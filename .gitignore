@@ -26,3 +26,12 @@
 *.exe
 *.out
 *.app
+
+# Astyle Leftovers
+*.orig
+
+# Possible build directories
+msvc64
+msvc32
+mingw64
+mingw32

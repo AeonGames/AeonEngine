@@ -1,0 +1,6 @@
+set(EXECUTABLE_HEADERS)
+set(EXECUTABLE_SOURCES Main.cpp)
+include_directories(${CMAKE_SOURCE_DIR}/include)
+add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
+target_link_libraries(game ${VULKAN_LIBRARY} engine)
+add_dependencies(game engine)
