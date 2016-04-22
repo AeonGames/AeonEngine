@@ -22,8 +22,16 @@ namespace AeonGames
     class AeonEngine
     {
     public:
+        /// Construct
         DLL AeonEngine();
+        /// Destruct
         DLL ~AeonEngine();
+        /// Move
+        DLL AeonEngine ( AeonEngine&& aRhs ) noexcept;
+        DLL AeonEngine& operator= ( AeonEngine&& aRhs ) noexcept;
+        /// Copy
+        DLL AeonEngine ( const AeonEngine& aRhs );
+        DLL AeonEngine& operator= ( const AeonEngine& aRhs );
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

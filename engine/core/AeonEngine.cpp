@@ -26,7 +26,35 @@ namespace AeonGames
     {
     }
 
-    AeonEngine::~AeonEngine()
+    AeonEngine::~AeonEngine() = default;
+
+    AeonEngine::AeonEngine ( AeonEngine && aRhs ) noexcept = default;
+
+    AeonEngine & AeonEngine::operator= ( AeonEngine && aRhs ) noexcept = default;
+
+    AeonEngine::AeonEngine ( const AeonEngine & aRhs )
+        : pImpl ( nullptr )
     {
+        if ( aRhs.pImpl )
+        {
+            pImpl = std::make_unique<Impl> ( *aRhs.pImpl );
+        }
+    }
+
+    AeonEngine & AeonEngine::operator= ( const AeonEngine & aRhs )
+    {
+        if ( !aRhs.pImpl )
+        {
+            pImpl.reset();
+        }
+        else if ( !pImpl )
+        {
+            pImpl = std::make_unique<Impl> ( *aRhs.pImpl );
+        }
+        else
+        {
+            *pImpl = *aRhs.pImpl;
+        }
+        return *this;
     }
 }
