@@ -1,0 +1,21 @@
+# Use broken brackets
+style=allman
+# No Tabs
+convert-tabs
+# Add brackets to one line conditionals
+add-brackets
+# Indent namespaces
+indent-namespaces
+# Add spaces besides operators
+pad-oper
+# Add spaces between parens and inside statements
+pad-paren
+# We're adding brackets to one line conditional statements,
+# No indent is clearer to read.
+min-conditional-indent=0
+# recurse directory tree
+recursive
+# Continue in exclude errors
+ignore-exclude-errors
+# Do not generate .orig files
+suffix=none
