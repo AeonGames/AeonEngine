@@ -21,10 +21,12 @@ include_directories(
 set(ENGINE_HEADERS 
 	${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
 	${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
+	core/Vulkan.h
 )
 
 set(ENGINE_SOURCES 
 	core/AeonEngine.cpp
+	core/Vulkan.cpp
 )
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
@@ -36,9 +38,9 @@ if(MSVC)
 endif()
 
 add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES} ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
-target_link_libraries(engine ${PROTOBUF_LIBRARIES})
+target_link_libraries(engine ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
 
 if(MSVC)
 	set_target_properties(engine PROPERTIES 
-		COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
+		COMPILE_FLAGS "-WX -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
 endif()
