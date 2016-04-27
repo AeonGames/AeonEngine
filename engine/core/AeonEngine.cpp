@@ -14,6 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/AeonEngine.h"
+#include <memory>
+
+#if __cplusplus < 201402L && __cplusplus >= 201103L
+// Taken from EMC++ Item 21
+namespace std
+{
+    template<typename T, typename... Ts>
+    std::unique_ptr<T> make_unique ( Ts&&... params )
+    {
+        return std::unique_ptr<T> ( new T ( std::forward<Ts> ( params )... ) );
+    }
+}
+#endif
 
 namespace AeonGames
 {
