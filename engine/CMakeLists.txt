@@ -22,10 +22,12 @@ set(ENGINE_HEADERS
 	${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
 	${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
 	core/Vulkan.h
+	core/Configuration.h
 )
 
 set(ENGINE_SOURCES 
 	core/AeonEngine.cpp
+	core/Configuration.cpp
 	core/Vulkan.cpp
 )
 
