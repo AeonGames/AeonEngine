@@ -15,6 +15,6 @@
 syntax = "proto3";
 package AeonGames;
 
-message Configuration {
+message ConfigurationBuffer {
 	repeated string Path = 1;
 }
