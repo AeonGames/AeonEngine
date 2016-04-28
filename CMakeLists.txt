@@ -29,6 +29,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${RUNTIME_INSTALL_PREFIX}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${RUNTIME_INSTALL_PREFIX}/lib/cmake/protobuf")
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+	list(APPEND CMAKE_CXX_FLAGS "-std=gnu++14")
+endif()
+
 find_package(Vulkan)
 find_package(Protobuf)
 
@@ -43,7 +47,6 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in"
 
 add_custom_target(format-code 
 				${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
-				DEPENDS engine game
 				WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 				COMMENT "Formatting Code."
 )
