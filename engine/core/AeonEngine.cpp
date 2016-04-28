@@ -16,7 +16,9 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include <memory>
 
-#if __cplusplus < 201402L && __cplusplus >= 201103L
+#if 0
+// This doesn't work on MinGW
+//__cplusplus < 201402L && __cplusplus >= 201103L
 // Taken from EMC++ Item 21
 namespace std
 {

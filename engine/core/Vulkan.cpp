@@ -23,6 +23,7 @@ limitations under the License.
 
 #include <cstring>
 #include <cassert>
+#include <cstdio>
 #include <vector>
 #include "Vulkan.h"
 
