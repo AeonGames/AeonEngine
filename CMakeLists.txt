@@ -36,15 +36,13 @@ add_subdirectory(engine)
 add_subdirectory(application)
 
 find_program (ASTYLE_EXECUTABLE astyle)
+
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in"
 	"${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
 
 add_custom_target(format-code 
 				${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
-				COMMAND sed -i 's/[ \t]*$//' "$1"
-sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$1"
-
 				DEPENDS engine game
 				WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 				COMMENT "Formatting Code."
