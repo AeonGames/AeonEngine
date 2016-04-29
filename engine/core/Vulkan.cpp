@@ -130,6 +130,16 @@ namespace AeonGames
     Vulkan::Vulkan ( bool aValidate ) :
         mValidate ( aValidate )
     {
+#if 1
+        if ( !InitializeInstance() )
+        {
+            throw ( InstanceInitializationFailed );
+        }
+        if ( !InitializeDevice() )
+        {
+            throw ( InstanceInitializationFailed );
+        }
+#else
         VkResult err;
         uint32_t instance_extension_count = 0;
         uint32_t instance_layer_count = 0;
@@ -291,14 +301,14 @@ namespace AeonGames
         app.engineVersion = 0;
         app.apiVersion = VK_API_VERSION_1_0;
 
-        VkInstanceCreateInfo inst_info;
-        inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        inst_info.pNext = nullptr;
-        inst_info.pApplicationInfo = &app;
-        inst_info.enabledLayerCount = static_cast<uint32_t> ( mDeviceValidationLayers.size() );
-        inst_info.ppEnabledLayerNames = ( const char *const * ) &mDeviceValidationLayers[0];
-        inst_info.enabledExtensionCount = static_cast<uint32_t> ( mExtensionNames.size() );
-        inst_info.ppEnabledExtensionNames = ( const char *const * ) &mExtensionNames[0];
+        VkInstanceCreateInfo instance_create_info;
+        instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        instance_create_info.pNext = nullptr;
+        instance_create_info.pApplicationInfo = &app;
+        instance_create_info.enabledLayerCount = static_cast<uint32_t> ( mDeviceValidationLayers.size() );
+        instance_create_info.ppEnabledLayerNames = ( const char *const * ) &mDeviceValidationLayers[0];
+        instance_create_info.enabledExtensionCount = static_cast<uint32_t> ( mExtensionNames.size() );
+        instance_create_info.ppEnabledExtensionNames = ( const char *const * ) &mExtensionNames[0];
 
         /*
         * This is info for a temp callback to use during CreateInstance.
@@ -314,12 +324,12 @@ namespace AeonGames
             dbgCreateInfo.pUserData = nullptr;
             dbgCreateInfo.flags =
                 VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
-            inst_info.pNext = &dbgCreateInfo;
+            instance_create_info.pNext = &dbgCreateInfo;
         }
 
         uint32_t gpu_count;
 
-        err = vkCreateInstance ( &inst_info, nullptr, &mVkInstance );
+        err = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance );
         if ( err == VK_ERROR_INCOMPATIBLE_DRIVER )
         {
             printf ( "%s: Cannot find a compatible Vulkan installable client driver "
@@ -520,17 +530,38 @@ namespace AeonGames
         //  features based on this query
         VkPhysicalDeviceFeatures physDevFeatures;
         vkGetPhysicalDeviceFeatures ( mVkPhysicalDevice, &physDevFeatures );
-
-#if 0
-        GET_INSTANCE_PROC_ADDR ( mVkInstance, GetPhysicalDeviceSurfaceSupportKHR );
-        GET_INSTANCE_PROC_ADDR ( mVkInstance, GetPhysicalDeviceSurfaceCapabilitiesKHR );
-        GET_INSTANCE_PROC_ADDR ( mVkInstance, GetPhysicalDeviceSurfaceFormatsKHR );
-        GET_INSTANCE_PROC_ADDR ( mVkInstance, GetPhysicalDeviceSurfacePresentModesKHR );
-        GET_INSTANCE_PROC_ADDR ( mVkInstance, GetSwapchainImagesKHR );
 #endif
     }
 
     Vulkan::~Vulkan()
+    {
+        FinalizeDevice();
+        FinalizeInstance();
+    }
+
+    bool Vulkan::InitializeInstance()
+    {
+        VkResult result;
+        VkInstanceCreateInfo instance_create_info {};
+        instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        if ( ( result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) ) != VK_SUCCESS )
+        {
+            return false;
+        }
+        return true;
+    }
+
+    void Vulkan::FinalizeInstance()
+    {
+        vkDestroyInstance ( mVkInstance, nullptr );
+    }
+
+    bool Vulkan::InitializeDevice()
+    {
+        return false;
+    }
+
+    void Vulkan::FinalizeDevice()
     {
     }
 }

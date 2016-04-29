@@ -18,6 +18,7 @@ limitations under the License.
 #define AEONGAMES_VULKAN_H
 
 #include <vulkan/vulkan.h>
+#include <exception>
 #include <vector>
 
 namespace AeonGames
@@ -27,12 +28,31 @@ namespace AeonGames
     public:
         Vulkan ( bool aValidate = true );
         ~Vulkan();
+        struct InstanceInitializationFailed : public std::exception
+        {
+            const char * what() const throw ()
+            {
+                return "Vulkan Instance Initialization Failed";
+            }
+        };
+        struct DeviceInitializationFailed : public std::exception
+        {
+            const char * what() const throw ()
+            {
+                return "Vulkan Device Initialization Failed";
+            }
+        };
     private:
+        bool InitializeInstance();
+        void FinalizeInstance();
+        bool InitializeDevice();
+        void FinalizeDevice();
+        VkInstance mVkInstance = nullptr;
+        // These members may change over time
         bool mValidate = true;
         bool mUseBreak = true;
         std::vector<const char*> mDeviceValidationLayers;
         std::vector<const char*> mExtensionNames;
-        VkInstance mVkInstance = nullptr;
         VkPhysicalDevice mVkPhysicalDevice = nullptr;
         VkPhysicalDeviceProperties mVkPhysicalDeviceProperties = {0};
         PFN_vkCreateDebugReportCallbackEXT mCreateDebugReportCallback = nullptr;
