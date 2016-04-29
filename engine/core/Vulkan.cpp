@@ -125,14 +125,13 @@ namespace AeonGames
     }
 
     Vulkan::Vulkan ( bool aValidate ) :
-        mValidate ( aValidate ) /*,
-        mEnabledExtensionCount ( 0 ),
-        mEnabledLayerCount ( 0 )*/
+        mValidate ( aValidate )
     {
         VkResult err;
         uint32_t instance_extension_count = 0;
         uint32_t instance_layer_count = 0;
-        //uint32_t device_validation_layer_count = 0;
+
+        // Instance
 
         std::vector<const char *> instance_validation_layers_alt1
         {
@@ -338,6 +337,8 @@ namespace AeonGames
                      "the Getting Started guide for additional information.\n",
                      "vkCreateInstance Failure" );
         }
+
+        // Devices
 
         /* Make initial call to query gpu_count, then second call for gpu info*/
         err = vkEnumeratePhysicalDevices ( mVkInstance, &gpu_count, NULL );
