@@ -27,11 +27,13 @@
 *.out
 *.app
 
-# Astyle Leftovers
+# Assorted leftover/temporary files
 *.orig
+*.swp
 
 # Possible build directories
 msvc64
 msvc32
 mingw64
 mingw32
+

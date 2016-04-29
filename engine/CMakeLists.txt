@@ -13,22 +13,22 @@
 # limitations under the License.
 
 include_directories(
-	${CMAKE_SOURCE_DIR}/include
-	${VULKAN_INCLUDE_DIR}
-	${PROTOBUF_INCLUDE_DIR}	
+    ${CMAKE_SOURCE_DIR}/include
+    ${VULKAN_INCLUDE_DIR}
+    ${PROTOBUF_INCLUDE_DIR}
 )
 
-set(ENGINE_HEADERS 
-	${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
-	${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-	core/Vulkan.h
-	core/Configuration.h
+set(ENGINE_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
+    core/Vulkan.h
+    core/Configuration.h
 )
 
-set(ENGINE_SOURCES 
-	core/AeonEngine.cpp
-	core/Configuration.cpp
-	core/Vulkan.cpp
+set(ENGINE_SOURCES
+    core/AeonEngine.cpp
+    core/Configuration.cpp
+    core/Vulkan.cpp
 )
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
@@ -43,9 +43,9 @@ add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES} ${PROTOBUF_SOURCES
 target_link_libraries(engine ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
 
 if(MSVC)
-	set_target_properties(engine PROPERTIES 
-		COMPILE_FLAGS "-WX -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
+    set_target_properties(engine PROPERTIES
+        COMPILE_FLAGS "-WX -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW)
-	set_target_properties(engine PROPERTIES 
-		COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
+    set_target_properties(engine PROPERTIES
+        COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
 endif()
