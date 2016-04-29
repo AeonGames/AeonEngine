@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/AeonEngine.h"
+#include "Vulkan.h"
 #include <memory>
 
 #if 0
@@ -34,6 +35,7 @@ namespace AeonGames
 {
     struct AeonEngine::Impl
     {
+        Vulkan mVulkan;
     };
 
     AeonEngine::AeonEngine() :
