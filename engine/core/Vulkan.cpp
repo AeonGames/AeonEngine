@@ -21,6 +21,9 @@ limitations under the License.
     http://gpuopen.com/using-the-vulkan-validation-layers/?utm_source=silverpop&utm_medium=email&utm_campaign=25324445&utm_term=link-article2&utm_content=p-global-developer-hcnewsflash-april-2016%20%281%29:&spMailingID=25324445&spUserID=NzI5Mzc5ODY4NjQS1&spJobID=783815030&spReportId=NzgzODE1MDMwS0
 */
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <cstring>
 #include <cassert>
 #include <cstdio>

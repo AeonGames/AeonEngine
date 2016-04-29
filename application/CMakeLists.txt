@@ -13,5 +13,5 @@
 # limitations under the License.
 
 if(WIN32)
-	add_subdirectory(windows)
+    add_subdirectory(windows)
 endif()

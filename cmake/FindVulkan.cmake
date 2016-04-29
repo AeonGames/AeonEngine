@@ -27,6 +27,7 @@
 #
 # CHANGELOG
 # 4/22/2016 Added copyright notice and modification notice.
+# 4/28/2016 Added Void Pointer size check to detect 64 bit architecture.
 #
 
 # Find Vulkan
@@ -39,7 +40,7 @@ if (WIN32)
     find_path(VULKAN_INCLUDE_DIR NAMES vulkan/vulkan.h HINTS
         "$ENV{VULKAN_SDK}/Include"
         "$ENV{VK_SDK_PATH}/Include")
-    if (CMAKE_CL_64)
+    if ((CMAKE_CL_64) OR (CMAKE_SIZEOF_VOID_P EQUAL 8))
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
             "$ENV{VULKAN_SDK}/Bin"
             "$ENV{VK_SDK_PATH}/Bin")
