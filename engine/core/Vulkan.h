@@ -48,13 +48,14 @@ namespace AeonGames
         bool InitializeDevice();
         void FinalizeDevice();
         VkInstance mVkInstance = nullptr;
+        VkDevice mVkDevice = nullptr;
+        VkPhysicalDevice mVkPhysicalDevice = nullptr;
+        VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties {};
         // These members may change over time
         bool mValidate = true;
         bool mUseBreak = true;
         std::vector<const char*> mDeviceValidationLayers;
         std::vector<const char*> mExtensionNames;
-        VkPhysicalDevice mVkPhysicalDevice = nullptr;
-        VkPhysicalDeviceProperties mVkPhysicalDeviceProperties = {0};
         PFN_vkCreateDebugReportCallbackEXT mCreateDebugReportCallback = nullptr;
         PFN_vkDestroyDebugReportCallbackEXT mDestroyDebugReportCallback = nullptr;
         PFN_vkDebugReportMessageEXT mDebugReportMessage = nullptr;
