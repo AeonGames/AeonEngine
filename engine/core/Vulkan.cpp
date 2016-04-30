@@ -133,11 +133,12 @@ namespace AeonGames
 #if 1
         if ( !InitializeInstance() )
         {
-            throw ( InstanceInitializationFailed );
+            throw InstanceInitializationFailed{};
         }
+
         if ( !InitializeDevice() )
         {
-            throw ( InstanceInitializationFailed );
+            throw DeviceInitializationFailed{};
         }
 #else
         VkResult err;
@@ -543,7 +544,16 @@ namespace AeonGames
     {
         VkResult result;
         VkInstanceCreateInfo instance_create_info {};
+        VkApplicationInfo application_info {};
+
+        application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        application_info.apiVersion = VK_API_VERSION_1_0;
+        application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
+        application_info.pApplicationName = "AeonEngine Vulkan Renderer";
+
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        instance_create_info.pApplicationInfo = &application_info;
+
         if ( ( result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) ) != VK_SUCCESS )
         {
             return false;
@@ -554,14 +564,87 @@ namespace AeonGames
     void Vulkan::FinalizeInstance()
     {
         vkDestroyInstance ( mVkInstance, nullptr );
+        mVkInstance = nullptr;
     }
 
     bool Vulkan::InitializeDevice()
     {
-        return false;
+        assert ( mVkInstance && "mVkInstance is a nullptr." );
+        if ( !mVkInstance )
+        {
+            return false;
+        }
+
+        {
+            uint32_t physical_device_count;
+            vkEnumeratePhysicalDevices ( mVkInstance, &physical_device_count, nullptr );
+
+            if ( physical_device_count == 0 )
+            {
+                return false;
+            }
+
+            std::vector<VkPhysicalDevice> physical_device_list ( physical_device_count );
+            vkEnumeratePhysicalDevices ( mVkInstance, &physical_device_count, physical_device_list.data() );
+
+            mVkPhysicalDevice = physical_device_list[0];
+            vkGetPhysicalDeviceProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceProperties );
+        }
+
+        VkDeviceCreateInfo device_create_info{};
+        VkDeviceQueueCreateInfo device_queue_create_info{};
+
+        {
+            uint32_t family_properties_count;
+            vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, nullptr );
+            if ( family_properties_count == 0 )
+            {
+                return false;
+            }
+            std::vector<VkQueueFamilyProperties> family_properties_list ( family_properties_count );
+            vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, family_properties_list.data() );
+            bool graphics_queue_family_found = false;
+            for ( auto family_property = family_properties_list.begin();
+                  family_property != family_properties_list.end();
+                  ++family_property )
+            {
+                if ( family_property->queueFlags & VK_QUEUE_GRAPHICS_BIT )
+                {
+                    graphics_queue_family_found = true;
+                    device_queue_create_info.queueFamilyIndex =
+                        static_cast<uint32_t> ( family_properties_list.begin() - family_property );
+                    break;
+                }
+            }
+            if ( !graphics_queue_family_found )
+            {
+                return false;
+            }
+        }
+        /// @todo Remove hardcoded Queue Info
+        float queue_priorities[] {1.0f};
+        device_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        device_queue_create_info.queueCount = 1;
+        // Note that device_queue_create_info.queueFamilyIndex is set above.
+        device_queue_create_info.pQueuePriorities = queue_priorities;
+
+
+        device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        device_create_info.queueCreateInfoCount = 1;
+        device_create_info.pQueueCreateInfos = &device_queue_create_info;
+
+        /// @todo Grab best device rather than first one
+        VkResult result;
+        if ( ( result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) ) != VK_SUCCESS )
+        {
+            return false;
+        }
+        return true;
     }
 
     void Vulkan::FinalizeDevice()
     {
+        vkDestroyDevice ( mVkDevice, nullptr );
+        mVkDevice = nullptr;
     }
 }
