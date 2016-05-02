@@ -47,17 +47,29 @@ namespace AeonGames
         void FinalizeInstance();
         bool InitializeDevice();
         void FinalizeDevice();
+        void SetupDebug();
+        bool LoadFunctions();
+        bool InitializeDebug();
+        void FinalizeDebug();
+
         VkInstance mVkInstance = nullptr;
         VkDevice mVkDevice = nullptr;
         VkPhysicalDevice mVkPhysicalDevice = nullptr;
         VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties {};
+        VkDebugReportCallbackEXT mVkDebugReportCallbackEXT = nullptr;
+        VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
+        std::vector<const char*> mInstanceLayerNames;
+        std::vector<const char*> mInstanceExtensionNames;
+        std::vector<const char*> mDeviceLayerNames;
+        std::vector<const char*> mDeviceExtensionNames;
+        // Vulkan Functions
+        bool mFunctionsLoaded = false;
+        PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = nullptr;
+        PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = nullptr;
+
         // These members may change over time
         bool mValidate = true;
         bool mUseBreak = true;
-        std::vector<const char*> mDeviceValidationLayers;
-        std::vector<const char*> mExtensionNames;
-        PFN_vkCreateDebugReportCallbackEXT mCreateDebugReportCallback = nullptr;
-        PFN_vkDestroyDebugReportCallbackEXT mDestroyDebugReportCallback = nullptr;
         PFN_vkDebugReportMessageEXT mDebugReportMessage = nullptr;
         VkDebugReportCallbackEXT mMsgCallback = nullptr;
     };
