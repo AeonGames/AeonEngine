@@ -136,10 +136,16 @@ namespace AeonGames
         {
             throw DeviceInitializationFailed{};
         }
+
+        if ( !InitializeCommandPool() )
+        {
+            throw CommandPoolInitializationFailed{};
+        }
     }
 
     Vulkan::~Vulkan()
     {
+        FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
@@ -277,7 +283,7 @@ namespace AeonGames
                 if ( family_property->queueFlags & VK_QUEUE_GRAPHICS_BIT )
                 {
                     graphics_queue_family_found = true;
-                    device_queue_create_info.queueFamilyIndex =
+                    mQueueFamilyIndex =
                         static_cast<uint32_t> ( family_properties_list.begin() - family_property );
                     break;
                 }
@@ -316,7 +322,7 @@ namespace AeonGames
         float queue_priorities[] {1.0f};
         device_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         device_queue_create_info.queueCount = 1;
-        // Note that device_queue_create_info.queueFamilyIndex is set above.
+        device_queue_create_info.queueFamilyIndex = mQueueFamilyIndex;
         device_queue_create_info.pQueuePriorities = queue_priorities;
 
 
@@ -341,5 +347,43 @@ namespace AeonGames
     {
         vkDestroyDevice ( mVkDevice, nullptr );
         mVkDevice = nullptr;
+    }
+
+    bool Vulkan::InitializeCommandPool()
+    {
+        assert ( mVkDevice != VK_NULL_HANDLE );
+        VkCommandPoolCreateInfo command_pool_create_info{};
+        command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        command_pool_create_info.queueFamilyIndex = mQueueFamilyIndex;
+        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        VkResult result;
+        if ( ( result = vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkCommandPool ) ) != VK_SUCCESS )
+        {
+            return false;
+        }
+
+        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        command_buffer_allocate_info.commandPool = mVkCommandPool;
+        command_buffer_allocate_info.commandBufferCount = 1;
+        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+        if ( ( result = vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer ) ) != VK_SUCCESS )
+        {
+            return false;
+        }
+        return true;
+
+        VkCommandBufferBeginInfo command_buffer_begin_info{};
+        command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info );
+
+        vkEndCommandBuffer ( mVkCommandBuffer );
+    }
+
+    void Vulkan::FinalizeCommandPool()
+    {
+        vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
+        mVkCommandPool = VK_NULL_HANDLE;
     }
 }

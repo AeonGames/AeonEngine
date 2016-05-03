@@ -42,36 +42,48 @@ namespace AeonGames
                 return "Vulkan Device Initialization Failed";
             }
         };
+        struct CommandPoolInitializationFailed : public std::exception
+        {
+            const char * what() const throw ()
+            {
+                return "Vulkan Command Initialization Failed";
+            }
+        };
     private:
         bool InitializeInstance();
         void FinalizeInstance();
         bool InitializeDevice();
         void FinalizeDevice();
+        bool InitializeCommandPool();
+        void FinalizeCommandPool();
         void SetupDebug();
         bool LoadFunctions();
         bool InitializeDebug();
         void FinalizeDebug();
 
-        VkInstance mVkInstance = nullptr;
-        VkDevice mVkDevice = nullptr;
-        VkPhysicalDevice mVkPhysicalDevice = nullptr;
+        VkInstance mVkInstance = VK_NULL_HANDLE;
+        VkDevice mVkDevice = VK_NULL_HANDLE;
+        VkPhysicalDevice mVkPhysicalDevice = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties {};
-        VkDebugReportCallbackEXT mVkDebugReportCallbackEXT = nullptr;
+        VkDebugReportCallbackEXT mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
+        VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
+        VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
+        uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;
         std::vector<const char*> mInstanceExtensionNames;
         std::vector<const char*> mDeviceLayerNames;
         std::vector<const char*> mDeviceExtensionNames;
         // Vulkan Functions
         bool mFunctionsLoaded = false;
-        PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = nullptr;
-        PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = nullptr;
+        PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
+        PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
 
         // These members may change over time
         bool mValidate = true;
         bool mUseBreak = true;
-        PFN_vkDebugReportMessageEXT mDebugReportMessage = nullptr;
-        VkDebugReportCallbackEXT mMsgCallback = nullptr;
+        PFN_vkDebugReportMessageEXT mDebugReportMessage = VK_NULL_HANDLE;
+        VkDebugReportCallbackEXT mMsgCallback = VK_NULL_HANDLE;
     };
 }
 #endif
