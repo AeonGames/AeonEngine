@@ -31,6 +31,7 @@ limitations under the License.
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <stdexcept>
 #include "Vulkan.h"
 
 namespace AeonGames
