@@ -35,34 +35,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    /*
-    * Return 1 (true) if all layer names specified in check_names
-    * can be found in given layer properties.
-    */
-    static bool CheckLayers ( std::vector<const char*>& aNames,
-                              uint32_t layer_count,
-                              VkLayerProperties *layers )
-    {
-        for ( auto & i : aNames )
-        {
-            bool found = false;
-            for ( uint32_t j = 0; j < layer_count; j++ )
-            {
-                if ( !strcmp ( i, layers[j].layerName ) )
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if ( !found )
-            {
-                fprintf ( stderr, "Cannot find layer: %s\n", i );
-                return false;
-            }
-        }
-        return true;
-    }
-
     VKAPI_ATTR VkBool32 VKAPI_CALL
     DebugCallback (
         VkFlags aFlags,
@@ -93,6 +65,9 @@ namespace AeonGames
         if ( aFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
         {
             stream << "ERROR ";
+#if _WIN32
+            MessageBox ( nullptr, aMsg, aLayerPrefix, MB_ICONERROR | MB_OK );
+#endif
         }
         if ( aFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
         {
@@ -103,70 +78,43 @@ namespace AeonGames
 
         std::cout << stream.str();
 
-#if _WIN32
-        if ( aFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
-        {
-            MessageBox ( nullptr, aMsg, aLayerPrefix, MB_ICONERROR | MB_OK );
-        }
-#endif
-
         return false;
     }
 
-    Vulkan::Vulkan ( bool aValidate ) :
+Vulkan::Vulkan ( bool aValidate ) try :
         mValidate ( aValidate )
     {
         SetupDebug();
-        if ( !InitializeInstance() )
-        {
-            throw InstanceInitializationFailed{};
-        }
-
-        if ( !LoadFunctions() )
-        {
-            throw InstanceInitializationFailed{};
-        }
-
-        if ( !InitializeDebug() )
-        {
-            throw InstanceInitializationFailed{};
-        }
-
-        if ( !InitializeDevice() )
-        {
-            throw DeviceInitializationFailed{};
-        }
-
-        if ( !InitializeCommandPool() )
-        {
-            throw CommandPoolInitializationFailed{};
-        }
+        InitializeInstance();
+        LoadFunctions();
+        InitializeDebug();
+        InitializeDevice();
+        InitializeCommandPool();
     }
-
-    Vulkan::~Vulkan()
+    catch ( ... )
     {
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
+        throw;
     }
 
-    bool Vulkan::LoadFunctions()
+    void Vulkan::LoadFunctions()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
         if ( !mFunctionsLoaded )
         {
             if ( ( vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkCreateDebugReportCallbackEXT" ) ) ) == nullptr )
             {
-                return false;
+                throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkCreateDebugReportCallbackEXT" );
             }
             if ( ( vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkDestroyDebugReportCallbackEXT" ) ) ) == nullptr )
             {
-                return false;
+                throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkDestroyDebugReportCallbackEXT" );
             }
             mFunctionsLoaded = true;
         }
-        return true;
     }
 
 
@@ -188,26 +136,19 @@ namespace AeonGames
         mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
     }
 
-    bool Vulkan::InitializeDebug()
+    void Vulkan::InitializeDebug()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
         VkResult result;
-
         if ( ( result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) ) != VK_SUCCESS )
         {
-            return false;
+            std::ostringstream stream;
+            stream << "Could not create Vulkan debug report callback. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
-        return true;
     }
 
-    void Vulkan::FinalizeDebug()
-    {
-        assert ( mVkInstance && "mVkInstance is a nullptr." );
-        vkDestroyDebugReportCallbackEXT ( mVkInstance, mVkDebugReportCallbackEXT, nullptr );
-        mVkDebugReportCallbackEXT = nullptr;
-    }
-
-    bool Vulkan::InitializeInstance()
+    void Vulkan::InitializeInstance()
     {
         VkResult result;
         VkInstanceCreateInfo instance_create_info {};
@@ -228,32 +169,22 @@ namespace AeonGames
 
         if ( ( result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) ) != VK_SUCCESS )
         {
-            return false;
+            std::ostringstream stream;
+            stream << "Could not create Vulkan instance. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
-        return true;
     }
 
-    void Vulkan::FinalizeInstance()
-    {
-        vkDestroyInstance ( mVkInstance, nullptr );
-        mVkInstance = nullptr;
-    }
-
-    bool Vulkan::InitializeDevice()
+    void Vulkan::InitializeDevice()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
-        if ( !mVkInstance )
-        {
-            return false;
-        }
-
         {
             uint32_t physical_device_count;
             vkEnumeratePhysicalDevices ( mVkInstance, &physical_device_count, nullptr );
 
             if ( physical_device_count == 0 )
             {
-                return false;
+                throw std::runtime_error ( "No Vulkan physical device found" );
             }
 
             std::vector<VkPhysicalDevice> physical_device_list ( physical_device_count );
@@ -271,7 +202,7 @@ namespace AeonGames
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, nullptr );
             if ( family_properties_count == 0 )
             {
-                return false;
+                throw std::runtime_error ( "Vulkan physical device has no queue family properties." );
             }
             std::vector<VkQueueFamilyProperties> family_properties_list ( family_properties_count );
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, family_properties_list.data() );
@@ -290,7 +221,7 @@ namespace AeonGames
             }
             if ( !graphics_queue_family_found )
             {
-                return false;
+                throw std::runtime_error ( "No graphics queue family found." );
             }
         }
 
@@ -338,18 +269,14 @@ namespace AeonGames
         VkResult result;
         if ( ( result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) ) != VK_SUCCESS )
         {
-            return false;
+            std::ostringstream stream;
+            stream << "Could not create Vulkan device. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
-        return true;
+        vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
     }
 
-    void Vulkan::FinalizeDevice()
-    {
-        vkDestroyDevice ( mVkDevice, nullptr );
-        mVkDevice = nullptr;
-    }
-
-    bool Vulkan::InitializeCommandPool()
+    void Vulkan::InitializeCommandPool()
     {
         assert ( mVkDevice != VK_NULL_HANDLE );
         VkCommandPoolCreateInfo command_pool_create_info{};
@@ -359,7 +286,9 @@ namespace AeonGames
         VkResult result;
         if ( ( result = vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkCommandPool ) ) != VK_SUCCESS )
         {
-            return false;
+            std::ostringstream stream;
+            stream << "Could not create Vulkan command pool. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
 
         VkCommandBufferAllocateInfo command_buffer_allocate_info{};
@@ -370,20 +299,129 @@ namespace AeonGames
 
         if ( ( result = vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer ) ) != VK_SUCCESS )
         {
-            return false;
+            std::ostringstream stream;
+            stream << "Could not allocate Vulkan command buffers. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
-        return true;
 
         VkCommandBufferBeginInfo command_buffer_begin_info{};
         command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info );
 
-        vkEndCommandBuffer ( mVkCommandBuffer );
+        if ( ( result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "vkBeginCommandBuffer call failed. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        if ( ( result = vkEndCommandBuffer ( mVkCommandBuffer ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "vkEndCommandBuffer call failed. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkFenceCreateInfo fence_create_info {};
+        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+        if ( ( result = vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "Could not create Vulkan fence. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkSemaphoreCreateInfo semaphore_create_info{};
+        semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        if ( ( result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkSemaphore ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "Could not create Vulkan semaphore. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkSubmitInfo submit_info{};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &mVkCommandBuffer;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &mVkSemaphore;
+
+        if ( ( result = vkQueueSubmit ( mVkQueue, 1, &submit_info, mVkFence ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "Could not submit Vulkan queue. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+#if 0
+        if ( ( result = vkWaitForFences ( mVkDevice, 1, &mVkFence, VK_TRUE, UINT64_MAX ) ) != VK_SUCCESS )
+        {
+            return false;
+        }
+#else
+        if ( ( result = vkQueueWaitIdle ( mVkQueue ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "Call to vkQueueWaitIdle failed. error code: ( " << result << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+#endif
+    }
+
+
+    void Vulkan::FinalizeDebug()
+    {
+        assert ( mVkInstance && "mVkInstance is a nullptr." );
+        if ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE )
+        {
+            vkDestroyDebugReportCallbackEXT ( mVkInstance, mVkDebugReportCallbackEXT, nullptr );
+            mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
+        }
+    }
+
+    void Vulkan::FinalizeInstance()
+    {
+        if ( mVkInstance != VK_NULL_HANDLE )
+        {
+            vkDestroyInstance ( mVkInstance, nullptr );
+            mVkInstance = VK_NULL_HANDLE;
+        }
+    }
+
+    void Vulkan::FinalizeDevice()
+    {
+        if ( mVkDevice != VK_NULL_HANDLE )
+        {
+            vkDestroyDevice ( mVkDevice, nullptr );
+            mVkDevice = VK_NULL_HANDLE;
+        }
     }
 
     void Vulkan::FinalizeCommandPool()
     {
-        vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
-        mVkCommandPool = VK_NULL_HANDLE;
+        if ( mVkSemaphore != VK_NULL_HANDLE )
+        {
+            vkDestroySemaphore ( mVkDevice, mVkSemaphore, nullptr );
+            mVkSemaphore = VK_NULL_HANDLE;
+        }
+        if ( mVkFence != VK_NULL_HANDLE )
+        {
+            vkDestroyFence ( mVkDevice, mVkFence, nullptr );
+            mVkFence = VK_NULL_HANDLE;
+        }
+        if ( mVkCommandPool != VK_NULL_HANDLE )
+        {
+            vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
+            mVkCommandPool = VK_NULL_HANDLE;
+        }
+    }
+
+    Vulkan::~Vulkan()
+    {
+        FinalizeCommandPool();
+        FinalizeDevice();
+        FinalizeDebug();
+        FinalizeInstance();
     }
 }

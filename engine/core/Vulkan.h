@@ -28,37 +28,16 @@ namespace AeonGames
     public:
         Vulkan ( bool aValidate = true );
         ~Vulkan();
-        struct InstanceInitializationFailed : public std::exception
-        {
-            const char * what() const throw ()
-            {
-                return "Vulkan Instance Initialization Failed";
-            }
-        };
-        struct DeviceInitializationFailed : public std::exception
-        {
-            const char * what() const throw ()
-            {
-                return "Vulkan Device Initialization Failed";
-            }
-        };
-        struct CommandPoolInitializationFailed : public std::exception
-        {
-            const char * what() const throw ()
-            {
-                return "Vulkan Command Initialization Failed";
-            }
-        };
     private:
-        bool InitializeInstance();
-        void FinalizeInstance();
-        bool InitializeDevice();
-        void FinalizeDevice();
-        bool InitializeCommandPool();
-        void FinalizeCommandPool();
+        void InitializeInstance();
+        void InitializeDevice();
+        void InitializeCommandPool();
+        void InitializeDebug();
         void SetupDebug();
-        bool LoadFunctions();
-        bool InitializeDebug();
+        void LoadFunctions();
+        void FinalizeInstance();
+        void FinalizeDevice();
+        void FinalizeCommandPool();
         void FinalizeDebug();
 
         VkInstance mVkInstance = VK_NULL_HANDLE;
@@ -68,7 +47,11 @@ namespace AeonGames
         VkDebugReportCallbackEXT mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
+        VkQueue mVkQueue = VK_NULL_HANDLE;
+        VkFence mVkFence = VK_NULL_HANDLE;
+        VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
+        VkViewport mVkViewport = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;
         std::vector<const char*> mInstanceExtensionNames;
