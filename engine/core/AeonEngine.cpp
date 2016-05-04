@@ -17,9 +17,7 @@ limitations under the License.
 #include "Vulkan.h"
 #include <memory>
 
-#if 0
-// This doesn't work on MinGW
-//__cplusplus < 201402L && __cplusplus >= 201103L
+#if __cplusplus < 201300L && __cplusplus >= 201103L
 // Taken from EMC++ Item 21
 namespace std
 {
