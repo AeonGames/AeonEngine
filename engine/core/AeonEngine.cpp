@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include "aeongames/AeonEngine.h"
 #include "Vulkan.h"
+#include <google/protobuf/stubs/common.h>
 #include <memory>
 
 #if __cplusplus < 201300L && __cplusplus >= 201103L
@@ -31,6 +32,14 @@ namespace std
 
 namespace AeonGames
 {
+    /*  This is a Hack so google::protobuf::ShutdownProtobufLibrary gets called on process exit.
+        This is nice because no reference count is required in the engine class,
+        there is no need for free form initialization/finalization functions
+        and client code needs not even know that the protobuffers library needs to be
+        shutdown before exit.
+        Also, it is platform independent since there is no DLLMain on Linux. */
+    static bool gShutdownProtobufLibraryAtExit = std::atexit ( google::protobuf::ShutdownProtobufLibrary ) == 0;
+
     struct AeonEngine::Impl
     {
         Vulkan mVulkan;

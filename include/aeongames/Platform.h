@@ -15,8 +15,10 @@ limitations under the License.
 */
 #ifndef AEONGAMES_PLATFORM_H
 #define AEONGAMES_PLATFORM_H
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #ifndef DLL
-#if defined(WIN32)
 #ifdef DLL_EXPORT
 #define DLL __declspec( dllexport )
 #else

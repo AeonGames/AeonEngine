@@ -22,9 +22,6 @@ limitations under the License.
     http://gpuopen.com/using-the-vulkan-validation-layers/?utm_source=silverpop&utm_medium=email&utm_campaign=25324445&utm_term=link-article2&utm_content=p-global-developer-hcnewsflash-april-2016%20%281%29:&spMailingID=25324445&spUserID=NzI5Mzc5ODY4NjQS1&spJobID=783815030&spReportId=NzgzODE1MDMwS0
 */
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
 #include <cstring>
 #include <cassert>
 #include <cstdio>
@@ -85,10 +82,18 @@ namespace AeonGames
 Vulkan::Vulkan ( bool aValidate ) try :
         mValidate ( aValidate )
     {
-        SetupDebug();
+        if ( mValidate )
+        {
+            SetupDebug();
+        }
         InitializeInstance();
-        LoadFunctions();
-        InitializeDebug();
+        if ( mValidate )
+        {
+            /* LoadFunctions currently only loads
+                Debug Functions. */
+            LoadFunctions();
+            InitializeDebug();
+        }
         InitializeDevice();
         InitializeCommandPool();
     }
@@ -166,7 +171,10 @@ Vulkan::Vulkan ( bool aValidate ) try :
         instance_create_info.ppEnabledLayerNames = mInstanceLayerNames.data();
         instance_create_info.enabledExtensionCount = static_cast<uint32_t> ( mInstanceExtensionNames.size() );
         instance_create_info.ppEnabledExtensionNames = mInstanceExtensionNames.data();
-        instance_create_info.pNext = &mDebugReportCallbackCreateInfo;
+        if ( mValidate )
+        {
+            instance_create_info.pNext = &mDebugReportCallbackCreateInfo;
+        }
 
         if ( ( result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) ) != VK_SUCCESS )
         {
@@ -314,6 +322,14 @@ Vulkan::Vulkan ( bool aValidate ) try :
             stream << "vkBeginCommandBuffer call failed. error code: ( " << result << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                               VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                               0,
+                               0, nullptr,
+                               0, nullptr,
+                               0, nullptr );
 
         if ( ( result = vkEndCommandBuffer ( mVkCommandBuffer ) ) != VK_SUCCESS )
         {
