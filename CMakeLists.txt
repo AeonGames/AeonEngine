@@ -57,18 +57,31 @@ add_subdirectory(application)
 find_program (SED_EXECUTABLE sed HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin)
 if(WIN32)
     find_program (FIND_EXECUTABLE find HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin NO_SYSTEM_ENVIRONMENT_PATH)
+else()
+    find_program (FIND_EXECUTABLE find)
 endif()
 find_program (ASTYLE_EXECUTABLE astyle)
 
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in" "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
 
-add_custom_target(format-code
-    ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
-    # Look for more useful sed oneliners at http://sed.sourceforge.net/sed1line.txt
-    COMMAND
-        ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/\\t/    /g' {} $<SEMICOLON>"
-    COMMAND
-        ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/[ \\t]*$$//' {} $<SEMICOLON>"
+if(WIN32)
+    add_custom_target(format-code
+        ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
+        # Look for more useful sed oneliners at http://sed.sourceforge.net/sed1line.txt
+        COMMAND
+            ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/\\t/    /g' {} $<SEMICOLON>"
+        COMMAND
+            ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/[ \\t]*$$//' {} $<SEMICOLON>"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Formatting Code.")
+else()
+    add_custom_target(format-code
+        ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
+        COMMAND
+            ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/\\t/    /g' {} \\$<SEMICOLON>
+        COMMAND
+            ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/[ \\t]*$$//' {} \\$<SEMICOLON>
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting Code.")
+endif()

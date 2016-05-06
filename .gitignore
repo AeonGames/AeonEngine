@@ -36,4 +36,5 @@ msvc64
 msvc32
 mingw64
 mingw32
-
+make64
+make32
