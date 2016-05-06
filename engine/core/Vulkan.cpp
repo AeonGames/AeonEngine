@@ -97,8 +97,18 @@ Vulkan::Vulkan ( bool aValidate ) try :
         InitializeDevice();
         InitializeCommandPool();
     }
+    catch ( const std::exception& e )
+    {
+        std::cout << "Exception thrown: " << e.what() << std::endl;
+        FinalizeCommandPool();
+        FinalizeDevice();
+        FinalizeDebug();
+        FinalizeInstance();
+        throw;
+    }
     catch ( ... )
     {
+        std::cout << "Unknown exception thrown." <<  std::endl;
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -109,7 +119,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
     void Vulkan::LoadFunctions()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
-        if ( !mFunctionsLoaded )
+        if ( !mFunctionsLoaded && mVkInstance )
         {
             if ( ( vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkCreateDebugReportCallbackEXT" ) ) ) == nullptr )
             {
@@ -144,9 +154,8 @@ Vulkan::Vulkan ( bool aValidate ) try :
 
     void Vulkan::InitializeDebug()
     {
-        assert ( mVkInstance && "mVkInstance is a nullptr." );
         VkResult result;
-        if ( ( result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) ) != VK_SUCCESS )
+        if ( !mVkInstance && ( result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
             stream << "Could not create Vulkan debug report callback. error code: ( " << result << " )";
@@ -161,7 +170,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         VkApplicationInfo application_info {};
 
         application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application_info.apiVersion = VK_API_VERSION_1_0;
+        application_info.apiVersion = 0;//VK_API_VERSION_1_0;
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
         application_info.pApplicationName = "AeonEngine Vulkan Renderer";
 
@@ -389,8 +398,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
 
     void Vulkan::FinalizeDebug()
     {
-        assert ( mVkInstance && "mVkInstance is a nullptr." );
-        if ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE )
+        if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
         {
             vkDestroyDebugReportCallbackEXT ( mVkInstance, mVkDebugReportCallbackEXT, nullptr );
             mVkDebugReportCallbackEXT = VK_NULL_HANDLE;

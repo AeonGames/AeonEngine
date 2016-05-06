@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_PLATFORM_H
 #define AEONGAMES_PLATFORM_H
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -24,14 +25,18 @@ limitations under the License.
 #else
 #define DLL __declspec( dllimport )
 #endif
+#endif
 #else
+#ifndef DLL
 #define DLL
 #endif
 #endif
-#endif
 
-#if defined(MINGW32) || defined(MINGW64)
+
+#if defined(__GNUC__)&&((__GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8 || (__GNUC_MINOR__ == 8 && __GNUC_PATCHLEVEL__ > 4))))||defined (__i386__))
 #define ENTRYPOINT __attribute__((force_align_arg_pointer))
 #else
 #define ENTRYPOINT
+#endif
+
 #endif

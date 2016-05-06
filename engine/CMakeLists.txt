@@ -39,7 +39,7 @@ if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
-add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES} 
+add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES}
     ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS}
     )
 target_link_libraries(engine ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
