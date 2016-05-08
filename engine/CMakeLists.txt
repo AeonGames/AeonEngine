@@ -50,4 +50,7 @@ if(MSVC)
 elseif(MINGW)
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
+elseif(UNIX)
+    set_target_properties(engine PROPERTIES
+        COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_XLIB_KHR")
 endif()
