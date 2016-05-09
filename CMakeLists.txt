@@ -42,6 +42,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     else()
         message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 or C++11 support. Please use a different C++ compiler.")
     endif()
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 endif()
 
 find_package(Vulkan)

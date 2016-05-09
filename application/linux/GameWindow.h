@@ -14,14 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "aeongames/AeonEngine.h"
-#include "GameWindow.h"
-#include <cassert>
-#include <cstdint>
+#ifndef AEONGAMES_GAMEWINDOW_H
+#define AEONGAMES_GAMEWINDOW_H
 
-int ENTRYPOINT main ( int argc, char *argv[] )
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <unistd.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysymdef.h>
+
+#include "aeongames/AeonEngine.h"
+
+namespace AeonGames
 {
-    AeonGames::AeonEngine engine;
-    AeonGames::GameWindow game_window;
-    return game_window.Run();
+    class GameWindow
+    {
+    public:
+        GameWindow();
+        ~GameWindow();
+        int Run();
+    private:
+        void Initialize();
+        void Finalize();
+        Display* mDisplay = nullptr;
+        Colormap mColorMap;
+        Window mWindow;
+        Atom mWMDeleteWindow;
+    };
 }
+#endif
