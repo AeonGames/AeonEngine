@@ -13,28 +13,36 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <Windows.h>
-#include <windowsx.h>
-#include <cassert>
-#include <cstdint>
+
+#ifndef AEONGAMES_GAMEWINDOW_H
+#define AEONGAMES_GAMEWINDOW_H
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <unistd.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysymdef.h>
+
+#include "aeongames/AeonEngine.h"
 
 namespace AeonGames
 {
     class GameWindow
     {
     public:
-        GameWindow ( HINSTANCE aInstance, LONG aWidth = 800, LONG aHeight = 600 );
+        GameWindow();
         ~GameWindow();
         int Run();
     private:
-        static LRESULT CALLBACK WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-        static ATOM mClassAtom;
-        void Initialize ( HINSTANCE hInstance, LONG aWidth, LONG aHeight );
+        void Initialize();
         void Finalize();
-        static void Register ( HINSTANCE hInstance );
-        LRESULT OnSize ( WPARAM type, WORD newwidth, WORD newheight );
-        LRESULT OnPaint();
-        void RenderLoop();
-        HWND mWindowHandle = nullptr;
+        Display* mDisplay = nullptr;
+        Window mWindow;
+        Atom mWMDeleteWindow;
     };
 }
+#endif

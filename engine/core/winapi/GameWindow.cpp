@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include "aeongames/AeonEngine.h"
 #include "GameWindow.h"
 #include <exception>
 #include <stdexcept>
@@ -24,11 +25,13 @@ namespace AeonGames
 {
     ATOM GameWindow::mClassAtom = 0;
 
-    GameWindow::GameWindow ( HINSTANCE aInstance, LONG aWidth, LONG aHeight )
-try :
-        mWindowHandle ( nullptr )
+    static HINSTANCE gInstance = nullptr;
+
+GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) try :
+        mWindowHandle ( nullptr ),
+                      mAeonEngine ( aAeonEngine )
     {
-        Initialize ( aInstance, aWidth, aHeight );
+        Initialize ( gInstance, aWidth, aHeight );
     }
     catch ( ... )
     {
@@ -229,4 +232,15 @@ try :
         }
         return 0;
     }
+}
+
+BOOL APIENTRY ENTRYPOINT DllMain ( HANDLE hModule, DWORD ul_reason_for_call, LPVOID )
+{
+    switch ( ul_reason_for_call )
+    {
+    case DLL_PROCESS_ATTACH:
+        AeonGames::gInstance = ( HINSTANCE ) hModule;
+        break;
+    }
+    return TRUE;
 }

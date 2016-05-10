@@ -32,14 +32,18 @@ namespace AeonGames
         void InitializeInstance();
         void InitializeDevice();
         void InitializeCommandPool();
+        void InitializeSurface();
         void InitializeDebug();
+        void SetupLayersAndExtensions();
         void SetupDebug();
         void LoadFunctions();
         void FinalizeInstance();
         void FinalizeDevice();
         void FinalizeCommandPool();
+        void FinalizeSurface();
         void FinalizeDebug();
 
+        bool mValidate = true;
         VkInstance mVkInstance = VK_NULL_HANDLE;
         VkDevice mVkDevice = VK_NULL_HANDLE;
         VkPhysicalDevice mVkPhysicalDevice = VK_NULL_HANDLE;
@@ -50,6 +54,7 @@ namespace AeonGames
         VkQueue mVkQueue = VK_NULL_HANDLE;
         VkFence mVkFence = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
+        VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         VkViewport mVkViewport = {};
         uint32_t mQueueFamilyIndex = 0;
@@ -61,12 +66,6 @@ namespace AeonGames
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
-
-        // These members may change over time
-        bool mValidate = true;
-        bool mUseBreak = true;
-        PFN_vkDebugReportMessageEXT mDebugReportMessage = VK_NULL_HANDLE;
-        VkDebugReportCallbackEXT mMsgCallback = VK_NULL_HANDLE;
     };
 }
 #endif

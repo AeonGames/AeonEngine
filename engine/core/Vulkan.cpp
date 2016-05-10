@@ -139,6 +139,7 @@ namespace AeonGames
 Vulkan::Vulkan ( bool aValidate ) try :
         mValidate ( aValidate )
     {
+        SetupLayersAndExtensions();
         if ( mValidate )
         {
             SetupDebug();
@@ -153,9 +154,11 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
         InitializeDevice();
         InitializeCommandPool();
+        InitializeSurface();
     }
     catch ( ... )
     {
+        FinalizeSurface();
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -208,6 +211,14 @@ Vulkan::Vulkan ( bool aValidate ) try :
             stream << "Could not create Vulkan debug report callback. error code: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+    }
+
+    void Vulkan::SetupLayersAndExtensions()
+    {
+        mInstanceExtensionNames.push_back ( VK_KHR_SURFACE_EXTENSION_NAME );
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+        mInstanceExtensionNames.push_back ( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
+#endif
     }
 
     void Vulkan::InitializeInstance()
@@ -442,6 +453,25 @@ Vulkan::Vulkan ( bool aValidate ) try :
 #endif
     }
 
+    void Vulkan::InitializeSurface()
+    {
+#if 0
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+        VkResult result;
+        VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
+        win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        // win32_surface_create_info_khr.hinstance = ...
+        // win32_surface_create_info_khr.hwnd = ...
+        if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+#endif
+#endif
+    }
+
 
     void Vulkan::FinalizeDebug()
     {
@@ -489,8 +519,18 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
     }
 
+    void Vulkan::FinalizeSurface()
+    {
+        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
+        {
+            vkDestroySurfaceKHR ( mVkInstance, mVkSurfaceKHR, nullptr );
+            mVkSurfaceKHR = VK_NULL_HANDLE;
+        }
+    }
+
     Vulkan::~Vulkan()
     {
+        FinalizeSurface();
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();

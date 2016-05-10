@@ -32,6 +32,12 @@ namespace AeonGames
         /// Copy
         DLL AeonEngine ( const AeonEngine& aRhs );
         DLL AeonEngine& operator= ( const AeonEngine& aRhs );
+        /**
+        Advance the simulation a single step.
+        @param aDeltaTime Time delta to advance the simulation.
+        */
+        DLL void Step ( double aDeltaTime );
+        DLL int Run();
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;
