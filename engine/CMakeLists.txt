@@ -12,7 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if(UNIX)
+    set(GUI_PLATFORM x11)
+elseif(WIN32)
+    set(GUI_PLATFORM winapi)
+else()
+    message("No GUI Platform detected")
+endif()
+
 include_directories(
+    core/${GUI_PLATFORM}
     ${CMAKE_SOURCE_DIR}/include
     ${VULKAN_INCLUDE_DIR}
     ${PROTOBUF_INCLUDE_DIR}
@@ -23,12 +32,14 @@ set(ENGINE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     core/Vulkan.h
     core/Configuration.h
+    core/${GUI_PLATFORM}/GameWindow.h
 )
 
 set(ENGINE_SOURCES
     core/AeonEngine.cpp
     core/Configuration.cpp
     core/Vulkan.cpp
+    core/${GUI_PLATFORM}/GameWindow.cpp
 )
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS

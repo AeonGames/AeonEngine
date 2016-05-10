@@ -15,15 +15,13 @@ limitations under the License.
 */
 
 #include "aeongames/AeonEngine.h"
-#include "GameWindow.h"
 #include <cassert>
 #include <cstdint>
 
 int WINAPI ENTRYPOINT WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
     AeonGames::AeonEngine engine;
-    AeonGames::GameWindow window ( hInstance );
-    return window.Run();
+    return engine.Run();
 }
 
 int ENTRYPOINT main ( int argc, char *argv[] )

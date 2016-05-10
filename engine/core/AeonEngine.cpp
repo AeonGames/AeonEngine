@@ -17,6 +17,7 @@ limitations under the License.
 #include <google/protobuf/stubs/common.h>
 #include "aeongames/AeonEngine.h"
 #include "Vulkan.h"
+#include "GameWindow.h"
 
 #if __cplusplus < 201300L && __cplusplus >= 201103L
 // Taken from EMC++ Item 21
@@ -80,5 +81,15 @@ namespace AeonGames
             *pImpl = *aRhs.pImpl;
         }
         return *this;
+    }
+
+    void AeonEngine::Step ( double aDeltaTime )
+    {
+    }
+
+    int AeonEngine::Run()
+    {
+        GameWindow game_window ( *this );
+        return game_window.Run();
     }
 }

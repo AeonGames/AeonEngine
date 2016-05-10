@@ -28,7 +28,6 @@ namespace AeonGames
 
 GameWindow::GameWindow() try :
         mDisplay ( nullptr ),
-                 mColorMap ( 0 ),
                  mWindow ( 0 )
     {
         Initialize();
@@ -72,7 +71,7 @@ GameWindow::GameWindow() try :
 
         XSetWindowAttributes set_window_attributes;
 
-        set_window_attributes.colormap = mColorMap = XCreateColormap ( mDisplay,
+        set_window_attributes.colormap = XCreateColormap ( mDisplay,
                                          RootWindow ( mDisplay, visual_info.screen ),
                                          visual_info.visual, AllocNone );
         set_window_attributes.background_pixmap = None ;
@@ -125,12 +124,14 @@ GameWindow::GameWindow() try :
                 XNextEvent ( mDisplay, &xEvent );
                 switch ( xEvent.type )
                 {
+#if 0
                 case Expose:
                 {
                     // Here is where window resize is required.
                     XWindowAttributes x_window_attributes;
                     XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
                 }
+#endif
                 break;
                 case KeyPress:
                     break;
@@ -170,16 +171,12 @@ GameWindow::GameWindow() try :
     {
         if ( mWindow != 0 )
         {
+            XWindowAttributes x_window_attributes {};
+            XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
+            XFreeColormap ( mDisplay, window_attributes.colormap );
             XDestroyWindow ( mDisplay, mWindow );
             mWindow = 0;
         }
-
-        if ( mColorMap != 0 )
-        {
-            XFreeColormap ( mDisplay, mColorMap );
-            mColorMap = 0;
-        }
-
         if ( mDisplay != nullptr )
         {
             XCloseDisplay ( mDisplay );
