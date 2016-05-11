@@ -38,6 +38,9 @@ namespace AeonGames
         */
         DLL void Step ( double aDeltaTime );
         DLL int Run();
+
+        DLL bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
+        DLL void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

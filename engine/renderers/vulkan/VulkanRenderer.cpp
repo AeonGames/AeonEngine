@@ -28,6 +28,7 @@ limitations under the License.
 #include <sstream>
 #include <vector>
 #include <stdexcept>
+#include "aeongames/LogLevel.h"
 #include "VulkanRenderer.h"
 
 namespace AeonGames
@@ -153,11 +154,10 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         }
         InitializeDevice();
         InitializeCommandPool();
-        InitializeSurface();
     }
     catch ( ... )
     {
-        FinalizeSurface();
+        FinalizeRenderingWindow ( nullptr, nullptr );
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -452,26 +452,6 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
 #endif
     }
 
-    void VulkanRenderer::InitializeSurface()
-    {
-#if 0
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-        VkResult result;
-        VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
-        win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        // win32_surface_create_info_khr.hinstance = ...
-        // win32_surface_create_info_khr.hwnd = ...
-        if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-#endif
-#endif
-    }
-
-
     void VulkanRenderer::FinalizeDebug()
     {
         if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
@@ -518,21 +498,37 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         }
     }
 
-    void VulkanRenderer::FinalizeSurface()
+    VulkanRenderer::~VulkanRenderer()
+    {
+        FinalizeRenderingWindow ( nullptr, nullptr );
+        FinalizeCommandPool();
+        FinalizeDevice();
+        FinalizeDebug();
+        FinalizeInstance();
+    }
+
+    bool VulkanRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    {
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+        VkResult result;
+        VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr{};
+        win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        win32_surface_create_info_khr.hinstance = aInstance;
+        win32_surface_create_info_khr.hwnd = aHwnd;
+        if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
+        {
+            std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
+            return false;
+        }
+#endif
+        return true;
+    }
+    void VulkanRenderer::FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {
             vkDestroySurfaceKHR ( mVkInstance, mVkSurfaceKHR, nullptr );
             mVkSurfaceKHR = VK_NULL_HANDLE;
         }
-    }
-
-    VulkanRenderer::~VulkanRenderer()
-    {
-        FinalizeSurface();
-        FinalizeCommandPool();
-        FinalizeDevice();
-        FinalizeDebug();
-        FinalizeInstance();
     }
 }
