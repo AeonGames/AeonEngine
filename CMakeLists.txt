@@ -46,6 +46,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 find_package(Vulkan)
+find_package(OpenGL)
 find_package(Protobuf)
 
 add_subdirectory(engine)

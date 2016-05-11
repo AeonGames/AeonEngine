@@ -21,6 +21,7 @@ else()
 endif()
 
 include_directories(
+    ${CMAKE_SOURCE_DIR}/engine
     core/${GUI_PLATFORM}
     ${CMAKE_SOURCE_DIR}/include
     ${VULKAN_INCLUDE_DIR}
@@ -30,15 +31,18 @@ include_directories(
 set(ENGINE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    core/Vulkan.h
+    renderers/vulkan/VulkanRenderer.h
+    renderers/opengl/OpenGLRenderer.h
     core/Configuration.h
     core/${GUI_PLATFORM}/GameWindow.h
 )
 
 set(ENGINE_SOURCES
     core/AeonEngine.cpp
+    core/LogLevel.cpp
     core/Configuration.cpp
-    core/Vulkan.cpp
+    renderers/vulkan/VulkanRenderer.cpp
+    renderers/opengl/OpenGLRenderer.cpp
     core/${GUI_PLATFORM}/GameWindow.cpp
 )
 
@@ -53,7 +57,7 @@ endif()
 add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES}
     ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS}
     )
-target_link_libraries(engine ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
+target_link_libraries(engine ${VULKAN_LIBRARY} ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES})
 
 if(MSVC)
     set_target_properties(engine PROPERTIES

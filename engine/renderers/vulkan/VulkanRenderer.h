@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_VULKAN_H
-#define AEONGAMES_VULKAN_H
+#ifndef AEONGAMES_VULKANRENDERER_H
+#define AEONGAMES_VULKANRENDERER_H
 
 #include <vulkan/vulkan.h>
 #include <exception>
@@ -23,11 +23,11 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Vulkan
+    class VulkanRenderer
     {
     public:
-        Vulkan ( bool aValidate = true );
-        ~Vulkan();
+        VulkanRenderer ( bool aValidate = true );
+        ~VulkanRenderer();
     private:
         void InitializeInstance();
         void InitializeDevice();
