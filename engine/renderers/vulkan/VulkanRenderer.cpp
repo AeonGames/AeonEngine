@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
 /*  Reference and Credits:
     Vulkan SDK Demo code.
     https://www.youtube.com/playlist?list=PLUXvZMiAqNbK8jd7s52BIDtCbZnKNGp0P
@@ -29,11 +28,11 @@ limitations under the License.
 #include <sstream>
 #include <vector>
 #include <stdexcept>
-#include "Vulkan.h"
+#include "VulkanRenderer.h"
 
 namespace AeonGames
 {
-    static const char* GetVulkanResultString ( VkResult aResult )
+    static const char* GetVulkanRendererResultString ( VkResult aResult )
     {
         switch ( aResult )
         {
@@ -136,7 +135,7 @@ namespace AeonGames
         return false;
     }
 
-Vulkan::Vulkan ( bool aValidate ) try :
+VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         mValidate ( aValidate )
     {
         SetupLayersAndExtensions();
@@ -166,7 +165,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         throw;
     }
 
-    void Vulkan::LoadFunctions()
+    void VulkanRenderer::LoadFunctions()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
         if ( !mFunctionsLoaded && mVkInstance )
@@ -184,7 +183,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
     }
 
 
-    void Vulkan::SetupDebug()
+    void VulkanRenderer::SetupDebug()
     {
         mDebugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
         mDebugReportCallbackCreateInfo.pfnCallback = DebugCallback;
@@ -202,18 +201,18 @@ Vulkan::Vulkan ( bool aValidate ) try :
         mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
     }
 
-    void Vulkan::InitializeDebug()
+    void VulkanRenderer::InitializeDebug()
     {
         VkResult result;
         if ( !mVkInstance && ( result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not create Vulkan debug report callback. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not create VulkanRenderer debug report callback. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
 
-    void Vulkan::SetupLayersAndExtensions()
+    void VulkanRenderer::SetupLayersAndExtensions()
     {
         mInstanceExtensionNames.push_back ( VK_KHR_SURFACE_EXTENSION_NAME );
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -221,7 +220,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
 #endif
     }
 
-    void Vulkan::InitializeInstance()
+    void VulkanRenderer::InitializeInstance()
     {
         VkResult result;
         VkInstanceCreateInfo instance_create_info {};
@@ -230,7 +229,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         application_info.apiVersion = 0;//VK_API_VERSION_1_0;
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
-        application_info.pApplicationName = "AeonEngine Vulkan Renderer";
+        application_info.pApplicationName = "AeonEngine VulkanRenderer Renderer";
 
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
@@ -246,12 +245,12 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not create Vulkan instance. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not create VulkanRenderer instance. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
 
-    void Vulkan::InitializeDevice()
+    void VulkanRenderer::InitializeDevice()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
         {
@@ -260,7 +259,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
 
             if ( physical_device_count == 0 )
             {
-                throw std::runtime_error ( "No Vulkan physical device found" );
+                throw std::runtime_error ( "No VulkanRenderer physical device found" );
             }
 
             std::vector<VkPhysicalDevice> physical_device_list ( physical_device_count );
@@ -278,7 +277,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, nullptr );
             if ( family_properties_count == 0 )
             {
-                throw std::runtime_error ( "Vulkan physical device has no queue family properties." );
+                throw std::runtime_error ( "VulkanRenderer physical device has no queue family properties." );
             }
             std::vector<VkQueueFamilyProperties> family_properties_list ( family_properties_count );
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, family_properties_list.data() );
@@ -306,7 +305,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
             vkEnumerateInstanceLayerProperties ( &instance_layer_count, nullptr );
             std::vector<VkLayerProperties> instance_layer_list ( instance_layer_count );
             vkEnumerateInstanceLayerProperties ( &instance_layer_count, instance_layer_list.data() );
-            std::cout << "Vulkan Instance Layers" << std::endl;
+            std::cout << "VulkanRenderer Instance Layers" << std::endl;
             for ( auto& i : instance_layer_list )
             {
                 std::cout << " " << i.layerName << "\t|\t" << i.description << std::endl;
@@ -318,7 +317,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
             vkEnumerateDeviceLayerProperties ( mVkPhysicalDevice, &device_layer_count, nullptr );
             std::vector<VkLayerProperties> device_layer_list ( device_layer_count );
             vkEnumerateInstanceLayerProperties ( &device_layer_count, device_layer_list.data() );
-            std::cout << "Vulkan Device Layers" << std::endl;
+            std::cout << "VulkanRenderer Device Layers" << std::endl;
             for ( auto& i : device_layer_list )
             {
                 std::cout << " " << i.layerName << "\t|\t" << i.description << std::endl;
@@ -346,13 +345,13 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not create Vulkan device. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not create VulkanRenderer device. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
         vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
     }
 
-    void Vulkan::InitializeCommandPool()
+    void VulkanRenderer::InitializeCommandPool()
     {
         assert ( mVkDevice != VK_NULL_HANDLE );
         VkCommandPoolCreateInfo command_pool_create_info{};
@@ -363,7 +362,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkCommandPool ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not create Vulkan command pool. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not create VulkanRenderer command pool. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -376,7 +375,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not allocate Vulkan command buffers. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not allocate VulkanRenderer command buffers. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -386,7 +385,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "vkBeginCommandBuffer call failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "vkBeginCommandBuffer call failed. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -401,7 +400,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkEndCommandBuffer ( mVkCommandBuffer ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "vkEndCommandBuffer call failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "vkEndCommandBuffer call failed. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -411,7 +410,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not create Vulkan fence. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not create VulkanRenderer fence. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -421,7 +420,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkSemaphore ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not create Vulkan semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -435,7 +434,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkQueueSubmit ( mVkQueue, 1, &submit_info, mVkFence ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Could not submit Vulkan queue. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Could not submit VulkanRenderer queue. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 #if 0
@@ -447,13 +446,13 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkQueueWaitIdle ( mVkQueue ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Call to vkQueueWaitIdle failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Call to vkQueueWaitIdle failed. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 #endif
     }
 
-    void Vulkan::InitializeSurface()
+    void VulkanRenderer::InitializeSurface()
     {
 #if 0
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -465,7 +464,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
-            stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+            stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 #endif
@@ -473,7 +472,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
     }
 
 
-    void Vulkan::FinalizeDebug()
+    void VulkanRenderer::FinalizeDebug()
     {
         if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
         {
@@ -482,7 +481,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
     }
 
-    void Vulkan::FinalizeInstance()
+    void VulkanRenderer::FinalizeInstance()
     {
         if ( mVkInstance != VK_NULL_HANDLE )
         {
@@ -491,7 +490,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
     }
 
-    void Vulkan::FinalizeDevice()
+    void VulkanRenderer::FinalizeDevice()
     {
         if ( mVkDevice != VK_NULL_HANDLE )
         {
@@ -500,7 +499,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
     }
 
-    void Vulkan::FinalizeCommandPool()
+    void VulkanRenderer::FinalizeCommandPool()
     {
         if ( mVkSemaphore != VK_NULL_HANDLE )
         {
@@ -519,7 +518,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
     }
 
-    void Vulkan::FinalizeSurface()
+    void VulkanRenderer::FinalizeSurface()
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {
@@ -528,7 +527,7 @@ Vulkan::Vulkan ( bool aValidate ) try :
         }
     }
 
-    Vulkan::~Vulkan()
+    VulkanRenderer::~VulkanRenderer()
     {
         FinalizeSurface();
         FinalizeCommandPool();

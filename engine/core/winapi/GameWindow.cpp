@@ -83,7 +83,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
             throw std::runtime_error ( message );
         }
         if ( ( mWindowHandle = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
-                                                "engine", "Aeon Engine Demo",
+                                                "AeonEngine", "Aeon Engine",
                                                 WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                                 0, 0, // Location
                                                 rect.right - rect.left, rect.bottom - rect.top, // dimensions
@@ -151,7 +151,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
         wcex.hCursor = LoadCursor ( NULL, IDC_ARROW );
         wcex.hbrBackground = NULL;
         wcex.lpszMenuName = NULL;
-        wcex.lpszClassName = "engine";
+        wcex.lpszClassName = "AeonEngine";
         wcex.hIconSm = NULL;
         if ( ( GameWindow::mClassAtom = RegisterClassEx ( &wcex ) ) == 0 )
         {

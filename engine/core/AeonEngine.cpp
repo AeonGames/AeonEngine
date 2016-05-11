@@ -16,7 +16,8 @@ limitations under the License.
 #include <memory>
 #include <google/protobuf/stubs/common.h>
 #include "aeongames/AeonEngine.h"
-#include "Vulkan.h"
+#include "renderers/vulkan/VulkanRenderer.h"
+#include "renderers/OpenGL/OpenGLRenderer.h"
 #include "GameWindow.h"
 
 #if __cplusplus < 201300L && __cplusplus >= 201103L
@@ -43,7 +44,8 @@ namespace AeonGames
 
     struct AeonEngine::Impl
     {
-        Vulkan mVulkan;
+        //VulkanRenderer mVulkanRenderer;
+        OpenGLRenderer mOpenGLRenderer;
     };
 
     AeonEngine::AeonEngine() :
