@@ -20,19 +20,21 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include <exception>
 #include <vector>
+#include "aeongames/Renderer.h"
 
 namespace AeonGames
 {
-    class VulkanRenderer
+    class VulkanRenderer : public Renderer
     {
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer();
+        bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
+        void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
     private:
         void InitializeInstance();
         void InitializeDevice();
         void InitializeCommandPool();
-        void InitializeSurface();
         void InitializeDebug();
         void SetupLayersAndExtensions();
         void SetupDebug();
@@ -40,7 +42,6 @@ namespace AeonGames
         void FinalizeInstance();
         void FinalizeDevice();
         void FinalizeCommandPool();
-        void FinalizeSurface();
         void FinalizeDebug();
 
         bool mValidate = true;

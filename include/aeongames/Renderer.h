@@ -13,27 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLRENDERER_H
-#define AEONGAMES_OPENGLRENDERER_H
+#ifndef AEONGAMES_RENDERER_H
+#define AEONGAMES_RENDERER_H
 
-#include "aeongames/Renderer.h"
-#include <exception>
-#include <vector>
+#include "Platform.h"
 
 namespace AeonGames
 {
-    class OpenGLRenderer : public Renderer
+    class Renderer
     {
     public:
-        OpenGLRenderer();
-        ~OpenGLRenderer();
-        bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
-        void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
-    private:
-        void Initialize();
-        void Finalize();
-        HDC mDeviceContext = nullptr;
-        HGLRC mOpenGLContext = nullptr;
+        virtual bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;
+        virtual void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;
+    protected:
+        virtual ~Renderer() = default;
     };
 }
 #endif

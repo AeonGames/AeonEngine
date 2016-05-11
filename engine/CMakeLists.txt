@@ -31,6 +31,8 @@ include_directories(
 set(ENGINE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/vulkan/VulkanRenderer.h
     renderers/opengl/OpenGLRenderer.h
     core/Configuration.h

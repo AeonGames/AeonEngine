@@ -94,4 +94,14 @@ namespace AeonGames
         GameWindow game_window ( *this );
         return game_window.Run();
     }
+
+    bool AeonEngine::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    {
+        return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
+    }
+
+    void AeonEngine::FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    {
+        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ( aInstance, aHwnd );
+    }
 }
