@@ -19,6 +19,11 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include <exception>
 #include <vector>
+#ifndef _WIN32
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include "glxext.h"
+#endif
 
 namespace AeonGames
 {
@@ -27,13 +32,22 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer();
+#if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
         void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
+#else
+        bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
+        void FinalizeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
+#endif
     private:
         void Initialize();
         void Finalize();
+#ifdef _WIN32
         HDC mDeviceContext = nullptr;
         HGLRC mOpenGLContext = nullptr;
+#else
+        GLXContext mGLXContext = nullptr;
+#endif
     };
 }
 #endif

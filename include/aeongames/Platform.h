@@ -27,6 +27,10 @@ limitations under the License.
 #endif
 #endif
 #else
+#include <unistd.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysymdef.h>
 #ifndef DLL
 #define DLL
 #endif

@@ -17,7 +17,7 @@ limitations under the License.
 #include <google/protobuf/stubs/common.h>
 #include "aeongames/AeonEngine.h"
 #include "renderers/vulkan/VulkanRenderer.h"
-#include "renderers/OpenGL/OpenGLRenderer.h"
+#include "renderers/opengl/OpenGLRenderer.h"
 #include "GameWindow.h"
 
 #if __cplusplus < 201300L && __cplusplus >= 201103L
@@ -94,7 +94,7 @@ namespace AeonGames
         GameWindow game_window ( *this );
         return game_window.Run();
     }
-
+#if _WIN32
     bool AeonEngine::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
         return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
@@ -104,4 +104,15 @@ namespace AeonGames
     {
         return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ( aInstance, aHwnd );
     }
+#else
+    bool AeonEngine::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
+    {
+        return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aDisplay, aWindow );
+    }
+
+    void AeonEngine::FinalizeRenderingWindow ( Display* aDisplay, Window aWindow )
+    {
+        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ( aDisplay, aWindow );
+    }
+#endif
 }

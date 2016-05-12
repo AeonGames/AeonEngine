@@ -182,7 +182,9 @@ namespace AeonGames
     static PFNGLDEBUGMESSAGEINSERTPROC            glDebugMessageInsert = nullptr;
     static PFNGLDEBUGMESSAGECALLBACKPROC          glDebugMessageCallback = nullptr;
     static PFNGLGETDEBUGMESSAGELOGPROC            glGetDebugMessageLog = nullptr;
+#ifdef _WIN32
     static PFNGLGETPOINTERVPROC                   glGetPointerv = nullptr;
+#endif
     static PFNGLMAPBUFFERPROC                     glMapBuffer = nullptr;
     static PFNGLUNMAPBUFFERPROC                   glUnmapBuffer = nullptr;
     static PFNGLGETBUFFERPARAMETERIVPROC          glGetBufferParameteriv = nullptr;
@@ -195,8 +197,12 @@ namespace AeonGames
 #endif
 
 OpenGLRenderer::OpenGLRenderer() try :
+#if _WIN32
         mDeviceContext ( nullptr ),
                        mOpenGLContext ( nullptr )
+#else
+        mGLXContext ( nullptr )
+#endif
     {
         Initialize();
     }
@@ -211,6 +217,7 @@ OpenGLRenderer::OpenGLRenderer() try :
         Finalize();
     }
 
+#if _WIN32
     bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
         PIXELFORMATDESCRIPTOR pfd;
@@ -283,9 +290,110 @@ OpenGLRenderer::OpenGLRenderer() try :
         wglDeleteContext ( mOpenGLContext );
         ReleaseDC ( aHwnd, mDeviceContext );
     }
+#else
+    bool OpenGLRenderer::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
+    {
+        PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
+                glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" );
+        if ( glXCreateContextAttribsARB )
+        {
+            int context_attribs[] =
+            {
+                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+                GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                None
+            };
 
+            int visual_attribs[] =
+            {
+                GLX_X_RENDERABLE    , True,
+                GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+                GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+                GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+                GLX_RED_SIZE        , 8,
+                GLX_GREEN_SIZE      , 8,
+                GLX_BLUE_SIZE       , 8,
+                GLX_ALPHA_SIZE      , 8,
+                GLX_DEPTH_SIZE      , 24,
+                GLX_STENCIL_SIZE    , 8,
+                GLX_DOUBLEBUFFER    , True,
+                //GLX_SAMPLE_BUFFERS  , 1,
+                //GLX_SAMPLES         , 4,
+                None
+            };
+
+            int fbcount;
+            GLXFBConfig *fbc = glXChooseFBConfig ( aDisplay, DefaultScreen ( aDisplay ),
+                                                   visual_attribs, &fbcount );
+            if ( !fbc )
+            {
+                return false;
+            }
+            // Pick the FB config/visual with the most samples per pixel
+            int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+            for ( int i = 0; i < fbcount; i++ )
+            {
+                XVisualInfo *vi = glXGetVisualFromFBConfig ( aDisplay, fbc[i] );
+                if ( vi )
+                {
+                    int samp_buf, samples;
+                    glXGetFBConfigAttrib ( aDisplay, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+                    glXGetFBConfigAttrib ( aDisplay, fbc[i], GLX_SAMPLES       , &samples  );
+                    if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
+                    {
+                        best_fbc = i, best_num_samp = samples;
+                    }
+                    if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
+                    {
+                        worst_fbc = i, worst_num_samp = samples;
+                    }
+                }
+                XFree ( vi );
+            }
+            GLXFBConfig bestFbc = fbc[ best_fbc ];
+            XFree ( fbc );
+
+            mGLXContext = glXCreateContextAttribsARB ( aDisplay, bestFbc, 0,
+                          True, context_attribs );
+            XSync ( aDisplay, False );
+            if ( mGLXContext != nullptr )
+            {
+                std::cout << LogLevel ( LogLevel::Level::Info ) <<
+                          "Created GL " <<  context_attribs[1] <<
+                          "." <<  context_attribs[3] << " context" << std::endl;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+        // Verifying that context is a direct context
+        if ( ! glXIsDirect ( aDisplay, mGLXContext ) )
+        {
+            std::cout << LogLevel ( LogLevel::Level::Info ) <<
+                      "Indirect GLX rendering context obtained" << std::endl;
+        }
+        else
+        {
+            std::cout << LogLevel ( LogLevel::Level::Info ) <<
+                      "Direct GLX rendering context obtained" << std::endl;
+        }
+
+        glXMakeCurrent ( aDisplay, aWindow, mGLXContext );
+        return true;
+    }
+    void OpenGLRenderer::FinalizeRenderingWindow ( Display* aDisplay, Window aWindow )
+    {
+    }
+#endif
     void OpenGLRenderer::Initialize()
     {
+#ifdef _WIN32
         WNDCLASSEX wcex;
         wcex.cbSize = sizeof ( WNDCLASSEX );
         wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -319,6 +427,7 @@ OpenGLRenderer::OpenGLRenderer() try :
                                   MAKELONG ( atom, 0 ) ), nullptr );
             throw std::runtime_error ( "Unable to Initialize Rendering Window." );
         }
+#endif
 #ifdef ANDROID
         // GL_OES_vertex_array_object
         if ( strstr ( ( char const* ) glGetString ( GL_EXTENSIONS ), "GL_OES_vertex_array_object" ) != nullptr )
@@ -431,7 +540,9 @@ OpenGLRenderer::OpenGLRenderer() try :
         GLGETPROCADDRESS ( PFNGLDEBUGMESSAGEINSERTPROC, glDebugMessageInsert );
         GLGETPROCADDRESS ( PFNGLDEBUGMESSAGECALLBACKPROC, glDebugMessageCallback );
         GLGETPROCADDRESS ( PFNGLGETDEBUGMESSAGELOGPROC, glGetDebugMessageLog );
+#ifdef _WIN32
         GLGETPROCADDRESS ( PFNGLGETPOINTERVPROC, glGetPointerv );
+#endif
         GLGETPROCADDRESS ( PFNGLMAPBUFFERPROC, glMapBuffer );
         GLGETPROCADDRESS ( PFNGLUNMAPBUFFERPROC, glUnmapBuffer );
         GLGETPROCADDRESS ( PFNGLGETBUFFERPARAMETERIVPROC, glGetBufferParameteriv );
@@ -470,6 +581,7 @@ OpenGLRenderer::OpenGLRenderer() try :
             std::cout << LogLevel ( LogLevel::Level::Info ) << glGetStringi ( GL_EXTENSIONS, i ) << std::endl;
         }
 #endif
+#ifdef _WIN32
         FinalizeRenderingWindow ( GetModuleHandle ( nullptr ), hWnd );
         DestroyWindow ( hWnd );
         UnregisterClass ( reinterpret_cast<LPCSTR> (
@@ -477,6 +589,7 @@ OpenGLRenderer::OpenGLRenderer() try :
                               0x0ULL +
 #endif
                               MAKELONG ( atom, 0 ) ), nullptr );
+#endif
 #endif
     }
 

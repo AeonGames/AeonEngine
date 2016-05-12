@@ -33,8 +33,13 @@ namespace AeonGames
         DLL ~LogLevel();
         DLL friend std::ostream& operator<< ( std::ostream& os, const LogLevel& obj );
     private:
-        CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo{};
+#ifdef _WIN32
+        CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo {};
         HANDLE mConsoleHandle = nullptr;
+#else
+        Level mLevel;
+        std::ostream* mOstream = nullptr;
+#endif
     };
 }
 #endif
