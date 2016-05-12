@@ -26,9 +26,10 @@ namespace AeonGames
     static const clockid_t kClockId = CLOCK_REALTIME;
 #endif
 
-GameWindow::GameWindow() try :
-        mDisplay ( nullptr ),
-                 mWindow ( 0 )
+GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
+        mAeonEngine ( aAeonEngine ),
+                    mDisplay ( nullptr ),
+                    mWindow ( 0 )
     {
         Initialize();
     }
@@ -173,7 +174,7 @@ GameWindow::GameWindow() try :
         {
             XWindowAttributes x_window_attributes {};
             XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
-            XFreeColormap ( mDisplay, window_attributes.colormap );
+            XFreeColormap ( mDisplay, x_window_attributes.colormap );
             XDestroyWindow ( mDisplay, mWindow );
             mWindow = 0;
         }

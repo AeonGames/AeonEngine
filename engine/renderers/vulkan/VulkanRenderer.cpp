@@ -157,7 +157,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
     }
     catch ( ... )
     {
-        FinalizeRenderingWindow ( nullptr, nullptr );
+        FinalizeRenderingWindow ( nullptr, 0 );
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -500,16 +500,16 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
 
     VulkanRenderer::~VulkanRenderer()
     {
-        FinalizeRenderingWindow ( nullptr, nullptr );
+        FinalizeRenderingWindow ( nullptr, 0 );
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
     }
 
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
     bool VulkanRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
-#ifdef VK_USE_PLATFORM_WIN32_KHR
         VkResult result;
         VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr{};
         win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -520,9 +520,9 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
             std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
             return false;
         }
-#endif
         return true;
     }
+
     void VulkanRenderer::FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
@@ -531,4 +531,29 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
             mVkSurfaceKHR = VK_NULL_HANDLE;
         }
     }
+#elif defined( VK_USE_PLATFORM_XLIB_KHR )
+    bool VulkanRenderer::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
+    {
+        VkResult result;
+        VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr{};
+        xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        xlib_surface_create_info_khr.dpy = aDisplay;
+        xlib_surface_create_info_khr.window = aWindow;
+        if ( ( result = vkCreateXlibSurfaceKHR ( mVkInstance, &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
+        {
+            std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
+            return false;
+        }
+        return true;
+    }
+
+    void VulkanRenderer::FinalizeRenderingWindow ( Display* aDisplay, Window aWindow )
+    {
+        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
+        {
+            vkDestroySurfaceKHR ( mVkInstance, mVkSurfaceKHR, nullptr );
+            mVkSurfaceKHR = VK_NULL_HANDLE;
+        }
+    }
+#endif
 }

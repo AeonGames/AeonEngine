@@ -29,8 +29,13 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer();
+#if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
         void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
+#else
+        bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
+        void FinalizeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
+#endif
     private:
         void InitializeInstance();
         void InitializeDevice();

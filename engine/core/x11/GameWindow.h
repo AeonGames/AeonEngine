@@ -34,12 +34,13 @@ namespace AeonGames
     class GameWindow
     {
     public:
-        GameWindow();
+        GameWindow ( AeonEngine& aAeonEngine );
         ~GameWindow();
         int Run();
     private:
         void Initialize();
         void Finalize();
+        AeonEngine& mAeonEngine;
         Display* mDisplay = nullptr;
         Window mWindow;
         Atom mWMDeleteWindow;

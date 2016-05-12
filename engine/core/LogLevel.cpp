@@ -16,9 +16,9 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 namespace AeonGames
 {
+#ifdef _WIN32
     LogLevel::LogLevel ( Level aLevel )
     {
-        mConsoleScreenBufferInfo;
         mConsoleHandle = GetStdHandle ( STD_OUTPUT_HANDLE );
         GetConsoleScreenBufferInfo ( mConsoleHandle, &mConsoleScreenBufferInfo );
         switch ( aLevel )
@@ -44,5 +44,36 @@ namespace AeonGames
     {
         return os;
     }
+#else
+    LogLevel::LogLevel ( Level aLevel ) : mLevel ( aLevel )
+    {
+    }
+
+    LogLevel::~LogLevel()
+    {
+    }
+
+    std::ostream& operator<< ( std::ostream& os, const LogLevel& obj )
+    {
+#if 0
+        std::ostream message;
+        switch ( obj.mLevel )
+        {
+        case LogLevel::Level::Info:
+            message << "\x1B[32m" << os << "\x1B[m";
+            break;
+        case LogLevel::Level::Warning:
+            message << "\x1B[33m" << os << "\x1B[m";
+            break;
+        case LogLevel::Level::Error:
+            message << "\x1B[31m" << os << "\x1B[m";
+            break;
+        }
+        return message;
+#else
+        return os;
+#endif
+    }
+#endif
 }
 
