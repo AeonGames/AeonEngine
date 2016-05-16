@@ -547,7 +547,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         return true;
     }
 
-    void VulkanRenderer::FinalizeRenderingWindow ( Display* aDisplay, Window aWindow )
+    void VulkanRenderer::FinalizeRenderingWindow()
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {

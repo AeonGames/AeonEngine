@@ -47,11 +47,11 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
             throw std::runtime_error ( "Could not open display" );
         }
 
-
         int number_of_visuals = 0;
-        XVisualInfo visual_template;
+        XVisualInfo visual_template{};
         visual_template.screen = DefaultScreen ( mDisplay );
         XVisualInfo* visual_list = XGetVisualInfo ( mDisplay, VisualScreenMask, &visual_template, &number_of_visuals );
+        // Pick best Visual
         for ( int i = 0; i < number_of_visuals; ++i )
         {
             printf ( "  %3d: visual 0x%lx class %d (%s) depth %d\n",
@@ -64,7 +64,8 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
         XFree ( visual_list );
 
         XVisualInfo visual_info {};
-        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 32, TrueColor, &visual_info ) )
+//        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 32, TrueColor, &visual_info ) )
+        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 24, TrueColor, &visual_info ) )
         {
             throw std::runtime_error ( "No such visual\n" );
         }
