@@ -40,11 +40,10 @@ namespace AeonGames
         DLL int Run();
 #ifdef _WIN32
         DLL bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
-        DLL void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
 #else
         DLL bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow );
-        DLL void FinalizeRenderingWindow ( Display* aDisplay, Window aWindow );
 #endif
+        DLL void FinalizeRenderingWindow();
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

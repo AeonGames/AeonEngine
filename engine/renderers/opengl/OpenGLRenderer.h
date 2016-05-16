@@ -34,15 +34,16 @@ namespace AeonGames
         ~OpenGLRenderer();
 #if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
-        void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
 #else
         bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
-        void FinalizeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
 #endif
+        void FinalizeRenderingWindow() override final;
     private:
         void Initialize();
         void Finalize();
 #ifdef _WIN32
+        HINSTANCE mInstance;
+        HWND mHwnd;
         HDC mDeviceContext = nullptr;
         HGLRC mOpenGLContext = nullptr;
 #else

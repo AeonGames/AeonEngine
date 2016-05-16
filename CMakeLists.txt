@@ -49,6 +49,14 @@ find_package(Vulkan)
 find_package(OpenGL)
 find_package(Protobuf)
 
+if(UNIX)
+    set(GUI_PLATFORM xlib)
+elseif(WIN32)
+    set(GUI_PLATFORM winapi)
+else()
+    message("No GUI Platform detected")
+endif()
+
 add_subdirectory(engine)
 add_subdirectory(application)
 
