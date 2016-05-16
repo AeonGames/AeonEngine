@@ -160,7 +160,9 @@ namespace AeonGames
         extern PFNGLDEBUGMESSAGEINSERTPROC          glDebugMessageInsert;
         extern PFNGLDEBUGMESSAGECALLBACKPROC        glDebugMessageCallback;
         extern PFNGLGETDEBUGMESSAGELOGPROC          glGetDebugMessageLog;
+#if _WIN32
         extern PFNGLGETPOINTERVPROC                 glGetPointerv;
+#endif
         extern PFNGLMAPBUFFERPROC                   glMapBuffer;
         extern PFNGLUNMAPBUFFERPROC                 glUnmapBuffer;
         extern PFNGLGETBUFFERPARAMETERIVPROC        glGetBufferParameteriv;

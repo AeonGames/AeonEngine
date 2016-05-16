@@ -99,20 +99,14 @@ namespace AeonGames
     {
         return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
     }
-
-    void AeonEngine::FinalizeRenderingWindow ()
-    {
-        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ();
-    }
 #else
     bool AeonEngine::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
     {
         return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aDisplay, aWindow );
     }
-
-    void AeonEngine::FinalizeRenderingWindow ( Display* aDisplay, Window aWindow )
-    {
-        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ( aDisplay, aWindow );
-    }
 #endif
+    void AeonEngine::FinalizeRenderingWindow()
+    {
+        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow();
+    }
 }
