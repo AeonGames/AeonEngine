@@ -100,9 +100,9 @@ namespace AeonGames
         return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
     }
 
-    void AeonEngine::FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    void AeonEngine::FinalizeRenderingWindow ()
     {
-        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ( aInstance, aHwnd );
+        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow ();
     }
 #else
     bool AeonEngine::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )

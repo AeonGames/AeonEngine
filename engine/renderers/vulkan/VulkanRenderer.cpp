@@ -157,7 +157,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
     }
     catch ( ... )
     {
-        FinalizeRenderingWindow ( nullptr, 0 );
+        FinalizeRenderingWindow();
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -500,7 +500,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
 
     VulkanRenderer::~VulkanRenderer()
     {
-        FinalizeRenderingWindow ( nullptr, 0 );
+        FinalizeRenderingWindow();
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -523,7 +523,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         return true;
     }
 
-    void VulkanRenderer::FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    void VulkanRenderer::FinalizeRenderingWindow ()
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {

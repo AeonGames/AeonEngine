@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if(UNIX)
-    set(GUI_PLATFORM x11)
-elseif(WIN32)
-    set(GUI_PLATFORM winapi)
-else()
-    message("No GUI Platform detected")
-endif()
-
 include_directories(
     ${CMAKE_SOURCE_DIR}/engine
+    ${CMAKE_SOURCE_DIR}/engine/renderers/opengl
+    ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
     core/${GUI_PLATFORM}
     ${CMAKE_SOURCE_DIR}/include
     ${VULKAN_INCLUDE_DIR}
@@ -35,6 +29,7 @@ set(ENGINE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/vulkan/VulkanRenderer.h
     renderers/opengl/OpenGLRenderer.h
+    renderers/opengl/OpenGLFunctions.h
     core/Configuration.h
     core/${GUI_PLATFORM}/GameWindow.h
 )
@@ -44,7 +39,8 @@ set(ENGINE_SOURCES
     core/LogLevel.cpp
     core/Configuration.cpp
     renderers/vulkan/VulkanRenderer.cpp
-    renderers/opengl/OpenGLRenderer.cpp
+    renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
+    renderers/opengl/OpenGLFunctions.cpp
     core/${GUI_PLATFORM}/GameWindow.cpp
 )
 

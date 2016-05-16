@@ -25,11 +25,10 @@ namespace AeonGames
     public:
 #if _WIN32
         virtual bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;
-        virtual void FinalizeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;
 #else
         virtual bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) = 0;
-        virtual void FinalizeRenderingWindow ( Display* aDisplay, Window aWindow ) = 0;
 #endif
+        virtual void FinalizeRenderingWindow() = 0;
     protected:
         virtual ~Renderer() = default;
     };
