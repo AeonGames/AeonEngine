@@ -23,6 +23,7 @@ namespace AeonGames
     class Renderer
     {
     public:
+        virtual void Step ( double aDeltaTime ) = 0;
 #if _WIN32
         virtual bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;
 #else

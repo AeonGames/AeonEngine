@@ -32,6 +32,7 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer();
+        void Step ( double aDeltaTime ) override final;
 #if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
 #else
@@ -46,6 +47,8 @@ namespace AeonGames
         HWND mHwnd;
         HDC mDeviceContext = nullptr;
         HGLRC mOpenGLContext = nullptr;
+        static LRESULT CALLBACK WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+        static WNDPROC mWindowProc;
 #else
         GLXContext mGLXContext = nullptr;
 #endif

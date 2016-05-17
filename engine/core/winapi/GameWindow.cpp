@@ -46,6 +46,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
 
     int GameWindow::Run()
     {
+        ShowWindow ( mWindowHandle, SW_SHOW );
         MSG msg{};
         while ( msg.message != WM_QUIT )
         {
@@ -110,12 +111,12 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
             }
             throw std::runtime_error ( message );
         }
-
-        ShowWindow ( mWindowHandle, SW_SHOW );
+        mAeonEngine.InitializeRenderingWindow ( aInstance, mWindowHandle );
     }
 
     void GameWindow::Finalize()
     {
+        mAeonEngine.FinalizeRenderingWindow();
         if ( mWindowHandle != nullptr )
         {
             DestroyWindow ( mWindowHandle );
@@ -135,6 +136,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
         {
             delta = 1.0f / 30.0f;
         }
+        mAeonEngine.Step ( delta );
         last_time = this_time;
     }
 

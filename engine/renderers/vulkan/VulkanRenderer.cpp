@@ -507,6 +507,10 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         FinalizeInstance();
     }
 
+    void VulkanRenderer::Step ( double aDeltaTime )
+    {
+    }
+
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
     bool VulkanRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {

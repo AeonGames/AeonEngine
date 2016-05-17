@@ -87,6 +87,7 @@ namespace AeonGames
 
     void AeonEngine::Step ( double aDeltaTime )
     {
+        pImpl->mOpenGLRenderer.Step ( aDeltaTime );
     }
 
     int AeonEngine::Run()
@@ -94,6 +95,7 @@ namespace AeonGames
         GameWindow game_window ( *this );
         return game_window.Run();
     }
+
 #if _WIN32
     bool AeonEngine::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
@@ -105,6 +107,7 @@ namespace AeonGames
         return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aDisplay, aWindow );
     }
 #endif
+
     void AeonEngine::FinalizeRenderingWindow()
     {
         return pImpl->mOpenGLRenderer.FinalizeRenderingWindow();
