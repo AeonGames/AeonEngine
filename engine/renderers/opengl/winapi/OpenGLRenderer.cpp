@@ -33,6 +33,8 @@ limitations under the License.
 
 namespace AeonGames
 {
+
+    WNDPROC OpenGLRenderer::mWindowProc = nullptr;
 OpenGLRenderer::OpenGLRenderer() try :
         mInstance ( nullptr ),
                   mHwnd ( nullptr ),
@@ -51,6 +53,15 @@ OpenGLRenderer::OpenGLRenderer() try :
     OpenGLRenderer::~OpenGLRenderer()
     {
         Finalize();
+    }
+
+    void OpenGLRenderer::Step ( double aDeltaTime )
+    {
+        if ( mDeviceContext != nullptr )
+        {
+            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            SwapBuffers ( mDeviceContext );
+        }
     }
 
     bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
@@ -112,6 +123,12 @@ OpenGLRenderer::OpenGLRenderer() try :
                 wglDeleteContext ( mOpenGLContext );
                 mOpenGLContext = wglCreateContextAttribsARB ( mDeviceContext, nullptr, ctxAttribs );
                 wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+                RECT rect;
+                GetClientRect ( mHwnd, &rect );
+                glViewport ( 0, 0, rect.right, rect.bottom );
+                glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
+                mWindowProc = reinterpret_cast<WNDPROC> ( GetWindowLongPtr ( mHwnd, GWLP_WNDPROC ) );
+                SetWindowLongPtr ( mHwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR> ( WindowProc ) );
             }
         }
         else
@@ -123,6 +140,11 @@ OpenGLRenderer::OpenGLRenderer() try :
 
     void OpenGLRenderer::FinalizeRenderingWindow ()
     {
+        if ( mHwnd && mWindowProc )
+        {
+            SetWindowLongPtr ( mHwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR> ( mWindowProc ) );
+            mWindowProc = nullptr;
+        }
         if ( mDeviceContext != nullptr )
         {
             wglMakeCurrent ( mDeviceContext, nullptr );
@@ -187,5 +209,19 @@ OpenGLRenderer::OpenGLRenderer() try :
     }
     void OpenGLRenderer::Finalize()
     {
+    }
+
+    LRESULT OpenGLRenderer::WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+    {
+        switch ( uMsg )
+        {
+        case WM_SIZE:
+            if ( LOWORD ( lParam ) && HIWORD ( lParam ) )
+            {
+                glViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            }
+            break;
+        }
+        return CallWindowProc ( mWindowProc, hwnd, uMsg, wParam, lParam );
     }
 }
