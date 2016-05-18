@@ -27,7 +27,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-OpenGLRenderer::OpenGLRenderer() try :
+    OpenGLRenderer::OpenGLRenderer()
+try :
         mGLXContext ( nullptr )
     {
         Initialize();
@@ -56,6 +57,10 @@ OpenGLRenderer::OpenGLRenderer() try :
         out << "Colormap Size: " << aXVisualInfo.colormap_size << std::endl;
         out << "Bits Per RGB: " << aXVisualInfo.bits_per_rgb << std::endl;
         return out;
+    }
+
+    void OpenGLRenderer::Step ( double aDelta )
+    {
     }
 
     bool OpenGLRenderer::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
