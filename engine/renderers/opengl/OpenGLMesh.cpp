@@ -21,6 +21,12 @@ limitations under the License.
 #include <exception>
 #include <vector>
 #include <cassert>
+#include <cstring>
+#ifdef __unix__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 namespace AeonGames
 {

@@ -43,6 +43,7 @@ set(ENGINE_SOURCES
     core/Configuration.cpp
     renderers/vulkan/VulkanRenderer.cpp
     renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
+    renderers/opengl/OpenGLRenderer.cpp
     renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/OpenGLFunctions.cpp
     core/${GUI_PLATFORM}/GameWindow.cpp

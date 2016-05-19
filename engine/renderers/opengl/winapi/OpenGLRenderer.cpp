@@ -24,7 +24,6 @@ limitations under the License.
 #include "OpenGLRenderer.h"
 #include "OpenGLMesh.h"
 #include "aeongames/LogLevel.h"
-#include "aeongames/ResourceCache.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX 1
@@ -64,11 +63,6 @@ OpenGLRenderer::OpenGLRenderer() try :
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             SwapBuffers ( mDeviceContext );
         }
-    }
-
-    std::shared_ptr<Mesh> OpenGLRenderer::GetMesh ( const std::string & aFilename ) const
-    {
-        return Get<OpenGLMesh> ( aFilename );
     }
 
     bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
