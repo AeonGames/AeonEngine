@@ -13,28 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_RENDERER_H
-#define AEONGAMES_RENDERER_H
+#ifndef AEONGAMES_OPENGLMESH_H
+#define AEONGAMES_OPENGLMESH_H
 
-#include "Platform.h"
-#include <memory>
-#include <string>
+#include "aeongames/Mesh.h"
+#include <exception>
+#include <vector>
+
 namespace AeonGames
 {
-    class Mesh;
-    class Renderer
+    class OpenGLMesh : public Mesh
     {
     public:
-        virtual void Step ( double aDeltaTime ) = 0;
-        virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
-#if _WIN32
-        virtual bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;
-#else
-        virtual bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) = 0;
-#endif
-        virtual void FinalizeRenderingWindow() = 0;
-    protected:
-        virtual ~Renderer() = default;
+        OpenGLMesh ( const std::string& aFilename );
+        ~OpenGLMesh();
+    private:
+        void Initialize();
+        void Finalize();
+        uint32_t OpenGLMesh::GetStride ( uint32_t aFlags ) const;
+        uint32_t OpenGLMesh::GetIndexSize ( uint32_t aIndexType ) const;
+        std::string mFilename;
+        MSHHeader mHeader;
+        uint32_t mArray;
+        uint32_t mBuffer;
     };
 }
 #endif

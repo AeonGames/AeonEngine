@@ -27,9 +27,12 @@ set(ENGINE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
     renderers/vulkan/VulkanRenderer.h
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
+    renderers/opengl/OpenGLMesh.h
     core/Configuration.h
     core/${GUI_PLATFORM}/GameWindow.h
 )
@@ -40,6 +43,7 @@ set(ENGINE_SOURCES
     core/Configuration.cpp
     renderers/vulkan/VulkanRenderer.cpp
     renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
+    renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/OpenGLFunctions.cpp
     core/${GUI_PLATFORM}/GameWindow.cpp
 )
