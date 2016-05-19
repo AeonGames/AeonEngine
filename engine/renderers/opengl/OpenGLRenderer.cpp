@@ -13,29 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLMESH_H
-#define AEONGAMES_OPENGLMESH_H
 
-#include "aeongames/Mesh.h"
-#include <exception>
-#include <string>
+#include "OpenGLRenderer.h"
+#include "aeongames/ResourceCache.h"
+#include "OpenGLMesh.h"
 
 namespace AeonGames
 {
-    class OpenGLMesh : public Mesh
+    std::shared_ptr<Mesh> OpenGLRenderer::GetMesh ( const std::string & aFilename ) const
     {
-    public:
-        OpenGLMesh ( const std::string& aFilename );
-        ~OpenGLMesh();
-    private:
-        void Initialize();
-        void Finalize();
-        uint32_t GetStride ( uint32_t aFlags ) const;
-        uint32_t GetIndexSize ( uint32_t aIndexType ) const;
-        std::string mFilename;
-        MSHHeader mHeader;
-        uint32_t mArray;
-        uint32_t mBuffer;
-    };
+        return Get<OpenGLMesh> ( aFilename );
+    }
 }
-#endif
