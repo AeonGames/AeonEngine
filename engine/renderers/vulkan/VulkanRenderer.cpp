@@ -507,7 +507,15 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         FinalizeInstance();
     }
 
-    void VulkanRenderer::Step ( double aDeltaTime )
+    void VulkanRenderer::BeginRender() const
+    {
+    }
+
+    void VulkanRenderer::EndRender() const
+    {
+    }
+
+    void VulkanRenderer::Render ( const std::shared_ptr<Mesh> aMesh ) const
     {
     }
 

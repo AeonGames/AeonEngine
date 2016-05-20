@@ -46,6 +46,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
 
     int GameWindow::Run()
     {
+        auto suzanne_mesh = mAeonEngine.GetMesh ( "game/meshes/Suzanne.msh" );
         ShowWindow ( mWindowHandle, SW_SHOW );
         MSG msg{};
         while ( msg.message != WM_QUIT )

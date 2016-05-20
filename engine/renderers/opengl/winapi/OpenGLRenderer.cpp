@@ -56,13 +56,26 @@ OpenGLRenderer::OpenGLRenderer() try :
         Finalize();
     }
 
-    void OpenGLRenderer::Step ( double aDeltaTime )
+    void OpenGLRenderer::BeginRender() const
     {
         if ( mDeviceContext != nullptr )
         {
+            wglMakeCurrent ( mDeviceContext, mOpenGLContext );
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             SwapBuffers ( mDeviceContext );
         }
+    }
+
+    void OpenGLRenderer::EndRender() const
+    {
+        if ( mDeviceContext != nullptr )
+        {
+            SwapBuffers ( mDeviceContext );
+        }
+    }
+
+    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh> aMesh ) const
+    {
     }
 
     bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )

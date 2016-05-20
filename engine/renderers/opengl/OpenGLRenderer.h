@@ -32,7 +32,9 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer();
-        void Step ( double aDeltaTime ) override final;
+        void BeginRender() const override final;
+        void EndRender() const override final;
+        void Render ( const std::shared_ptr<Mesh> aMesh ) const override final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
 #if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;

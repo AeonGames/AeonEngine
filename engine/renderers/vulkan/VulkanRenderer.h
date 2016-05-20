@@ -29,7 +29,9 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer();
-        void Step ( double aDeltaTime ) override final;
+        void BeginRender() const override final;
+        void EndRender() const override final;
+        void Render ( const std::shared_ptr<Mesh> aMesh ) const override final;
 #if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
 #else
