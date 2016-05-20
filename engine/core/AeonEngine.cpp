@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "renderers/vulkan/VulkanRenderer.h"
 #include "renderers/opengl/OpenGLRenderer.h"
+#include "scenegraph/Scene.h"
 #include "GameWindow.h"
 
 #if __cplusplus < 201300L && __cplusplus >= 201103L
@@ -45,7 +46,8 @@ namespace AeonGames
     struct AeonEngine::Impl
     {
         //VulkanRenderer mVulkanRenderer;
-        OpenGLRenderer mOpenGLRenderer;
+        OpenGLRenderer mRenderer;
+        Scene* mScene;
     };
 
     AeonEngine::AeonEngine() :
@@ -87,7 +89,14 @@ namespace AeonGames
 
     void AeonEngine::Step ( double aDeltaTime )
     {
-        pImpl->mOpenGLRenderer.Step ( aDeltaTime );
+        pImpl->mRenderer.BeginRender();
+        if ( pImpl->mScene != nullptr )
+        {
+            //pImpl->mScene->
+            //pImpl->mScene->Render();
+            //pImpl->mRenderer.Render(aDeltaTime);
+        }
+        pImpl->mRenderer.EndRender();
     }
 
     int AeonEngine::Run()
@@ -96,10 +105,25 @@ namespace AeonGames
         return game_window.Run();
     }
 
+    std::shared_ptr<Mesh> AeonEngine::GetMesh ( const std::string & aFilename ) const
+    {
+        return pImpl->mRenderer.GetMesh ( aFilename );
+    }
+
+    void AeonEngine::SetScene ( Scene * aScene )
+    {
+        pImpl->mScene = aScene;
+    }
+
+    Scene * AeonEngine::GetScene() const
+    {
+        return pImpl->mScene;
+    }
+
 #if _WIN32
     bool AeonEngine::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
-        return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
+        return pImpl->mRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
     }
 #else
     bool AeonEngine::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
@@ -110,6 +134,6 @@ namespace AeonGames
 
     void AeonEngine::FinalizeRenderingWindow()
     {
-        return pImpl->mOpenGLRenderer.FinalizeRenderingWindow();
+        return pImpl->mRenderer.FinalizeRenderingWindow();
     }
 }

@@ -22,36 +22,66 @@ include_directories(
     ${PROTOBUF_INCLUDE_DIR}
 )
 
-set(ENGINE_HEADERS
+set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
+set(ENGINE_RENDERER_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/vulkan/VulkanRenderer.h
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
-    renderers/opengl/OpenGLMesh.h
+    renderers/opengl/OpenGLMesh.h)
+set(ENGINE_CORE_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     core/Configuration.h
-    core/${GUI_PLATFORM}/GameWindow.h
-)
+    core/${GUI_PLATFORM}/GameWindow.h)
+set(ENGINE_SCENEGRAPH_HEADERS
+    scenegraph/Scene.h
+    scenegraph/Node.h)
+set(ENGINE_MATH_HEADERS
+    math/Vector4.h
+    math/Vector3.h
+    math/Matrix4x4.h
+    math/Transform.h)
 
-set(ENGINE_SOURCES
+set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
     core/LogLevel.cpp
     core/Configuration.cpp
+    core/${GUI_PLATFORM}/GameWindow.cpp)
+set(ENGINE_RENDERER_SOURCES
     renderers/vulkan/VulkanRenderer.cpp
     renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
     renderers/opengl/OpenGLRenderer.cpp
     renderers/opengl/OpenGLMesh.cpp
-    renderers/opengl/OpenGLFunctions.cpp
-    core/${GUI_PLATFORM}/GameWindow.cpp
-)
+    renderers/opengl/OpenGLFunctions.cpp)
+set(ENGINE_SCENEGRAPH_SOURCES
+    scenegraph/Scene.cpp
+    scenegraph/Node.cpp)
+set(ENGINE_MATH_SOURCES
+    math/Vector4.cpp
+    math/Vector3.cpp
+    math/Matrix4x4.cpp
+    math/Transform.cpp)
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
     ${CMAKE_SOURCE_DIR}/proto/Configuration.proto
 )
+
+source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
+source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
+source_group("renderers" FILES ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES})
+source_group("scenegraph" FILES ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES})
+source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
+source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+
+set(ENGINE_SOURCES     ${ENGINE_SDK_HEADERS} ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES}
+                    ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES}
+                    ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES}
+                    ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES}
+                    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
 if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")

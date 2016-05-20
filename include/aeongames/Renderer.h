@@ -25,7 +25,9 @@ namespace AeonGames
     class Renderer
     {
     public:
-        virtual void Step ( double aDeltaTime ) = 0;
+        virtual void BeginRender() const = 0;
+        virtual void EndRender() const = 0;
+        virtual void Render ( const std::shared_ptr<Mesh> aMesh ) const = 0;
         virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
 #if _WIN32
         virtual bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) = 0;

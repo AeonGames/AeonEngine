@@ -53,7 +53,7 @@ try :
         if ( stat ( mFilename.c_str(), &stat_buffer ) != 0 )
         {
             std::ostringstream stream;
-            stream << "File" << mFilename << " Not Found (error code:" << errno << ")";
+            stream << "File " << mFilename << " Not Found (error code:" << errno << ")";
             throw std::runtime_error ( stream.str().c_str() );
         }
         std::ifstream file;
@@ -68,7 +68,7 @@ try :
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        size_t buffer_size = ( GetStride ( mHeader.vertex_flags ) * mHeader.vertex_count ) + ( GetIndexSize ( mHeader.index_count ) * mHeader.index_count );
+        size_t buffer_size = ( GetStride ( mHeader.vertex_flags ) * mHeader.vertex_count ) + ( GetIndexSize ( mHeader.index_type ) * mHeader.index_count );
         std::vector<char> buffer ( buffer_size );
         file.read ( buffer.data(), buffer_size );
         file.close();

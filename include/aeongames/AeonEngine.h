@@ -17,8 +17,12 @@ limitations under the License.
 #define AEONGAMES_AEONENGINE_H
 #include "Platform.h"
 #include <memory>
+#include <string>
+
 namespace AeonGames
 {
+    class Mesh;
+    class Scene;
     class AeonEngine
     {
     public:
@@ -37,7 +41,15 @@ namespace AeonGames
         @param aDeltaTime Time delta to advance the simulation.
         */
         DLL void Step ( double aDeltaTime );
+        /**
+        Run standalone.
+        @return program return value.
+        */
         DLL int Run();
+        DLL std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const;
+        DLL void SetScene ( Scene* aScene );
+        DLL Scene* GetScene() const;
+
 #ifdef _WIN32
         DLL bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
 #else
