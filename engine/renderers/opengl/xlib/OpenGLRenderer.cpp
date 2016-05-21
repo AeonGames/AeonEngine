@@ -29,7 +29,9 @@ namespace AeonGames
 {
     OpenGLRenderer::OpenGLRenderer()
 try :
-        mGLXContext ( nullptr )
+        mDisplay ( nullptr ),
+                 mWindow ( 0 ),
+                 mGLXContext ( nullptr )
     {
         Initialize();
     }
@@ -59,12 +61,10 @@ try :
         return out;
     }
 
-    void OpenGLRenderer::Step ( double aDelta )
-    {
-    }
-
     bool OpenGLRenderer::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
     {
+        mDisplay = aDisplay;
+        mWindow = aWindow;
         PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
                 glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" );
         if ( glXCreateContextAttribsARB )
@@ -77,14 +77,12 @@ try :
                 None
             };
 
-
             // Get Window Attributes
             XWindowAttributes x_window_attributes{};
-            XGetWindowAttributes ( aDisplay, aWindow, &x_window_attributes );
+            XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
 
             int glx_fb_config_count;
-            //GLXFBConfig *fbc = glXChooseFBConfig ( aDisplay, DefaultScreen ( aDisplay ),visual_attribs, &glx_fb_config_count );
-            GLXFBConfig* glx_fb_config_list = glXGetFBConfigs ( aDisplay, DefaultScreen ( aDisplay ), &glx_fb_config_count );
+            GLXFBConfig* glx_fb_config_list = glXGetFBConfigs ( mDisplay, DefaultScreen ( mDisplay ), &glx_fb_config_count );
 
             if ( !glx_fb_config_list )
             {
@@ -94,13 +92,13 @@ try :
             int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
             for ( int i = 0; i < glx_fb_config_count; ++i )
             {
-                XVisualInfo *vi = glXGetVisualFromFBConfig ( aDisplay, glx_fb_config_list[i] );
+                XVisualInfo *vi = glXGetVisualFromFBConfig ( mDisplay, glx_fb_config_list[i] );
                 if ( ( vi ) && ( x_window_attributes.visual == vi->visual ) )
                 {
                     std::cout << *vi << std::endl;
                     int samp_buf, samples;
-                    glXGetFBConfigAttrib ( aDisplay, glx_fb_config_list[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-                    glXGetFBConfigAttrib ( aDisplay, glx_fb_config_list[i], GLX_SAMPLES       , &samples  );
+                    glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+                    glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_SAMPLES       , &samples  );
                     if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
                     {
                         best_fbc = i, best_num_samp = samples;
@@ -121,8 +119,8 @@ try :
 
             GLXFBConfig bestFbc = glx_fb_config_list[ best_fbc ];
             XFree ( glx_fb_config_list );
-            mGLXContext = glXCreateContextAttribsARB ( aDisplay, bestFbc, 0, True, context_attribs );
-            XSync ( aDisplay, False );
+            mGLXContext = glXCreateContextAttribsARB ( mDisplay, bestFbc, 0, True, context_attribs );
+            XSync ( mDisplay, False );
             if ( mGLXContext != nullptr )
             {
                 std::cout << LogLevel ( LogLevel::Level::Info ) <<
@@ -140,7 +138,7 @@ try :
         }
 
         // Verifying that context is a direct context
-        if ( ! glXIsDirect ( aDisplay, mGLXContext ) )
+        if ( ! glXIsDirect ( mDisplay, mGLXContext ) )
         {
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Indirect GLX rendering context obtained" << std::endl;
@@ -150,20 +148,24 @@ try :
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-
-        glXMakeCurrent ( aDisplay, aWindow, mGLXContext );
+        glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+        glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
         return true;
     }
 
     void OpenGLRenderer::FinalizeRenderingWindow()
     {
+        if ( mGLXContext )
+        {
+            glXMakeCurrent ( mDisplay, mWindow, nullptr );
+            glXDestroyContext ( mDisplay, mGLXContext );
+        }
     }
 
     void OpenGLRenderer::Initialize()
     {
         Display* display = XOpenDisplay ( 0 );
         int glx_fb_config_count = 0;
-        //GLXFBConfig* glx_fb_config_list = glXChooseFBConfig(display,DefaultScreen(display),visual_attribs,&glx_fb_config_count);
         GLXFBConfig* glx_fb_config_list = glXGetFBConfigs ( display, DefaultScreen ( display ), &glx_fb_config_count );
         if ( !glx_fb_config_list )
         {
@@ -182,5 +184,61 @@ try :
 
     void OpenGLRenderer::Finalize()
     {
+    }
+
+    Bool ExposePredicate ( Display *display, XEvent *event, XPointer arg )
+    {
+        if ( event->type == Expose )
+        {
+            return True;
+        }
+        return False;
+    }
+
+    Bool ConfigurePredicate ( Display *display, XEvent *event, XPointer arg )
+    {
+        if ( event->type == ConfigureNotify )
+        {
+            return True;
+        }
+        return False;
+    }
+
+    void OpenGLRenderer::BeginRender() const
+    {
+        XEvent event;
+        if ( XPending ( mDisplay ) > 0 )
+        {
+            if ( XCheckIfEvent ( mDisplay, &event, ConfigurePredicate, nullptr ) && ( event.xany.window == mWindow ) )
+            {
+                static int width = 0;
+                static int height = 0;
+                if ( ( event.xconfigure.width != width ) || ( event.xconfigure.height != height ) )
+                {
+                    width = event.xconfigure.width;
+                    height = event.xconfigure.height;
+                    std::cout << "Expose Width  " << event.xconfigure.width << std::endl;
+                    std::cout << "Expose Height " << event.xconfigure.height << std::endl;
+                    std::cout << "Expose Send " << event.xconfigure.send_event << std::endl;
+                    std::cout << "Expose X " << event.xconfigure.x << std::endl;
+                    std::cout << "Expose Y " << event.xconfigure.y << std::endl;
+                    glViewport ( 0, 0, width, height );
+                }
+                XPutBackEvent ( mDisplay, &event );
+            }
+        }
+        if ( mGLXContext != nullptr )
+        {
+            glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        }
+    }
+
+    void OpenGLRenderer::EndRender() const
+    {
+        if ( mGLXContext != nullptr )
+        {
+            glXSwapBuffers ( mDisplay, mWindow );
+        }
     }
 }

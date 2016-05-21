@@ -21,6 +21,5 @@ limitations under the License.
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
     AeonGames::AeonEngine engine;
-//    return engine.Run();
-    return 0;
+    return engine.Run();
 }
