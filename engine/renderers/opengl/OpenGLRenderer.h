@@ -53,6 +53,8 @@ namespace AeonGames
         static LRESULT CALLBACK WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
         static WNDPROC mWindowProc;
 #else
+        Display* mDisplay = nullptr;
+        Window mWindow = 0;
         GLXContext mGLXContext = nullptr;
 #endif
     };

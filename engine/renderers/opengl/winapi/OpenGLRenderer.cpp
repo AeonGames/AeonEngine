@@ -62,7 +62,6 @@ OpenGLRenderer::OpenGLRenderer() try :
         {
             wglMakeCurrent ( mDeviceContext, mOpenGLContext );
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-            SwapBuffers ( mDeviceContext );
         }
     }
 
@@ -72,10 +71,6 @@ OpenGLRenderer::OpenGLRenderer() try :
         {
             SwapBuffers ( mDeviceContext );
         }
-    }
-
-    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh> aMesh ) const
-    {
     }
 
     bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )

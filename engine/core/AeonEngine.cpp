@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <iostream>
 #include <memory>
 #include <google/protobuf/stubs/common.h>
 #include "aeongames/AeonEngine.h"
@@ -89,6 +90,7 @@ namespace AeonGames
 
     void AeonEngine::Step ( double aDeltaTime )
     {
+        //std::cout << __func__ << " " << __LINE__ << std::endl;
         pImpl->mRenderer.BeginRender();
         if ( pImpl->mScene != nullptr )
         {
@@ -128,7 +130,7 @@ namespace AeonGames
 #else
     bool AeonEngine::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
     {
-        return pImpl->mOpenGLRenderer.InitializeRenderingWindow ( aDisplay, aWindow );
+        return pImpl->mRenderer.InitializeRenderingWindow ( aDisplay, aWindow );
     }
 #endif
 

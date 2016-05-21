@@ -64,7 +64,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
         XFree ( visual_list );
 
         XVisualInfo visual_info {};
-//        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 32, TrueColor, &visual_info ) )
+        //if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 32, TrueColor, &visual_info ) )
         if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 24, TrueColor, &visual_info ) )
         {
             throw std::runtime_error ( "No such visual\n" );
@@ -97,7 +97,8 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
                        KeyReleaseMask |
                        ButtonPressMask |
                        ButtonReleaseMask |
-                       PointerMotionMask
+                       PointerMotionMask |
+                       StructureNotifyMask
 #if 0
                        | ResizeRedirectMask
 #endif
@@ -105,7 +106,7 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
 
         mWMDeleteWindow = XInternAtom ( mDisplay, "WM_DELETE_WINDOW", 0 );
         XSetWMProtocols ( mDisplay, mWindow, &mWMDeleteWindow, 1 );
-
+        mAeonEngine.InitializeRenderingWindow ( mDisplay, mWindow );
         XMapWindow ( mDisplay, mWindow );
 
         XSync ( mDisplay, False );
@@ -118,45 +119,9 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
         timespec current_time;
         clock_gettime ( kClockId, &current_time );
         timespec last_time = current_time;
-        float delta;
+        double delta;
         while ( running )
         {
-            while ( ( XPending ( mDisplay ) > 0 ) && running )
-            {
-                XNextEvent ( mDisplay, &xEvent );
-                switch ( xEvent.type )
-                {
-#if 0
-                case Expose:
-                {
-                    // Here is where window resize is required.
-                    XWindowAttributes x_window_attributes;
-                    XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
-                }
-#endif
-                break;
-                case KeyPress:
-                    break;
-                case KeyRelease:
-                    break;
-                case ButtonPress:
-                    break;
-                case ButtonRelease:
-                    break;
-                case MotionNotify:
-                    break;
-                case ResizeRequest:
-                    break;
-                case ClientMessage:
-                    if ( static_cast<Atom> ( xEvent.xclient.data.l[0] ) == mWMDeleteWindow )
-                    {
-                        running = false;
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
             clock_gettime ( kClockId, &current_time );
             delta = static_cast<float> ( current_time.tv_sec - last_time.tv_sec )   +
                     static_cast<float> ( current_time.tv_nsec - last_time.tv_nsec ) * 1e-9;
@@ -164,13 +129,49 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine ) try :
             {
                 delta = 1.0f / 30.0f;
             }
+            mAeonEngine.Step ( delta );
             last_time = current_time;
+            if ( ( XPending ( mDisplay ) > 0 ) && running )
+            {
+                XNextEvent ( mDisplay, &xEvent );
+                if ( xEvent.xany.window == mWindow )
+                {
+                    switch ( xEvent.type )
+                    {
+                    case Expose:
+                        break;
+                    case KeyPress:
+                        break;
+                    case KeyRelease:
+                        break;
+                    case ButtonPress:
+                        break;
+                    case ButtonRelease:
+                        break;
+                    case ConfigureNotify:
+                        break;
+                    case MotionNotify:
+                        break;
+                    case ResizeRequest:
+                        break;
+                    case ClientMessage:
+                        if ( static_cast<Atom> ( xEvent.xclient.data.l[0] ) == mWMDeleteWindow )
+                        {
+                            running = false;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
         }
         return EXIT_SUCCESS;
     }
 
     void GameWindow::Finalize()
     {
+        mAeonEngine.FinalizeRenderingWindow();
         if ( mWindow != 0 )
         {
             XWindowAttributes x_window_attributes {};
