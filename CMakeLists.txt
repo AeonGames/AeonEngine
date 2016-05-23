@@ -95,3 +95,11 @@ else()
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting Code.")
 endif()
+
+###########################################
+# Protobuf Python source generation target
+###########################################
+
+add_custom_target(generate-python-protobuf-source
+    ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+    COMMENT "Generating Protocol Buffers Python Code")

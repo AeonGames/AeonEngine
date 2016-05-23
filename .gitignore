@@ -40,3 +40,6 @@ make64
 make32
 codeblocks32
 codeblocks64
+
+# CTags
+tags
