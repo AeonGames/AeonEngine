@@ -33,7 +33,7 @@ namespace AeonGames
         uint32_t GetStride ( uint32_t aFlags ) const;
         uint32_t GetIndexSize ( uint32_t aIndexType ) const;
         std::string mFilename;
-        MSHHeader mHeader;
+        //MSHHeader mHeader;
         uint32_t mArray;
         uint32_t mBuffer;
     };

@@ -28,11 +28,20 @@ limitations under the License.
 #include <unistd.h>
 #endif
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "mesh.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 namespace AeonGames
 {
     OpenGLMesh::OpenGLMesh ( const std::string& aFilename )
 try :
-        mFilename ( aFilename ), mHeader{}, mArray ( 0 ), mBuffer ( 0 )
+        mFilename ( aFilename ), mArray ( 0 ), mBuffer ( 0 )
     {
         Initialize();
     }
@@ -59,8 +68,9 @@ try :
         std::ifstream file;
         file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
         file.open ( mFilename, std::ifstream::in | std::ifstream::binary );
-        file.read ( reinterpret_cast<char*> ( &mHeader ), sizeof ( MSHHeader ) );
-        if ( strncmp ( mHeader.id, "AEONMSH\0", 8 ) )
+        char magick_number[8] = { 0 };
+        file.read ( magick_number, sizeof ( magick_number ) );
+        if ( strncmp ( magick_number, "AEONMSH\0", 8 ) )
         {
             file.close();
             std::ostringstream stream;
@@ -68,48 +78,53 @@ try :
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        size_t buffer_size = ( GetStride ( mHeader.vertex_flags ) * mHeader.vertex_count ) + ( GetIndexSize ( mHeader.index_type ) * mHeader.index_count );
-        std::vector<char> buffer ( buffer_size );
-        file.read ( buffer.data(), buffer_size );
+        file.exceptions ( std::ifstream::badbit );
+        MeshBuffer mesh_buffer;
+        if ( !mesh_buffer.ParseFromIstream ( &file ) )
+        {
+            throw std::runtime_error ( "Mesh Parse failed." );
+        }
+
         file.close();
 
         glGenVertexArrays ( 1, &mArray );
         glBindVertexArray ( mArray );
         glGenBuffers ( 1, &mBuffer );
         glBindBuffer ( GL_ARRAY_BUFFER, mBuffer );
-        glBufferData ( GL_ARRAY_BUFFER, buffer_size, buffer.data(), GL_STATIC_DRAW );
+        glBufferData ( GL_ARRAY_BUFFER, mesh_buffer.vertexbuffer().length(), mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
 
         uint8_t* offset = nullptr;
-        if ( mHeader.vertex_flags & POSITION_MASK )
+        if ( mesh_buffer.vertexflags() & POSITION_MASK )
         {
             glEnableVertexAttribArray ( 0 );
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mHeader.vertex_flags ), offset );
+            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
             offset += sizeof ( float ) * 3;
         }
 
-        if ( mHeader.vertex_flags & NORMAL_MASK )
+        if ( mesh_buffer.vertexflags() & NORMAL_MASK )
         {
             glEnableVertexAttribArray ( 1 );
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mHeader.vertex_flags ), offset );
+            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
             offset += sizeof ( float ) * 3;
         }
 
-        if ( mHeader.vertex_flags & UV_MASK )
+        if ( mesh_buffer.vertexflags() & UV_MASK )
         {
             glEnableVertexAttribArray ( 2 );
-            glVertexAttribPointer ( 2, 2, GL_FLOAT, GL_FALSE, GetStride ( mHeader.vertex_flags ), offset );
+            glVertexAttribPointer ( 2, 2, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
             offset += sizeof ( float ) * 2;
         }
 
-        if ( mHeader.vertex_flags & WEIGHT_MASK )
+        if ( mesh_buffer.vertexflags() & WEIGHT_MASK )
         {
             glEnableVertexAttribArray ( 3 );
-            glVertexAttribPointer ( 3, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( mHeader.vertex_flags ), offset );
+            glVertexAttribPointer ( 3, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
             offset += sizeof ( uint8_t ) * 4;
             glEnableVertexAttribArray ( 4 );
-            glVertexAttribPointer ( 4, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mHeader.vertex_flags ), offset );
+            glVertexAttribPointer ( 4, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mesh_buffer.vertexflags() ), offset );
             offset += sizeof ( uint8_t ) * 4;
         }
+        mesh_buffer.Clear();
     }
 
     void OpenGLMesh::Finalize()

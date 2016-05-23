@@ -20,6 +20,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${VULKAN_INCLUDE_DIR}
     ${PROTOBUF_INCLUDE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 set(ENGINE_SDK_HEADERS
