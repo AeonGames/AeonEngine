@@ -68,6 +68,8 @@ namespace AeonGames
         VkSurfaceFormatKHR mVkSurfaceFormatKHR {};
         VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
         uint32_t mSwapchainImageCount = 2;
+        std::vector<VkImage> mVkSwapchainImages;
+        std::vector<VkImageView> mVkSwapchainImageViews;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         VkViewport mVkViewport = {};
         uint32_t mQueueFamilyIndex = 0;
