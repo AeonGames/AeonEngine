@@ -46,8 +46,8 @@ namespace AeonGames
 
     struct AeonEngine::Impl
     {
-        //VulkanRenderer mVulkanRenderer;
-        OpenGLRenderer mRenderer;
+        VulkanRenderer mRenderer;
+        //OpenGLRenderer mRenderer;
         Scene* mScene;
     };
 
