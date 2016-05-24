@@ -32,6 +32,7 @@ namespace AeonGames
         void BeginRender() const override final;
         void EndRender() const override final;
         void Render ( const std::shared_ptr<Mesh> aMesh ) const override final;
+        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
 #if _WIN32
         bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
 #else
@@ -63,6 +64,7 @@ namespace AeonGames
         VkFence mVkFence = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
+        VkSurfaceFormatKHR mVkSurfaceFormatKHR {};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         VkViewport mVkViewport = {};
         uint32_t mQueueFamilyIndex = 0;

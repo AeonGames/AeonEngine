@@ -519,6 +519,11 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
     {
     }
 
+    std::shared_ptr<Mesh> VulkanRenderer::GetMesh ( const std::string & aFilename ) const
+    {
+        return nullptr;
+    }
+
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
     bool VulkanRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
@@ -531,6 +536,35 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         {
             std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
             return false;
+        }
+        // From here on this is platform dependent code, move it later
+        VkBool32 wsi_supported = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR ( mVkPhysicalDevice, mQueueFamilyIndex, mVkSurfaceKHR, &wsi_supported );
+        if ( !wsi_supported )
+        {
+            assert ( 0 && "WSI not supported." );
+            return false;
+        }
+
+        VkSurfaceCapabilitiesKHR surface_capabilities {};
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_capabilities );
+        uint32_t surface_format_count = 0;
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, nullptr );
+        if ( surface_format_count == 0 )
+        {
+            assert ( 0 && "No surface formats." );
+            return false;
+        }
+        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
+        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
+        {
+            mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+        }
+        else
+        {
+            mVkSurfaceFormatKHR = surface_format_list[0];
         }
         return true;
     }
