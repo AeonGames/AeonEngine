@@ -32,6 +32,7 @@ limitations under the License.
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
+#include <google/protobuf/text_format.h>
 #include "mesh.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
@@ -86,6 +87,14 @@ try :
         }
 
         file.close();
+
+        {
+            // Write Text Version
+            std::string text_string;
+            std::ofstream text_file ( mFilename + ".txt", std::ifstream::out );
+            google::protobuf::TextFormat::PrintToString ( mesh_buffer, &text_string );
+            text_file.write ( text_string.c_str(), text_string.length() );
+        }
 
         glGenVertexArrays ( 1, &mArray );
         glBindVertexArray ( mArray );

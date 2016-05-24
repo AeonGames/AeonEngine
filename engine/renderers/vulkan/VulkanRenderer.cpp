@@ -588,7 +588,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
         }
-        if ( mSwapchainImageCount > mVkSurfaceCapabilitiesKHR.maxImageCount )
+        if ( ( mVkSurfaceCapabilitiesKHR.maxImageCount > 0 ) && ( mSwapchainImageCount > mVkSurfaceCapabilitiesKHR.maxImageCount ) )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.maxImageCount;
         }
@@ -614,11 +614,40 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
 
         vkCreateSwapchainKHR ( mVkDevice, &swapchain_create_info, nullptr, &mVkSwapchainKHR );
         vkGetSwapchainImagesKHR ( mVkDevice, mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
+        mVkSwapchainImages.resize ( mSwapchainImageCount );
+        mVkSwapchainImageViews.resize ( mSwapchainImageCount );
+        vkGetSwapchainImagesKHR ( mVkDevice, mVkSwapchainKHR, &mSwapchainImageCount, mVkSwapchainImages.data() );
+        for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
+        {
+            VkImageViewCreateInfo image_view_create_info{};
+            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            image_view_create_info.image = mVkSwapchainImages[i];
+            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            image_view_create_info.format = mVkSurfaceFormatKHR.format;
+            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            image_view_create_info.subresourceRange.baseMipLevel = 0;
+            image_view_create_info.subresourceRange.levelCount = 1;
+            image_view_create_info.subresourceRange.baseArrayLayer = 0;
+            image_view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( mVkDevice, &image_view_create_info, nullptr, &mVkSwapchainImageViews[i] );
+        }
         return true;
     }
 
     void VulkanRenderer::FinalizeRenderingWindow ()
     {
+        for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
+        {
+            if ( mVkSwapchainImageViews[i] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVkDevice, mVkSwapchainImageViews[i], nullptr );
+                mVkSwapchainImageViews[i] = VK_NULL_HANDLE;
+            }
+        }
         if ( mVkSwapchainKHR != VK_NULL_HANDLE )
         {
             vkDestroySwapchainKHR ( mVkDevice, mVkSwapchainKHR, nullptr );
