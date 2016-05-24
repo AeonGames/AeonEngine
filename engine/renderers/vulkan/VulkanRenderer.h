@@ -64,7 +64,10 @@ namespace AeonGames
         VkFence mVkFence = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
+        VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         VkSurfaceFormatKHR mVkSurfaceFormatKHR {};
+        VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
+        uint32_t mSwapchainImageCount = 2;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         VkViewport mVkViewport = {};
         uint32_t mQueueFamilyIndex = 0;
