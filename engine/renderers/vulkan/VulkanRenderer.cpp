@@ -218,6 +218,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
 #ifdef VK_USE_PLATFORM_WIN32_KHR
         mInstanceExtensionNames.push_back ( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
 #endif
+        mDeviceExtensionNames.push_back ( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
     }
 
     void VulkanRenderer::InitializeInstance()
@@ -546,8 +547,8 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
             return false;
         }
 
-        VkSurfaceCapabilitiesKHR surface_capabilities {};
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_capabilities );
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
+
         uint32_t surface_format_count = 0;
         vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, nullptr );
         if ( surface_format_count == 0 )
@@ -566,11 +567,63 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         {
             mVkSurfaceFormatKHR = surface_format_list[0];
         }
+
+        VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+        {
+            uint32_t present_mode_count = 0;
+            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &present_mode_count, nullptr );
+            std::vector<VkPresentModeKHR> present_mode_list ( present_mode_count );
+            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &present_mode_count, present_mode_list.data() );
+            for ( auto& i : present_mode_list )
+            {
+                if ( i == VK_PRESENT_MODE_MAILBOX_KHR )
+                {
+                    present_mode = i;
+                    break;
+                }
+            }
+        }
+
+        if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
+        {
+            mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
+        }
+        if ( mSwapchainImageCount > mVkSurfaceCapabilitiesKHR.maxImageCount )
+        {
+            mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.maxImageCount;
+        }
+
+        VkSwapchainCreateInfoKHR swapchain_create_info {};
+        swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapchain_create_info.surface = mVkSurfaceKHR;
+        swapchain_create_info.minImageCount = mSwapchainImageCount;
+        swapchain_create_info.imageFormat = mVkSurfaceFormatKHR.format;
+        swapchain_create_info.imageColorSpace = mVkSurfaceFormatKHR.colorSpace;
+        swapchain_create_info.imageExtent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
+        swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
+        swapchain_create_info.imageArrayLayers = 1;
+        swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapchain_create_info.queueFamilyIndexCount = 0;
+        swapchain_create_info.pQueueFamilyIndices = nullptr;
+        swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        swapchain_create_info.presentMode = present_mode;
+        swapchain_create_info.clipped = VK_TRUE;
+        swapchain_create_info.oldSwapchain = VK_NULL_HANDLE; // Used for Resising later.
+
+        vkCreateSwapchainKHR ( mVkDevice, &swapchain_create_info, nullptr, &mVkSwapchainKHR );
+        vkGetSwapchainImagesKHR ( mVkDevice, mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
         return true;
     }
 
     void VulkanRenderer::FinalizeRenderingWindow ()
     {
+        if ( mVkSwapchainKHR != VK_NULL_HANDLE )
+        {
+            vkDestroySwapchainKHR ( mVkDevice, mVkSwapchainKHR, nullptr );
+            mVkSwapchainKHR = VK_NULL_HANDLE;
+        }
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {
             vkDestroySurfaceKHR ( mVkInstance, mVkSurfaceKHR, nullptr );
