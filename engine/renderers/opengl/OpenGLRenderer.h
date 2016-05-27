@@ -19,11 +19,14 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include <exception>
 #include <vector>
+#include <memory>
 #ifndef _WIN32
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include "glxext.h"
 #endif
+
+#include "OpenGLPipeline.h"
 
 namespace AeonGames
 {
@@ -57,6 +60,7 @@ namespace AeonGames
         Window mWindow = 0;
         GLXContext mGLXContext = nullptr;
 #endif
+        OpenGLPipeline mPipeline;
     };
 }
 #endif

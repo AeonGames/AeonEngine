@@ -30,12 +30,22 @@ namespace AeonGames
         DLL AeonEngine();
         /// Destruct
         DLL ~AeonEngine();
+#if 0
+        /* We don't really want to be copying and moving engine objects.*/
         /// Move
         DLL AeonEngine ( AeonEngine&& aRhs ) noexcept;
         DLL AeonEngine& operator= ( AeonEngine&& aRhs ) noexcept;
         /// Copy
         DLL AeonEngine ( const AeonEngine& aRhs );
         DLL AeonEngine& operator= ( const AeonEngine& aRhs );
+#else
+        /// Move
+        AeonEngine ( AeonEngine&& aRhs ) noexcept = delete;
+        AeonEngine& operator= ( AeonEngine&& aRhs ) noexcept = delete;
+        /// Copy
+        AeonEngine ( const AeonEngine& aRhs ) = delete;
+        AeonEngine& operator= ( const AeonEngine& aRhs ) = delete;
+#endif
         /**
         Advance the simulation a single step.
         @param aDeltaTime Time delta to advance the simulation.
