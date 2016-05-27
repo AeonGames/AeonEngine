@@ -46,8 +46,8 @@ namespace AeonGames
 
     struct AeonEngine::Impl
     {
-        VulkanRenderer mRenderer;
-        //OpenGLRenderer mRenderer;
+        //VulkanRenderer mRenderer;
+        OpenGLRenderer mRenderer;
         Scene* mScene;
     };
 
@@ -57,7 +57,7 @@ namespace AeonGames
     }
 
     AeonEngine::~AeonEngine() = default;
-
+#if 0
     AeonEngine::AeonEngine ( AeonEngine && aRhs ) noexcept = default;
 
     AeonEngine & AeonEngine::operator= ( AeonEngine && aRhs ) noexcept = default;
@@ -87,7 +87,7 @@ namespace AeonGames
         }
         return *this;
     }
-
+#endif
     void AeonEngine::Step ( double aDeltaTime )
     {
         //std::cout << __func__ << " " << __LINE__ << std::endl;

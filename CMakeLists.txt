@@ -48,6 +48,7 @@ endif()
 find_package(Vulkan)
 find_package(OpenGL)
 find_package(Protobuf)
+find_program(XXD_EXECUTABLE NAMES xxd xxd.exe)
 
 if(UNIX)
     set(GUI_PLATFORM xlib)

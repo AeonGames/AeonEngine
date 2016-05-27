@@ -23,24 +23,45 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+add_custom_command( OUTPUT
+                        ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
+                        ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
+                    COMMAND ${XXD_EXECUTABLE} -i main.vert > ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
+                    COMMAND ${XXD_EXECUTABLE} -i main.frag > ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
+                    DEPENDS
+                        renderers/opengl/shaders/main.vert
+                        renderers/opengl/shaders/main.frag
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/renderers/opengl/shaders
+                    COMMENT "Generating Shader Headers" VERBATIM)
+
 set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
-set(ENGINE_RENDERER_HEADERS
+    
+set(ENGINE_VULKAN_RENDERER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    renderers/vulkan/VulkanRenderer.h
+    renderers/vulkan/VulkanRenderer.h)
+    
+set(ENGINE_OPENGL_RENDERER_HEADERS
+    ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
+    ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
+    renderers/opengl/OpenGLPipeline.h    
     renderers/opengl/OpenGLMesh.h)
+    
 set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     core/Configuration.h
     core/${GUI_PLATFORM}/GameWindow.h)
+    
 set(ENGINE_SCENEGRAPH_HEADERS
     scenegraph/Scene.h
     scenegraph/Node.h)
+    
 set(ENGINE_MATH_HEADERS
     math/Vector4.h
     math/Vector3.h
@@ -52,15 +73,21 @@ set(ENGINE_CORE_SOURCES
     core/LogLevel.cpp
     core/Configuration.cpp
     core/${GUI_PLATFORM}/GameWindow.cpp)
-set(ENGINE_RENDERER_SOURCES
-    renderers/vulkan/VulkanRenderer.cpp
+    
+set(ENGINE_VULKAN_RENDERER_SOURCES
+    renderers/vulkan/VulkanRenderer.cpp)
+    
+set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
     renderers/opengl/OpenGLRenderer.cpp
+    renderers/opengl/OpenGLPipeline.cpp
     renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/OpenGLFunctions.cpp)
+    
 set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Scene.cpp
     scenegraph/Node.cpp)
+    
 set(ENGINE_MATH_SOURCES
     math/Vector4.cpp
     math/Vector3.cpp
@@ -74,13 +101,16 @@ PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
 
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
 source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
-source_group("renderers" FILES ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES})
+source_group("vulkan" FILES ${ENGINE_VULKAN_RENDERER_HEADERS} ${ENGINE_VULKAN_RENDERER_SOURCES})
+source_group("opengl" FILES ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES})
 source_group("scenegraph" FILES ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES})
 source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
 source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
-set(ENGINE_SOURCES     ${ENGINE_SDK_HEADERS} ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES}
+set(ENGINE_SOURCES  ${ENGINE_SDK_HEADERS} ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES}
                     ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES}
+                    ${ENGINE_VULKAN_RENDERER_HEADERS} ${ENGINE_VULKAN_RENDERER_SOURCES}
+                    ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES}
                     ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES}
                     ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES}
                     ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
