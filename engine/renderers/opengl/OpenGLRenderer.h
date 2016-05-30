@@ -26,6 +26,7 @@ limitations under the License.
 #include "glxext.h"
 #endif
 
+#include "winapi/OpenGLWindow.h"
 #include "OpenGLPipeline.h"
 
 namespace AeonGames
@@ -33,18 +34,13 @@ namespace AeonGames
     class OpenGLRenderer : public Renderer
     {
     public:
-        OpenGLRenderer();
+        OpenGLRenderer ( AeonEngine& aAeonEngine );
         ~OpenGLRenderer();
         void BeginRender() const override final;
         void EndRender() const override final;
         void Render ( const std::shared_ptr<Mesh> aMesh ) const override final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
-#if _WIN32
-        bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
-#else
-        bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
-#endif
-        void FinalizeRenderingWindow() override final;
+        GameWindow& GetGameWindow() override final;
     private:
         void Initialize();
         void Finalize();
@@ -60,7 +56,8 @@ namespace AeonGames
         Window mWindow = 0;
         GLXContext mGLXContext = nullptr;
 #endif
-        OpenGLPipeline mPipeline;
+        OpenGLWindow mOpenGLWindow;
+        OpenGLPipeline mOpenGLPipeline;
     };
 }
 #endif

@@ -13,30 +13,38 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include "aeongames/GameWindow.h"
 #include <Windows.h>
-#include <windowsx.h>
-#include <cassert>
 #include <cstdint>
 
 namespace AeonGames
 {
     class AeonEngine;
-    class GameWindow
+    class OpenGLWindow : public GameWindow
     {
     public:
-        GameWindow ( AeonEngine& aEngine, LONG aWidth = 800, LONG aHeight = 600 );
-        ~GameWindow();
-        int Run();
+        OpenGLWindow ( AeonEngine& aAeonEngine );
+        ~OpenGLWindow();
+        int Run() override final;
+        HWND GetWindowHandle() const;
+        HDC GetDeviceContext() const;
+        HGLRC GetOpenGLContext() const;
     private:
+        static ATOM mWindowClassType;
         static LRESULT CALLBACK WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-        static ATOM mClassAtom;
-        void Initialize ( HINSTANCE hInstance, LONG aWidth, LONG aHeight );
+        void Initialize();
         void Finalize();
-        static void Register ( HINSTANCE hInstance );
+        HWND mHwnd = nullptr;
+        HDC mDeviceContext = nullptr;
+        HGLRC mOpenGLContext = nullptr;
+        uint32_t mRefCount = 0;
+        AeonEngine& mAeonEngine;
         LRESULT OnSize ( WPARAM type, WORD newwidth, WORD newheight );
         LRESULT OnPaint();
         void RenderLoop();
-        HWND mWindowHandle = nullptr;
-        AeonEngine& mAeonEngine;
     };
 }

@@ -13,26 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_RENDERER_H
-#define AEONGAMES_RENDERER_H
+#ifndef AEONGAMES_GAMEWINDOW_H
+#define AEONGAMES_GAMEWINDOW_H
+#include <cassert>
+#include <cstdint>
 
-#include "Platform.h"
-#include <memory>
-#include <string>
 namespace AeonGames
 {
-    class GameWindow;
-    class Mesh;
-    class Renderer
+    class GameWindow
     {
     public:
-        virtual void BeginRender() const = 0;
-        virtual void EndRender() const = 0;
-        virtual void Render ( const std::shared_ptr<Mesh> aMesh ) const = 0;
-        virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
-        virtual GameWindow& GetGameWindow() = 0;
+        virtual int Run() = 0;
     protected:
-        virtual ~Renderer() = default;
+        virtual ~GameWindow() {};
     };
 }
 #endif

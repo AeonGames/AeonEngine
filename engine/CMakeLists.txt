@@ -50,13 +50,14 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
-    renderers/opengl/OpenGLPipeline.h    
+    renderers/opengl/OpenGLPipeline.h
+    renderers/opengl/winapi/OpenGLWindow.h
     renderers/opengl/OpenGLMesh.h)
     
 set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    core/Configuration.h
-    core/${GUI_PLATFORM}/GameWindow.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/GameWindow.h
+    core/Configuration.h)
     
 set(ENGINE_SCENEGRAPH_HEADERS
     scenegraph/Scene.h
@@ -71,8 +72,7 @@ set(ENGINE_MATH_HEADERS
 set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
     core/LogLevel.cpp
-    core/Configuration.cpp
-    core/${GUI_PLATFORM}/GameWindow.cpp)
+    core/Configuration.cpp)
     
 set(ENGINE_VULKAN_RENDERER_SOURCES
     renderers/vulkan/VulkanRenderer.cpp)
@@ -82,6 +82,7 @@ set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/OpenGLRenderer.cpp
     renderers/opengl/OpenGLPipeline.cpp
     renderers/opengl/OpenGLMesh.cpp
+    renderers/opengl/winapi/OpenGLWindow.cpp
     renderers/opengl/OpenGLFunctions.cpp)
     
 set(ENGINE_SCENEGRAPH_SOURCES
