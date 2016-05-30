@@ -112,12 +112,12 @@ GameWindow::GameWindow ( AeonEngine& aAeonEngine, LONG aWidth, LONG aHeight ) tr
             }
             throw std::runtime_error ( message );
         }
-        mAeonEngine.InitializeRenderingWindow ( aInstance, mWindowHandle );
+//        mAeonEngine.InitializeRenderingWindow ( aInstance, mWindowHandle );
     }
 
     void GameWindow::Finalize()
     {
-        mAeonEngine.FinalizeRenderingWindow();
+//        mAeonEngine.FinalizeRenderingWindow();
         if ( mWindowHandle != nullptr )
         {
             DestroyWindow ( mWindowHandle );

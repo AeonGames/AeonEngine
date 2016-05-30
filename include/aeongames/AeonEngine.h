@@ -59,13 +59,14 @@ namespace AeonGames
         DLL std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const;
         DLL void SetScene ( Scene* aScene );
         DLL Scene* GetScene() const;
-
+#if 0
 #ifdef _WIN32
         DLL bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
 #else
         DLL bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow );
 #endif
         DLL void FinalizeRenderingWindow();
+#endif
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

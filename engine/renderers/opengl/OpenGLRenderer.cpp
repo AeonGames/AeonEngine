@@ -25,6 +25,11 @@ namespace AeonGames
         return Get<OpenGLMesh> ( aFilename );
     }
 
+    GameWindow & OpenGLRenderer::GetGameWindow()
+    {
+        return mOpenGLWindow;
+    }
+
     void OpenGLRenderer::Render ( const std::shared_ptr<Mesh> aMesh ) const
     {
     }

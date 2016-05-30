@@ -36,17 +36,15 @@ namespace AeonGames
 {
 
     WNDPROC OpenGLRenderer::mWindowProc = nullptr;
-OpenGLRenderer::OpenGLRenderer() try :
+OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
         mInstance ( nullptr ),
-                  mHwnd ( nullptr ),
-                  mDeviceContext ( nullptr ),
-                  mOpenGLContext ( nullptr )
+                  mOpenGLWindow ( aAeonEngine ),
+                  mOpenGLPipeline()
     {
         Initialize();
     }
     catch ( ... )
     {
-        FinalizeRenderingWindow();
         Finalize();
         throw;
     }
@@ -73,6 +71,7 @@ OpenGLRenderer::OpenGLRenderer() try :
         }
     }
 
+#if 0
     bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
         mInstance = aInstance;
@@ -166,55 +165,9 @@ OpenGLRenderer::OpenGLRenderer() try :
             mOpenGLContext = nullptr;
         }
     }
-
+#endif
     void OpenGLRenderer::Initialize()
     {
-        WNDCLASSEX wcex;
-        wcex.cbSize = sizeof ( WNDCLASSEX );
-        wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-        wcex.lpfnWndProc = ( WNDPROC ) DefWindowProc;
-        wcex.cbClsExtra = 0;
-        wcex.cbWndExtra = 0;
-        wcex.hInstance = GetModuleHandle ( nullptr );
-        wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
-        wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
-        wcex.hbrBackground = nullptr;
-        wcex.lpszMenuName = nullptr;
-        wcex.lpszClassName = "AeonEngineTmpWnd";
-        wcex.hIconSm = nullptr;
-        ATOM atom = RegisterClassEx ( &wcex );
-        HWND hWnd = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
-                                     MAKEINTATOM ( atom ), "AeonEngine Temporary Window",
-                                     WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-                                     0, 0, // Location
-                                     10, 10, // dimensions
-                                     nullptr,
-                                     nullptr,
-                                     GetModuleHandle ( nullptr ),
-                                     nullptr );
-        if ( !InitializeRenderingWindow ( GetModuleHandle ( nullptr ), hWnd ) )
-        {
-            DestroyWindow ( hWnd );
-            UnregisterClass ( reinterpret_cast<LPCSTR> (
-#if defined(_M_X64) || defined(__amd64__)
-                                  0x0ULL +
-#endif
-                                  MAKELONG ( atom, 0 ) ), nullptr );
-            throw std::runtime_error ( "Unable to Initialize Rendering Window." );
-        }
-
-        if ( !LoadOpenGLAPI() )
-        {
-            throw std::runtime_error ( "Unable to Load OpenGL functions." );
-        }
-
-        FinalizeRenderingWindow();
-        DestroyWindow ( hWnd );
-        UnregisterClass ( reinterpret_cast<LPCSTR> (
-#if defined(_M_X64) || defined(__amd64__)
-                              0x0ULL +
-#endif
-                              MAKELONG ( atom, 0 ) ), nullptr );
     }
     void OpenGLRenderer::Finalize()
     {

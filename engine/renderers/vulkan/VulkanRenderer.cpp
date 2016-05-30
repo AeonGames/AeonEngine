@@ -157,7 +157,9 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
     }
     catch ( ... )
     {
+#if 0
         FinalizeRenderingWindow();
+#endif
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -501,7 +503,9 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
 
     VulkanRenderer::~VulkanRenderer()
     {
+#if 0
         FinalizeRenderingWindow();
+#endif
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -525,6 +529,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
         return nullptr;
     }
 
+#if 0
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
     bool VulkanRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
     {
@@ -683,5 +688,6 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
             mVkSurfaceKHR = VK_NULL_HANDLE;
         }
     }
+#endif
 #endif
 }

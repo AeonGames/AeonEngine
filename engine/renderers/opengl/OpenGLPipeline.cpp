@@ -39,11 +39,12 @@ OpenGLPipeline::OpenGLPipeline() try :
 
     void OpenGLPipeline::Initialize()
     {
-#if 0
-        // There must be a Current OGL Context before calling glCreateProgram
+        if ( !LoadOpenGLAPI() )
+        {
+            throw std::runtime_error ( "Unable to Load OpenGL functions." );
+        }
         mProgram = glCreateProgram();
         OPENGL_CHECK_ERROR ( true );
-#endif
     }
 
     void OpenGLPipeline::Finalize()
