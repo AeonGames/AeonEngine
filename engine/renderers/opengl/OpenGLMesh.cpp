@@ -97,55 +97,55 @@ try :
         }
 
         glGenVertexArrays ( 1, &mArray );
-        OPENGL_CHECK_ERROR ( true );
+        OPENGL_CHECK_ERROR_THROW;
         glBindVertexArray ( mArray );
-        OPENGL_CHECK_ERROR ( true );
+        OPENGL_CHECK_ERROR_THROW;
         glGenBuffers ( 1, &mBuffer );
-        OPENGL_CHECK_ERROR ( true );
+        OPENGL_CHECK_ERROR_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, mBuffer );
-        OPENGL_CHECK_ERROR ( true );
+        OPENGL_CHECK_ERROR_THROW;
         glBufferData ( GL_ARRAY_BUFFER, mesh_buffer.vertexbuffer().length(), mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
-        OPENGL_CHECK_ERROR ( true );
+        OPENGL_CHECK_ERROR_THROW;
 
         uint8_t* offset = nullptr;
         if ( mesh_buffer.vertexflags() & POSITION_MASK )
         {
             glEnableVertexAttribArray ( 0 );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
 
         if ( mesh_buffer.vertexflags() & NORMAL_MASK )
         {
             glEnableVertexAttribArray ( 1 );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
 
         if ( mesh_buffer.vertexflags() & UV_MASK )
         {
             glEnableVertexAttribArray ( 2 );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 2, 2, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 2;
         }
 
         if ( mesh_buffer.vertexflags() & WEIGHT_MASK )
         {
             glEnableVertexAttribArray ( 3 );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 3, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
             glEnableVertexAttribArray ( 4 );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 4, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR ( true );
+            OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
         }
         mesh_buffer.Clear();

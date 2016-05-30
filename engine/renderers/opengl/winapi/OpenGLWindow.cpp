@@ -93,7 +93,7 @@ try:
             WNDCLASSEX wcex;
             wcex.cbSize = sizeof ( WNDCLASSEX );
             wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-            wcex.lpfnWndProc = ( WNDPROC ) DefWindowProc;
+            wcex.lpfnWndProc = ( WNDPROC ) OpenGLWindow::WindowProc;
             wcex.cbClsExtra = 0;
             wcex.cbWndExtra = 0;
             wcex.hInstance = GetModuleHandle ( nullptr );

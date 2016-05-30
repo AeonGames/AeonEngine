@@ -2,6 +2,11 @@
 
 layout ( location = 0 ) in vec3 VertexPosition;
 layout ( location = 1 ) in vec3 VertexNormal;
+layout ( location = 2 ) in vec3 VertexTangent;
+layout ( location = 3 ) in vec3 VertexBitangent;
+layout ( location = 4 ) in vec2 VertexUV;
+layout ( location = 5 ) in vec4 VertexWeightIndices;
+layout ( location = 6 ) in vec4 VertexWeights;
 
 out vec3 LightIntensity;
 
