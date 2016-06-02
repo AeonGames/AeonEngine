@@ -97,6 +97,8 @@ set(ENGINE_MATH_SOURCES
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
     ${CMAKE_SOURCE_DIR}/proto/Configuration.proto
+    ${CMAKE_SOURCE_DIR}/proto/vector3.proto
+    ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
 )
 
