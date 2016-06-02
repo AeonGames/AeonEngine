@@ -15,15 +15,9 @@
 syntax = "proto3";
 package AeonGames;
 
-import "vector3.proto";
-
-message MeshBuffer {
-	uint32 Version         = 1;
-    Vector3Buffer Min      = 2;
-    Vector3Buffer Max      = 3;
-    uint32 VertexFlags     = 4;
-    uint32 VertexCount     = 5;
-    uint32 IndexType       = 6;		
-    uint32 IndexCount      = 7;
-    bytes VertexBuffer     = 8;
+message Vector3Buffer
+{
+    float x = 1;
+    float y = 2;
+    float z = 3;
 }
