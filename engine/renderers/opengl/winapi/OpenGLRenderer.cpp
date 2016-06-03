@@ -38,8 +38,7 @@ namespace AeonGames
     WNDPROC OpenGLRenderer::mWindowProc = nullptr;
 OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
         mInstance ( nullptr ),
-                  mOpenGLWindow ( aAeonEngine ),
-                  mOpenGLPipeline()
+                  mOpenGLWindow ( aAeonEngine )
     {
         Initialize();
     }
@@ -168,6 +167,12 @@ OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
 #endif
     void OpenGLRenderer::Initialize()
     {
+        if ( !LoadOpenGLAPI() )
+        {
+            throw std::runtime_error ( "Unable to Load OpenGL functions." );
+        }
+        // This is here just for testing ATM
+        ShaderProgram ShaderProgram ( "shader_program.txt" );
     }
     void OpenGLRenderer::Finalize()
     {

@@ -27,7 +27,7 @@ limitations under the License.
 #endif
 
 #include "winapi/OpenGLWindow.h"
-#include "OpenGLPipeline.h"
+#include "ShaderProgram.h"
 
 namespace AeonGames
 {
@@ -57,7 +57,6 @@ namespace AeonGames
         GLXContext mGLXContext = nullptr;
 #endif
         OpenGLWindow mOpenGLWindow;
-        OpenGLPipeline mOpenGLPipeline;
     };
 }
 #endif

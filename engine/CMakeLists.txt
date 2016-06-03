@@ -50,7 +50,7 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
-    renderers/opengl/OpenGLPipeline.h
+    renderers/opengl/ShaderProgram.h
     renderers/opengl/winapi/OpenGLWindow.h
     renderers/opengl/OpenGLMesh.h)
     
@@ -80,7 +80,7 @@ set(ENGINE_VULKAN_RENDERER_SOURCES
 set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
     renderers/opengl/OpenGLRenderer.cpp
-    renderers/opengl/OpenGLPipeline.cpp
+    renderers/opengl/ShaderProgram.cpp
     renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/winapi/OpenGLWindow.cpp
     renderers/opengl/OpenGLFunctions.cpp)
@@ -97,9 +97,11 @@ set(ENGINE_MATH_SOURCES
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
     ${CMAKE_SOURCE_DIR}/proto/Configuration.proto
+    ${CMAKE_SOURCE_DIR}/proto/vector2.proto    
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+    ${CMAKE_SOURCE_DIR}/proto/shader_program.proto
 )
 
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})

@@ -15,18 +15,54 @@
 syntax = "proto3";
 package AeonGames;
 
+import "vector2.proto";
 import "vector3.proto";
 import "vector4.proto";
 
 message PropertyBuffer {
-	enum Type { VEC3 = 1; VEC4 = 2; }
-	string name = 1;
+	enum Type 
+	{
+		UNKNOWN = 0;
+		// All of these match OpenGL constants
+        FLOAT      = 0x1406;
+        FLOAT_VEC2 = 0x8B50;
+		FLOAT_VEC3 = 0x8B51;
+        FLOAT_VEC4 = 0x8B52;		
+        SAMPLER_2D = 0x8B5E;
+        SAMPLER_CUBE = 0x8B60;
+		// The following have no mapping to the default_value field yet.
+        //BOOL = 0x8B56;
+        //INT = 0x1404;
+        //UNSIGNED_INT = 0x1405;
+        //INT_VEC2 = 0x8B53;
+        //BOOL_VEC2 = 0x8B57;
+        //UNSIGNED_INT_VEC2 = 0x8DC6;
+        //INT_VEC3 = 0x8B54;
+        //BOOL_VEC3 = 0x8B58;
+        //UNSIGNED_INT_VEC3 = 0x8DC7;
+        //INT_VEC4 = 0x8B55;
+        //BOOL_VEC4 = 0x8B59;
+        //FLOAT_MAT2 = 0x8B5A;
+        //UNSIGNED_INT_VEC4 = 0x8DC8;
+        //FLOAT_MAT3 = 0x8B5B;
+        //FLOAT_MAT4 = 0x8B5C;	
+	}
+	string uniform_name = 1;
 	string display_name = 2;
 	Type type = 3;
-	optional Vector3Buffer vec3 = 4;
-	optional Vector4Buffer vec4 = 5;
+	oneof default_value
+	{
+		float    scalar_float = 4;
+		Vector2Buffer vector2 = 5;
+		Vector3Buffer vector3 = 6;
+		Vector4Buffer vector4 = 7;
+		string        texture = 8;
+	}
 }
 
 message ShaderProgramBuffer {
-	repeated PropertyBuffer properties = 1;
+	uint32 glsl_version                = 1;
+	repeated PropertyBuffer properties = 2;
+	string vertex_shader               = 3;
+	string fragment_shader             = 4;
 }

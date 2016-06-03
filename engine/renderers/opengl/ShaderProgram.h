@@ -13,19 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLPIPELINE_H
-#define AEONGAMES_OPENGLPIPELINE_H
+#ifndef AEONGAMES_SHADERPROGRAM_H
+#define AEONGAMES_SHADERPROGRAM_H
 #include <cstdint>
+#include <string>
 namespace AeonGames
 {
-    class OpenGLPipeline
+    class ShaderProgram
     {
     public:
-        OpenGLPipeline();
-        ~OpenGLPipeline();
+        ShaderProgram ( const std::string& aFilename );
+        ~ShaderProgram();
     private:
         void Initialize();
         void Finalize();
+        std::string mFilename;
         uint32_t mProgram;
     };
 }
