@@ -16,6 +16,7 @@ limitations under the License.
 #include <fstream>
 #include <sstream>
 #include <ostream>
+#include <regex>
 #include "ShaderProgram.h"
 #include "OpenGLFunctions.h"
 
@@ -31,11 +32,31 @@ limitations under the License.
 
 namespace AeonGames
 {
-#include "main.vert.h"
 #include "main.frag.h"
 }
+
 namespace AeonGames
 {
+#if 0
+    /*
+    This code has to be moved to a converter tool
+    */
+    class CodeFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
+    {
+    public:
+        CodeFieldValuePrinter() : google::protobuf::TextFormat::FieldValuePrinter()
+        {
+        };
+        virtual std::string PrintString ( const std::string & val ) const override
+        {
+            std::string pattern ( "\\\\n" );
+            std::regex newline ( pattern );
+            std::string printed ( google::protobuf::TextFormat::FieldValuePrinter::PrintString ( val ) );
+            printed = std::regex_replace ( printed, newline, "$&\"\n\"" );
+            return printed;
+        }
+    };
+#endif
 ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
         mFilename ( aFilename ),
                   mProgram ( 0 )
@@ -88,6 +109,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
             else
             {
                 std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
+                std::cout << text << std::endl;
                 if ( !google::protobuf::TextFormat::ParseFromString ( text, &shader_program_buffer ) )
                 {
                     throw std::runtime_error ( "Text program parsing failed." );
@@ -180,39 +202,20 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
             meant to generate a text
             template for shader program
             files.*/
-            ShaderProgramBuffer shader_program_buffer;
-            shader_program_buffer.set_glsl_version ( 330 );
-            PropertyBuffer *property;
-
-            property = shader_program_buffer.add_properties();
-            property->set_display_name ( "Scalar Float" );
-            property->set_uniform_name ( "scalar_float_value" );
-            property->set_type ( PropertyBuffer_Type::PropertyBuffer_Type_FLOAT );
-            property->set_scalar_float ( 10 );
-
-            property = shader_program_buffer.add_properties();
-            property->set_display_name ( "2D Vector" );
-            property->set_uniform_name ( "vec2_value" );
-            property->set_type ( PropertyBuffer_Type::PropertyBuffer_Type_FLOAT_VEC2 );
-            Vector2Buffer vec2;
-            property->mutable_vector2()->set_x ( 1 );
-            property->mutable_vector2()->set_y ( 2 );
-
-            property = shader_program_buffer.add_properties();
-            property->set_display_name ( "3D Vector" );
-            property->set_uniform_name ( "vec3_value" );
-            property->set_type ( PropertyBuffer_Type::PropertyBuffer_Type_FLOAT_VEC3 );
-            Vector2Buffer vec3;
-            property->mutable_vector3()->set_x ( 1 );
-            property->mutable_vector3()->set_y ( 2 );
-            property->mutable_vector3()->set_z ( 3 );
-
-            shader_program_buffer.mutable_vertex_shader()->set_code ( reinterpret_cast<const char*> ( main_vert ), main_vert_len );
-            shader_program_buffer.mutable_fragment_shader()->set_code ( reinterpret_cast<const char*> ( main_frag ), main_frag_len );
             // Write Text Version
+            google::protobuf::TextFormat::Printer printer;
+#if 1
+            if ( !printer.RegisterFieldValuePrinter (
+                     shader_program_buffer.vertex_shader().GetDescriptor()->FindFieldByName ( "code" ),
+                     new CodeFieldValuePrinter ) )
+            {
+                std::cout << "Failed to register field value printer." << std::endl;
+            }
+#endif
             std::string text_string;
             std::ofstream text_file ( "shader_program.txt", std::ifstream::out );
-            google::protobuf::TextFormat::PrintToString ( shader_program_buffer, &text_string );
+            //google::protobuf::TextFormat::PrintToString ( shader_program_buffer, &text_string );
+            printer.PrintToString ( shader_program_buffer, &text_string );
             text_file << "AEONPRG" << std::endl;
             text_file.write ( text_string.c_str(), text_string.length() );
             text_file.close();

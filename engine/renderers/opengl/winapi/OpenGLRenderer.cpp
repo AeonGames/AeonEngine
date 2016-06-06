@@ -172,7 +172,7 @@ OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
         // This is here just for testing ATM
-        ShaderProgram ShaderProgram ( "shader_program.txt" );
+        ShaderProgram ShaderProgram ( "game/shaders/simple_phong.txt" );
     }
     void OpenGLRenderer::Finalize()
     {

@@ -1,0 +1,60 @@
+AEONPRG
+glsl_version: 330
+properties {
+  uniform_name: "LightPosition"
+  display_name: "Light position in eye coords"
+  type: FLOAT_VEC3
+  vector3 {
+    x: 100
+    y: 100
+    z: 100
+  }
+}
+properties {
+  uniform_name: "Kd"
+  display_name: "Diffuse reflectivity"
+  type: FLOAT_VEC3
+  vector3 {
+    x: 0.1
+    y: 0.1
+    z: 0.1
+  }
+}
+properties {
+  uniform_name: "Ld"
+  display_name: "Diffuse light intensity"
+  type: FLOAT_VEC3
+  vector3 {
+    x: 0.5
+    y: 0.5
+    z: 0.5
+  }
+}
+vertex_shader {
+  entry_point: "phong();"
+  code: "out vec3 LightIntensity;\n"
+  "void phong()\n"
+  "{\n"
+  "if ( length ( VertexNormal ) != 0 )\n"
+  "{\n"
+  "vec3 tnorm = normalize ( NormalMatrix * VertexNormal );\n"
+  "vec4 eyeCoords = ModelViewMatrix * vec4 ( VertexPosition, 1.0 );\n"
+  "vec3 s = normalize ( LightPosition - eyeCoords.xyz );\n"
+  "LightIntensity = Ld * Kd * max ( dot ( s, tnorm ), 0.0 );\n"
+  "}\n"
+  "else\n"
+  "{\n"
+  "LightIntensity = Ld;\n"
+  "}\n"
+  "}\n"
+}
+fragment_shader {
+  entry_point: "phong();"
+  code: "in vec3 LightIntensity;\n"
+  "layout ( location = 0 ) out vec4 FragColor;\n"
+  "\n"
+  "void phong()\n"
+  "{\n"
+  "FragColor = vec4 ( LightIntensity, 1.0 );\n"
+  "}\n"
+}
