@@ -60,9 +60,14 @@ message PropertyBuffer {
 	}
 }
 
+message ShaderBuffer {
+	string entry_point = 1;
+	string code = 2;
+}
+
 message ShaderProgramBuffer {
 	uint32 glsl_version                = 1;
 	repeated PropertyBuffer properties = 2;
-	string vertex_shader               = 3;
-	string fragment_shader             = 4;
+	ShaderBuffer vertex_shader               = 3;
+	ShaderBuffer fragment_shader             = 4;
 }
