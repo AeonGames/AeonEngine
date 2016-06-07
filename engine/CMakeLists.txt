@@ -23,6 +23,15 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
+    ${CMAKE_SOURCE_DIR}/proto/Configuration.proto
+    ${CMAKE_SOURCE_DIR}/proto/vector2.proto    
+    ${CMAKE_SOURCE_DIR}/proto/vector3.proto
+    ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+    ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+    ${CMAKE_SOURCE_DIR}/proto/shader_program.proto
+)
+
 add_custom_command( OUTPUT
                         ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
                         ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
@@ -94,15 +103,6 @@ set(ENGINE_MATH_SOURCES
     math/Vector3.cpp
     math/Matrix4x4.cpp
     math/Transform.cpp)
-
-PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
-    ${CMAKE_SOURCE_DIR}/proto/Configuration.proto
-    ${CMAKE_SOURCE_DIR}/proto/vector2.proto    
-    ${CMAKE_SOURCE_DIR}/proto/vector3.proto
-    ${CMAKE_SOURCE_DIR}/proto/vector4.proto
-    ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-    ${CMAKE_SOURCE_DIR}/proto/shader_program.proto
-)
 
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
 source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
