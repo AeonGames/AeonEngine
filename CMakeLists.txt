@@ -58,6 +58,7 @@ else()
     message("No GUI Platform detected")
 endif()
 
+add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
 
