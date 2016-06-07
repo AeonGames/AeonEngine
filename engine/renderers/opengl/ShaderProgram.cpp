@@ -32,11 +32,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-#include "main.frag.h"
-}
-
-namespace AeonGames
-{
 #if 0
     /*
     This code has to be moved to a converter tool
@@ -140,14 +135,14 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
             switch ( i.type() )
             {
             case PropertyBuffer_Type_FLOAT:
-                type_name = " float ";
+                type_name = "float ";
                 if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
                 {
                     default_value = " = " + std::to_string ( i.scalar_float() );
                 }
                 break;
             case PropertyBuffer_Type_FLOAT_VEC2:
-                type_name = " vec2 ";
+                type_name = "vec2 ";
                 if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
                 {
                     default_value = " = vec2( " +
@@ -156,7 +151,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 }
                 break;
             case PropertyBuffer_Type_FLOAT_VEC3:
-                type_name = " vec3 ";
+                type_name = "vec3 ";
                 if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
                 {
                     default_value = " = vec3( " +
@@ -166,7 +161,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 }
                 break;
             case PropertyBuffer_Type_FLOAT_VEC4:
-                type_name = " vec4 ";
+                type_name = "vec4 ";
                 if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
                 {
                     default_value = " = vec4( " +
@@ -177,11 +172,11 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 }
                 break;
             case PropertyBuffer_Type_SAMPLER_2D:
-                type_name = " sampler2D ";
+                type_name = "sampler2D ";
                 /* To be continued ... */
                 break;
             case PropertyBuffer_Type_SAMPLER_CUBE:
-                type_name = " samplerCube ";
+                type_name = "samplerCube ";
                 /* To be continued ... */
                 break;
             }
@@ -231,10 +226,11 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
         OPENGL_CHECK_ERROR_THROW;
 
 
-        //const GLchar* vertex_shader_source = reinterpret_cast<const GLchar *> ( main_vert );
         std::cout << vertex_shader_source << std::endl;
         const GLchar* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( vertex_shader_source.data() );
         GLint vertex_shader_len = static_cast<GLint> ( vertex_shader_source.length() );
+
+
         glShaderSource (
             vertex_shader,
             1,
@@ -264,11 +260,87 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
         glAttachShader ( mProgram, vertex_shader );
         OPENGL_CHECK_ERROR_THROW;
         //-------------------------
+
+        std::string fragment_shader_source;
+
+        fragment_shader_source.append ( "#version " + std::to_string ( shader_program_buffer.glsl_version() ) + "\n" );
+        fragment_shader_source.append (
+            "uniform mat4 ModelViewMatrix;\n"
+            "uniform mat4 ModelViewProjectionMatrix;\n"
+            "uniform mat3 NormalMatrix;\n" );
+        for ( auto& i : shader_program_buffer.properties() )
+        {
+            std::string type_name;
+            std::string default_value ( "" );
+            switch ( i.type() )
+            {
+            case PropertyBuffer_Type_FLOAT:
+                type_name = " float ";
+                if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
+                {
+                    default_value = " = " + std::to_string ( i.scalar_float() );
+                }
+                break;
+            case PropertyBuffer_Type_FLOAT_VEC2:
+                type_name = " vec2 ";
+                if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
+                {
+                    default_value = " = vec2( " +
+                                    std::to_string ( i.vector2().x() ) + ", " +
+                                    std::to_string ( i.vector2().y() ) + ")";
+                }
+                break;
+            case PropertyBuffer_Type_FLOAT_VEC3:
+                type_name = " vec3 ";
+                if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
+                {
+                    default_value = " = vec3( " +
+                                    std::to_string ( i.vector3().x() ) + ", " +
+                                    std::to_string ( i.vector3().y() ) + ", " +
+                                    std::to_string ( i.vector3().z() ) + ")";
+                }
+                break;
+            case PropertyBuffer_Type_FLOAT_VEC4:
+                type_name = " vec4 ";
+                if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
+                {
+                    default_value = " = vec4( " +
+                                    std::to_string ( i.vector4().x() ) + ", " +
+                                    std::to_string ( i.vector4().y() ) + ", " +
+                                    std::to_string ( i.vector4().z() ) + ", " +
+                                    std::to_string ( i.vector4().w() ) + ")";
+                }
+                break;
+            case PropertyBuffer_Type_SAMPLER_2D:
+                type_name = " sampler2D ";
+                /* To be continued ... */
+                break;
+            case PropertyBuffer_Type_SAMPLER_CUBE:
+                type_name = " samplerCube ";
+                /* To be continued ... */
+                break;
+            }
+            fragment_shader_source.append ( "uniform " + type_name + i.uniform_name() + default_value + ";\n" );
+        }
+        fragment_shader_source.append ( shader_program_buffer.fragment_shader().code() );
+        fragment_shader_source.append (
+            "void main()\n"
+            "{\n" +
+            shader_program_buffer.fragment_shader().entry_point() +
+            "\n}\n" );
+
+
+        std::cout << fragment_shader_source << std::endl;
+
         uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
         OPENGL_CHECK_ERROR_THROW;
-        const GLchar* fragment_shader_source = reinterpret_cast<const GLchar *> ( main_frag );
-        GLint fragment_shader_len = main_frag_len;
-        glShaderSource ( fragment_shader, 1, &fragment_shader_source, &fragment_shader_len );
+
+
+        const GLchar* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( fragment_shader_source.c_str() );
+        GLint fragment_shader_len = static_cast<GLint> ( fragment_shader_source.length() );
+
+
+        glShaderSource ( fragment_shader, 1, &fragment_shader_source_ptr, &fragment_shader_len );
         OPENGL_CHECK_ERROR_THROW;
         glCompileShader ( fragment_shader );
         OPENGL_CHECK_ERROR_THROW;
@@ -284,6 +356,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
             if ( info_log_len > 1 )
             {
                 glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+                std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
         }
