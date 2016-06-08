@@ -68,6 +68,6 @@ message ShaderBuffer {
 message ShaderProgramBuffer {
 	uint32 glsl_version                = 1;
 	repeated PropertyBuffer properties = 2;
-	ShaderBuffer vertex_shader               = 3;
-	ShaderBuffer fragment_shader             = 4;
+	ShaderBuffer vertex_shader         = 3;
+	ShaderBuffer fragment_shader       = 4;
 }
