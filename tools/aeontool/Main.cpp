@@ -13,9 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <fstream>
-#include <sstream>
-#include <ostream>
+#include <iostream>
 #include <regex>
 
 #ifdef _MSC_VER
@@ -23,14 +21,13 @@ limitations under the License.
 #pragma warning( disable : 4251 )
 #endif
 #include <google/protobuf/text_format.h>
-#include "shader_program.pb.h"
-#include "mesh.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 
 #include <cassert>
 #include <cstdint>
+#include "Convert.h"
 
 int main ( int argc, char *argv[] )
 {
@@ -48,5 +45,22 @@ int main ( int argc, char *argv[] )
 #endif
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
 #endif
-    return 0;
+    try
+    {
+        AeonGames::Convert convert ( argc, argv );
+        int retval = convert.Run();
+        google::protobuf::ShutdownProtobufLibrary();
+        return retval;
+    }
+    catch ( std::runtime_error &e )
+    {
+        std::cout << e.what() << std::endl;
+        google::protobuf::ShutdownProtobufLibrary();
+        return -1;
+    }
+    catch ( ... )
+    {
+        google::protobuf::ShutdownProtobufLibrary();
+        return -1;
+    }
 }

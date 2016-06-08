@@ -32,26 +32,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-#if 0
-    /*
-    This code has to be moved to a converter tool
-    */
-    class CodeFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
-    {
-    public:
-        CodeFieldValuePrinter() : google::protobuf::TextFormat::FieldValuePrinter()
-        {
-        };
-        virtual std::string PrintString ( const std::string & val ) const override
-        {
-            std::string pattern ( "\\\\n" );
-            std::regex newline ( pattern );
-            std::string printed ( google::protobuf::TextFormat::FieldValuePrinter::PrintString ( val ) );
-            printed = std::regex_replace ( printed, newline, "$&\"\n\"" );
-            return printed;
-        }
-    };
-#endif
 ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
         mFilename ( aFilename ),
                   mProgram ( 0 )
