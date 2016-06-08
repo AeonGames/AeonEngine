@@ -43,3 +43,8 @@ codeblocks64
 
 # CTags
 tags
+
+# Binary assets
+*.prg
+*.msh
+

@@ -30,6 +30,7 @@ PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
     ${CMAKE_SOURCE_DIR}/proto/shader_program.proto
+    ${CMAKE_SOURCE_DIR}/proto/material.proto
 )
 
 add_custom_command( OUTPUT
@@ -60,6 +61,7 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
     renderers/opengl/ShaderProgram.h
+    renderers/opengl/Material.h
     renderers/opengl/winapi/OpenGLWindow.h
     renderers/opengl/OpenGLMesh.h)
     
@@ -90,6 +92,7 @@ set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
     renderers/opengl/OpenGLRenderer.cpp
     renderers/opengl/ShaderProgram.cpp
+    renderers/opengl/Material.cpp
     renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/winapi/OpenGLWindow.cpp
     renderers/opengl/OpenGLFunctions.cpp)
