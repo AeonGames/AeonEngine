@@ -105,3 +105,19 @@ endif()
 add_custom_target(generate-python-protobuf-source
     ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/mesh.proto
     COMMENT "Generating Protocol Buffers Python Code")
+
+###########################################
+# Binary asset generation target.
+###########################################
+
+get_target_property(AEONTOOL_EXECUTABLE aeontool RUNTIME_OUTPUT_NAME)
+add_custom_target(generate-binary-assets
+    COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
+    COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
+    DEPENDS aeontool
+    SOURCES
+        ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
+        ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
+    COMMENT "Generating binary game assets")
