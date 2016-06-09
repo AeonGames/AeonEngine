@@ -58,6 +58,15 @@ else()
     message("No GUI Platform detected")
 endif()
 
+find_package(Qt5 COMPONENTS Core Gui Widgets OpenGL Test)
+if(WIN32)
+    find_package(Qt5 COMPONENTS WinExtras)
+endif(WIN32)
+if(Qt5_FOUND)
+    add_subdirectory(tools/modelviewer)
+endif()
+
+
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
