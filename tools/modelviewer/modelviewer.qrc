@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icons">
+    <file alias="magnifying_glass">resources/icons/magnifying_glass.svg</file>
+  </qresource>
+</RCC>

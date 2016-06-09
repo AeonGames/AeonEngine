@@ -37,8 +37,7 @@ namespace AeonGames
 
     WNDPROC OpenGLRenderer::mWindowProc = nullptr;
 OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
-        mInstance ( nullptr ),
-                  mOpenGLWindow ( aAeonEngine )
+        mInstance ( nullptr ),  mOpenGLWindow ( aAeonEngine )
     {
         Initialize();
     }
