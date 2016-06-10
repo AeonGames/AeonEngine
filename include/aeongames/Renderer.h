@@ -30,7 +30,9 @@ namespace AeonGames
         virtual void EndRender() const = 0;
         virtual void Render ( const std::shared_ptr<Mesh> aMesh ) const = 0;
         virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
-        virtual GameWindow& GetGameWindow() = 0;
+        virtual bool RegisterRenderingWindow ( uintptr_t aWindowId ) = 0;
+        virtual void UnregisterRenderingWindow ( uintptr_t aWindowId ) = 0;
+        virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const = 0;
     protected:
         virtual ~Renderer() = default;
     };

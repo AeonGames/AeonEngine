@@ -40,11 +40,11 @@ namespace AeonGames
         DLL AeonEngine& operator= ( const AeonEngine& aRhs );
 #else
         /// Move
-        AeonEngine ( AeonEngine&& aRhs ) noexcept = delete;
-        AeonEngine& operator= ( AeonEngine&& aRhs ) noexcept = delete;
+        AeonEngine ( AeonEngine&& ) noexcept = delete;
+        AeonEngine& operator= ( AeonEngine&& ) noexcept = delete;
         /// Copy
-        AeonEngine ( const AeonEngine& aRhs ) = delete;
-        AeonEngine& operator= ( const AeonEngine& aRhs ) = delete;
+        AeonEngine ( const AeonEngine& ) = delete;
+        AeonEngine& operator= ( const AeonEngine& ) = delete;
 #endif
         /**
         Advance the simulation a single step.
@@ -59,14 +59,10 @@ namespace AeonGames
         DLL std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const;
         DLL void SetScene ( Scene* aScene );
         DLL Scene* GetScene() const;
-#if 0
-#ifdef _WIN32
-        DLL bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd );
-#else
-        DLL bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow );
-#endif
-        DLL void FinalizeRenderingWindow();
-#endif
+
+        DLL bool RegisterRenderingWindow ( uintptr_t aWindowId );
+        DLL void UnregisterRenderingWindow ( uintptr_t aWindowId );
+        DLL void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const;
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

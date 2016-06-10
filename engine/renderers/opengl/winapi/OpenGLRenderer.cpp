@@ -34,10 +34,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-
-    WNDPROC OpenGLRenderer::mWindowProc = nullptr;
-OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
-        mInstance ( nullptr ),  mOpenGLWindow ( aAeonEngine )
+    OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try
     {
         Initialize();
     }
@@ -69,12 +66,10 @@ OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
         }
     }
 
-#if 0
-    bool OpenGLRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    bool OpenGLRenderer::RegisterRenderingWindow ( uintptr_t aWindowId )
     {
-        mInstance = aInstance;
-        mHwnd = aHwnd;
-        PIXELFORMATDESCRIPTOR pfd;
+        mHwnd = reinterpret_cast<HWND> ( aWindowId );
+        PIXELFORMATDESCRIPTOR pfd{};
         PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = nullptr;
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
         mDeviceContext = GetDC ( mHwnd );
@@ -83,27 +78,8 @@ OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
         pfd.iPixelType = PFD_TYPE_RGBA;
         pfd.cColorBits = 32;
-        pfd.cRedBits = 0;
-        pfd.cRedShift = 0;
-        pfd.cGreenBits = 0;
-        pfd.cGreenShift = 0;
-        pfd.cBlueBits = 0;
-        pfd.cBlueShift = 0;
-        pfd.cAlphaBits = 0;
-        pfd.cAlphaShift = 0;
-        pfd.cAccumBits = 0;
-        pfd.cAccumRedBits = 0;
-        pfd.cAccumGreenBits = 0;
-        pfd.cAccumBlueBits = 0;
-        pfd.cAccumAlphaBits = 0;
         pfd.cDepthBits = 32;
-        pfd.cStencilBits = 0;
-        pfd.cAuxBuffers = 0;
         pfd.iLayerType = PFD_MAIN_PLANE;
-        pfd.bReserved = 0;
-        pfd.dwLayerMask = 0;
-        pfd.dwVisibleMask = 0;
-        pfd.dwDamageMask = 0;
         int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
         SetPixelFormat ( mDeviceContext, pf, &pfd );
         mOpenGLContext = wglCreateContext ( mDeviceContext );
@@ -129,12 +105,19 @@ OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
                 wglDeleteContext ( mOpenGLContext );
                 mOpenGLContext = wglCreateContextAttribsARB ( mDeviceContext, nullptr, ctxAttribs );
                 wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+                if ( !LoadOpenGLAPI() )
+                {
+                    std::cout << "Unable to Load OpenGL functions." << std::endl;
+                    return false;
+                }
+
+                // This is here just for testing ATM
+                ShaderProgram ShaderProgram ( "game/shaders/simple_phong.txt" );
                 RECT rect;
                 GetClientRect ( mHwnd, &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
                 glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
-                mWindowProc = reinterpret_cast<WNDPROC> ( GetWindowLongPtr ( mHwnd, GWLP_WNDPROC ) );
-                SetWindowLongPtr ( mHwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR> ( WindowProc ) );
+                glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
         }
         else
@@ -144,50 +127,36 @@ OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try :
         return true;
     }
 
-    void OpenGLRenderer::FinalizeRenderingWindow ()
+    void OpenGLRenderer::UnregisterRenderingWindow ( uintptr_t aWindowId )
     {
-        if ( mHwnd && mWindowProc )
+        if ( mHwnd && ( mHwnd == reinterpret_cast<HWND> ( aWindowId ) ) )
         {
-            SetWindowLongPtr ( mHwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR> ( mWindowProc ) );
-            mWindowProc = nullptr;
-        }
-        if ( mDeviceContext != nullptr )
-        {
-            wglMakeCurrent ( mDeviceContext, nullptr );
-            ReleaseDC ( mHwnd, mDeviceContext );
-            mDeviceContext = nullptr;
-        }
-        if ( mOpenGLContext )
-        {
-            wglDeleteContext ( mOpenGLContext );
-            mOpenGLContext = nullptr;
+            if ( mDeviceContext != nullptr )
+            {
+                wglMakeCurrent ( mDeviceContext, nullptr );
+                ReleaseDC ( mHwnd, mDeviceContext );
+                mDeviceContext = nullptr;
+            }
+            if ( mOpenGLContext )
+            {
+                wglDeleteContext ( mOpenGLContext );
+                mOpenGLContext = nullptr;
+            }
         }
     }
-#endif
+
+    void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
+    {
+        if ( aWidth > 0 && aHeight > 0 )
+        {
+            glViewport ( 0, 0, aWidth, aHeight );
+        }
+    }
+
     void OpenGLRenderer::Initialize()
     {
-        if ( !LoadOpenGLAPI() )
-        {
-            throw std::runtime_error ( "Unable to Load OpenGL functions." );
-        }
-        // This is here just for testing ATM
-        ShaderProgram ShaderProgram ( "game/shaders/simple_phong.txt" );
     }
     void OpenGLRenderer::Finalize()
     {
-    }
-
-    LRESULT OpenGLRenderer::WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-    {
-        switch ( uMsg )
-        {
-        case WM_SIZE:
-            if ( LOWORD ( lParam ) && HIWORD ( lParam ) )
-            {
-                glViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
-            }
-            break;
-        }
-        return CallWindowProc ( mWindowProc, hwnd, uMsg, wParam, lParam );
     }
 }
