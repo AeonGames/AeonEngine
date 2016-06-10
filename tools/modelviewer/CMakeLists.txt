@@ -16,8 +16,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${CMAKE_SOURCE_DIR}/include
                     ${Qt5Core_INCLUDE_DIRS}
                     ${Qt5Gui_INCLUDE_DIRS}
-                    ${Qt5Widgets_INCLUDE_DIRS}
-                    ${Qt5OpenGL_INCLUDE_DIRS})
+                    ${Qt5Widgets_INCLUDE_DIRS})
                     
 set(MODELVIEWER_QT_HEADERS
     MainWindow.h
@@ -68,7 +67,6 @@ target_link_libraries(modelviewer
     ${Qt5Core_LIBRARIES}
     ${Qt5Gui_LIBRARIES}
     ${Qt5Widgets_LIBRARIES}
-    ${Qt5OpenGL_LIBRARIES}
     ${Qt5WinExtras_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${CMAKE_DL_LIBS}
