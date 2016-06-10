@@ -58,7 +58,7 @@ else()
     message("No GUI Platform detected")
 endif()
 
-find_package(Qt5 COMPONENTS Core Gui Widgets OpenGL Test)
+find_package(Qt5 COMPONENTS Core Gui Widgets)
 if(WIN32)
     find_package(Qt5 COMPONENTS WinExtras)
 endif(WIN32)
