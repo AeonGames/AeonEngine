@@ -91,18 +91,20 @@ namespace AeonGames
 #endif
     void AeonEngine::Step ( double aDeltaTime )
     {
-        //std::cout << __func__ << " " << __LINE__ << std::endl;
+        pImpl->mRenderer.BeginRender();
         if ( pImpl->mScene != nullptr )
         {
             //pImpl->mScene->
             //pImpl->mScene->Render();
             //pImpl->mRenderer.Render(aDeltaTime);
         }
+        pImpl->mRenderer.EndRender();
     }
 
     int AeonEngine::Run()
     {
-        return pImpl->mRenderer.GetGameWindow().Run();
+        //return pImpl->mRenderer.GetGameWindow().Run();
+        return 0;
     }
 
     std::shared_ptr<Mesh> AeonEngine::GetMesh ( const std::string & aFilename ) const
@@ -120,24 +122,17 @@ namespace AeonGames
         return pImpl->mScene;
     }
 
-#if 0
-#if _WIN32
-    bool AeonEngine::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
+    bool AeonEngine::RegisterRenderingWindow ( uintptr_t aWindowId )
     {
-        return pImpl->mRenderer.InitializeRenderingWindow ( aInstance, aHwnd );
+        return pImpl->mRenderer.RegisterRenderingWindow ( aWindowId );
     }
-#else
-    bool AeonEngine::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
-    {
-        return pImpl->mRenderer.InitializeRenderingWindow ( aDisplay, aWindow );
-    }
-#endif
-#endif
 
-#if 0
-    void AeonEngine::FinalizeRenderingWindow()
+    void AeonEngine::UnregisterRenderingWindow ( uintptr_t aWindowId )
     {
-        return pImpl->mRenderer.FinalizeRenderingWindow();
+        pImpl->mRenderer.UnregisterRenderingWindow ( aWindowId );
     }
-#endif
+    void AeonEngine::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
+    {
+        pImpl->mRenderer.Resize ( aWindowId, aWidth, aHeight );
+    }
 }

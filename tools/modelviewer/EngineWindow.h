@@ -16,6 +16,10 @@ limitations under the License.
 #ifndef AEONGAMES_ENGINEWINDOW_H
 #define AEONGAMES_ENGINEWINDOW_H
 #include <QWindow>
+#include <QTimer>
+#include <QElapsedTimer>
+
+#include "aeongames/AeonEngine.h"
 namespace AeonGames
 {
     class EngineWindow : public QWindow
@@ -24,6 +28,13 @@ namespace AeonGames
     public:
         EngineWindow ( QWindow *parent = nullptr );
         ~EngineWindow();
+    private:
+        void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
+        void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
+        bool event ( QEvent* aEvent ) override final;
+        QTimer mTimer;
+        QElapsedTimer mStopWatch;
+        AeonEngine mAeonEngine;
     };
 }
 #endif

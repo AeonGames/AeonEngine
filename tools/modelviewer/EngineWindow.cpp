@@ -13,10 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <QResizeEvent>
 #include "EngineWindow.h"
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent )
+    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer()
     {
         /* On
         Windows we want the window to own its device context.
@@ -36,9 +37,44 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
+        if ( !mAeonEngine.RegisterRenderingWindow ( winId() ) )
+        {
+            throw std::runtime_error ( "Window registration failed." );
+        }
+        connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
     }
     EngineWindow::~EngineWindow()
     {
+        mAeonEngine.UnregisterRenderingWindow ( winId() );
+    }
+    void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
+    {
+        mAeonEngine.Resize ( winId(), aResizeEvent->size().width(), aResizeEvent->size().height() );
+    }
 
+    void EngineWindow::exposeEvent ( QExposeEvent * aExposeEvent )
+    {
+        Q_UNUSED ( aExposeEvent );
+        if ( isExposed() )
+        {
+            mTimer.start ( 0 );
+            mStopWatch.start();
+        }
+        else
+        {
+            mTimer.stop();
+            mStopWatch.invalidate();
+        }
+    }
+    bool EngineWindow::event ( QEvent * aEvent )
+    {
+        switch ( aEvent->type() )
+        {
+        case QEvent::UpdateRequest:
+            mAeonEngine.Step ( 0.0 );
+            return true;
+        default:
+            return QWindow::event ( aEvent );
+        }
     }
 }

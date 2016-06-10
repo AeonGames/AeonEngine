@@ -40,23 +40,22 @@ namespace AeonGames
         void EndRender() const override final;
         void Render ( const std::shared_ptr<Mesh> aMesh ) const override final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
-        GameWindow& GetGameWindow() override final;
+        bool RegisterRenderingWindow ( uintptr_t aWindowId ) override final;
+        void UnregisterRenderingWindow ( uintptr_t aWindowId ) override final;
+        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const override final;
     private:
         void Initialize();
         void Finalize();
 #ifdef _WIN32
-        HINSTANCE mInstance;
         HWND mHwnd;
         HDC mDeviceContext = nullptr;
         HGLRC mOpenGLContext = nullptr;
-        static LRESULT CALLBACK WindowProc ( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-        static WNDPROC mWindowProc;
 #else
         Display* mDisplay = nullptr;
         Window mWindow = 0;
         GLXContext mGLXContext = nullptr;
 #endif
-        OpenGLWindow mOpenGLWindow;
+        //OpenGLWindow mOpenGLWindow;
     };
 }
 #endif
