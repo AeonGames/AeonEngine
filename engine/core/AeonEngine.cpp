@@ -46,14 +46,12 @@ namespace AeonGames
 
     struct AeonEngine::Impl
     {
-        Impl ( AeonEngine& aAeonEngine ) :
-            mRenderer ( aAeonEngine ) {}
         OpenGLRenderer mRenderer;
         Scene* mScene;
     };
 
     AeonEngine::AeonEngine() :
-        pImpl ( std::make_unique<Impl> ( *this ) )
+        pImpl ( std::make_unique<Impl>() )
     {
     }
 

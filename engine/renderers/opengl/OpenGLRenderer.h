@@ -34,7 +34,7 @@ namespace AeonGames
     class OpenGLRenderer : public Renderer
     {
     public:
-        OpenGLRenderer ( AeonEngine& aAeonEngine );
+        OpenGLRenderer();
         ~OpenGLRenderer();
         void BeginRender() const override final;
         void EndRender() const override final;
@@ -55,7 +55,6 @@ namespace AeonGames
         Window mWindow = 0;
         GLXContext mGLXContext = nullptr;
 #endif
-        //OpenGLWindow mOpenGLWindow;
     };
 }
 #endif
