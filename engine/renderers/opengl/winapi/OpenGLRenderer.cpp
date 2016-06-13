@@ -34,7 +34,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLRenderer::OpenGLRenderer ( AeonEngine& aAeonEngine ) try
+    OpenGLRenderer::OpenGLRenderer() try
     {
         Initialize();
     }
