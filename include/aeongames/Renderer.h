@@ -23,16 +23,27 @@ namespace AeonGames
 {
     class GameWindow;
     class Mesh;
+    class OpenGLProgram;
     class Renderer
     {
     public:
+        ///@name Rendering Functions
+        ///@{
         virtual void BeginRender() const = 0;
         virtual void EndRender() const = 0;
-        virtual void Render ( const std::shared_ptr<Mesh> aMesh ) const = 0;
+        virtual void Render ( const std::shared_ptr<Mesh>& aMesh ) const = 0;
+        ///@}
+        ///@name Resource Access Functions
+        ///@{
         virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
+        virtual std::shared_ptr<OpenGLProgram> GetProgram ( const std::string& aFilename ) const = 0;
+        ///@}
+        ///@name Window Functions
+        ///@{
         virtual bool RegisterRenderingWindow ( uintptr_t aWindowId ) = 0;
         virtual void UnregisterRenderingWindow ( uintptr_t aWindowId ) = 0;
         virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const = 0;
+        ///@}
     protected:
         virtual ~Renderer() = default;
     };

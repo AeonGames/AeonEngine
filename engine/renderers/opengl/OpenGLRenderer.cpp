@@ -24,7 +24,13 @@ namespace AeonGames
     {
         return Get<OpenGLMesh> ( aFilename );
     }
-    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh> aMesh ) const
+
+    std::shared_ptr<OpenGLProgram> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
+    {
+        return Get<OpenGLProgram> ( aFilename );
+    }
+
+    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh ) const
     {
     }
 }

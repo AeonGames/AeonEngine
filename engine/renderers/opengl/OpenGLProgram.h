@@ -13,25 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_MESH_H
-#define AEONGAMES_MESH_H
+#ifndef AEONGAMES_OPENGLPROGRAM_H
+#define AEONGAMES_OPENGLPROGRAM_H
 #include <cstdint>
+#include <string>
+#include "aeongames/Program.h"
 
 namespace AeonGames
 {
-    class Mesh
+    class OpenGLProgram : public Program
     {
-    protected:
-        virtual ~Mesh() = default;
-        enum AttributeMask
-        {
-            POSITION_MASK  = 0b1,
-            NORMAL_MASK    = 0b10,
-            TANGENT_MASK   = 0b100,
-            BITANGENT_MASK = 0b1000,
-            UV_MASK        = 0b10000,
-            WEIGHT_MASK    = 0b100000,
-        };
+    public:
+        OpenGLProgram ( const std::string& aFilename );
+        ~OpenGLProgram();
+    private:
+        void Initialize();
+        void Finalize();
+        std::string mFilename;
+        uint32_t mProgram;
     };
 }
 #endif

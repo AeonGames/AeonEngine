@@ -17,7 +17,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
-#include "ShaderProgram.h"
+#include "OpenGLProgram.h"
 #include "OpenGLFunctions.h"
 
 #ifdef _MSC_VER
@@ -25,14 +25,15 @@ limitations under the License.
 #pragma warning( disable : 4251 )
 #endif
 #include <google/protobuf/text_format.h>
-#include "shader_program.pb.h"
+#include "program.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 
 namespace AeonGames
 {
-ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
+    OpenGLProgram::OpenGLProgram ( const std::string& aFilename )
+try :
         mFilename ( aFilename ),
                   mProgram ( 0 )
     {
@@ -44,13 +45,13 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
         throw;
     }
 
-    ShaderProgram::~ShaderProgram()
+    OpenGLProgram::~OpenGLProgram()
     {
     }
 
-    void ShaderProgram::Initialize()
+    void OpenGLProgram::Initialize()
     {
-        static ShaderProgramBuffer shader_program_buffer;
+        static ProgramBuffer program_buffer;
         {
             struct stat stat_buffer;
             if ( stat ( mFilename.c_str(), &stat_buffer ) != 0 )
@@ -75,7 +76,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
             }
             else if ( magick_number[7] == '\0' )
             {
-                if ( !shader_program_buffer.ParseFromIstream ( &file ) )
+                if ( !program_buffer.ParseFromIstream ( &file ) )
                 {
                     throw std::runtime_error ( "Binary program parsing failed." );
                 }
@@ -83,7 +84,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
             else
             {
                 std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
-                if ( !google::protobuf::TextFormat::ParseFromString ( text, &shader_program_buffer ) )
+                if ( !google::protobuf::TextFormat::ParseFromString ( text, &program_buffer ) )
                 {
                     throw std::runtime_error ( "Text program parsing failed." );
                 }
@@ -93,7 +94,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
 
         std::string vertex_shader_source;
         {
-            vertex_shader_source.append ( "#version " + std::to_string ( shader_program_buffer.glsl_version() ) + "\n" );
+            vertex_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             vertex_shader_source.append (
                 "layout(location = 0) in vec3 VertexPosition;\n"
                 "layout(location = 1) in vec3 VertexNormal;\n"
@@ -106,7 +107,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 "uniform mat4 ModelViewMatrix;\n"
                 "uniform mat4 ModelViewProjectionMatrix;\n"
                 "uniform mat3 NormalMatrix;\n" );
-            for ( auto& i : shader_program_buffer.properties() )
+            for ( auto& i : program_buffer.properties() )
             {
                 std::string type_name;
                 std::string default_value ( "" );
@@ -114,14 +115,14 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 {
                 case PropertyBuffer_Type_FLOAT:
                     type_name = "float ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
                     {
                         default_value = " = " + std::to_string ( i.scalar_float() );
                     }
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC2:
                     type_name = "vec2 ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
                     {
                         default_value = " = vec2( " +
                                         std::to_string ( i.vector2().x() ) + ", " +
@@ -130,7 +131,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC3:
                     type_name = "vec3 ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
                     {
                         default_value = " = vec3( " +
                                         std::to_string ( i.vector3().x() ) + ", " +
@@ -140,7 +141,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC4:
                     type_name = "vec4 ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
                     {
                         default_value = " = vec4( " +
                                         std::to_string ( i.vector4().x() ) + ", " +
@@ -160,22 +161,22 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 }
                 vertex_shader_source.append ( "uniform " + type_name + i.uniform_name() + default_value + ";\n" );
             }
-            vertex_shader_source.append ( shader_program_buffer.vertex_shader().code() );
+            vertex_shader_source.append ( program_buffer.vertex_shader().code() );
             vertex_shader_source.append (
                 "void main()\n"
                 "{\n"
                 "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n" +
-                shader_program_buffer.vertex_shader().entry_point() +
+                program_buffer.vertex_shader().entry_point() +
                 "\n}\n" );
         }
         std::string fragment_shader_source;
         {
-            fragment_shader_source.append ( "#version " + std::to_string ( shader_program_buffer.glsl_version() ) + "\n" );
+            fragment_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             fragment_shader_source.append (
                 "uniform mat4 ModelViewMatrix;\n"
                 "uniform mat4 ModelViewProjectionMatrix;\n"
                 "uniform mat3 NormalMatrix;\n" );
-            for ( auto& i : shader_program_buffer.properties() )
+            for ( auto& i : program_buffer.properties() )
             {
                 std::string type_name;
                 std::string default_value ( "" );
@@ -183,14 +184,14 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 {
                 case PropertyBuffer_Type_FLOAT:
                     type_name = " float ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
                     {
                         default_value = " = " + std::to_string ( i.scalar_float() );
                     }
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC2:
                     type_name = " vec2 ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
                     {
                         default_value = " = vec2( " +
                                         std::to_string ( i.vector2().x() ) + ", " +
@@ -199,7 +200,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC3:
                     type_name = " vec3 ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
                     {
                         default_value = " = vec3( " +
                                         std::to_string ( i.vector3().x() ) + ", " +
@@ -209,7 +210,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC4:
                     type_name = " vec4 ";
-                    if ( ( shader_program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
+                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
                     {
                         default_value = " = vec4( " +
                                         std::to_string ( i.vector4().x() ) + ", " +
@@ -229,11 +230,11 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
                 }
                 fragment_shader_source.append ( "uniform " + type_name + i.uniform_name() + default_value + ";\n" );
             }
-            fragment_shader_source.append ( shader_program_buffer.fragment_shader().code() );
+            fragment_shader_source.append ( program_buffer.fragment_shader().code() );
             fragment_shader_source.append (
                 "void main()\n"
                 "{\n" +
-                shader_program_buffer.fragment_shader().entry_point() +
+                program_buffer.fragment_shader().entry_point() +
                 "\n}\n" );
 
         }
@@ -339,7 +340,7 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void ShaderProgram::Finalize()
+    void OpenGLProgram::Finalize()
     {
         if ( glIsProgram ( mProgram ) )
         {

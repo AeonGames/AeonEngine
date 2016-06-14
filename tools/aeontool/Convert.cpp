@@ -25,7 +25,7 @@ limitations under the License.
 #pragma warning( disable : 4251 )
 #endif
 #include <google/protobuf/text_format.h>
-#include "shader_program.pb.h"
+#include "program.pb.h"
 #include "mesh.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
@@ -106,7 +106,7 @@ namespace AeonGames
     }
     int Convert::Run()
     {
-        ShaderProgramBuffer shader_program_buffer;
+        ProgramBuffer shader_program_buffer;
         MeshBuffer mesh_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };

@@ -27,7 +27,7 @@ limitations under the License.
 #endif
 
 #include "winapi/OpenGLWindow.h"
-#include "ShaderProgram.h"
+#include "OpenGLProgram.h"
 
 namespace AeonGames
 {
@@ -38,14 +38,17 @@ namespace AeonGames
         ~OpenGLRenderer();
         void BeginRender() const override final;
         void EndRender() const override final;
-        void Render ( const std::shared_ptr<Mesh> aMesh ) const override final;
+        void Render ( const std::shared_ptr<Mesh>& aMesh ) const override final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
+        std::shared_ptr<OpenGLProgram> GetProgram ( const std::string& aFilename ) const override final;
         bool RegisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void UnregisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const override final;
     private:
         void Initialize();
         void Finalize();
+        float mViewMatrix[16];
+        float mProjectionMatrix[16];
 #ifdef _WIN32
         HWND mHwnd;
         HDC mDeviceContext = nullptr;

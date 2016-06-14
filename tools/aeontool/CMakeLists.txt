@@ -27,7 +27,7 @@ PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-    ${CMAKE_SOURCE_DIR}/proto/shader_program.proto
+    ${CMAKE_SOURCE_DIR}/proto/program.proto
 )
 
 source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
