@@ -28,6 +28,7 @@ namespace AeonGames
     public:
         EngineWindow ( QWindow *parent = nullptr );
         ~EngineWindow();
+        void setMesh ( const QString& filename );
     private:
         void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
         void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
@@ -35,6 +36,7 @@ namespace AeonGames
         QTimer mTimer;
         QElapsedTimer mStopWatch;
         AeonEngine mAeonEngine;
+        std::shared_ptr<Mesh> mMesh;
     };
 }
 #endif

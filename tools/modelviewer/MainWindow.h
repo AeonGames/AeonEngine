@@ -38,6 +38,8 @@ namespace AeonGames
     public:
         MainWindow();
         ~MainWindow();
+    private slots:
+        void on_actionOpen_triggered();
     private:
         EngineWindow* engineWindow = nullptr;
         QWidget* engineWindowContainer = nullptr;

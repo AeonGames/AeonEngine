@@ -110,9 +110,6 @@ namespace AeonGames
                     std::cout << "Unable to Load OpenGL functions." << std::endl;
                     return false;
                 }
-
-                // This is here just for testing ATM
-                ShaderProgram ShaderProgram ( "game/shaders/simple_phong.txt" );
                 RECT rect;
                 GetClientRect ( mHwnd, &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
