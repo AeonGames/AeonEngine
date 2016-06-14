@@ -65,7 +65,7 @@ message ShaderBuffer {
 	string code = 2;
 }
 
-message ShaderProgramBuffer {
+message ProgramBuffer {
 	uint32 glsl_version                = 1;
 	repeated PropertyBuffer properties = 2;
 	ShaderBuffer vertex_shader         = 3;

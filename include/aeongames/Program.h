@@ -13,22 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_SHADERPROGRAM_H
-#define AEONGAMES_SHADERPROGRAM_H
-#include <cstdint>
-#include <string>
+#ifndef AEONGAMES_PROGRAM_H
+#define AEONGAMES_PROGRAM_H
+
 namespace AeonGames
 {
-    class ShaderProgram
+    class Program
     {
     public:
-        ShaderProgram ( const std::string& aFilename );
-        ~ShaderProgram();
-    private:
-        void Initialize();
-        void Finalize();
-        std::string mFilename;
-        uint32_t mProgram;
+    protected:
+        virtual ~Program() = default;
     };
 }
 #endif
