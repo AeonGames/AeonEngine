@@ -17,7 +17,7 @@ limitations under the License.
 #include "EngineWindow.h"
 //#include <QtGui>
 //#include <QApplication>
-//#include <QFileDialog>
+#include <QFileDialog>
 //#include <QFileInfo>
 //#include <QDesktopWidget>
 //#include <QDir>
@@ -37,5 +37,14 @@ namespace AeonGames
 
     MainWindow::~MainWindow()
     {
+    }
+
+    void MainWindow::on_actionOpen_triggered()
+    {
+        QString filename = QFileDialog::getOpenFileName ( this, tr ( "Open Mesh" ), tr ( "" ), tr ( "Mesh Files (*.msh *.txt)" ) );
+        if ( ! ( filename.isEmpty() || filename.isNull() ) )
+        {
+            engineWindow->setMesh ( filename );
+        }
     }
 }

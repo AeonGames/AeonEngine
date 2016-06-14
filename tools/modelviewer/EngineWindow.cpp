@@ -47,6 +47,10 @@ namespace AeonGames
     {
         mAeonEngine.UnregisterRenderingWindow ( winId() );
     }
+    void EngineWindow::setMesh ( const QString & filename )
+    {
+        mMesh = mAeonEngine.GetMesh ( filename.toUtf8().constData() );
+    }
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
         mAeonEngine.Resize ( winId(), aResizeEvent->size().width(), aResizeEvent->size().height() );

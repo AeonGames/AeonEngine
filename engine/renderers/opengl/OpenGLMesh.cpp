@@ -71,30 +71,31 @@ try :
         file.open ( mFilename, std::ifstream::in | std::ifstream::binary );
         char magick_number[8] = { 0 };
         file.read ( magick_number, sizeof ( magick_number ) );
-        if ( strncmp ( magick_number, "AEONMSH\0", 8 ) )
+        file.exceptions ( std::ifstream::badbit );
+        static MeshBuffer mesh_buffer;
+        if ( strncmp ( magick_number, "AEONMSH", 7 ) )
         {
             file.close();
             std::ostringstream stream;
             stream << "File" << mFilename << " Is not in AeonGames MSH format.";
             throw std::runtime_error ( stream.str().c_str() );
         }
-
-        file.exceptions ( std::ifstream::badbit );
-        MeshBuffer mesh_buffer;
-        if ( !mesh_buffer.ParseFromIstream ( &file ) )
+        else if ( magick_number[7] == '\0' )
         {
-            throw std::runtime_error ( "Mesh Parse failed." );
+            if ( !mesh_buffer.ParseFromIstream ( &file ) )
+            {
+                throw std::runtime_error ( "Mesh Parse failed." );
+            }
         }
-
+        else
+        {
+            std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
+            if ( !google::protobuf::TextFormat::ParseFromString ( text, &mesh_buffer ) )
+            {
+                throw std::runtime_error ( "Text mesh parsing failed." );
+            }
+        }
         file.close();
-
-        {
-            // Write Text Version
-            std::string text_string;
-            std::ofstream text_file ( mFilename + ".txt", std::ifstream::out );
-            google::protobuf::TextFormat::PrintToString ( mesh_buffer, &text_string );
-            text_file.write ( text_string.c_str(), text_string.length() );
-        }
 
         glGenVertexArrays ( 1, &mArray );
         OPENGL_CHECK_ERROR_THROW;

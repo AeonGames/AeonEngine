@@ -238,7 +238,6 @@ ShaderProgram::ShaderProgram ( const std::string& aFilename ) try :
 
         }
 
-
         //--------------------------------------------------
         // Begin OpenGL Specific code
         //--------------------------------------------------
