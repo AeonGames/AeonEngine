@@ -24,9 +24,9 @@ limitations under the License.
 #endif
 #include <cassert>
 #include <algorithm>
-#include "Node.h"
+#include "aeongames/Node.h"
+#include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
-#include "Scene.h"
 
 namespace AeonGames
 {

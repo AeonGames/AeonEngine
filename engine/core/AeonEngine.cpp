@@ -19,7 +19,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "renderers/vulkan/VulkanRenderer.h"
 #include "renderers/opengl/OpenGLRenderer.h"
-#include "scenegraph/Scene.h"
+#include "aeongames/Scene.h"
 #include "aeongames/GameWindow.h"
 
 #if __cplusplus < 201300L && __cplusplus >= 201103L
