@@ -20,6 +20,9 @@ limitations under the License.
 #include <QElapsedTimer>
 
 #include "aeongames/AeonEngine.h"
+#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
+
 namespace AeonGames
 {
     class EngineWindow : public QWindow
@@ -37,6 +40,7 @@ namespace AeonGames
         QElapsedTimer mStopWatch;
         AeonEngine mAeonEngine;
         std::shared_ptr<Mesh> mMesh;
+        Scene mScene;
     };
 }
 #endif
