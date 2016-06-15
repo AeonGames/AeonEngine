@@ -26,9 +26,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Geometry;
+    class Renderer;
     class Scene;
-    class Entity;
     /// Scene Graph Node
     class Node
     {
@@ -47,7 +46,7 @@ namespace AeonGames
         };
         DLL static const size_t kInvalidIndex;
         DLL explicit Node ( uint32_t aFlags = AllBits );
-        DLL ~Node();
+        DLL virtual ~Node();
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
         /** Enables or disables a set of node flags.
@@ -116,15 +115,15 @@ namespace AeonGames
         DLL const Transform& GetGlobalTransform() const;
         DLL void SetLocalTransform ( const Transform& aTransform );
         DLL void SetGlobalTransform ( const Transform& aTransform );
-        DLL void AttachEntity ( Entity* aEntity );
-        DLL Entity* DettachEntity();
         DLL size_t GetChildrenCount() const;
         DLL Node* GetChild ( size_t aIndex ) const;
         DLL Node* GetParent() const;
         DLL size_t GetIndex() const;
+    protected:
+        virtual void Update ( const double delta ) = 0;
+        virtual void Render ( Renderer* aRenderer ) = 0;
     private:
         friend class Scene;
-        DLL void Update ( const double delta );
         std::string mName;
         Node* mParent;
         Scene* mScene;
@@ -136,7 +135,6 @@ namespace AeonGames
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<Node*>::size_type mIterator;
         std::bitset<8> mFlags;
-        Entity* mEntity;
     };
 }
 #endif

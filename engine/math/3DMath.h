@@ -1,5 +1,20 @@
-﻿#ifndef MATH_H
-#define MATH_H
+﻿/*
+Copyright 2009-2016 Rodrigo Jose Hernandez Cordoba
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+#ifndef AEONGAMES_MATH_H
+#define AEONGAMES_MATH_H
 /*! \file
     \brief Inline functions related to 3D Math.
     \author Rodrigo Hernandez.
@@ -8,7 +23,7 @@
     matrices and vectors are represented as float arrays, this is done to avoid castings
     as well as being able to perform operations on contiguous memory.
 
-    Matrices are defined in the same way OpenGL defines them, as a float array with 16 elements,
+    Matrices are defined in the same way OpenGL defines them, as a float arrays with 16 elements,
     matrix notation is done in column mayor format to fit OpenGL documentation as well
     (see <a href="http://www.opengl.org/resources/faq/technical/transformations.htm">OpenGL FAQ</a>).
 
@@ -21,7 +36,7 @@
     m[3] & m[7] & m[11] & m[15] \end{array} \right)
     \f]
 
-    &copy; 2009-2015 Rodrigo Hernandez
+    &copy; 2009-2016 Rodrigo Hernandez
 */
 
 #include <cmath>

@@ -90,18 +90,16 @@ namespace AeonGames
     void AeonEngine::Step ( double aDeltaTime )
     {
         pImpl->mRenderer.BeginRender();
-        if ( pImpl->mScene != nullptr )
+        if ( pImpl->mScene )
         {
-            //pImpl->mScene->
-            //pImpl->mScene->Render();
-            //pImpl->mRenderer.Render(aDeltaTime);
+            pImpl->mScene->Update ( aDeltaTime );
+            pImpl->mScene->Render ( &pImpl->mRenderer );
         }
         pImpl->mRenderer.EndRender();
     }
 
     int AeonEngine::Run()
     {
-        //return pImpl->mRenderer.GetGameWindow().Run();
         return 0;
     }
 

@@ -20,6 +20,7 @@ limitations under the License.
 #include <sstream>
 #include <vector>
 #include <stdexcept>
+#include "math/3DMath.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLMesh.h"
@@ -148,6 +149,18 @@ namespace AeonGames
         {
             glViewport ( 0, 0, aWidth, aHeight );
         }
+    }
+
+    void OpenGLRenderer::SetViewMatrix ( float aMatrix[16] )
+    {
+        memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
+        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+    }
+
+    void OpenGLRenderer::SetProjectionMatrix ( float aMatrix[16] )
+    {
+        memcpy ( mProjectionMatrix, aMatrix,  sizeof ( float ) * 16 );
+        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
     }
 
     void OpenGLRenderer::Initialize()

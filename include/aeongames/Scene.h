@@ -28,6 +28,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Node;
+    class Renderer;
     /*! \brief Scene class.
       Scene is the container for all elements in a game level,
       takes care of collision, rendering and updates to all elements therein.
@@ -45,7 +46,8 @@ namespace AeonGames
         DLL size_t GetNodeCount() const;
         DLL size_t GetChildrenCount() const;
         DLL Node* GetChild ( size_t aIndex ) const;
-        DLL void Update ( double delta );
+        DLL void Update ( const double delta );
+        DLL void Render ( Renderer* aRenderer );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node*) > aAction)*/
         DLL void LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction );
         /** @copydoc Node::LoopTraverseDFSPreOrder(

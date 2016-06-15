@@ -39,12 +39,10 @@ namespace AeonGames
         mScene ( nullptr ),
         mLocalTransform(),
         mGlobalTransform(),
-        //mAxisAlignedBoundingBox(),
         mNodes(),
         mIndex ( kInvalidIndex ),
         mIterator ( 0 ),
-        mFlags ( aFlags ),
-        mEntity ( nullptr )
+        mFlags ( aFlags )
     {
     }
 
@@ -89,18 +87,6 @@ namespace AeonGames
     size_t Node::GetIndex() const
     {
         return mIndex;
-    }
-
-    void Node::AttachEntity ( Entity* aEntity )
-    {
-        mEntity = aEntity;
-    }
-
-    Entity* Node::DettachEntity()
-    {
-        Entity* entity = mEntity;
-        mEntity = nullptr;
-        return entity;
     }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
