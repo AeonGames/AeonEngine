@@ -44,11 +44,33 @@ namespace AeonGames
         bool RegisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void UnregisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const override final;
+        void SetViewMatrix ( float aMatrix[16] ) override final;
+        void SetProjectionMatrix ( float aMatrix[16] ) override final;
     private:
         void Initialize();
         void Finalize();
-        float mViewMatrix[16];
-        float mProjectionMatrix[16];
+        float mViewMatrix[16] =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+        float mProjectionMatrix[16] =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+        float mViewProjectionMatrix[16]
+        =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
 #ifdef _WIN32
         HWND mHwnd;
         HDC mDeviceContext = nullptr;

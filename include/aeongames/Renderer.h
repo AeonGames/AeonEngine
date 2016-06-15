@@ -44,6 +44,11 @@ namespace AeonGames
         virtual void UnregisterRenderingWindow ( uintptr_t aWindowId ) = 0;
         virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const = 0;
         ///@}
+        ///@name Matrix Functions
+        ///@{
+        virtual void SetViewMatrix ( float aMatrix[16] ) = 0;
+        virtual void SetProjectionMatrix ( float aMatrix[16] ) = 0;
+        ///@}
     protected:
         virtual ~Renderer() = default;
     };

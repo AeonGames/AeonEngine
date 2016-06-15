@@ -48,6 +48,9 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
     
 set(ENGINE_VULKAN_RENDERER_HEADERS
@@ -72,13 +75,14 @@ set(ENGINE_CORE_HEADERS
     
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h)
     
 set(ENGINE_MATH_HEADERS
     math/Vector4.h
     math/Vector3.h
     math/Matrix4x4.h
-    math/Transform.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
@@ -99,7 +103,8 @@ set(ENGINE_OPENGL_RENDERER_SOURCES
     
 set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Scene.cpp
-    scenegraph/Node.cpp)
+    scenegraph/Node.cpp
+    scenegraph/Model.cpp)
     
 set(ENGINE_MATH_SOURCES
     math/Vector4.cpp

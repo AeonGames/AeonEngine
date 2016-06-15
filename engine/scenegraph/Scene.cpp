@@ -16,6 +16,7 @@ limitations under the License.
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/Renderer.h"
 #include <cstring>
 #include <cassert>
 #include <algorithm>
@@ -71,7 +72,7 @@ namespace AeonGames
         return nullptr;
     }
 
-    void Scene::Update ( double delta )
+    void Scene::Update ( const double delta )
     {
         for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
         {
@@ -82,6 +83,23 @@ namespace AeonGames
                     node->Update ( delta );
                 }
             } );
+        }
+    }
+
+    void Scene::Render ( Renderer* aRenderer )
+    {
+        if ( aRenderer )
+        {
+            for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+            {
+                ( *i )->LoopTraverseDFSPreOrder ( [aRenderer] ( Node * node )
+                {
+                    if ( node->mFlags[Node::Visible] )
+                    {
+                        node->Render ( aRenderer );
+                    }
+                } );
+            }
         }
     }
 
