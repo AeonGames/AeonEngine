@@ -170,3 +170,13 @@ namespace AeonGames
     {
     }
 }
+
+AeonGames::Renderer * CreateRenderer()
+{
+    return new AeonGames::OpenGLRenderer;
+}
+
+void DestroyRenderer ( AeonGames::Renderer * aRenderer )
+{
+    delete reinterpret_cast<AeonGames::OpenGLRenderer *> ( aRenderer );
+}

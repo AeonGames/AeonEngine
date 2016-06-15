@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "OpenGLFunctions.h"
-#include "aeongames/LogLevel.h"
 #include <string.h>
 #include <iostream>
 #include <string>
@@ -333,12 +332,12 @@ namespace AeonGames
 #endif
 
         // Provide some information regarding OpenGL Drivers.
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "OpenGL Version " << glGetString ( GL_VERSION ) << std::endl;
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "GLSL Version " << glGetString ( GL_SHADING_LANGUAGE_VERSION ) << std::endl;
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "OpenGL Vendor " << glGetString ( GL_VENDOR ) << std::endl;
+        std::cout << "OpenGL Version " << glGetString ( GL_VERSION ) << std::endl;
+        std::cout << "GLSL Version " << glGetString ( GL_SHADING_LANGUAGE_VERSION ) << std::endl;
+        std::cout << "OpenGL Vendor " << glGetString ( GL_VENDOR ) << std::endl;
         GLint texSize = 0;
         glGetIntegerv ( GL_MAX_TEXTURE_SIZE, &texSize );
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "Maximum Texture Size: " << texSize << std::endl;
+        std::cout << "Maximum Texture Size: " << texSize << std::endl;
         GLint glInteger;
 #ifdef ANDROID
         glGetIntegerv ( GL_MAX_VERTEX_UNIFORM_VECTORS, &glInteger );
@@ -348,16 +347,16 @@ namespace AeonGames
         std::cout << glGetString ( GL_EXTENSIONS );
 #else
         glGetIntegerv ( GL_MAX_VERTEX_UNIFORM_COMPONENTS, &glInteger );
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "GLSL Max Vertex Uniform Components " << glInteger << std::endl;
+        std::cout << "GLSL Max Vertex Uniform Components " << glInteger << std::endl;
         glGetIntegerv ( GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &glInteger );
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "GLSL Max Fragment Uniform Components " << glInteger << std::endl;
+        std::cout << "GLSL Max Fragment Uniform Components " << glInteger << std::endl;
         glGetIntegerv ( GL_MAX_VERTEX_ATTRIBS, &glInteger );
-        std::cout << LogLevel ( LogLevel::Level::Info ) << "GLSL Max Vertex Attributes " << glInteger << std::endl;
+        std::cout << "GLSL Max Vertex Attributes " << glInteger << std::endl;
         GLint extension_count;
         glGetIntegerv ( GL_NUM_EXTENSIONS, &extension_count );
         for ( GLint i = 0; i < extension_count; ++i )
         {
-            std::cout << LogLevel ( LogLevel::Level::Info ) << glGetStringi ( GL_EXTENSIONS, i ) << std::endl;
+            std::cout << glGetStringi ( GL_EXTENSIONS, i ) << std::endl;
         }
 #endif
         return true;
