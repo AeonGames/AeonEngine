@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "renderers/vulkan/VulkanRenderer.h"
 #include "renderers/opengl/OpenGLRenderer.h"
+#include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
 #include "aeongames/GameWindow.h"
 
@@ -46,8 +47,16 @@ namespace AeonGames
 
     struct AeonEngine::Impl
     {
-        OpenGLRenderer mRenderer;
-        Scene* mScene;
+        Renderer* mRenderer = CreateRenderer();
+        Scene* mScene = nullptr;
+        ~Impl()
+        {
+            if ( mRenderer )
+            {
+                DestroyRenderer ( mRenderer );
+                mRenderer = nullptr;
+            }
+        }
     };
 
     AeonEngine::AeonEngine() :
@@ -89,13 +98,19 @@ namespace AeonGames
 #endif
     void AeonEngine::Step ( double aDeltaTime )
     {
-        pImpl->mRenderer.BeginRender();
+        if ( pImpl->mRenderer )
+        {
+            pImpl->mRenderer->BeginRender();
+        }
         if ( pImpl->mScene )
         {
             pImpl->mScene->Update ( aDeltaTime );
-            pImpl->mScene->Render ( &pImpl->mRenderer );
+            pImpl->mScene->Render ( pImpl->mRenderer );
         }
-        pImpl->mRenderer.EndRender();
+        if ( pImpl->mRenderer )
+        {
+            pImpl->mRenderer->EndRender();
+        }
     }
 
     int AeonEngine::Run()
@@ -105,7 +120,7 @@ namespace AeonGames
 
     std::shared_ptr<Mesh> AeonEngine::GetMesh ( const std::string & aFilename ) const
     {
-        return pImpl->mRenderer.GetMesh ( aFilename );
+        return pImpl->mRenderer->GetMesh ( aFilename );
     }
 
     void AeonEngine::SetScene ( Scene * aScene )
@@ -120,15 +135,15 @@ namespace AeonGames
 
     bool AeonEngine::RegisterRenderingWindow ( uintptr_t aWindowId )
     {
-        return pImpl->mRenderer.RegisterRenderingWindow ( aWindowId );
+        return pImpl->mRenderer->RegisterRenderingWindow ( aWindowId );
     }
 
     void AeonEngine::UnregisterRenderingWindow ( uintptr_t aWindowId )
     {
-        pImpl->mRenderer.UnregisterRenderingWindow ( aWindowId );
+        pImpl->mRenderer->UnregisterRenderingWindow ( aWindowId );
     }
     void AeonEngine::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
     {
-        pImpl->mRenderer.Resize ( aWindowId, aWidth, aHeight );
+        pImpl->mRenderer->Resize ( aWindowId, aWidth, aHeight );
     }
 }

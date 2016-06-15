@@ -24,7 +24,6 @@ include_directories(
 )
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
-    ${CMAKE_SOURCE_DIR}/proto/Configuration.proto
     ${CMAKE_SOURCE_DIR}/proto/vector2.proto    
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
@@ -60,18 +59,16 @@ set(ENGINE_VULKAN_RENDERER_HEADERS
 set(ENGINE_OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
     ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
     renderers/opengl/OpenGLProgram.h
     renderers/opengl/Material.h
-    renderers/opengl/winapi/OpenGLWindow.h
     renderers/opengl/OpenGLMesh.h)
     
 set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/GameWindow.h
-    core/Configuration.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/GameWindow.h)
     
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
@@ -86,8 +83,7 @@ set(ENGINE_MATH_HEADERS
 
 set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
-    core/LogLevel.cpp
-    core/Configuration.cpp)
+    core/LogLevel.cpp)
     
 set(ENGINE_VULKAN_RENDERER_SOURCES
     renderers/vulkan/VulkanRenderer.cpp)
@@ -98,7 +94,6 @@ set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/OpenGLProgram.cpp
     renderers/opengl/Material.cpp
     renderers/opengl/OpenGLMesh.cpp
-    renderers/opengl/winapi/OpenGLWindow.cpp
     renderers/opengl/OpenGLFunctions.cpp)
     
 set(ENGINE_SCENEGRAPH_SOURCES
@@ -123,27 +118,36 @@ source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 set(ENGINE_SOURCES  ${ENGINE_SDK_HEADERS} ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES}
                     ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES}
                     ${ENGINE_VULKAN_RENDERER_HEADERS} ${ENGINE_VULKAN_RENDERER_SOURCES}
-                    ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES}
                     ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES}
-                    ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES}
-                    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+                    ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
 
 if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
-add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES}
-    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS}
-    )
-target_link_libraries(engine ${VULKAN_LIBRARY} ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES})
+add_library(renderGL SHARED 
+    ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES}
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
+    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+
+add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
+
+target_link_libraries(renderGL ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES})
+target_link_libraries(engine ${VULKAN_LIBRARY} renderGL ${PROTOBUF_LIBRARIES})
 
 if(MSVC)
+    set_target_properties(renderGL PROPERTIES
+        COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-WX -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW)
+    set_target_properties(renderGL PROPERTIES
+        COMPILE_FLAGS "-Wall -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
 elseif(UNIX)
+    set_target_properties(renderGL PROPERTIES
+        COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_XLIB_KHR")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_XLIB_KHR")
 endif()
