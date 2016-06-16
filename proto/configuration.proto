@@ -16,5 +16,6 @@ syntax = "proto3";
 package AeonGames;
 
 message ConfigurationBuffer {
-	repeated string Path = 1;
+	string Renderer = 1;
+	repeated string Path = 2;
 }
