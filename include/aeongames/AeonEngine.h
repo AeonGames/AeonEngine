@@ -31,7 +31,7 @@ namespace AeonGames
         /// Destruct
         DLL ~AeonEngine();
 #if 0
-        /* We don't really want to be copying and moving engine objects.*/
+        /* We don't really want to be copying and moving engine objects... or do we?*/
         /// Move
         DLL AeonEngine ( AeonEngine&& aRhs ) noexcept;
         DLL AeonEngine& operator= ( AeonEngine&& aRhs ) noexcept;
@@ -63,6 +63,10 @@ namespace AeonGames
         DLL bool RegisterRenderingWindow ( uintptr_t aWindowId );
         DLL void UnregisterRenderingWindow ( uintptr_t aWindowId );
         DLL void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const;
+
+        DLL void SetProjectionMatrix ( const float aMatrix[16] );
+        DLL void SetViewMatrix ( const float aMatrix[16] );
+
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

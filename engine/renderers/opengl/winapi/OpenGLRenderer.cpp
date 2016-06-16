@@ -151,13 +151,13 @@ namespace AeonGames
         }
     }
 
-    void OpenGLRenderer::SetViewMatrix ( float aMatrix[16] )
+    void OpenGLRenderer::SetViewMatrix ( const float aMatrix[16] )
     {
         memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
         Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
     }
 
-    void OpenGLRenderer::SetProjectionMatrix ( float aMatrix[16] )
+    void OpenGLRenderer::SetProjectionMatrix ( const float aMatrix[16] )
     {
         memcpy ( mProjectionMatrix, aMatrix,  sizeof ( float ) * 16 );
         Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );

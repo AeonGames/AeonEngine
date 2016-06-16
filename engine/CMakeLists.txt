@@ -78,7 +78,7 @@ set(ENGINE_SCENEGRAPH_HEADERS
 set(ENGINE_MATH_HEADERS
     math/Vector4.h
     math/Vector3.h
-    math/Matrix4x4.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_SOURCES

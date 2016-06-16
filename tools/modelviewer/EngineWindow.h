@@ -18,10 +18,14 @@ limitations under the License.
 #include <QWindow>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QQuaternion>
+#include <QVector4D>
+#include <QMatrix4x4>
 
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
 {
@@ -36,11 +40,17 @@ namespace AeonGames
         void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
         void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
         bool event ( QEvent* aEvent ) override final;
+        void updateViewMatrix();
         QTimer mTimer;
         QElapsedTimer mStopWatch;
         AeonEngine mAeonEngine;
         std::shared_ptr<Mesh> mMesh;
         Scene mScene;
+        /* We're using QT classes for now... */
+        QQuaternion mCameraRotation;
+        QVector4D mCameraLocation;
+        QMatrix4x4 mProjectionMatrix;
+        QMatrix4x4 mViewMatrix;
     };
 }
 #endif
