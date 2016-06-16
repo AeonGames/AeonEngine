@@ -146,4 +146,12 @@ namespace AeonGames
     {
         pImpl->mRenderer->Resize ( aWindowId, aWidth, aHeight );
     }
+    void AeonEngine::SetProjectionMatrix ( const float aMatrix[16] )
+    {
+        pImpl->mRenderer->SetProjectionMatrix ( aMatrix );
+    }
+    void AeonEngine::SetViewMatrix ( const float aMatrix[16] )
+    {
+        pImpl->mRenderer->SetViewMatrix ( aMatrix );
+    }
 }

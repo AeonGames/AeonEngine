@@ -46,8 +46,8 @@ namespace AeonGames
         ///@}
         ///@name Matrix Functions
         ///@{
-        virtual void SetViewMatrix ( float aMatrix[16] ) = 0;
-        virtual void SetProjectionMatrix ( float aMatrix[16] ) = 0;
+        virtual void SetViewMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetProjectionMatrix ( const float aMatrix[16] ) = 0;
         ///@}
     protected:
         virtual ~Renderer() = default;

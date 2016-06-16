@@ -224,7 +224,10 @@ namespace AeonGames
 
     bool Scene::RemoveNode ( Node* aNode )
     {
-        assert ( aNode != nullptr );
+        if ( aNode == nullptr )
+        {
+            return false;
+        }
         // If passed a null or this pointer find SHOULD not find it on release builds.
         /*  While only a single instance should be found and erase does the element shifting
         we're using remove here to do the shifting in order to stablish

@@ -44,8 +44,8 @@ namespace AeonGames
         bool RegisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void UnregisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const override final;
-        void SetViewMatrix ( float aMatrix[16] ) override final;
-        void SetProjectionMatrix ( float aMatrix[16] ) override final;
+        void SetViewMatrix ( const float aMatrix[16] ) override final;
+        void SetProjectionMatrix ( const float aMatrix[16] ) override final;
     private:
         void Initialize();
         void Finalize();
