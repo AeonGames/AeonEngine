@@ -26,11 +26,14 @@ limitations under the License.
 #ifndef NOMINMAX
 #define NOMINMAX 1
 #endif
-#include "glcorearb.h"
 #include <GL/gl.h>
+#include "glcorearb.h"
+#include "wglext.h"
 #else
-#include "glcorearb.h"
 #include <GL/gl.h>
+#include <GL/glx.h>
+#include "glcorearb.h"
+#include "glxext.h"
 #endif
 #endif // ANDROID
 #include <sstream>

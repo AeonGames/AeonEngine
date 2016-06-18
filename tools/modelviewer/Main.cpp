@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/Platform.h"
 #include "MainWindow.h"
+#include "aeongames/Platform.h"
 
 int ENTRYPOINT main ( int argc, char *argv[] )
 {

@@ -16,7 +16,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/engine
     ${CMAKE_SOURCE_DIR}/engine/renderers/opengl
     ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
-    core/${GUI_PLATFORM}
     ${CMAKE_SOURCE_DIR}/include
     ${VULKAN_INCLUDE_DIR}
     ${PROTOBUF_INCLUDE_DIR}
@@ -24,7 +23,7 @@ include_directories(
 )
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
-    ${CMAKE_SOURCE_DIR}/proto/vector2.proto    
+    ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
@@ -51,11 +50,11 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
-    
+
 set(ENGINE_VULKAN_RENDERER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/vulkan/VulkanRenderer.h)
-    
+
 set(ENGINE_OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
     ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
@@ -64,17 +63,17 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     renderers/opengl/OpenGLProgram.h
     renderers/opengl/Material.h
     renderers/opengl/OpenGLMesh.h)
-    
+
 set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/GameWindow.h)
-    
+
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h)
-    
+
 set(ENGINE_MATH_HEADERS
     math/Vector4.h
     math/Vector3.h
@@ -84,23 +83,22 @@ set(ENGINE_MATH_HEADERS
 set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
     core/LogLevel.cpp)
-    
+
 set(ENGINE_VULKAN_RENDERER_SOURCES
     renderers/vulkan/VulkanRenderer.cpp)
-    
+
 set(ENGINE_OPENGL_RENDERER_SOURCES
-    renderers/opengl/${GUI_PLATFORM}/OpenGLRenderer.cpp
     renderers/opengl/OpenGLRenderer.cpp
     renderers/opengl/OpenGLProgram.cpp
     renderers/opengl/Material.cpp
     renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/OpenGLFunctions.cpp)
-    
+
 set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Scene.cpp
     scenegraph/Node.cpp
     scenegraph/Model.cpp)
-    
+
 set(ENGINE_MATH_SOURCES
     math/Vector4.cpp
     math/Vector3.cpp
@@ -125,7 +123,7 @@ if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
-add_library(renderGL SHARED 
+add_library(renderGL SHARED
     ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES}
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})

@@ -17,7 +17,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${Qt5Core_INCLUDE_DIRS}
                     ${Qt5Gui_INCLUDE_DIRS}
                     ${Qt5Widgets_INCLUDE_DIRS})
-                    
+
 set(MODELVIEWER_QT_HEADERS
     MainWindow.h
     EngineWindow.h

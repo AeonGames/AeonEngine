@@ -20,17 +20,16 @@ limitations under the License.
 #include <exception>
 #include <vector>
 #include <memory>
-#ifndef _WIN32
+#include "OpenGLFunctions.h"
+#if 0
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include "glxext.h"
 #endif
 
-#include "winapi/OpenGLWindow.h"
-#include "OpenGLProgram.h"
-
 namespace AeonGames
 {
+    class OpenGLProgram;
     class OpenGLRenderer : public Renderer
     {
     public:

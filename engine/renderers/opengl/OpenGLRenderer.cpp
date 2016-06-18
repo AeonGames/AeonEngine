@@ -13,13 +13,309 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+#include <cstring>
+#include <cassert>
+#include <cstdio>
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <stdexcept>
+#include "math/3DMath.h"
+#include "OpenGLFunctions.h"
 #include "OpenGLRenderer.h"
-#include "aeongames/ResourceCache.h"
 #include "OpenGLMesh.h"
+#include "OpenGLProgram.h"
+#include "aeongames/LogLevel.h"
+#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
+#ifdef __unix__
+    std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo )
+    {
+        out << "Visual: " << aXVisualInfo.visual << std::endl;
+        out << "VisualID: " << aXVisualInfo.visualid << std::endl;
+        out << "Screen: " << aXVisualInfo.screen << std::endl;
+        out << "Depth: " << aXVisualInfo.depth << std::endl;
+        out << "Class: " << aXVisualInfo.c_class << std::endl;
+        out << "Red Mask: " << aXVisualInfo.red_mask << std::endl;
+        out << "Green Mask: " << aXVisualInfo.green_mask << std::endl;
+        out << "Blue Mask: " << aXVisualInfo.blue_mask << std::endl;
+        out << "Colormap Size: " << aXVisualInfo.colormap_size << std::endl;
+        out << "Bits Per RGB: " << aXVisualInfo.bits_per_rgb << std::endl;
+        return out;
+    }
+#endif
+
+    OpenGLRenderer::OpenGLRenderer() try
+    {
+        Initialize();
+    }
+    catch ( ... )
+    {
+        Finalize();
+        throw;
+    }
+
+    OpenGLRenderer::~OpenGLRenderer()
+    {
+        Finalize();
+    }
+
+    void OpenGLRenderer::BeginRender() const
+    {
+#ifdef _WIN32
+        if ( mDeviceContext != nullptr )
+        {
+            wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        }
+#else
+        if ( mGLXContext != nullptr )
+        {
+            glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        }
+#endif
+    }
+
+    void OpenGLRenderer::EndRender() const
+    {
+#if _WIN32
+        if ( mDeviceContext != nullptr )
+        {
+            SwapBuffers ( mDeviceContext );
+        }
+#else
+        if ( mGLXContext != nullptr )
+        {
+            glXSwapBuffers ( mDisplay, mWindow );
+        }
+#endif
+    }
+
+    bool OpenGLRenderer::RegisterRenderingWindow ( uintptr_t aWindowId )
+    {
+#ifdef WIN32
+        mHwnd = reinterpret_cast<HWND> ( aWindowId );
+        PIXELFORMATDESCRIPTOR pfd{};
+        PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = nullptr;
+        PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
+        mDeviceContext = GetDC ( mHwnd );
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 32;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
+        SetPixelFormat ( mDeviceContext, pf, &pfd );
+        mOpenGLContext = wglCreateContext ( mDeviceContext );
+        wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+
+        //---OpenGL 3.2 Context---//
+        wglGetExtensionsStringARB = ( PFNWGLGETEXTENSIONSSTRINGARBPROC ) wglGetProcAddress ( "wglGetExtensionsStringARB" );
+        if ( wglGetExtensionsStringARB != nullptr )
+        {
+            if ( strstr ( wglGetExtensionsStringARB ( mDeviceContext ), "WGL_ARB_create_context" ) != nullptr )
+            {
+                const int ctxAttribs[] =
+                {
+                    WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+                    WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+                    WGL_CONTEXT_PROFILE_MASK_ARB,
+                    WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+                    0
+                };
+
+                wglCreateContextAttribsARB = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" );
+                wglMakeCurrent ( mDeviceContext, nullptr );
+                wglDeleteContext ( mOpenGLContext );
+                mOpenGLContext = wglCreateContextAttribsARB ( mDeviceContext, nullptr, ctxAttribs );
+                wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+                if ( !LoadOpenGLAPI() )
+                {
+                    std::cout << "Unable to Load OpenGL functions." << std::endl;
+                    return false;
+                }
+                RECT rect;
+                GetClientRect ( mHwnd, &rect );
+                glViewport ( 0, 0, rect.right, rect.bottom );
+                glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
+                glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            }
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+#else
+        mDisplay = XOpenDisplay ( nullptr );
+        if ( !mDisplay )
+        {
+            return false;
+        }
+        mWindow = reinterpret_cast<Window> ( aWindowId );
+        PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
+                glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" );
+        if ( glXCreateContextAttribsARB )
+        {
+            int context_attribs[] =
+            {
+                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+                GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                None
+            };
+
+            // Get Window Attributes
+            XWindowAttributes x_window_attributes{};
+            XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
+
+            int glx_fb_config_count;
+            GLXFBConfig* glx_fb_config_list = glXGetFBConfigs ( mDisplay, DefaultScreen ( mDisplay ), &glx_fb_config_count );
+
+            if ( !glx_fb_config_list )
+            {
+                return false;
+            }
+            // Pick the FB config/visual with the most samples per pixel
+            int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+            for ( int i = 0; i < glx_fb_config_count; ++i )
+            {
+                XVisualInfo *vi = glXGetVisualFromFBConfig ( mDisplay, glx_fb_config_list[i] );
+                if ( ( vi ) && ( x_window_attributes.visual == vi->visual ) )
+                {
+                    std::cout << *vi << std::endl;
+                    int samp_buf, samples;
+                    glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+                    glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_SAMPLES       , &samples  );
+                    if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
+                    {
+                        best_fbc = i, best_num_samp = samples;
+                    }
+                    if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
+                    {
+                        worst_fbc = i, worst_num_samp = samples;
+                    }
+                }
+                XFree ( vi );
+            }
+
+            if ( best_fbc < 0 )
+            {
+                XFree ( glx_fb_config_list );
+                return false;
+            }
+
+            GLXFBConfig bestFbc = glx_fb_config_list[ best_fbc ];
+            XFree ( glx_fb_config_list );
+            mGLXContext = glXCreateContextAttribsARB ( mDisplay, bestFbc, 0, True, context_attribs );
+            XSync ( mDisplay, False );
+            if ( mGLXContext != nullptr )
+            {
+                std::cout << LogLevel ( LogLevel::Level::Info ) <<
+                          "Created GL " <<  context_attribs[1] <<
+                          "." <<  context_attribs[3] << " context" << std::endl;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        // Verifying that context is a direct context
+        if ( ! glXIsDirect ( mDisplay, mGLXContext ) )
+        {
+            std::cout << LogLevel ( LogLevel::Level::Info ) <<
+                      "Indirect GLX rendering context obtained" << std::endl;
+        }
+        else
+        {
+            std::cout << LogLevel ( LogLevel::Level::Info ) <<
+                      "Direct GLX rendering context obtained" << std::endl;
+        }
+        glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+        if ( !LoadOpenGLAPI() )
+        {
+            std::cout << "Unable to Load OpenGL functions." << std::endl;
+            return false;
+        }
+        glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        return true;
+#endif
+    }
+
+    void OpenGLRenderer::UnregisterRenderingWindow ( uintptr_t aWindowId )
+    {
+#ifdef WIN32
+        if ( mHwnd && ( mHwnd == reinterpret_cast<HWND> ( aWindowId ) ) )
+        {
+            if ( mDeviceContext != nullptr )
+            {
+                wglMakeCurrent ( mDeviceContext, nullptr );
+                ReleaseDC ( mHwnd, mDeviceContext );
+                mDeviceContext = nullptr;
+            }
+            if ( mOpenGLContext )
+            {
+                wglDeleteContext ( mOpenGLContext );
+                mOpenGLContext = nullptr;
+            }
+        }
+#else
+        if ( mWindow && ( mWindow == reinterpret_cast<Window> ( aWindowId ) ) )
+        {
+            if ( mGLXContext )
+            {
+                glXMakeCurrent ( mDisplay, mWindow, nullptr );
+                glXDestroyContext ( mDisplay, mGLXContext );
+                mGLXContext = nullptr;
+            }
+            if ( mDisplay )
+            {
+                XCloseDisplay ( mDisplay );
+                mDisplay = nullptr;
+            }
+        }
+#endif
+    }
+
+    void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
+    {
+        if ( aWidth > 0 && aHeight > 0 )
+        {
+            glViewport ( 0, 0, aWidth, aHeight );
+        }
+    }
+
+    void OpenGLRenderer::SetViewMatrix ( const float aMatrix[16] )
+    {
+        memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
+        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+    }
+
+    void OpenGLRenderer::SetProjectionMatrix ( const float aMatrix[16] )
+    {
+        memcpy ( mProjectionMatrix, aMatrix,  sizeof ( float ) * 16 );
+        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+    }
+
+    void OpenGLRenderer::Initialize()
+    {
+    }
+
+    void OpenGLRenderer::Finalize()
+    {
+    }
+
     std::shared_ptr<Mesh> OpenGLRenderer::GetMesh ( const std::string & aFilename ) const
     {
         return Get<OpenGLMesh> ( aFilename );
@@ -33,4 +329,14 @@ namespace AeonGames
     void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh ) const
     {
     }
+}
+
+AeonGames::Renderer * CreateRenderer()
+{
+    return new AeonGames::OpenGLRenderer;
+}
+
+void DestroyRenderer ( AeonGames::Renderer * aRenderer )
+{
+    delete reinterpret_cast<AeonGames::OpenGLRenderer *> ( aRenderer );
 }

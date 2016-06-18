@@ -13,8 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "MainWindow.h"
-#include "EngineWindow.h"
 //#include <QtGui>
 //#include <QApplication>
 #include <QFileDialog>
@@ -23,6 +21,8 @@ limitations under the License.
 //#include <QDir>
 //#include <QMessageBox>
 //#include <QMdiSubWindow>
+#include "MainWindow.h"
+#include "EngineWindow.h"
 
 namespace AeonGames
 {
