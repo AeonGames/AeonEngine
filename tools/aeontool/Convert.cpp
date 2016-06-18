@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <fstream>
-#include <sstream>
-#include <ostream>
-#include <iostream>
-#include <regex>
 
+#ifdef __unix__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -31,6 +31,11 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include <fstream>
+#include <sstream>
+#include <ostream>
+#include <iostream>
+#include <regex>
 #include "Convert.h"
 
 namespace AeonGames

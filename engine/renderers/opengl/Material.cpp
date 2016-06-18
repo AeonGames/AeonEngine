@@ -17,8 +17,12 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
-#include "Material.h"
-#include "OpenGLFunctions.h"
+
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -29,6 +33,9 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+
+#include "OpenGLFunctions.h"
+#include "Material.h"
 
 namespace AeonGames
 {

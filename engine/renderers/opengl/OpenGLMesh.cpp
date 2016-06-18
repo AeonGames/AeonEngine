@@ -14,14 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "OpenGLFunctions.h"
-#include "OpenGLMesh.h"
 #include <fstream>
 #include <sstream>
 #include <exception>
 #include <vector>
 #include <cassert>
 #include <cstring>
+
 #ifdef __unix__
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,6 +36,9 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+
+#include "OpenGLFunctions.h"
+#include "OpenGLMesh.h"
 
 namespace AeonGames
 {

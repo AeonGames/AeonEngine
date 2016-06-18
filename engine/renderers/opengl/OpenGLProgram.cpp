@@ -17,8 +17,12 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
-#include "OpenGLProgram.h"
-#include "OpenGLFunctions.h"
+
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -29,6 +33,9 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+
+#include "OpenGLProgram.h"
+#include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
@@ -158,6 +165,8 @@ try :
                     type_name = "samplerCube ";
                     /* To be continued ... */
                     break;
+                default:
+                    assert ( 0 && "Unknown Type." );
                 }
                 vertex_shader_source.append ( "uniform " + type_name + i.uniform_name() + default_value + ";\n" );
             }
@@ -227,6 +236,8 @@ try :
                     type_name = " samplerCube ";
                     /* To be continued ... */
                     break;
+                default:
+                    assert ( 0 && "Unknown Type." );
                 }
                 fragment_shader_source.append ( "uniform " + type_name + i.uniform_name() + default_value + ";\n" );
             }
