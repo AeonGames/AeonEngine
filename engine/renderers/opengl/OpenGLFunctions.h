@@ -21,11 +21,11 @@ limitations under the License.
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES2/gl2platform.h>
-#else
-#ifdef WIN32
+#elif defined (_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX 1
 #endif
+#include <Windows.h>
 #include <GL/gl.h>
 #include "glcorearb.h"
 #include "wglext.h"
@@ -34,7 +34,6 @@ limitations under the License.
 #include <GL/glx.h>
 #include "glcorearb.h"
 #include "glxext.h"
-#endif
 #endif // ANDROID
 #include <sstream>
 #include <iostream>
@@ -164,9 +163,6 @@ namespace AeonGames
         extern PFNGLDEBUGMESSAGEINSERTPROC          glDebugMessageInsert;
         extern PFNGLDEBUGMESSAGECALLBACKPROC        glDebugMessageCallback;
         extern PFNGLGETDEBUGMESSAGELOGPROC          glGetDebugMessageLog;
-#if _WIN32
-        extern PFNGLGETPOINTERVPROC                 glGetPointerv;
-#endif
         extern PFNGLMAPBUFFERPROC                   glMapBuffer;
         extern PFNGLUNMAPBUFFERPROC                 glUnmapBuffer;
         extern PFNGLGETBUFFERPARAMETERIVPROC        glGetBufferParameteriv;

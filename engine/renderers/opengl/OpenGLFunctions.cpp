@@ -177,9 +177,6 @@ namespace AeonGames
         PFNGLDEBUGMESSAGEINSERTPROC            glDebugMessageInsert = nullptr;
         PFNGLDEBUGMESSAGECALLBACKPROC          glDebugMessageCallback = nullptr;
         PFNGLGETDEBUGMESSAGELOGPROC            glGetDebugMessageLog = nullptr;
-#if _WIN32
-        PFNGLGETPOINTERVPROC                   glGetPointerv = nullptr;
-#endif
         PFNGLMAPBUFFERPROC                     glMapBuffer = nullptr;
         PFNGLUNMAPBUFFERPROC                   glUnmapBuffer = nullptr;
         PFNGLGETBUFFERPARAMETERIVPROC          glGetBufferParameteriv = nullptr;
@@ -315,9 +312,6 @@ namespace AeonGames
         GLGETPROCADDRESS ( PFNGLDEBUGMESSAGEINSERTPROC,            glDebugMessageInsert            );
         GLGETPROCADDRESS ( PFNGLDEBUGMESSAGECALLBACKPROC,          glDebugMessageCallback          );
         GLGETPROCADDRESS ( PFNGLGETDEBUGMESSAGELOGPROC,            glGetDebugMessageLog            );
-#if _WIN32
-        GLGETPROCADDRESS ( PFNGLGETPOINTERVPROC,                   glGetPointerv                   );
-#endif
         GLGETPROCADDRESS ( PFNGLMAPBUFFERPROC,                     glMapBuffer                     );
         GLGETPROCADDRESS ( PFNGLUNMAPBUFFERPROC,                   glUnmapBuffer                   );
         GLGETPROCADDRESS ( PFNGLGETBUFFERPARAMETERIVPROC,          glGetBufferParameteriv          );
