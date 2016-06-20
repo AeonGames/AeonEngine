@@ -520,7 +520,7 @@ VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
     {
     }
 
-    void VulkanRenderer::Render ( const std::shared_ptr<Mesh>& aMesh ) const
+    void VulkanRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
     {
     }
 
