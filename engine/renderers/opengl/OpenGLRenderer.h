@@ -21,11 +21,6 @@ limitations under the License.
 #include <vector>
 #include <memory>
 #include "OpenGLFunctions.h"
-#if 0
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include "glxext.h"
-#endif
 
 namespace AeonGames
 {
@@ -37,31 +32,44 @@ namespace AeonGames
         ~OpenGLRenderer();
         void BeginRender() const override final;
         void EndRender() const override final;
-        void Render ( const std::shared_ptr<Mesh>& aMesh ) const override final;
+        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const override final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
-        std::shared_ptr<OpenGLProgram> GetProgram ( const std::string& aFilename ) const override final;
+        std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const override final;
         bool RegisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void UnregisterRenderingWindow ( uintptr_t aWindowId ) override final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const override final;
         void SetViewMatrix ( const float aMatrix[16] ) override final;
         void SetProjectionMatrix ( const float aMatrix[16] ) override final;
+        void SetModelMatrix ( const float aMatrix[16] ) override final;
     private:
         void Initialize();
         void Finalize();
-        float mViewMatrix[16] =
+        void UpdateMatrices();
+        float mViewMatrix[16]
+        =
         {
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
         };
-        float mProjectionMatrix[16] =
+        float mProjectionMatrix[16]
+        =
         {
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
         };
+        float mModelMatrix[16]
+        =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+        // Cache Matrices
         float mViewProjectionMatrix[16]
         =
         {
@@ -69,6 +77,29 @@ namespace AeonGames
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
+        };
+        float mModelViewMatrix[16]
+        =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+        float mModelViewProjectionMatrix[16]
+        =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+        float mNormalMatrix[9]
+        =
+        {
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1,
         };
 #ifdef _WIN32
         HWND mHwnd;

@@ -299,13 +299,36 @@ namespace AeonGames
     void OpenGLRenderer::SetViewMatrix ( const float aMatrix[16] )
     {
         memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
-        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+        UpdateMatrices();
     }
 
     void OpenGLRenderer::SetProjectionMatrix ( const float aMatrix[16] )
     {
         memcpy ( mProjectionMatrix, aMatrix,  sizeof ( float ) * 16 );
+        UpdateMatrices();
+    }
+
+    void OpenGLRenderer::SetModelMatrix ( const float aMatrix[16] )
+    {
+        memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
+        UpdateMatrices();
+    }
+
+    void OpenGLRenderer::UpdateMatrices()
+    {
+        /** @todo Either publish this function or
+            add arguments so just some matrices are
+            updated based on which one changed.*/
+        // Update mViewProjectionMatrix
         Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+        // Update mModelViewMatrix
+        Multiply4x4Matrix ( mViewMatrix, mModelMatrix, mModelViewMatrix );
+        // Update mModelViewProjectionMatrix
+        Multiply4x4Matrix ( mViewProjectionMatrix, mModelMatrix, mModelViewProjectionMatrix );
+        // Calculate Normal Matrix
+        Extract3x3Matrix ( mModelViewMatrix, mNormalMatrix );
+        Invert3x3Matrix ( mNormalMatrix, mNormalMatrix );
+        Transpose3x3Matrix ( mNormalMatrix, mNormalMatrix );
     }
 
     void OpenGLRenderer::Initialize()
@@ -321,12 +344,12 @@ namespace AeonGames
         return Get<OpenGLMesh> ( aFilename );
     }
 
-    std::shared_ptr<OpenGLProgram> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
+    std::shared_ptr<Program> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
     {
         return Get<OpenGLProgram> ( aFilename );
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
     {
     }
 }
