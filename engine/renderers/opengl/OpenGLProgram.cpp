@@ -56,6 +56,75 @@ try :
     {
     }
 
+    void OpenGLProgram::SetViewMatrix ( const float aMatrix[16] )
+    {
+        if ( mViewMatrixLocation > 0 )
+        {
+            glUniformMatrix4fv ( mViewMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::SetProjectionMatrix ( const float aMatrix[16] )
+    {
+        if ( mProjectionMatrixLocation > 0 )
+        {
+            glUniformMatrix4fv ( mProjectionMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::SetModelMatrix ( const float aMatrix[16] )
+    {
+        if ( mModelMatrixLocation > 0 )
+        {
+            glUniformMatrix4fv ( mModelMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::SetViewProjectionMatrix ( const float aMatrix[16] )
+    {
+        if ( mViewProjectionMatrixLocation > 0 )
+        {
+            glUniformMatrix4fv ( mViewProjectionMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::SetModelViewMatrix ( const float aMatrix[16] )
+    {
+        if ( mModelViewMatrixLocation > 0 )
+        {
+            glUniformMatrix4fv ( mModelViewMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::SetModelViewProjectionMatrix ( const float aMatrix[16] )
+    {
+        if ( mModelViewProjectionMatrixLocation > 0 )
+        {
+            glUniformMatrix4fv ( mModelViewProjectionMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::SetNormalMatrix ( const float aMatrix[9] )
+    {
+        if ( mNormalMatrixLocation > 0 )
+        {
+            glUniformMatrix3fv ( mNormalMatrixLocation, 1, false, aMatrix );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLProgram::Use() const
+    {
+        glUseProgram ( mProgram );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLProgram::Initialize()
     {
         static ProgramBuffer program_buffer;
@@ -111,6 +180,10 @@ try :
                 "layout(location = 5) in vec4 VertexWeightIndices;\n"
                 "layout(location = 6) in vec4 VertexWeights;\n" );
             vertex_shader_source.append (
+                "uniform mat4 ViewMatrix;\n"
+                "uniform mat4 ProjectionMatrix;\n"
+                "uniform mat4 ModelMatrix;\n"
+                "uniform mat4 ViewProjectionMatrix;\n"
                 "uniform mat4 ModelViewMatrix;\n"
                 "uniform mat4 ModelViewProjectionMatrix;\n"
                 "uniform mat3 NormalMatrix;\n" );
@@ -182,6 +255,10 @@ try :
         {
             fragment_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             fragment_shader_source.append (
+                "uniform mat4 ViewMatrix;\n"
+                "uniform mat4 ProjectionMatrix;\n"
+                "uniform mat4 ModelMatrix;\n"
+                "uniform mat4 ViewProjectionMatrix;\n"
                 "uniform mat4 ModelViewMatrix;\n"
                 "uniform mat4 ModelViewProjectionMatrix;\n"
                 "uniform mat3 NormalMatrix;\n" );
@@ -348,6 +425,21 @@ try :
         glDeleteShader ( vertex_shader );
         OPENGL_CHECK_ERROR_THROW;
         glDeleteShader ( fragment_shader );
+        OPENGL_CHECK_ERROR_THROW;
+        // Get Matrix uniform locations
+        mViewMatrixLocation = glGetUniformLocation ( mProgram, "ViewMatrix" );
+        OPENGL_CHECK_ERROR_THROW;
+        mProjectionMatrixLocation = glGetUniformLocation ( mProgram, "ProjectionMatrix" );
+        OPENGL_CHECK_ERROR_THROW;
+        mModelMatrixLocation = glGetUniformLocation ( mProgram, "ModelMatrix" );
+        OPENGL_CHECK_ERROR_THROW;
+        mViewProjectionMatrixLocation = glGetUniformLocation ( mProgram, "ViewProjectionMatrix" );
+        OPENGL_CHECK_ERROR_THROW;
+        mModelViewMatrixLocation = glGetUniformLocation ( mProgram, "ModelViewMatrix" );
+        OPENGL_CHECK_ERROR_THROW;
+        mModelViewProjectionMatrixLocation = glGetUniformLocation ( mProgram, "ModelViewProjectionMatrix" );
+        OPENGL_CHECK_ERROR_THROW;
+        mNormalMatrixLocation = glGetUniformLocation ( mProgram, "NormalMatrix" );
         OPENGL_CHECK_ERROR_THROW;
     }
 

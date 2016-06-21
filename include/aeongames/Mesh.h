@@ -21,6 +21,8 @@ namespace AeonGames
 {
     class Mesh
     {
+    public:
+        virtual void Render() const = 0;
     protected:
         virtual ~Mesh() = default;
         enum AttributeMask

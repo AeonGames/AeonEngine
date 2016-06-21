@@ -20,8 +20,10 @@ limitations under the License.
 namespace AeonGames
 {
     EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mScene(),
-        mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
-        mCameraLocation ( 459.279297f, -459.279358f, 374.999969f, 1 ),
+        mCameraRotation(),
+        //mCameraRotation(QQuaternion::fromAxisAndAngle(0.0f, 0.0f, 1.0f, 45.0f) * QQuaternion::fromAxisAndAngle(1.0f, 0.0f, 0.0f, -30.0f)),
+        //mCameraLocation ( 4.59279297f, -4.59279358f, 3.74999969f, 1 ),
+        mCameraLocation ( 0, -2, 0, 1 ),
         mProjectionMatrix(),
         mViewMatrix()
     {
@@ -60,9 +62,11 @@ namespace AeonGames
     {
         static Model* model = nullptr;
         mMesh = mAeonEngine.GetMesh ( filename.toUtf8().constData() );
+        mProgram = mAeonEngine.GetProgram ( "game/shaders/plain_red.txt" );
         mScene.RemoveNode ( model );
         mScene.AddNode ( model = new Model );
         model->SetMesh ( mMesh );
+        model->SetProgram ( mProgram );
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )

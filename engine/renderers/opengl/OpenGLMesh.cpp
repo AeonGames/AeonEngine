@@ -59,6 +59,23 @@ try :
         Finalize();
     }
 
+    void OpenGLMesh::Render() const
+    {
+        glBindVertexArray ( mArray );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( mIndexCount )
+        {
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+            glDrawElements ( GL_TRIANGLES, mIndexCount, mIndexType, 0 );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+        else
+        {
+            glDrawArrays ( GL_TRIANGLES, 0, mVertexCount );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
     void OpenGLMesh::Initialize()
     {
         struct stat stat_buffer;
@@ -98,6 +115,11 @@ try :
             }
         }
         file.close();
+
+        mVertexCount = mesh_buffer.vertexcount();
+        mIndexCount = mesh_buffer.indexcount();
+        mIndexType = 0x1400 | mesh_buffer.indextype();
+        mIndexOffset = GetStride ( mesh_buffer.vertexflags() ) * mVertexCount;
 
         glGenVertexArrays ( 1, &mArray );
         OPENGL_CHECK_ERROR_THROW;
@@ -151,6 +173,18 @@ try :
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
         }
+        //---Index Buffer---
+        if ( mIndexCount )
+        {
+            glGenBuffers ( 1, &mIndexBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBufferData ( GL_ELEMENT_ARRAY_BUFFER,
+                           mesh_buffer.vertexbuffer().length() - mIndexOffset,
+                           mesh_buffer.vertexbuffer().data() + mIndexOffset, GL_STATIC_DRAW );
+            OPENGL_CHECK_ERROR_THROW;
+        }
         mesh_buffer.Clear();
     }
 
@@ -165,6 +199,11 @@ try :
         {
             glDeleteBuffers ( 1, &mBuffer );
             mBuffer = 0;
+        }
+        if ( glIsBuffer ( mIndexBuffer ) )
+        {
+            glDeleteBuffers ( 1, &mIndexBuffer );
+            mIndexBuffer = 0;
         }
     }
 

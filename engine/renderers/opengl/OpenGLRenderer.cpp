@@ -79,6 +79,19 @@ namespace AeonGames
 #endif
     }
 
+    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
+    {
+        aProgram->Use();
+        aProgram->SetViewMatrix ( mViewMatrix );
+        aProgram->SetProjectionMatrix ( mProjectionMatrix );
+        aProgram->SetModelMatrix ( mModelMatrix );
+        aProgram->SetViewProjectionMatrix ( mViewProjectionMatrix );
+        aProgram->SetModelViewMatrix ( mModelViewMatrix );
+        aProgram->SetModelViewProjectionMatrix ( mViewProjectionMatrix );
+        aProgram->SetNormalMatrix ( mNormalMatrix );
+        aMesh->Render();
+    }
+
     void OpenGLRenderer::EndRender() const
     {
 #if _WIN32
@@ -347,10 +360,6 @@ namespace AeonGames
     std::shared_ptr<Program> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
     {
         return Get<OpenGLProgram> ( aFilename );
-    }
-
-    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
-    {
     }
 }
 

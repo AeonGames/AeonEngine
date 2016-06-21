@@ -21,6 +21,14 @@ namespace AeonGames
     class Program
     {
     public:
+        virtual void SetViewMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetProjectionMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetModelMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetViewProjectionMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetModelViewMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetModelViewProjectionMatrix ( const float aMatrix[16] ) = 0;
+        virtual void SetNormalMatrix ( const float aMatrix[9] ) = 0;
+        virtual void Use() const = 0;
     protected:
         virtual ~Program() = default;
     };
