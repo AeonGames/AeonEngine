@@ -23,6 +23,7 @@ namespace AeonGames
 {
     class Mesh;
     class Scene;
+    class Program;
     class AeonEngine
     {
     public:
@@ -57,6 +58,7 @@ namespace AeonGames
         */
         DLL int Run();
         DLL std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const;
+        DLL std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const;
         DLL void SetScene ( Scene* aScene );
         DLL Scene* GetScene() const;
 

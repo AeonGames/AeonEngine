@@ -52,7 +52,6 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
 
 set(ENGINE_VULKAN_RENDERER_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     renderers/vulkan/VulkanRenderer.h)
 
 set(ENGINE_OPENGL_RENDERER_HEADERS
@@ -66,8 +65,7 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
 
 set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/GameWindow.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h

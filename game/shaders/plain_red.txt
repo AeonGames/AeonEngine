@@ -1,0 +1,17 @@
+AEONPRG
+glsl_version: 330
+
+vertex_shader {
+  entry_point: ""
+  code: ""
+}
+
+fragment_shader {
+  entry_point: "plain_red();"
+  code: "layout ( location = 0 ) out vec4 FragColor;\n"
+  "\n"
+  "void plain_red()\n"
+  "{\n"
+  "FragColor = vec4 ( 1.0,0.0,0.0, 1.0 );\n"
+  "}\n"
+}

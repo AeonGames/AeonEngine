@@ -49,6 +49,9 @@ namespace AeonGames
         assert ( aRenderer );
         if ( aRenderer )
         {
+            float model_matrix[16];
+            GetGlobalTransform().GetMatrix ( model_matrix );
+            aRenderer->SetModelMatrix ( model_matrix );
             aRenderer->Render ( mMesh, mProgram );
         }
     }

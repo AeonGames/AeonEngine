@@ -45,6 +45,7 @@ namespace AeonGames
         QElapsedTimer mStopWatch;
         AeonEngine mAeonEngine;
         std::shared_ptr<Mesh> mMesh;
+        std::shared_ptr<Program> mProgram;
         Scene mScene;
         /* We're using QT classes for now... */
         QQuaternion mCameraRotation;

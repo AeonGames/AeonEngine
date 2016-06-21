@@ -123,6 +123,11 @@ namespace AeonGames
         return pImpl->mRenderer->GetMesh ( aFilename );
     }
 
+    std::shared_ptr<Program> AeonEngine::GetProgram ( const std::string & aFilename ) const
+    {
+        return pImpl->mRenderer->GetProgram ( aFilename );
+    }
+
     void AeonEngine::SetScene ( Scene * aScene )
     {
         pImpl->mScene = aScene;

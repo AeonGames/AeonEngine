@@ -130,3 +130,16 @@ add_custom_target(generate-binary-assets
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
         ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
     COMMENT "Generating binary game assets")
+
+###########################################
+# Blender Execution target
+###########################################
+find_program (BLENDER_EXECUTABLE blender HINTS ENV ProgramFiles PATH_SUFFIXES "Blender Foundation/Blender")
+add_custom_target(execute-blender
+    COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin PYTHONPATH=${CMAKE_SOURCE_DIR}/tools/blender "${BLENDER_EXECUTABLE}"
+    DEPENDS
+        generate-python-protobuf-source
+    SOURCES
+        ${CMAKE_SOURCE_DIR}/tools/blender/mesh_exporter.py
+    COMMENT "Executing Blender")

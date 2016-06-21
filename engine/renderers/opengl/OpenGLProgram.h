@@ -26,11 +26,26 @@ namespace AeonGames
     public:
         OpenGLProgram ( const std::string& aFilename );
         ~OpenGLProgram();
+        void SetViewMatrix ( const float aMatrix[16] ) override final;
+        void SetProjectionMatrix ( const float aMatrix[16] ) override final;
+        void SetModelMatrix ( const float aMatrix[16] ) override final;
+        void SetViewProjectionMatrix ( const float aMatrix[16] ) override final;
+        void SetModelViewMatrix ( const float aMatrix[16] ) override final;
+        void SetModelViewProjectionMatrix ( const float aMatrix[16] ) override final;
+        void SetNormalMatrix ( const float aMatrix[9] ) override final;
+        void Use() const override final;
     private:
         void Initialize();
         void Finalize();
         std::string mFilename;
         uint32_t mProgram;
+        int mViewMatrixLocation = -1;
+        int mProjectionMatrixLocation = -1;
+        int mModelMatrixLocation = -1;
+        int mViewProjectionMatrixLocation = -1;
+        int mModelViewMatrixLocation = -1;
+        int mModelViewProjectionMatrixLocation = -1;
+        int mNormalMatrixLocation = -1;
     };
 }
 #endif
