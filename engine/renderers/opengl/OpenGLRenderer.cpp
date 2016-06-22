@@ -155,8 +155,23 @@ namespace AeonGames
                 RECT rect;
                 GetClientRect ( mHwnd, &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
+                OPENGL_CHECK_ERROR_NO_THROW;
                 glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glEnable ( GL_BLEND );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glDepthFunc ( GL_LESS );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glEnable ( GL_DEPTH_TEST );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glCullFace ( GL_BACK );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glEnable ( GL_CULL_FACE );
+                OPENGL_CHECK_ERROR_NO_THROW;
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+                OPENGL_CHECK_ERROR_NO_THROW;
             }
         }
         else

@@ -65,9 +65,17 @@ try :
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( mIndexCount )
         {
+#if 0
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
             glDrawElements ( GL_TRIANGLES, mIndexCount, mIndexType, 0 );
             OPENGL_CHECK_ERROR_NO_THROW;
+#else
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDrawElements ( GL_TRIANGLES, mIndexCount, mIndexType, reinterpret_cast<GLvoid*> ( mIndexOffset ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+#endif
         }
         else
         {
@@ -129,7 +137,11 @@ try :
         OPENGL_CHECK_ERROR_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, mBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_ARRAY_BUFFER, mesh_buffer.vertexbuffer().length(), mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
+#if 0
+        glBufferData ( GL_ARRAY_BUFFER, GetStride ( mesh_buffer.vertexflags() ) * mVertexCount, mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
+#else
+        glBufferData ( GL_ARRAY_BUFFER, mesh_buffer.vertexbuffer().size(), mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
+#endif
         OPENGL_CHECK_ERROR_THROW;
 
         uint8_t* offset = nullptr;
@@ -176,6 +188,7 @@ try :
         //---Index Buffer---
         if ( mIndexCount )
         {
+#if 0
             glGenBuffers ( 1, &mIndexBuffer );
             OPENGL_CHECK_ERROR_THROW;
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
@@ -184,6 +197,10 @@ try :
                            mesh_buffer.vertexbuffer().length() - mIndexOffset,
                            mesh_buffer.vertexbuffer().data() + mIndexOffset, GL_STATIC_DRAW );
             OPENGL_CHECK_ERROR_THROW;
+#else
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+#endif
         }
         mesh_buffer.Clear();
     }
@@ -200,11 +217,13 @@ try :
             glDeleteBuffers ( 1, &mBuffer );
             mBuffer = 0;
         }
+#if 0
         if ( glIsBuffer ( mIndexBuffer ) )
         {
             glDeleteBuffers ( 1, &mIndexBuffer );
             mIndexBuffer = 0;
         }
+#endif
     }
 
     uint32_t OpenGLMesh::GetStride ( uint32_t aFlags ) const

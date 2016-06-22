@@ -136,10 +136,13 @@ add_custom_target(generate-binary-assets
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
     COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
+    COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
     DEPENDS aeontool
     SOURCES
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
+        ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt
         ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
     COMMENT "Generating binary game assets")
 

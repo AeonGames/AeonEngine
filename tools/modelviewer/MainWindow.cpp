@@ -39,6 +39,11 @@ namespace AeonGames
     {
     }
 
+    void MainWindow::on_actionExit_triggered()
+    {
+        close();
+    }
+
     void MainWindow::on_actionOpen_triggered()
     {
         QString filename = QFileDialog::getOpenFileName ( this, tr ( "Open Mesh" ), tr ( "" ), tr ( "Mesh Files (*.msh *.txt)" ) );

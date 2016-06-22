@@ -58,7 +58,7 @@ try :
 
     void OpenGLProgram::SetViewMatrix ( const float aMatrix[16] )
     {
-        if ( mViewMatrixLocation > 0 )
+        if ( mViewMatrixLocation >= 0 )
         {
             glUniformMatrix4fv ( mViewMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -67,7 +67,7 @@ try :
 
     void OpenGLProgram::SetProjectionMatrix ( const float aMatrix[16] )
     {
-        if ( mProjectionMatrixLocation > 0 )
+        if ( mProjectionMatrixLocation >= 0 )
         {
             glUniformMatrix4fv ( mProjectionMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -76,7 +76,7 @@ try :
 
     void OpenGLProgram::SetModelMatrix ( const float aMatrix[16] )
     {
-        if ( mModelMatrixLocation > 0 )
+        if ( mModelMatrixLocation >= 0 )
         {
             glUniformMatrix4fv ( mModelMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -85,7 +85,7 @@ try :
 
     void OpenGLProgram::SetViewProjectionMatrix ( const float aMatrix[16] )
     {
-        if ( mViewProjectionMatrixLocation > 0 )
+        if ( mViewProjectionMatrixLocation >= 0 )
         {
             glUniformMatrix4fv ( mViewProjectionMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -94,7 +94,7 @@ try :
 
     void OpenGLProgram::SetModelViewMatrix ( const float aMatrix[16] )
     {
-        if ( mModelViewMatrixLocation > 0 )
+        if ( mModelViewMatrixLocation >= 0 )
         {
             glUniformMatrix4fv ( mModelViewMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -103,7 +103,7 @@ try :
 
     void OpenGLProgram::SetModelViewProjectionMatrix ( const float aMatrix[16] )
     {
-        if ( mModelViewProjectionMatrixLocation > 0 )
+        if ( mModelViewProjectionMatrixLocation >= 0 )
         {
             glUniformMatrix4fv ( mModelViewProjectionMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -112,7 +112,7 @@ try :
 
     void OpenGLProgram::SetNormalMatrix ( const float aMatrix[9] )
     {
-        if ( mNormalMatrixLocation > 0 )
+        if ( mNormalMatrixLocation >= 0 )
         {
             glUniformMatrix3fv ( mNormalMatrixLocation, 1, false, aMatrix );
             OPENGL_CHECK_ERROR_NO_THROW;
