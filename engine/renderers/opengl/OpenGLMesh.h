@@ -36,7 +36,9 @@ namespace AeonGames
         std::string mFilename;
         uint32_t mArray;
         uint32_t mBuffer;
+#if 0
         uint32_t mIndexBuffer;
+#endif
         uint32_t mVertexCount = 0;
         uint32_t mIndexCount = 0;
         uint32_t mIndexType = 0;
