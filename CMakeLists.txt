@@ -112,7 +112,19 @@ endif()
 ###########################################
 
 add_custom_target(generate-python-protobuf-source
-    ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+    COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+    COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector2.proto
+    COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector3.proto
+    COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+    SOURCES
+        ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+        ${CMAKE_SOURCE_DIR}/proto/vector2.proto
+        ${CMAKE_SOURCE_DIR}/proto/vector3.proto
+        ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     COMMENT "Generating Protocol Buffers Python Code")
 
 ###########################################
@@ -135,11 +147,20 @@ add_custom_target(generate-binary-assets
 # Blender Execution target
 ###########################################
 find_program (BLENDER_EXECUTABLE blender HINTS ENV ProgramFiles PATH_SUFFIXES "Blender Foundation/Blender")
-add_custom_target(execute-blender
+if(BLENDER_EXECUTABLE)
+# Right now this is just a shortcut to running Blender,
+# it was supposed to set everything up so exporters
+# were registered and ready to run 
+# without making changes to the Blender configuration,
+# but that idea didn't work out in the end.
+# The target is still useful and I may expand on it later on,
+# so it stays for now.
+add_custom_target(run-blender
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin PYTHONPATH=${CMAKE_SOURCE_DIR}/tools/blender "${BLENDER_EXECUTABLE}"
+        "${BLENDER_EXECUTABLE}"
     DEPENDS
         generate-python-protobuf-source
     SOURCES
-        ${CMAKE_SOURCE_DIR}/tools/blender/mesh_exporter.py
-    COMMENT "Executing Blender")
+        ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh/export.py
+    COMMENT "Running Blender")
+endif()
