@@ -22,7 +22,7 @@ namespace AeonGames
 {
     EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mScene(),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
-        mCameraLocation ( 4.59279297f, -4.59279358f, 3.74999969f, 1 ),
+        mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
         mProjectionMatrix(),
         mViewMatrix()
     {
@@ -65,7 +65,8 @@ namespace AeonGames
             mScene.AddNode ( model = new Model );
         }
         mMesh = mAeonEngine.GetMesh ( filename.toUtf8().constData() );
-        mProgram = mAeonEngine.GetProgram ( "game/shaders/plain_red.txt" );
+        //mProgram = mAeonEngine.GetProgram ( "game/shaders/plain_red.txt" );
+        mProgram = mAeonEngine.GetProgram ( "game/shaders/fixed_phong.txt" );
         assert ( model && "Model is nullptr" );
         model->SetMesh ( mMesh );
         model->SetProgram ( mProgram );
@@ -118,5 +119,65 @@ namespace AeonGames
         mViewMatrix.setColumn ( 3, mCameraLocation );
         mViewMatrix = mViewMatrix.inverted();
         mAeonEngine.SetViewMatrix ( mViewMatrix.constData() );
+    }
+
+    void EngineWindow::keyPressEvent ( QKeyEvent * event )
+    {
+        switch ( event->key() )
+        {
+        case Qt::Key_W:
+            mCameraLocation += ( mCameraRotation.rotatedVector ( forward ) * 10.0f );
+            break;
+        case Qt::Key_S:
+            mCameraLocation -= ( mCameraRotation.rotatedVector ( forward ) * 10.0f );
+            break;
+        case Qt::Key_D:
+            mCameraLocation += ( mCameraRotation.rotatedVector ( right ) * 10.0f );
+            break;
+        case Qt::Key_A:
+            mCameraLocation -= ( mCameraRotation.rotatedVector ( right ) * 10.0f );
+            break;
+        }
+        updateViewMatrix();
+        event->accept();
+    }
+
+    void EngineWindow::keyReleaseEvent ( QKeyEvent * event )
+    {
+        event->accept();
+    }
+
+    void EngineWindow::mouseMoveEvent ( QMouseEvent * event )
+    {
+        if ( event->buttons() & Qt::LeftButton )
+        {
+            QPoint movement = event->globalPos() - mLastCursorPosition;
+            mLastCursorPosition = event->globalPos();
+            mCameraRotation = QQuaternion::fromAxisAndAngle ( 0, 0, 1, - ( static_cast<float> ( movement.x() ) / 2.0f ) ) * mCameraRotation;
+            mCameraRotation = mCameraRotation * QQuaternion::fromAxisAndAngle ( 1, 0, 0, - ( static_cast<float> ( movement.y() ) / 2.0f ) );
+            updateViewMatrix();
+            event->accept();
+        }
+    }
+
+    void EngineWindow::mousePressEvent ( QMouseEvent * event )
+    {
+        if ( event->button() & Qt::LeftButton )
+        {
+            mLastCursorPosition = event->globalPos();
+        }
+        event->accept();
+    }
+
+    void EngineWindow::mouseReleaseEvent ( QMouseEvent * event )
+    {
+        event->accept();
+    }
+
+    void EngineWindow::wheelEvent ( QWheelEvent *event )
+    {
+        mCameraLocation += ( mCameraRotation.rotatedVector ( forward ) * ( event->angleDelta().y() / 2.0f ) );
+        updateViewMatrix();
+        event->accept();
     }
 }
