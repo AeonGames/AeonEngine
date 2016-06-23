@@ -19,8 +19,10 @@ limitations under the License.
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QQuaternion>
+#include <QVector3D>
 #include <QVector4D>
 #include <QMatrix4x4>
+#include <QPoint>
 
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Scene.h"
@@ -37,10 +39,22 @@ namespace AeonGames
         ~EngineWindow();
         void setMesh ( const QString& filename );
     private:
+        const QVector3D right
+        {
+            1.0f, 0.0f, 0.0f
+        };
+        const QVector3D forward{ 0.0f, 1.0f, 0.0f };
         void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
         void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
+        void keyPressEvent ( QKeyEvent * event ) override final;
+        void keyReleaseEvent ( QKeyEvent * event ) override final;
+        void mouseMoveEvent ( QMouseEvent * event ) override final;
+        void mousePressEvent ( QMouseEvent * event ) override final;
+        void mouseReleaseEvent ( QMouseEvent * event ) override final;
+        void wheelEvent ( QWheelEvent *event );
         bool event ( QEvent* aEvent ) override final;
         void updateViewMatrix();
+        QPoint mLastCursorPosition;
         QTimer mTimer;
         QElapsedTimer mStopWatch;
         AeonEngine mAeonEngine;

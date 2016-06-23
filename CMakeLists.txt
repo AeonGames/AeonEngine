@@ -139,6 +139,10 @@ add_custom_target(generate-binary-assets
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
+    COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
+    COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
     DEPENDS aeontool
     SOURCES
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
