@@ -30,6 +30,7 @@ import struct
 import mathutils
 import math
 import mesh_pb2
+import google.protobuf.text_format
 
 ATTR_POSITION_MASK = 0b1
 ATTR_NORMAL_MASK = 0b10
@@ -83,7 +84,8 @@ class MSHExporter(bpy.types.Operator):
             if modifier.type == 'ARMATURE':
                 armaturemodifier = bpy.types.ArmatureModifier(modifier)
                 if armaturemodifier.use_vertex_groups:
-                    armature = armaturemodifier.object.data
+                    if armaturemodifier.object:
+                        armature = armaturemodifier.object.data
                     break
         mesh_buffer.VertexFlags = 0
         vertex_struct_string = ''
@@ -97,15 +99,18 @@ class MSHExporter(bpy.types.Operator):
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
-            mesh_buffer.VertexFlags |= ATTR_UV_MASK
-            vertex_struct_string += '2f'
+
+            mesh.calc_tangents(mesh.uv_layers[0].name)
 
             mesh_buffer.VertexFlags |= ATTR_TANGENT_MASK
             vertex_struct_string += '3f'
 
             mesh_buffer.VertexFlags |= ATTR_BITANGENT_MASK
             vertex_struct_string += '3f'
-            mesh.calc_tangents(mesh.uv_layers[0].name)
+			
+            mesh_buffer.VertexFlags |= ATTR_UV_MASK
+            vertex_struct_string += '2f'
+			
 
         # Weights are only included if there is an armature modifier.
         if armature is not None:
@@ -138,19 +143,21 @@ class MSHExporter(bpy.types.Operator):
                                    localnormal[2]])
 
                 if mesh_buffer.VertexFlags & ATTR_TANGENT_MASK:
-                    localtangent = mesh.vertices[
-                        mesh.loops[loop_index].vertex_index].tangent * mesh_world_matrix
+                    localtangent = mesh.loops[loop_index].tangent * mesh_world_matrix
                     vertex.extend([localtangent[0],
                                    localtangent[1],
                                    localtangent[2]])
 
                 if mesh_buffer.VertexFlags & ATTR_BITANGENT_MASK:
-                    localbitangent = mesh.vertices[
-                        mesh.loops[loop_index].vertex_index].bitangent * mesh_world_matrix
+                    localbitangent = mesh.loops[loop_index].bitangent * mesh_world_matrix
                     vertex.extend([localbitangent[0],
                                    localbitangent[1],
                                    localbitangent[2]])
 
+                if mesh_buffer.VertexFlags & ATTR_UV_MASK:
+                    vertex.extend([mesh.uv_layers[0].data[loop_index].uv[0],
+                                   1.0 - mesh.uv_layers[0].data[loop_index].uv[1]])
+								   
                 if mesh_buffer.VertexFlags & ATTR_WEIGHT_MASK:
 
                     weights = []
@@ -193,10 +200,6 @@ class MSHExporter(bpy.types.Operator):
                         weight_values.append(weight[0])
                     vertex.extend(weight_indices)
                     vertex.extend(weight_values)
-
-                if mesh_buffer.VertexFlags & ATTR_UV_MASK:
-                    vertex.extend([mesh.uv_layers[0].data[loop_index].uv[0],
-                                   1.0 - mesh.uv_layers[0].data[loop_index].uv[1]])
 
                 if vertex not in vertices:
                     indices.append(len(vertices))
@@ -258,6 +261,10 @@ class MSHExporter(bpy.types.Operator):
         magick_struct = struct.Struct('8s')
         out.write(magick_struct.pack(b'AEONMSH\x00'))
         out.write(mesh_buffer.SerializeToString())
+        out.close()
+        out = open(self.filepath+".txt", "wt")
+        out.write("AEONMSH\n")
+        out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
         out.close()
         return {'FINISHED'}
 

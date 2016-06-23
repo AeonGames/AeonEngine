@@ -33,14 +33,6 @@ namespace AeonGames
         void EndRender() const override final;
         void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const override final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
-#if 0
-#if _WIN32
-        bool InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd ) override final;
-#else
-        bool InitializeRenderingWindow ( Display* aDisplay, Window aWindow ) override final;
-#endif
-        void FinalizeRenderingWindow() override final;
-#endif
     private:
         void InitializeInstance();
         void InitializeDevice();
