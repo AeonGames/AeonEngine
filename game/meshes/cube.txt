@@ -1,14 +1,14 @@
 AEONMSH
 Version: 1
 Min {
-  x: inf
-  y: inf
-  z: inf
+  x: -1.0000003576278687
+  y: -1.0000005960464478
+  z: -1.0
 }
 Max {
-  x: -inf
-  y: -inf
-  z: -inf
+  x: 1.0000004768371582
+  y: 1.0000003576278687
+  z: 1.0
 }
 VertexFlags: 3
 VertexCount: 8

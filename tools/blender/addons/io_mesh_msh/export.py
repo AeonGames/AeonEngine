@@ -73,6 +73,15 @@ class MSHExporter(bpy.types.Operator):
         self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
         # Create Protocol Buffer
         mesh_buffer = mesh_pb2.MeshBuffer()
+        # Initialize Protocol Buffer Message
+        mesh_buffer.Version = 1
+        mesh_buffer.Min.x = float('inf')
+        mesh_buffer.Min.y = float('inf')
+        mesh_buffer.Min.z = float('inf')
+        mesh_buffer.Max.x = float('-inf')
+        mesh_buffer.Max.y = float('-inf')
+        mesh_buffer.Max.z = float('-inf')
+
         mesh_object = context.active_object
         mesh_world_matrix = mathutils.Matrix(mesh_object.matrix_world)
         mesh = context.active_object.data
@@ -131,6 +140,14 @@ class MSHExporter(bpy.types.Operator):
                 if mesh_buffer.VertexFlags & ATTR_POSITION_MASK:
                     localpos = mesh.vertices[
                         mesh.loops[loop_index].vertex_index].co * mesh_world_matrix
+
+                    mesh_buffer.Min.x = min(mesh_buffer.Min.x,localpos[0])
+                    mesh_buffer.Min.y = min(mesh_buffer.Min.y,localpos[1])
+                    mesh_buffer.Min.z = min(mesh_buffer.Min.z,localpos[2])
+                    mesh_buffer.Max.x = max(mesh_buffer.Max.x,localpos[0])
+                    mesh_buffer.Max.y = max(mesh_buffer.Max.y,localpos[1])
+                    mesh_buffer.Max.z = max(mesh_buffer.Max.z,localpos[2])
+
                     vertex.extend([localpos[0],
                                    localpos[1],
                                    localpos[2]])
@@ -157,7 +174,7 @@ class MSHExporter(bpy.types.Operator):
                 if mesh_buffer.VertexFlags & ATTR_UV_MASK:
                     vertex.extend([mesh.uv_layers[0].data[loop_index].uv[0],
                                    1.0 - mesh.uv_layers[0].data[loop_index].uv[1]])
-								   
+
                 if mesh_buffer.VertexFlags & ATTR_WEIGHT_MASK:
 
                     weights = []
@@ -211,16 +228,6 @@ class MSHExporter(bpy.types.Operator):
                 index_buffer.append(indices[i - 1])
                 index_buffer.append(indices[i])
                 index_buffer.append(indices[(i + 1) % len(indices)])
-
-        # Fill Protocol Buffer ------------------------------------------------
-        mesh_buffer.Version = 1
-        mesh_buffer.Min.x = float('inf')
-        mesh_buffer.Min.y = float('inf')
-        mesh_buffer.Min.z = float('inf')
-        mesh_buffer.Max.x = float('-inf')
-        mesh_buffer.Max.y = float('-inf')
-        mesh_buffer.Max.z = float('-inf')
-        mesh_buffer.VertexFlags = mesh_buffer.VertexFlags
 
         # Write vertices -----------------------------------
         vertex_struct = struct.Struct(vertex_struct_string)
