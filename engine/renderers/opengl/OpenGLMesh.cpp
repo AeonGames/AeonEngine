@@ -145,7 +145,7 @@ try :
         OPENGL_CHECK_ERROR_THROW;
 
         uint8_t* offset = nullptr;
-        if ( mesh_buffer.vertexflags() & POSITION_MASK )
+        if ( mesh_buffer.vertexflags() & POSITION_BIT )
         {
             glEnableVertexAttribArray ( 0 );
             OPENGL_CHECK_ERROR_THROW;
@@ -154,7 +154,7 @@ try :
             offset += sizeof ( float ) * 3;
         }
 
-        if ( mesh_buffer.vertexflags() & NORMAL_MASK )
+        if ( mesh_buffer.vertexflags() & NORMAL_BIT )
         {
             glEnableVertexAttribArray ( 1 );
             OPENGL_CHECK_ERROR_THROW;
@@ -163,16 +163,34 @@ try :
             offset += sizeof ( float ) * 3;
         }
 
-        if ( mesh_buffer.vertexflags() & UV_MASK )
+        if ( mesh_buffer.vertexflags() & TANGENT_BIT )
         {
             glEnableVertexAttribArray ( 2 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 2, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
+            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
+            OPENGL_CHECK_ERROR_THROW;
+            offset += sizeof ( float ) * 3;
+        }
+
+        if ( mesh_buffer.vertexflags() & BITANGENT_BIT )
+        {
+            glEnableVertexAttribArray ( 3 );
+            OPENGL_CHECK_ERROR_THROW;
+            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
+            OPENGL_CHECK_ERROR_THROW;
+            offset += sizeof ( float ) * 3;
+        }
+
+        if ( mesh_buffer.vertexflags() & UV_BIT )
+        {
+            glEnableVertexAttribArray ( 4 );
+            OPENGL_CHECK_ERROR_THROW;
+            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 2;
         }
 
-        if ( mesh_buffer.vertexflags() & WEIGHT_MASK )
+        if ( mesh_buffer.vertexflags() & WEIGHT_BIT )
         {
             glEnableVertexAttribArray ( 3 );
             OPENGL_CHECK_ERROR_THROW;
@@ -229,24 +247,33 @@ try :
     uint32_t OpenGLMesh::GetStride ( uint32_t aFlags ) const
     {
         uint32_t stride = 0;
-        if ( aFlags & POSITION_MASK )
+        if ( aFlags & POSITION_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & NORMAL_MASK )
+        if ( aFlags & NORMAL_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & UV_MASK )
+        if ( aFlags & TANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aFlags & BITANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aFlags & UV_BIT )
         {
             stride += sizeof ( float ) * 2;
         }
-        if ( aFlags & WEIGHT_MASK )
+        if ( aFlags & WEIGHT_BIT )
         {
             stride += sizeof ( uint8_t ) * 8;
         }
         return stride;
     }
+
     uint32_t OpenGLMesh::GetIndexSize ( uint32_t aIndexType ) const
     {
         switch ( 0x1400 | aIndexType )
