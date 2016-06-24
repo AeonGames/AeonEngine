@@ -27,12 +27,12 @@ namespace AeonGames
         virtual ~Mesh() = default;
         enum AttributeMask
         {
-            POSITION_MASK  = 0b1,
-            NORMAL_MASK    = 0b10,
-            TANGENT_MASK   = 0b100,
-            BITANGENT_MASK = 0b1000,
-            UV_MASK        = 0b10000,
-            WEIGHT_MASK    = 0b100000,
+            POSITION_BIT  = 0b1,
+            NORMAL_BIT    = 0b10,
+            TANGENT_BIT   = 0b100,
+            BITANGENT_BIT = 0b1000,
+            UV_BIT        = 0b10000,
+            WEIGHT_BIT    = 0b100000,
         };
     };
 }
