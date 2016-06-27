@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef AEONGAMES_PROGRAM_H
 #define AEONGAMES_PROGRAM_H
 
+#include <cstdint>
+
 namespace AeonGames
 {
     class Program
