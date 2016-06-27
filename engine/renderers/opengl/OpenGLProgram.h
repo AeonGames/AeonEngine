@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include "aeongames/Program.h"
+#include "OpenGLMaterial.h"
 
 namespace AeonGames
 {
