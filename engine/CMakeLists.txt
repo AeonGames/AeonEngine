@@ -46,6 +46,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
@@ -60,7 +61,7 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     renderers/opengl/OpenGLRenderer.h
     renderers/opengl/OpenGLFunctions.h
     renderers/opengl/OpenGLProgram.h
-    renderers/opengl/Material.h
+    renderers/opengl/OpenGLMaterial.h
     renderers/opengl/OpenGLMesh.h)
 
 set(ENGINE_CORE_HEADERS
@@ -88,7 +89,7 @@ set(ENGINE_VULKAN_RENDERER_SOURCES
 set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/OpenGLRenderer.cpp
     renderers/opengl/OpenGLProgram.cpp
-    renderers/opengl/Material.cpp
+    renderers/opengl/OpenGLMaterial.cpp
     renderers/opengl/OpenGLMesh.cpp
     renderers/opengl/OpenGLFunctions.cpp)
 

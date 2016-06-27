@@ -35,11 +35,11 @@ limitations under the License.
 #endif
 
 #include "OpenGLFunctions.h"
-#include "Material.h"
+#include "OpenGLMaterial.h"
 
 namespace AeonGames
 {
-Material::Material ( const std::string& aFilename ) try :
+OpenGLMaterial::OpenGLMaterial ( const std::string& aFilename ) try :
         mFilename ( aFilename )
     {
         Initialize();
@@ -50,16 +50,16 @@ Material::Material ( const std::string& aFilename ) try :
         throw;
     }
 
-    Material::~Material()
+    OpenGLMaterial::~OpenGLMaterial()
     {
     }
 
-    void Material::Initialize()
+    void OpenGLMaterial::Initialize()
     {
         static MaterialBuffer material_buffer;
     }
 
-    void Material::Finalize()
+    void OpenGLMaterial::Finalize()
     {
     }
 }
