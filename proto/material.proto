@@ -34,5 +34,6 @@ message PropertyValueBuffer
 
 message MaterialBuffer
 {
-	repeated PropertyValueBuffer property_values = 1;
+	string Program = 1;
+	repeated PropertyValueBuffer property_values = 2;
 }
