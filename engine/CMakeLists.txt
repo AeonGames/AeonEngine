@@ -62,7 +62,8 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     renderers/opengl/OpenGLFunctions.h
     renderers/opengl/OpenGLProgram.h
     renderers/opengl/OpenGLMaterial.h
-    renderers/opengl/OpenGLMesh.h)
+    renderers/opengl/OpenGLMesh.h
+    renderers/opengl/Uniform.h)
 
 set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
@@ -91,7 +92,8 @@ set(ENGINE_OPENGL_RENDERER_SOURCES
     renderers/opengl/OpenGLProgram.cpp
     renderers/opengl/OpenGLMaterial.cpp
     renderers/opengl/OpenGLMesh.cpp
-    renderers/opengl/OpenGLFunctions.cpp)
+    renderers/opengl/OpenGLFunctions.cpp
+    renderers/opengl/Uniform.cpp)
 
 set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Scene.cpp

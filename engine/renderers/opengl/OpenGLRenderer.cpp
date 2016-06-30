@@ -81,6 +81,8 @@ namespace AeonGames
 
     void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
     {
+        OpenGLProgram* program = reinterpret_cast<OpenGLProgram*> ( aProgram.get() );
+#if 0
         aProgram->Use();
         aProgram->SetViewMatrix ( mViewMatrix );
         aProgram->SetProjectionMatrix ( mProjectionMatrix );
@@ -89,6 +91,16 @@ namespace AeonGames
         aProgram->SetModelViewMatrix ( mModelViewMatrix );
         aProgram->SetModelViewProjectionMatrix ( mViewProjectionMatrix );
         aProgram->SetNormalMatrix ( mNormalMatrix );
+#else
+        program->Use();
+        program->SetViewMatrix ( mViewMatrix );
+        program->SetProjectionMatrix ( mProjectionMatrix );
+        program->SetModelMatrix ( mModelMatrix );
+        program->SetViewProjectionMatrix ( mViewProjectionMatrix );
+        program->SetModelViewMatrix ( mModelViewMatrix );
+        program->SetModelViewProjectionMatrix ( mViewProjectionMatrix );
+        program->SetNormalMatrix ( mNormalMatrix );
+#endif
         aMesh->Render();
     }
 

@@ -20,22 +20,10 @@ limitations under the License.
 #include <string>
 #include <memory>
 #include <vector>
+#include "Uniform.h"
 
 namespace AeonGames
 {
-    class Texture;
-    class Uniform
-    {
-    public:
-        Uniform() {};
-        ~Uniform() {};
-    private:
-        uint32_t mLocation;
-        uint32_t mType;
-        uint8_t mData[sizeof ( float ) * 4];
-        static_assert ( sizeof ( std::shared_ptr<Texture> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
-    };
-
     class OpenGLMaterial : public Material
     {
     public:

@@ -19,6 +19,7 @@ limitations under the License.
 #include <string>
 #include "aeongames/Program.h"
 #include "OpenGLMaterial.h"
+#include "Uniform.h"
 
 namespace AeonGames
 {
@@ -27,14 +28,14 @@ namespace AeonGames
     public:
         OpenGLProgram ( const std::string& aFilename );
         ~OpenGLProgram();
-        void SetViewMatrix ( const float aMatrix[16] ) override final;
-        void SetProjectionMatrix ( const float aMatrix[16] ) override final;
-        void SetModelMatrix ( const float aMatrix[16] ) override final;
-        void SetViewProjectionMatrix ( const float aMatrix[16] ) override final;
-        void SetModelViewMatrix ( const float aMatrix[16] ) override final;
-        void SetModelViewProjectionMatrix ( const float aMatrix[16] ) override final;
-        void SetNormalMatrix ( const float aMatrix[9] ) override final;
-        void Use() const override final;
+        void SetViewMatrix ( const float aMatrix[16] );
+        void SetProjectionMatrix ( const float aMatrix[16] );
+        void SetModelMatrix ( const float aMatrix[16] );
+        void SetViewProjectionMatrix ( const float aMatrix[16] );
+        void SetModelViewMatrix ( const float aMatrix[16] );
+        void SetModelViewProjectionMatrix ( const float aMatrix[16] );
+        void SetNormalMatrix ( const float aMatrix[9] );
+        void Use() const;
     private:
         void Initialize();
         void Finalize();
@@ -47,6 +48,7 @@ namespace AeonGames
         int mModelViewMatrixLocation = -1;
         int mModelViewProjectionMatrixLocation = -1;
         int mNormalMatrixLocation = -1;
+        std::vector<Uniform> mDefaultValues;
     };
 }
 #endif
