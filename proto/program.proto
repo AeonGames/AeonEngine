@@ -27,7 +27,7 @@ message PropertyBuffer {
         FLOAT      = 0x1406;
         FLOAT_VEC2 = 0x8B50;
 		FLOAT_VEC3 = 0x8B51;
-        FLOAT_VEC4 = 0x8B52;		
+        FLOAT_VEC4 = 0x8B52;
         SAMPLER_2D = 0x8B5E;
         SAMPLER_CUBE = 0x8B60;
 		// The following have no mapping to the default_value field yet.

@@ -187,6 +187,8 @@ try :
                 "uniform mat4 ModelViewMatrix;\n"
                 "uniform mat4 ModelViewProjectionMatrix;\n"
                 "uniform mat3 NormalMatrix;\n" );
+            mDefaultValues.clear();
+            mDefaultValues.reserve ( program_buffer.properties().size() );
             for ( auto& i : program_buffer.properties() )
             {
                 std::string type_name;
@@ -194,6 +196,7 @@ try :
                 switch ( i.type() )
                 {
                 case PropertyBuffer_Type_FLOAT:
+                    mDefaultValues.emplace_back ( i.scalar_float() );
                     type_name = "float ";
                     if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
                     {
@@ -201,6 +204,7 @@ try :
                     }
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC2:
+                    mDefaultValues.emplace_back ( i.vector2().x(), i.vector2().y() );
                     type_name = "vec2 ";
                     if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
                     {
@@ -210,6 +214,7 @@ try :
                     }
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC3:
+                    mDefaultValues.emplace_back ( i.vector3().x(), i.vector3().y(), i.vector3().z() );
                     type_name = "vec3 ";
                     if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
                     {
@@ -220,6 +225,7 @@ try :
                     }
                     break;
                 case PropertyBuffer_Type_FLOAT_VEC4:
+                    mDefaultValues.emplace_back ( i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
                     type_name = "vec4 ";
                     if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
                     {
@@ -324,7 +330,6 @@ try :
                 "{\n" +
                 program_buffer.fragment_shader().entry_point() +
                 "\n}\n" );
-
         }
 
         //--------------------------------------------------
@@ -362,7 +367,7 @@ try :
             log_string.resize ( info_log_len );
             if ( info_log_len > 1 )
             {
-                glGetShaderInfoLog ( vertex_shader, info_log_len, NULL, const_cast<GLchar*> ( log_string.data() ) );
+                glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
                 OPENGL_CHECK_ERROR_THROW;
                 std::cout << log_string << std::endl;
             }
@@ -441,6 +446,13 @@ try :
         OPENGL_CHECK_ERROR_THROW;
         mNormalMatrixLocation = glGetUniformLocation ( mProgram, "NormalMatrix" );
         OPENGL_CHECK_ERROR_THROW;
+
+        assert ( ( program_buffer.properties().size() == mDefaultValues.size() ) && "Difference between program properties and default values." );
+        for ( int i = 0; i < mDefaultValues.size(); ++i )
+        {
+            mDefaultValues[i].SetLocation ( glGetUniformLocation ( mProgram, program_buffer.properties().Get ( i ).uniform_name().c_str() ) );
+        }
+        program_buffer.Clear();
     }
 
     void OpenGLProgram::Finalize()
