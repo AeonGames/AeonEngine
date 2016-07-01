@@ -129,6 +129,7 @@ namespace AeonGames
         PFNGLGENBUFFERSPROC                    glGenBuffers = nullptr;
         PFNGLBINDBUFFERPROC                    glBindBuffer = nullptr;
         PFNGLBUFFERDATAPROC                    glBufferData = nullptr;
+        PFNGLBUFFERSUBDATAPROC                 glBufferSubData = nullptr;
         PFNGLGETBUFFERSUBDATAPROC              glGetBufferSubData = nullptr;
         PFNGLDELETEBUFFERSPROC                 glDeleteBuffers = nullptr;
         PFNGLGETACTIVEATTRIBPROC               glGetActiveAttrib = nullptr;
@@ -180,6 +181,11 @@ namespace AeonGames
         PFNGLMAPBUFFERPROC                     glMapBuffer = nullptr;
         PFNGLUNMAPBUFFERPROC                   glUnmapBuffer = nullptr;
         PFNGLGETBUFFERPARAMETERIVPROC          glGetBufferParameteriv = nullptr;
+        // UBOs
+        PFNGLGETUNIFORMBLOCKINDEXPROC          glGetUniformBlockIndex = nullptr;
+        PFNGLGETACTIVEUNIFORMBLOCKIVPROC       glGetActiveUniformBlockiv = nullptr;
+        PFNGLBINDBUFFERBASEPROC                glBindBufferBase = nullptr;
+        PFNGLUNIFORMBLOCKBINDINGPROC           glUniformBlockBinding = nullptr;
 #ifndef __CYGWIN__
         PFNGLENABLEVERTEXATTRIBARRAYPROC       glEnableVertexAttribArray = nullptr;
         PFNGLDISABLEVERTEXATTRIBARRAYPROC      glDisableVertexAttribArray = nullptr;
@@ -262,6 +268,7 @@ namespace AeonGames
         GLGETPROCADDRESS ( PFNGLGENBUFFERSPROC,                    glGenBuffers                    );
         GLGETPROCADDRESS ( PFNGLBINDBUFFERPROC,                    glBindBuffer                    );
         GLGETPROCADDRESS ( PFNGLBUFFERDATAPROC,                    glBufferData                    );
+        GLGETPROCADDRESS ( PFNGLBUFFERSUBDATAPROC,                 glBufferSubData                 );
         GLGETPROCADDRESS ( PFNGLGETBUFFERSUBDATAPROC,              glGetBufferSubData              );
         GLGETPROCADDRESS ( PFNGLDELETEBUFFERSPROC,                 glDeleteBuffers                 );
         GLGETPROCADDRESS ( PFNGLGETACTIVEATTRIBPROC,               glGetActiveAttrib               );
@@ -315,6 +322,11 @@ namespace AeonGames
         GLGETPROCADDRESS ( PFNGLMAPBUFFERPROC,                     glMapBuffer                     );
         GLGETPROCADDRESS ( PFNGLUNMAPBUFFERPROC,                   glUnmapBuffer                   );
         GLGETPROCADDRESS ( PFNGLGETBUFFERPARAMETERIVPROC,          glGetBufferParameteriv          );
+        // UBOs
+        GLGETPROCADDRESS ( PFNGLGETUNIFORMBLOCKINDEXPROC,          glGetUniformBlockIndex          );
+        GLGETPROCADDRESS ( PFNGLGETACTIVEUNIFORMBLOCKIVPROC,       glGetActiveUniformBlockiv       );
+        GLGETPROCADDRESS ( PFNGLBINDBUFFERBASEPROC,                glBindBufferBase                );
+        GLGETPROCADDRESS ( PFNGLUNIFORMBLOCKBINDINGPROC,           glUniformBlockBinding           );
 #ifndef __CYGWIN__
         GLGETPROCADDRESS ( PFNGLENABLEVERTEXATTRIBARRAYPROC,       glEnableVertexAttribArray       );
         GLGETPROCADDRESS ( PFNGLDISABLEVERTEXATTRIBARRAYPROC,      glDisableVertexAttribArray      );

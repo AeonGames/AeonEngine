@@ -55,7 +55,7 @@ try :
     OpenGLProgram::~OpenGLProgram()
     {
     }
-
+#if 0
     void OpenGLProgram::SetViewMatrix ( const float aMatrix[16] )
     {
         if ( mViewMatrixLocation >= 0 )
@@ -118,11 +118,16 @@ try :
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }
-
+#endif
     void OpenGLProgram::Use() const
     {
         glUseProgram ( mProgram );
         OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    uint32_t OpenGLProgram::GetMatricesBlockIndex() const
+    {
+        return mMatricesBlockIndex;
     }
 
     void OpenGLProgram::Initialize()
@@ -180,13 +185,16 @@ try :
                 "layout(location = 5) in vec4 VertexWeightIndices;\n"
                 "layout(location = 6) in vec4 VertexWeights;\n" );
             vertex_shader_source.append (
-                "uniform mat4 ViewMatrix;\n"
-                "uniform mat4 ProjectionMatrix;\n"
-                "uniform mat4 ModelMatrix;\n"
-                "uniform mat4 ViewProjectionMatrix;\n"
-                "uniform mat4 ModelViewMatrix;\n"
-                "uniform mat4 ModelViewProjectionMatrix;\n"
-                "uniform mat3 NormalMatrix;\n" );
+                "layout(std140) uniform Matrices{\n"
+                "mat4 ViewMatrix;\n"
+                "mat4 ProjectionMatrix;\n"
+                "mat4 ModelMatrix;\n"
+                "mat4 ViewProjectionMatrix;\n"
+                "mat4 ModelViewMatrix;\n"
+                "mat4 ModelViewProjectionMatrix;\n"
+                "mat3 NormalMatrix;\n"
+                "};\n"
+            );
             mDefaultValues.clear();
             mDefaultValues.reserve ( program_buffer.properties().size() );
             for ( auto& i : program_buffer.properties() )
@@ -261,13 +269,15 @@ try :
         {
             fragment_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             fragment_shader_source.append (
-                "uniform mat4 ViewMatrix;\n"
-                "uniform mat4 ProjectionMatrix;\n"
-                "uniform mat4 ModelMatrix;\n"
-                "uniform mat4 ViewProjectionMatrix;\n"
-                "uniform mat4 ModelViewMatrix;\n"
-                "uniform mat4 ModelViewProjectionMatrix;\n"
-                "uniform mat3 NormalMatrix;\n" );
+                "layout(std140) uniform Matrices{\n"
+                "mat4 ViewMatrix;\n"
+                "mat4 ProjectionMatrix;\n"
+                "mat4 ModelMatrix;\n"
+                "mat4 ViewProjectionMatrix;\n"
+                "mat4 ModelViewMatrix;\n"
+                "mat4 ModelViewProjectionMatrix;\n"
+                "mat3 NormalMatrix;\n"
+                "};\n" );
             for ( auto& i : program_buffer.properties() )
             {
                 std::string type_name;
@@ -431,6 +441,7 @@ try :
         OPENGL_CHECK_ERROR_THROW;
         glDeleteShader ( fragment_shader );
         OPENGL_CHECK_ERROR_THROW;
+#if 0
         // Get Matrix uniform locations
         mViewMatrixLocation = glGetUniformLocation ( mProgram, "ViewMatrix" );
         OPENGL_CHECK_ERROR_THROW;
@@ -446,8 +457,17 @@ try :
         OPENGL_CHECK_ERROR_THROW;
         mNormalMatrixLocation = glGetUniformLocation ( mProgram, "NormalMatrix" );
         OPENGL_CHECK_ERROR_THROW;
-
-        assert ( ( program_buffer.properties().size() == mDefaultValues.size() ) && "Difference between program properties and default values." );
+#else
+        mMatricesBlockIndex = glGetUniformBlockIndex ( mProgram, "Matrices" );
+        OPENGL_CHECK_ERROR_THROW;
+        GLint block_size;
+        glGetActiveUniformBlockiv ( mProgram, mMatricesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
+        OPENGL_CHECK_ERROR_THROW;
+        assert ( block_size >= ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ) );
+        glUniformBlockBinding ( mProgram, mMatricesBlockIndex, 0 );
+        OPENGL_CHECK_ERROR_THROW;
+#endif
+        assert ( ( program_buffer.properties().size() >= mDefaultValues.size() ) && "Difference between program properties and default values." );
         for ( int i = 0; i < mDefaultValues.size(); ++i )
         {
             mDefaultValues[i].SetLocation ( glGetUniformLocation ( mProgram, program_buffer.properties().Get ( i ).uniform_name().c_str() ) );
