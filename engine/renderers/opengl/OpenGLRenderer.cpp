@@ -83,15 +83,6 @@ namespace AeonGames
     {
         OpenGLProgram* program = reinterpret_cast<OpenGLProgram*> ( aProgram.get() );
 #if 0
-        aProgram->Use();
-        aProgram->SetViewMatrix ( mViewMatrix );
-        aProgram->SetProjectionMatrix ( mProjectionMatrix );
-        aProgram->SetModelMatrix ( mModelMatrix );
-        aProgram->SetViewProjectionMatrix ( mViewProjectionMatrix );
-        aProgram->SetModelViewMatrix ( mModelViewMatrix );
-        aProgram->SetModelViewProjectionMatrix ( mViewProjectionMatrix );
-        aProgram->SetNormalMatrix ( mNormalMatrix );
-#else
         program->Use();
         program->SetViewMatrix ( mViewMatrix );
         program->SetProjectionMatrix ( mProjectionMatrix );
@@ -101,6 +92,9 @@ namespace AeonGames
         program->SetModelViewProjectionMatrix ( mViewProjectionMatrix );
         program->SetNormalMatrix ( mNormalMatrix );
 #endif
+        program->Use();
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
         aMesh->Render();
     }
 
@@ -164,6 +158,15 @@ namespace AeonGames
                     std::cout << "Unable to Load OpenGL functions." << std::endl;
                     return false;
                 }
+
+                glGenBuffers ( 1, &mMatricesBuffer );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glBufferData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ),
+                               mMatrices, GL_DYNAMIC_DRAW );
+                OPENGL_CHECK_ERROR_NO_THROW;
+
                 RECT rect;
                 GetClientRect ( mHwnd, &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
@@ -287,6 +290,15 @@ namespace AeonGames
             std::cout << "Unable to Load OpenGL functions." << std::endl;
             return false;
         }
+
+        glGenBuffers ( 1, &mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ),
+                       mMatrices, GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
         glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         return true;
@@ -295,6 +307,11 @@ namespace AeonGames
 
     void OpenGLRenderer::UnregisterRenderingWindow ( uintptr_t aWindowId )
     {
+        if ( glIsBuffer ( mMatricesBuffer ) )
+        {
+            glDeleteBuffers ( 1, &mMatricesBuffer );
+            mMatricesBuffer = 0;
+        }
 #ifdef WIN32
         if ( mHwnd && ( mHwnd == reinterpret_cast<HWND> ( aWindowId ) ) )
         {
@@ -369,6 +386,10 @@ namespace AeonGames
         Extract3x3Matrix ( mModelViewMatrix, mNormalMatrix );
         Invert3x3Matrix ( mNormalMatrix, mNormalMatrix );
         Transpose3x3Matrix ( mNormalMatrix, mNormalMatrix );
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ), mMatrices );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLRenderer::Initialize()

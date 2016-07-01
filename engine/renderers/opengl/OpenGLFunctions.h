@@ -90,8 +90,6 @@ namespace AeonGames
         extern PFNGLVERTEXATTRIBL3DPROC glVertexAttribL3d;
         extern PFNGLVERTEXATTRIBL4DPROC glVertexAttribL4d;
 #endif
-
-
         extern PFNGLGETATTRIBLOCATIONPROC           glGetAttribLocation;
         extern PFNGLBINDATTRIBLOCATIONPROC          glBindAttribLocation;
         extern PFNGLGETPROGRAMIVPROC                glGetProgramiv;
@@ -113,6 +111,7 @@ namespace AeonGames
         extern PFNGLGENBUFFERSPROC                  glGenBuffers;
         extern PFNGLBINDBUFFERPROC                  glBindBuffer;
         extern PFNGLBUFFERDATAPROC                  glBufferData;
+        extern PFNGLBUFFERSUBDATAPROC               glBufferSubData;
         extern PFNGLGETBUFFERSUBDATAPROC            glGetBufferSubData;
         extern PFNGLDELETEBUFFERSPROC               glDeleteBuffers;
         extern PFNGLGETACTIVEATTRIBPROC             glGetActiveAttrib;
@@ -166,6 +165,11 @@ namespace AeonGames
         extern PFNGLMAPBUFFERPROC                   glMapBuffer;
         extern PFNGLUNMAPBUFFERPROC                 glUnmapBuffer;
         extern PFNGLGETBUFFERPARAMETERIVPROC        glGetBufferParameteriv;
+        // UBO
+        extern PFNGLGETUNIFORMBLOCKINDEXPROC        glGetUniformBlockIndex;
+        extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC     glGetActiveUniformBlockiv;
+        extern PFNGLBINDBUFFERBASEPROC              glBindBufferBase;
+        extern PFNGLUNIFORMBLOCKBINDINGPROC         glUniformBlockBinding;
 #endif
     }
     bool LoadOpenGLAPI();

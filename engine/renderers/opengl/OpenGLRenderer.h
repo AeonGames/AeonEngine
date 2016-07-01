@@ -45,6 +45,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
+#if 0
         float mViewMatrix[16]
         =
         {
@@ -101,6 +102,54 @@ namespace AeonGames
             0, 1, 0,
             0, 0, 1,
         };
+#else
+        GLuint mMatricesBuffer;
+        float mMatrices[ ( 16 * 6 ) + ( 9 * 1 )] =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mProjectionMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mModelMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mViewProjectionMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mModelViewMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mModelViewProjectionMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mNormalMatrix
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1,
+        };
+
+        float* mViewMatrix = mMatrices + ( 16 * 0 );
+        float* mProjectionMatrix = mMatrices + ( 16 * 1 );
+        float* mModelMatrix = mMatrices + ( 16 * 2 );
+        // Cache Matrices
+        float* mViewProjectionMatrix = mMatrices + ( 16 * 3 );
+        float* mModelViewMatrix = mMatrices + ( 16 * 4 );
+        float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
+        float* mNormalMatrix = mMatrices + ( 16 * 6 );
+#endif
 #ifdef _WIN32
         HWND mHwnd;
         HDC mDeviceContext = nullptr;
