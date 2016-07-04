@@ -37,7 +37,7 @@ namespace AeonGames
         uint32_t mProgram;
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;
-        std::vector<Uniform> mDefaultValues;
+        uint32_t mPropertiesBuffer = 0;
     };
 }
 #endif
