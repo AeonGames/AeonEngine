@@ -28,15 +28,6 @@ namespace AeonGames
     public:
         OpenGLProgram ( const std::string& aFilename );
         ~OpenGLProgram();
-#if 0
-        void SetViewMatrix ( const float aMatrix[16] );
-        void SetProjectionMatrix ( const float aMatrix[16] );
-        void SetModelMatrix ( const float aMatrix[16] );
-        void SetViewProjectionMatrix ( const float aMatrix[16] );
-        void SetModelViewMatrix ( const float aMatrix[16] );
-        void SetModelViewProjectionMatrix ( const float aMatrix[16] );
-        void SetNormalMatrix ( const float aMatrix[9] );
-#endif
         void Use() const;
         uint32_t GetMatricesBlockIndex() const;
     private:
@@ -44,18 +35,8 @@ namespace AeonGames
         void Finalize();
         std::string mFilename;
         uint32_t mProgram;
-#if 0
-        int mViewMatrixLocation = -1;
-        int mProjectionMatrixLocation = -1;
-        int mModelMatrixLocation = -1;
-        int mViewProjectionMatrixLocation = -1;
-        int mModelViewMatrixLocation = -1;
-        int mModelViewProjectionMatrixLocation = -1;
-        int mNormalMatrixLocation = -1;
-#else
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;
-#endif
         std::vector<Uniform> mDefaultValues;
     };
 }

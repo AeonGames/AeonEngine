@@ -116,7 +116,6 @@ source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
 set(ENGINE_SOURCES  ${ENGINE_SDK_HEADERS} ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES}
                     ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES}
-                    ${ENGINE_VULKAN_RENDERER_HEADERS} ${ENGINE_VULKAN_RENDERER_SOURCES}
                     ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES}
                     ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
 
@@ -124,29 +123,41 @@ if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
-add_library(renderGL SHARED
+add_library(OpenGLRenderer SHARED
     ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES}
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
+    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+
+add_library(VulkanRenderer SHARED
+    ${ENGINE_VULKAN_RENDERER_HEADERS} ${ENGINE_VULKAN_RENDERER_SOURCES}
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
 add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
-target_link_libraries(renderGL ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES})
-target_link_libraries(engine ${VULKAN_LIBRARY} renderGL ${PROTOBUF_LIBRARIES})
+target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES})
+target_link_libraries(VulkanRenderer ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
+target_link_libraries(engine OpenGLRenderer ${PROTOBUF_LIBRARIES})
 
 if(MSVC)
-    set_target_properties(renderGL PROPERTIES
+    set_target_properties(OpenGLRenderer PROPERTIES
+        COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
+    set_target_properties(VulkanRenderer PROPERTIES
         COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-WX -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW)
-    set_target_properties(renderGL PROPERTIES
-        COMPILE_FLAGS "-Wall -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
+    set_target_properties(OpenGLRenderer PROPERTIES
+        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
+    set_target_properties(VulkanRenderer PROPERTIES
+        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
     set_target_properties(engine PROPERTIES
-        COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
 elseif(UNIX)
-    set_target_properties(renderGL PROPERTIES
-        COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_XLIB_KHR")
+    set_target_properties(OpenGLRenderer PROPERTIES
+        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors")
+    set_target_properties(VulkanRenderer PROPERTIES
+        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
     set_target_properties(engine PROPERTIES
-        COMPILE_FLAGS "-Wall -DVK_USE_PLATFORM_XLIB_KHR")
+        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors")
 endif()
