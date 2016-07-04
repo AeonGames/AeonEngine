@@ -82,16 +82,6 @@ namespace AeonGames
     void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
     {
         OpenGLProgram* program = reinterpret_cast<OpenGLProgram*> ( aProgram.get() );
-#if 0
-        program->Use();
-        program->SetViewMatrix ( mViewMatrix );
-        program->SetProjectionMatrix ( mProjectionMatrix );
-        program->SetModelMatrix ( mModelMatrix );
-        program->SetViewProjectionMatrix ( mViewProjectionMatrix );
-        program->SetModelViewMatrix ( mModelViewMatrix );
-        program->SetModelViewProjectionMatrix ( mViewProjectionMatrix );
-        program->SetNormalMatrix ( mNormalMatrix );
-#endif
         program->Use();
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -163,7 +153,7 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_NO_THROW;
                 glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glBufferData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ),
+                glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
                                mMatrices, GL_DYNAMIC_DRAW );
                 OPENGL_CHECK_ERROR_NO_THROW;
 
@@ -382,13 +372,18 @@ namespace AeonGames
         Multiply4x4Matrix ( mViewMatrix, mModelMatrix, mModelViewMatrix );
         // Update mModelViewProjectionMatrix
         Multiply4x4Matrix ( mViewProjectionMatrix, mModelMatrix, mModelViewProjectionMatrix );
-        // Calculate Normal Matrix
+        /*  Calculate Normal Matrix
+            Inverting a 3x3 matrix is cheaper than inverting a 4x4 matrix,
+            so even if the shader alignment requires us to pad the 3x3 matrix into
+            a 4x3 matrix we do these operations on a 3x3 basis.*/
         Extract3x3Matrix ( mModelViewMatrix, mNormalMatrix );
         Invert3x3Matrix ( mNormalMatrix, mNormalMatrix );
         Transpose3x3Matrix ( mNormalMatrix, mNormalMatrix );
+        Convert3x3To4x3 ( mNormalMatrix, mNormalMatrix );
+
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, 0, ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ), mMatrices );
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( mMatrices ), mMatrices );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
