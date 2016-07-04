@@ -441,32 +441,16 @@ try :
         OPENGL_CHECK_ERROR_THROW;
         glDeleteShader ( fragment_shader );
         OPENGL_CHECK_ERROR_THROW;
-#if 0
-        // Get Matrix uniform locations
-        mViewMatrixLocation = glGetUniformLocation ( mProgram, "ViewMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-        mProjectionMatrixLocation = glGetUniformLocation ( mProgram, "ProjectionMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-        mModelMatrixLocation = glGetUniformLocation ( mProgram, "ModelMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-        mViewProjectionMatrixLocation = glGetUniformLocation ( mProgram, "ViewProjectionMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-        mModelViewMatrixLocation = glGetUniformLocation ( mProgram, "ModelViewMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-        mModelViewProjectionMatrixLocation = glGetUniformLocation ( mProgram, "ModelViewProjectionMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-        mNormalMatrixLocation = glGetUniformLocation ( mProgram, "NormalMatrix" );
-        OPENGL_CHECK_ERROR_THROW;
-#else
+
         mMatricesBlockIndex = glGetUniformBlockIndex ( mProgram, "Matrices" );
         OPENGL_CHECK_ERROR_THROW;
         GLint block_size;
         glGetActiveUniformBlockiv ( mProgram, mMatricesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
         OPENGL_CHECK_ERROR_THROW;
-        assert ( block_size >= ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ) );
+        assert ( block_size >= ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 12 * 1 ) );
         glUniformBlockBinding ( mProgram, mMatricesBlockIndex, 0 );
         OPENGL_CHECK_ERROR_THROW;
-#endif
+
         assert ( ( program_buffer.properties().size() >= mDefaultValues.size() ) && "Difference between program properties and default values." );
         for ( int i = 0; i < mDefaultValues.size(); ++i )
         {

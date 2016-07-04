@@ -422,6 +422,68 @@ inline float* Extract3x3Matrix ( const float* m, float* out )
     return out;
 }
 
+/*! \brief Extracts a 3x3 matrix from a 4x4 matrix into a 4x4 matrix.
+\param m [in] 4x4 Matrix.
+\param out [out] 4x4 Matrix.
+*/
+inline float* Extract3x3Into4x4 ( const float* m, float* out )
+{
+    out[0] = m[0];
+    out[1] = m[1];
+    out[2] = m[2];
+    out[3] = 0;
+    out[4] = m[4];
+    out[5] = m[5];
+    out[6] = m[6];
+    out[7] = 0;
+    out[8] = m[8];
+    out[9] = m[9];
+    out[10] = m[10];
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+}
+
+/*! \brief converts a 3x3 matrix to a 4x3 matrix.
+\param m [in] 3x3 Matrix.
+\param out [out] 4x4 Matrix.
+*/
+inline float* Convert3x3To4x3 ( const float* m, float* out )
+{
+    /*  Setting the values backward allow
+    for the input matrix to be output matrix
+    (in place conversion)*/
+    out[11] = 0;
+    out[10] = m[8];
+    out[9] = m[7];
+    out[8] = m[6];
+    out[7] = 0;
+    out[6] = m[5];
+    out[5] = m[4];
+    out[4] = m[3];
+    out[3] = 0;
+    out[2] = m[2];
+    out[1] = m[1];
+    out[0] = m[0];
+    return out;
+}
+
+/*! \brief converts a 3x3 matrix to a 4x4 matrix.
+\param m [in] 3x3 Matrix.
+\param out [out] 4x4 Matrix.
+*/
+inline float* Convert3x3To4x4 ( const float* m, float* out )
+{
+    out[15] = 1;
+    out[14] = 0;
+    out[13] = 0;
+    out[12] = 0;
+    return Convert3x3To4x3 ( m, out );
+}
+
 /*! \brief Transposes a 3x3 Matrix.
 \param src [in] 3x3 matrix to transpose.
 \param out [out] 3x3 transposed matrix.
