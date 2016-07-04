@@ -116,11 +116,11 @@ namespace AeonGames
     bool OpenGLRenderer::RegisterRenderingWindow ( uintptr_t aWindowId )
     {
 #ifdef WIN32
-        mHwnd = reinterpret_cast<HWND> ( aWindowId );
+        mWindowId = aWindowId;
         PIXELFORMATDESCRIPTOR pfd{};
         PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = nullptr;
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
-        mDeviceContext = GetDC ( mHwnd );
+        mDeviceContext = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -168,7 +168,7 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_NO_THROW;
 
                 RECT rect;
-                GetClientRect ( mHwnd, &rect );
+                GetClientRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
                 OPENGL_CHECK_ERROR_NO_THROW;
                 glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
@@ -313,12 +313,12 @@ namespace AeonGames
             mMatricesBuffer = 0;
         }
 #ifdef WIN32
-        if ( mHwnd && ( mHwnd == reinterpret_cast<HWND> ( aWindowId ) ) )
+        if ( mWindowId && ( mWindowId == aWindowId  ) )
         {
             if ( mDeviceContext != nullptr )
             {
                 wglMakeCurrent ( mDeviceContext, nullptr );
-                ReleaseDC ( mHwnd, mDeviceContext );
+                ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), mDeviceContext );
                 mDeviceContext = nullptr;
             }
             if ( mOpenGLContext )
