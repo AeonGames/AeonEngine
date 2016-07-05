@@ -62,11 +62,6 @@ try :
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    uint32_t OpenGLProgram::GetMatricesBlockIndex() const
-    {
-        return mMatricesBlockIndex;
-    }
-
     void OpenGLProgram::Initialize()
     {
         static ProgramBuffer program_buffer;
@@ -132,61 +127,66 @@ try :
                 "mat3 NormalMatrix;\n"
                 "};\n"
             );
-            for ( auto& i : program_buffer.properties() )
+            if ( program_buffer.properties().size() > 0 )
             {
-                std::string type_name;
-                std::string default_value ( "" );
-                switch ( i.type() )
+                vertex_shader_source.append ( "layout(shared) uniform Properties{\n" );
+                for ( auto& i : program_buffer.properties() )
                 {
-                case PropertyBuffer_Type_FLOAT:
-                    type_name = "float ";
-                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
+                    std::string type_name;
+                    std::string default_value ( "" );
+                    switch ( i.type() )
                     {
-                        default_value = " = " + std::to_string ( i.scalar_float() );
+                    case PropertyBuffer_Type_FLOAT:
+                        type_name = "float ";
+                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
+                        {
+                            default_value = " = " + std::to_string ( i.scalar_float() );
+                        }
+                        break;
+                    case PropertyBuffer_Type_FLOAT_VEC2:
+                        type_name = "vec2 ";
+                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
+                        {
+                            default_value = " = vec2( " +
+                                            std::to_string ( i.vector2().x() ) + ", " +
+                                            std::to_string ( i.vector2().y() ) + ")";
+                        }
+                        break;
+                    case PropertyBuffer_Type_FLOAT_VEC3:
+                        type_name = "vec3 ";
+                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
+                        {
+                            default_value = " = vec3( " +
+                                            std::to_string ( i.vector3().x() ) + ", " +
+                                            std::to_string ( i.vector3().y() ) + ", " +
+                                            std::to_string ( i.vector3().z() ) + ")";
+                        }
+                        break;
+                    case PropertyBuffer_Type_FLOAT_VEC4:
+                        type_name = "vec4 ";
+                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
+                        {
+                            default_value = " = vec4( " +
+                                            std::to_string ( i.vector4().x() ) + ", " +
+                                            std::to_string ( i.vector4().y() ) + ", " +
+                                            std::to_string ( i.vector4().z() ) + ", " +
+                                            std::to_string ( i.vector4().w() ) + ")";
+                        }
+                        break;
+                    case PropertyBuffer_Type_SAMPLER_2D:
+                        type_name = "sampler2D ";
+                        /* To be continued ... */
+                        break;
+                    case PropertyBuffer_Type_SAMPLER_CUBE:
+                        type_name = "samplerCube ";
+                        /* To be continued ... */
+                        break;
+                    default:
+                        assert ( 0 && "Unknown Type." );
                     }
-                    break;
-                case PropertyBuffer_Type_FLOAT_VEC2:
-                    type_name = "vec2 ";
-                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
-                    {
-                        default_value = " = vec2( " +
-                                        std::to_string ( i.vector2().x() ) + ", " +
-                                        std::to_string ( i.vector2().y() ) + ")";
-                    }
-                    break;
-                case PropertyBuffer_Type_FLOAT_VEC3:
-                    type_name = "vec3 ";
-                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
-                    {
-                        default_value = " = vec3( " +
-                                        std::to_string ( i.vector3().x() ) + ", " +
-                                        std::to_string ( i.vector3().y() ) + ", " +
-                                        std::to_string ( i.vector3().z() ) + ")";
-                    }
-                    break;
-                case PropertyBuffer_Type_FLOAT_VEC4:
-                    type_name = "vec4 ";
-                    if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
-                    {
-                        default_value = " = vec4( " +
-                                        std::to_string ( i.vector4().x() ) + ", " +
-                                        std::to_string ( i.vector4().y() ) + ", " +
-                                        std::to_string ( i.vector4().z() ) + ", " +
-                                        std::to_string ( i.vector4().w() ) + ")";
-                    }
-                    break;
-                case PropertyBuffer_Type_SAMPLER_2D:
-                    type_name = "sampler2D ";
-                    /* To be continued ... */
-                    break;
-                case PropertyBuffer_Type_SAMPLER_CUBE:
-                    type_name = "samplerCube ";
-                    /* To be continued ... */
-                    break;
-                default:
-                    assert ( 0 && "Unknown Type." );
+                    vertex_shader_source.append ( type_name + i.uniform_name() + default_value + ";\n" );
                 }
-                vertex_shader_source.append ( "uniform " + type_name + i.uniform_name() + default_value + ";\n" );
+                vertex_shader_source.append ( "}\n" );
             }
             vertex_shader_source.append ( program_buffer.vertex_shader().code() );
             vertex_shader_source.append (
@@ -419,7 +419,6 @@ try :
             glBufferSubData ( GL_UNIFORM_BUFFER, uniform_offset[i], ... )
         }
 #endif
-
         program_buffer.Clear();
     }
 

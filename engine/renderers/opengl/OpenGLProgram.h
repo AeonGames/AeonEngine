@@ -29,7 +29,6 @@ namespace AeonGames
         OpenGLProgram ( const std::string& aFilename );
         ~OpenGLProgram();
         void Use() const;
-        uint32_t GetMatricesBlockIndex() const;
     private:
         void Initialize();
         void Finalize();
