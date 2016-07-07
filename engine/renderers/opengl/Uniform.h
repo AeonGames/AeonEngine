@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 namespace AeonGames
 {
@@ -25,16 +26,20 @@ namespace AeonGames
     class Uniform
     {
     public:
-        Uniform ( float aX );
-        Uniform ( float aX, float aY );
-        Uniform ( float aX, float aY, float aZ );
-        Uniform ( float aX, float aY, float aZ, float aW );
+        Uniform ( const std::string& aName, float aX );
+        Uniform ( const std::string& aName, float aX, float aY );
+        Uniform ( const std::string& aName, float aX, float aY, float aZ );
+        Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW );
         ~Uniform();
-        int32_t Location() const;
-        void SetLocation ( int32_t aLocation );
+        void SetOffset ( const uint32_t aOffset );
+        uint32_t Offset() const;
+        const std::string GetDeclaration() const;
+        const std::string& GetName() const;
+        void CopyTo ( uint8_t* aMemory ) const;
     private:
-        int32_t mLocation = -1;
+        std::string mName;
         uint32_t mType = 0;
+        uint32_t mOffset = 0;
         uint8_t mData[sizeof ( float ) * 4];
     };
 }

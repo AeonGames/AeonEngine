@@ -5,9 +5,9 @@ properties {
   display_name: "Light position in eye coords"
   type: FLOAT_VEC3
   vector3 {
-    x: 100
-    y: 100
-    z: 100
+    x: 0
+    y: 0
+    z: 0
   }
 }
 properties {
@@ -15,9 +15,9 @@ properties {
   display_name: "Diffuse reflectivity"
   type: FLOAT_VEC3
   vector3 {
-    x: 0.1
-    y: 0.1
-    z: 0.1
+    x: 1
+    y: 1
+    z: 1
   }
 }
 properties {
@@ -27,7 +27,7 @@ properties {
   vector3 {
     x: 0.5
     y: 0.5
-    z: 0.5
+    z: 1
   }
 }
 vertex_shader {

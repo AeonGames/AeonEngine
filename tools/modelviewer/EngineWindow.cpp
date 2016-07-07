@@ -66,7 +66,8 @@ namespace AeonGames
         }
         mMesh = mAeonEngine.GetMesh ( filename.toUtf8().constData() );
         //mProgram = mAeonEngine.GetProgram ( "game/shaders/plain_red.txt" );
-        mProgram = mAeonEngine.GetProgram ( "game/shaders/fixed_phong.txt" );
+        //mProgram = mAeonEngine.GetProgram("game/shaders/fixed_phong.txt");
+        mProgram = mAeonEngine.GetProgram ( "game/shaders/simple_phong.txt" );
         assert ( model && "Model is nullptr" );
         model->SetMesh ( mMesh );
         model->SetProgram ( mProgram );

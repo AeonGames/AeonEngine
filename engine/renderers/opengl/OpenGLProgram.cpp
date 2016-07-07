@@ -106,6 +106,7 @@ try :
         }
 
         std::string vertex_shader_source;
+        std::string fragment_shader_source;
         {
             vertex_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             vertex_shader_source.append (
@@ -127,77 +128,7 @@ try :
                 "mat3 NormalMatrix;\n"
                 "};\n"
             );
-            if ( program_buffer.properties().size() > 0 )
-            {
-                vertex_shader_source.append ( "layout(shared) uniform Properties{\n" );
-                for ( auto& i : program_buffer.properties() )
-                {
-                    std::string type_name;
-                    std::string default_value ( "" );
-                    switch ( i.type() )
-                    {
-                    case PropertyBuffer_Type_FLOAT:
-                        type_name = "float ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
-                        {
-                            default_value = " = " + std::to_string ( i.scalar_float() );
-                        }
-                        break;
-                    case PropertyBuffer_Type_FLOAT_VEC2:
-                        type_name = "vec2 ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
-                        {
-                            default_value = " = vec2( " +
-                                            std::to_string ( i.vector2().x() ) + ", " +
-                                            std::to_string ( i.vector2().y() ) + ")";
-                        }
-                        break;
-                    case PropertyBuffer_Type_FLOAT_VEC3:
-                        type_name = "vec3 ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
-                        {
-                            default_value = " = vec3( " +
-                                            std::to_string ( i.vector3().x() ) + ", " +
-                                            std::to_string ( i.vector3().y() ) + ", " +
-                                            std::to_string ( i.vector3().z() ) + ")";
-                        }
-                        break;
-                    case PropertyBuffer_Type_FLOAT_VEC4:
-                        type_name = "vec4 ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
-                        {
-                            default_value = " = vec4( " +
-                                            std::to_string ( i.vector4().x() ) + ", " +
-                                            std::to_string ( i.vector4().y() ) + ", " +
-                                            std::to_string ( i.vector4().z() ) + ", " +
-                                            std::to_string ( i.vector4().w() ) + ")";
-                        }
-                        break;
-                    case PropertyBuffer_Type_SAMPLER_2D:
-                        type_name = "sampler2D ";
-                        /* To be continued ... */
-                        break;
-                    case PropertyBuffer_Type_SAMPLER_CUBE:
-                        type_name = "samplerCube ";
-                        /* To be continued ... */
-                        break;
-                    default:
-                        assert ( 0 && "Unknown Type." );
-                    }
-                    vertex_shader_source.append ( type_name + i.uniform_name() + default_value + ";\n" );
-                }
-                vertex_shader_source.append ( "}\n" );
-            }
-            vertex_shader_source.append ( program_buffer.vertex_shader().code() );
-            vertex_shader_source.append (
-                "void main()\n"
-                "{\n"
-                "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n" +
-                program_buffer.vertex_shader().entry_point() +
-                "\n}\n" );
-        }
-        std::string fragment_shader_source;
-        {
+
             fragment_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             fragment_shader_source.append (
                 "layout(std140) uniform Matrices{\n"
@@ -209,73 +140,61 @@ try :
                 "mat4 ModelViewProjectionMatrix;\n"
                 "mat3 NormalMatrix;\n"
                 "};\n" );
+
+            mUniformMetaData.clear();
+            mUniformMetaData.reserve ( program_buffer.properties().size() );
             if ( program_buffer.properties().size() > 0 )
             {
-                fragment_shader_source.append ( "layout(shared) uniform Properties{\n" );
+                vertex_shader_source.append ( "layout(packed) uniform Properties{\n" );
+                fragment_shader_source.append ( "layout(packed) uniform Properties{\n" );
                 for ( auto& i : program_buffer.properties() )
                 {
-                    std::string type_name;
-                    std::string default_value ( "" );
+                    ///@todo MOVE rather than COPY uniform_name
                     switch ( i.type() )
                     {
                     case PropertyBuffer_Type_FLOAT:
-                        type_name = " float ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kScalarFloat ) )
-                        {
-                            default_value = " = " + std::to_string ( i.scalar_float() );
-                        }
+                        mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC2:
-                        type_name = " vec2 ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector2 ) )
-                        {
-                            default_value = " = vec2( " +
-                                            std::to_string ( i.vector2().x() ) + ", " +
-                                            std::to_string ( i.vector2().y() ) + ")";
-                        }
+                        mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC3:
-                        type_name = " vec3 ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector3 ) )
-                        {
-                            default_value = " = vec3( " +
-                                            std::to_string ( i.vector3().x() ) + ", " +
-                                            std::to_string ( i.vector3().y() ) + ", " +
-                                            std::to_string ( i.vector3().z() ) + ")";
-                        }
+                        mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC4:
-                        type_name = " vec4 ";
-                        if ( ( program_buffer.glsl_version() >= 120 ) && ( i.default_value_case() == PropertyBuffer::DefaultValueCase::kVector4 ) )
-                        {
-                            default_value = " = vec4( " +
-                                            std::to_string ( i.vector4().x() ) + ", " +
-                                            std::to_string ( i.vector4().y() ) + ", " +
-                                            std::to_string ( i.vector4().z() ) + ", " +
-                                            std::to_string ( i.vector4().w() ) + ")";
-                        }
+                        mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_2D:
-                        type_name = " sampler2D ";
+                        //type_name = "sampler2D ";
                         /* To be continued ... */
                         break;
                     case PropertyBuffer_Type_SAMPLER_CUBE:
-                        type_name = " samplerCube ";
+                        //type_name = "samplerCube ";
                         /* To be continued ... */
                         break;
                     default:
                         assert ( 0 && "Unknown Type." );
                     }
-                    fragment_shader_source.append ( type_name + i.uniform_name() + default_value + ";\n" );
+                    vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
+                    fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                 }
-                fragment_shader_source.append ( "}\n" );
+                vertex_shader_source.append ( "};\n" );
+                fragment_shader_source.append ( "};\n" );
             }
+            vertex_shader_source.append ( program_buffer.vertex_shader().code() );
+            vertex_shader_source.append (
+                "void main()\n"
+                "{\n"
+                "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n" +
+                program_buffer.vertex_shader().entry_point() +
+                "\n}\n" );
             fragment_shader_source.append ( program_buffer.fragment_shader().code() );
             fragment_shader_source.append (
                 "void main()\n"
                 "{\n" +
                 program_buffer.fragment_shader().entry_point() +
                 "\n}\n" );
+            program_buffer.Clear();
         }
 
         //--------------------------------------------------
@@ -299,7 +218,6 @@ try :
             &vertex_shader_len );
         OPENGL_CHECK_ERROR_THROW;
 
-
         glCompileShader ( vertex_shader );
         OPENGL_CHECK_ERROR_THROW;
         glGetShaderiv ( vertex_shader, GL_COMPILE_STATUS, &compile_status );
@@ -315,6 +233,7 @@ try :
             {
                 glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
                 OPENGL_CHECK_ERROR_THROW;
+                std::cout << vertex_shader_source << std::endl;
                 std::cout << log_string << std::endl;
             }
         }
@@ -390,36 +309,52 @@ try :
         glUniformBlockBinding ( mProgram, mMatricesBlockIndex, 0 );
         OPENGL_CHECK_ERROR_THROW;
 
-#if 0
         // Properties
-        mPropertiesBlockIndex = glGetUniformBlockIndex ( mProgram, "Properties" );
-        OPENGL_CHECK_ERROR_THROW;
-        glGetActiveUniformBlockiv ( mProgram, mPropertiesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
-        OPENGL_CHECK_ERROR_THROW;
-
-        std::vector<const GLchar *> uniform_names ( program_buffer.properties().size() );
-        for ( int i = 0; i < program_buffer.properties().size(); ++i )
+        if ( mUniformMetaData.size() )
         {
-            uniform_names[i] = program_buffer.properties().Get ( i ).uniform_name().c_str();
-        }
-        std::vector<GLuint> uniform_indices ( program_buffer.properties().size() );
-        glGetUniformIndices ( mProgram, program_buffer.properties().size(), uniform_names.data(), uniform_indices.data() );
+            {
+                // Get offsets (initialize mUniformMetaData)
+                std::vector<const GLchar *> uniform_names ( mUniformMetaData.size() );
+                for ( int i = 0; i < mUniformMetaData.size(); ++i )
+                {
+                    uniform_names[i] = mUniformMetaData[i].GetName().c_str();
+                }
+                std::vector<GLuint> uniform_indices ( mUniformMetaData.size() );
+                glGetUniformIndices ( mProgram, static_cast<GLsizei> ( mUniformMetaData.size() ), uniform_names.data(), uniform_indices.data() );
+                OPENGL_CHECK_ERROR_THROW;
 
-        std::vector<GLint> uniform_offset;
-        glGetActiveUniformsiv ( mProgram, program_buffer.properties().size(), uniform_indices.data(),
-                                GL_UNIFORM_OFFSET, uniform_offset.data() );
-        glGenBuffers ( 1, &mPropertiesBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, block_size, nullptr, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_THROW;
-        for ( int i = 0; i < program_buffer.properties().size(); ++i )
-        {
-            glBufferSubData ( GL_UNIFORM_BUFFER, uniform_offset[i], ... )
+                std::vector<GLint> uniform_offset ( mUniformMetaData.size() );
+                glGetActiveUniformsiv ( mProgram, static_cast<GLsizei> ( mUniformMetaData.size() ), uniform_indices.data(),
+                                        GL_UNIFORM_OFFSET, uniform_offset.data() );
+                OPENGL_CHECK_ERROR_THROW;
+                for ( int i = 0; i < mUniformMetaData.size(); ++i )
+                {
+                    mUniformMetaData[i].SetOffset ( uniform_offset[i] );
+                }
+            }
+            {
+                // Get and initialize data block (initialize mUniformData)
+                mPropertiesBlockIndex = glGetUniformBlockIndex ( mProgram, "Properties" );
+                OPENGL_CHECK_ERROR_THROW;
+                glGetActiveUniformBlockiv ( mProgram, mPropertiesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
+                OPENGL_CHECK_ERROR_THROW;
+                glUniformBlockBinding ( mProgram, mPropertiesBlockIndex, 1 );
+                OPENGL_CHECK_ERROR_THROW;
+                mUniformData.resize ( block_size );
+                for ( int i = 0; i < mUniformMetaData.size(); ++i )
+                {
+                    mUniformMetaData[i].CopyTo ( mUniformData.data() );
+                }
+            }
+            glGenBuffers ( 1, &mPropertiesBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBufferData ( GL_UNIFORM_BUFFER, mUniformData.size(), mUniformData.data(), GL_DYNAMIC_DRAW );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
+            OPENGL_CHECK_ERROR_THROW;
         }
-#endif
-        program_buffer.Clear();
     }
 
     void OpenGLProgram::Finalize()
@@ -428,6 +363,11 @@ try :
         {
             glDeleteProgram ( mProgram );
             mProgram = 0;
+        }
+        if ( glIsBuffer ( mPropertiesBuffer ) )
+        {
+            glDeleteBuffers ( 1, &mPropertiesBuffer );
+            mPropertiesBuffer = 0;
         }
     }
 }
