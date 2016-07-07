@@ -18,28 +18,36 @@ limitations under the License.
 namespace AeonGames
 {
     static_assert ( sizeof ( std::shared_ptr<Texture> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
-    Uniform::Uniform ( float aX ) : mType ( GL_FLOAT )
+    Uniform::Uniform ( const std::string& aName, float aX ) :
+        mName ( aName ),
+        mType ( GL_FLOAT )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( float aX, float aY ) : mType ( GL_FLOAT_VEC2 )
+    Uniform::Uniform ( const std::string& aName, float aX, float aY ) :
+        mName ( aName ),
+        mType ( GL_FLOAT_VEC2 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
         ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( float aX, float aY, float aZ ) : mType ( GL_FLOAT_VEC3 )
+    Uniform::Uniform ( const std::string& aName, float aX, float aY, float aZ ) :
+        mName ( aName ),
+        mType ( GL_FLOAT_VEC3 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
         ( reinterpret_cast<float*> ( mData ) ) [2] = aZ;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( float aX, float aY, float aZ, float aW ) : mType ( GL_FLOAT_VEC4 )
+    Uniform::Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW ) :
+        mName ( aName ),
+        mType ( GL_FLOAT_VEC4 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
@@ -49,12 +57,54 @@ namespace AeonGames
     Uniform::~Uniform()
     {
     }
-    int32_t Uniform::Location() const
+    void Uniform::SetOffset ( const uint32_t aOffset )
     {
-        return mLocation;
+        mOffset = aOffset;
     }
-    void Uniform::SetLocation ( int32_t aLocation )
+    uint32_t Uniform::Offset() const
     {
-        mLocation = aLocation;
+        return mOffset;
+    }
+    const std::string Uniform::GetDeclaration() const
+    {
+        std::string declaration;
+        switch ( mType )
+        {
+        case GL_FLOAT:
+            declaration = "float " + mName + ";\n";
+            break;
+        case GL_FLOAT_VEC2:
+            declaration = "vec2 " + mName + ";\n";
+            break;
+        case GL_FLOAT_VEC3:
+            declaration = "vec3 " + mName + ";\n";
+            break;
+        case GL_FLOAT_VEC4:
+            declaration = "vec4 " + mName + ";\n";
+            break;
+        }
+        return declaration;
+    }
+    const std::string & Uniform::GetName() const
+    {
+        return mName;
+    }
+    void Uniform::CopyTo ( uint8_t * aMemory ) const
+    {
+        switch ( mType )
+        {
+        case GL_FLOAT:
+            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) );
+            break;
+        case GL_FLOAT_VEC2:
+            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 2 );
+            break;
+        case GL_FLOAT_VEC3:
+            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 3 );
+            break;
+        case GL_FLOAT_VEC4:
+            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
+            break;
+        }
     }
 }
