@@ -157,7 +157,7 @@ find_program (BLENDER_EXECUTABLE blender HINTS ENV ProgramFiles PATH_SUFFIXES "B
 if(BLENDER_EXECUTABLE)
 # Right now this is just a shortcut to running Blender,
 # it was supposed to set everything up so exporters
-# were registered and ready to run 
+# were registered and ready to run
 # without making changes to the Blender configuration,
 # but that idea didn't work out in the end.
 # The target is still useful and I may expand on it later on,

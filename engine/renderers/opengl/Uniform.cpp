@@ -15,6 +15,8 @@ limitations under the License.
 */
 #include "OpenGLFunctions.h"
 #include "Uniform.h"
+#include <cstring>
+
 namespace AeonGames
 {
     static_assert ( sizeof ( std::shared_ptr<Texture> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
