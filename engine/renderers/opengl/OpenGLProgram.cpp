@@ -149,7 +149,6 @@ try :
                 fragment_shader_source.append ( "layout(packed) uniform Properties{\n" );
                 for ( auto& i : program_buffer.properties() )
                 {
-                    ///@todo MOVE rather than COPY uniform_name
                     switch ( i.type() )
                     {
                     case PropertyBuffer_Type_FLOAT:
