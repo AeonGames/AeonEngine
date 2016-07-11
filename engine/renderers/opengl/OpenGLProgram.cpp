@@ -304,7 +304,7 @@ try :
 
         glGetActiveUniformBlockiv ( mProgram, mMatricesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
         OPENGL_CHECK_ERROR_THROW;
-        assert ( block_size >= ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 12 * 1 ) );
+        assert ( static_cast<uint32_t> ( block_size ) >= ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 12 * 1 ) );
         glUniformBlockBinding ( mProgram, mMatricesBlockIndex, 0 );
         OPENGL_CHECK_ERROR_THROW;
 
@@ -314,7 +314,7 @@ try :
             {
                 // Get offsets (initialize mUniformMetaData)
                 std::vector<const GLchar *> uniform_names ( mUniformMetaData.size() );
-                for ( int i = 0; i < mUniformMetaData.size(); ++i )
+                for ( std::size_t i = 0; i < mUniformMetaData.size(); ++i )
                 {
                     uniform_names[i] = mUniformMetaData[i].GetName().c_str();
                 }
@@ -326,7 +326,7 @@ try :
                 glGetActiveUniformsiv ( mProgram, static_cast<GLsizei> ( mUniformMetaData.size() ), uniform_indices.data(),
                                         GL_UNIFORM_OFFSET, uniform_offset.data() );
                 OPENGL_CHECK_ERROR_THROW;
-                for ( int i = 0; i < mUniformMetaData.size(); ++i )
+                for ( std::size_t i = 0; i < mUniformMetaData.size(); ++i )
                 {
                     mUniformMetaData[i].SetOffset ( uniform_offset[i] );
                 }
@@ -340,7 +340,7 @@ try :
                 glUniformBlockBinding ( mProgram, mPropertiesBlockIndex, 1 );
                 OPENGL_CHECK_ERROR_THROW;
                 mUniformData.resize ( block_size );
-                for ( int i = 0; i < mUniformMetaData.size(); ++i )
+                for ( std::size_t i = 0; i < mUniformMetaData.size(); ++i )
                 {
                     mUniformMetaData[i].CopyTo ( mUniformData.data() );
                 }
