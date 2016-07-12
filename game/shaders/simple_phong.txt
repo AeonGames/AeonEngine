@@ -55,6 +55,13 @@ fragment_shader {
   "\n"
   "void phong()\n"
   "{\n"
+  "if(gl_FrontFacing)\n"
+  "{\n"
   "FragColor = vec4 ( LightIntensity, 1.0 );\n"
+  "}\n"
+  "else\n"
+  "{\n"
+  "FragColor = vec4 ( 1.0,0.5,0.5, 1.0 );\n"
+  "}\n"
   "}\n"
 }

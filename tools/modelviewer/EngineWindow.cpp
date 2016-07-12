@@ -26,6 +26,10 @@ namespace AeonGames
         mProjectionMatrix(),
         mViewMatrix()
     {
+        setSurfaceType ( QSurface::OpenGLSurface );
+        QSurfaceFormat surface_format = format();
+        surface_format.setDepthBufferSize ( 24 );
+        setFormat ( surface_format );
         /* On Windows we want the window to own its device context.
         This code works on Qt 5.6.0, but if it does not
         or a new non Qt application needs to set it,
@@ -83,7 +87,7 @@ namespace AeonGames
             0.0f, 0.0f, 0.0f, 1.0f );
         mProjectionMatrix.setToIdentity();
         float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
-        mProjectionMatrix.frustum ( -half_radius, half_radius, -0.5, 0.5, 1, 16000 );
+        mProjectionMatrix.frustum ( -half_radius, half_radius, -0.5, 0.5, 1, 1600 );
         mProjectionMatrix = mProjectionMatrix * flipMatrix;
         mAeonEngine.SetProjectionMatrix ( mProjectionMatrix.constData() );
     }

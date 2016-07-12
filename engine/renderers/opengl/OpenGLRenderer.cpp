@@ -219,6 +219,9 @@ namespace AeonGames
             for ( int i = 0; i < glx_fb_config_count; ++i )
             {
                 XVisualInfo *vi = glXGetVisualFromFBConfig ( mDisplay, glx_fb_config_list[i] );
+                int value;
+                glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_DEPTH_SIZE, &value );
+                std::cout << "Depth Buffer: " << value << std::endl;
                 if ( ( vi ) && ( x_window_attributes.visual == vi->visual ) )
                 {
                     std::cout << *vi << std::endl;
@@ -285,12 +288,28 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 9 ),
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
                        mMatrices, GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_NO_THROW;
 
         glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_BLEND );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDepthFunc ( GL_LESS );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glCullFace ( GL_BACK );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_CULL_FACE );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
         return true;
 #endif
     }
