@@ -63,6 +63,7 @@ class MSHExporter(bpy.types.Operator):
         mesh_buffer = mesh_pb2.MeshBuffer()
         # Initialize Protocol Buffer Message
         mesh_buffer.Version = 1
+        # TODO: Store center radius instead (besides?) of min/max.
         mesh_buffer.Min.x = float('inf')
         mesh_buffer.Min.y = float('inf')
         mesh_buffer.Min.z = float('inf')

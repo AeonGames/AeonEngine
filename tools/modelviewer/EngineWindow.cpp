@@ -13,10 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#define _USE_MATH_DEFINES
 #include <QResizeEvent>
 #include <cassert>
 #include "EngineWindow.h"
 #include "aeongames/Model.h"
+#include "aeongames/Mesh.h"
 
 namespace AeonGames
 {
@@ -26,9 +28,11 @@ namespace AeonGames
         mProjectionMatrix(),
         mViewMatrix()
     {
+        // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );
         QSurfaceFormat surface_format = format();
         surface_format.setDepthBufferSize ( 24 );
+        surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
         setFormat ( surface_format );
         /* On Windows we want the window to own its device context.
         This code works on Qt 5.6.0, but if it does not
@@ -75,6 +79,16 @@ namespace AeonGames
         assert ( model && "Model is nullptr" );
         model->SetMesh ( mMesh );
         model->SetProgram ( mProgram );
+        // Adjust camera position so model fits the frustum tightly.
+        const float* const center_radius = mMesh->GetCenterRadius();
+        float radius = std::sqrtf ( ( center_radius[3] * center_radius[3] ) +
+                                    ( center_radius[4] * center_radius[4] ) +
+                                    ( center_radius[5] * center_radius[5] ) );
+        float eye_length = radius / std::tan ( mFrustumVerticalHalfAngle );
+        mCameraLocation = QVector4D (
+                              QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
+                              ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
+        updateViewMatrix();
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
@@ -90,6 +104,13 @@ namespace AeonGames
         mProjectionMatrix.frustum ( -half_radius, half_radius, -0.5, 0.5, 1, 1600 );
         mProjectionMatrix = mProjectionMatrix * flipMatrix;
         mAeonEngine.SetProjectionMatrix ( mProjectionMatrix.constData() );
+        // Calculate frustum half vertical angle (for fitting models into frustum)
+        float v1[2] = { 1, 0 };
+        float v2[2] = { 1, half_radius };
+        float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );
+        v2[0] /= length;
+        v2[1] /= length;
+        mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
     }
 
     void EngineWindow::exposeEvent ( QExposeEvent * aExposeEvent )
@@ -106,6 +127,7 @@ namespace AeonGames
             mStopWatch.invalidate();
         }
     }
+
     bool EngineWindow::event ( QEvent * aEvent )
     {
         switch ( aEvent->type() )
@@ -117,6 +139,7 @@ namespace AeonGames
             return QWindow::event ( aEvent );
         }
     }
+
     void EngineWindow::updateViewMatrix()
     {
         mViewMatrix.setToIdentity();

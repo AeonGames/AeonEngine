@@ -84,6 +84,11 @@ try :
         }
     }
 
+    const float * const OpenGLMesh::GetCenterRadius() const
+    {
+        return mCenterRadius;
+    }
+
     void OpenGLMesh::Initialize()
     {
         struct stat stat_buffer;
@@ -128,6 +133,15 @@ try :
         mIndexCount = mesh_buffer.indexcount();
         mIndexType = 0x1400 | mesh_buffer.indextype();
         mIndexOffset = GetStride ( mesh_buffer.vertexflags() ) * mVertexCount;
+
+        // Calculate Center
+        mCenterRadius[0] = ( mesh_buffer.min().x() + mesh_buffer.max().x() ) / 2;
+        mCenterRadius[1] = ( mesh_buffer.min().y() + mesh_buffer.max().y() ) / 2;
+        mCenterRadius[2] = ( mesh_buffer.min().z() + mesh_buffer.max().z() ) / 2;
+        // Calculate Radius
+        mCenterRadius[3] = mesh_buffer.max().x() - mCenterRadius[0];
+        mCenterRadius[4] = mesh_buffer.max().y() - mCenterRadius[1];
+        mCenterRadius[5] = mesh_buffer.max().z() - mCenterRadius[2];
 
         glGenVertexArrays ( 1, &mArray );
         OPENGL_CHECK_ERROR_THROW;

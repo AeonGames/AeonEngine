@@ -28,12 +28,14 @@ namespace AeonGames
         OpenGLMesh ( const std::string& aFilename );
         ~OpenGLMesh();
         void Render() const override final;
+        const float * const GetCenterRadius() const override final;
     private:
         void Initialize();
         void Finalize();
         uint32_t GetStride ( uint32_t aFlags ) const;
         uint32_t GetIndexSize ( uint32_t aIndexType ) const;
         std::string mFilename;
+        float mCenterRadius[6];
         uint32_t mArray;
         uint32_t mBuffer;
 #if 0
