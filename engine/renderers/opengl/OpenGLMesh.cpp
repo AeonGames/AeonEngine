@@ -43,17 +43,19 @@ limitations under the License.
 namespace AeonGames
 {
     OpenGLMesh::OpenGLMesh ( const std::string& aFilename )
-try :
+        :
         mFilename ( aFilename ), mArray ( 0 ), mBuffer ( 0 )
     {
-        Initialize();
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
     }
-    catch ( ... )
-    {
-        Finalize();
-        throw;
-    }
-
     OpenGLMesh::~OpenGLMesh()
     {
         Finalize();

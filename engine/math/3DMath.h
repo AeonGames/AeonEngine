@@ -2027,7 +2027,7 @@ inline float* InvertSRT ( const float* srt, float* out )
 
 /*! \name Distance functions */
 // @{
-inline float PointDistanceToPlane ( float* plane, const float* point, const float* dimensions = nullptr )
+inline float PointDistanceToPlane ( float* plane, const float* point, const float* dimensions = NULL )
 {
     return
         plane[0] * point[0] +

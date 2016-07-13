@@ -47,14 +47,17 @@ namespace AeonGames
     }
 #endif
 
-    OpenGLRenderer::OpenGLRenderer() try
+    OpenGLRenderer::OpenGLRenderer()
     {
-        Initialize();
-    }
-    catch ( ... )
-    {
-        Finalize();
-        throw;
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
     }
 
     OpenGLRenderer::~OpenGLRenderer()

@@ -39,15 +39,18 @@ limitations under the License.
 
 namespace AeonGames
 {
-OpenGLMaterial::OpenGLMaterial ( const std::string& aFilename ) try :
+    OpenGLMaterial::OpenGLMaterial ( const std::string& aFilename ) :
         mFilename ( aFilename )
     {
-        Initialize();
-    }
-    catch ( ... )
-    {
-        Finalize();
-        throw;
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
     }
 
     OpenGLMaterial::~OpenGLMaterial()

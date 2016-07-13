@@ -39,17 +39,19 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLProgram::OpenGLProgram ( const std::string& aFilename )
-try :
+    OpenGLProgram::OpenGLProgram ( const std::string& aFilename ) :
         mFilename ( aFilename ),
-                  mProgram ( 0 )
+        mProgram ( 0 )
     {
-        Initialize();
-    }
-    catch ( ... )
-    {
-        Finalize();
-        throw;
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
     }
 
     OpenGLProgram::~OpenGLProgram()
