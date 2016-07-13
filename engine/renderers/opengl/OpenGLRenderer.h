@@ -31,18 +31,18 @@ namespace AeonGames
     {
     public:
         OpenGLRenderer();
-        ~OpenGLRenderer();
-        void BeginRender() const override final;
-        void EndRender() const override final;
-        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const override final;
-        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
-        std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const override final;
-        bool RegisterRenderingWindow ( uintptr_t aWindowId ) override final;
-        void UnregisterRenderingWindow ( uintptr_t aWindowId ) override final;
-        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const override final;
-        void SetViewMatrix ( const float aMatrix[16] ) override final;
-        void SetProjectionMatrix ( const float aMatrix[16] ) override final;
-        void SetModelMatrix ( const float aMatrix[16] ) override final;
+        ~OpenGLRenderer() override;
+        void BeginRender() const final;
+        void EndRender() const final;
+        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const final;
+        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const final;
+        std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const final;
+        bool RegisterRenderingWindow ( uintptr_t aWindowId ) final;
+        void UnregisterRenderingWindow ( uintptr_t aWindowId ) final;
+        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;
+        void SetViewMatrix ( const float aMatrix[16] ) final;
+        void SetProjectionMatrix ( const float aMatrix[16] ) final;
+        void SetModelMatrix ( const float aMatrix[16] ) final;
     private:
         void Initialize();
         void Finalize();

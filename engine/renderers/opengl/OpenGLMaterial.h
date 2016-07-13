@@ -28,7 +28,7 @@ namespace AeonGames
     {
     public:
         OpenGLMaterial ( const std::string& aFilename );
-        ~OpenGLMaterial();
+        ~OpenGLMaterial() override;
     private:
         void Initialize();
         void Finalize();

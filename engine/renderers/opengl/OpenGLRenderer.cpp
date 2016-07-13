@@ -251,7 +251,7 @@ namespace AeonGames
 
             GLXFBConfig bestFbc = glx_fb_config_list[ best_fbc ];
             XFree ( glx_fb_config_list );
-            mGLXContext = glXCreateContextAttribsARB ( mDisplay, bestFbc, 0, True, context_attribs );
+            mGLXContext = glXCreateContextAttribsARB ( mDisplay, bestFbc, nullptr, True, context_attribs );
             XSync ( mDisplay, False );
             if ( mGLXContext != nullptr )
             {

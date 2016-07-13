@@ -28,7 +28,7 @@ namespace AeonGames
     {
     public:
         OpenGLProgram ( const std::string& aFilename );
-        ~OpenGLProgram();
+        ~OpenGLProgram() override;
         void Use() const;
     private:
         void Initialize();
