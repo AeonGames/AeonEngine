@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 
-#ifdef __unix__
+#ifdef __GNUG__
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

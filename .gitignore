@@ -40,6 +40,8 @@ make64
 make32
 codeblocks32
 codeblocks64
+msys*
+clang*
 
 # CTags
 tags

@@ -16,6 +16,7 @@ limitations under the License.
 #define _USE_MATH_DEFINES
 #include <QResizeEvent>
 #include <cassert>
+#include <cmath>
 #include "EngineWindow.h"
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
@@ -81,9 +82,9 @@ namespace AeonGames
         model->SetProgram ( mProgram );
         // Adjust camera position so model fits the frustum tightly.
         const float* const center_radius = mMesh->GetCenterRadius();
-        float radius = std::sqrtf ( ( center_radius[3] * center_radius[3] ) +
-                                    ( center_radius[4] * center_radius[4] ) +
-                                    ( center_radius[5] * center_radius[5] ) );
+        float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
+                               ( center_radius[4] * center_radius[4] ) +
+                               ( center_radius[5] * center_radius[5] ) );
         float eye_length = radius / std::tan ( mFrustumVerticalHalfAngle );
         mCameraLocation = QVector4D (
                               QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
