@@ -184,7 +184,7 @@ add_library(VulkanRenderer SHARED
 
 add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
-target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES})
+target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES} Threads::Threads)
 target_link_libraries(VulkanRenderer ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
 target_link_libraries(engine OpenGLRenderer ${PROTOBUF_LIBRARIES})
 
@@ -192,14 +192,14 @@ if(MSVC)
     set_target_properties(OpenGLRenderer PROPERTIES
         COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
+        COMPILE_FLAGS "-WX -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS -DVK_USE_PLATFORM_WIN32_KHR")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-WX -DVK_USE_PLATFORM_WIN32_KHR -DDLL_EXPORT -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
-elseif(MINGW)
+elseif(MINGW OR MSYS)
     set_target_properties(OpenGLRenderer PROPERTIES
         COMPILE_FLAGS "-Wall -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS -DVK_USE_PLATFORM_WIN32_KHR")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
 elseif(UNIX)

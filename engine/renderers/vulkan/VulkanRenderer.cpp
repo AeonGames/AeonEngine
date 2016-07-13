@@ -136,35 +136,37 @@ namespace AeonGames
         return false;
     }
 
-VulkanRenderer::VulkanRenderer ( bool aValidate ) try :
-        mValidate ( aValidate )
+    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
     {
-        SetupLayersAndExtensions();
-        if ( mValidate )
+        try
         {
-            SetupDebug();
+            SetupLayersAndExtensions();
+            if ( mValidate )
+            {
+                SetupDebug();
+            }
+            InitializeInstance();
+            if ( mValidate )
+            {
+                /* LoadFunctions currently only loads
+                    Debug Functions. */
+                LoadFunctions();
+                InitializeDebug();
+            }
+            InitializeDevice();
+            InitializeCommandPool();
         }
-        InitializeInstance();
-        if ( mValidate )
+        catch ( ... )
         {
-            /* LoadFunctions currently only loads
-                Debug Functions. */
-            LoadFunctions();
-            InitializeDebug();
-        }
-        InitializeDevice();
-        InitializeCommandPool();
-    }
-    catch ( ... )
-    {
 #if 0
-        FinalizeRenderingWindow();
+            FinalizeRenderingWindow();
 #endif
-        FinalizeCommandPool();
-        FinalizeDevice();
-        FinalizeDebug();
-        FinalizeInstance();
-        throw;
+            FinalizeCommandPool();
+            FinalizeDevice();
+            FinalizeDebug();
+            FinalizeInstance();
+            throw;
+        }
     }
 
     void VulkanRenderer::LoadFunctions()
