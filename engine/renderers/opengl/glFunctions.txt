@@ -92,10 +92,12 @@ glUniform2uiv
 glUniform3uiv
 glUniform4uiv
 glGetUniformIndices
+#if !GL_VERSION_1_3
 glCompressedTexImage2D
+glActiveTexture
+#endif
 glDetachShader
 glIsBuffer
-glActiveTexture
 glDrawArraysInstanced
 glGenRenderbuffers
 glBindRenderbuffer
