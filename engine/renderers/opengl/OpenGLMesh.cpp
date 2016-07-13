@@ -21,7 +21,7 @@ limitations under the License.
 #include <cassert>
 #include <cstring>
 
-#ifdef __unix__
+#ifdef __GNUG__
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

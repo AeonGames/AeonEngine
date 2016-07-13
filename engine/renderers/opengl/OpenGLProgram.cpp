@@ -18,7 +18,7 @@ limitations under the License.
 #include <ostream>
 #include <regex>
 
-#ifdef __linux__
+#ifdef __GNUG__
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

@@ -86,7 +86,7 @@ find_program (ASTYLE_EXECUTABLE astyle)
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in" "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
 
-if(WIN32)
+if(MSVC)
     add_custom_target(format-code
         ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
         # Look for more useful sed oneliners at http://sed.sourceforge.net/sed1line.txt
