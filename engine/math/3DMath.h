@@ -700,9 +700,9 @@ inline float* InvertMatrix ( float *mat, float *dest )
     det = src[0] * dst[0] + src[1] * dst[1] + src[2] * dst[2] + src[3] * dst[3];
     /* calculate matrix inverse */
     det = 1 / det;
-    for ( int j = 0; j < 16; j++ )
+    for ( float & j : dst )
     {
-        dst[j] *= det;
+        j *= det;
     }
     memcpy ( dest, dst, sizeof ( float ) * 16 );
     return dest;
@@ -2027,7 +2027,7 @@ inline float* InvertSRT ( const float* srt, float* out )
 
 /*! \name Distance functions */
 // @{
-inline float PointDistanceToPlane ( float* plane, const float* point, const float* dimensions = NULL )
+inline float PointDistanceToPlane ( float* plane, const float* point, const float* dimensions = nullptr )
 {
     return
         plane[0] * point[0] +

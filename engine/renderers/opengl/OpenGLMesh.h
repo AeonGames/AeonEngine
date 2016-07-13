@@ -26,9 +26,9 @@ namespace AeonGames
     {
     public:
         OpenGLMesh ( const std::string& aFilename );
-        ~OpenGLMesh();
-        void Render() const override final;
-        const float * const GetCenterRadius() const override final;
+        ~OpenGLMesh() override;
+        void Render() const final;
+        const float * const GetCenterRadius() const final;
     private:
         void Initialize();
         void Finalize();

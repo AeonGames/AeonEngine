@@ -28,7 +28,7 @@ namespace AeonGames
     template<class T>
     std::unique_ptr<T> Load ( const std::string& key )
     {
-        return std::unique_ptr<T> ( new T ( key ) );
+        return std::make_unique<T> ( key );
     }
     /** This was inspired by the fastLoadWidget
      * presented in Effective Modern C++ (EMC++20) by Scott Meyers,
