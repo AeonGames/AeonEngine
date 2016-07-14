@@ -102,7 +102,6 @@ namespace AeonGames
         HDC mDeviceContext = nullptr;
         HGLRC mOpenGLContext = nullptr;
 #else
-        Window mWindow = 0;
         Display* mDisplay = nullptr;
         GLXContext mGLXContext = nullptr;
 #endif
