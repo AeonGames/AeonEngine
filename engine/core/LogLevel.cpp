@@ -50,8 +50,7 @@ namespace AeonGames
     }
 
     LogLevel::~LogLevel()
-    {
-    }
+        = default;
 
     std::ostream& operator<< ( std::ostream& os, const LogLevel& obj )
     {

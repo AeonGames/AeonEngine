@@ -29,8 +29,7 @@ namespace AeonGames
     }
 
     Vector4::~Vector4()
-    {
-    }
+        = default;
 
     const float* const Vector4::GetVector4() const
     {

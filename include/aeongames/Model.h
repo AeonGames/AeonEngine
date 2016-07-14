@@ -28,11 +28,11 @@ namespace AeonGames
     {
     public:
         DLL Model();
-        DLL ~Model();
+        DLL ~Model() override;
         DLL void SetMesh ( const std::shared_ptr<Mesh>& aMesh );
         DLL void SetProgram ( const std::shared_ptr<Program>& aProgram );
-        DLL void Update ( const double delta ) override final;
-        DLL void Render ( Renderer* aRenderer ) override final;
+        DLL void Update ( const double delta ) final;
+        DLL void Render ( Renderer* aRenderer ) final;
     private:
         std::shared_ptr<Mesh> mMesh;
         std::shared_ptr<Program> mProgram;

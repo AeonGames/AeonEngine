@@ -28,11 +28,11 @@ namespace AeonGames
     {
     public:
         VulkanRenderer ( bool aValidate = true );
-        ~VulkanRenderer();
-        void BeginRender() const override final;
-        void EndRender() const override final;
-        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const override final;
-        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const override final;
+        ~VulkanRenderer() override;
+        void BeginRender() const final;
+        void EndRender() const final;
+        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const final;
+        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const final;
     private:
         void InitializeInstance();
         void InitializeDevice();

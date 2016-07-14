@@ -25,7 +25,7 @@ namespace AeonGames
     public:
         virtual int Run() = 0;
     protected:
-        virtual ~GameWindow() {};
+        virtual ~GameWindow() = default;;
     };
 }
 #endif

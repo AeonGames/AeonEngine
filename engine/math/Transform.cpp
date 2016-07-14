@@ -49,8 +49,7 @@ namespace AeonGames
     }
 
     Transform::~Transform()
-    {
-    }
+        = default;
 
     const float* const Transform::GetScale() const
     {

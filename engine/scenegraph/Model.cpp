@@ -26,8 +26,7 @@ namespace AeonGames
     }
 
     Model::~Model()
-    {
-    }
+        = default;
 
     void Model::SetMesh ( const std::shared_ptr<Mesh>& aMesh )
     {

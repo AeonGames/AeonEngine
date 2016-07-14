@@ -54,8 +54,7 @@ namespace AeonGames
     }
 
     Vector3::~Vector3()
-    {
-    }
+        = default;
 
     const float* const Vector3::GetVector3() const
     {
