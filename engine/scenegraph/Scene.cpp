@@ -36,10 +36,10 @@ namespace AeonGames
 
     Scene::~Scene()
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->mScene = nullptr;
-            delete ( *i );
+            mRootNode->mScene = nullptr;
+            delete mRootNode;
         }
     }
 
@@ -74,9 +74,9 @@ namespace AeonGames
 
     void Scene::Update ( const double delta )
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->LoopTraverseDFSPreOrder ( [delta] ( Node * node )
+            mRootNode->LoopTraverseDFSPreOrder ( [delta] ( Node * node )
             {
                 if ( node->mFlags[Node::Enabled] )
                 {
@@ -90,9 +90,9 @@ namespace AeonGames
     {
         if ( aRenderer )
         {
-            for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+            for ( auto & mRootNode : mRootNodes )
             {
-                ( *i )->LoopTraverseDFSPreOrder ( [aRenderer] ( Node * node )
+                mRootNode->LoopTraverseDFSPreOrder ( [aRenderer] ( Node * node )
                 {
                     if ( node->mFlags[Node::Visible] )
                     {
@@ -105,57 +105,57 @@ namespace AeonGames
 
     void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->LoopTraverseDFSPreOrder ( aAction );
+            mRootNode->LoopTraverseDFSPreOrder ( aAction );
         }
     }
 
     void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aPreamble, std::function<void ( Node* ) > aPostamble )
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->LoopTraverseDFSPreOrder ( aPreamble, aPostamble );
+            mRootNode->LoopTraverseDFSPreOrder ( aPreamble, aPostamble );
         }
     }
 
     void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const Node* ) > aAction ) const
     {
-        for ( auto i = mRootNodes.cbegin(); i != mRootNodes.cend(); ++i )
+        for ( auto mRootNode : mRootNodes )
         {
-            static_cast<const Node*> ( ( *i ) )->LoopTraverseDFSPreOrder ( aAction );
+            static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPreOrder ( aAction );
         }
     }
 
     void Scene::LoopTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->LoopTraverseDFSPostOrder ( aAction );
+            mRootNode->LoopTraverseDFSPostOrder ( aAction );
         }
     }
 
     void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const Node* ) > aAction ) const
     {
-        for ( auto i = mRootNodes.cbegin(); i != mRootNodes.cend(); ++i )
+        for ( auto mRootNode : mRootNodes )
         {
-            static_cast<const Node*> ( ( *i ) )->LoopTraverseDFSPostOrder ( aAction );
+            static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPostOrder ( aAction );
         }
     }
 
     void Scene::RecursiveTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->RecursiveTraverseDFSPreOrder ( aAction );
+            mRootNode->RecursiveTraverseDFSPreOrder ( aAction );
         }
     }
 
     void Scene::RecursiveTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
     {
-        for ( auto i = mRootNodes.begin(); i != mRootNodes.end(); ++i )
+        for ( auto & mRootNode : mRootNodes )
         {
-            ( *i )->RecursiveTraverseDFSPostOrder ( aAction );
+            mRootNode->RecursiveTraverseDFSPostOrder ( aAction );
         }
     }
 
@@ -232,7 +232,7 @@ namespace AeonGames
         /*  While only a single instance should be found and erase does the element shifting
         we're using remove here to do the shifting in order to stablish
         that the erase-remove idiom is what should be used in these situations.*/
-        std::vector<Node*>::iterator it = std::remove ( mRootNodes.begin(), mRootNodes.end(), aNode );
+        auto it = std::remove ( mRootNodes.begin(), mRootNodes.end(), aNode );
         if ( it != mRootNodes.end() )
         {
             mRootNodes.erase ( it );
@@ -244,7 +244,7 @@ namespace AeonGames
             aNode->mIndex = Node::kInvalidIndex;
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
-            std::vector<Node*>::iterator it = mAllNodes.end();
+            auto it = mAllNodes.end();
             aNode->LoopTraverseDFSPostOrder ( [&it, this] ( Node * node )
             {
                 node->mScene = nullptr;

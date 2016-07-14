@@ -57,11 +57,11 @@ namespace AeonGames
         {
             mScene->RemoveNode ( this );
         }
-        for ( std::vector<Node*>::iterator i = mNodes.begin(); i != mNodes.end(); ++i )
+        for ( auto & mNode : mNodes )
         {
-            ( *i )->mParent = nullptr;
-            ( *i )->mScene = nullptr;
-            delete ( *i );
+            mNode->mParent = nullptr;
+            mNode->mScene = nullptr;
+            delete mNode;
         }
     }
 
@@ -245,7 +245,7 @@ namespace AeonGames
         /*  While only a single instance should be found and erase does the element shifting
             we're using remove here to do the shifting in order to stablish
             that the erase-remove idiom is what should be used in these situations.*/
-        std::vector<Node*>::iterator it = std::remove ( mNodes.begin(), mNodes.end(), aNode );
+        auto it = std::remove ( mNodes.begin(), mNodes.end(), aNode );
         if ( it != mNodes.end() )
         {
             mNodes.erase ( it );
@@ -260,7 +260,7 @@ namespace AeonGames
             // Remove node from Scene
             if ( mScene != nullptr )
             {
-                std::vector<Node*>::iterator it = mScene->mAllNodes.end();
+                auto it = mScene->mAllNodes.end();
                 aNode->LoopTraverseDFSPostOrder ( [&it, this] ( Node * node )
                 {
                     node->mScene = nullptr;
@@ -398,9 +398,9 @@ namespace AeonGames
 
     void Node::RecursiveTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
     {
-        for ( std::vector<Node*>::iterator i = mNodes.begin(); i != mNodes.end(); ++i )
+        for ( auto & mNode : mNodes )
         {
-            ( *i )->RecursiveTraverseDFSPostOrder ( aAction );
+            mNode->RecursiveTraverseDFSPostOrder ( aAction );
         }
         aAction ( this );
     }
@@ -408,9 +408,9 @@ namespace AeonGames
     void Node::RecursiveTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
     {
         aAction ( this );
-        for ( std::vector<Node*>::iterator i = mNodes.begin(); i != mNodes.end(); ++i )
+        for ( auto & mNode : mNodes )
         {
-            ( *i )->RecursiveTraverseDFSPreOrder ( aAction );
+            mNode->RecursiveTraverseDFSPreOrder ( aAction );
         }
     }
 

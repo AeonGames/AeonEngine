@@ -163,10 +163,15 @@ source_group("scenegraph" FILES ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH
 source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
 source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
-set(ENGINE_SOURCES  ${ENGINE_SDK_HEADERS} ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES}
-                    ${ENGINE_RENDERER_HEADERS} ${ENGINE_RENDERER_SOURCES}
-                    ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES}
-                    ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
+set(ENGINE_SOURCES  ${ENGINE_CORE_SOURCES}
+                    ${ENGINE_RENDERER_SOURCES}
+                    ${ENGINE_SCENEGRAPH_SOURCES}
+                    ${ENGINE_MATH_SOURCES})
+set(ENGINE_HEADERS  ${ENGINE_SDK_HEADERS}
+                    ${ENGINE_CORE_HEADERS}
+                    ${ENGINE_RENDERER_HEADERS}
+                    ${ENGINE_SCENEGRAPH_HEADERS}
+                    ${ENGINE_MATH_HEADERS})
 
 if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
@@ -209,4 +214,11 @@ elseif(UNIX)
         COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
     set_target_properties(engine PROPERTIES
         COMPILE_FLAGS "-Wall -Werror -Wfatal-errors")
+endif()
+
+if(CLANG_TIDY_EXECUTABLE)
+    add_custom_target(check-engine-code
+        COMMAND ${CLANG_TIDY_EXECUTABLE} -fix -header-filter=.* -checks=modernize-* -p ${CMAKE_BINARY_DIR} ${ENGINE_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Checking Engine Code")
 endif()

@@ -35,8 +35,7 @@ namespace AeonGames
     }
 
     Matrix4x4::~Matrix4x4()
-    {
-    }
+        = default;
 
     const float* const Matrix4x4::GetMatrix4x4() const
     {
