@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <iostream>
 #include <memory>
+#include <utility>
 #include <google/protobuf/stubs/common.h>
 #include "aeongames/AeonEngine.h"
 #include "renderers/vulkan/VulkanRenderer.h"

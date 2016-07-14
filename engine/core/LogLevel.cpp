@@ -16,9 +16,9 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 namespace AeonGames
 {
-#ifdef _WIN32
     LogLevel::LogLevel ( Level aLevel )
     {
+#ifdef _WIN32
         mConsoleHandle = GetStdHandle ( STD_OUTPUT_HANDLE );
         GetConsoleScreenBufferInfo ( mConsoleHandle, &mConsoleScreenBufferInfo );
         switch ( aLevel )
@@ -33,46 +33,34 @@ namespace AeonGames
             SetConsoleTextAttribute ( mConsoleHandle, FOREGROUND_RED | FOREGROUND_INTENSITY );
             break;
         }
-    }
-
-    LogLevel::~LogLevel()
-    {
-        SetConsoleTextAttribute ( mConsoleHandle, mConsoleScreenBufferInfo.wAttributes );
-    }
-
-    std::ostream& operator<< ( std::ostream& os, const LogLevel& obj )
-    {
-        return os;
-    }
 #else
-    LogLevel::LogLevel ( Level aLevel ) : mLevel ( aLevel )
-    {
-    }
-
-    LogLevel::~LogLevel()
-        = default;
-
-    std::ostream& operator<< ( std::ostream& os, const LogLevel& obj )
-    {
-#if 0
-        std::ostream message;
-        switch ( obj.mLevel )
+        switch ( aLevel )
         {
         case LogLevel::Level::Info:
-            message << "\x1B[32m" << os << "\x1B[m";
+            fprintf ( stdout, "\x1B[32m" );
             break;
         case LogLevel::Level::Warning:
-            message << "\x1B[33m" << os << "\x1B[m";
+            fprintf ( stdout, "\x1B[33m" );
             break;
         case LogLevel::Level::Error:
-            message << "\x1B[31m" << os << "\x1B[m";
+            fprintf ( stdout, "\x1B[31m" );
             break;
         }
-        return message;
-#else
-        return os;
 #endif
     }
+
+    LogLevel::~LogLevel()
+    {
+#ifdef _WIN32
+        SetConsoleTextAttribute ( mConsoleHandle, mConsoleScreenBufferInfo.wAttributes );
+#else
+        fprintf ( stdout, "\x1B[m" );
 #endif
+    }
+
+    std::ostream& operator<< ( std::ostream& os, const LogLevel& obj )
+    {
+        return os;
+    }
 }
 

@@ -36,9 +36,6 @@ namespace AeonGames
 #ifdef _WIN32
         CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo {};
         HANDLE mConsoleHandle = nullptr;
-#else
-        Level mLevel;
-        std::ostream* mOstream = nullptr;
 #endif
     };
 }

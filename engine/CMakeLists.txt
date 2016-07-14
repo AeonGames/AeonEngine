@@ -209,11 +209,11 @@ elseif(MINGW OR MSYS)
         COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DDLL_EXPORT -DPROTOBUF_USE_DLLS")
 elseif(UNIX)
     set_target_properties(OpenGLRenderer PROPERTIES
-        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors")
+        COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors")
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
+        COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
     set_target_properties(engine PROPERTIES
-        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors")
+        COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors")
 endif()
 
 if(CLANG_TIDY_EXECUTABLE)

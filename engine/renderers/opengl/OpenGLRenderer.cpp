@@ -76,7 +76,7 @@ namespace AeonGames
 #else
         if ( mGLXContext != nullptr )
         {
-            glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+            glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( mWindowId ), mGLXContext );
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         }
 #endif
@@ -101,7 +101,7 @@ namespace AeonGames
 #else
         if ( mGLXContext != nullptr )
         {
-            glXSwapBuffers ( mDisplay, mWindow );
+            glXSwapBuffers ( mDisplay, reinterpret_cast<Window> ( mWindowId ) );
         }
 #endif
     }
@@ -193,7 +193,7 @@ namespace AeonGames
         {
             return false;
         }
-        mWindow = reinterpret_cast<Window> ( aWindowId );
+        mWindowId = aWindowId;
         PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
                 glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" );
         if ( glXCreateContextAttribsARB )
@@ -208,7 +208,7 @@ namespace AeonGames
 
             // Get Window Attributes
             XWindowAttributes x_window_attributes{};
-            XGetWindowAttributes ( mDisplay, mWindow, &x_window_attributes );
+            XGetWindowAttributes ( mDisplay, reinterpret_cast<Window> ( mWindowId ), &x_window_attributes );
 
             int glx_fb_config_count;
             GLXFBConfig* glx_fb_config_list = glXGetFBConfigs ( mDisplay, DefaultScreen ( mDisplay ), &glx_fb_config_count );
@@ -280,7 +280,7 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-        glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+        glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( mWindowId ), mGLXContext );
         if ( !LoadOpenGLAPI() )
         {
             std::cout << "Unable to Load OpenGL functions." << std::endl;
@@ -340,11 +340,11 @@ namespace AeonGames
             }
         }
 #else
-        if ( mWindow && ( mWindow == reinterpret_cast<Window> ( aWindowId ) ) )
+        if ( mWindowId && ( mWindowId == aWindowId ) )
         {
             if ( mGLXContext )
             {
-                glXMakeCurrent ( mDisplay, mWindow, nullptr );
+                glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( mWindowId ), nullptr );
                 glXDestroyContext ( mDisplay, mGLXContext );
                 mGLXContext = nullptr;
             }
