@@ -36,15 +36,16 @@ namespace AeonGames
         uint32_t GetIndexSize ( uint32_t aIndexType ) const;
         std::string mFilename;
         float mCenterRadius[6];
-        uint32_t mArray;
-        uint32_t mBuffer;
-#if 0
-        uint32_t mIndexBuffer;
-#endif
-        uint32_t mVertexCount = 0;
-        uint32_t mIndexCount = 0;
-        uint32_t mIndexType = 0;
-        uintptr_t mIndexOffset = 0;
+        struct TriangleGroup
+        {
+            uint32_t mArray = 0;
+            uint32_t mVertexBuffer = 0;
+            uint32_t mVertexCount = 0;
+            uint32_t mIndexBuffer = 0;
+            uint32_t mIndexType = 0;
+            uint32_t mIndexCount = 0;
+        };
+        std::vector<TriangleGroup> mTriangleGroups;
     };
 }
 #endif

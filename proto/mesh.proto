@@ -25,6 +25,7 @@ message TriangleGroupBuffer {
     uint32 IndexType       = 5;		
     uint32 IndexCount      = 6;
     bytes VertexBuffer     = 7;
+    bytes IndexBuffer      = 8;
 }
 
 message MeshBuffer {

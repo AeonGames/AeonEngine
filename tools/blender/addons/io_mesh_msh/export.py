@@ -250,7 +250,7 @@ class MSHExporter(bpy.types.Operator):
             index_struct = struct.Struct('I')
         print("Writting", triangle_group.IndexCount, "indices.")
         for index in index_buffer:
-            triangle_group.VertexBuffer += index_struct.pack(index)
+            triangle_group.IndexBuffer += index_struct.pack(index)
 
     def execute(self, context):
         bpy.ops.object.mode_set()
