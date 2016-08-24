@@ -61,15 +61,16 @@ class MSHExporter(bpy.types.Operator):
         self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
         # Create Protocol Buffer
         mesh_buffer = mesh_pb2.MeshBuffer()
+        triangle_group = mesh_buffer.TriangleGroup.add()
         # Initialize Protocol Buffer Message
         mesh_buffer.Version = 1
         # TODO: Store center radius instead (besides?) of min/max.
-        mesh_buffer.Min.x = float('inf')
-        mesh_buffer.Min.y = float('inf')
-        mesh_buffer.Min.z = float('inf')
-        mesh_buffer.Max.x = float('-inf')
-        mesh_buffer.Max.y = float('-inf')
-        mesh_buffer.Max.z = float('-inf')
+        triangle_group.Min.x = float('inf')
+        triangle_group.Min.y = float('inf')
+        triangle_group.Min.z = float('inf')
+        triangle_group.Max.x = float('-inf')
+        triangle_group.Max.y = float('-inf')
+        triangle_group.Max.z = float('-inf')
 
         mesh_object = context.active_object
         mesh_world_matrix = mathutils.Matrix(mesh_object.matrix_world)
@@ -85,34 +86,34 @@ class MSHExporter(bpy.types.Operator):
                     if armaturemodifier.object:
                         armature = armaturemodifier.object.data
                     break
-        mesh_buffer.VertexFlags = 0
+        triangle_group.VertexFlags = 0
         vertex_struct_string = ''
         vertices = []
         index_buffer = []
         # Position and Normal aren't optional (for now)
-        mesh_buffer.VertexFlags |= ATTR_POSITION_MASK
+        triangle_group.VertexFlags |= ATTR_POSITION_MASK
         vertex_struct_string += '3f'
 
-        mesh_buffer.VertexFlags |= ATTR_NORMAL_MASK
+        triangle_group.VertexFlags |= ATTR_NORMAL_MASK
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
 
             mesh.calc_tangents(mesh.uv_layers[0].name)
 
-            mesh_buffer.VertexFlags |= ATTR_TANGENT_MASK
+            triangle_group.VertexFlags |= ATTR_TANGENT_MASK
             vertex_struct_string += '3f'
 
-            mesh_buffer.VertexFlags |= ATTR_BITANGENT_MASK
+            triangle_group.VertexFlags |= ATTR_BITANGENT_MASK
             vertex_struct_string += '3f'
 			
-            mesh_buffer.VertexFlags |= ATTR_UV_MASK
+            triangle_group.VertexFlags |= ATTR_UV_MASK
             vertex_struct_string += '2f'
 			
 
         # Weights are only included if there is an armature modifier.
         if armature is not None:
-            mesh_buffer.VertexFlags |= ATTR_WEIGHT_MASK
+            triangle_group.VertexFlags |= ATTR_WEIGHT_MASK
             vertex_struct_string += '8B'
 
         # Generate Vertex Buffers----------------------------------------------
@@ -126,45 +127,45 @@ class MSHExporter(bpy.types.Operator):
             for loop_index in polygon.loop_indices:
                 vertex = []
                 # this should be a single function
-                if mesh_buffer.VertexFlags & ATTR_POSITION_MASK:
+                if triangle_group.VertexFlags & ATTR_POSITION_MASK:
                     localpos = mesh.vertices[
                         mesh.loops[loop_index].vertex_index].co * mesh_world_matrix
 
-                    mesh_buffer.Min.x = min(mesh_buffer.Min.x,localpos[0])
-                    mesh_buffer.Min.y = min(mesh_buffer.Min.y,localpos[1])
-                    mesh_buffer.Min.z = min(mesh_buffer.Min.z,localpos[2])
-                    mesh_buffer.Max.x = max(mesh_buffer.Max.x,localpos[0])
-                    mesh_buffer.Max.y = max(mesh_buffer.Max.y,localpos[1])
-                    mesh_buffer.Max.z = max(mesh_buffer.Max.z,localpos[2])
+                    triangle_group.Min.x = min(triangle_group.Min.x,localpos[0])
+                    triangle_group.Min.y = min(triangle_group.Min.y,localpos[1])
+                    triangle_group.Min.z = min(triangle_group.Min.z,localpos[2])
+                    triangle_group.Max.x = max(triangle_group.Max.x,localpos[0])
+                    triangle_group.Max.y = max(triangle_group.Max.y,localpos[1])
+                    triangle_group.Max.z = max(triangle_group.Max.z,localpos[2])
 
                     vertex.extend([localpos[0],
                                    localpos[1],
                                    localpos[2]])
 
-                if mesh_buffer.VertexFlags & ATTR_NORMAL_MASK:
+                if triangle_group.VertexFlags & ATTR_NORMAL_MASK:
                     localnormal = mesh.vertices[
                         mesh.loops[loop_index].vertex_index].normal * mesh_world_matrix
                     vertex.extend([localnormal[0],
                                    localnormal[1],
                                    localnormal[2]])
 
-                if mesh_buffer.VertexFlags & ATTR_TANGENT_MASK:
+                if triangle_group.VertexFlags & ATTR_TANGENT_MASK:
                     localtangent = mesh.loops[loop_index].tangent * mesh_world_matrix
                     vertex.extend([localtangent[0],
                                    localtangent[1],
                                    localtangent[2]])
 
-                if mesh_buffer.VertexFlags & ATTR_BITANGENT_MASK:
+                if triangle_group.VertexFlags & ATTR_BITANGENT_MASK:
                     localbitangent = mesh.loops[loop_index].bitangent * mesh_world_matrix
                     vertex.extend([localbitangent[0],
                                    localbitangent[1],
                                    localbitangent[2]])
 
-                if mesh_buffer.VertexFlags & ATTR_UV_MASK:
+                if triangle_group.VertexFlags & ATTR_UV_MASK:
                     vertex.extend([mesh.uv_layers[0].data[loop_index].uv[0],
                                    1.0 - mesh.uv_layers[0].data[loop_index].uv[1]])
 
-                if mesh_buffer.VertexFlags & ATTR_WEIGHT_MASK:
+                if triangle_group.VertexFlags & ATTR_WEIGHT_MASK:
 
                     weights = []
 
@@ -229,34 +230,34 @@ class MSHExporter(bpy.types.Operator):
             len(vertices) *
             vertex_struct.size,
             "bytes for vertex buffer")
-        mesh_buffer.VertexCount = len(vertices)
+        triangle_group.VertexCount = len(vertices)
 
         for vertex in vertices:
-            mesh_buffer.VertexBuffer += vertex_struct.pack(*vertex)
+            triangle_group.VertexBuffer += vertex_struct.pack(*vertex)
 
         index_struct = None
         # Write indices -----------------------------------
-        mesh_buffer.IndexCount = len(index_buffer)
+        triangle_group.IndexCount = len(index_buffer)
 
         # Save memory space by using best fitting type for indices.
         if len(vertices) < 0x100:
-            mesh_buffer.IndexType = UNSIGNED_BYTE
+            triangle_group.IndexType = UNSIGNED_BYTE
             index_struct = struct.Struct('B')
         elif len(vertices) < 0x10000:
-            mesh_buffer.IndexType = UNSIGNED_SHORT
+            triangle_group.IndexType = UNSIGNED_SHORT
             index_struct = struct.Struct('H')
         else:
-            mesh_buffer.IndexType = UNSIGNED_INT
+            triangle_group.IndexType = UNSIGNED_INT
             index_struct = struct.Struct('I')
-        print("Writting", mesh_buffer.IndexCount, "indices.")
+        print("Writting", triangle_group.IndexCount, "indices.")
         for index in index_buffer:
-            mesh_buffer.VertexBuffer += index_struct.pack(index)
+            triangle_group.VertexBuffer += index_struct.pack(index)
         #------------------------------------------------
         # Open File for Writing -----------------------------------------------
         out = open(self.filepath, "wb")
         magick_struct = struct.Struct('8s')
         out.write(magick_struct.pack(b'AEONMSH\x00'))
-        out.write(mesh_buffer.SerializeToString())
+        out.write(triangle_group.SerializeToString())
         out.close()
         out = open(self.filepath+".txt", "wt")
         out.write("AEONMSH\n")
