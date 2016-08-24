@@ -49,21 +49,12 @@ class MSHExporter(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if (context.active_object.type == 'MESH'):
-            return True
+        for object in context.scene.objects:
+            if (object.type == 'MESH'):
+                return True
         return False
 
-    def execute(self, context):
-        if (context.active_object.type != 'MESH'):
-            return {'CANCELLED'}
-
-        bpy.ops.object.mode_set()
-        self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
-        # Create Protocol Buffer
-        mesh_buffer = mesh_pb2.MeshBuffer()
-        triangle_group = mesh_buffer.TriangleGroup.add()
-        # Initialize Protocol Buffer Message
-        mesh_buffer.Version = 1
+    def fill_triangle_group(self, triangle_group, mesh_object):
         # TODO: Store center radius instead (besides?) of min/max.
         triangle_group.Min.x = float('inf')
         triangle_group.Min.y = float('inf')
@@ -72,14 +63,13 @@ class MSHExporter(bpy.types.Operator):
         triangle_group.Max.y = float('-inf')
         triangle_group.Max.z = float('-inf')
 
-        mesh_object = context.active_object
         mesh_world_matrix = mathutils.Matrix(mesh_object.matrix_world)
-        mesh = context.active_object.data
+        mesh = mesh_object.data
         mesh.calc_normals()
 
         # if this mesh is modified by an armature, find out which one.
         armature = None
-        for modifier in context.active_object.modifiers:
+        for modifier in mesh_object.modifiers:
             if modifier.type == 'ARMATURE':
                 armaturemodifier = bpy.types.ArmatureModifier(modifier)
                 if armaturemodifier.use_vertex_groups:
@@ -106,17 +96,16 @@ class MSHExporter(bpy.types.Operator):
 
             triangle_group.VertexFlags |= ATTR_BITANGENT_MASK
             vertex_struct_string += '3f'
-			
+
             triangle_group.VertexFlags |= ATTR_UV_MASK
             vertex_struct_string += '2f'
-			
 
         # Weights are only included if there is an armature modifier.
         if armature is not None:
             triangle_group.VertexFlags |= ATTR_WEIGHT_MASK
             vertex_struct_string += '8B'
 
-        # Generate Vertex Buffers----------------------------------------------
+        # Generate Vertex Buffers--------------------------------------
 
         for polygon in mesh.polygons:
             if polygon.loop_total < 3:
@@ -131,12 +120,18 @@ class MSHExporter(bpy.types.Operator):
                     localpos = mesh.vertices[
                         mesh.loops[loop_index].vertex_index].co * mesh_world_matrix
 
-                    triangle_group.Min.x = min(triangle_group.Min.x,localpos[0])
-                    triangle_group.Min.y = min(triangle_group.Min.y,localpos[1])
-                    triangle_group.Min.z = min(triangle_group.Min.z,localpos[2])
-                    triangle_group.Max.x = max(triangle_group.Max.x,localpos[0])
-                    triangle_group.Max.y = max(triangle_group.Max.y,localpos[1])
-                    triangle_group.Max.z = max(triangle_group.Max.z,localpos[2])
+                    triangle_group.Min.x = min(
+                        triangle_group.Min.x, localpos[0])
+                    triangle_group.Min.y = min(
+                        triangle_group.Min.y, localpos[1])
+                    triangle_group.Min.z = min(
+                        triangle_group.Min.z, localpos[2])
+                    triangle_group.Max.x = max(
+                        triangle_group.Max.x, localpos[0])
+                    triangle_group.Max.y = max(
+                        triangle_group.Max.y, localpos[1])
+                    triangle_group.Max.z = max(
+                        triangle_group.Max.z, localpos[2])
 
                     vertex.extend([localpos[0],
                                    localpos[1],
@@ -150,13 +145,15 @@ class MSHExporter(bpy.types.Operator):
                                    localnormal[2]])
 
                 if triangle_group.VertexFlags & ATTR_TANGENT_MASK:
-                    localtangent = mesh.loops[loop_index].tangent * mesh_world_matrix
+                    localtangent = mesh.loops[
+                        loop_index].tangent * mesh_world_matrix
                     vertex.extend([localtangent[0],
                                    localtangent[1],
                                    localtangent[2]])
 
                 if triangle_group.VertexFlags & ATTR_BITANGENT_MASK:
-                    localbitangent = mesh.loops[loop_index].bitangent * mesh_world_matrix
+                    localbitangent = mesh.loops[
+                        loop_index].bitangent * mesh_world_matrix
                     vertex.extend([localbitangent[0],
                                    localbitangent[1],
                                    localbitangent[2]])
@@ -193,10 +190,12 @@ class MSHExporter(bpy.types.Operator):
                         weight[0] = int(weight[0] * 0xFF)
                         byte_magnitude = byte_magnitude + weight[0]
 
-                    weights[-1][0] = weights[-1][0] + (0xFF - byte_magnitude)
+                    weights[-1][0] = weights[-1][0] + \
+                        (0xFF - byte_magnitude)
 
                     if len(weights) < 4:
-                        weights = weights + [[0, 0]] * (4 - len(weights))
+                        weights = weights + \
+                            [[0, 0]] * (4 - len(weights))
 
                     weight_indices = []
                     weight_values = []
@@ -252,14 +251,25 @@ class MSHExporter(bpy.types.Operator):
         print("Writting", triangle_group.IndexCount, "indices.")
         for index in index_buffer:
             triangle_group.VertexBuffer += index_struct.pack(index)
-        #------------------------------------------------
-        # Open File for Writing -----------------------------------------------
+
+    def execute(self, context):
+        bpy.ops.object.mode_set()
+        self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
+        # Create Protocol Buffer
+        mesh_buffer = mesh_pb2.MeshBuffer()
+        # Initialize Protocol Buffer Message
+        mesh_buffer.Version = 1
+        for object in context.scene.objects:
+            if (object.type == 'MESH'):
+                self.fill_triangle_group(
+                    mesh_buffer.TriangleGroup.add(), object)
+        # Open File for Writing
         out = open(self.filepath, "wb")
         magick_struct = struct.Struct('8s')
         out.write(magick_struct.pack(b'AEONMSH\x00'))
-        out.write(triangle_group.SerializeToString())
+        out.write(mesh_buffer.SerializeToString())
         out.close()
-        out = open(self.filepath+".txt", "wt")
+        out = open(self.filepath + ".txt", "wt")
         out.write("AEONMSH\n")
         out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
         out.close()
@@ -271,7 +281,7 @@ class MSHExporter(bpy.types.Operator):
                 os.path.dirname(
                     bpy.data.filepath) +
                 os.sep +
-                context.active_object.name,
+                context.scene.name,
                 ".msh")
         else:
             self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")

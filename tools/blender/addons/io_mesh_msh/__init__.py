@@ -27,9 +27,13 @@ bl_info = {
 import bpy
 from . import export
 
+
 def msh_menu_func(self, context):
-    self.layout.operator(export.MSHExporter.bl_idname, text="AeonGames Mesh (.msh)")
+    self.layout.operator(
+        export.MSHExporter.bl_idname,
+        text="AeonGames Mesh (.msh)")
     bpy.types.INFO_MT_file_export.remove(msh_menu_func)
+
 
 def register():
     bpy.utils.register_class(export.MSHExporter)
