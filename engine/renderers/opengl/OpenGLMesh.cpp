@@ -44,7 +44,7 @@ namespace AeonGames
 {
     OpenGLMesh::OpenGLMesh ( const std::string& aFilename )
         :
-        mFilename ( aFilename ), mArray ( 0 ), mBuffer ( 0 )
+        mFilename ( aFilename )
     {
         try
         {
@@ -63,26 +63,22 @@ namespace AeonGames
 
     void OpenGLMesh::Render() const
     {
-        glBindVertexArray ( mArray );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        if ( mIndexCount )
+        for ( auto& i : mTriangleGroups )
         {
-#if 0
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+            glBindVertexArray ( i.mArray );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glDrawElements ( GL_TRIANGLES, mIndexCount, mIndexType, 0 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-#else
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDrawElements ( GL_TRIANGLES, mIndexCount, mIndexType, reinterpret_cast<GLvoid*> ( mIndexOffset ) );
-            OPENGL_CHECK_ERROR_NO_THROW;
-#endif
-        }
-        else
-        {
-            glDrawArrays ( GL_TRIANGLES, 0, mVertexCount );
-            OPENGL_CHECK_ERROR_NO_THROW;
+            if ( i.mIndexCount )
+            {
+                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, i.mIndexBuffer );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glDrawElements ( GL_TRIANGLES, i.mIndexCount, i.mIndexType, 0 );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            else
+            {
+                glDrawArrays ( GL_TRIANGLES, 0, i.mVertexCount );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
         }
     }
 
@@ -131,12 +127,13 @@ namespace AeonGames
         }
         file.close();
 
+        mTriangleGroups.reserve ( mesh_buffer.trianglegroup().size() );
         for ( auto& i : mesh_buffer.trianglegroup() )
         {
-            mVertexCount = i.vertexcount();
-            mIndexCount = i.indexcount();
-            mIndexType = 0x1400 | i.indextype();
-            mIndexOffset = GetStride ( i.vertexflags() ) * mVertexCount;
+            mTriangleGroups.emplace_back();
+            mTriangleGroups.back().mVertexCount = i.vertexcount();
+            mTriangleGroups.back().mIndexCount = i.indexcount();
+            mTriangleGroups.back().mIndexType = 0x1400 | i.indextype();
 
             // Calculate Center
             mCenterRadius[0] = ( i.min().x() + i.max().x() ) / 2;
@@ -147,13 +144,13 @@ namespace AeonGames
             mCenterRadius[4] = i.max().y() - mCenterRadius[1];
             mCenterRadius[5] = i.max().z() - mCenterRadius[2];
 
-            glGenVertexArrays ( 1, &mArray );
+            glGenVertexArrays ( 1, &mTriangleGroups.back().mArray );
             OPENGL_CHECK_ERROR_THROW;
-            glBindVertexArray ( mArray );
+            glBindVertexArray ( mTriangleGroups.back().mArray );
             OPENGL_CHECK_ERROR_THROW;
-            glGenBuffers ( 1, &mBuffer );
+            glGenBuffers ( 1, &mTriangleGroups.back().mVertexBuffer );
             OPENGL_CHECK_ERROR_THROW;
-            glBindBuffer ( GL_ARRAY_BUFFER, mBuffer );
+            glBindBuffer ( GL_ARRAY_BUFFER, mTriangleGroups.back().mVertexBuffer );
             OPENGL_CHECK_ERROR_THROW;
 #if 0
             glBufferData ( GL_ARRAY_BUFFER, GetStride ( i.vertexflags() ) * mVertexCount, i.vertexbuffer().data(), GL_STATIC_DRAW );
@@ -222,21 +219,16 @@ namespace AeonGames
                 offset += sizeof ( uint8_t ) * 4;
             }
             //---Index Buffer---
-            if ( mIndexCount )
+            if ( mTriangleGroups.back().mIndexCount )
             {
-#if 0
-                glGenBuffers ( 1, &mIndexBuffer );
+                glGenBuffers ( 1, &mTriangleGroups.back().mIndexBuffer );
                 OPENGL_CHECK_ERROR_THROW;
-                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mTriangleGroups.back().mIndexBuffer );
                 OPENGL_CHECK_ERROR_THROW;
-                glBufferData ( GL_ELEMENT_ARRAY_BUFFER,
-                               i.vertexbuffer().length() - mIndexOffset,
-                               i.vertexbuffer().data() + mIndexOffset, GL_STATIC_DRAW );
+                glBufferData ( GL_ARRAY_BUFFER, i.vertexbuffer().size(), i.vertexbuffer().data(), GL_STATIC_DRAW );
+
+                glBufferData ( GL_ELEMENT_ARRAY_BUFFER, i.indexbuffer().size(), i.indexbuffer().data(), GL_STATIC_DRAW );
                 OPENGL_CHECK_ERROR_THROW;
-#else
-                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffer );
-                OPENGL_CHECK_ERROR_THROW;
-#endif
             }
         }
         mesh_buffer.Clear();
@@ -244,23 +236,24 @@ namespace AeonGames
 
     void OpenGLMesh::Finalize()
     {
-        if ( glIsVertexArray ( mArray ) )
+        for ( auto& i : mTriangleGroups )
         {
-            glDeleteVertexArrays ( 1, &mArray );
-            mArray = 0;
+            if ( glIsVertexArray ( i.mArray ) )
+            {
+                glDeleteVertexArrays ( 1, &i.mArray );
+                i.mArray = 0;
+            }
+            if ( glIsBuffer ( i.mVertexBuffer ) )
+            {
+                glDeleteBuffers ( 1, &i.mVertexBuffer );
+                i.mVertexBuffer = 0;
+            }
+            if ( glIsBuffer ( i.mIndexBuffer ) )
+            {
+                glDeleteBuffers ( 1, &i.mIndexBuffer );
+                i.mIndexBuffer = 0;
+            }
         }
-        if ( glIsBuffer ( mBuffer ) )
-        {
-            glDeleteBuffers ( 1, &mBuffer );
-            mBuffer = 0;
-        }
-#if 0
-        if ( glIsBuffer ( mIndexBuffer ) )
-        {
-            glDeleteBuffers ( 1, &mIndexBuffer );
-            mIndexBuffer = 0;
-        }
-#endif
     }
 
     uint32_t OpenGLMesh::GetStride ( uint32_t aFlags ) const
