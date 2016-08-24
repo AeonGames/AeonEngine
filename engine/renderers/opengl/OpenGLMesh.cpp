@@ -131,110 +131,113 @@ namespace AeonGames
         }
         file.close();
 
-        mVertexCount = mesh_buffer.vertexcount();
-        mIndexCount = mesh_buffer.indexcount();
-        mIndexType = 0x1400 | mesh_buffer.indextype();
-        mIndexOffset = GetStride ( mesh_buffer.vertexflags() ) * mVertexCount;
+        for ( auto& i : mesh_buffer.trianglegroup() )
+        {
+            mVertexCount = i.vertexcount();
+            mIndexCount = i.indexcount();
+            mIndexType = 0x1400 | i.indextype();
+            mIndexOffset = GetStride ( i.vertexflags() ) * mVertexCount;
 
-        // Calculate Center
-        mCenterRadius[0] = ( mesh_buffer.min().x() + mesh_buffer.max().x() ) / 2;
-        mCenterRadius[1] = ( mesh_buffer.min().y() + mesh_buffer.max().y() ) / 2;
-        mCenterRadius[2] = ( mesh_buffer.min().z() + mesh_buffer.max().z() ) / 2;
-        // Calculate Radius
-        mCenterRadius[3] = mesh_buffer.max().x() - mCenterRadius[0];
-        mCenterRadius[4] = mesh_buffer.max().y() - mCenterRadius[1];
-        mCenterRadius[5] = mesh_buffer.max().z() - mCenterRadius[2];
+            // Calculate Center
+            mCenterRadius[0] = ( i.min().x() + i.max().x() ) / 2;
+            mCenterRadius[1] = ( i.min().y() + i.max().y() ) / 2;
+            mCenterRadius[2] = ( i.min().z() + i.max().z() ) / 2;
+            // Calculate Radius
+            mCenterRadius[3] = i.max().x() - mCenterRadius[0];
+            mCenterRadius[4] = i.max().y() - mCenterRadius[1];
+            mCenterRadius[5] = i.max().z() - mCenterRadius[2];
 
-        glGenVertexArrays ( 1, &mArray );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindVertexArray ( mArray );
-        OPENGL_CHECK_ERROR_THROW;
-        glGenBuffers ( 1, &mBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBuffer ( GL_ARRAY_BUFFER, mBuffer );
-        OPENGL_CHECK_ERROR_THROW;
+            glGenVertexArrays ( 1, &mArray );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindVertexArray ( mArray );
+            OPENGL_CHECK_ERROR_THROW;
+            glGenBuffers ( 1, &mBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBuffer ( GL_ARRAY_BUFFER, mBuffer );
+            OPENGL_CHECK_ERROR_THROW;
 #if 0
-        glBufferData ( GL_ARRAY_BUFFER, GetStride ( mesh_buffer.vertexflags() ) * mVertexCount, mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
+            glBufferData ( GL_ARRAY_BUFFER, GetStride ( i.vertexflags() ) * mVertexCount, i.vertexbuffer().data(), GL_STATIC_DRAW );
 #else
-        glBufferData ( GL_ARRAY_BUFFER, mesh_buffer.vertexbuffer().size(), mesh_buffer.vertexbuffer().data(), GL_STATIC_DRAW );
+            glBufferData ( GL_ARRAY_BUFFER, i.vertexbuffer().size(), i.vertexbuffer().data(), GL_STATIC_DRAW );
 #endif
-        OPENGL_CHECK_ERROR_THROW;
+            OPENGL_CHECK_ERROR_THROW;
 
-        uint8_t* offset = nullptr;
-        if ( mesh_buffer.vertexflags() & POSITION_BIT )
-        {
-            glEnableVertexAttribArray ( 0 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
+            uint8_t* offset = nullptr;
+            if ( i.vertexflags() & POSITION_BIT )
+            {
+                glEnableVertexAttribArray ( 0 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( float ) * 3;
+            }
 
-        if ( mesh_buffer.vertexflags() & NORMAL_BIT )
-        {
-            glEnableVertexAttribArray ( 1 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
+            if ( i.vertexflags() & NORMAL_BIT )
+            {
+                glEnableVertexAttribArray ( 1 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( float ) * 3;
+            }
 
-        if ( mesh_buffer.vertexflags() & TANGENT_BIT )
-        {
-            glEnableVertexAttribArray ( 2 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
+            if ( i.vertexflags() & TANGENT_BIT )
+            {
+                glEnableVertexAttribArray ( 2 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( float ) * 3;
+            }
 
-        if ( mesh_buffer.vertexflags() & BITANGENT_BIT )
-        {
-            glEnableVertexAttribArray ( 3 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
+            if ( i.vertexflags() & BITANGENT_BIT )
+            {
+                glEnableVertexAttribArray ( 3 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( float ) * 3;
+            }
 
-        if ( mesh_buffer.vertexflags() & UV_BIT )
-        {
-            glEnableVertexAttribArray ( 4 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 2;
-        }
+            if ( i.vertexflags() & UV_BIT )
+            {
+                glEnableVertexAttribArray ( 4 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( float ) * 2;
+            }
 
-        if ( mesh_buffer.vertexflags() & WEIGHT_BIT )
-        {
-            glEnableVertexAttribArray ( 3 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( uint8_t ) * 4;
-            glEnableVertexAttribArray ( 4 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mesh_buffer.vertexflags() ), offset );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( uint8_t ) * 4;
-        }
-        //---Index Buffer---
-        if ( mIndexCount )
-        {
+            if ( i.vertexflags() & WEIGHT_BIT )
+            {
+                glEnableVertexAttribArray ( 3 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 3, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( uint8_t ) * 4;
+                glEnableVertexAttribArray ( 4 );
+                OPENGL_CHECK_ERROR_THROW;
+                glVertexAttribPointer ( 4, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( i.vertexflags() ), offset );
+                OPENGL_CHECK_ERROR_THROW;
+                offset += sizeof ( uint8_t ) * 4;
+            }
+            //---Index Buffer---
+            if ( mIndexCount )
+            {
 #if 0
-            glGenBuffers ( 1, &mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_ELEMENT_ARRAY_BUFFER,
-                           mesh_buffer.vertexbuffer().length() - mIndexOffset,
-                           mesh_buffer.vertexbuffer().data() + mIndexOffset, GL_STATIC_DRAW );
-            OPENGL_CHECK_ERROR_THROW;
+                glGenBuffers ( 1, &mIndexBuffer );
+                OPENGL_CHECK_ERROR_THROW;
+                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+                OPENGL_CHECK_ERROR_THROW;
+                glBufferData ( GL_ELEMENT_ARRAY_BUFFER,
+                               i.vertexbuffer().length() - mIndexOffset,
+                               i.vertexbuffer().data() + mIndexOffset, GL_STATIC_DRAW );
+                OPENGL_CHECK_ERROR_THROW;
 #else
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffer );
-            OPENGL_CHECK_ERROR_THROW;
+                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffer );
+                OPENGL_CHECK_ERROR_THROW;
 #endif
+            }
         }
         mesh_buffer.Clear();
     }
