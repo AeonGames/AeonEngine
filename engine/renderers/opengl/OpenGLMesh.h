@@ -28,16 +28,17 @@ namespace AeonGames
         OpenGLMesh ( const std::string& aFilename );
         ~OpenGLMesh() override;
         void Render() const final;
-        const float * const GetCenterRadius() const final;
+        const float * const GetCenterRadii() const final;
     private:
         void Initialize();
         void Finalize();
         uint32_t GetStride ( uint32_t aFlags ) const;
         uint32_t GetIndexSize ( uint32_t aIndexType ) const;
         std::string mFilename;
-        float mCenterRadius[6];
+        float mCenterRadii[6];
         struct TriangleGroup
         {
+            float mCenterRadii[6];
             uint32_t mArray = 0;
             uint32_t mVertexBuffer = 0;
             uint32_t mVertexCount = 0;

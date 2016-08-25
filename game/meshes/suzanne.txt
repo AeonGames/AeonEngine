@@ -1,12 +1,12 @@
 AEONMSH
 Version: 1
 TriangleGroup {
-  Min {
-    x: -6.8359375
-    y: -4.2578125
-    z: -4.921875
+  Center {
+    x: 0.0
+    y: 0.0
+    z: 0.0
   }
-  Max {
+  Radii {
     x: 6.8359375
     y: 4.2578125
     z: 4.921875

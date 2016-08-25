@@ -54,13 +54,72 @@ class MSHExporter(bpy.types.Operator):
         return True
 
     def fill_triangle_group(self, triangle_group, mesh_object):
-        # TODO: Store center radius instead (besides?) of min/max.
-        triangle_group.Min.x = float('inf')
-        triangle_group.Min.y = float('inf')
-        triangle_group.Min.z = float('inf')
-        triangle_group.Max.x = float('-inf')
-        triangle_group.Max.y = float('-inf')
-        triangle_group.Max.z = float('-inf')
+        # Store center, radii.
+        triangle_group_min_x = min(
+            mesh_object.bound_box[0][0],
+            mesh_object.bound_box[1][0],
+            mesh_object.bound_box[2][0],
+            mesh_object.bound_box[3][0],
+            mesh_object.bound_box[4][0],
+            mesh_object.bound_box[5][0],
+            mesh_object.bound_box[6][0],
+            mesh_object.bound_box[7][0])
+        triangle_group_max_x = max(
+            mesh_object.bound_box[0][0],
+            mesh_object.bound_box[1][0],
+            mesh_object.bound_box[2][0],
+            mesh_object.bound_box[3][0],
+            mesh_object.bound_box[4][0],
+            mesh_object.bound_box[5][0],
+            mesh_object.bound_box[6][0],
+            mesh_object.bound_box[7][0])
+        triangle_group_min_y = min(
+            mesh_object.bound_box[0][1],
+            mesh_object.bound_box[1][1],
+            mesh_object.bound_box[2][1],
+            mesh_object.bound_box[3][1],
+            mesh_object.bound_box[4][1],
+            mesh_object.bound_box[5][1],
+            mesh_object.bound_box[6][1],
+            mesh_object.bound_box[7][1])
+        triangle_group_max_y = max(
+            mesh_object.bound_box[0][1],
+            mesh_object.bound_box[1][1],
+            mesh_object.bound_box[2][1],
+            mesh_object.bound_box[3][1],
+            mesh_object.bound_box[4][1],
+            mesh_object.bound_box[5][1],
+            mesh_object.bound_box[6][1],
+            mesh_object.bound_box[7][1])
+        triangle_group_min_z = min(
+            mesh_object.bound_box[0][2],
+            mesh_object.bound_box[1][2],
+            mesh_object.bound_box[2][2],
+            mesh_object.bound_box[3][2],
+            mesh_object.bound_box[4][2],
+            mesh_object.bound_box[5][2],
+            mesh_object.bound_box[6][2],
+            mesh_object.bound_box[7][2])
+        triangle_group_max_z = max(
+            mesh_object.bound_box[0][2],
+            mesh_object.bound_box[1][2],
+            mesh_object.bound_box[2][2],
+            mesh_object.bound_box[3][2],
+            mesh_object.bound_box[4][2],
+            mesh_object.bound_box[5][2],
+            mesh_object.bound_box[6][2],
+            mesh_object.bound_box[7][2])
+
+        triangle_group.Center.x = (
+            triangle_group_min_x + triangle_group_max_x) / 2
+        triangle_group.Center.y = (
+            triangle_group_min_y + triangle_group_max_y) / 2
+        triangle_group.Center.z = (
+            triangle_group_min_z + triangle_group_max_z) / 2
+
+        triangle_group.Radii.x = triangle_group_max_x - triangle_group.Center.x
+        triangle_group.Radii.y = triangle_group_max_y - triangle_group.Center.y
+        triangle_group.Radii.z = triangle_group_max_z - triangle_group.Center.z
 
         mesh_world_matrix = mathutils.Matrix(mesh_object.matrix_world)
         mesh = mesh_object.data
@@ -118,20 +177,6 @@ class MSHExporter(bpy.types.Operator):
                 if triangle_group.VertexFlags & ATTR_POSITION_MASK:
                     localpos = mesh.vertices[
                         mesh.loops[loop_index].vertex_index].co * mesh_world_matrix
-
-                    triangle_group.Min.x = min(
-                        triangle_group.Min.x, localpos[0])
-                    triangle_group.Min.y = min(
-                        triangle_group.Min.y, localpos[1])
-                    triangle_group.Min.z = min(
-                        triangle_group.Min.z, localpos[2])
-                    triangle_group.Max.x = max(
-                        triangle_group.Max.x, localpos[0])
-                    triangle_group.Max.y = max(
-                        triangle_group.Max.y, localpos[1])
-                    triangle_group.Max.z = max(
-                        triangle_group.Max.z, localpos[2])
-
                     vertex.extend([localpos[0],
                                    localpos[1],
                                    localpos[2]])
@@ -260,16 +305,50 @@ class MSHExporter(bpy.types.Operator):
         mesh_buffer = mesh_pb2.MeshBuffer()
         # Initialize Protocol Buffer Message
         mesh_buffer.Version = 1
+        global_min_x = float('inf')
+        global_min_y = float('inf')
+        global_min_z = float('inf')
+        global_max_x = float('-inf')
+        global_max_y = float('-inf')
+        global_max_z = float('-inf')
         for object in context.scene.objects:
             if (object.type == 'MESH'):
-                #self.fill_triangle_group(mesh_buffer.TriangleGroup.add(), object)
-                #cProfile.runctx('self.fill_triangle_group(mesh_buffer.TriangleGroup.add(), object)', globals(), locals())
+                triangle_group = mesh_buffer.TriangleGroup.add()
+                #self.fill_triangle_group(triangle_group, object)
+                #cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
                 print(
                     timeit.timeit(
                         lambda: self.fill_triangle_group(
-                            mesh_buffer.TriangleGroup.add(),
+                            triangle_group,
                             object),
                         number=1))
+                global_min_x = min(
+                    global_min_x,
+                    (triangle_group.Center.x - triangle_group.Radii.x))
+                global_min_y = min(
+                    global_min_y,
+                    (triangle_group.Center.y - triangle_group.Radii.y))
+                global_min_z = min(
+                    global_min_z,
+                    (triangle_group.Center.z - triangle_group.Radii.z))
+                global_max_x = max(
+                    global_max_x,
+                    (triangle_group.Center.x + triangle_group.Radii.x))
+                global_max_y = max(
+                    global_max_y,
+                    (triangle_group.Center.y + triangle_group.Radii.y))
+                global_max_z = max(
+                    global_max_z,
+                    (triangle_group.Center.z + triangle_group.Radii.z))
+
+        # Set Global Center and Radii
+        mesh_buffer.Center.x = (global_min_x + global_max_x) / 2
+        mesh_buffer.Center.y = (global_min_y + global_max_y) / 2
+        mesh_buffer.Center.z = (global_min_z + global_max_z) / 2
+        mesh_buffer.Radii.x = global_max_x - mesh_buffer.Center.x
+        mesh_buffer.Radii.y = global_max_y - mesh_buffer.Center.y
+        mesh_buffer.Radii.z = global_max_z - mesh_buffer.Center.z
+
         # Open File for Writing
         print("Writting", self.filepath, ".")
         out = open(self.filepath, "wb")
