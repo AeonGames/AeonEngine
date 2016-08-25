@@ -49,10 +49,7 @@ class MSHExporter(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        for object in context.scene.objects:
-            if (object.type == 'MESH'):
-                return True
-        return False
+        return True
 
     def fill_triangle_group(self, triangle_group, mesh_object):
         # TODO: Store center radius instead (besides?) of min/max.
@@ -233,6 +230,7 @@ class MSHExporter(bpy.types.Operator):
 
         for vertex in vertices:
             triangle_group.VertexBuffer += vertex_struct.pack(*vertex)
+        print("Done")
 
         index_struct = None
         # Write indices -----------------------------------
@@ -251,6 +249,7 @@ class MSHExporter(bpy.types.Operator):
         print("Writting", triangle_group.IndexCount, "indices.")
         for index in index_buffer:
             triangle_group.IndexBuffer += index_struct.pack(index)
+        print("Done")
 
     def execute(self, context):
         bpy.ops.object.mode_set()
@@ -264,15 +263,19 @@ class MSHExporter(bpy.types.Operator):
                 self.fill_triangle_group(
                     mesh_buffer.TriangleGroup.add(), object)
         # Open File for Writing
+        print("Writting", self.filepath, ".")
         out = open(self.filepath, "wb")
         magick_struct = struct.Struct('8s')
         out.write(magick_struct.pack(b'AEONMSH\x00'))
         out.write(mesh_buffer.SerializeToString())
         out.close()
+        print("Done.")
+        print("Writting", self.filepath + ".txt", ".")
         out = open(self.filepath + ".txt", "wt")
         out.write("AEONMSH\n")
         out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
         out.close()
+        print("Done.")
         return {'FINISHED'}
 
     def invoke(self, context, event):
