@@ -23,7 +23,7 @@ namespace AeonGames
     {
     public:
         virtual void Render() const = 0;
-        virtual const float * const GetCenterRadius() const = 0;
+        virtual const float * const GetCenterRadii() const = 0;
     protected:
         virtual ~Mesh() = default;
         enum AttributeMask

@@ -82,9 +82,9 @@ namespace AeonGames
         }
     }
 
-    const float * const OpenGLMesh::GetCenterRadius() const
+    const float * const OpenGLMesh::GetCenterRadii() const
     {
-        return mCenterRadius;
+        return mCenterRadii;
     }
 
     void OpenGLMesh::Initialize()
@@ -127,22 +127,32 @@ namespace AeonGames
         }
         file.close();
 
+        // Extract Center
+        mCenterRadii[0] = mesh_buffer.center().x();
+        mCenterRadii[1] = mesh_buffer.center().y();
+        mCenterRadii[2] = mesh_buffer.center().z();
+        // Extract Radius
+        mCenterRadii[3] = mesh_buffer.radii().x();
+        mCenterRadii[4] = mesh_buffer.radii().y();
+        mCenterRadii[5] = mesh_buffer.radii().z();
+
         mTriangleGroups.reserve ( mesh_buffer.trianglegroup().size() );
         for ( auto& i : mesh_buffer.trianglegroup() )
         {
             mTriangleGroups.emplace_back();
+
+            // Extract Center
+            mTriangleGroups.back().mCenterRadii[0] = i.center().x();
+            mTriangleGroups.back().mCenterRadii[1] = i.center().y();
+            mTriangleGroups.back().mCenterRadii[2] = i.center().z();
+            // Extract Radius
+            mTriangleGroups.back().mCenterRadii[3] = i.radii().x();
+            mTriangleGroups.back().mCenterRadii[4] = i.radii().y();
+            mTriangleGroups.back().mCenterRadii[5] = i.radii().z();
+
             mTriangleGroups.back().mVertexCount = i.vertexcount();
             mTriangleGroups.back().mIndexCount = i.indexcount();
             mTriangleGroups.back().mIndexType = 0x1400 | i.indextype();
-
-            // Calculate Center
-            mCenterRadius[0] = ( i.min().x() + i.max().x() ) / 2;
-            mCenterRadius[1] = ( i.min().y() + i.max().y() ) / 2;
-            mCenterRadius[2] = ( i.min().z() + i.max().z() ) / 2;
-            // Calculate Radius
-            mCenterRadius[3] = i.max().x() - mCenterRadius[0];
-            mCenterRadius[4] = i.max().y() - mCenterRadius[1];
-            mCenterRadius[5] = i.max().z() - mCenterRadius[2];
 
             glGenVertexArrays ( 1, &mTriangleGroups.back().mArray );
             OPENGL_CHECK_ERROR_THROW;

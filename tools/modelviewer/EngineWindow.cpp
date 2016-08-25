@@ -81,7 +81,7 @@ namespace AeonGames
         model->SetMesh ( mMesh );
         model->SetProgram ( mProgram );
         // Adjust camera position so model fits the frustum tightly.
-        const float* const center_radius = mMesh->GetCenterRadius();
+        const float* const center_radius = mMesh->GetCenterRadii();
         float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
                                ( center_radius[4] * center_radius[4] ) +
                                ( center_radius[5] * center_radius[5] ) );

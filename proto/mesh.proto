@@ -18,8 +18,8 @@ package AeonGames;
 import "vector3.proto";
 
 message TriangleGroupBuffer {
-    Vector3Buffer Min      = 1;
-    Vector3Buffer Max      = 2;
+    Vector3Buffer Center   = 1;
+    Vector3Buffer Radii    = 2;
     uint32 VertexFlags     = 3;
     uint32 VertexCount     = 4;
     uint32 IndexType       = 5;		
@@ -30,5 +30,7 @@ message TriangleGroupBuffer {
 
 message MeshBuffer {
 	uint32 Version         = 1;
-	repeated TriangleGroupBuffer TriangleGroup = 2;
+    Vector3Buffer Center   = 2;
+    Vector3Buffer Radii    = 3;
+	repeated TriangleGroupBuffer TriangleGroup = 4;
 }

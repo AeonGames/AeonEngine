@@ -1,14 +1,14 @@
 AEONMSH
 Version: 1
 TriangleGroup {
-  Min {
-    x: -1.0000003576278687
-    y: -1.0000005960464478
-    z: -1.0
+  Center {
+    x: 0.0
+    y: 0.0
+    z: 0.0
   }
-  Max {
-    x: 1.0000004768371582
-    y: 1.0000003576278687
+  Radii {
+    x: 1.0
+    y: 1.0
     z: 1.0
   }
   VertexFlags: 3
