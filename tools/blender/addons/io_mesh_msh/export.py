@@ -17,6 +17,8 @@ import os
 import struct
 import mathutils
 import math
+import cProfile
+import timeit
 import mesh_pb2
 import google.protobuf.text_format
 
@@ -260,8 +262,14 @@ class MSHExporter(bpy.types.Operator):
         mesh_buffer.Version = 1
         for object in context.scene.objects:
             if (object.type == 'MESH'):
-                self.fill_triangle_group(
-                    mesh_buffer.TriangleGroup.add(), object)
+                #self.fill_triangle_group(mesh_buffer.TriangleGroup.add(), object)
+                #cProfile.runctx('self.fill_triangle_group(mesh_buffer.TriangleGroup.add(), object)', globals(), locals())
+                print(
+                    timeit.timeit(
+                        lambda: self.fill_triangle_group(
+                            mesh_buffer.TriangleGroup.add(),
+                            object),
+                        number=1))
         # Open File for Writing
         print("Writting", self.filepath, ".")
         out = open(self.filepath, "wb")
