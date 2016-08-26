@@ -127,14 +127,29 @@ namespace AeonGames
         }
         file.close();
 
-        // Extract Center
-        mCenterRadii[0] = mesh_buffer.center().x();
-        mCenterRadii[1] = mesh_buffer.center().y();
-        mCenterRadii[2] = mesh_buffer.center().z();
-        // Extract Radius
-        mCenterRadii[3] = mesh_buffer.radii().x();
-        mCenterRadii[4] = mesh_buffer.radii().y();
-        mCenterRadii[5] = mesh_buffer.radii().z();
+        if ( mesh_buffer.trianglegroup().size() == 1 )
+        {
+            /* This avoids having to duplicate the values on single triangle group meshes.*/
+            // Extract Center
+            mCenterRadii[0] = mesh_buffer.trianglegroup().Get ( 0 ).center().x();
+            mCenterRadii[1] = mesh_buffer.trianglegroup().Get ( 0 ).center().y();
+            mCenterRadii[2] = mesh_buffer.trianglegroup().Get ( 0 ).center().z();
+            // Extract Radius
+            mCenterRadii[3] = mesh_buffer.trianglegroup().Get ( 0 ).radii().x();
+            mCenterRadii[4] = mesh_buffer.trianglegroup().Get ( 0 ).radii().y();
+            mCenterRadii[5] = mesh_buffer.trianglegroup().Get ( 0 ).radii().z();
+        }
+        else
+        {
+            // Extract Center
+            mCenterRadii[0] = mesh_buffer.center().x();
+            mCenterRadii[1] = mesh_buffer.center().y();
+            mCenterRadii[2] = mesh_buffer.center().z();
+            // Extract Radius
+            mCenterRadii[3] = mesh_buffer.radii().x();
+            mCenterRadii[4] = mesh_buffer.radii().y();
+            mCenterRadii[5] = mesh_buffer.radii().z();
+        }
 
         mTriangleGroups.reserve ( mesh_buffer.trianglegroup().size() );
         for ( auto& i : mesh_buffer.trianglegroup() )
@@ -162,11 +177,7 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             glBindBuffer ( GL_ARRAY_BUFFER, mTriangleGroups.back().mVertexBuffer );
             OPENGL_CHECK_ERROR_THROW;
-#if 0
-            glBufferData ( GL_ARRAY_BUFFER, GetStride ( i.vertexflags() ) * mVertexCount, i.vertexbuffer().data(), GL_STATIC_DRAW );
-#else
             glBufferData ( GL_ARRAY_BUFFER, i.vertexbuffer().size(), i.vertexbuffer().data(), GL_STATIC_DRAW );
-#endif
             OPENGL_CHECK_ERROR_THROW;
 
             uint8_t* offset = nullptr;
