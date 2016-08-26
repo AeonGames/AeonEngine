@@ -14,6 +14,7 @@
 
 import bpy
 import os
+import sys
 import struct
 import mathutils
 import math
@@ -109,7 +110,6 @@ class MSHExporter(bpy.types.Operator):
             mesh_object.bound_box[5][2],
             mesh_object.bound_box[6][2],
             mesh_object.bound_box[7][2])
-
         triangle_group.Center.x = (
             triangle_group_min_x + triangle_group_max_x) / 2
         triangle_group.Center.y = (
@@ -164,12 +164,14 @@ class MSHExporter(bpy.types.Operator):
             vertex_struct_string += '8B'
 
         # Generate Vertex Buffers--------------------------------------
-
+        polygon_count = 0
         for polygon in mesh.polygons:
             if polygon.loop_total < 3:
                 print("Invalid Face?")
                 continue
             indices = []
+            print("\rPolygon ", polygon_count, " of ", len(mesh.polygons))
+            polygon_count = polygon_count + 1
 
             for loop_index in polygon.loop_indices:
                 vertex = []
