@@ -49,6 +49,11 @@ find_package(Threads)
 find_package(Vulkan)
 find_package(OpenGL)
 find_package(Protobuf)
+find_package(PythonInterp)
+include(FindPythonModule)
+if(PYTHONINTERP_FOUND)
+    find_python_module(autopep8)
+endif()
 find_program(XXD_EXECUTABLE NAMES xxd xxd.exe)
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
@@ -92,13 +97,15 @@ set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in" "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
 
 if(MSVC)
+    # Look for more useful sed oneliners at http://sed.sourceforge.net/sed1line.txt
     add_custom_target(format-code
         ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
-        # Look for more useful sed oneliners at http://sed.sourceforge.net/sed1line.txt
         COMMAND
             ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/\\t/    /g' {} $<SEMICOLON>"
         COMMAND
             ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/[ \\t]*$$//' {} $<SEMICOLON>"
+        COMMAND
+            ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\""
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting Code.")
 else()
@@ -108,6 +115,8 @@ else()
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/\\t/    /g' {} \\$<SEMICOLON>
         COMMAND
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/[ \\t]*$$//' {} \\$<SEMICOLON>
+        COMMAND
+            ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\""
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting Code.")
 endif()
