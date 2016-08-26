@@ -17,6 +17,7 @@ limitations under the License.
 #include <QResizeEvent>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include "EngineWindow.h"
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
@@ -85,7 +86,9 @@ namespace AeonGames
         float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
                                ( center_radius[4] * center_radius[4] ) +
                                ( center_radius[5] * center_radius[5] ) );
-        float eye_length = radius / std::tan ( mFrustumVerticalHalfAngle );
+        std::cout << "Radius: " << radius << std::endl;
+        // Add the near value to the radius just in case the actual object contains the eye position.
+        float eye_length = ( radius + 1.0f ) / std::tan ( mFrustumVerticalHalfAngle );
         mCameraLocation = QVector4D (
                               QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
                               ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );

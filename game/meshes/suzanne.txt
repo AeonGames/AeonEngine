@@ -1,5 +1,10 @@
 AEONMSH
 Version: 1
+Radii {
+  x: 6.8359375
+  y: 4.2578125
+  z: 4.921875
+}
 TriangleGroup {
   Center {
     x: 0.0
