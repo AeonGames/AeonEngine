@@ -54,7 +54,99 @@ class MSHExporter(bpy.types.Operator):
     def poll(cls, context):
         return True
 
+    def __init__(self):
+        self.mesh = None
+        self.object = None
+        self.flags = None
+
+    def get_vertices(self, loop_index):
+        mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
+        vertex = []
+        # this should be a single function
+        if self.flags & ATTR_POSITION_MASK:
+            localpos = self.mesh.vertices[self.mesh.loops[
+                loop_index].vertex_index].co * mesh_world_matrix
+            vertex.extend([localpos[0],
+                           localpos[1],
+                           localpos[2]])
+
+        if self.flags & ATTR_NORMAL_MASK:
+            localnormal = self.mesh.vertices[self.mesh.loops[
+                loop_index].vertex_index].normal * mesh_world_matrix
+            vertex.extend([localnormal[0],
+                           localnormal[1],
+                           localnormal[2]])
+
+        if self.flags & ATTR_TANGENT_MASK:
+            localtangent = self.mesh.loops[
+                loop_index].tangent * mesh_world_matrix
+            vertex.extend([localtangent[0],
+                           localtangent[1],
+                           localtangent[2]])
+
+        if self.flags & ATTR_BITANGENT_MASK:
+            localbitangent = self.mesh.loops[
+                loop_index].bitangent * mesh_world_matrix
+            vertex.extend([localbitangent[0],
+                           localbitangent[1],
+                           localbitangent[2]])
+
+        if self.flags & ATTR_UV_MASK:
+            vertex.extend([self.mesh.uv_layers[0].data[loop_index].uv[0],
+                           1.0 - self.mesh.uv_layers[0].data[loop_index].uv[1]])
+
+        if self.flags & ATTR_WEIGHT_MASK:
+
+            weights = []
+
+            for group in mesh.vertices[
+                    mesh.loops[loop_index].vertex_index].groups:
+                if group.weight > 0:
+                    weights.append([group.weight, armature.bones.find(
+                        mesh_object.vertex_groups[group.group].name)])
+
+            weights.sort()
+            weights.reverse()
+
+            # Clip
+            if len(weights) > 4:
+                weights = weights[:4]
+
+            # Normalize
+            magnitude = 0
+            for weight in weights:
+                magnitude = magnitude + weight[0]
+
+            byte_magnitude = 0
+            for weight in weights:
+                weight[0] = weight[0] / magnitude
+                weight[0] = int(weight[0] * 0xFF)
+                byte_magnitude = byte_magnitude + weight[0]
+
+            weights[-1][0] = weights[-1][0] + \
+                (0xFF - byte_magnitude)
+
+            if len(weights) < 4:
+                weights = weights + \
+                    [[0, 0]] * (4 - len(weights))
+
+            weight_indices = []
+            weight_values = []
+            weights.sort()
+            weights.reverse()
+            for weight in weights:
+                weight_indices.append(weight[1])
+                weight_values.append(weight[0])
+            vertex.extend(weight_indices)
+            vertex.extend(weight_values)
+        return vertex
+
+    def get_polygon(self, polygon):
+        return map(self.get_vertices, polygon.loop_indices)
+
     def fill_triangle_group(self, triangle_group, mesh_object):
+        self.mesh = mesh_object.data
+        self.object = mesh_object
         # Store center, radii.
         triangle_group_min_x = min(
             mesh_object.bound_box[0][0],
@@ -121,7 +213,6 @@ class MSHExporter(bpy.types.Operator):
         triangle_group.Radii.y = triangle_group_max_y - triangle_group.Center.y
         triangle_group.Radii.z = triangle_group_max_z - triangle_group.Center.z
 
-        mesh_world_matrix = mathutils.Matrix(mesh_object.matrix_world)
         mesh = mesh_object.data
         mesh.calc_normals()
 
@@ -165,6 +256,7 @@ class MSHExporter(bpy.types.Operator):
 
         # Generate Vertex Buffers--------------------------------------
         polygon_count = 0
+        self.flags = triangle_group.VertexFlags
         for polygon in mesh.polygons:
             if polygon.loop_total < 3:
                 print("Invalid Face?")
@@ -173,86 +265,8 @@ class MSHExporter(bpy.types.Operator):
             print("\rPolygon ", polygon_count, " of ", len(mesh.polygons))
             polygon_count = polygon_count + 1
 
-            for loop_index in polygon.loop_indices:
-                vertex = []
-                # this should be a single function
-                if triangle_group.VertexFlags & ATTR_POSITION_MASK:
-                    localpos = mesh.vertices[
-                        mesh.loops[loop_index].vertex_index].co * mesh_world_matrix
-                    vertex.extend([localpos[0],
-                                   localpos[1],
-                                   localpos[2]])
-
-                if triangle_group.VertexFlags & ATTR_NORMAL_MASK:
-                    localnormal = mesh.vertices[
-                        mesh.loops[loop_index].vertex_index].normal * mesh_world_matrix
-                    vertex.extend([localnormal[0],
-                                   localnormal[1],
-                                   localnormal[2]])
-
-                if triangle_group.VertexFlags & ATTR_TANGENT_MASK:
-                    localtangent = mesh.loops[
-                        loop_index].tangent * mesh_world_matrix
-                    vertex.extend([localtangent[0],
-                                   localtangent[1],
-                                   localtangent[2]])
-
-                if triangle_group.VertexFlags & ATTR_BITANGENT_MASK:
-                    localbitangent = mesh.loops[
-                        loop_index].bitangent * mesh_world_matrix
-                    vertex.extend([localbitangent[0],
-                                   localbitangent[1],
-                                   localbitangent[2]])
-
-                if triangle_group.VertexFlags & ATTR_UV_MASK:
-                    vertex.extend([mesh.uv_layers[0].data[loop_index].uv[0],
-                                   1.0 - mesh.uv_layers[0].data[loop_index].uv[1]])
-
-                if triangle_group.VertexFlags & ATTR_WEIGHT_MASK:
-
-                    weights = []
-
-                    for group in mesh.vertices[
-                            mesh.loops[loop_index].vertex_index].groups:
-                        if group.weight > 0:
-                            weights.append([group.weight, armature.bones.find(
-                                mesh_object.vertex_groups[group.group].name)])
-
-                    weights.sort()
-                    weights.reverse()
-
-                    # Clip
-                    if len(weights) > 4:
-                        weights = weights[:4]
-
-                    # Normalize
-                    magnitude = 0
-                    for weight in weights:
-                        magnitude = magnitude + weight[0]
-
-                    byte_magnitude = 0
-                    for weight in weights:
-                        weight[0] = weight[0] / magnitude
-                        weight[0] = int(weight[0] * 0xFF)
-                        byte_magnitude = byte_magnitude + weight[0]
-
-                    weights[-1][0] = weights[-1][0] + \
-                        (0xFF - byte_magnitude)
-
-                    if len(weights) < 4:
-                        weights = weights + \
-                            [[0, 0]] * (4 - len(weights))
-
-                    weight_indices = []
-                    weight_values = []
-                    weights.sort()
-                    weights.reverse()
-                    for weight in weights:
-                        weight_indices.append(weight[1])
-                        weight_values.append(weight[0])
-                    vertex.extend(weight_indices)
-                    vertex.extend(weight_values)
-
+            polygon_vertices = self.get_polygon(polygon)
+            for vertex in polygon_vertices:
                 if vertex not in vertices:
                     indices.append(len(vertices))
                     vertices.append(vertex)
