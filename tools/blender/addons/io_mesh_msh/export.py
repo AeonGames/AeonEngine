@@ -21,6 +21,8 @@ import math
 import cProfile
 import timeit
 import mesh_pb2
+import operator
+import itertools
 import google.protobuf.text_format
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
@@ -142,12 +144,25 @@ class MSHExporter(bpy.types.Operator):
                 weight_values.append(weight[0])
             vertex.extend(weight_indices)
             vertex.extend(weight_values)
-        print("Loop Index", loop.index, "Vertex", vertex)
-        return vertex
+        return [loop.index, vertex]
+
+    def get_indices_per_vertex(self, key_group):
+        return [list(map(operator.itemgetter(0), key_group[1])), key_group[0]]
+
+    def get_unique_index(self, index):
+        if(index < len(self.vertices)):
+            print("Real index for", index, "is", index)
+            return index
+        for vertex in self.vertices:
+            if index in vertex[0][1::]:
+                print("Real index for", index, "is", vertex[0][0])
+                return vertex[0][0]
+        return 0
 
     def fill_triangle_group(self, triangle_group, mesh_object):
         self.mesh = mesh_object.data
         self.object = mesh_object
+        pool = ThreadPool()
         # Store center, radii.
         triangle_group_min_x = min(
             mesh_object.bound_box[0][0],
@@ -255,10 +270,15 @@ class MSHExporter(bpy.types.Operator):
 
         # Generate Vertex Buffer--------------------------------------
         self.flags = triangle_group.VertexFlags
-        pool = ThreadPool()
         self.vertices = pool.map(self.get_vertex, mesh.loops)
-        pool.close()
-        pool.join()
+        self.vertices.sort(key=operator.itemgetter(1))
+        # The next line of code it's so dense;
+        # every single statement has so many things going on...
+        self.vertices = sorted(map(self.get_indices_per_vertex, itertools.groupby(
+            self.vertices, key=operator.itemgetter(1))), key=operator.itemgetter(0))
+        # ... but it basically collects all indices that reference the same vertex
+        # and packs them as a list of lists of lists like so:
+        # [[[index,...],[vertex attribute values]],...]
 
         # Generate Index Buffer---------------------------------------
         polygon_count = 0
@@ -272,7 +292,7 @@ class MSHExporter(bpy.types.Operator):
                 self.indices.append(polygon.loop_indices[i])
                 self.indices.append(polygon.loop_indices[
                                     (i + 1) % len(polygon.loop_indices)])
-
+        self.indices = list(pool.map(self.get_unique_index, self.indices))
         # Write vertices -----------------------------------
         vertex_struct = struct.Struct(vertex_struct_string)
         print(
@@ -286,7 +306,7 @@ class MSHExporter(bpy.types.Operator):
             "bytes for vertex buffer")
         triangle_group.VertexCount = len(self.vertices)
         triangle_group.VertexBuffer = b''.join(
-            list(map(lambda x: vertex_struct.pack(*x), self.vertices)))
+            list(pool.map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
         print("Done")
 
         index_struct = None
@@ -306,8 +326,10 @@ class MSHExporter(bpy.types.Operator):
 
         print("Writting", triangle_group.IndexCount, "indices.")
         triangle_group.IndexBuffer = b''.join(
-            list(map(index_struct.pack, self.indices)))
+            list(pool.map(index_struct.pack, self.indices)))
         print("Done")
+        pool.close()
+        pool.join()
 
     def execute(self, context):
         bpy.ops.object.mode_set()
