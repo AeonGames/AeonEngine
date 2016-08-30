@@ -65,7 +65,6 @@ class MSHExporter(bpy.types.Operator):
         self.lock = ThreadLock()
 
     def get_vertex(self, loop):
-        print("Loop Index", loop.index)
         mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
         vertex = []
         # this should be a single function
@@ -143,6 +142,7 @@ class MSHExporter(bpy.types.Operator):
                 weight_values.append(weight[0])
             vertex.extend(weight_indices)
             vertex.extend(weight_values)
+        print("Loop Index", loop.index, "Vertex", vertex)
         return vertex
 
     def fill_triangle_group(self, triangle_group, mesh_object):
@@ -264,7 +264,8 @@ class MSHExporter(bpy.types.Operator):
         polygon_count = 0
         for polygon in mesh.polygons:
             polygon_count = polygon_count + 1
-            print("\rPolygon ", polygon_count, " of ", len(mesh.polygons))
+            print("\rPolygon ", polygon_count, " of ", len(
+                mesh.polygons), "indices", polygon.loop_indices)
 
             for i in range(1, len(polygon.loop_indices), 2):
                 self.indices.append(polygon.loop_indices[i - 1])
@@ -284,9 +285,8 @@ class MSHExporter(bpy.types.Operator):
             vertex_struct.size,
             "bytes for vertex buffer")
         triangle_group.VertexCount = len(self.vertices)
-
-        for vertex in self.vertices:
-            triangle_group.VertexBuffer += vertex_struct.pack(*vertex)
+        triangle_group.VertexBuffer = b''.join(
+            list(map(lambda x: vertex_struct.pack(*x), self.vertices)))
         print("Done")
 
         index_struct = None
@@ -303,9 +303,10 @@ class MSHExporter(bpy.types.Operator):
         else:
             triangle_group.IndexType = UNSIGNED_INT
             index_struct = struct.Struct('I')
+
         print("Writting", triangle_group.IndexCount, "indices.")
-        for index in self.indices:
-            triangle_group.IndexBuffer += index_struct.pack(index)
+        triangle_group.IndexBuffer = b''.join(
+            list(map(index_struct.pack, self.indices)))
         print("Done")
 
     def execute(self, context):
