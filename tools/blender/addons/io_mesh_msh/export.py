@@ -22,6 +22,8 @@ import cProfile
 import timeit
 import mesh_pb2
 import google.protobuf.text_format
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 ATTR_POSITION_MASK = 0b1
 ATTR_NORMAL_MASK = 0b10
@@ -58,49 +60,51 @@ class MSHExporter(bpy.types.Operator):
         self.mesh = None
         self.object = None
         self.flags = None
+        self.vertices = []
+        self.indices = []
+        self.lock = ThreadLock()
 
-    def get_vertices(self, loop_index):
+    def get_vertex(self, loop):
+        print("Loop Index", loop.index)
         mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
         vertex = []
         # this should be a single function
         if self.flags & ATTR_POSITION_MASK:
-            localpos = self.mesh.vertices[self.mesh.loops[
-                loop_index].vertex_index].co * mesh_world_matrix
+            localpos = self.mesh.vertices[
+                loop.vertex_index].co * mesh_world_matrix
             vertex.extend([localpos[0],
                            localpos[1],
                            localpos[2]])
 
         if self.flags & ATTR_NORMAL_MASK:
-            localnormal = self.mesh.vertices[self.mesh.loops[
-                loop_index].vertex_index].normal * mesh_world_matrix
+            localnormal = self.mesh.vertices[
+                loop.vertex_index].normal * mesh_world_matrix
             vertex.extend([localnormal[0],
                            localnormal[1],
                            localnormal[2]])
 
         if self.flags & ATTR_TANGENT_MASK:
-            localtangent = self.mesh.loops[
-                loop_index].tangent * mesh_world_matrix
+            localtangent = loop.tangent * mesh_world_matrix
             vertex.extend([localtangent[0],
                            localtangent[1],
                            localtangent[2]])
 
         if self.flags & ATTR_BITANGENT_MASK:
-            localbitangent = self.mesh.loops[
-                loop_index].bitangent * mesh_world_matrix
+            localbitangent = loop.bitangent * mesh_world_matrix
             vertex.extend([localbitangent[0],
                            localbitangent[1],
                            localbitangent[2]])
 
         if self.flags & ATTR_UV_MASK:
-            vertex.extend([self.mesh.uv_layers[0].data[loop_index].uv[0],
-                           1.0 - self.mesh.uv_layers[0].data[loop_index].uv[1]])
+            vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
+                           1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
 
         if self.flags & ATTR_WEIGHT_MASK:
 
             weights = []
 
             for group in mesh.vertices[
-                    mesh.loops[loop_index].vertex_index].groups:
+                    loop.vertex_index].groups:
                 if group.weight > 0:
                     weights.append([group.weight, armature.bones.find(
                         mesh_object.vertex_groups[group.group].name)])
@@ -140,9 +144,6 @@ class MSHExporter(bpy.types.Operator):
             vertex.extend(weight_indices)
             vertex.extend(weight_values)
         return vertex
-
-    def get_polygon(self, polygon):
-        return map(self.get_vertices, polygon.loop_indices)
 
     def fill_triangle_group(self, triangle_group, mesh_object):
         self.mesh = mesh_object.data
@@ -227,8 +228,6 @@ class MSHExporter(bpy.types.Operator):
                     break
         triangle_group.VertexFlags = 0
         vertex_struct_string = ''
-        vertices = []
-        index_buffer = []
         # Position and Normal aren't optional (for now)
         triangle_group.VertexFlags |= ATTR_POSITION_MASK
         vertex_struct_string += '3f'
@@ -254,63 +253,58 @@ class MSHExporter(bpy.types.Operator):
             triangle_group.VertexFlags |= ATTR_WEIGHT_MASK
             vertex_struct_string += '8B'
 
-        # Generate Vertex Buffers--------------------------------------
-        polygon_count = 0
+        # Generate Vertex Buffer--------------------------------------
         self.flags = triangle_group.VertexFlags
+        pool = ThreadPool()
+        self.vertices = pool.map(self.get_vertex, mesh.loops)
+        pool.close()
+        pool.join()
+
+        # Generate Index Buffer---------------------------------------
+        polygon_count = 0
         for polygon in mesh.polygons:
-            if polygon.loop_total < 3:
-                print("Invalid Face?")
-                continue
-            indices = []
-            print("\rPolygon ", polygon_count, " of ", len(mesh.polygons))
             polygon_count = polygon_count + 1
+            print("\rPolygon ", polygon_count, " of ", len(mesh.polygons))
 
-            polygon_vertices = self.get_polygon(polygon)
-            for vertex in polygon_vertices:
-                if vertex not in vertices:
-                    indices.append(len(vertices))
-                    vertices.append(vertex)
-                else:
-                    indices.append(vertices.index(vertex))
-
-            for i in range(1, len(indices), 2):
-                index_buffer.append(indices[i - 1])
-                index_buffer.append(indices[i])
-                index_buffer.append(indices[(i + 1) % len(indices)])
+            for i in range(1, len(polygon.loop_indices), 2):
+                self.indices.append(polygon.loop_indices[i - 1])
+                self.indices.append(polygon.loop_indices[i])
+                self.indices.append(polygon.loop_indices[
+                                    (i + 1) % len(polygon.loop_indices)])
 
         # Write vertices -----------------------------------
         vertex_struct = struct.Struct(vertex_struct_string)
         print(
             "Writing",
-            len(vertices),
+            len(self.vertices),
             "*",
             vertex_struct.size,
             "=",
-            len(vertices) *
+            len(self.vertices) *
             vertex_struct.size,
             "bytes for vertex buffer")
-        triangle_group.VertexCount = len(vertices)
+        triangle_group.VertexCount = len(self.vertices)
 
-        for vertex in vertices:
+        for vertex in self.vertices:
             triangle_group.VertexBuffer += vertex_struct.pack(*vertex)
         print("Done")
 
         index_struct = None
         # Write indices -----------------------------------
-        triangle_group.IndexCount = len(index_buffer)
+        triangle_group.IndexCount = len(self.indices)
 
         # Save memory space by using best fitting type for indices.
-        if len(vertices) < 0x100:
+        if len(self.vertices) < 0x100:
             triangle_group.IndexType = UNSIGNED_BYTE
             index_struct = struct.Struct('B')
-        elif len(vertices) < 0x10000:
+        elif len(self.vertices) < 0x10000:
             triangle_group.IndexType = UNSIGNED_SHORT
             index_struct = struct.Struct('H')
         else:
             triangle_group.IndexType = UNSIGNED_INT
             index_struct = struct.Struct('I')
         print("Writting", triangle_group.IndexCount, "indices.")
-        for index in index_buffer:
+        for index in self.indices:
             triangle_group.IndexBuffer += index_struct.pack(index)
         print("Done")
 
@@ -330,14 +324,14 @@ class MSHExporter(bpy.types.Operator):
         for object in context.scene.objects:
             if (object.type == 'MESH'):
                 triangle_group = mesh_buffer.TriangleGroup.add()
-                #self.fill_triangle_group(triangle_group, object)
+                self.fill_triangle_group(triangle_group, object)
                 #cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
-                print(
-                    timeit.timeit(
-                        lambda: self.fill_triangle_group(
-                            triangle_group,
-                            object),
-                        number=1))
+                # print(
+                # timeit.timeit(
+                # lambda: self.fill_triangle_group(
+                # triangle_group,
+                # object),
+                # number=1))
                 global_min_x = min(
                     global_min_x,
                     (triangle_group.Center.x - triangle_group.Radii.x))
