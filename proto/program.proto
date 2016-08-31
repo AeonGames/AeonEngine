@@ -61,8 +61,7 @@ message PropertyBuffer {
 }
 
 message ShaderBuffer {
-	string entry_point = 1;
-	string code = 2;
+	string code = 1;
 }
 
 message ProgramBuffer {

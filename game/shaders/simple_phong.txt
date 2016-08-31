@@ -31,9 +31,8 @@ properties {
   }
 }
 vertex_shader {
-  entry_point: "phong();"
   code: "out vec3 LightIntensity;\n"
-  "void phong()\n"
+  "void main()\n"
   "{\n"
   "if ( length ( VertexNormal ) != 0 )\n"
   "{\n"
@@ -46,14 +45,14 @@ vertex_shader {
   "{\n"
   "LightIntensity = Ld;\n"
   "}\n"
+  "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
   "}\n"
 }
 fragment_shader {
-  entry_point: "phong();"
   code: "in vec3 LightIntensity;\n"
   "layout ( location = 0 ) out vec4 FragColor;\n"
   "\n"
-  "void phong()\n"
+  "void main()\n"
   "{\n"
   "if(gl_FrontFacing)\n"
   "{\n"
