@@ -183,18 +183,7 @@ namespace AeonGames
                 fragment_shader_source.append ( "};\n" );
             }
             vertex_shader_source.append ( program_buffer.vertex_shader().code() );
-            vertex_shader_source.append (
-                "void main()\n"
-                "{\n"
-                "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n" +
-                program_buffer.vertex_shader().entry_point() +
-                "\n}\n" );
             fragment_shader_source.append ( program_buffer.fragment_shader().code() );
-            fragment_shader_source.append (
-                "void main()\n"
-                "{\n" +
-                program_buffer.fragment_shader().entry_point() +
-                "\n}\n" );
             program_buffer.Clear();
         }
 

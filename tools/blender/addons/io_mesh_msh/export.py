@@ -61,6 +61,7 @@ class MSHExporter(bpy.types.Operator):
     def __init__(self):
         self.mesh = None
         self.object = None
+        self.armature = None
         self.flags = None
         self.vertices = []
         self.indices = []
@@ -104,11 +105,11 @@ class MSHExporter(bpy.types.Operator):
 
             weights = []
 
-            for group in mesh.vertices[
+            for group in self.mesh.vertices[
                     loop.vertex_index].groups:
                 if group.weight > 0:
-                    weights.append([group.weight, armature.bones.find(
-                        mesh_object.vertex_groups[group.group].name)])
+                    weights.append([group.weight, self.armature.bones.find(
+                        self.object.vertex_groups[group.group].name)])
 
             weights.sort()
             weights.reverse()
@@ -231,13 +232,13 @@ class MSHExporter(bpy.types.Operator):
         mesh.calc_normals()
 
         # if this mesh is modified by an armature, find out which one.
-        armature = None
+        self.armature = None
         for modifier in mesh_object.modifiers:
             if modifier.type == 'ARMATURE':
                 armaturemodifier = bpy.types.ArmatureModifier(modifier)
                 if armaturemodifier.use_vertex_groups:
                     if armaturemodifier.object:
-                        armature = armaturemodifier.object.data
+                        self.armature = armaturemodifier.object.data
                     break
         triangle_group.VertexFlags = 0
         vertex_struct_string = ''
@@ -262,13 +263,13 @@ class MSHExporter(bpy.types.Operator):
             vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier.
-        if armature is not None:
+        if self.armature is not None:
             triangle_group.VertexFlags |= ATTR_WEIGHT_MASK
             vertex_struct_string += '8B'
 
         # Generate Vertex Buffer--------------------------------------
         self.flags = triangle_group.VertexFlags
-        self.vertices = pool.map(self.get_vertex, mesh.loops)
+        self.vertices = list(map(self.get_vertex, mesh.loops))
         self.vertices.sort(key=operator.itemgetter(1))
         # The next line of code it's so dense;
         # every single statement has so many things going on...
@@ -281,13 +282,14 @@ class MSHExporter(bpy.types.Operator):
         # Generate Index Buffer---------------------------------------
         polygon_count = 0
         index_dictionary = {}
-        for entry in pool.map(self.get_index_dictionary, self.vertices):
+        for entry in map(self.get_index_dictionary, self.vertices):
             index_dictionary.update(entry)
         for polygon in mesh.polygons:
             polygon_count = polygon_count + 1
             print("\rPolygon ", polygon_count, " of ", len(
                 mesh.polygons))
-
+            if(len(polygon.loop_indices) < 3):  # skip invalid faces
+                continue
             for i in range(1, len(polygon.loop_indices), 2):
                 self.indices.append(
                     index_dictionary[
@@ -309,7 +311,7 @@ class MSHExporter(bpy.types.Operator):
             "bytes for vertex buffer")
         triangle_group.VertexCount = len(self.vertices)
         triangle_group.VertexBuffer = b''.join(
-            list(pool.map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
+            list(map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
         print("Done")
 
         index_struct = None
@@ -329,7 +331,7 @@ class MSHExporter(bpy.types.Operator):
 
         print("Writting", triangle_group.IndexCount, "indices.")
         triangle_group.IndexBuffer = b''.join(
-            list(pool.map(index_struct.pack, self.indices)))
+            list(map(index_struct.pack, self.indices)))
         print("Done")
         pool.close()
         pool.join()

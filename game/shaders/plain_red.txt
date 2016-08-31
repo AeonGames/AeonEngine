@@ -2,15 +2,16 @@ AEONPRG
 glsl_version: 330
 
 vertex_shader {
-  entry_point: ""
-  code: ""
+  code: "void main()\n"
+  "{\n"
+  "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
+  "}\n"
 }
 
 fragment_shader {
-  entry_point: "plain_red();"
   code: "layout ( location = 0 ) out vec4 FragColor;\n"
   "\n"
-  "void plain_red()\n"
+  "void main()\n"
   "{\n"
   "FragColor = vec4 ( 1.0,0.0,0.0, 1.0 );\n"
   "}\n"
