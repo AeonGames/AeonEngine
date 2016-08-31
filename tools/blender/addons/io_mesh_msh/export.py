@@ -144,20 +144,18 @@ class MSHExporter(bpy.types.Operator):
                 weight_values.append(weight[0])
             vertex.extend(weight_indices)
             vertex.extend(weight_values)
+        print("Generating Vertex", loop.index)
         return [loop.index, vertex]
 
     def get_indices_per_vertex(self, key_group):
         return [list(map(operator.itemgetter(0), key_group[1])), key_group[0]]
 
-    def get_unique_index(self, index):
-        if(index < len(self.vertices)):
-            print("Real index for", index, "is", index)
-            return index
-        for vertex in self.vertices:
-            if index in vertex[0][1::]:
-                print("Real index for", index, "is", vertex[0][0])
-                return vertex[0][0]
-        return 0
+    def get_index_dictionary(self, vertex):
+        dictionary = {}
+        for index in vertex[0]:
+            dictionary[index] = vertex[0][0]
+        print(dictionary)
+        return dictionary
 
     def fill_triangle_group(self, triangle_group, mesh_object):
         self.mesh = mesh_object.data
@@ -282,17 +280,22 @@ class MSHExporter(bpy.types.Operator):
 
         # Generate Index Buffer---------------------------------------
         polygon_count = 0
+        index_dictionary = {}
+        for entry in pool.map(self.get_index_dictionary, self.vertices):
+            index_dictionary.update(entry)
         for polygon in mesh.polygons:
             polygon_count = polygon_count + 1
             print("\rPolygon ", polygon_count, " of ", len(
-                mesh.polygons), "indices", polygon.loop_indices)
+                mesh.polygons))
 
             for i in range(1, len(polygon.loop_indices), 2):
-                self.indices.append(polygon.loop_indices[i - 1])
-                self.indices.append(polygon.loop_indices[i])
-                self.indices.append(polygon.loop_indices[
-                                    (i + 1) % len(polygon.loop_indices)])
-        self.indices = list(pool.map(self.get_unique_index, self.indices))
+                self.indices.append(
+                    index_dictionary[
+                        polygon.loop_indices[
+                            i - 1]])
+                self.indices.append(index_dictionary[polygon.loop_indices[i]])
+                self.indices.append(index_dictionary[polygon.loop_indices[
+                                    (i + 1) % len(polygon.loop_indices)]])
         # Write vertices -----------------------------------
         vertex_struct = struct.Struct(vertex_struct_string)
         print(
