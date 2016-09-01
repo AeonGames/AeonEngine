@@ -151,11 +151,10 @@ class MSHExporter(bpy.types.Operator):
     def get_indices_per_vertex(self, key_group):
         return [list(map(operator.itemgetter(0), key_group[1])), key_group[0]]
 
-    def get_index_dictionary(self, vertex):
+    def get_index_dictionary(self, indices, index):
         dictionary = {}
-        for index in vertex[0]:
-            dictionary[index] = vertex[0][0]
-        print(dictionary)
+        for key in indices[0]:
+            dictionary[key] = index
         return dictionary
 
     def fill_triangle_group(self, triangle_group, mesh_object):
@@ -269,7 +268,7 @@ class MSHExporter(bpy.types.Operator):
 
         # Generate Vertex Buffer--------------------------------------
         self.flags = triangle_group.VertexFlags
-        self.vertices = list(map(self.get_vertex, mesh.loops))
+        self.vertices = list(pool.map(self.get_vertex, mesh.loops))
         self.vertices.sort(key=operator.itemgetter(1))
         # The next line of code it's so dense;
         # every single statement has so many things going on...
@@ -278,12 +277,15 @@ class MSHExporter(bpy.types.Operator):
         # ... but it basically collects all indices that reference the same vertex
         # and packs them as a list of lists of lists like so:
         # [[[index,...],[vertex attribute values]],...]
-
         # Generate Index Buffer---------------------------------------
         polygon_count = 0
         index_dictionary = {}
-        for entry in map(self.get_index_dictionary, self.vertices):
+        for entry in map(
+            self.get_index_dictionary, self.vertices, range(
+                0, len(
+                self.vertices))):
             index_dictionary.update(entry)
+        self.indices = []
         for polygon in mesh.polygons:
             polygon_count = polygon_count + 1
             print("\rPolygon ", polygon_count, " of ", len(
@@ -311,7 +313,7 @@ class MSHExporter(bpy.types.Operator):
             "bytes for vertex buffer")
         triangle_group.VertexCount = len(self.vertices)
         triangle_group.VertexBuffer = b''.join(
-            list(map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
+            list(pool.map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
         print("Done")
 
         index_struct = None
@@ -331,7 +333,7 @@ class MSHExporter(bpy.types.Operator):
 
         print("Writting", triangle_group.IndexCount, "indices.")
         triangle_group.IndexBuffer = b''.join(
-            list(map(index_struct.pack, self.indices)))
+            list(pool.map(index_struct.pack, self.indices)))
         print("Done")
         pool.close()
         pool.join()

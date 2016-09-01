@@ -109,6 +109,7 @@ if(MSVC)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting Code.")
 else()
+    find_program (AUTOPEP8_EXECUTABLE autopep8)
     add_custom_target(format-code
         ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
         COMMAND
@@ -116,7 +117,7 @@ else()
         COMMAND
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/[ \\t]*$$//' {} \\$<SEMICOLON>
         COMMAND
-            ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\""
+            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting Code.")
 endif()
