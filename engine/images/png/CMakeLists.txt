@@ -1,0 +1,3 @@
+set(PNGIMAGE_HEADERS PngImage.h)
+set(PNGIMAGE_SOURCES PngImage.cpp)
+add_library(png SHARED ${PNGIMAGE_HEADERS} ${PNGIMAGE_SOURCES})

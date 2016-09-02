@@ -96,6 +96,8 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Image.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
 
 set(ENGINE_VULKAN_RENDERER_HEADERS
@@ -130,6 +132,8 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_SOURCES
+    core/Image.cpp
+    core/Utilities.cpp
     core/AeonEngine.cpp
     core/LogLevel.cpp)
 
@@ -222,3 +226,4 @@ if(CLANG_TIDY_EXECUTABLE)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Checking Engine Code")
 endif()
+add_subdirectory(images)
