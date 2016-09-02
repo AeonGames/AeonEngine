@@ -35,18 +35,21 @@ namespace AeonGames
      * which is in turn a version of Herb Sutter's
      * 'My Favorite C++ 10-liner' :
      * https://channel9.msdn.com/Events/GoingNative/2013/My-Favorite-Cpp-10-Liner
+     * @param B Base class of the resource.
+     * @param D Derived class of the resource (optional).
+     * @return Shared pointer to the only instance of the resource in memory.
      * */
-    template<class T>
-    std::shared_ptr<T> Get ( const std::string& key, std::unique_ptr<T> ( loader ) ( const std::string& ) = Load<T> )
+    template<class B, class D = B>
+    std::shared_ptr<B> Get ( const std::string& key, std::unique_ptr<B> ( loader ) ( const std::string& ) = Load<D> )
     {
-        ///@todo Maybe replace unordered_map with vector.
-        static std::unordered_map<std::string, std::weak_ptr<T>> cache;
+        ///@todo Maybe replace unordered_map with a vector.
+        static std::unordered_map<std::string, std::weak_ptr<B>> cache;
         static std::mutex m;
         std::lock_guard<std::mutex> hold ( m );
         auto iter = cache.find ( key );
         if ( iter == cache.end() )
         {
-            auto retval = std::shared_ptr<T> ( loader ( key ).release(), [key] ( T * t )
+            auto retval = std::shared_ptr<B> ( loader ( key ).release(), [key] ( B * t )
             {
                 ///@todo Should this use the unique pointer deleter?
                 delete ( t );

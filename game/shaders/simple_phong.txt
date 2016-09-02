@@ -1,6 +1,6 @@
 AEONPRG
 glsl_version: 330
-properties {
+property {
   uniform_name: "LightPosition"
   display_name: "Light position in eye coords"
   type: FLOAT_VEC3
@@ -10,7 +10,7 @@ properties {
     z: 0
   }
 }
-properties {
+property {
   uniform_name: "Kd"
   display_name: "Diffuse reflectivity"
   type: FLOAT_VEC3
@@ -20,7 +20,7 @@ properties {
     z: 1
   }
 }
-properties {
+property {
   uniform_name: "Ld"
   display_name: "Diffuse light intensity"
   type: FLOAT_VEC3

@@ -144,12 +144,12 @@ namespace AeonGames
                 "};\n" );
 
             mUniformMetaData.clear();
-            mUniformMetaData.reserve ( program_buffer.properties().size() );
-            if ( program_buffer.properties().size() > 0 )
+            mUniformMetaData.reserve ( program_buffer.property().size() );
+            if ( program_buffer.property().size() > 0 )
             {
                 vertex_shader_source.append ( "layout(packed) uniform Properties{\n" );
                 fragment_shader_source.append ( "layout(packed) uniform Properties{\n" );
-                for ( auto& i : program_buffer.properties() )
+                for ( auto& i : program_buffer.property() )
                 {
                     switch ( i.type() )
                     {
