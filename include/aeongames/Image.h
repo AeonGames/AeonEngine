@@ -24,10 +24,22 @@ namespace AeonGames
     class Image
     {
     public:
+        enum class ImageFormat : std::uint32_t
+        {
+            Unknown,
+            RGB,
+            RGBA
+        };
+        enum class ImageType : std::uint32_t
+        {
+            Unknown,
+            UNSIGNED_BYTE,
+            UNSIGNED_SHORT
+        };
         virtual uint32_t Width() const = 0;
         virtual uint32_t Height() const = 0;
-        virtual uint32_t Format() const = 0;
-        virtual uint32_t Type() const = 0;
+        virtual ImageFormat Format() const = 0;
+        virtual ImageType Type() const = 0;
         virtual const uint8_t* Data() const = 0;
         virtual ~Image() = default;
     };

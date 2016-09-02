@@ -28,14 +28,14 @@ namespace AeonGames
         ~PngImage() final;
         uint32_t Width() const final;
         uint32_t Height() const final;
-        uint32_t Format() const final;
-        uint32_t Type() const final;
+        ImageFormat Format() const final;
+        ImageType Type() const final;
         const uint8_t* Data() const final;
     private:
         uint32_t mWidth = 0;
         uint32_t mHeight = 0;
-        uint32_t mFormat = 0;
-        uint32_t mType = 0;
+        ImageFormat mFormat = ImageFormat::Unknown;
+        ImageType mType = ImageType::Unknown;
         std::vector<uint8_t> mData;
     };
 }

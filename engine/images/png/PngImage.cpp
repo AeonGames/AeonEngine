@@ -16,12 +16,9 @@ limitations under the License.
 #include <iostream>
 #include <png.h>
 #include <algorithm>
+#include <exception>
 #include <stdexcept>
 #include "PngImage.h"
-
-#define S(x) #x
-#define S_(x) S(x)
-#define S__LINE__ S_(__LINE__)
 
 namespace AeonGames
 {
@@ -74,14 +71,14 @@ namespace AeonGames
             if ( data == nullptr )
             {
                 fclose ( file );
-                throw std::runtime_error ( "Unable to allocate memory " __FUNCTION__ " " S__LINE__ );
+                throw std::runtime_error ( "Unable to allocate memory." );
             }
             fread ( data, dataSize, 1, file );
             fclose ( file );
         }
         else
         {
-            throw std::runtime_error ( "File not found " __FUNCTION__ " " S__LINE__ );
+            throw std::runtime_error ( "File not found." );
         }
         //--------------------------------------------------------
 
@@ -90,16 +87,16 @@ namespace AeonGames
             png_structp png_ptr = png_create_read_struct ( PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
             if ( png_ptr == NULL )
             {
-                throw std::runtime_error ( "png_create_read_struct failed " __FUNCTION__ " " S__LINE__ );
+                throw std::runtime_error ( "png_create_read_struct failed." );
             }
             png_infop info_ptr = png_create_info_struct ( png_ptr );
             if ( info_ptr == NULL )
             {
-                throw std::runtime_error ( "png_create_info_struct failed " __FUNCTION__ " " S__LINE__ );
+                throw std::runtime_error ( "png_create_info_struct failed." );
             }
             if ( setjmp ( png_jmpbuf ( png_ptr ) ) )
             {
-                throw std::runtime_error ( "Error during init_io " __FUNCTION__ " " S__LINE__ );
+                throw std::runtime_error ( "Error during init_io." );
             }
             png_read_memory_struct read_memory_struct = {data, data + 8, dataSize};
             png_set_read_fn ( png_ptr, &read_memory_struct, png_read_memory_data );
@@ -114,15 +111,12 @@ namespace AeonGames
 
             if ( ( color_type == PNG_COLOR_TYPE_RGB ) || ( color_type == PNG_COLOR_TYPE_RGBA ) )
             {
-#if 0
-                ///@todo assign generic type and format.
-                mFormat = ( color_type == PNG_COLOR_TYPE_RGB ) ? GL_RGB : GL_RGBA;
-                mType   = ( bit_depth == 8 ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT;
-#endif
+                mFormat = ( color_type == PNG_COLOR_TYPE_RGB ) ? ImageFormat::RGB : ImageFormat::RGBA;
+                mType   = ( bit_depth == 8 ) ? ImageType::UNSIGNED_BYTE : ImageType::UNSIGNED_SHORT;
             }
             else
             {
-                throw std::runtime_error ( "PNG image color type not supported " __FUNCTION__ " " S__LINE__ );
+                throw std::runtime_error ( "PNG image color type not supported...yet" );
             }
 
             /*int number_of_passes =*/ png_set_interlace_handling ( png_ptr );
@@ -131,7 +125,7 @@ namespace AeonGames
             /* read file */
             if ( setjmp ( png_jmpbuf ( png_ptr ) ) )
             {
-                throw std::runtime_error ( "Error during read_image" __FUNCTION__ " " S__LINE__ );
+                throw std::runtime_error ( "Error during read_image." );
             }
             // --------------------------------------
             // This has to be changed to create a single buffer to which all row_pointers point at.
@@ -150,7 +144,7 @@ namespace AeonGames
         else
         {
             free ( data );
-            throw std::runtime_error ( "Image format not supported. " __FUNCTION__ " " S__LINE__ );
+            throw std::runtime_error ( "Image format not supported...yet" );
         }
         free ( data );
     }
@@ -159,22 +153,22 @@ namespace AeonGames
     }
     uint32_t PngImage::Width() const
     {
-        return 0;
+        return mWidth;
     }
     uint32_t PngImage::Height() const
     {
-        return 0;
+        return mHeight;
     }
-    uint32_t PngImage::Format() const
+    Image::ImageFormat PngImage::Format() const
     {
-        return 0;
+        return mFormat;
     }
-    uint32_t PngImage::Type() const
+    Image::ImageType PngImage::Type() const
     {
-        return 0;
+        return mType;
     }
     const uint8_t* PngImage::Data() const
     {
-        return 0;
+        return mData.data();
     }
 }
