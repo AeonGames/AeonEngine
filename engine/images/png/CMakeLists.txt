@@ -1,4 +1,7 @@
 set(PNGIMAGE_HEADERS PngImage.h)
-set(PNGIMAGE_SOURCES PngImage.cpp)
+set(PNGIMAGE_SOURCES PngImage.cpp Plugin.cpp)
 add_library(PngImage SHARED ${PNGIMAGE_HEADERS} ${PNGIMAGE_SOURCES})
+if(MSVC)
+    set_target_properties(PngImage PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
+endif()
 target_link_libraries(PngImage engine ${PNG_LIBRARIES})

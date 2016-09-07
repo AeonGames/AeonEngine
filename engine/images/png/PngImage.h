@@ -18,7 +18,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include "aeongames/Image.h"
-#include "aeongames/Plugin.h"
+
 namespace AeonGames
 {
     class PngImage : public Image
