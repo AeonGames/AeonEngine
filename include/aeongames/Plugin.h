@@ -20,6 +20,15 @@ limitations under the License.
 extern "C"
 {
 #endif
+typedef bool ( *StartUpPtr ) ( void );
+typedef void ( *ShutDownPtr ) ( void );
+typedef struct
+{
+    char* Name;
+    char* Description;
+    StartUpPtr StartUp;
+    ShutDownPtr ShutDown;
+} PluginModuleInterface;
 #ifdef __cplusplus
 }
 #endif

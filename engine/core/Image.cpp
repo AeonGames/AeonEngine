@@ -19,7 +19,7 @@ limitations under the License.
 #include <unordered_map>
 namespace AeonGames
 {
-    static std::unordered_map<std::string, std::function<std::unique_ptr<Image> ( const std::string& ) >> ImageLoaders;
+    static std::unordered_map<std::string, std::function<std::shared_ptr<Image> ( const std::string& ) >> ImageLoaders;
 
     std::shared_ptr<Image> GetImage ( const std::string& aFilename )
     {
@@ -30,7 +30,7 @@ namespace AeonGames
         }
         return nullptr;
     }
-    bool RegisterImageLoader ( const std::string& aExt, std::function<std::unique_ptr<Image> ( const std::string& ) > aLoader )
+    bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader )
     {
         if ( ImageLoaders.find ( aExt ) == ImageLoaders.end() )
         {
