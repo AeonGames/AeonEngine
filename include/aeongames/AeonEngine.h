@@ -21,6 +21,9 @@ limitations under the License.
 
 namespace AeonGames
 {
+    DLL bool Initialize();
+    DLL void Finalize();
+
     class Mesh;
     class Scene;
     class Program;

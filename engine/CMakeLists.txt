@@ -23,6 +23,7 @@ include_directories(
 )
 
 PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
+    ${CMAKE_SOURCE_DIR}/proto/configuration.proto
     ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
@@ -116,10 +117,6 @@ set(ENGINE_OPENGL_RENDERER_HEADERS
     renderers/opengl/OpenGLMesh.h
     renderers/opengl/Uniform.h)
 
-set(ENGINE_CORE_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
-
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
@@ -131,10 +128,17 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
+set(ENGINE_CORE_HEADERS
+    core/Configuration.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
+
 set(ENGINE_CORE_SOURCES
+    core/Configuration.cpp
     core/Image.cpp
     core/Utilities.cpp
     core/AeonEngine.cpp
+    core/InitializeFinalize.cpp
     core/LogLevel.cpp)
 
 set(ENGINE_VULKAN_RENDERER_SOURCES
@@ -191,7 +195,7 @@ add_library(VulkanRenderer SHARED
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
-add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
+add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES} ${PROTOBUF_SOURCES})
 
 target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES} Threads::Threads)
 target_link_libraries(VulkanRenderer ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})

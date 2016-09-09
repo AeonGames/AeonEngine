@@ -31,4 +31,10 @@ namespace AeonGames
         }
         return std::string();
     }
+
+    bool FileExists ( const std::string& aFilePath )
+    {
+        struct stat stat_buffer;
+        return ( stat ( aFilePath.c_str(), &stat_buffer ) == 0 ) ? true : false;
+    }
 }

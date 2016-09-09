@@ -19,5 +19,6 @@ limitations under the License.
 namespace AeonGames
 {
     const std::string GetFileExtension ( const std::string aFilePath );
+    bool FileExists ( const std::string& aFilePath );
 }
 #endif
