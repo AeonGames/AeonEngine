@@ -18,6 +18,7 @@ limitations under the License.
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
+#include <cstring>
 #include "PngImage.h"
 
 namespace AeonGames

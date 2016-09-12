@@ -24,8 +24,8 @@ typedef bool ( *StartUpPtr ) ( void );
 typedef void ( *ShutDownPtr ) ( void );
 typedef struct
 {
-    char* Name;
-    char* Description;
+    const char* Name;
+    const char* Description;
     StartUpPtr StartUp;
     ShutDownPtr ShutDown;
 } PluginModuleInterface;

@@ -22,7 +22,7 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
+PROTOBUF_GENERATE_EXPORT_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS "DLL_EXPORT"
     ${CMAKE_SOURCE_DIR}/proto/configuration.proto
     ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
@@ -185,21 +185,22 @@ if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
+add_library(ProtoBufClasses SHARED ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+
 add_library(OpenGLRenderer SHARED
     ${ENGINE_OPENGL_RENDERER_HEADERS} ${ENGINE_OPENGL_RENDERER_SOURCES}
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
 add_library(VulkanRenderer SHARED
     ${ENGINE_VULKAN_RENDERER_HEADERS} ${ENGINE_VULKAN_RENDERER_SOURCES}
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
-add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES} ${PROTOBUF_SOURCES})
+add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
-target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} ${PROTOBUF_LIBRARIES} Threads::Threads)
-target_link_libraries(VulkanRenderer ${VULKAN_LIBRARY} ${PROTOBUF_LIBRARIES})
-target_link_libraries(engine OpenGLRenderer ${PROTOBUF_LIBRARIES})
+target_link_libraries(ProtoBufClasses ${PROTOBUF_LIBRARIES})
+target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} ProtoBufClasses Threads::Threads)
+target_link_libraries(VulkanRenderer ${VULKAN_LIBRARY} ProtoBufClasses)
+target_link_libraries(engine OpenGLRenderer ProtoBufClasses)
 
 if(MSVC)
     set_target_properties(OpenGLRenderer PROPERTIES
