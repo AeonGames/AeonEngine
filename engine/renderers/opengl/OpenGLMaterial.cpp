@@ -17,13 +17,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
-
-#ifdef __linux__
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
+#include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )

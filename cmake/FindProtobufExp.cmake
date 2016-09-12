@@ -15,7 +15,6 @@
 #  License text for the above reference.)
 
 find_package(Protobuf)
-message(STATUS "Found: ${PROTOBUF_FOUND}")
 if(PROTOBUF_FOUND)
 function(PROTOBUF_GENERATE_EXPORT_CPP SRCS HDRS MACRO_NAME)
   if(NOT ARGN)

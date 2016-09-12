@@ -20,13 +20,7 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
-
-#ifdef __GNUG__
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
+#include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )

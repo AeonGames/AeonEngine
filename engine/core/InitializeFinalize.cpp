@@ -21,7 +21,7 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
+#include "aeongames/AeonEngine.h"
 namespace AeonGames
 {
     static bool gInitialized = false;

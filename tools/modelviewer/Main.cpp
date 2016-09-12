@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "MainWindow.h"
-#include "aeongames/Platform.h"
+#include "aeongames/AeonEngine.h"
 
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
@@ -25,6 +25,10 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
 #endif
+    if ( !AeonGames::Initialize() )
+    {
+        return -1;
+    }
     int retval = 0;
     QApplication application ( argc, argv );
     application.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
@@ -34,5 +38,6 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     AeonGames::MainWindow mainWindow;
     mainWindow.showNormal();
     retval = application.exec();
+    AeonGames::Finalize();
     return retval;
 }
