@@ -18,7 +18,8 @@ set(AEONTOOL_SOURCES Main.cpp Convert.cpp)
 include_directories(
                     ${PROTOBUF_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/include
-                    ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_BINARY_DIR}/engine
 )
 
 add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})

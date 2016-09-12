@@ -15,7 +15,8 @@
 #  License text for the above reference.)
 
 find_package(Protobuf)
-if(Protobuf_FOUND)
+message(STATUS "Found: ${PROTOBUF_FOUND}")
+if(PROTOBUF_FOUND)
 function(PROTOBUF_GENERATE_EXPORT_CPP SRCS HDRS MACRO_NAME)
   if(NOT ARGN)
     message(SEND_ERROR "Error: PROTOBUF_GENERATE_EXPORT_CPP() called without any proto files")
