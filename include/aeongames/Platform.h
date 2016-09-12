@@ -28,7 +28,9 @@ limitations under the License.
 #define DLL __declspec( dllimport )
 #endif
 #endif
-#else
+#elif defined(__unix__)
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -37,7 +39,6 @@ limitations under the License.
 #define DLL
 #endif
 #endif
-
 
 #if defined(__GNUC__)&&((__GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8 || (__GNUC_MINOR__ == 8 && __GNUC_PATCHLEVEL__ > 4))))||defined (__i386__))
 #define ENTRYPOINT __attribute__((force_align_arg_pointer))

@@ -21,23 +21,8 @@ include_directories(
                     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
-    ${CMAKE_SOURCE_DIR}/proto/configuration.proto
-    ${CMAKE_SOURCE_DIR}/proto/vector2.proto
-    ${CMAKE_SOURCE_DIR}/proto/vector3.proto
-    ${CMAKE_SOURCE_DIR}/proto/vector4.proto
-    ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-    ${CMAKE_SOURCE_DIR}/proto/program.proto
-)
-
-source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
-
-if(MSVC)
-    set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
-endif()
-
-add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES} ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
-target_link_libraries(aeontool ${PROTOBUF_LIBRARIES})
+add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
+target_link_libraries(aeontool ProtoBufClasses)
 if(MSVC)
     set_target_properties(aeontool PROPERTIES
         COMPILE_FLAGS "-WX -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")

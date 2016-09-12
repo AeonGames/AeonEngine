@@ -14,13 +14,15 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-function(PROTOBUF_GENERATE_EXPORT_CPP MACRO SRCS HDRS)
+find_package(Protobuf)
+if(Protobuf_FOUND)
+function(PROTOBUF_GENERATE_EXPORT_CPP SRCS HDRS MACRO_NAME)
   if(NOT ARGN)
     message(SEND_ERROR "Error: PROTOBUF_GENERATE_EXPORT_CPP() called without any proto files")
     return()
   endif()
 
-  if(PROTOBUF_GENERATE_EXPORT_CPP_APPEND_PATH)
+  if(PROTOBUF_GENERATE_CPP_APPEND_PATH)
     # Create an include path for each file specified
     foreach(FIL ${ARGN})
       get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
@@ -53,8 +55,8 @@ function(PROTOBUF_GENERATE_EXPORT_CPP MACRO SRCS HDRS)
     list(APPEND ${SRCS} "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc")
     list(APPEND ${HDRS} "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h")
 
-    if(WIN32)
-        set(cpp_out --cpp_out=dllexport_decl=${MACRO}:${CMAKE_CURRENT_BINARY_DIR})
+    if(WIN32 AND MACRO_NAME)
+        set(cpp_out --cpp_out=dllexport_decl=${MACRO_NAME}:${CMAKE_CURRENT_BINARY_DIR})
     else()
         set(cpp_out --cpp_out ${CMAKE_CURRENT_BINARY_DIR})
     endif()
@@ -63,7 +65,7 @@ function(PROTOBUF_GENERATE_EXPORT_CPP MACRO SRCS HDRS)
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
              "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-      ARGS ${cpp_out}  ${CMAKE_CURRENT_BINARY_DIR} ${_protobuf_include_path} ${ABS_FIL}
+      ARGS ${cpp_out} ${_protobuf_include_path} ${ABS_FIL}
       DEPENDS ${ABS_FIL} ${PROTOBUF_PROTOC_EXECUTABLE}
       COMMENT "Running C++ protocol buffer compiler on ${FIL}"
       VERBATIM )
@@ -73,3 +75,4 @@ function(PROTOBUF_GENERATE_EXPORT_CPP MACRO SRCS HDRS)
   set(${SRCS} ${${SRCS}} PARENT_SCOPE)
   set(${HDRS} ${${HDRS}} PARENT_SCOPE)
 endfunction()
+endif()
