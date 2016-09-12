@@ -14,16 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-#ifdef __GNUG__
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
+#include "aeongames/ProtoBufClasses.h"
 #include <google/protobuf/text_format.h>
 #include "program.pb.h"
 #include "mesh.pb.h"

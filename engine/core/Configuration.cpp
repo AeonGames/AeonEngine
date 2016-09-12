@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "Configuration.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
