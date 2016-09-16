@@ -31,6 +31,9 @@ limitations under the License.
 #include <ostream>
 #include <iostream>
 #include <regex>
+#ifdef __unix__
+#include "sys/stat.h"
+#endif
 #include "Convert.h"
 
 namespace AeonGames

@@ -31,6 +31,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include "aeongames/Utilities.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLMesh.h"
 
@@ -83,8 +84,7 @@ namespace AeonGames
 
     void OpenGLMesh::Initialize()
     {
-        struct stat stat_buffer;
-        if ( stat ( mFilename.c_str(), &stat_buffer ) != 0 )
+        if ( !FileExists ( mFilename ) )
         {
             std::ostringstream stream;
             stream << "File " << mFilename << " Not Found (error code:" << errno << ")";
