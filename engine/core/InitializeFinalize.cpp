@@ -22,6 +22,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include "aeongames/AeonEngine.h"
+#include "Configuration.h"
 namespace AeonGames
 {
     static bool gInitialized = false;
@@ -34,6 +35,7 @@ namespace AeonGames
         }
         gInitialized = true;
         GOOGLE_PROTOBUF_VERIFY_VERSION;
+        Configuration config ( "game/config" );
         return gInitialized;
     }
 

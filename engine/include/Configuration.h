@@ -20,6 +20,15 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "configuration.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 namespace AeonGames
 {
     class Configuration
@@ -29,7 +38,7 @@ namespace AeonGames
         ~Configuration();
     private:
         std::string mFilename;
-        std::vector<std::string> mPath;
+        ConfigurationBuffer mConfigurationBuffer;
     };
 }
 #endif

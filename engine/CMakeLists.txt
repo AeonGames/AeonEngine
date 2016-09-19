@@ -14,6 +14,7 @@
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/engine
+    ${CMAKE_SOURCE_DIR}/engine/include
     ${CMAKE_SOURCE_DIR}/engine/renderers/opengl
     ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
     ${CMAKE_SOURCE_DIR}/include
@@ -129,7 +130,7 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_HEADERS
-    core/Configuration.h
+    include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
