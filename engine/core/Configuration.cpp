@@ -14,28 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <exception>
 #include "Configuration.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4251 )
-#endif
-#include <google/protobuf/text_format.h>
-#include "configuration.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
+#include "ProtoBufHelpers.h"
 
 namespace AeonGames
 {
+
     Configuration::Configuration ( const std::string& aFilename )
         : mFilename ( aFilename )
     {
-        ConfigurationBuffer configuration_buffer;
-        if ( FileExists ( aFilename ) )
+        try
         {
-
+            mConfigurationBuffer =
+                LoadProtoBufObject<ConfigurationBuffer> ( aFilename, "AEONCFG" );
+        }
+        catch ( std::runtime_error e )
+        {
+            std::cout << "Warning: " << e.what() << std::endl;
         }
     }
 
