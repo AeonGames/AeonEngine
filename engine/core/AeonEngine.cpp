@@ -40,13 +40,13 @@ namespace AeonGames
 {
     struct AeonEngine::Impl
     {
-        Renderer* mRenderer = CreateRenderer();
+        Renderer* mRenderer = nullptr;//CreateRenderer();
         Scene* mScene = nullptr;
         ~Impl()
         {
             if ( mRenderer )
             {
-                DestroyRenderer ( mRenderer );
+                //DestroyRenderer ( mRenderer );
                 mRenderer = nullptr;
             }
         }

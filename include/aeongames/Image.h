@@ -44,7 +44,7 @@ namespace AeonGames
         virtual const uint8_t* Data() const = 0;
         virtual ~Image() = default;
     };
-    /// Factory Function
+    /** Factory Function */
     DLL std::shared_ptr<Image> GetImage ( const std::string& aFilename );
     /** Registers an image loader for a filename extension.*/
     DLL bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader );

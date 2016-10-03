@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_PROTOBUFCLASSES_H
 #ifdef _WIN32
 #ifndef DLL_PROTOBUF
-#ifdef DLL_EXPORT_PROTOBUF
+#ifdef ProtoBufClasses_EXPORTS
 #define DLL_PROTOBUF __declspec( dllexport )
 #else
 #define DLL_PROTOBUF __declspec( dllimport )

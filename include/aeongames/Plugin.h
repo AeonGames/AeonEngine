@@ -15,7 +15,6 @@ limitations under the License.
 */
 #ifndef AEONGAMES_PLUGIN_H
 #define AEONGAMES_PLUGIN_H
-#include "aeongames/Platform.h"
 #ifdef __cplusplus
 extern "C"
 {

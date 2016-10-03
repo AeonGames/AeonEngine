@@ -15,10 +15,11 @@ limitations under the License.
 */
 #ifndef AEONGAMES_UTILITIES_H
 #define AEONGAMES_UTILITIES_H
+#include "aeongames/Platform.h"
 #include <string>
 namespace AeonGames
 {
-    const std::string GetFileExtension ( const std::string aFilePath );
-    bool FileExists ( const std::string& aFilePath );
+    DLL const std::string GetFileExtension ( const std::string aFilePath );
+    DLL bool FileExists ( const std::string& aFilePath );
 }
 #endif
