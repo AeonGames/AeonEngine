@@ -13,40 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 #include "aeongames/Renderer.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/ResourceCache.h"
-#include <unordered_map>
+#include "Factory.h"
+
 namespace AeonGames
 {
-    static std::unordered_map<std::string, std::function<std::shared_ptr<Renderer> ( const std::string& ) >> RendererLoaders;
+    Factory<Renderer>;
 
-    std::shared_ptr<Renderer> GetRenderer ( const std::string& aFilename )
+    std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier )
     {
-        auto it = RendererLoaders.find ( GetFileExtension ( aFilename ) );
-        if ( it != RendererLoaders.end() )
-        {
-            return it->second ( aFilename );
-        }
-        return nullptr;
+        return Factory<Renderer>::Get ( aIdentifier );
     }
-    bool RegisterRendererLoader ( const std::string& aExt, std::function<std::shared_ptr<Renderer> ( const std::string& ) > aLoader )
+    bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Renderer>() > aLoader )
     {
-        if ( RendererLoaders.find ( aExt ) == RendererLoaders.end() )
-        {
-            RendererLoaders[aExt] = aLoader;
-            return true;
-        }
-        return false;
+        return Factory<Renderer>::RegisterLoader ( aIdentifier, aLoader );
     }
-    bool UnregisterRendererLoader ( const std::string& aExt )
+    bool UnregisterRendererLoader ( const std::string& aIdentifier )
     {
-        auto it = RendererLoaders.find ( aExt );
-        if ( it != RendererLoaders.end() )
-        {
-            RendererLoaders.erase ( it );
-            return true;
-        }
-        return false;
+        return Factory<Renderer>::UnregisterLoader ( aIdentifier );
     }
 }

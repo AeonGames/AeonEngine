@@ -88,7 +88,8 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLMaterial.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
-    Uniform.cpp)
+    Uniform.cpp
+    Plugin.cpp)
 
 source_group("opengl" FILES ${OPENGL_RENDERER_HEADERS} ${OPENGL_RENDERER_SOURCES})
 
@@ -96,7 +97,7 @@ add_library(OpenGLRenderer SHARED
     ${OPENGL_RENDERER_HEADERS} ${OPENGL_RENDERER_SOURCES}
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
-target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} engine ProtoBufClasses Threads::Threads)
+target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} AeonEngine ProtoBufClasses Threads::Threads)
 
 if(MSVC)
     set_target_properties(OpenGLRenderer PROPERTIES

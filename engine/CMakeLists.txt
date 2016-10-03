@@ -44,7 +44,8 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Image.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
 
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
@@ -58,6 +59,8 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_HEADERS
+    include/Factory.h
+    include/ProtoBufHelpers.h
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
@@ -86,7 +89,7 @@ source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
 source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
 source_group("scenegraph" FILES ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES})
 source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
-source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS} ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
 
 set(ENGINE_SOURCES  ${ENGINE_CORE_SOURCES}
                     ${ENGINE_RENDERER_SOURCES}
@@ -103,21 +106,21 @@ if(MSVC)
 endif()
 
 add_library(ProtoBufClasses SHARED ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
-add_library(engine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
+add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
 target_link_libraries(ProtoBufClasses ${PROTOBUF_LIBRARIES})
-target_link_libraries(engine ProtoBufClasses)
+target_link_libraries(AeonEngine ProtoBufClasses)
 
 if(MSVC)
     set_target_properties(ProtoBufClasses PROPERTIES
         COMPILE_FLAGS "-FIaeongames/ProtoBufClasses.h -WX -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
-    set_target_properties(engine PROPERTIES
+    set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DPROTOBUF_USE_DLLS")
 elseif(MINGW OR MSYS)
-    set_target_properties(engine PROPERTIES
+    set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors")
 elseif(UNIX)
-    set_target_properties(engine PROPERTIES
+    set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors")
 endif()
 
