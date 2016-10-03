@@ -25,10 +25,13 @@ limitations under the License.
 #endif
 #include <Windows.h>
 #ifndef DLL
-#ifdef DLL_EXPORT
+#ifdef engine_EXPORTS
 #define DLL __declspec( dllexport )
 #else
 #define DLL __declspec( dllimport )
+#endif
+#ifndef PLUGIN
+#define PLUGIN __declspec( dllexport )
 #endif
 #endif
 #elif defined(__unix__)
@@ -40,6 +43,9 @@ limitations under the License.
 #include <X11/keysymdef.h>
 #ifndef DLL
 #define DLL
+#endif
+#ifndef PLUGIN
+#define PLUGIN
 #endif
 #endif
 

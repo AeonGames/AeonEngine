@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 /** \File Implements the interface for the PNG plugin.*/
+#include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/ResourceCache.h"
 #include "PngImage.h"
@@ -43,7 +44,7 @@ extern "C"
         AeonGames::UnregisterImageLoader ( "png" );
     }
 
-    DLL PluginModuleInterface PMI =
+    PLUGIN PluginModuleInterface PMI =
     {
         "PNG image loader",
         "Implements Portable Network Graphics image support",

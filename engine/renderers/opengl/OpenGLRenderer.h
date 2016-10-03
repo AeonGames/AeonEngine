@@ -107,9 +107,11 @@ namespace AeonGames
 #endif
     };
 }
+#if 0
 extern "C"
 {
     DLL AeonGames::Renderer* CreateRenderer();
     DLL void DestroyRenderer ( AeonGames::Renderer* aRenderer );
 }
+#endif
 #endif

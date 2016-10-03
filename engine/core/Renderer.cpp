@@ -13,39 +13,38 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/Image.h"
+#include "aeongames/Renderer.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ResourceCache.h"
 #include <unordered_map>
-/**@file @todo This file and Renderer are identical, merge both into a template. */
 namespace AeonGames
 {
-    static std::unordered_map<std::string, std::function<std::shared_ptr<Image> ( const std::string& ) >> ImageLoaders;
+    static std::unordered_map<std::string, std::function<std::shared_ptr<Renderer> ( const std::string& ) >> RendererLoaders;
 
-    std::shared_ptr<Image> GetImage ( const std::string& aFilename )
+    std::shared_ptr<Renderer> GetRenderer ( const std::string& aFilename )
     {
-        auto it = ImageLoaders.find ( GetFileExtension ( aFilename ) );
-        if ( it != ImageLoaders.end() )
+        auto it = RendererLoaders.find ( GetFileExtension ( aFilename ) );
+        if ( it != RendererLoaders.end() )
         {
             return it->second ( aFilename );
         }
         return nullptr;
     }
-    bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader )
+    bool RegisterRendererLoader ( const std::string& aExt, std::function<std::shared_ptr<Renderer> ( const std::string& ) > aLoader )
     {
-        if ( ImageLoaders.find ( aExt ) == ImageLoaders.end() )
+        if ( RendererLoaders.find ( aExt ) == RendererLoaders.end() )
         {
-            ImageLoaders[aExt] = aLoader;
+            RendererLoaders[aExt] = aLoader;
             return true;
         }
         return false;
     }
-    bool UnregisterImageLoader ( const std::string& aExt )
+    bool UnregisterRendererLoader ( const std::string& aExt )
     {
-        auto it = ImageLoaders.find ( aExt );
-        if ( it != ImageLoaders.end() )
+        auto it = RendererLoaders.find ( aExt );
+        if ( it != RendererLoaders.end() )
         {
-            ImageLoaders.erase ( it );
+            RendererLoaders.erase ( it );
             return true;
         }
         return false;

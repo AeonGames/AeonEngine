@@ -428,6 +428,7 @@ namespace AeonGames
     }
 }
 
+#if 0
 AeonGames::Renderer * CreateRenderer()
 {
     return new AeonGames::OpenGLRenderer;
@@ -437,3 +438,4 @@ void DestroyRenderer ( AeonGames::Renderer * aRenderer )
 {
     delete reinterpret_cast<AeonGames::OpenGLRenderer *> ( aRenderer );
 }
+#endif

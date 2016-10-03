@@ -19,6 +19,7 @@ limitations under the License.
 #include "Platform.h"
 #include <memory>
 #include <string>
+#include <functional>
 namespace AeonGames
 {
     class GameWindow;
@@ -53,5 +54,12 @@ namespace AeonGames
     protected:
         virtual ~Renderer() = default;
     };
+
+    /** Factory Function */
+    DLL std::shared_ptr<Renderer> GetImage ( const std::string& aFilename );
+    /** Registers an image loader for a filename extension.*/
+    DLL bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Renderer> ( const std::string& ) > aLoader );
+    /** Unregisters an image loader for a filename extension.*/
+    DLL bool UnregisterImageLoader ( const std::string& aExt );
 }
 #endif
