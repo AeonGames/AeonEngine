@@ -20,6 +20,7 @@ limitations under the License.
 #include <memory>
 #include <string>
 #include <functional>
+#include <utility>
 namespace AeonGames
 {
     class GameWindow;
@@ -55,11 +56,11 @@ namespace AeonGames
         virtual ~Renderer() = default;
     };
 
-    /** Factory Function */
-    DLL std::shared_ptr<Renderer> GetImage ( const std::string& aFilename );
-    /** Registers an image loader for a filename extension.*/
-    DLL bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Renderer> ( const std::string& ) > aLoader );
-    /** Unregisters an image loader for a filename extension.*/
-    DLL bool UnregisterImageLoader ( const std::string& aExt );
+    /** Factory Functions */
+    DLL std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
+    /** Registers a renderer loader for a specific identifier.*/
+    DLL bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Renderer>() > aLoader );
+    /** Unregisters a renderer loader for a specific identifier.*/
+    DLL bool UnregisterRendererLoader ( const std::string& aIdentifier );
 }
 #endif

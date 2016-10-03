@@ -61,9 +61,8 @@ if(MSVC)
     set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
 endif()
 
-add_dependencies(modelviewer engine)
 target_link_libraries(modelviewer
-    engine
+    AeonEngine
     ${Qt5Core_LIBRARIES}
     ${Qt5Gui_LIBRARIES}
     ${Qt5Widgets_LIBRARIES}
