@@ -16,38 +16,21 @@ limitations under the License.
 #include "aeongames/Image.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ResourceCache.h"
+#include "Factory.h"
 #include <unordered_map>
-/**@file @todo This file and Renderer are identical, merge both into a template. */
+
 namespace AeonGames
 {
-    static std::unordered_map<std::string, std::function<std::shared_ptr<Image> ( const std::string& ) >> ImageLoaders;
-
-    std::shared_ptr<Image> GetImage ( const std::string& aFilename )
+    std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename )
     {
-        auto it = ImageLoaders.find ( GetFileExtension ( aFilename ) );
-        if ( it != ImageLoaders.end() )
-        {
-            return it->second ( aFilename );
-        }
-        return nullptr;
+        return Factory<Image, const std::string&>::Get ( aIdentifier, aFilename );
     }
     bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader )
     {
-        if ( ImageLoaders.find ( aExt ) == ImageLoaders.end() )
-        {
-            ImageLoaders[aExt] = aLoader;
-            return true;
-        }
-        return false;
+        return Factory<Image, const std::string&>::RegisterLoader ( aExt, aLoader );
     }
     bool UnregisterImageLoader ( const std::string& aExt )
     {
-        auto it = ImageLoaders.find ( aExt );
-        if ( it != ImageLoaders.end() )
-        {
-            ImageLoaders.erase ( it );
-            return true;
-        }
-        return false;
+        return Factory<Image, const std::string&>::UnregisterLoader ( aExt );
     }
 }
