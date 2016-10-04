@@ -33,7 +33,6 @@ namespace AeonGames
             }
             return nullptr;
         }
-        template<typename... Args>
         static bool RegisterLoader ( const std::string& aIdentifier, std::function < std::shared_ptr<T> ( Args&&... args ) > aLoader )
         {
             if ( Loaders.find ( aIdentifier ) == Loaders.end() )
