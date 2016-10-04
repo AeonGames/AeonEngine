@@ -19,8 +19,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Factory<Renderer>;
-
     std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier )
     {
         return Factory<Renderer>::Get ( aIdentifier );
