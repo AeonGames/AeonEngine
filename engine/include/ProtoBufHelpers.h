@@ -25,6 +25,7 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "aeongames/Utilities.h"
 
 namespace AeonGames
 {
@@ -133,6 +134,5 @@ namespace AeonGames
             }
         }
         file.close();
-        return t;
     }
 }
