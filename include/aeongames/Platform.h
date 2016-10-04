@@ -25,7 +25,7 @@ limitations under the License.
 #endif
 #include <Windows.h>
 #ifndef DLL
-#ifdef engine_EXPORTS
+#ifdef AeonEngine_EXPORTS
 #define DLL __declspec( dllexport )
 #else
 #define DLL __declspec( dllimport )
