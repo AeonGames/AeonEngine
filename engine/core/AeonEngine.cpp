@@ -18,8 +18,6 @@ limitations under the License.
 #include <utility>
 #include <google/protobuf/stubs/common.h>
 #include "aeongames/AeonEngine.h"
-#include "renderers/vulkan/VulkanRenderer.h"
-#include "renderers/opengl/OpenGLRenderer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
 #include "aeongames/GameWindow.h"
@@ -40,15 +38,10 @@ namespace AeonGames
 {
     struct AeonEngine::Impl
     {
-        Renderer* mRenderer = nullptr;//CreateRenderer();
+        std::shared_ptr<Renderer> mRenderer = GetRenderer ( "OpenGL" );
         Scene* mScene = nullptr;
         ~Impl()
         {
-            if ( mRenderer )
-            {
-                //DestroyRenderer ( mRenderer );
-                mRenderer = nullptr;
-            }
         }
     };
 
@@ -98,7 +91,7 @@ namespace AeonGames
         if ( pImpl->mScene )
         {
             pImpl->mScene->Update ( aDeltaTime );
-            pImpl->mScene->Render ( pImpl->mRenderer );
+            pImpl->mScene->Render ( pImpl->mRenderer.get() );
         }
         if ( pImpl->mRenderer )
         {

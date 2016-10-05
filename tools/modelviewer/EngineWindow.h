@@ -23,6 +23,7 @@ limitations under the License.
 #include <QVector4D>
 #include <QMatrix4x4>
 #include <QPoint>
+#include <QCloseEvent>
 
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Scene.h"

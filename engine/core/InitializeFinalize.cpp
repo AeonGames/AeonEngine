@@ -43,9 +43,9 @@ namespace AeonGames
 
     static void LoadPlugin ( const std::string& aDir, const std::string& aFilename )
     {
-        std::cout << aDir << "/" << aFilename << std::endl;
+        std::cout << aFilename << std::endl;
 #if (defined WIN32)
-        HMODULE plugin = LoadLibraryEx ( ( aDir + "/" + aFilename ).c_str(), nullptr, 0 );
+        HMODULE plugin = LoadLibraryEx ( aFilename.c_str(), nullptr, 0 );
         if ( nullptr == plugin )
         {
             std::cout << "Failed to load " << aFilename << std::endl;
@@ -58,7 +58,7 @@ namespace AeonGames
             return;
         }
 #else
-        void* plugin = dlopen ( ( aDir + "/" + aFilename ).c_str(), RTLD_NOW | RTLD_GLOBAL );
+        void* plugin = dlopen ( aFilename.c_str(), RTLD_NOW | RTLD_GLOBAL );
         if ( nullptr == game )
         {
             std::cout << "Failed to load " << aFilename << std::endl;
@@ -79,8 +79,17 @@ namespace AeonGames
         {
 #if (defined WIN32)
             FreeLibrary ( plugin );
+            if ( !FreeLibrary ( ( HINSTANCE ) plugin ) )
+            {
+                std::cout << "FreeLibrary Failed: " << GetLastError() << std::endl;
+                return;
+            }
 #else
-            dlclose ( plugin );
+            if ( dlclose ( plugin ) != 0 )
+            {
+                std::cout << dlerror() << std::endl;
+                return;
+            }
 #endif
         }
     }
@@ -95,7 +104,7 @@ namespace AeonGames
         GOOGLE_PROTOBUF_VERIFY_VERSION;
         try
         {
-            LoadProtoBufObject<ConfigurationBuffer> ( gConfigurationBuffer, "config", "AEONCFG" );
+            LoadProtoBufObject<ConfigurationBuffer> ( gConfigurationBuffer, "game/config", "AEONCFG" );
         }
         catch ( std::runtime_error e )
         {

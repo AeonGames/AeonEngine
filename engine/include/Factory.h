@@ -20,6 +20,7 @@ limitations under the License.
 #include <utility>
 namespace AeonGames
 {
+    /**@todo shared_ptrs should really be unique_ptrs.*/
     template<class T, typename... Args>
     class Factory
     {

@@ -114,7 +114,6 @@ namespace AeonGames
         }
         else if ( magick_number[7] == '\0' )
         {
-            file.close();
             if ( !t.ParseFromIstream ( &file ) )
             {
                 std::ostringstream stream;
@@ -124,7 +123,6 @@ namespace AeonGames
         }
         else
         {
-            file.close();
             std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
             if ( !google::protobuf::TextFormat::ParseFromString ( text, &t ) )
             {
