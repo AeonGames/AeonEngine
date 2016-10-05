@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 add_custom_command( OUTPUT
                         ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
                         ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h

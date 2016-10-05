@@ -33,6 +33,7 @@ namespace AeonGames
         engineWindowContainer = QWidget::createWindowContainer ( engineWindow );
         engineWindowContainer->setParent ( centralwidget );
         verticalLayout->addWidget ( engineWindowContainer );
+        setAttribute ( Qt::WA_DeleteOnClose );
     }
 
     MainWindow::~MainWindow()
