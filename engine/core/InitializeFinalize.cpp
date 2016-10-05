@@ -18,6 +18,8 @@ limitations under the License.
 #include "aeongames/Plugin.h"
 #include "ProtoBufHelpers.h"
 #include <iostream>
+#include <cstdlib>
+#include <vector>
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -32,7 +34,13 @@ namespace AeonGames
 {
     static bool gInitialized = false;
     static ConfigurationBuffer gConfigurationBuffer;
-    /**@todo Plugin Cache and Unload.*/
+#if defined(WIN32)
+    static std::vector<std::tuple<HMODULE, PluginModuleInterface*>> gPlugInCache;
+#else
+    static std::vector<std::tuple<void*, PluginModuleInterface*>> gPlugInCache;
+#endif
+    static std::string gPath ( std::getenv ( "PATH" ) );
+
     static void LoadPlugin ( const std::string& aDir, const std::string& aFilename )
     {
         std::cout << aDir << "/" << aFilename << std::endl;
@@ -63,6 +71,18 @@ namespace AeonGames
             return;
         }
 #endif
+        if ( pmi->StartUp() )
+        {
+            gPlugInCache.emplace_back ( plugin, pmi );
+        }
+        else
+        {
+#if (defined WIN32)
+            FreeLibrary ( plugin );
+#else
+            dlclose ( plugin );
+#endif
+        }
     }
 
     bool Initialize()
@@ -81,6 +101,8 @@ namespace AeonGames
         {
             std::cout << "Warning: " << e.what() << std::endl;
         }
+        std::cout << "PATH: " << gPath << std::endl;
+        gPlugInCache.reserve ( gConfigurationBuffer.plugin_size() );
         for ( auto& i : gConfigurationBuffer.plugin() )
         {
             LoadPlugin ( gConfigurationBuffer.plugindirectory(), i );
@@ -94,7 +116,16 @@ namespace AeonGames
         {
             return;
         }
-        gInitialized = false;
+        for ( auto& i : gPlugInCache )
+        {
+            std::get<1> ( i )->ShutDown();
+#if (defined WIN32)
+            FreeLibrary ( std::get<0> ( i ) );
+#else
+            dlclose ( std::get<0> ( i ) );
+#endif
+        }
         google::protobuf::ShutdownProtobufLibrary();
+        gInitialized = false;
     }
 }
