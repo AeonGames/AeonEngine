@@ -38,9 +38,7 @@ limitations under the License.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysymdef.h>
+#include <dlfcn.h>
 #ifndef DLL
 #define DLL
 #endif
