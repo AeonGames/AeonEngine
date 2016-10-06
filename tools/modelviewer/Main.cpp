@@ -35,9 +35,10 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     application.setOrganizationName ( "AeonGames" );
     application.setOrganizationDomain ( "aeongames.com" );
     application.setApplicationName ( "AeonGames Model Viewer" );
-    AeonGames::MainWindow mainWindow;
-    mainWindow.showNormal();
+    AeonGames::MainWindow* mainWindow = new AeonGames::MainWindow();
+    mainWindow->showNormal();
     retval = application.exec();
+    delete mainWindow;
     AeonGames::Finalize();
     return retval;
 }

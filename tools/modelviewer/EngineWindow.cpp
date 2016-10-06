@@ -47,6 +47,7 @@ namespace AeonGames
 
         This flag is Windows specific, so Linux or Mac implementations
         will probably just ignore it, I have not verified this though.
+        UPDATE: Linux compilation does not complain about this code.
         */
         auto current_flags = flags();
         if ( ! ( current_flags & Qt::MSWindowsOwnDC ) )
