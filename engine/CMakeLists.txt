@@ -109,19 +109,21 @@ add_library(ProtoBufClasses SHARED ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
 target_link_libraries(ProtoBufClasses ${PROTOBUF_LIBRARIES})
-target_link_libraries(AeonEngine ProtoBufClasses)
 
 if(MSVC)
     set_target_properties(ProtoBufClasses PROPERTIES
         COMPILE_FLAGS "-FIaeongames/ProtoBufClasses.h -WX -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DPROTOBUF_USE_DLLS")
+    target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(MINGW OR MSYS)
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors")
+    target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(UNIX)
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors")
+    target_link_libraries(AeonEngine ProtoBufClasses dl)
 endif()
 
 if(CLANG_TIDY_EXECUTABLE)

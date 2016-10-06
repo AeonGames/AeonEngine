@@ -59,13 +59,13 @@ namespace AeonGames
         }
 #else
         void* plugin = dlopen ( aFilename.c_str(), RTLD_NOW | RTLD_GLOBAL );
-        if ( nullptr == game )
+        if ( nullptr == plugin )
         {
             std::cout << "Failed to load " << aFilename << std::endl;
             return;
         }
-        PluginModuleInterface* pmi = ( PluginModuleInterface* ) dlsym ( plugin, "Initialize" );
-        if ( NULL == InitializeGame )
+        PluginModuleInterface* pmi = ( PluginModuleInterface* ) dlsym ( plugin, "PMI" );
+        if ( nullptr == pmi )
         {
             std::cout << aFilename << " is not an AeonEngine Plugin." << std::endl;
             return;
