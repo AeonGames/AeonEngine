@@ -126,12 +126,12 @@ namespace AeonGames
 
     bool AeonEngine::RegisterRenderingWindow ( uintptr_t aWindowId )
     {
-        return pImpl->mRenderer->RegisterRenderingWindow ( aWindowId );
+        return pImpl->mRenderer->AddRenderingWindow ( aWindowId );
     }
 
     void AeonEngine::UnregisterRenderingWindow ( uintptr_t aWindowId )
     {
-        pImpl->mRenderer->UnregisterRenderingWindow ( aWindowId );
+        pImpl->mRenderer->RemoveRenderingWindow ( aWindowId );
     }
     void AeonEngine::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
     {

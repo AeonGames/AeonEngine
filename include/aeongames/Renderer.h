@@ -21,9 +21,9 @@ limitations under the License.
 #include <string>
 #include <functional>
 #include <utility>
+
 namespace AeonGames
 {
-    class GameWindow;
     class Mesh;
     class Program;
     class Renderer
@@ -42,8 +42,8 @@ namespace AeonGames
         ///@}
         ///@name Window Functions
         ///@{
-        virtual bool RegisterRenderingWindow ( uintptr_t aWindowId ) = 0;
-        virtual void UnregisterRenderingWindow ( uintptr_t aWindowId ) = 0;
+        virtual bool AddRenderingWindow ( uintptr_t aWindowId ) = 0;
+        virtual void RemoveRenderingWindow ( uintptr_t aWindowId ) = 0;
         virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const = 0;
         ///@}
         ///@name Matrix Functions

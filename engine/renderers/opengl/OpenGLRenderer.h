@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include <exception>
 #include <vector>
+#include <utility>
 #include <memory>
 #include "OpenGLFunctions.h"
 
@@ -37,8 +38,8 @@ namespace AeonGames
         void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const final;
         std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const final;
-        bool RegisterRenderingWindow ( uintptr_t aWindowId ) final;
-        void UnregisterRenderingWindow ( uintptr_t aWindowId ) final;
+        bool AddRenderingWindow ( uintptr_t aWindowId ) final;
+        void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
@@ -97,21 +98,18 @@ namespace AeonGames
         float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
         float* mNormalMatrix = mMatrices + ( 16 * 6 );
 
-        uintptr_t mWindowId = 0;
+        struct WindowData
+        {
+            uintptr_t mWindowId = 0;
 #ifdef _WIN32
-        HDC mDeviceContext = nullptr;
-        HGLRC mOpenGLContext = nullptr;
+            HDC mDeviceContext = nullptr;
+            HGLRC mOpenGLContext = nullptr;
 #else
-        Display* mDisplay = nullptr;
-        GLXContext mGLXContext = nullptr;
+            Display* mDisplay = nullptr;
+            GLXContext mGLXContext = nullptr;
 #endif
+        };
+        std::vector<WindowData> WindowRegistry;
     };
 }
-#if 0
-extern "C"
-{
-    DLL AeonGames::Renderer* CreateRenderer();
-    DLL void DestroyRenderer ( AeonGames::Renderer* aRenderer );
-}
-#endif
 #endif
