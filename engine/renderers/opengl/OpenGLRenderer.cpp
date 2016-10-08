@@ -20,6 +20,7 @@ limitations under the License.
 #include <sstream>
 #include <vector>
 #include <stdexcept>
+#include <algorithm>
 #include "math/3DMath.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLRenderer.h"
@@ -67,19 +68,24 @@ namespace AeonGames
 
     void OpenGLRenderer::BeginRender() const
     {
+        for ( auto& i : WindowRegistry )
+        {
 #ifdef _WIN32
-        if ( mDeviceContext != nullptr )
-        {
-            wglMakeCurrent ( mDeviceContext, mOpenGLContext );
-            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        }
+            if ( i.mDeviceContext != nullptr )
+            {
+                wglMakeCurrent ( i.mDeviceContext, i.mOpenGLContext );
+                glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            }
 #else
-        if ( mGLXContext != nullptr )
+            if ( wglMakeCurrent ( i.mGLXContext != nullptr )
         {
-            glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( mWindowId ), mGLXContext );
-            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            glXMakeCurrent ( wglMakeCurrent ( i.mDisplay,
+                                              reinterpret_cast<Window> ( wglMakeCurrent ( i.mWindowId ),
+                                                      wglMakeCurrent ( i.mGLXContext );
+                                                      glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         }
 #endif
+        }
     }
 
     void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
@@ -93,27 +99,28 @@ namespace AeonGames
 
     void OpenGLRenderer::EndRender() const
     {
+        for ( auto& i : WindowRegistry )
+        {
 #if _WIN32
-        if ( mDeviceContext != nullptr )
-        {
-            SwapBuffers ( mDeviceContext );
-        }
+            if ( i.mDeviceContext != nullptr )
+            {
+                SwapBuffers ( i.mDeviceContext );
+            }
 #else
-        if ( mGLXContext != nullptr )
-        {
-            glXSwapBuffers ( mDisplay, reinterpret_cast<Window> ( mWindowId ) );
-        }
+            if ( mGLXContext != nullptr )
+            {
+                glXSwapBuffers ( i.mDisplay, reinterpret_cast<Window> ( i ) );
+            }
 #endif
+        }
     }
 
-    bool OpenGLRenderer::RegisterRenderingWindow ( uintptr_t aWindowId )
+    bool OpenGLRenderer::AddRenderingWindow ( uintptr_t aWindowId )
     {
 #ifdef WIN32
-        mWindowId = aWindowId;
-        PIXELFORMATDESCRIPTOR pfd{};
+        PIXELFORMATDESCRIPTOR pfd {};
         PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = nullptr;
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
-        mDeviceContext = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -121,16 +128,19 @@ namespace AeonGames
         pfd.cColorBits = 32;
         pfd.cDepthBits = 32;
         pfd.iLayerType = PFD_MAIN_PLANE;
-        int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
-        SetPixelFormat ( mDeviceContext, pf, &pfd );
-        mOpenGLContext = wglCreateContext ( mDeviceContext );
-        wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+        WindowRegistry.emplace_back();
+        WindowRegistry.back().mWindowId = aWindowId;
+        WindowRegistry.back().mDeviceContext = ( HDC ) GetDC ( reinterpret_cast<HWND> ( aWindowId ) );
+        int pf = ChoosePixelFormat ( WindowRegistry.back().mDeviceContext, &pfd );
+        SetPixelFormat ( WindowRegistry.back().mDeviceContext, pf, &pfd );
+        WindowRegistry.back().mOpenGLContext = wglCreateContext ( WindowRegistry.back().mDeviceContext );
+        wglMakeCurrent ( WindowRegistry.back().mDeviceContext, WindowRegistry.back().mOpenGLContext );
 
         //---OpenGL 3.2 Context---//
         wglGetExtensionsStringARB = ( PFNWGLGETEXTENSIONSSTRINGARBPROC ) wglGetProcAddress ( "wglGetExtensionsStringARB" );
         if ( wglGetExtensionsStringARB != nullptr )
         {
-            if ( strstr ( wglGetExtensionsStringARB ( mDeviceContext ), "WGL_ARB_create_context" ) != nullptr )
+            if ( strstr ( wglGetExtensionsStringARB ( WindowRegistry.back().mDeviceContext ), "WGL_ARB_create_context" ) != nullptr )
             {
                 const int ctxAttribs[] =
                 {
@@ -142,10 +152,10 @@ namespace AeonGames
                 };
 
                 wglCreateContextAttribsARB = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" );
-                wglMakeCurrent ( mDeviceContext, nullptr );
-                wglDeleteContext ( mOpenGLContext );
-                mOpenGLContext = wglCreateContextAttribsARB ( mDeviceContext, nullptr, ctxAttribs );
-                wglMakeCurrent ( mDeviceContext, mOpenGLContext );
+                wglMakeCurrent ( WindowRegistry.back().mDeviceContext, nullptr );
+                wglDeleteContext ( WindowRegistry.back().mOpenGLContext );
+                WindowRegistry.back().mOpenGLContext = wglCreateContextAttribsARB ( WindowRegistry.back().mDeviceContext, nullptr, ctxAttribs );
+                wglMakeCurrent ( WindowRegistry.back().mDeviceContext, WindowRegistry.back().mOpenGLContext );
                 if ( !LoadOpenGLAPI() )
                 {
                     std::cout << "Unable to Load OpenGL functions." << std::endl;
@@ -161,7 +171,7 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_NO_THROW;
 
                 RECT rect;
-                GetClientRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
+                GetClientRect ( reinterpret_cast<HWND> ( WindowRegistry.back().mWindowId ), &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
                 OPENGL_CHECK_ERROR_NO_THROW;
                 glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
@@ -317,7 +327,7 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLRenderer::UnregisterRenderingWindow ( uintptr_t aWindowId )
+    void OpenGLRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
     {
         if ( glIsBuffer ( mMatricesBuffer ) )
         {
@@ -325,19 +335,30 @@ namespace AeonGames
             mMatricesBuffer = 0;
         }
 #ifdef WIN32
-        if ( mWindowId && ( mWindowId == aWindowId  ) )
+        auto i = std::find_if ( WindowRegistry.begin(), WindowRegistry.end(),
+                                [&aWindowId] ( const WindowData & aWindowData )
         {
-            if ( mDeviceContext != nullptr )
+            return aWindowData.mWindowId == aWindowId;
+        } );
+        if ( i != WindowRegistry.end() )
+        {
+            if ( i->mDeviceContext != nullptr )
             {
-                wglMakeCurrent ( mDeviceContext, nullptr );
-                ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), mDeviceContext );
-                mDeviceContext = nullptr;
+                wglMakeCurrent ( i->mDeviceContext, nullptr );
+                ReleaseDC ( reinterpret_cast<HWND> ( i->mWindowId ), i->mDeviceContext );
+                i->mDeviceContext = nullptr;
             }
-            if ( mOpenGLContext )
+            if ( i->mOpenGLContext )
             {
-                wglDeleteContext ( mOpenGLContext );
-                mOpenGLContext = nullptr;
+                wglDeleteContext ( i->mOpenGLContext );
+                i->mOpenGLContext = nullptr;
             }
+            WindowRegistry.erase ( std::remove_if ( WindowRegistry.begin(), WindowRegistry.end(),
+                                                    [&aWindowId] ( const WindowData & aWindowData )
+            {
+                return aWindowData.mWindowId == aWindowId;
+            } )
+            , WindowRegistry.end() );
         }
 #else
         if ( mWindowId && ( mWindowId == aWindowId ) )
@@ -427,15 +448,3 @@ namespace AeonGames
         return Get<OpenGLProgram> ( aFilename );
     }
 }
-
-#if 0
-AeonGames::Renderer * CreateRenderer()
-{
-    return new AeonGames::OpenGLRenderer;
-}
-
-void DestroyRenderer ( AeonGames::Renderer * aRenderer )
-{
-    delete reinterpret_cast<AeonGames::OpenGLRenderer *> ( aRenderer );
-}
-#endif
