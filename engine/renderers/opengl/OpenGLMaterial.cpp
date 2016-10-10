@@ -18,11 +18,11 @@ limitations under the License.
 #include <ostream>
 #include <regex>
 #include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
-#include <google/protobuf/text_format.h>
 #include "material.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
@@ -54,6 +54,8 @@ namespace AeonGames
     void OpenGLMaterial::Initialize()
     {
         static MaterialBuffer material_buffer;
+        LoadProtoBufObject ( material_buffer, mFilename, "AEONMTL" );
+        material_buffer.Clear();
     }
 
     void OpenGLMaterial::Finalize()
