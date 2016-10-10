@@ -77,13 +77,11 @@ namespace AeonGames
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #else
-            if ( wglMakeCurrent ( i.mGLXContext != nullptr )
-        {
-            glXMakeCurrent ( wglMakeCurrent ( i.mDisplay,
-                                              reinterpret_cast<Window> ( wglMakeCurrent ( i.mWindowId ),
-                                                      wglMakeCurrent ( i.mGLXContext );
-                                                      glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        }
+            if ( i.mGLXContext != nullptr )
+            {
+                glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
+                glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            }
 #endif
         }
     }
@@ -104,12 +102,14 @@ namespace AeonGames
 #if _WIN32
             if ( i.mDeviceContext != nullptr )
             {
+                wglMakeCurrent ( i.mDeviceContext, i.mOpenGLContext );
                 SwapBuffers ( i.mDeviceContext );
             }
 #else
             if ( mGLXContext != nullptr )
             {
-                glXSwapBuffers ( i.mDisplay, reinterpret_cast<Window> ( i ) );
+                glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
+                glXSwapBuffers ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ) );
             }
 #endif
         }
@@ -380,9 +380,18 @@ namespace AeonGames
 
     void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
     {
-        if ( aWidth > 0 && aHeight > 0 )
+        auto i = std::find_if ( WindowRegistry.begin(), WindowRegistry.end(),
+                                [&aWindowId] ( const WindowData & aWindowData )
         {
-            glViewport ( 0, 0, aWidth, aHeight );
+            return aWindowId == aWindowData.mWindowId;
+        } );
+        if ( i != WindowRegistry.end() )
+        {
+            if ( aWidth > 0 && aHeight > 0 )
+            {
+                wglMakeCurrent ( i->mDeviceContext, i->mOpenGLContext );
+                glViewport ( 0, 0, aWidth, aHeight );
+            }
         }
     }
 

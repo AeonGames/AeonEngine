@@ -38,11 +38,14 @@ namespace AeonGames
 {
     struct AeonEngine::Impl
     {
-        std::shared_ptr<Renderer> mRenderer = GetRenderer ( "OpenGL" );
-        Scene* mScene = nullptr;
+        Impl() : mRenderer ( GetRenderer ( "OpenGL" ) )
+        {
+        }
         ~Impl()
         {
         }
+        std::shared_ptr<Renderer> mRenderer;
+        Scene* mScene = nullptr;
     };
 
     AeonEngine::AeonEngine() :

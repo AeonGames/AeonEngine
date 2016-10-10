@@ -18,19 +18,20 @@ limitations under the License.
 #include <ostream>
 #include <regex>
 #include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
+#include "aeongames/Utilities.h"
+#include "OpenGLProgram.h"
+#include "OpenGLFunctions.h"
+
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
-#include <google/protobuf/text_format.h>
 #include "program.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 
-#include "aeongames/Utilities.h"
-#include "OpenGLProgram.h"
-#include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
@@ -62,44 +63,7 @@ namespace AeonGames
     void OpenGLProgram::Initialize()
     {
         static ProgramBuffer program_buffer;
-        {
-            if ( !FileExists ( mFilename ) )
-            {
-                std::ostringstream stream;
-                stream << "File " << mFilename << " Not Found (error code:" << errno << ")";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            std::ifstream file;
-            file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-            file.open ( mFilename, std::ifstream::in | std::ifstream::binary );
-            char magick_number[8] = { 0 };
-            file.read ( magick_number, sizeof ( magick_number ) );
-            file.exceptions ( std::ifstream::badbit );
-
-            if ( strncmp ( magick_number, "AEONPRG", 7 ) )
-            {
-                file.close();
-                std::ostringstream stream;
-                stream << "File" << mFilename << " Is not in AeonGames PRG format.";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            else if ( magick_number[7] == '\0' )
-            {
-                if ( !program_buffer.ParseFromIstream ( &file ) )
-                {
-                    throw std::runtime_error ( "Binary program parsing failed." );
-                }
-            }
-            else
-            {
-                std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
-                if ( !google::protobuf::TextFormat::ParseFromString ( text, &program_buffer ) )
-                {
-                    throw std::runtime_error ( "Text program parsing failed." );
-                }
-            }
-            file.close();
-        }
+        LoadProtoBufObject<ProgramBuffer> ( program_buffer, mFilename, "AEONPRG" );
 
         std::string vertex_shader_source;
         std::string fragment_shader_source;
@@ -178,8 +142,8 @@ namespace AeonGames
             }
             vertex_shader_source.append ( program_buffer.vertex_shader().code() );
             fragment_shader_source.append ( program_buffer.fragment_shader().code() );
-            program_buffer.Clear();
         }
+        program_buffer.Clear();
 
         //--------------------------------------------------
         // Begin OpenGL Specific code

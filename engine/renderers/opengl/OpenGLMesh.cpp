@@ -21,11 +21,11 @@ limitations under the License.
 #include <cassert>
 #include <cstring>
 #include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
-#include <google/protobuf/text_format.h>
 #include "mesh.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
@@ -84,42 +84,8 @@ namespace AeonGames
 
     void OpenGLMesh::Initialize()
     {
-        if ( !FileExists ( mFilename ) )
-        {
-            std::ostringstream stream;
-            stream << "File " << mFilename << " Not Found (error code:" << errno << ")";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        std::ifstream file;
-        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-        file.open ( mFilename, std::ifstream::in | std::ifstream::binary );
-        char magick_number[8] = { 0 };
-        file.read ( magick_number, sizeof ( magick_number ) );
-        file.exceptions ( std::ifstream::badbit );
         static MeshBuffer mesh_buffer;
-        if ( strncmp ( magick_number, "AEONMSH", 7 ) )
-        {
-            file.close();
-            std::ostringstream stream;
-            stream << "File" << mFilename << " Is not in AeonGames MSH format.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        else if ( magick_number[7] == '\0' )
-        {
-            if ( !mesh_buffer.ParseFromIstream ( &file ) )
-            {
-                throw std::runtime_error ( "Mesh Parse failed." );
-            }
-        }
-        else
-        {
-            std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
-            if ( !google::protobuf::TextFormat::ParseFromString ( text, &mesh_buffer ) )
-            {
-                throw std::runtime_error ( "Text mesh parsing failed." );
-            }
-        }
-        file.close();
+        LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
 
         if ( mesh_buffer.trianglegroup().size() == 1 )
         {
