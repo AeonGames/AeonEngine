@@ -154,7 +154,8 @@ namespace AeonGames
                 wglCreateContextAttribsARB = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" );
                 wglMakeCurrent ( WindowRegistry.back().mDeviceContext, nullptr );
                 wglDeleteContext ( WindowRegistry.back().mOpenGLContext );
-                WindowRegistry.back().mOpenGLContext = wglCreateContextAttribsARB ( WindowRegistry.back().mDeviceContext, nullptr, ctxAttribs );
+                WindowRegistry.back().mOpenGLContext = wglCreateContextAttribsARB ( WindowRegistry.back().mDeviceContext,
+                                                       ( WindowRegistry.size() ) ? WindowRegistry[0].mOpenGLContext : nullptr, ctxAttribs );
                 wglMakeCurrent ( WindowRegistry.back().mDeviceContext, WindowRegistry.back().mOpenGLContext );
                 if ( !LoadOpenGLAPI() )
                 {
