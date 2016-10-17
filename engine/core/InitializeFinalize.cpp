@@ -62,6 +62,7 @@ namespace AeonGames
         if ( nullptr == plugin )
         {
             std::cout << "Failed to load " << aFilename << std::endl;
+            std::cout << "Error " << dlerror() << std::endl;
             return;
         }
         PluginModuleInterface* pmi = ( PluginModuleInterface* ) dlsym ( plugin, "PMI" );

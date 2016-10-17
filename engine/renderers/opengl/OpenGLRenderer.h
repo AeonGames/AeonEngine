@@ -109,7 +109,7 @@ namespace AeonGames
             GLXContext mGLXContext = nullptr;
 #endif
         };
-        std::vector<WindowData> WindowRegistry;
+        std::vector<WindowData> mWindowRegistry;
     };
 }
 #endif
