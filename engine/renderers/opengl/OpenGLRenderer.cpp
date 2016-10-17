@@ -68,7 +68,7 @@ namespace AeonGames
 
     void OpenGLRenderer::BeginRender() const
     {
-        for ( auto& i : WindowRegistry )
+        for ( auto& i : mWindowRegistry )
         {
 #ifdef _WIN32
             if ( i.mDeviceContext != nullptr )
@@ -79,7 +79,7 @@ namespace AeonGames
 #else
             if ( i.mGLXContext != nullptr )
             {
-                glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
+                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #endif
@@ -97,7 +97,7 @@ namespace AeonGames
 
     void OpenGLRenderer::EndRender() const
     {
-        for ( auto& i : WindowRegistry )
+        for ( auto& i : mWindowRegistry )
         {
 #if _WIN32
             if ( i.mDeviceContext != nullptr )
@@ -106,9 +106,9 @@ namespace AeonGames
                 SwapBuffers ( i.mDeviceContext );
             }
 #else
-            if ( mGLXContext != nullptr )
+            if ( i.mGLXContext != nullptr )
             {
-                glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
+                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
                 glXSwapBuffers ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ) );
             }
 #endif
@@ -128,19 +128,19 @@ namespace AeonGames
         pfd.cColorBits = 32;
         pfd.cDepthBits = 32;
         pfd.iLayerType = PFD_MAIN_PLANE;
-        WindowRegistry.emplace_back();
-        WindowRegistry.back().mWindowId = aWindowId;
-        WindowRegistry.back().mDeviceContext = ( HDC ) GetDC ( reinterpret_cast<HWND> ( aWindowId ) );
-        int pf = ChoosePixelFormat ( WindowRegistry.back().mDeviceContext, &pfd );
-        SetPixelFormat ( WindowRegistry.back().mDeviceContext, pf, &pfd );
-        WindowRegistry.back().mOpenGLContext = wglCreateContext ( WindowRegistry.back().mDeviceContext );
-        wglMakeCurrent ( WindowRegistry.back().mDeviceContext, WindowRegistry.back().mOpenGLContext );
+        mWindowRegistry.emplace_back();
+        mWindowRegistry.back().mWindowId = aWindowId;
+        mWindowRegistry.back().mDeviceContext = ( HDC ) GetDC ( reinterpret_cast<HWND> ( aWindowId ) );
+        int pf = ChoosePixelFormat ( mWindowRegistry.back().mDeviceContext, &pfd );
+        SetPixelFormat ( mWindowRegistry.back().mDeviceContext, pf, &pfd );
+        mWindowRegistry.back().mOpenGLContext = wglCreateContext ( mWindowRegistry.back().mDeviceContext );
+        wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, mWindowRegistry.back().mOpenGLContext );
 
         //---OpenGL 3.2 Context---//
         wglGetExtensionsStringARB = ( PFNWGLGETEXTENSIONSSTRINGARBPROC ) wglGetProcAddress ( "wglGetExtensionsStringARB" );
         if ( wglGetExtensionsStringARB != nullptr )
         {
-            if ( strstr ( wglGetExtensionsStringARB ( WindowRegistry.back().mDeviceContext ), "WGL_ARB_create_context" ) != nullptr )
+            if ( strstr ( wglGetExtensionsStringARB ( mWindowRegistry.back().mDeviceContext ), "WGL_ARB_create_context" ) != nullptr )
             {
                 const int ctxAttribs[] =
                 {
@@ -152,11 +152,11 @@ namespace AeonGames
                 };
 
                 wglCreateContextAttribsARB = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" );
-                wglMakeCurrent ( WindowRegistry.back().mDeviceContext, nullptr );
-                wglDeleteContext ( WindowRegistry.back().mOpenGLContext );
-                WindowRegistry.back().mOpenGLContext = wglCreateContextAttribsARB ( WindowRegistry.back().mDeviceContext,
-                                                       ( WindowRegistry.size() ) ? WindowRegistry[0].mOpenGLContext : nullptr, ctxAttribs );
-                wglMakeCurrent ( WindowRegistry.back().mDeviceContext, WindowRegistry.back().mOpenGLContext );
+                wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, nullptr );
+                wglDeleteContext ( mWindowRegistry.back().mOpenGLContext );
+                mWindowRegistry.back().mOpenGLContext = wglCreateContextAttribsARB ( mWindowRegistry.back().mDeviceContext,
+                                                        ( mWindowRegistry.size() ) ? mWindowRegistry[0].mOpenGLContext : nullptr, ctxAttribs );
+                wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, mWindowRegistry.back().mOpenGLContext );
                 if ( !LoadOpenGLAPI() )
                 {
                     std::cout << "Unable to Load OpenGL functions." << std::endl;
@@ -172,7 +172,7 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_NO_THROW;
 
                 RECT rect;
-                GetClientRect ( reinterpret_cast<HWND> ( WindowRegistry.back().mWindowId ), &rect );
+                GetClientRect ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ), &rect );
                 glViewport ( 0, 0, rect.right, rect.bottom );
                 OPENGL_CHECK_ERROR_NO_THROW;
                 glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
@@ -199,12 +199,13 @@ namespace AeonGames
         }
         return true;
 #else
-        mDisplay = XOpenDisplay ( nullptr );
-        if ( !mDisplay )
+        mWindowRegistry.emplace_back();
+        mWindowRegistry.back().mDisplay = XOpenDisplay ( nullptr );
+        if ( !mWindowRegistry.back().mDisplay )
         {
             return false;
         }
-        mWindowId = aWindowId;
+        mWindowRegistry.back().mWindowId = aWindowId;
         PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
                 glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" );
         if ( glXCreateContextAttribsARB )
@@ -219,10 +220,10 @@ namespace AeonGames
 
             // Get Window Attributes
             XWindowAttributes x_window_attributes{};
-            XGetWindowAttributes ( mDisplay, reinterpret_cast<Window> ( mWindowId ), &x_window_attributes );
+            XGetWindowAttributes ( mWindowRegistry.back().mDisplay, reinterpret_cast<Window> (  mWindowRegistry.back().mWindowId ), &x_window_attributes );
 
             int glx_fb_config_count;
-            GLXFBConfig* glx_fb_config_list = glXGetFBConfigs ( mDisplay, DefaultScreen ( mDisplay ), &glx_fb_config_count );
+            GLXFBConfig* glx_fb_config_list = glXGetFBConfigs (  mWindowRegistry.back().mDisplay, DefaultScreen (  mWindowRegistry.back().mDisplay ), &glx_fb_config_count );
 
             if ( !glx_fb_config_list )
             {
@@ -232,16 +233,16 @@ namespace AeonGames
             int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
             for ( int i = 0; i < glx_fb_config_count; ++i )
             {
-                XVisualInfo *vi = glXGetVisualFromFBConfig ( mDisplay, glx_fb_config_list[i] );
+                XVisualInfo *vi = glXGetVisualFromFBConfig (  mWindowRegistry.back().mDisplay, glx_fb_config_list[i] );
                 int value;
-                glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_DEPTH_SIZE, &value );
+                glXGetFBConfigAttrib (  mWindowRegistry.back().mDisplay, glx_fb_config_list[i], GLX_DEPTH_SIZE, &value );
                 std::cout << "Depth Buffer: " << value << std::endl;
                 if ( ( vi ) && ( x_window_attributes.visual == vi->visual ) )
                 {
                     std::cout << *vi << std::endl;
                     int samp_buf, samples;
-                    glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-                    glXGetFBConfigAttrib ( mDisplay, glx_fb_config_list[i], GLX_SAMPLES       , &samples  );
+                    glXGetFBConfigAttrib ( mWindowRegistry.back().mDisplay, glx_fb_config_list[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+                    glXGetFBConfigAttrib ( mWindowRegistry.back().mDisplay, glx_fb_config_list[i], GLX_SAMPLES       , &samples  );
                     if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
                     {
                         best_fbc = i, best_num_samp = samples;
@@ -262,9 +263,9 @@ namespace AeonGames
 
             GLXFBConfig bestFbc = glx_fb_config_list[ best_fbc ];
             XFree ( glx_fb_config_list );
-            mGLXContext = glXCreateContextAttribsARB ( mDisplay, bestFbc, nullptr, True, context_attribs );
-            XSync ( mDisplay, False );
-            if ( mGLXContext != nullptr )
+            mWindowRegistry.back().mGLXContext = glXCreateContextAttribsARB (  mWindowRegistry.back().mDisplay, bestFbc, nullptr, True, context_attribs );
+            XSync (  mWindowRegistry.back().mDisplay, False );
+            if (  mWindowRegistry.back().mGLXContext != nullptr )
             {
                 std::cout << LogLevel ( LogLevel::Level::Info ) <<
                           "Created GL " <<  context_attribs[1] <<
@@ -281,7 +282,7 @@ namespace AeonGames
         }
 
         // Verifying that context is a direct context
-        if ( ! glXIsDirect ( mDisplay, mGLXContext ) )
+        if ( ! glXIsDirect (  mWindowRegistry.back().mDisplay,  mWindowRegistry.back().mGLXContext ) )
         {
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Indirect GLX rendering context obtained" << std::endl;
@@ -291,7 +292,7 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-        glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( mWindowId ), mGLXContext );
+        glXMakeCurrent (  mWindowRegistry.back().mDisplay, reinterpret_cast<Window> (  mWindowRegistry.back().mWindowId ),  mWindowRegistry.back().mGLXContext );
         if ( !LoadOpenGLAPI() )
         {
             std::cout << "Unable to Load OpenGL functions." << std::endl;
@@ -335,14 +336,14 @@ namespace AeonGames
             glDeleteBuffers ( 1, &mMatricesBuffer );
             mMatricesBuffer = 0;
         }
-#ifdef WIN32
-        auto i = std::find_if ( WindowRegistry.begin(), WindowRegistry.end(),
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [&aWindowId] ( const WindowData & aWindowData )
         {
             return aWindowData.mWindowId == aWindowId;
         } );
-        if ( i != WindowRegistry.end() )
+        if ( i != mWindowRegistry.end() )
         {
+#ifdef WIN32
             if ( i->mDeviceContext != nullptr )
             {
                 wglMakeCurrent ( i->mDeviceContext, nullptr );
@@ -354,43 +355,47 @@ namespace AeonGames
                 wglDeleteContext ( i->mOpenGLContext );
                 i->mOpenGLContext = nullptr;
             }
-            WindowRegistry.erase ( std::remove_if ( WindowRegistry.begin(), WindowRegistry.end(),
-                                                    [&aWindowId] ( const WindowData & aWindowData )
+#else
+            if ( i->mWindowId && ( i->mWindowId == aWindowId ) )
+            {
+                if ( i->mGLXContext )
+                {
+                    glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
+                    glXDestroyContext ( i->mDisplay, i->mGLXContext );
+                    i->mGLXContext = nullptr;
+                }
+                if ( i->mDisplay )
+                {
+                    XCloseDisplay ( i->mDisplay );
+                    i->mDisplay = nullptr;
+                }
+            }
+#endif
+            mWindowRegistry.erase ( std::remove_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                    [&aWindowId] ( const WindowData & aWindowData )
             {
                 return aWindowData.mWindowId == aWindowId;
             } )
-            , WindowRegistry.end() );
+            , mWindowRegistry.end() );
         }
-#else
-        if ( mWindowId && ( mWindowId == aWindowId ) )
-        {
-            if ( mGLXContext )
-            {
-                glXMakeCurrent ( mDisplay, reinterpret_cast<Window> ( mWindowId ), nullptr );
-                glXDestroyContext ( mDisplay, mGLXContext );
-                mGLXContext = nullptr;
-            }
-            if ( mDisplay )
-            {
-                XCloseDisplay ( mDisplay );
-                mDisplay = nullptr;
-            }
-        }
-#endif
     }
 
     void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
     {
-        auto i = std::find_if ( WindowRegistry.begin(), WindowRegistry.end(),
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [&aWindowId] ( const WindowData & aWindowData )
         {
             return aWindowId == aWindowData.mWindowId;
         } );
-        if ( i != WindowRegistry.end() )
+        if ( i != mWindowRegistry.end() )
         {
             if ( aWidth > 0 && aHeight > 0 )
             {
+#ifdef WIN32
                 wglMakeCurrent ( i->mDeviceContext, i->mOpenGLContext );
+#else
+                glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
+#endif
                 glViewport ( 0, 0, aWidth, aHeight );
             }
         }
