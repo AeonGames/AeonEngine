@@ -97,8 +97,6 @@ set(OPENGL_RENDERER_SOURCES
 
 #set_source_files_properties(OpenGLFunctions.cpp PROPERTIES COMPILE_FLAGS "-E")
 
-source_group("opengl" FILES ${OPENGL_RENDERER_HEADERS} ${OPENGL_RENDERER_SOURCES})
-
 add_library(OpenGLRenderer SHARED
     ${OPENGL_RENDERER_HEADERS} ${OPENGL_RENDERER_SOURCES}
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
