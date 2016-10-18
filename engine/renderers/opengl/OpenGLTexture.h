@@ -31,6 +31,7 @@ namespace AeonGames
         ~OpenGLTexture() final;
     private:
         std::string mFilename;
+        uint32_t mTexture;
     };
 }
 #endif
