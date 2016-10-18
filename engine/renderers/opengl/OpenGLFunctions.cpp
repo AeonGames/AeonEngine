@@ -61,12 +61,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    extern "C"
-    {
-        extern bool CreateOpenGLContext();
-        extern void DestroyOpenGLContext();
 #include "glDefinitions.h"
-    }
     bool LoadOpenGLAPI()
     {
 #include "glAssignments.h"

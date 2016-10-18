@@ -78,9 +78,9 @@ namespace AeonGames
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #else
-            if ( i.mGLXContext != nullptr )
+            if ( i.mOpenGLContext != nullptr )
             {
-                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
+                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mOpenGLContext );
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #endif
@@ -107,9 +107,9 @@ namespace AeonGames
                 SwapBuffers ( i.mDeviceContext );
             }
 #else
-            if ( i.mGLXContext != nullptr )
+            if ( i.mOpenGLContext != nullptr )
             {
-                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mGLXContext );
+                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mOpenGLContext );
                 glXSwapBuffers ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ) );
             }
 #endif
@@ -268,9 +268,11 @@ namespace AeonGames
 
             GLXFBConfig bestFbc = glx_fb_config_list[ best_fbc ];
             XFree ( glx_fb_config_list );
-            mWindowRegistry.back().mGLXContext = glXCreateContextAttribsARB (  mWindowRegistry.back().mDisplay, bestFbc, nullptr, True, context_attribs );
+            mWindowRegistry.back().mOpenGLContext = glXCreateContextAttribsARB (  mWindowRegistry.back().mDisplay, bestFbc,
+                                                    ( mWindowRegistry.size() > 1 ) ? mWindowRegistry[0].mOpenGLContext : nullptr,
+                                                    True, context_attribs );
             XSync (  mWindowRegistry.back().mDisplay, False );
-            if (  mWindowRegistry.back().mGLXContext != nullptr )
+            if (  mWindowRegistry.back().mOpenGLContext != nullptr )
             {
                 std::cout << LogLevel ( LogLevel::Level::Info ) <<
                           "Created GL " <<  context_attribs[1] <<
@@ -287,7 +289,7 @@ namespace AeonGames
         }
 
         // Verifying that context is a direct context
-        if ( ! glXIsDirect (  mWindowRegistry.back().mDisplay,  mWindowRegistry.back().mGLXContext ) )
+        if ( ! glXIsDirect (  mWindowRegistry.back().mDisplay,  mWindowRegistry.back().mOpenGLContext ) )
         {
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Indirect GLX rendering context obtained" << std::endl;
@@ -297,7 +299,7 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-        glXMakeCurrent (  mWindowRegistry.back().mDisplay, reinterpret_cast<Window> (  mWindowRegistry.back().mWindowId ),  mWindowRegistry.back().mGLXContext );
+        glXMakeCurrent (  mWindowRegistry.back().mDisplay, reinterpret_cast<Window> (  mWindowRegistry.back().mWindowId ),  mWindowRegistry.back().mOpenGLContext );
         if ( !LoadOpenGLAPI() )
         {
             std::cout << "Unable to Load OpenGL functions." << std::endl;
@@ -363,11 +365,11 @@ namespace AeonGames
 #else
             if ( i->mWindowId && ( i->mWindowId == aWindowId ) )
             {
-                if ( i->mGLXContext )
+                if ( i->mOpenGLContext )
                 {
                     glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
-                    glXDestroyContext ( i->mDisplay, i->mGLXContext );
-                    i->mGLXContext = nullptr;
+                    glXDestroyContext ( i->mDisplay, i->mOpenGLContext );
+                    i->mOpenGLContext = nullptr;
                 }
                 if ( i->mDisplay )
                 {
