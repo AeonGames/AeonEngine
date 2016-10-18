@@ -39,10 +39,7 @@ limitations under the License.
 #include <iostream>
 namespace AeonGames
 {
-    extern "C"
-    {
 #include "glDeclarations.h"
-    }
     bool LoadOpenGLAPI();
 #define OPENGL_CHECK_ERROR_THROW \
  { \

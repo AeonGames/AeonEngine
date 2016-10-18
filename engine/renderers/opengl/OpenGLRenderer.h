@@ -108,7 +108,7 @@ namespace AeonGames
             HGLRC mOpenGLContext = nullptr;
 #else
             Display* mDisplay = nullptr;
-            GLXContext mGLXContext = nullptr;
+            GLXContext mOpenGLContext = nullptr;
 #endif
         };
         std::vector<WindowData> mWindowRegistry;

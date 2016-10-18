@@ -95,6 +95,8 @@ set(OPENGL_RENDERER_SOURCES
     Uniform.cpp
     Plugin.cpp)
 
+#set_source_files_properties(OpenGLFunctions.cpp PROPERTIES COMPILE_FLAGS "-E")
+
 source_group("opengl" FILES ${OPENGL_RENDERER_HEADERS} ${OPENGL_RENDERER_SOURCES})
 
 add_library(OpenGLRenderer SHARED
