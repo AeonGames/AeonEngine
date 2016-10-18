@@ -27,7 +27,8 @@ namespace AeonGames
 {
     class Mesh;
     class Program;
-    class OpenGLProgram;
+    class Texture;
+//    class OpenGLProgram;
     class OpenGLRenderer : public Renderer
     {
     public:
@@ -38,6 +39,7 @@ namespace AeonGames
         void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const final;
         std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const final;
         std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const final;
+        std::shared_ptr<Texture> GetTexture ( const std::string& aFilename ) const final;
         bool AddRenderingWindow ( uintptr_t aWindowId ) final;
         void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;

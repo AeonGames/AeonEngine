@@ -13,22 +13,32 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <fstream>
+#include <sstream>
+#include <ostream>
+#include <regex>
+#include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "material.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
-#include "aeongames/Renderer.h"
-#include "Factory.h"
+#include "OpenGLFunctions.h"
+#include "OpenGLTexture.h"
 
 namespace AeonGames
 {
-    std::unique_ptr<Renderer> GetRenderer ( const std::string& aIdentifier )
+    OpenGLTexture::OpenGLTexture ( const std::string& aFilename ) :
+        mFilename ( aFilename )
     {
-        return Factory<Renderer>::Get ( aIdentifier );
     }
-    bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::unique_ptr<Renderer>() > aLoader )
+
+    OpenGLTexture::~OpenGLTexture()
     {
-        return Factory<Renderer>::RegisterLoader ( aIdentifier, aLoader );
-    }
-    bool UnregisterRendererLoader ( const std::string& aIdentifier )
-    {
-        return Factory<Renderer>::UnregisterLoader ( aIdentifier );
     }
 }

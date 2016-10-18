@@ -16,7 +16,6 @@ limitations under the License.
 /** \File Implements the interface for the PNG plugin.*/
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
-#include "aeongames/ResourceCache.h"
 #include "OpenGLRenderer.h"
 #include <memory>
 
@@ -24,19 +23,11 @@ extern "C"
 {
     bool OpenGLStartUp()
     {
-#if 1
         return AeonGames::RegisterRendererLoader ( "OpenGL",
                 [] ()
         {
-            return std::make_shared<AeonGames::OpenGLRenderer>();
+            return std::make_unique<AeonGames::OpenGLRenderer>();
         } );
-#else
-        return AeonGames::RegisterRendererLoader ( "OpenGL",
-                [] ()
-        {
-            return AeonGames::Get<AeonGames::Image, AeonGames::PngImage>();
-        } );
-#endif
     }
 
     void OpenGLShutdown()

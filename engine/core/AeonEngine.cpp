@@ -44,7 +44,7 @@ namespace AeonGames
         ~Impl()
         {
         }
-        std::shared_ptr<Renderer> mRenderer;
+        std::unique_ptr<Renderer> mRenderer;
         Scene* mScene = nullptr;
     };
 

@@ -16,7 +16,6 @@ limitations under the License.
 /** \File Implements the interface for the PNG plugin.*/
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
-#include "aeongames/ResourceCache.h"
 #include "PngImage.h"
 #include <memory>
 
@@ -24,19 +23,11 @@ extern "C"
 {
     bool PngStartUp()
     {
-#if 1
         return AeonGames::RegisterImageLoader ( "png",
                                                 [] ( const std::string & aFilename )
         {
-            return std::make_shared<AeonGames::PngImage> ( aFilename );
+            return std::make_unique<AeonGames::PngImage> ( aFilename );
         } );
-#else
-        return AeonGames::RegisterImageLoader ( "png",
-                                                [] ( const std::string & aFilename )
-        {
-            return AeonGames::Get<AeonGames::Image, AeonGames::PngImage> ( aFilename );
-        } );
-#endif
     }
 
     void PngShutdown()
