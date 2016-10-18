@@ -118,6 +118,8 @@ namespace AeonGames
 
     bool OpenGLRenderer::AddRenderingWindow ( uintptr_t aWindowId )
     {
+        /**@todo Should a window wrapper be created? */
+        /**@todo Should each window own a renderer instead of the renderer managing the windows? */
 #ifdef WIN32
         PIXELFORMATDESCRIPTOR pfd {};
         PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = nullptr;
