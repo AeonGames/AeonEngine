@@ -26,6 +26,7 @@ namespace AeonGames
 {
     class Mesh;
     class Program;
+    class Texture;
     class Renderer
     {
     public:
@@ -39,6 +40,7 @@ namespace AeonGames
         ///@{
         virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
         virtual std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const = 0;
+        virtual std::shared_ptr<Texture> GetTexture ( const std::string& aFilename ) const = 0;
         ///@}
         ///@name Window Functions
         ///@{
@@ -52,14 +54,13 @@ namespace AeonGames
         virtual void SetProjectionMatrix ( const float aMatrix[16] ) = 0;
         virtual void SetModelMatrix ( const float aMatrix[16] ) = 0;
         ///@}
-    protected:
         virtual ~Renderer() = default;
     };
 
     /** Factory Functions */
-    DLL std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
+    DLL std::unique_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
     /** Registers a renderer loader for a specific identifier.*/
-    DLL bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Renderer>() > aLoader );
+    DLL bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::unique_ptr<Renderer>() > aLoader );
     /** Unregisters a renderer loader for a specific identifier.*/
     DLL bool UnregisterRendererLoader ( const std::string& aIdentifier );
 }

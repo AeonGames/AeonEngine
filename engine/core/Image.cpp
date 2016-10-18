@@ -21,11 +21,11 @@ limitations under the License.
 
 namespace AeonGames
 {
-    std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename )
+    std::unique_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename )
     {
         return Factory<Image, const std::string&>::Get ( aIdentifier, aFilename );
     }
-    bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader )
+    bool RegisterImageLoader ( const std::string& aExt, std::function<std::unique_ptr<Image> ( const std::string& ) > aLoader )
     {
         return Factory<Image, const std::string&>::RegisterLoader ( aExt, aLoader );
     }

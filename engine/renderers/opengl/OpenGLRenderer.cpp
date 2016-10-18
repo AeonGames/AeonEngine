@@ -26,6 +26,7 @@ limitations under the License.
 #include "OpenGLRenderer.h"
 #include "OpenGLMesh.h"
 #include "OpenGLProgram.h"
+#include "OpenGLTexture.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
 
@@ -130,7 +131,7 @@ namespace AeonGames
         pfd.iLayerType = PFD_MAIN_PLANE;
         mWindowRegistry.emplace_back();
         mWindowRegistry.back().mWindowId = aWindowId;
-        mWindowRegistry.back().mDeviceContext = ( HDC ) GetDC ( reinterpret_cast<HWND> ( aWindowId ) );
+        mWindowRegistry.back().mDeviceContext = ( HDC ) GetDC ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ) );
         int pf = ChoosePixelFormat ( mWindowRegistry.back().mDeviceContext, &pfd );
         SetPixelFormat ( mWindowRegistry.back().mDeviceContext, pf, &pfd );
         mWindowRegistry.back().mOpenGLContext = wglCreateContext ( mWindowRegistry.back().mDeviceContext );
@@ -155,8 +156,12 @@ namespace AeonGames
                 wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, nullptr );
                 wglDeleteContext ( mWindowRegistry.back().mOpenGLContext );
                 mWindowRegistry.back().mOpenGLContext = wglCreateContextAttribsARB ( mWindowRegistry.back().mDeviceContext,
-                                                        ( mWindowRegistry.size() ) ? mWindowRegistry[0].mOpenGLContext : nullptr, ctxAttribs );
-                wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, mWindowRegistry.back().mOpenGLContext );
+                                                        ( mWindowRegistry.size() > 1 ) ? mWindowRegistry[0].mOpenGLContext : nullptr, ctxAttribs );
+                if ( !wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, mWindowRegistry.back().mOpenGLContext ) )
+                {
+                    std::cout << "wglMakeCurrent Failed. Error: " << GetLastError() << std::endl;
+                    return false;
+                }
                 if ( !LoadOpenGLAPI() )
                 {
                     std::cout << "Unable to Load OpenGL functions." << std::endl;
@@ -461,5 +466,10 @@ namespace AeonGames
     std::shared_ptr<Program> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
     {
         return Get<OpenGLProgram> ( aFilename );
+    }
+
+    std::shared_ptr<Texture> OpenGLRenderer::GetTexture ( const std::string & aFilename ) const
+    {
+        return Get<OpenGLTexture> ( aFilename );
     }
 }

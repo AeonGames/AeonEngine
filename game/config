@@ -1,3 +1,4 @@
 AEONCFG
 PluginDirectory: ""
 Plugin: "OpenGLRenderer"
+Plugin: "PngImage"

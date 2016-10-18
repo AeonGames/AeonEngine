@@ -81,6 +81,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLFunctions.h
     OpenGLProgram.h
     OpenGLMaterial.h
+    OpenGLTexture.h
     OpenGLMesh.h
     Uniform.h)
 
@@ -88,6 +89,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
     OpenGLProgram.cpp
     OpenGLMaterial.cpp
+    OpenGLTexture.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
     Uniform.cpp
