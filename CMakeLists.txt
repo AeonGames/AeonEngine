@@ -60,12 +60,10 @@ if(CLANG_TIDY_EXECUTABLE)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
 endif()
 
-if(UNIX)
-    set(GUI_PLATFORM xlib)
-elseif(WIN32)
-    set(GUI_PLATFORM winapi)
-else()
-    message("No GUI Platform detected")
+if(CMAKE_HOST_UNIX)
+    set(PATH_SEPARATOR :)
+elseif(CMAKE_HOST_WIN32)
+    set(PATH_SEPARATOR $<SEMICOLON>)
 endif()
 
 find_package(Qt5 COMPONENTS Core Gui Widgets)
@@ -149,20 +147,22 @@ add_custom_target(generate-python-protobuf-source
 get_target_property(AEONTOOL_EXECUTABLE aeontool RUNTIME_OUTPUT_NAME)
 add_custom_target(generate-binary-assets
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
-    DEPENDS aeontool
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
+    DEPENDS aeontool ProtoBufClasses
     SOURCES
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
         ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt
         ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
+        ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt
+        ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
     COMMENT "Generating binary game assets")
 
 ###########################################
