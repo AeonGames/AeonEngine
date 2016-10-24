@@ -21,6 +21,7 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.h"
 #include <google/protobuf/text_format.h>
 #include "program.pb.h"
+#include "material.pb.h"
 #include "mesh.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
@@ -35,6 +36,12 @@ limitations under the License.
 #include "sys/stat.h"
 #endif
 #include "Convert.h"
+
+/** @todo This code may benefit from ProtoBufHelpers.h,
+    but by doing so, it must become public
+    and aeontool would need to link
+    against the AeonEngine library just for FileExists.
+    Find a workaround?.*/
 
 namespace AeonGames
 {
@@ -110,6 +117,7 @@ namespace AeonGames
     int Convert::Run()
     {
         ProgramBuffer shader_program_buffer;
+        MaterialBuffer material_buffer;
         MeshBuffer mesh_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };
@@ -136,6 +144,11 @@ namespace AeonGames
                 binary_input = true;
             case FileType::AEONPRGT:
                 message = &shader_program_buffer;
+                break;
+            case FileType::AEONMTLB:
+                binary_input = true;
+            case FileType::AEONMTLT:
+                message = &material_buffer;
                 break;
             case FileType::AEONMSHB:
                 binary_input = true;
@@ -215,6 +228,11 @@ namespace AeonGames
             {
                 retval = ( type[3] == '\0' ) ? Convert::FileType::AEONPRGB :
                          Convert::FileType::AEONPRGT;
+            }
+            else if ( strncmp ( type, "MTL", 3 ) == 0 )
+            {
+                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONMTLB :
+                         Convert::FileType::AEONMTLT;
             }
             else if ( strncmp ( type, "MSH", 3 ) == 0 )
             {

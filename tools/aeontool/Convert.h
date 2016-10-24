@@ -32,6 +32,8 @@ namespace AeonGames
             UNKNOWN = 0,
             AEONPRGB,
             AEONPRGT,
+            AEONMTLB,
+            AEONMTLT,
             AEONMSHB,
             AEONMSHT,
         };
