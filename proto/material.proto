@@ -15,25 +15,10 @@
 syntax = "proto3";
 package AeonGames;
 
-import "vector2.proto";
-import "vector3.proto";
-import "vector4.proto";
-
-message PropertyValueBuffer
-{
-	string name = 1;
-	oneof value
-	{
-		float    scalar_float = 2;
-		Vector2Buffer vector2 = 3;
-		Vector3Buffer vector3 = 4;
-		Vector4Buffer vector4 = 5;
-		string        texture = 6;
-	}
-}
+import "property.proto";
 
 message MaterialBuffer
 {
-	string Program = 1;
-	repeated PropertyValueBuffer property_values = 2;
+	string program = 1;
+	repeated PropertyBuffer property = 2;
 }

@@ -1,0 +1,61 @@
+// Copyright 2016 Rodrigo Jose Hernandez Cordoba
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+package AeonGames;
+
+import "vector2.proto";
+import "vector3.proto";
+import "vector4.proto";
+
+message PropertyBuffer {
+	enum Type 
+	{
+		UNKNOWN = 0;
+		// All of these match OpenGL constants
+        FLOAT      = 0x1406;
+        FLOAT_VEC2 = 0x8B50;
+		FLOAT_VEC3 = 0x8B51;
+        FLOAT_VEC4 = 0x8B52;
+        SAMPLER_2D = 0x8B5E;
+        SAMPLER_CUBE = 0x8B60;
+		// The following have no mapping to the default_value field yet.
+        //BOOL = 0x8B56;
+        //INT = 0x1404;
+        //UNSIGNED_INT = 0x1405;
+        //INT_VEC2 = 0x8B53;
+        //BOOL_VEC2 = 0x8B57;
+        //UNSIGNED_INT_VEC2 = 0x8DC6;
+        //INT_VEC3 = 0x8B54;
+        //BOOL_VEC3 = 0x8B58;
+        //UNSIGNED_INT_VEC3 = 0x8DC7;
+        //INT_VEC4 = 0x8B55;
+        //BOOL_VEC4 = 0x8B59;
+        //FLOAT_MAT2 = 0x8B5A;
+        //UNSIGNED_INT_VEC4 = 0x8DC8;
+        //FLOAT_MAT3 = 0x8B5B;
+        //FLOAT_MAT4 = 0x8B5C;	
+	}
+	string uniform_name = 1;
+	string display_name = 2;
+	Type type = 3;
+	oneof default_value
+	{
+		float    scalar_float = 4;
+		Vector2Buffer vector2 = 5;
+		Vector3Buffer vector3 = 6;
+		Vector4Buffer vector4 = 7;
+		string        texture = 8;
+	}
+}

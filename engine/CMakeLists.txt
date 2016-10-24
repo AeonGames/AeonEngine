@@ -28,6 +28,7 @@ PROTOBUF_GENERATE_EXPORT_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS "DLL_PROTOBUF"
     ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+    ${CMAKE_SOURCE_DIR}/proto/property.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
     ${CMAKE_SOURCE_DIR}/proto/program.proto
     ${CMAKE_SOURCE_DIR}/proto/material.proto
