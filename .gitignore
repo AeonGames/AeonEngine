@@ -49,4 +49,6 @@ tags
 # Binary assets
 *.prg
 *.msh
+*.mtl
+*.png
 

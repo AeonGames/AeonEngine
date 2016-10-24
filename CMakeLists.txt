@@ -143,8 +143,7 @@ add_custom_target(generate-python-protobuf-source
 ###########################################
 # Binary asset generation target.
 ###########################################
-
-get_target_property(AEONTOOL_EXECUTABLE aeontool RUNTIME_OUTPUT_NAME)
+find_program (GRAPHICSMAGICK_EXECUTABLE gm HINTS ENV ProgramFiles PATH_SUFFIXES "GraphicsMagick-1.3.25-Q16")
 add_custom_target(generate-binary-assets
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
@@ -156,6 +155,8 @@ add_custom_target(generate-binary-assets
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
+    COMMAND
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin ${GRAPHICSMAGICK_EXECUTABLE} convert ${CMAKE_SOURCE_DIR}/game/images/orange.svg ${CMAKE_SOURCE_DIR}/game/images/orange.png
     DEPENDS aeontool ProtoBufClasses
     SOURCES
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
