@@ -56,6 +56,12 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [2] = aZ;
         ( reinterpret_cast<float*> ( mData ) ) [3] = aW;
     }
+    Uniform::Uniform ( const std::string & aName, const std::string & aFilename ) :
+        mName ( aName ),
+        mType ( GL_SAMPLER_2D )
+    {
+        /**@todo Handle aFilename.*/
+    }
     Uniform::~Uniform()
     {
     }
@@ -73,16 +79,19 @@ namespace AeonGames
         switch ( mType )
         {
         case GL_FLOAT:
-            declaration = "float " + mName + ";\n";
+            declaration = "uniform float " + mName + ";\n";
             break;
         case GL_FLOAT_VEC2:
-            declaration = "vec2 " + mName + ";\n";
+            declaration = "uniform vec2 " + mName + ";\n";
             break;
         case GL_FLOAT_VEC3:
-            declaration = "vec3 " + mName + ";\n";
+            declaration = "uniform vec3 " + mName + ";\n";
             break;
         case GL_FLOAT_VEC4:
-            declaration = "vec4 " + mName + ";\n";
+            declaration = "uniform vec4 " + mName + ";\n";
+            break;
+        case GL_SAMPLER_2D:
+            declaration = "uniform sampler2D " + mName + ";\n";
             break;
         }
         return declaration;

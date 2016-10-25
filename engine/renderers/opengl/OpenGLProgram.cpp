@@ -105,8 +105,10 @@ namespace AeonGames
             mUniformMetaData.reserve ( program_buffer.property().size() );
             if ( program_buffer.property().size() > 0 )
             {
+#if 0
                 vertex_shader_source.append ( "layout(packed) uniform Properties{\n" );
                 fragment_shader_source.append ( "layout(packed) uniform Properties{\n" );
+#endif
                 for ( auto& i : program_buffer.property() )
                 {
                     switch ( i.type() )
@@ -124,8 +126,7 @@ namespace AeonGames
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_2D:
-                        //type_name = "sampler2D ";
-                        /* To be continued ... */
+                        mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_CUBE:
                         //type_name = "samplerCube ";
@@ -137,8 +138,10 @@ namespace AeonGames
                     vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                     fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                 }
+#if 0
                 vertex_shader_source.append ( "};\n" );
                 fragment_shader_source.append ( "};\n" );
+#endif
             }
             vertex_shader_source.append ( program_buffer.vertex_shader().code() );
             fragment_shader_source.append ( program_buffer.fragment_shader().code() );
@@ -211,6 +214,7 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+                std::cout << fragment_shader_source << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
