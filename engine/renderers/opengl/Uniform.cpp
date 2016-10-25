@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "OpenGLFunctions.h"
+#include "OpenGLTexture.h"
+#include "aeongames/ResourceCache.h"
 #include "Uniform.h"
 #include <cstring>
 
@@ -60,10 +62,18 @@ namespace AeonGames
         mName ( aName ),
         mType ( GL_SAMPLER_2D )
     {
-        /**@todo Handle aFilename.*/
+        * ( new ( mData ) std::shared_ptr<Texture> ( Get<OpenGLTexture> ( aFilename ) ) );
     }
     Uniform::~Uniform()
     {
+        switch ( mType )
+        {
+        case GL_SAMPLER_2D:
+            reinterpret_cast<std::shared_ptr<Texture>*> ( mData )->~shared_ptr();
+            break;
+        default:
+            break;
+        }
     }
     void Uniform::SetOffset ( const uint32_t aOffset )
     {
@@ -79,19 +89,19 @@ namespace AeonGames
         switch ( mType )
         {
         case GL_FLOAT:
-            declaration = "uniform float " + mName + ";\n";
+            declaration = "float " + mName + ";\n";
             break;
         case GL_FLOAT_VEC2:
-            declaration = "uniform vec2 " + mName + ";\n";
+            declaration = "vec2 " + mName + ";\n";
             break;
         case GL_FLOAT_VEC3:
-            declaration = "uniform vec3 " + mName + ";\n";
+            declaration = "vec3 " + mName + ";\n";
             break;
         case GL_FLOAT_VEC4:
-            declaration = "uniform vec4 " + mName + ";\n";
+            declaration = "vec4 " + mName + ";\n";
             break;
         case GL_SAMPLER_2D:
-            declaration = "uniform sampler2D " + mName + ";\n";
+            declaration = "sampler2D " + mName + ";\n";
             break;
         }
         return declaration;
@@ -115,6 +125,10 @@ namespace AeonGames
             break;
         case GL_FLOAT_VEC4:
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
+            break;
+        case GL_SAMPLER_2D:
+            /**@todo Get ID from texture.*/
+            memset ( ( aMemory + mOffset ), 0, sizeof ( uint64_t ) );
             break;
         }
     }
