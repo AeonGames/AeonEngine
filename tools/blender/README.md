@@ -9,8 +9,11 @@ I may expand some more on this, but right now this is mostly something I can loo
 1. Run as administrator or root a command line window or terminal.
 2. Add the directory containing the python executable from Blender into the PATH enviroment variable. (Only valid for Windows, Ubuntu 16.04 now uses the system's python, but you may have to install pip for python3 since the default is python 2.x).
 3. Install pip using get-pip.py (https://pip.pypa.io/en/stable/installing/)
-4. After building and/or installing protocol buffer, add the path to protoc to the PATH enviroment variable.
-5. From the python folder under the protobuffer source run "python setup.py build" then "python setup.py test" and "python setup.py install"
+4. IF installing from source
+4.1. After building and/or installing protocol buffer, add the path to protoc to the PATH enviroment variable.
+4.2. From the python folder under the protobuffer source run "python setup.py build" then "python setup.py test" and "python setup.py install"
+5. IF installing from the PIP package directory
+5.1. Run either 'python -m pip install protobuf' OR just 'pip install protobuf' at the time of writing, the version at pip is 3.1.0 which should be compatible with the one on the runtime.
 
 Thats it. To actually run the exporters:
 

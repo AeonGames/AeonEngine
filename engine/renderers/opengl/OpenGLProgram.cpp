@@ -69,6 +69,8 @@ namespace AeonGames
         std::string fragment_shader_source;
         {
             vertex_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
+            vertex_shader_source.append ( "#extension GL_ARB_bindless_texture : require\n"
+                                          "layout (bindless_sampler) uniform;\n" );
             vertex_shader_source.append (
                 "layout(location = 0) in vec3 VertexPosition;\n"
                 "layout(location = 1) in vec3 VertexNormal;\n"
@@ -90,6 +92,8 @@ namespace AeonGames
             );
 
             fragment_shader_source.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
+            fragment_shader_source.append ( "#extension GL_ARB_bindless_texture : require\n"
+                                            "layout (bindless_sampler) uniform;\n" );
             fragment_shader_source.append (
                 "layout(std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
@@ -105,28 +109,36 @@ namespace AeonGames
             mUniformMetaData.reserve ( program_buffer.property().size() );
             if ( program_buffer.property().size() > 0 )
             {
-#if 0
-                vertex_shader_source.append ( "layout(packed) uniform Properties{\n" );
-                fragment_shader_source.append ( "layout(packed) uniform Properties{\n" );
-#endif
+                vertex_shader_source.append ( "layout(std140) uniform Properties{\n" );
+                fragment_shader_source.append ( "layout(std140) uniform Properties{\n" );
                 for ( auto& i : program_buffer.property() )
                 {
                     switch ( i.type() )
                     {
                     case PropertyBuffer_Type_FLOAT:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
+                        vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
+                        fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC2:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );
+                        vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
+                        fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC3:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z() );
+                        vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
+                        fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC4:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
+                        vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
+                        fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_2D:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
+                        vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
+                        fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_CUBE:
                         //type_name = "samplerCube ";
@@ -135,13 +147,9 @@ namespace AeonGames
                     default:
                         assert ( 0 && "Unknown Type." );
                     }
-                    vertex_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
-                    fragment_shader_source.append ( mUniformMetaData.back().GetDeclaration() );
                 }
-#if 0
                 vertex_shader_source.append ( "};\n" );
                 fragment_shader_source.append ( "};\n" );
-#endif
             }
             vertex_shader_source.append ( program_buffer.vertex_shader().code() );
             fragment_shader_source.append ( program_buffer.fragment_shader().code() );
@@ -237,6 +245,9 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetProgramInfoLog ( mProgram, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+                std::cout << vertex_shader_source << std::endl;
+                std::cout << fragment_shader_source << std::endl;
+                std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
         }

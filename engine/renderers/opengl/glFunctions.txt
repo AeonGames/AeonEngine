@@ -130,3 +130,21 @@ glBindBufferBase
 glUniformBlockBinding
 glGetActiveUniformsiv
 #endif
+// GL_ARB_bindless_texture
+glGetTextureHandleARB
+glGetTextureSamplerHandleARB
+glMakeTextureHandleResidentARB
+glMakeTextureHandleNonResidentARB
+glGetImageHandleARB
+glMakeImageHandleResidentARB
+glMakeImageHandleNonResidentARB
+glUniformHandleui64ARB
+glUniformHandleui64vARB
+glProgramUniformHandleui64ARB
+glProgramUniformHandleui64vARB
+glIsTextureHandleResidentARB
+glIsImageHandleResidentARB
+// Inherited from NV_vertex_attrib_integer_64bit:
+glVertexAttribL1ui64ARB
+glVertexAttribL1ui64vARB
+glGetVertexAttribLui64vARB

@@ -23,7 +23,7 @@ extern "C"
 {
     bool PngStartUp()
     {
-        return AeonGames::RegisterImageLoader ( "png",
+        return AeonGames::RegisterImageLoader ( ".png",
                                                 [] ( const std::string & aFilename )
         {
             return std::make_unique<AeonGames::PngImage> ( aFilename );
@@ -32,7 +32,7 @@ extern "C"
 
     void PngShutdown()
     {
-        AeonGames::UnregisterImageLoader ( "png" );
+        AeonGames::UnregisterImageLoader ( ".png" );
     }
 
     PLUGIN PluginModuleInterface PMI =
