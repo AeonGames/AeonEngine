@@ -30,6 +30,7 @@ namespace AeonGames
         Uniform ( const std::string& aName, float aX, float aY );
         Uniform ( const std::string& aName, float aX, float aY, float aZ );
         Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW );
+        Uniform ( const std::string& aName, const std::string& aFilename );
         ~Uniform();
         void SetOffset ( const uint32_t aOffset );
         uint32_t Offset() const;

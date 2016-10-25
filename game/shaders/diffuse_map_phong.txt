@@ -1,0 +1,64 @@
+AEONPRG
+glsl_version: 330
+property {
+  uniform_name: "LightPosition"
+  display_name: "Light position in eye coords"
+  type: FLOAT_VEC3
+  vector3 {
+    x: 0
+    y: 0
+    z: 0
+  }
+}
+property {
+  uniform_name: "Kd"
+  display_name: "Diffuse reflectivity"
+  type: FLOAT_VEC3
+  vector3 {
+    x: 1
+    y: 1
+    z: 1
+  }
+}
+property {
+  uniform_name: "DiffuseMap"
+  display_name: "Diffuse Map"
+  type: SAMPLER_2D
+  texture: "game/images/orange.png"
+}
+vertex_shader {
+  code: "out vec3 LightIntensity;\n"
+  "void main()\n"
+  "{\n"
+  "if ( length ( VertexNormal ) != 0 )\n"
+  "{\n"
+  "vec3 tnorm = normalize ( NormalMatrix * VertexNormal );\n"
+  "vec4 eyeCoords = ModelViewMatrix * vec4 ( VertexPosition, 1.0 );\n"
+  "vec3 s = normalize ( LightPosition - eyeCoords.xyz );\n"
+  "LightIntensity = Kd * max ( dot ( s, tnorm ), 0.0 );\n"
+  "}\n"
+  "else\n"
+  "{\n"
+  "LightIntensity = vec3(1,1,1);\n"
+  "}\n"
+  "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
+  "}\n"
+}
+fragment_shader {
+  code: 
+  "in vec2 VertexUV;\n"
+  "in vec3 LightIntensity;\n"
+  "layout ( location = 0 ) out vec4 FragColor;\n"
+  "\n"
+  "void main()\n"
+  "{\n"
+  "if(gl_FrontFacing)\n"
+  "{\n"
+  "FragColor = vec4 ( texture(DiffuseMap,VertexUV).xyz * LightIntensity, 1.0 );\n"
+  "}\n"
+  "else\n"
+  "{\n"
+  "FragColor = vec4 ( 1.0,0.5,0.5, 1.0 );\n"
+  "}\n"
+  "}\n"
+}
