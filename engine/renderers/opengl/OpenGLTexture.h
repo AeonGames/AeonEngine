@@ -29,9 +29,12 @@ namespace AeonGames
     public:
         OpenGLTexture ( const std::string& aFilename );
         ~OpenGLTexture() final;
+        /**@todo This is a temporary hack since mHandle is specific of ARB_bindless_texture which is not core in any OpenGL version.*/
+        const uint64_t& GetHandle() const override final;
     private:
         std::string mFilename;
         uint32_t mTexture;
+        uint64_t mHandle;
     };
 }
 #endif

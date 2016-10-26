@@ -23,6 +23,7 @@ namespace AeonGames
     {
     public:
         DLL virtual ~Texture() = 0;
+        DLL virtual const uint64_t& GetHandle() const = 0;
     };
 }
 #endif

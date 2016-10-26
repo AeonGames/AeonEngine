@@ -207,7 +207,7 @@ namespace AeonGames
                 glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mTriangleGroups.back().mIndexBuffer );
                 OPENGL_CHECK_ERROR_THROW;
                 glBufferData ( GL_ARRAY_BUFFER, i.vertexbuffer().size(), i.vertexbuffer().data(), GL_STATIC_DRAW );
-
+                OPENGL_CHECK_ERROR_THROW;
                 glBufferData ( GL_ELEMENT_ARRAY_BUFFER, i.indexbuffer().size(), i.indexbuffer().data(), GL_STATIC_DRAW );
                 OPENGL_CHECK_ERROR_THROW;
             }
