@@ -127,8 +127,8 @@ namespace AeonGames
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
             break;
         case GL_SAMPLER_2D:
-            /**@todo Get ID from texture.*/
-            memset ( ( aMemory + mOffset ), 0, sizeof ( uint64_t ) );
+            * ( reinterpret_cast<uint64_t*> ( aMemory + mOffset ) ) =
+                reinterpret_cast<const std::shared_ptr<Texture>*> ( mData )->get()->GetHandle();
             break;
         }
     }
