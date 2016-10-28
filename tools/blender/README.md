@@ -21,7 +21,8 @@ Thats it. To actually run the exporters:
 2. Run Blender and go to File->User Preferences and click on the "Files" Tab.
 3. Type or browse for this folder on the "Scripts" field.
 4. Save preferences and restart Blender.
-5. I will be making changes so the exporters show up as actual addons but for now...
-6. Open the text editor window and open the exporter you need under the addons folder.
-7. Click on "Run Script" no error should pop up and nothing really should happen.
-8. Go to File->Export or File->Import and find the type you want to export to.
+5. Open the preferences window again and the exporter should be listed as an Import-Export Addon on the Addons tab.
+6. Check the box to the left of the addon name/description, the exporter should report no errors during loading.
+7. Go to File->Export and find the type you want to export to.
+
+There is only export functionality for the time being, so avoid lossing the original blend file if you want to make changes to your model down the road.
