@@ -27,7 +27,9 @@ property {
   texture: "game/images/orange.png"
 }
 vertex_shader {
-  code: "out vec3 LightIntensity;\n"
+  code: 
+  "out vec3 LightIntensity;\n"
+  "out vec2 CoordUV;\n"
   "void main()\n"
   "{\n"
   "if ( length ( VertexNormal ) != 0 )\n"
@@ -42,19 +44,20 @@ vertex_shader {
   "LightIntensity = vec3(1,1,1);\n"
   "}\n"
   "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
+  "CoordUV = VertexUV;\n"
   "}\n"
 }
 fragment_shader {
   code: 
-  "in vec2 VertexUV;\n"
   "in vec3 LightIntensity;\n"
+  "in vec2 CoordUV;\n"
   "layout ( location = 0 ) out vec4 FragColor;\n"
   "\n"
   "void main()\n"
   "{\n"
   "if(gl_FrontFacing)\n"
   "{\n"
-  "FragColor = vec4 ( texture(DiffuseMap,VertexUV).xyz * LightIntensity, 1.0 );\n"
+  "FragColor = vec4 ( texture(DiffuseMap,CoordUV).xyz * LightIntensity, 1.0 );\n"
   "}\n"
   "else\n"
   "{\n"
