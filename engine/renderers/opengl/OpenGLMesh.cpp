@@ -188,14 +188,14 @@ namespace AeonGames
 
             if ( i.vertexflags() & WEIGHT_BIT )
             {
-                glEnableVertexAttribArray ( 3 );
+                glEnableVertexAttribArray ( 5 );
                 OPENGL_CHECK_ERROR_THROW;
-                glVertexAttribPointer ( 3, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( i.vertexflags() ), offset );
+                glVertexAttribPointer ( 5, 4, GL_UNSIGNED_BYTE, GL_FALSE, GetStride ( i.vertexflags() ), offset );
                 OPENGL_CHECK_ERROR_THROW;
                 offset += sizeof ( uint8_t ) * 4;
-                glEnableVertexAttribArray ( 4 );
+                glEnableVertexAttribArray ( 6 );
                 OPENGL_CHECK_ERROR_THROW;
-                glVertexAttribPointer ( 4, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( i.vertexflags() ), offset );
+                glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( i.vertexflags() ), offset );
                 OPENGL_CHECK_ERROR_THROW;
                 offset += sizeof ( uint8_t ) * 4;
             }
