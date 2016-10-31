@@ -32,6 +32,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Model;
     class EngineWindow : public QWindow
     {
         Q_OBJECT
@@ -61,6 +62,7 @@ namespace AeonGames
         AeonEngine mAeonEngine;
         std::shared_ptr<Mesh> mMesh;
         std::shared_ptr<Program> mProgram;
+        Model* mModel;
         Scene mScene;
         float mFrustumVerticalHalfAngle;
         float mStep;
