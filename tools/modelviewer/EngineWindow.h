@@ -63,6 +63,7 @@ namespace AeonGames
         std::shared_ptr<Program> mProgram;
         Scene mScene;
         float mFrustumVerticalHalfAngle;
+        float mStep;
         /* We're using QT classes for now... */
         QQuaternion mCameraRotation;
         QVector4D mCameraLocation;

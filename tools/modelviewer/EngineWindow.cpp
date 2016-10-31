@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mScene(),
+    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mScene(), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
         mProjectionMatrix(),
@@ -95,6 +95,7 @@ namespace AeonGames
                               QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
                               ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
         updateViewMatrix();
+        mStep = eye_length / 100.0f;
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
@@ -160,16 +161,16 @@ namespace AeonGames
         switch ( event->key() )
         {
         case Qt::Key_W:
-            mCameraLocation += ( mCameraRotation.rotatedVector ( forward ) * 10.0f );
+            mCameraLocation += ( mCameraRotation.rotatedVector ( forward ) * mStep );
             break;
         case Qt::Key_S:
-            mCameraLocation -= ( mCameraRotation.rotatedVector ( forward ) * 10.0f );
+            mCameraLocation -= ( mCameraRotation.rotatedVector ( forward ) * mStep );
             break;
         case Qt::Key_D:
-            mCameraLocation += ( mCameraRotation.rotatedVector ( right ) * 10.0f );
+            mCameraLocation += ( mCameraRotation.rotatedVector ( right ) * mStep );
             break;
         case Qt::Key_A:
-            mCameraLocation -= ( mCameraRotation.rotatedVector ( right ) * 10.0f );
+            mCameraLocation -= ( mCameraRotation.rotatedVector ( right ) * mStep );
             break;
         }
         updateViewMatrix();
@@ -210,7 +211,7 @@ namespace AeonGames
 
     void EngineWindow::wheelEvent ( QWheelEvent *event )
     {
-        mCameraLocation += ( mCameraRotation.rotatedVector ( forward ) * ( event->angleDelta().y() / 2.0f ) );
+        mCameraLocation += ( ( mCameraRotation.rotatedVector ( forward ) * mStep ) * ( event->angleDelta().y() / fabs ( event->angleDelta().y() ) ) );
         updateViewMatrix();
         event->accept();
     }
