@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mScene(), mStep ( 0 ),
+    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mModel ( nullptr ), mScene(), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
         mProjectionMatrix(),
@@ -65,24 +65,28 @@ namespace AeonGames
 
     EngineWindow::~EngineWindow()
     {
+        mProgram.reset();
+        mScene.RemoveNode ( mModel );
+        delete mModel;
+        mModel = nullptr;
         mAeonEngine.UnregisterRenderingWindow ( winId() );
     }
 
     void EngineWindow::setMesh ( const QString & filename )
     {
-        static Model* model = nullptr;
-        if ( !model )
+        //static Model* model = nullptr;
+        if ( !mModel )
         {
-            mScene.AddNode ( model = new Model );
+            mScene.AddNode ( mModel = new Model );
         }
         mMesh = mAeonEngine.GetMesh ( filename.toUtf8().constData() );
         //mProgram = mAeonEngine.GetProgram ( "game/shaders/plain_red.txt" );
         //mProgram = mAeonEngine.GetProgram("game/shaders/fixed_phong.txt");
         //mProgram = mAeonEngine.GetProgram ( "game/shaders/simple_phong.txt" );
         mProgram = mAeonEngine.GetProgram ( "game/shaders/diffuse_map_phong.txt" );
-        assert ( model && "Model is nullptr" );
-        model->SetMesh ( mMesh );
-        model->SetProgram ( mProgram );
+        assert ( mModel && "Model is nullptr" );
+        mModel->SetMesh ( mMesh );
+        mModel->SetProgram ( mProgram );
         // Adjust camera position so model fits the frustum tightly.
         const float* const center_radius = mMesh->GetCenterRadii();
         float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
