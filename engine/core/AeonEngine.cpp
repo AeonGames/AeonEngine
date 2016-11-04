@@ -16,7 +16,14 @@ limitations under the License.
 #include <iostream>
 #include <memory>
 #include <utility>
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
 #include <google/protobuf/stubs/common.h>
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
