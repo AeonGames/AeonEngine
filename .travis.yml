@@ -13,11 +13,11 @@ install:
   - ./configure
   - make
   - sudo make install
-  - sudo ldconfig
   - cd ..
   - wget https://vulkan.lunarg.com/sdk/download/1.0.30.0/linux/vulkansdk-linux-x86_64-1.0.30.0.run
   - chmod a+x vulkansdk-linux-x86_64-1.0.30.0.run
   - sudo ./vulkansdk-linux-x86_64-1.0.30.0.run
+  - sudo ldconfig
 before_script:
   - cmake -G "Unix Makefiles" .
 script: make
