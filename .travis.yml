@@ -1,0 +1,22 @@
+sudo: required
+dist: xenial
+os: linux
+language: cpp
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y tar wget cmake autoconf automake libtool curl make g++ unzip libz-dev libpng-dev libpng12-dev vim-common qtbase5-dev
+install:
+  - wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
+  - tar -xzvf v3.1.0.tar.gz
+  - cd protobuf-3.1.0
+  - ./autogen.sh
+  - ./configure
+  - make
+  - sudo make install
+  - sudo ldconfig
+  - cd ..
+before_script:
+  - cmake -G "Unix Makefiles" .
+script: make
+notifications:
+  email: false
