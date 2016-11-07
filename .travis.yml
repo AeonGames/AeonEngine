@@ -17,6 +17,9 @@ install:
   - wget https://vulkan.lunarg.com/sdk/download/1.0.30.0/linux/vulkansdk-linux-x86_64-1.0.30.0.run
   - chmod a+x vulkansdk-linux-x86_64-1.0.30.0.run
   - sudo ./vulkansdk-linux-x86_64-1.0.30.0.run
+  - cd VulkanSDK/1.0.30.0
+  - source setup-env.sh
+  - cd ../..
   - sudo ldconfig
 before_script:
   - cmake -G "Unix Makefiles" .
