@@ -16,7 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_AEONENGINE_H
 #define AEONGAMES_AEONENGINE_H
 #include "Platform.h"
-#include <memory>
+#include "Memory.h"
 #include <string>
 
 namespace AeonGames

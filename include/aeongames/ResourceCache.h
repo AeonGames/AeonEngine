@@ -16,7 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_RESOURCECACHE_H
 #define AEONGAMES_RESOURCECACHE_H
 #include <iostream>
-#include <memory>
+#include "aeongames/Memory.h"
 #include <vector>
 #include <unordered_map>
 #include <string>

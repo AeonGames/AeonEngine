@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <iostream>
-#include <memory>
 #include <utility>
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -24,22 +23,11 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "aeongames/Memory.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
 #include "aeongames/GameWindow.h"
-
-#if __cplusplus < 201300L && __cplusplus >= 201103L
-// Taken from EMC++ Item 21
-namespace std
-{
-    template<typename T, typename... Ts>
-    std::unique_ptr<T> make_unique ( Ts&&... params )
-    {
-        return std::unique_ptr<T> ( new T ( std::forward<Ts> ( params )... ) );
-    }
-}
-#endif
 
 namespace AeonGames
 {

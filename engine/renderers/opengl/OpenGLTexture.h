@@ -18,7 +18,6 @@ limitations under the License.
 #include "aeongames/Texture.h"
 #include <cstdint>
 #include <string>
-#include <memory>
 #include <vector>
 #include "Uniform.h"
 

@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_UNIFORM_H
 
 #include <cstdint>
-#include <memory>
+#include "aeongames/Memory.h"
 #include <string>
 
 namespace AeonGames

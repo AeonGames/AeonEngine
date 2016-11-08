@@ -20,7 +20,7 @@ limitations under the License.
 #include <exception>
 #include <vector>
 #include <utility>
-#include <memory>
+#include "aeongames/Memory.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
