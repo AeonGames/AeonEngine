@@ -29,6 +29,6 @@ install:
 before_script:
   - echo $VULKAN_SDK
   - cmake -G "Unix Makefiles" .
-script: make
+script: make VERBOSE=1
 notifications:
   email: false
