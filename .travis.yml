@@ -4,7 +4,7 @@ os: linux
 language: cpp
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y sed python python3 python-autopep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev
 install:
   - wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
   - tar -xzvf v3.1.0.tar.gz
@@ -23,11 +23,8 @@ install:
   - echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.30.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
   - echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.30.0/etc/explicit_layer.d" >> ~/.bashrc
   - source ~/.bashrc
-  - echo $VULKAN_SDK
-  - cat ~/.bashrc
   - sudo ldconfig
 before_script:
-  - echo $VULKAN_SDK
   - cmake -G "Unix Makefiles" .
 script: make VERBOSE=1
 notifications:

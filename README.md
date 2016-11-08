@@ -5,6 +5,54 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 
 THIS IS A WORK IN PROGRESS.
 
+Building:
+=========
+Ubuntu 14.04 and up:
+--------------------
+
+## Install required Packages
+    sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev
+    
+## Install libprotobuf-dev from source
+    wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
+    tar -xzvf v3.1.0.tar.gz
+    cd protobuf-3.1.0
+    ./autogen.sh
+    ./configure
+    make
+    sudo make install
+    sudo ldconfig
+    cd ..
+    
+## UBUNTU 14.x: Locally install libvulkan-dev from self extracting executable into home directory
+    cd ~/
+    wget https://vulkan.lunarg.com/sdk/download/1.0.30.0/linux/vulkansdk-linux-x86_64-1.0.30.0.run
+    chmod a+x vulkansdk-linux-x86_64-1.0.30.0.run
+    ./vulkansdk-linux-x86_64-1.0.30.0.run
+    echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.30.0/x86_64" >> ~/.bashrc
+    echo "export VULKAN_SDK" >> ~/.bashrc
+    echo "export PATH=$PWD/VulkanSDK/1.0.30.0/bin:$PATH" >> ~/.bashrc   
+    echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.30.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
+    echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.30.0/etc/explicit_layer.d" >> ~/.bashrc
+    source ~/.bashrc
+    sudo ldconfig
+    
+## UBUNTU 16.x: Use apt to install Vulkan SDK
+    sudo apt-get install -y libvulkan-dev
+
+## Generate Makefiles with CMake
+    cmake -G "Unix Makefiles" .
+
+## Build
+    make
+
+Visual Studio 2015:
+-------------------
+
+Building with Visual Studio is somewhat more involved as all dependencies and tools need to be build first, for this I have created a separate project, the [AeonGames Runtime](https://github.com/AeonGames/runtime), you might want to build and install that first, then point the CMake variable RUNTIME_INSTALL_PREFIX to the path where it was installed when configuring.
+
+In the future, building should be possible using [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg), but as it is right now it is lacking support for binary tools such as astyle, sed, xxd and protoc which are required for building and contributing to this repo.
+
 In No Way Complete TODO List:
 =============================
 
