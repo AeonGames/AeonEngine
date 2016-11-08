@@ -14,8 +14,6 @@
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-message(STATUS "SED EXECUTABLE: ${SED_EXECUTABLE}")
-
 add_custom_command( OUTPUT
                         ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
                         ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
