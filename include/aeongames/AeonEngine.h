@@ -24,8 +24,9 @@ namespace AeonGames
     DLL bool Initialize();
     DLL void Finalize();
 
-    class Mesh;
     class Scene;
+    class Mesh;
+    class Material;
     class Program;
     class AeonEngine
     {

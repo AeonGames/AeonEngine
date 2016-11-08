@@ -15,34 +15,56 @@ limitations under the License.
 */
 #include <cassert>
 #include "aeongames/Model.h"
+#include "aeongames/Utilities.h"
+#include "ProtoBufHelpers.h"
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "model.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+#include "aeongames/ResourceCache.h"
 #include "aeongames/Program.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Renderer.h"
 
 namespace AeonGames
 {
-    Model::Model() : Node(), mMesh ( nullptr ), mProgram ( nullptr )
+    Model::Model ( const std::string & aFilename ) : mFilename ( aFilename )
     {
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
     }
 
     Model::~Model()
-        = default;
-
-    void Model::SetMesh ( const std::shared_ptr<Mesh>& aMesh )
     {
-        mMesh = aMesh;
     }
 
-    void Model::SetProgram ( const std::shared_ptr<Program>& aProgram )
+    void Model::Initialize()
     {
-        mProgram = aProgram;
+        static ModelBuffer model_buffer;
+        LoadProtoBufObject<ModelBuffer> ( model_buffer, mFilename, "AEONMDL" );
+        //mProgram = Get<Program>(model_buffer.program().file());
+        //mMaterial = Get<Material>(model_buffer.material().file());
+        //mMesh = Get<Mesh>(model_buffer.material().file());
+        model_buffer.Clear();
     }
 
-    void Model::Update ( const double delta )
+    void Model::Finalize()
     {
-
     }
 
+#if 0
     void Model::Render ( Renderer * aRenderer )
     {
         assert ( aRenderer );
@@ -54,4 +76,5 @@ namespace AeonGames
             aRenderer->Render ( mMesh, mProgram );
         }
     }
+#endif
 }

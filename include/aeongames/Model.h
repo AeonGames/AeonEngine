@@ -16,26 +16,26 @@ limitations under the License.
 #ifndef AEONGAMES_MODEL_H
 #define AEONGAMES_MODEL_H
 #include <memory>
-#include "aeongames/Node.h"
+#include <vector>
 #include "aeongames/Platform.h"
-//#include "aeongames/Program.h"
 
 namespace AeonGames
 {
     class Program;
+    class Material;
     class Mesh;
-    class Model : public Node
+    class Model
     {
     public:
-        DLL Model();
-        DLL ~Model() override;
-        DLL void SetMesh ( const std::shared_ptr<Mesh>& aMesh );
-        DLL void SetProgram ( const std::shared_ptr<Program>& aProgram );
-        DLL void Update ( const double delta ) final;
-        DLL void Render ( Renderer* aRenderer ) final;
+        DLL Model ( const std::string& aFilename );
+        DLL ~Model();
     private:
-        std::shared_ptr<Mesh> mMesh;
+        std::string mFilename;
         std::shared_ptr<Program> mProgram;
+        std::shared_ptr<Material> mMaterial;
+        std::shared_ptr<Mesh> mMesh;
+        void Initialize();
+        void Finalize();
     };
 }
 #endif
