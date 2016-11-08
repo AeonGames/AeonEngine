@@ -17,7 +17,7 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "PngImage.h"
-#include <memory>
+#include "aeongames/Memory.h"
 
 extern "C"
 {

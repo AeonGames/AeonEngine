@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_RENDERER_H
 
 #include "Platform.h"
-#include <memory>
+#include "aeongames/Memory.h"
 #include <string>
 #include <functional>
 #include <utility>

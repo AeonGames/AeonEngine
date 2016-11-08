@@ -18,7 +18,7 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include <cstdint>
 #include <string>
-#include <memory>
+#include "aeongames/Memory.h"
 #include <vector>
 #include "Uniform.h"
 

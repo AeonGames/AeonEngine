@@ -16,11 +16,10 @@ limitations under the License.
 #include <unordered_map>
 #include <string>
 #include <functional>
-#include <memory>
+#include "aeongames/Memory.h"
 #include <utility>
 namespace AeonGames
 {
-    /**@todo unique_ptrs should really be unique_ptrs.*/
     template<class T, typename... Args>
     class Factory
     {

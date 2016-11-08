@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_IMAGE_H
 #include "Platform.h"
 #include <cstdint>
-#include <memory>
+#include "aeongames/Memory.h"
 #include <functional>
 #include <string>
 namespace AeonGames

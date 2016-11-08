@@ -15,7 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_MODEL_H
 #define AEONGAMES_MODEL_H
-#include <memory>
+#include "aeongames/Memory.h"
 #include <vector>
 #include "aeongames/Platform.h"
 
