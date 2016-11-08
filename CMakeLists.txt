@@ -85,7 +85,7 @@ add_subdirectory(application)
 
 find_program (SED_EXECUTABLE sed HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin)
 if(SED_EXECUTABLE)
-    message(STATUS "Found sed executable: $SED_EXECUTABLE")
+    message(STATUS "Found sed executable: ${SED_EXECUTABLE}")
 else()
     message(FATAL_ERROR "Unable to find sed executable.")
 endif()
