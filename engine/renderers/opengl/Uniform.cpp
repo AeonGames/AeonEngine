@@ -62,7 +62,7 @@ namespace AeonGames
         mName ( aName ),
         mType ( GL_SAMPLER_2D )
     {
-        * ( new ( mData ) std::shared_ptr<Texture> ( Get<OpenGLTexture> ( aFilename ) ) );
+        new ( mData ) std::shared_ptr<Texture> ( Get<OpenGLTexture> ( aFilename ) );
     }
     Uniform::~Uniform()
     {
@@ -127,7 +127,7 @@ namespace AeonGames
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
             break;
         case GL_SAMPLER_2D:
-            * ( reinterpret_cast<uint64_t*> ( aMemory + mOffset ) ) =
+            ( * ( reinterpret_cast<uint64_t*> ( aMemory + mOffset ) ) ) =
                 reinterpret_cast<const std::shared_ptr<Texture>*> ( mData )->get()->GetHandle();
             break;
         }
