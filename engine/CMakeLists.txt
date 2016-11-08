@@ -76,12 +76,12 @@ set(ENGINE_CORE_SOURCES
     core/Utilities.cpp
     core/AeonEngine.cpp
     core/InitializeFinalize.cpp
-    core/LogLevel.cpp)
+    core/LogLevel.cpp
+    scenegraph/Model.cpp)
 
 set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Scene.cpp
-    scenegraph/Node.cpp
-    scenegraph/Model.cpp)
+    scenegraph/Node.cpp)
 
 set(ENGINE_MATH_SOURCES
     math/Vector4.cpp

@@ -20,7 +20,6 @@ limitations under the License.
 #include <exception>
 #include "Configuration.h"
 #include "aeongames/Utilities.h"
-
 #include "ProtoBufHelpers.h"
 
 namespace AeonGames

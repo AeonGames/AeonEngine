@@ -19,14 +19,15 @@ install:
   - sudo ./vulkansdk-linux-x86_64-1.0.30.0.run
   - echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.30.0" >> ~/.bashrc
   - echo "export VULKAN_SDK" >> ~/.bashrc
-  - echo "export PATH=$VULKAN_SDK/bin:$PATH" >> ~/.bashrc   
-  - echo "export LD_LIBRARY_PATH=$VULKAN_SDK/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
-  - echo "export VK_LAYER_PATH=$VULKAN_SDK/etc/explicit_layer.d" >> ~/.bashrc
+  - echo "export PATH=$PWD/VulkanSDK/1.0.30.0/bin:$PATH" >> ~/.bashrc   
+  - echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.30.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
+  - echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.30.0/etc/explicit_layer.d" >> ~/.bashrc
   - source ~/.bashrc
   - echo $VULKAN_SDK
   - cat ~/.bashrc
   - sudo ldconfig
 before_script:
+  - echo $VULKAN_SDK
   - cmake -G "Unix Makefiles" .
 script: make
 notifications:

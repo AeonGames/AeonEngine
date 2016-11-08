@@ -65,16 +65,18 @@ namespace AeonGames
 
     EngineWindow::~EngineWindow()
     {
+#if 0
         mProgram.reset();
         mScene.RemoveNode ( mModel );
         delete mModel;
         mModel = nullptr;
+#endif
         mAeonEngine.UnregisterRenderingWindow ( winId() );
     }
 
     void EngineWindow::setMesh ( const QString & filename )
     {
-        //static Model* model = nullptr;
+#if 0
         if ( !mModel )
         {
             mScene.AddNode ( mModel = new Model );
@@ -100,6 +102,7 @@ namespace AeonGames
                               ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
         updateViewMatrix();
         mStep = eye_length / 100.0f;
+#endif
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
