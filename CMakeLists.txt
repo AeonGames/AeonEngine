@@ -74,6 +74,12 @@ if(Qt5_FOUND)
     add_subdirectory(tools/modelviewer)
 endif()
 
+find_program (SED_EXECUTABLE sed HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin)
+if(SED_EXECUTABLE)
+    message(STATUS "Found sed executable: ${SED_EXECUTABLE}")
+else()
+    message(FATAL_ERROR "Unable to find sed executable.")
+endif()
 
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
@@ -82,13 +88,6 @@ add_subdirectory(application)
 #######################################
 # Code Formating target
 #######################################
-
-find_program (SED_EXECUTABLE sed HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin)
-if(SED_EXECUTABLE)
-    message(STATUS "Found sed executable: ${SED_EXECUTABLE}")
-else()
-    message(FATAL_ERROR "Unable to find sed executable.")
-endif()
 
 if(WIN32)
     find_program (FIND_EXECUTABLE find HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin NO_SYSTEM_ENVIRONMENT_PATH)
