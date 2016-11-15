@@ -50,7 +50,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
-        GLuint mMatricesBuffer;
+        GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
             1, 0, 0, 0,

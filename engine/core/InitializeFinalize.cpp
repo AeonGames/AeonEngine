@@ -55,6 +55,7 @@ namespace AeonGames
         if ( nullptr == pmi )
         {
             std::cout << aFilename << " is not an AeonEngine Plugin." << std::endl;
+            FreeLibrary ( ( HINSTANCE ) plugin );
             return;
         }
 #else
@@ -69,6 +70,7 @@ namespace AeonGames
         if ( nullptr == pmi )
         {
             std::cout << aFilename << " is not an AeonEngine Plugin." << std::endl;
+            dlclose ( plugin );
             return;
         }
 #endif

@@ -24,7 +24,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mModel ( nullptr ), mScene(), mStep ( 0 ),
+    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mModel ( nullptr ), mScene(),
+        mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
         mProjectionMatrix(),

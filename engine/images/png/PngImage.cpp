@@ -62,11 +62,11 @@ namespace AeonGames
         // File loading code
         FILE* file = fopen ( aFileName.c_str(), "rb" );
         uint8_t* data;
-        size_t dataSize;
+        long dataSize;
         if ( file != nullptr )
         {
             fseek ( file, 0, SEEK_END );
-            dataSize = ( size_t ) ftell ( file );
+            dataSize = ftell ( file );
             fseek ( file, 0, SEEK_SET );
             data = static_cast<uint8_t*> ( malloc ( dataSize ) );
             if ( data == nullptr )
@@ -74,7 +74,11 @@ namespace AeonGames
                 fclose ( file );
                 throw std::runtime_error ( "Unable to allocate memory." );
             }
-            fread ( data, dataSize, 1, file );
+            if ( fread ( data, dataSize, 1, file ) != dataSize )
+            {
+                fclose ( file );
+                throw std::runtime_error ( "Failed to read all data." );
+            }
             fclose ( file );
         }
         else
