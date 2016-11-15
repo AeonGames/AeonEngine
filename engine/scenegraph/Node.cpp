@@ -51,11 +51,17 @@ namespace AeonGames
         /* Make sure tree is left in a valid state */
         if ( mParent != nullptr )
         {
-            mParent->RemoveNode ( this );
+            if ( !mParent->RemoveNode ( this ) )
+            {
+                std::cerr << "Remove Node Failed" << std::endl;
+            }
         }
         else if ( mScene != nullptr )
         {
-            mScene->RemoveNode ( this );
+            if ( !mScene->RemoveNode ( this ) )
+            {
+                std::cerr << "Remove Node Failed" << std::endl;
+            }
         }
         for ( auto & mNode : mNodes )
         {

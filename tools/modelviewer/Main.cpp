@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <iostream>
 #include "MainWindow.h"
 #include "aeongames/AeonEngine.h"
 
@@ -35,7 +36,16 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     application.setOrganizationName ( "AeonGames" );
     application.setOrganizationDomain ( "aeongames.com" );
     application.setApplicationName ( "AeonGames Model Viewer" );
-    AeonGames::MainWindow* mainWindow = new AeonGames::MainWindow();
+    AeonGames::MainWindow* mainWindow;
+    try
+    {
+        mainWindow = new AeonGames::MainWindow();
+    }
+    catch ( std::runtime_error e )
+    {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
     mainWindow->showNormal();
     retval = application.exec();
     delete mainWindow;
