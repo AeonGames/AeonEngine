@@ -15,13 +15,19 @@ limitations under the License.
 */
 #ifndef AEONGAMES_MATERIAL_H
 #define AEONGAMES_MATERIAL_H
+#include <string>
 
 namespace AeonGames
 {
     class Material
     {
-    protected:
-        virtual ~Material() = default;
+    public:
+        Material ( const std::string& aFilename );
+        ~Material();
+    private:
+        void Initialize();
+        void Finalize();
+        std::string mFilename;
     };
 }
 #endif

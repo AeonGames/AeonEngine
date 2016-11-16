@@ -22,19 +22,34 @@ namespace AeonGames
     class Mesh
     {
     public:
-        virtual void Render() const = 0;
-        virtual const float * const GetCenterRadii() const = 0;
-    protected:
-        virtual ~Mesh() = default;
         enum AttributeMask
         {
-            POSITION_BIT  = 0b1,
-            NORMAL_BIT    = 0b10,
-            TANGENT_BIT   = 0b100,
+            POSITION_BIT = 0b1,
+            NORMAL_BIT = 0b10,
+            TANGENT_BIT = 0b100,
             BITANGENT_BIT = 0b1000,
-            UV_BIT        = 0b10000,
-            WEIGHT_BIT    = 0b100000,
+            UV_BIT = 0b10000,
+            WEIGHT_BIT = 0b100000,
         };
+        Mesh ( const std::string& aFilename );
+        const float * const GetCenterRadii() const;
+        ~Mesh();
+    private:
+        void Initialize();
+        void Finalize();
+        uint32_t GetStride ( uint32_t aFlags ) const;
+        uint32_t GetIndexSize ( uint32_t aIndexType ) const;
+        std::string mFilename;
+        float mCenterRadii[3];
+        struct TriangleGroup
+        {
+            float mCenterRadii[6];
+            uint32_t mVertexFlags = 0;
+            uint32_t mVertexCount = 0;
+            uint32_t mIndexType = 0;
+            uint32_t mIndexCount = 0;
+        };
+        std::vector<TriangleGroup> mTriangleGroups;
     };
 }
 #endif

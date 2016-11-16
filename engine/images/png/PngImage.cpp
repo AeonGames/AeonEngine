@@ -103,7 +103,7 @@ namespace AeonGames
             {
                 throw std::runtime_error ( "Error during init_io." );
             }
-            png_read_memory_struct read_memory_struct = {data, data + 8, dataSize};
+            png_read_memory_struct read_memory_struct = {data, data + 8, static_cast<png_size_t> ( dataSize ) };
             png_set_read_fn ( png_ptr, &read_memory_struct, png_read_memory_data );
             png_set_sig_bytes ( png_ptr, 8 );
 

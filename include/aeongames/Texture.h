@@ -16,14 +16,17 @@ limitations under the License.
 #ifndef AEONGAMES_TEXTURE_H
 #define AEONGAMES_TEXTURE_H
 #include <cstdint>
+#include <string>
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
     class Texture
     {
     public:
-        DLL virtual ~Texture() = 0;
-        DLL virtual const uint64_t& GetHandle() const = 0;
+        Texture ( const std::string& aFilename );
+        ~Texture();
+    private:
+        std::string mFilename;
     };
 }
 #endif

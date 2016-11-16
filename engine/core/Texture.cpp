@@ -17,6 +17,10 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Texture::Texture ( const std::string& aFilename ) : mFilename ( aFilename )
+    {
+    }
     Texture::~Texture()
-    {}
+    {
+    }
 }

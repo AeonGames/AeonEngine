@@ -93,7 +93,7 @@ namespace AeonGames
         program->Use();
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        aMesh->Render();
+        //aMesh->Render(); /// @note commenting pending re-write.
     }
 
     void OpenGLRenderer::EndRender() const
@@ -464,16 +464,19 @@ namespace AeonGames
 
     std::shared_ptr<Mesh> OpenGLRenderer::GetMesh ( const std::string & aFilename ) const
     {
-        return Get<OpenGLMesh> ( aFilename );
+        //return Get<OpenGLMesh> ( aFilename ); /// @note commented, pending rewrite
+        return nullptr;
     }
 
     std::shared_ptr<Program> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
     {
-        return Get<OpenGLProgram> ( aFilename );
+        //return Get<OpenGLProgram> ( aFilename ); /// @note commented, pending rewrite
+        return nullptr;
     }
 
     std::shared_ptr<Texture> OpenGLRenderer::GetTexture ( const std::string & aFilename ) const
     {
-        return Get<OpenGLTexture> ( aFilename );
+        //return Get<OpenGLTexture> ( aFilename ); /// @note commented, pending rewrite
+        return nullptr;
     }
 }

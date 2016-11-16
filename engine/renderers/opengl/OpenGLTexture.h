@@ -23,13 +23,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class OpenGLTexture : public Texture
+    class OpenGLTexture
     {
     public:
         OpenGLTexture ( const std::string& aFilename );
-        ~OpenGLTexture() final;
-        /**@todo This is a temporary hack since mHandle is specific of ARB_bindless_texture which is not core in any OpenGL version.*/
-        const uint64_t& GetHandle() const override final;
+        ~OpenGLTexture();
+        /**@todo This is a temporary hack since mHandle is specific of ARB_bindless_texture which is not core in any OpenGL version to date.*/
+        const uint64_t& GetHandle() const;
     private:
         std::string mFilename;
         uint32_t mTexture;
