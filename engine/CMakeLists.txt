@@ -66,6 +66,7 @@ set(ENGINE_CORE_HEADERS
     include/Factory.h
     include/ProtoBufHelpers.h
     include/Configuration.h
+    core/Uniform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
@@ -73,6 +74,10 @@ set(ENGINE_CORE_SOURCES
     core/Configuration.cpp
     core/Image.cpp
     core/Texture.cpp
+    core/Program.cpp
+    core/Uniform.cpp
+    core/Material.cpp
+    core/Mesh.cpp
     core/Renderer.cpp
     core/Utilities.cpp
     core/AeonEngine.cpp

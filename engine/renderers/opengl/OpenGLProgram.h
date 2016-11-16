@@ -24,11 +24,11 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class OpenGLProgram : public Program
+    class OpenGLProgram
     {
     public:
         OpenGLProgram ( const std::string& aFilename );
-        ~OpenGLProgram() override;
+        ~OpenGLProgram();
         void Use() const;
     private:
         void Initialize();

@@ -13,18 +13,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "OpenGLFunctions.h"
-#include "OpenGLTexture.h"
+#include <cstring>
+#include "aeongames/Texture.h"
 #include "aeongames/ResourceCache.h"
 #include "Uniform.h"
-#include <cstring>
+
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "property.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
     static_assert ( sizeof ( std::shared_ptr<Texture> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
     Uniform::Uniform ( const std::string& aName, float aX ) :
         mName ( aName ),
-        mType ( GL_FLOAT )
+        mType ( PropertyBuffer_Type_FLOAT )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = 0;
@@ -33,7 +42,7 @@ namespace AeonGames
     }
     Uniform::Uniform ( const std::string& aName, float aX, float aY ) :
         mName ( aName ),
-        mType ( GL_FLOAT_VEC2 )
+        mType ( PropertyBuffer_Type_FLOAT_VEC2 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
@@ -42,7 +51,7 @@ namespace AeonGames
     }
     Uniform::Uniform ( const std::string& aName, float aX, float aY, float aZ ) :
         mName ( aName ),
-        mType ( GL_FLOAT_VEC3 )
+        mType ( PropertyBuffer_Type_FLOAT_VEC3 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
@@ -51,7 +60,7 @@ namespace AeonGames
     }
     Uniform::Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW ) :
         mName ( aName ),
-        mType ( GL_FLOAT_VEC4 )
+        mType ( PropertyBuffer_Type_FLOAT_VEC4 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
@@ -60,26 +69,20 @@ namespace AeonGames
     }
     Uniform::Uniform ( const std::string & aName, const std::string & aFilename ) :
         mName ( aName ),
-        mType ( GL_SAMPLER_2D )
+        mType ( PropertyBuffer_Type_SAMPLER_2D )
     {
-#if 0
-        ///@note commented pending rewrite
         new ( mData ) std::shared_ptr<Texture> ( Get<Texture> ( aFilename ) );
-#endif
     }
     Uniform::~Uniform()
     {
-#if 0
-        ///@note commented pending rewrite
         switch ( mType )
         {
-        case GL_SAMPLER_2D:
+        case PropertyBuffer_Type_SAMPLER_2D:
             reinterpret_cast<std::shared_ptr<Texture>*> ( mData )->~shared_ptr();
             break;
         default:
             break;
         }
-#endif
     }
     void Uniform::SetOffset ( const uint32_t aOffset )
     {
@@ -94,19 +97,19 @@ namespace AeonGames
         std::string declaration;
         switch ( mType )
         {
-        case GL_FLOAT:
+        case PropertyBuffer_Type_FLOAT:
             declaration = "float " + mName + ";\n";
             break;
-        case GL_FLOAT_VEC2:
+        case PropertyBuffer_Type_FLOAT_VEC2:
             declaration = "vec2 " + mName + ";\n";
             break;
-        case GL_FLOAT_VEC3:
+        case PropertyBuffer_Type_FLOAT_VEC3:
             declaration = "vec3 " + mName + ";\n";
             break;
-        case GL_FLOAT_VEC4:
+        case PropertyBuffer_Type_FLOAT_VEC4:
             declaration = "vec4 " + mName + ";\n";
             break;
-        case GL_SAMPLER_2D:
+        case PropertyBuffer_Type_SAMPLER_2D:
             declaration = "sampler2D " + mName + ";\n";
             break;
         }
@@ -120,21 +123,22 @@ namespace AeonGames
     {
         switch ( mType )
         {
-        case GL_FLOAT:
+        case PropertyBuffer_Type_FLOAT:
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) );
             break;
-        case GL_FLOAT_VEC2:
+        case PropertyBuffer_Type_FLOAT_VEC2:
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 2 );
             break;
-        case GL_FLOAT_VEC3:
+        case PropertyBuffer_Type_FLOAT_VEC3:
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 3 );
             break;
-        case GL_FLOAT_VEC4:
+        case PropertyBuffer_Type_FLOAT_VEC4:
             memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
             break;
-        case GL_SAMPLER_2D:
+        case PropertyBuffer_Type_SAMPLER_2D:
             ( * ( reinterpret_cast<uint64_t*> ( aMemory + mOffset ) ) ) =
-                /*reinterpret_cast<const std::shared_ptr<Texture>*> ( mData )->get()->GetHandle();*/ ///@note commented pending re-write.
+                /**@todo figure out wether it makes sence to keep a texture class or just keep the image class.*/
+                /*reinterpret_cast<const std::shared_ptr<Texture>*> ( mData )->get()->GetHandle()*/
                 0;
             break;
         }

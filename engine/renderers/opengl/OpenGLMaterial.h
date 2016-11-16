@@ -24,11 +24,11 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class OpenGLMaterial : public Material
+    class OpenGLMaterial
     {
     public:
         OpenGLMaterial ( const std::string& aFilename );
-        ~OpenGLMaterial() override;
+        ~OpenGLMaterial();
     private:
         void Initialize();
         void Finalize();

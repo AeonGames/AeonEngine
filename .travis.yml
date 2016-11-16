@@ -40,6 +40,6 @@ addons:
     project:
       name: "AeonGames/AeonEngine"
     notification_email: kwizatz@aeongames.com
-    build_command_prepend: "cmake -G \"Unix Makefiles\" .; make clean"
+    build_command_prepend: "cmake -G\\\"Unix Makefiles\\\" .; make clean"
     build_command:   "make -j4"
     branch_pattern: coverity_scan

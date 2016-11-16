@@ -141,7 +141,7 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
 
             uint8_t* offset = nullptr;
-            if ( i.vertexflags() & POSITION_BIT )
+            if ( i.vertexflags() & Mesh::POSITION_BIT )
             {
                 glEnableVertexAttribArray ( 0 );
                 OPENGL_CHECK_ERROR_THROW;
@@ -150,7 +150,7 @@ namespace AeonGames
                 offset += sizeof ( float ) * 3;
             }
 
-            if ( i.vertexflags() & NORMAL_BIT )
+            if ( i.vertexflags() & Mesh::NORMAL_BIT )
             {
                 glEnableVertexAttribArray ( 1 );
                 OPENGL_CHECK_ERROR_THROW;
@@ -159,7 +159,7 @@ namespace AeonGames
                 offset += sizeof ( float ) * 3;
             }
 
-            if ( i.vertexflags() & TANGENT_BIT )
+            if ( i.vertexflags() & Mesh::TANGENT_BIT )
             {
                 glEnableVertexAttribArray ( 2 );
                 OPENGL_CHECK_ERROR_THROW;
@@ -168,7 +168,7 @@ namespace AeonGames
                 offset += sizeof ( float ) * 3;
             }
 
-            if ( i.vertexflags() & BITANGENT_BIT )
+            if ( i.vertexflags() & Mesh::BITANGENT_BIT )
             {
                 glEnableVertexAttribArray ( 3 );
                 OPENGL_CHECK_ERROR_THROW;
@@ -177,7 +177,7 @@ namespace AeonGames
                 offset += sizeof ( float ) * 3;
             }
 
-            if ( i.vertexflags() & UV_BIT )
+            if ( i.vertexflags() & Mesh::UV_BIT )
             {
                 glEnableVertexAttribArray ( 4 );
                 OPENGL_CHECK_ERROR_THROW;
@@ -186,7 +186,7 @@ namespace AeonGames
                 offset += sizeof ( float ) * 2;
             }
 
-            if ( i.vertexflags() & WEIGHT_BIT )
+            if ( i.vertexflags() & Mesh::WEIGHT_BIT )
             {
                 glEnableVertexAttribArray ( 5 );
                 OPENGL_CHECK_ERROR_THROW;
@@ -240,27 +240,27 @@ namespace AeonGames
     uint32_t OpenGLMesh::GetStride ( uint32_t aFlags ) const
     {
         uint32_t stride = 0;
-        if ( aFlags & POSITION_BIT )
+        if ( aFlags & Mesh::POSITION_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & NORMAL_BIT )
+        if ( aFlags & Mesh::NORMAL_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & TANGENT_BIT )
+        if ( aFlags & Mesh::TANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & BITANGENT_BIT )
+        if ( aFlags & Mesh::BITANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & UV_BIT )
+        if ( aFlags & Mesh::UV_BIT )
         {
             stride += sizeof ( float ) * 2;
         }
-        if ( aFlags & WEIGHT_BIT )
+        if ( aFlags & Mesh::WEIGHT_BIT )
         {
             stride += sizeof ( uint8_t ) * 8;
         }

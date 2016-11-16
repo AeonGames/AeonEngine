@@ -22,13 +22,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class OpenGLMesh : public Mesh
+    class OpenGLMesh
     {
     public:
         OpenGLMesh ( const std::string& aFilename );
-        ~OpenGLMesh() override;
-        void Render() const final;
-        const float * const GetCenterRadii() const final;
+        ~OpenGLMesh();
+        void Render() const;
+        const float * const GetCenterRadii() const;
     private:
         void Initialize();
         void Finalize();

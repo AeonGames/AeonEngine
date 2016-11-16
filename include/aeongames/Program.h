@@ -17,13 +17,22 @@ limitations under the License.
 #define AEONGAMES_PROGRAM_H
 
 #include <cstdint>
-
+#include <string>
+#include "Uniform.h"
 namespace AeonGames
 {
     class Program
     {
-    protected:
-        virtual ~Program() = default;
+    public:
+        Program ( const std::string& aFilename );
+        ~Program();
+    private:
+        void Initialize();
+        void Finalize();
+        std::string mFilename;
+        std::string mVertexShader;
+        std::string mFragmentShader;
+        std::vector<Uniform> mUniformMetaData;
     };
 }
 #endif
