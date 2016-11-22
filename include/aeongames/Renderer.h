@@ -57,11 +57,15 @@ namespace AeonGames
         virtual ~Renderer() = default;
     };
 
-    /** Factory Functions */
+    /**@name Factory Functions */
+    /*@{*/
     DLL std::unique_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
     /** Registers a renderer loader for a specific identifier.*/
     DLL bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::unique_ptr<Renderer>() > aLoader );
     /** Unregisters a renderer loader for a specific identifier.*/
     DLL bool UnregisterRendererLoader ( const std::string& aIdentifier );
+    /** Enumerates Renderer loader identifiers via an enumerator functor.*/
+    DLL void EnumerateRendererLoaders ( std::function<bool ( const std::string& ) > aEnumerator );
+    /*@}*/
 }
 #endif

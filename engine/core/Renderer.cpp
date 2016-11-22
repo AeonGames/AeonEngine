@@ -31,4 +31,8 @@ namespace AeonGames
     {
         return Factory<Renderer>::UnregisterLoader ( aIdentifier );
     }
+    void EnumerateRendererLoaders ( std::function<bool ( const std::string& ) > aEnumerator )
+    {
+        Factory<Renderer>::EnumerateLoaders ( aEnumerator );
+    }
 }

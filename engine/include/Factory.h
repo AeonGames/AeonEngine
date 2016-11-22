@@ -52,6 +52,16 @@ namespace AeonGames
             }
             return false;
         }
+        static void EnumerateLoaders ( std::function<bool ( const std::string& ) > aEnumerator )
+        {
+            for ( auto& i : Loaders )
+            {
+                if ( !aEnumerator ( i.first ) )
+                {
+                    return;
+                }
+            }
+        }
     private:
         static std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Loaders;
     };
