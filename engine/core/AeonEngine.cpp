@@ -101,32 +101,19 @@ namespace AeonGames
     {
         return 0;
     }
-
+#if 0
     std::shared_ptr<Mesh> AeonEngine::GetMesh ( const std::string & aFilename ) const
     {
         return pImpl->mRenderer->GetMesh ( aFilename );
     }
-
     std::shared_ptr<Program> AeonEngine::GetProgram ( const std::string & aFilename ) const
     {
         return pImpl->mRenderer->GetProgram ( aFilename );
     }
-
-    void AeonEngine::SetScene ( Scene * aScene )
-    {
-        pImpl->mScene = aScene;
-    }
-
-    Scene * AeonEngine::GetScene() const
-    {
-        return pImpl->mScene;
-    }
-
     bool AeonEngine::RegisterRenderingWindow ( uintptr_t aWindowId )
     {
         return pImpl->mRenderer->AddRenderingWindow ( aWindowId );
     }
-
     void AeonEngine::UnregisterRenderingWindow ( uintptr_t aWindowId )
     {
         pImpl->mRenderer->RemoveRenderingWindow ( aWindowId );
@@ -143,4 +130,16 @@ namespace AeonGames
     {
         pImpl->mRenderer->SetViewMatrix ( aMatrix );
     }
+#endif
+
+    void AeonEngine::SetScene ( Scene * aScene )
+    {
+        pImpl->mScene = aScene;
+    }
+
+    Scene * AeonEngine::GetScene() const
+    {
+        return pImpl->mScene;
+    }
+
 }

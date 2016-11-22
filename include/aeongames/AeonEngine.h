@@ -35,22 +35,12 @@ namespace AeonGames
         DLL AeonEngine();
         /// Destruct
         DLL ~AeonEngine();
-#if 0
-        /* We don't really want to be copying and moving engine objects... or do we?*/
-        /// Move
-        DLL AeonEngine ( AeonEngine&& aRhs ) noexcept;
-        DLL AeonEngine& operator= ( AeonEngine&& aRhs ) noexcept;
-        /// Copy
-        DLL AeonEngine ( const AeonEngine& aRhs );
-        DLL AeonEngine& operator= ( const AeonEngine& aRhs );
-#else
-        /// Move
+        /// No Move
         AeonEngine ( AeonEngine&& ) noexcept = delete;
         AeonEngine& operator= ( AeonEngine&& ) noexcept = delete;
-        /// Copy
+        /// No Copy
         AeonEngine ( const AeonEngine& ) = delete;
         AeonEngine& operator= ( const AeonEngine& ) = delete;
-#endif
         /**
         Advance the simulation a single step.
         @param aDeltaTime Time delta to advance the simulation.
@@ -61,18 +51,8 @@ namespace AeonGames
         @return program return value.
         */
         DLL int Run();
-        DLL std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const;
-        DLL std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const;
         DLL void SetScene ( Scene* aScene );
         DLL Scene* GetScene() const;
-
-        DLL bool RegisterRenderingWindow ( uintptr_t aWindowId );
-        DLL void UnregisterRenderingWindow ( uintptr_t aWindowId );
-        DLL void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const;
-
-        DLL void SetProjectionMatrix ( const float aMatrix[16] );
-        DLL void SetViewMatrix ( const float aMatrix[16] );
-
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

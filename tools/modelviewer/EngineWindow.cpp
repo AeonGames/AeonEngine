@@ -19,12 +19,13 @@ limitations under the License.
 #include <cmath>
 #include <iostream>
 #include "EngineWindow.h"
+#include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mAeonEngine(), mModel ( nullptr ), mScene(),
+    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mRenderer(), mAeonEngine(), mModel ( nullptr ), mScene(),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
@@ -55,7 +56,17 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-        if ( !mAeonEngine.RegisterRenderingWindow ( winId() ) )
+
+        EnumerateRendererLoaders ( [this] ( const std::string & aIdentifier )->bool
+        {
+            /* For now just grab the first renderer found. */
+            this->mRenderer = GetRenderer ( aIdentifier );
+            return false;
+        } );
+
+        assert ( ( mRenderer != nullptr ) && "Failed to retrieve a valid renderer." );
+
+        if ( !mRenderer->AddRenderingWindow ( winId() ) )
         {
             throw std::runtime_error ( "Window registration failed." );
         }
@@ -72,7 +83,7 @@ namespace AeonGames
         delete mModel;
         mModel = nullptr;
 #endif
-        mAeonEngine.UnregisterRenderingWindow ( winId() );
+        mRenderer->RemoveRenderingWindow ( winId() );
     }
 
     void EngineWindow::setMesh ( const QString & filename )
@@ -108,7 +119,7 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        mAeonEngine.Resize ( winId(), aResizeEvent->size().width(), aResizeEvent->size().height() );
+        mRenderer->Resize ( winId(), aResizeEvent->size().width(), aResizeEvent->size().height() );
         static const QMatrix4x4 flipMatrix (
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -118,7 +129,7 @@ namespace AeonGames
         float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
         mProjectionMatrix.frustum ( -half_radius, half_radius, -0.5, 0.5, 1, 1600 );
         mProjectionMatrix = mProjectionMatrix * flipMatrix;
-        mAeonEngine.SetProjectionMatrix ( mProjectionMatrix.constData() );
+        mRenderer->SetProjectionMatrix ( mProjectionMatrix.constData() );
         // Calculate frustum half vertical angle (for fitting models into frustum)
         float v1[2] = { 1, 0 };
         float v2[2] = { 1, half_radius };
@@ -161,7 +172,7 @@ namespace AeonGames
         mViewMatrix.rotate ( mCameraRotation );
         mViewMatrix.setColumn ( 3, mCameraLocation );
         mViewMatrix = mViewMatrix.inverted();
-        mAeonEngine.SetViewMatrix ( mViewMatrix.constData() );
+        mRenderer->SetViewMatrix ( mViewMatrix.constData() );
     }
 
     void EngineWindow::keyPressEvent ( QKeyEvent * event )

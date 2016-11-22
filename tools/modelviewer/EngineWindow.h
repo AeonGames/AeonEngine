@@ -26,6 +26,7 @@ limitations under the License.
 #include <QCloseEvent>
 
 #include "aeongames/AeonEngine.h"
+#include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 #include "aeongames/Matrix4x4.h"
@@ -60,6 +61,7 @@ namespace AeonGames
         QTimer mTimer;
         QElapsedTimer mStopWatch;
         AeonEngine mAeonEngine;
+        std::unique_ptr<Renderer> mRenderer;
         std::shared_ptr<Mesh> mMesh;
         std::shared_ptr<Program> mProgram;
         Model* mModel;
