@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mRenderer(), mAeonEngine(), mModel ( nullptr ), mScene(),
+    EngineWindow::EngineWindow ( QWindow *parent ) : QWindow ( parent ), mTimer(), mRenderer(), mModel ( nullptr ),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
@@ -59,7 +59,8 @@ namespace AeonGames
 
         EnumerateRendererLoaders ( [this] ( const std::string & aIdentifier )->bool
         {
-            /* For now just grab the first renderer found. */
+            /* For now just grab the first renderer found,
+                later we can add a nice renderer selection window.*/
             this->mRenderer = GetRenderer ( aIdentifier );
             return false;
         } );
@@ -72,7 +73,6 @@ namespace AeonGames
         }
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
         updateViewMatrix();
-        mAeonEngine.SetScene ( &mScene );
     }
 
     EngineWindow::~EngineWindow()
@@ -159,7 +159,7 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            mAeonEngine.Step ( 0.0 );
+            ///@todo Render directly from Renderer.
             return true;
         default:
             return QWindow::event ( aEvent );

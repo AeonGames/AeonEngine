@@ -33,14 +33,13 @@ namespace AeonGames
 {
     struct AeonEngine::Impl
     {
-        Impl() : mRenderer ( GetRenderer ( "OpenGL" ) )
+        Impl()
         {
         }
         ~Impl()
         {
         }
-        std::unique_ptr<Renderer> mRenderer;
-        Scene* mScene = nullptr;
+        std::shared_ptr<Scene> mScene = nullptr;
     };
 
     AeonEngine::AeonEngine() :
@@ -49,51 +48,12 @@ namespace AeonGames
     }
 
     AeonEngine::~AeonEngine() = default;
-#if 0
-    AeonEngine::AeonEngine ( AeonEngine && aRhs ) noexcept = default;
 
-    AeonEngine & AeonEngine::operator= ( AeonEngine && aRhs ) noexcept = default;
-
-    AeonEngine::AeonEngine ( const AeonEngine & aRhs )
-        : pImpl ( nullptr )
-    {
-        if ( aRhs.pImpl )
-        {
-            pImpl = std::make_unique<Impl> ( *aRhs.pImpl );
-        }
-    }
-
-    AeonEngine & AeonEngine::operator= ( const AeonEngine & aRhs )
-    {
-        if ( !aRhs.pImpl )
-        {
-            pImpl.reset();
-        }
-        else if ( !pImpl )
-        {
-            pImpl = std::make_unique<Impl> ( *aRhs.pImpl );
-        }
-        else
-        {
-            *pImpl = *aRhs.pImpl;
-        }
-        return *this;
-    }
-#endif
     void AeonEngine::Step ( double aDeltaTime )
     {
-        if ( pImpl->mRenderer )
-        {
-            pImpl->mRenderer->BeginRender();
-        }
         if ( pImpl->mScene )
         {
             pImpl->mScene->Update ( aDeltaTime );
-            pImpl->mScene->Render ( pImpl->mRenderer.get() );
-        }
-        if ( pImpl->mRenderer )
-        {
-            pImpl->mRenderer->EndRender();
         }
     }
 
@@ -101,43 +61,13 @@ namespace AeonGames
     {
         return 0;
     }
-#if 0
-    std::shared_ptr<Mesh> AeonEngine::GetMesh ( const std::string & aFilename ) const
-    {
-        return pImpl->mRenderer->GetMesh ( aFilename );
-    }
-    std::shared_ptr<Program> AeonEngine::GetProgram ( const std::string & aFilename ) const
-    {
-        return pImpl->mRenderer->GetProgram ( aFilename );
-    }
-    bool AeonEngine::RegisterRenderingWindow ( uintptr_t aWindowId )
-    {
-        return pImpl->mRenderer->AddRenderingWindow ( aWindowId );
-    }
-    void AeonEngine::UnregisterRenderingWindow ( uintptr_t aWindowId )
-    {
-        pImpl->mRenderer->RemoveRenderingWindow ( aWindowId );
-    }
-    void AeonEngine::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
-    {
-        pImpl->mRenderer->Resize ( aWindowId, aWidth, aHeight );
-    }
-    void AeonEngine::SetProjectionMatrix ( const float aMatrix[16] )
-    {
-        pImpl->mRenderer->SetProjectionMatrix ( aMatrix );
-    }
-    void AeonEngine::SetViewMatrix ( const float aMatrix[16] )
-    {
-        pImpl->mRenderer->SetViewMatrix ( aMatrix );
-    }
-#endif
 
-    void AeonEngine::SetScene ( Scene * aScene )
+    void AeonEngine::SetScene ( std::shared_ptr<Scene> aScene )
     {
         pImpl->mScene = aScene;
     }
 
-    Scene * AeonEngine::GetScene() const
+    std::shared_ptr<Scene> AeonEngine::GetScene() const
     {
         return pImpl->mScene;
     }

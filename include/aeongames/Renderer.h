@@ -27,6 +27,7 @@ namespace AeonGames
     class Mesh;
     class Program;
     class Texture;
+    class Model;
     class Renderer
     {
     public:
@@ -34,13 +35,12 @@ namespace AeonGames
         ///@{
         virtual void BeginRender() const = 0;
         virtual void EndRender() const = 0;
-        virtual void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const = 0;
+        virtual void Render ( const std::shared_ptr<Model> aModel ) const = 0;
         ///@}
-        ///@name Resource Access Functions
+        ///@name Resource Allocation Functions
         ///@{
-        virtual std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const = 0;
-        virtual std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const = 0;
-        virtual std::shared_ptr<Texture> GetTexture ( const std::string& aFilename ) const = 0;
+        ///@todo This should take a const std::shared_ptr
+        virtual bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) = 0;
         ///@}
         ///@name Window Functions
         ///@{

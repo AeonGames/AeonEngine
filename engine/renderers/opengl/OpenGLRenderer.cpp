@@ -29,6 +29,10 @@ limitations under the License.
 #include "OpenGLTexture.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/Program.h"
+#include "aeongames/Material.h"
+#include "aeongames/Mesh.h"
+#include "aeongames/Model.h"
 
 namespace AeonGames
 {
@@ -87,13 +91,47 @@ namespace AeonGames
         }
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
+#if 0
         OpenGLProgram* program = reinterpret_cast<OpenGLProgram*> ( aProgram.get() );
         program->Use();
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
         //aMesh->Render(); /// @note commenting pending re-write.
+#endif
+    }
+
+    bool OpenGLRenderer::AllocateMeshRenderData ( std::shared_ptr<Mesh> aMesh )
+    {
+        return false;
+    }
+
+    bool OpenGLRenderer::AllocateProgramRenderData ( std::shared_ptr<Program> aProgram )
+    {
+        return false;
+    }
+
+    bool OpenGLRenderer::AllocateMaterialRenderData ( std::shared_ptr<Material> aMaterial )
+    {
+        return false;
+    }
+
+    bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
+    {
+        if ( !AllocateProgramRenderData ( aModel->GetProgram() ) )
+        {
+            return false;
+        }
+        if ( !AllocateMaterialRenderData ( aModel->GetMaterial() ) )
+        {
+            return false;
+        }
+        if ( !AllocateMeshRenderData ( aModel->GetMesh() ) )
+        {
+            return false;
+        }
+        return true;
     }
 
     void OpenGLRenderer::EndRender() const
@@ -460,23 +498,5 @@ namespace AeonGames
 
     void OpenGLRenderer::Finalize()
     {
-    }
-
-    std::shared_ptr<Mesh> OpenGLRenderer::GetMesh ( const std::string & aFilename ) const
-    {
-        //return Get<OpenGLMesh> ( aFilename ); /// @note commented, pending rewrite
-        return nullptr;
-    }
-
-    std::shared_ptr<Program> OpenGLRenderer::GetProgram ( const std::string & aFilename ) const
-    {
-        //return Get<OpenGLProgram> ( aFilename ); /// @note commented, pending rewrite
-        return nullptr;
-    }
-
-    std::shared_ptr<Texture> OpenGLRenderer::GetTexture ( const std::string & aFilename ) const
-    {
-        //return Get<OpenGLTexture> ( aFilename ); /// @note commented, pending rewrite
-        return nullptr;
     }
 }
