@@ -27,8 +27,7 @@ namespace AeonGames
 {
     class Mesh;
     class Program;
-    class Texture;
-//    class OpenGLProgram;
+    class Material;
     class OpenGLRenderer : public Renderer
     {
     public:
@@ -36,10 +35,8 @@ namespace AeonGames
         ~OpenGLRenderer() override;
         void BeginRender() const final;
         void EndRender() const final;
-        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const final;
-        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const final;
-        std::shared_ptr<Program> GetProgram ( const std::string& aFilename ) const final;
-        std::shared_ptr<Texture> GetTexture ( const std::string& aFilename ) const final;
+        void Render ( const std::shared_ptr<Model> aModel ) const final;
+        bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
         bool AddRenderingWindow ( uintptr_t aWindowId ) final;
         void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
         void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;
@@ -50,6 +47,9 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
+        bool AllocateMeshRenderData ( std::shared_ptr<Mesh> aMesh );
+        bool AllocateProgramRenderData ( std::shared_ptr<Program> aProgram );
+        bool AllocateMaterialRenderData ( std::shared_ptr<Material> aMaterial );
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {

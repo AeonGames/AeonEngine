@@ -60,12 +60,10 @@ namespace AeonGames
         QPoint mLastCursorPosition;
         QTimer mTimer;
         QElapsedTimer mStopWatch;
-        AeonEngine mAeonEngine;
         std::unique_ptr<Renderer> mRenderer;
         std::shared_ptr<Mesh> mMesh;
         std::shared_ptr<Program> mProgram;
         Model* mModel;
-        Scene mScene;
         float mFrustumVerticalHalfAngle;
         float mStep;
         /* We're using QT classes for now... */

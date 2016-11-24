@@ -522,13 +522,8 @@ namespace AeonGames
     {
     }
 
-    void VulkanRenderer::Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const
+    void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
-    }
-
-    std::shared_ptr<Mesh> VulkanRenderer::GetMesh ( const std::string & aFilename ) const
-    {
-        return nullptr;
     }
 
 #if 0

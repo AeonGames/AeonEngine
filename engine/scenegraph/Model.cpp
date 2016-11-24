@@ -28,6 +28,7 @@ limitations under the License.
 #endif
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Program.h"
+#include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Renderer.h"
 
@@ -50,13 +51,33 @@ namespace AeonGames
     {
     }
 
+    const std::string & Model::GetFilename() const
+    {
+        return mFilename;
+    }
+
+    std::shared_ptr<Program> Model::GetProgram()
+    {
+        return mProgram;
+    }
+
+    std::shared_ptr<Material> Model::GetMaterial()
+    {
+        return mMaterial;
+    }
+
+    std::shared_ptr<Mesh> Model::GetMesh()
+    {
+        return mMesh;
+    }
+
     void Model::Initialize()
     {
         static ModelBuffer model_buffer;
         LoadProtoBufObject<ModelBuffer> ( model_buffer, mFilename, "AEONMDL" );
-        //mProgram = Get<Program>(model_buffer.program().file());
-        //mMaterial = Get<Material>(model_buffer.material().file());
-        //mMesh = Get<Mesh>(model_buffer.material().file());
+        mProgram = Get<Program> ( model_buffer.program().file() );
+        mMaterial = Get<Material> ( model_buffer.material().file() );
+        mMesh = Get<Mesh> ( model_buffer.material().file() );
         model_buffer.Clear();
     }
 

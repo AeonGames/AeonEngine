@@ -51,8 +51,8 @@ namespace AeonGames
         @return program return value.
         */
         DLL int Run();
-        DLL void SetScene ( Scene* aScene );
-        DLL Scene* GetScene() const;
+        DLL void SetScene ( std::shared_ptr<Scene> aScene );
+        DLL std::shared_ptr<Scene> GetScene() const;
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

@@ -31,8 +31,7 @@ namespace AeonGames
         ~VulkanRenderer() override;
         void BeginRender() const final;
         void EndRender() const final;
-        void Render ( const std::shared_ptr<Mesh>& aMesh, const std::shared_ptr<Program>& aProgram ) const final;
-        std::shared_ptr<Mesh> GetMesh ( const std::string& aFilename ) const final;
+        void Render ( const std::shared_ptr<Model> aModel ) const final;
     private:
         void InitializeInstance();
         void InitializeDevice();
