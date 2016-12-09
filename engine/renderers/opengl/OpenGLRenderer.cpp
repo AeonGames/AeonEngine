@@ -93,28 +93,61 @@ namespace AeonGames
 
     void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
-#if 0
-        OpenGLProgram* program = reinterpret_cast<OpenGLProgram*> ( aProgram.get() );
-        program->Use();
+        mProgramMap.at ( aModel->GetProgram() )->Use();
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        //aMesh->Render(); /// @note commenting pending re-write.
-#endif
+        mMeshMap.at ( aModel->GetMesh() )->Render();
     }
 
     bool OpenGLRenderer::AllocateMeshRenderData ( std::shared_ptr<Mesh> aMesh )
     {
-        return false;
+        if ( mMeshMap.find ( aMesh ) == mMeshMap.end() )
+        {
+            try
+            {
+                mMeshMap[aMesh] = std::make_unique<OpenGLMesh> ( aMesh );
+            }
+            catch ( std::runtime_error e )
+            {
+                std::cerr << e.what() << std::endl;
+                return false;
+            }
+        }
+        return true;
     }
 
     bool OpenGLRenderer::AllocateProgramRenderData ( std::shared_ptr<Program> aProgram )
     {
-        return false;
+        if ( mProgramMap.find ( aProgram ) == mProgramMap.end() )
+        {
+            try
+            {
+                mProgramMap[aProgram] = std::make_unique<OpenGLProgram> ( aProgram );
+            }
+            catch ( std::runtime_error e )
+            {
+                std::cerr << e.what() << std::endl;
+                return false;
+            }
+        }
+        return true;
     }
 
     bool OpenGLRenderer::AllocateMaterialRenderData ( std::shared_ptr<Material> aMaterial )
     {
-        return false;
+        if ( mMaterialMap.find ( aMaterial ) == mMaterialMap.end() )
+        {
+            try
+            {
+                mMaterialMap[aMaterial] = std::make_unique<OpenGLMaterial> ( aMaterial );
+            }
+            catch ( std::runtime_error e )
+            {
+                std::cerr << e.what() << std::endl;
+                return false;
+            }
+        }
+        return true;
     }
 
     bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )

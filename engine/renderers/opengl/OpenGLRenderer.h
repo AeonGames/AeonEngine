@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include <exception>
 #include <vector>
+#include <unordered_map>
 #include <utility>
 #include "aeongames/Memory.h"
 #include "OpenGLFunctions.h"
@@ -26,8 +27,11 @@ limitations under the License.
 namespace AeonGames
 {
     class Mesh;
+    class OpenGLMesh;
     class Program;
+    class OpenGLProgram;
     class Material;
+    class OpenGLMaterial;
     class OpenGLRenderer : public Renderer
     {
     public:
@@ -112,6 +116,9 @@ namespace AeonGames
 #endif
         };
         std::vector<WindowData> mWindowRegistry;
+        std::unordered_map<std::shared_ptr<Mesh>, std::unique_ptr<OpenGLMesh>> mMeshMap;
+        std::unordered_map<std::shared_ptr<Program>, std::unique_ptr<OpenGLProgram>> mProgramMap;
+        std::unordered_map<std::shared_ptr<Material>, std::unique_ptr<OpenGLMaterial>> mMaterialMap;
     };
 }
 #endif

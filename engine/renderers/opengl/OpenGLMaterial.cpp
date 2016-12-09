@@ -27,14 +27,14 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
+#include "aeongames/Material.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLMaterial.h"
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial ( const std::string& aFilename ) :
-        mFilename ( aFilename )
+    OpenGLMaterial::OpenGLMaterial ( const std::shared_ptr<Material> aMaterial ) :
+        mMaterial ( aMaterial )
     {
         try
         {
@@ -53,9 +53,6 @@ namespace AeonGames
 
     void OpenGLMaterial::Initialize()
     {
-        static MaterialBuffer material_buffer;
-        LoadProtoBufObject ( material_buffer, mFilename, "AEONMTL" );
-        material_buffer.Clear();
     }
 
     void OpenGLMaterial::Finalize()
