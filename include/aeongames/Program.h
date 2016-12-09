@@ -19,6 +19,8 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include "Uniform.h"
+#include "aeongames/Platform.h"
+
 namespace AeonGames
 {
     class Program
@@ -26,6 +28,9 @@ namespace AeonGames
     public:
         Program ( const std::string& aFilename );
         ~Program();
+        DLL const std::string& GetVertexShaderSource() const;
+        DLL const std::string& GetFragmentShaderSource() const;
+        DLL const std::vector<Uniform>& GetUniformMetaData() const;
     private:
         void Initialize();
         void Finalize();

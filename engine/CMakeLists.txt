@@ -68,6 +68,10 @@ set(ENGINE_CORE_HEADERS
     include/Configuration.h
     core/Uniform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
 set(ENGINE_CORE_SOURCES

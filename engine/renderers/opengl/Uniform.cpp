@@ -81,14 +81,6 @@ namespace AeonGames
         }
 #endif
     }
-    void Uniform::SetOffset ( const uint32_t aOffset )
-    {
-        mOffset = aOffset;
-    }
-    uint32_t Uniform::Offset() const
-    {
-        return mOffset;
-    }
     const std::string Uniform::GetDeclaration() const
     {
         std::string declaration;
@@ -116,24 +108,24 @@ namespace AeonGames
     {
         return mName;
     }
-    void Uniform::CopyTo ( uint8_t * aMemory ) const
+    void Uniform::CopyTo ( uint8_t * aMemory, uint32_t aOffset ) const
     {
         switch ( mType )
         {
         case GL_FLOAT:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) );
+            memcpy ( ( aMemory + aOffset ), mData, sizeof ( float ) );
             break;
         case GL_FLOAT_VEC2:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 2 );
+            memcpy ( ( aMemory + aOffset ), mData, sizeof ( float ) * 2 );
             break;
         case GL_FLOAT_VEC3:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 3 );
+            memcpy ( ( aMemory + aOffset ), mData, sizeof ( float ) * 3 );
             break;
         case GL_FLOAT_VEC4:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
+            memcpy ( ( aMemory + aOffset ), mData, sizeof ( float ) * 4 );
             break;
         case GL_SAMPLER_2D:
-            ( * ( reinterpret_cast<uint64_t*> ( aMemory + mOffset ) ) ) =
+            ( * ( reinterpret_cast<uint64_t*> ( aMemory + aOffset ) ) ) =
                 /*reinterpret_cast<const std::shared_ptr<Texture>*> ( mData )->get()->GetHandle();*/ ///@note commented pending re-write.
                 0;
             break;

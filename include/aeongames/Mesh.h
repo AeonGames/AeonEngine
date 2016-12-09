@@ -31,16 +31,6 @@ namespace AeonGames
             UV_BIT = 0b10000,
             WEIGHT_BIT = 0b100000,
         };
-        Mesh ( const std::string& aFilename );
-        const float * const GetCenterRadii() const;
-        ~Mesh();
-    private:
-        void Initialize();
-        void Finalize();
-        uint32_t GetStride ( uint32_t aFlags ) const;
-        uint32_t GetIndexSize ( uint32_t aIndexType ) const;
-        std::string mFilename;
-        float mCenterRadii[3];
         struct TriangleGroup
         {
             float mCenterRadii[6];
@@ -48,7 +38,20 @@ namespace AeonGames
             uint32_t mVertexCount = 0;
             uint32_t mIndexType = 0;
             uint32_t mIndexCount = 0;
+            std::string mVertexBuffer;
+            std::string mIndexBuffer;
         };
+        Mesh ( const std::string& aFilename );
+        ~Mesh();
+        DLL uint32_t GetStride ( uint32_t aFlags ) const;
+        DLL uint32_t GetIndexSize ( uint32_t aIndexType ) const;
+        DLL const float * const GetCenterRadii() const;
+        DLL const std::vector<TriangleGroup>& GetTriangleGroups() const;
+    private:
+        void Initialize();
+        void Finalize();
+        std::string mFilename;
+        float mCenterRadii[3];
         std::vector<TriangleGroup> mTriangleGroups;
     };
 }

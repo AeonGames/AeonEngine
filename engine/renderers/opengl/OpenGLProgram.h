@@ -17,28 +17,27 @@ limitations under the License.
 #define AEONGAMES_OPENGLPROGRAM_H
 #include <cstdint>
 #include <string>
-#include "aeongames/Program.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLMaterial.h"
 #include "Uniform.h"
 
 namespace AeonGames
 {
+    class Program;
     class OpenGLProgram
     {
     public:
-        OpenGLProgram ( const std::string& aFilename );
+        OpenGLProgram ( const std::shared_ptr<Program> aProgram );
         ~OpenGLProgram();
         void Use() const;
     private:
         void Initialize();
         void Finalize();
-        std::string mFilename;
-        uint32_t mProgram;
+        const std::shared_ptr<Program> mProgram;
+        uint32_t mProgramId;
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
-        std::vector<Uniform> mUniformMetaData;
         std::vector<uint8_t> mUniformData;
     };
 }

@@ -16,37 +16,30 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLMESH_H
 #define AEONGAMES_OPENGLMESH_H
 
-#include "aeongames/Mesh.h"
 #include <exception>
 #include <string>
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
+    class Mesh;
     class OpenGLMesh
     {
     public:
-        OpenGLMesh ( const std::string& aFilename );
+        OpenGLMesh ( const std::shared_ptr<Mesh> aMesh );
         ~OpenGLMesh();
         void Render() const;
-        const float * const GetCenterRadii() const;
     private:
         void Initialize();
         void Finalize();
-        uint32_t GetStride ( uint32_t aFlags ) const;
-        uint32_t GetIndexSize ( uint32_t aIndexType ) const;
-        std::string mFilename;
-        float mCenterRadii[6];
-        struct TriangleGroup
+        const std::shared_ptr<Mesh> mMesh;
+        struct Buffers
         {
-            float mCenterRadii[6];
             uint32_t mArray = 0;
             uint32_t mVertexBuffer = 0;
-            uint32_t mVertexCount = 0;
             uint32_t mIndexBuffer = 0;
-            uint32_t mIndexType = 0;
-            uint32_t mIndexCount = 0;
         };
-        std::vector<TriangleGroup> mTriangleGroups;
+        std::vector<Buffers> mBuffers;
     };
 }
 #endif

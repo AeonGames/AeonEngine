@@ -56,17 +56,17 @@ namespace AeonGames
         return mFilename;
     }
 
-    std::shared_ptr<Program> Model::GetProgram()
+    const std::shared_ptr<Program> Model::GetProgram() const
     {
         return mProgram;
     }
 
-    std::shared_ptr<Material> Model::GetMaterial()
+    const std::shared_ptr<Material> Model::GetMaterial() const
     {
         return mMaterial;
     }
 
-    std::shared_ptr<Mesh> Model::GetMesh()
+    const std::shared_ptr<Mesh> Model::GetMesh() const
     {
         return mMesh;
     }

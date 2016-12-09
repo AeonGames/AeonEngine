@@ -60,6 +60,11 @@ namespace AeonGames
         return mCenterRadii;
     }
 
+    const std::vector<Mesh::TriangleGroup>& Mesh::GetTriangleGroups() const
+    {
+        return mTriangleGroups;
+    }
+
     void Mesh::Initialize()
     {
         static MeshBuffer mesh_buffer;
@@ -108,6 +113,15 @@ namespace AeonGames
             mTriangleGroups.back().mIndexType = 0x1400 | i.indextype();
 
             mTriangleGroups.back().mVertexFlags = i.vertexflags();
+            // Sadly we must copy here
+            if ( i.vertexcount() )
+            {
+                mTriangleGroups.back().mVertexBuffer = i.vertexbuffer();
+            }
+            if ( i.indexcount() )
+            {
+                mTriangleGroups.back().mIndexBuffer = i.indexbuffer();
+            }
         }
         mesh_buffer.Clear();
     }
