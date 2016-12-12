@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
@@ -77,32 +78,19 @@ namespace AeonGames
 
     EngineWindow::~EngineWindow()
     {
-#if 0
-        mProgram.reset();
-        mScene.RemoveNode ( mModel );
-        delete mModel;
-        mModel = nullptr;
-#endif
         mRenderer->RemoveRenderingWindow ( winId() );
     }
 
     void EngineWindow::setMesh ( const QString & filename )
     {
-#if 0
         if ( !mModel )
         {
-            mScene.AddNode ( mModel = new Model );
+            mModel = Get<Model> ( filename.toUtf8().constData() );
         }
-        mMesh = mAeonEngine.GetMesh ( filename.toUtf8().constData() );
-        //mProgram = mAeonEngine.GetProgram ( "game/shaders/plain_red.txt" );
-        //mProgram = mAeonEngine.GetProgram("game/shaders/fixed_phong.txt");
-        //mProgram = mAeonEngine.GetProgram ( "game/shaders/simple_phong.txt" );
-        mProgram = mAeonEngine.GetProgram ( "game/shaders/diffuse_map_phong.txt" );
         assert ( mModel && "Model is nullptr" );
-        mModel->SetMesh ( mMesh );
-        mModel->SetProgram ( mProgram );
+        mRenderer->AllocateModelRenderData ( mModel );
         // Adjust camera position so model fits the frustum tightly.
-        const float* const center_radius = mMesh->GetCenterRadii();
+        const float* const center_radius = mModel->GetMesh()->GetCenterRadii();
         float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
                                ( center_radius[4] * center_radius[4] ) +
                                ( center_radius[5] * center_radius[5] ) );
@@ -114,7 +102,6 @@ namespace AeonGames
                               ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
         updateViewMatrix();
         mStep = eye_length / 100.0f;
-#endif
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
@@ -159,7 +146,12 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            ///@todo Render directly from Renderer.
+            mRenderer->BeginRender();
+            if ( mModel )
+            {
+                mRenderer->Render ( mModel );
+            }
+            mRenderer->EndRender();
             return true;
         default:
             return QWindow::event ( aEvent );

@@ -19,7 +19,7 @@ limitations under the License.
 #include <string>
 #include "OpenGLFunctions.h"
 #include "OpenGLMaterial.h"
-#include "Uniform.h"
+#include "aeongames/Uniform.h"
 
 namespace AeonGames
 {

@@ -196,7 +196,25 @@ namespace AeonGames
                 mUniformData.resize ( block_size );
                 for ( std::size_t i = 0; i < mProgram->GetUniformMetaData().size(); ++i )
                 {
-                    mProgram->GetUniformMetaData() [i].CopyTo ( mUniformData.data(), uniform_offset[i] );
+                    switch ( mProgram->GetUniformMetaData() [i].GetType() )
+                    {
+                    case GL_FLOAT_VEC4:
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mProgram->GetUniformMetaData() [i].GetW();
+                    /* Intentional Pass-Thru*/
+                    case GL_FLOAT_VEC3:
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mProgram->GetUniformMetaData() [i].GetZ();
+                    /* Intentional Pass-Thru*/
+                    case GL_FLOAT_VEC2:
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mProgram->GetUniformMetaData() [i].GetY();
+                    /* Intentional Pass-Thru*/
+                    case GL_FLOAT:
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
+                        break;
+                    case GL_SAMPLER_2D:
+                        //*reinterpret_cast<float*>(mUniformData.data() + uniform_offset[i]) = mProgram->GetUniformMetaData()[i].GetY();
+                        break;
+                    }
+
                 }
             }
             glGenBuffers ( 1, &mPropertiesBuffer );

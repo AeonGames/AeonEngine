@@ -47,7 +47,10 @@ namespace AeonGames
 
     void MainWindow::on_actionOpen_triggered()
     {
-        QString filename = QFileDialog::getOpenFileName ( this, tr ( "Open Mesh" ), tr ( "" ), tr ( "Mesh Files (*.msh *.txt)" ) );
+        QString filename = QFileDialog::getOpenFileName ( this,
+                           tr ( "Open Model" ),
+                           tr ( "" ),
+                           tr ( "Model Files (*.mdl *.txt)" ) );
         if ( ! ( filename.isEmpty() || filename.isNull() ) )
         {
             engineWindow->setMesh ( filename );
