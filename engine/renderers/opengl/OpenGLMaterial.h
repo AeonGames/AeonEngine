@@ -18,9 +18,8 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include <cstdint>
 #include <string>
-#include "aeongames/Memory.h"
 #include <vector>
-#include "Uniform.h"
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
@@ -34,7 +33,6 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         std::shared_ptr<Material> mMaterial;
-        std::vector<Uniform> mUniforms;
     };
 }
 #endif

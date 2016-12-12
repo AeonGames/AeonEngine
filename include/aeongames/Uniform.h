@@ -17,12 +17,13 @@ limitations under the License.
 #define AEONGAMES_UNIFORM_H
 
 #include <cstdint>
-#include "aeongames/Memory.h"
 #include <string>
+#include "aeongames/Platform.h"
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
-    class Texture;
+	class Image;
     class Uniform
     {
     public:
@@ -32,11 +33,17 @@ namespace AeonGames
         Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW );
         Uniform ( const std::string& aName, const std::string& aFilename );
         ~Uniform();
-        void SetOffset ( const uint32_t aOffset );
-        uint32_t Offset() const;
-        const std::string GetDeclaration() const;
-        const std::string& GetName() const;
-        void CopyTo ( uint8_t* aMemory ) const;
+		///@name Getters
+		///@{
+		DLL uint32_t GetType() const;
+		DLL const std::string GetDeclaration() const;
+		DLL const std::string& GetName() const;
+		DLL float GetX() const;
+		DLL float GetY() const;
+		DLL float GetZ() const;
+		DLL float GetW() const;
+		const std::shared_ptr<Image>& GetImage();
+		///@}
     private:
         std::string mName;
         uint32_t mType = 0;

@@ -16,7 +16,7 @@ limitations under the License.
 #include <cstring>
 #include "aeongames/Texture.h"
 #include "aeongames/ResourceCache.h"
-#include "Uniform.h"
+#include "aeongames/Uniform.h"
 
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
@@ -84,14 +84,12 @@ namespace AeonGames
             break;
         }
     }
-    void Uniform::SetOffset ( const uint32_t aOffset )
+
+    uint32_t Uniform::GetType() const
     {
-        mOffset = aOffset;
+        return mType;
     }
-    uint32_t Uniform::Offset() const
-    {
-        return mOffset;
-    }
+
     const std::string Uniform::GetDeclaration() const
     {
         std::string declaration;
@@ -119,28 +117,31 @@ namespace AeonGames
     {
         return mName;
     }
-    void Uniform::CopyTo ( uint8_t * aMemory ) const
+    float Uniform::GetX() const
     {
-        switch ( mType )
-        {
-        case PropertyBuffer_Type_FLOAT:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) );
-            break;
-        case PropertyBuffer_Type_FLOAT_VEC2:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 2 );
-            break;
-        case PropertyBuffer_Type_FLOAT_VEC3:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 3 );
-            break;
-        case PropertyBuffer_Type_FLOAT_VEC4:
-            memcpy ( ( aMemory + mOffset ), mData, sizeof ( float ) * 4 );
-            break;
-        case PropertyBuffer_Type_SAMPLER_2D:
-            ( * ( reinterpret_cast<uint64_t*> ( aMemory + mOffset ) ) ) =
-                /**@todo figure out wether it makes sence to keep a texture class or just keep the image class.*/
-                /*reinterpret_cast<const std::shared_ptr<Texture>*> ( mData )->get()->GetHandle()*/
-                0;
-            break;
-        }
+        assert (
+            mType == PropertyBuffer_Type_FLOAT ||
+            mType == PropertyBuffer_Type_FLOAT_VEC2 ||
+            mType == PropertyBuffer_Type_FLOAT_VEC3 ||
+            mType == PropertyBuffer_Type_FLOAT_VEC4 );
+        return mData[0];
+    }
+    float Uniform::GetY() const
+    {
+        assert ( mType == PropertyBuffer_Type_FLOAT_VEC2 ||
+                 mType == PropertyBuffer_Type_FLOAT_VEC3 ||
+                 mType == PropertyBuffer_Type_FLOAT_VEC4 );
+        return mData[1];
+    }
+    float Uniform::GetZ() const
+    {
+        assert ( mType == PropertyBuffer_Type_FLOAT_VEC3 ||
+                 mType == PropertyBuffer_Type_FLOAT_VEC4 );
+        return mData[2];
+    }
+    float Uniform::GetW() const
+    {
+        assert ( mType == PropertyBuffer_Type_FLOAT_VEC4 );
+        return mData[3];
     }
 }

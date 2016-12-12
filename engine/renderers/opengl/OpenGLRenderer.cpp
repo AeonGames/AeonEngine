@@ -156,10 +156,13 @@ namespace AeonGames
         {
             return false;
         }
+#if 0
+        // Material has not been implemented yet
         if ( !AllocateMaterialRenderData ( aModel->GetMaterial() ) )
         {
             return false;
         }
+#endif
         if ( !AllocateMeshRenderData ( aModel->GetMesh() ) )
         {
             return false;

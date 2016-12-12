@@ -75,9 +75,27 @@ namespace AeonGames
     {
         static ModelBuffer model_buffer;
         LoadProtoBufObject<ModelBuffer> ( model_buffer, mFilename, "AEONMDL" );
-        mProgram = Get<Program> ( model_buffer.program().file() );
-        mMaterial = Get<Material> ( model_buffer.material().file() );
-        mMesh = Get<Mesh> ( model_buffer.material().file() );
+        if ( model_buffer.has_program() )
+        {
+            if ( !model_buffer.program().has_buffer() )
+            {
+                mProgram = Get<Program> ( model_buffer.program().file() );
+            }
+        }
+        if ( model_buffer.has_material() )
+        {
+            if ( !model_buffer.material().has_buffer() )
+            {
+                mMaterial = Get<Material> ( model_buffer.material().file() );
+            }
+        }
+        if ( model_buffer.has_mesh() )
+        {
+            if ( !model_buffer.mesh().has_buffer() )
+            {
+                mMesh = Get<Mesh> ( model_buffer.mesh().file() );
+            }
+        }
         model_buffer.Clear();
     }
 

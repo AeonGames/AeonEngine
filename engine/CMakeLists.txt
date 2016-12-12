@@ -40,6 +40,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Uniform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
@@ -66,7 +67,6 @@ set(ENGINE_CORE_HEADERS
     include/Factory.h
     include/ProtoBufHelpers.h
     include/Configuration.h
-    core/Uniform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h

@@ -51,7 +51,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         std::string mFilename;
-        float mCenterRadii[3];
+        float mCenterRadii[6];
         std::vector<TriangleGroup> mTriangleGroups;
     };
 }

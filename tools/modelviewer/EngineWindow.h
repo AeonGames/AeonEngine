@@ -61,9 +61,7 @@ namespace AeonGames
         QTimer mTimer;
         QElapsedTimer mStopWatch;
         std::unique_ptr<Renderer> mRenderer;
-        std::shared_ptr<Mesh> mMesh;
-        std::shared_ptr<Program> mProgram;
-        Model* mModel;
+        std::shared_ptr<Model> mModel;
         float mFrustumVerticalHalfAngle;
         float mStep;
         /* We're using QT classes for now... */
