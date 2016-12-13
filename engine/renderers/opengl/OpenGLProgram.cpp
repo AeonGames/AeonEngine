@@ -211,10 +211,8 @@ namespace AeonGames
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
                         break;
                     case GL_SAMPLER_2D:
-                        //*reinterpret_cast<float*>(mUniformData.data() + uniform_offset[i]) = mProgram->GetUniformMetaData()[i].GetY();
                         break;
                     }
-
                 }
             }
             glGenBuffers ( 1, &mPropertiesBuffer );

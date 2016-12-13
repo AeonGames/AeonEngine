@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cstring>
-#include "aeongames/Texture.h"
+#include "aeongames/Image.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Uniform.h"
 
@@ -30,7 +30,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    static_assert ( sizeof ( std::shared_ptr<Texture> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
+    static_assert ( sizeof ( std::shared_ptr<Image> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
     Uniform::Uniform ( const std::string& aName, float aX ) :
         mName ( aName ),
         mType ( PropertyBuffer_Type_FLOAT )
@@ -71,14 +71,16 @@ namespace AeonGames
         mName ( aName ),
         mType ( PropertyBuffer_Type_SAMPLER_2D )
     {
-        new ( mData ) std::shared_ptr<Texture> ( Get<Texture> ( aFilename ) );
+        /**@todo Temporarily hardcoding ".png" identifier,
+        the AeonGames::GetImage has to change to deduce image type based on extension.*/
+        new ( mData ) std::shared_ptr<Image> ( AeonGames::GetImage ( ".png", aFilename ) );
     }
     Uniform::~Uniform()
     {
         switch ( mType )
         {
         case PropertyBuffer_Type_SAMPLER_2D:
-            reinterpret_cast<std::shared_ptr<Texture>*> ( mData )->~shared_ptr();
+            reinterpret_cast<std::shared_ptr<Image>*> ( mData )->~shared_ptr();
             break;
         default:
             break;
@@ -143,5 +145,10 @@ namespace AeonGames
     {
         assert ( mType == PropertyBuffer_Type_FLOAT_VEC4 );
         return mData[3];
+    }
+    const std::shared_ptr<Image> Uniform::GetImage()
+    {
+        assert ( mType == PropertyBuffer_Type_SAMPLER_2D );
+        return *reinterpret_cast<std::shared_ptr<Image>*> ( mData );
     }
 }
