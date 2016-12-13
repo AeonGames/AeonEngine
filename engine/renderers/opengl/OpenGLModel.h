@@ -13,30 +13,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLTEXTURE_H
-#define AEONGAMES_OPENGLTEXTURE_H
-#include <cstdint>
-#include <string>
-#include <vector>
-#include "aeongames/Uniform.h"
-#include "aeongames/Memory.h"
+#ifndef AEONGAMES_OPENGLMODEL_H
+#define AEONGAMES_OPENGLMODEL_H
 
 namespace AeonGames
 {
-    class Image;
-    class OpenGLTexture
+    class Model;
+    class OpenGLProgram;
+    class OpenGLMesh;
+    class OpenGLModel
     {
     public:
-        OpenGLTexture ( const std::shared_ptr<Image> aImage );
-        ~OpenGLTexture();
-        /**@todo This is a temporary hack since mHandle is specific of ARB_bindless_texture which is not core in any OpenGL version to date.*/
-        const uint64_t& GetHandle() const;
+        OpenGLModel ( const std::shared_ptr<Model> aModel );
+        ~OpenGLModel();
+        const std::shared_ptr<OpenGLProgram> GetProgram() const;
+        const std::shared_ptr<OpenGLMesh> GetMesh() const;
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Image> mImage;
-        uint32_t mTexture;
-        uint64_t mHandle;
+        const std::shared_ptr<Model> mModel;
+        std::shared_ptr<OpenGLProgram> mProgram;
+        std::shared_ptr<OpenGLMesh> mMesh;
     };
 }
 #endif

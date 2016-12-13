@@ -27,6 +27,7 @@ limitations under the License.
 #include "OpenGLMesh.h"
 #include "OpenGLProgram.h"
 #include "OpenGLTexture.h"
+#include "OpenGLModel.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Program.h"
@@ -93,79 +94,21 @@ namespace AeonGames
 
     void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
-        mProgramMap.at ( aModel->GetProgram() )->Use();
+        auto& model = mModelMap.at ( aModel );
+        model->GetProgram()->Use();
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        mMeshMap.at ( aModel->GetMesh() )->Render();
-    }
-
-    bool OpenGLRenderer::AllocateMeshRenderData ( std::shared_ptr<Mesh> aMesh )
-    {
-        if ( mMeshMap.find ( aMesh ) == mMeshMap.end() )
-        {
-            try
-            {
-                mMeshMap[aMesh] = std::make_unique<OpenGLMesh> ( aMesh );
-            }
-            catch ( std::runtime_error e )
-            {
-                std::cerr << e.what() << std::endl;
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool OpenGLRenderer::AllocateProgramRenderData ( std::shared_ptr<Program> aProgram )
-    {
-        if ( mProgramMap.find ( aProgram ) == mProgramMap.end() )
-        {
-            try
-            {
-                mProgramMap[aProgram] = std::make_unique<OpenGLProgram> ( aProgram );
-            }
-            catch ( std::runtime_error e )
-            {
-                std::cerr << e.what() << std::endl;
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool OpenGLRenderer::AllocateMaterialRenderData ( std::shared_ptr<Material> aMaterial )
-    {
-        if ( mMaterialMap.find ( aMaterial ) == mMaterialMap.end() )
-        {
-            try
-            {
-                mMaterialMap[aMaterial] = std::make_unique<OpenGLMaterial> ( aMaterial );
-            }
-            catch ( std::runtime_error e )
-            {
-                std::cerr << e.what() << std::endl;
-                return false;
-            }
-        }
-        return true;
+        model->GetMesh()->Render();
     }
 
     bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
     {
-        if ( !AllocateProgramRenderData ( aModel->GetProgram() ) )
+        if ( mModelMap.find ( aModel ) == mModelMap.end() )
         {
-            return false;
-        }
-#if 0
-        // Material has not been implemented yet
-        if ( !AllocateMaterialRenderData ( aModel->GetMaterial() ) )
-        {
-            return false;
-        }
-#endif
-        if ( !AllocateMeshRenderData ( aModel->GetMesh() ) )
-        {
-            return false;
+            /* We dont really need to cache OpenGL Models,
+            since mModelMap IS our model cache.
+            We DO need a deallocation function.*/
+            mModelMap[aModel] = std::make_unique<OpenGLModel> ( aModel );
         }
         return true;
     }

@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-	class Image;
+    class Image;
     class Uniform
     {
     public:
@@ -33,21 +33,20 @@ namespace AeonGames
         Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW );
         Uniform ( const std::string& aName, const std::string& aFilename );
         ~Uniform();
-		///@name Getters
-		///@{
-		DLL uint32_t GetType() const;
-		DLL const std::string GetDeclaration() const;
-		DLL const std::string& GetName() const;
-		DLL float GetX() const;
-		DLL float GetY() const;
-		DLL float GetZ() const;
-		DLL float GetW() const;
-		const std::shared_ptr<Image>& GetImage();
-		///@}
+        ///@name Getters
+        ///@{
+        DLL uint32_t GetType() const;
+        DLL const std::string GetDeclaration() const;
+        DLL const std::string& GetName() const;
+        DLL float GetX() const;
+        DLL float GetY() const;
+        DLL float GetZ() const;
+        DLL float GetW() const;
+        const std::shared_ptr<Image> GetImage();
+        ///@}
     private:
         std::string mName;
         uint32_t mType = 0;
-        uint32_t mOffset = 0;
         uint8_t mData[sizeof ( float ) * 4];
     };
 }

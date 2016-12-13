@@ -21,25 +21,42 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture ( const std::string& aFilename ) :
-        mFilename ( aFilename )
+    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<Image> aImage ) :
+        mImage ( aImage )
     {
-        auto image = GetImage ( GetFileExtension ( mFilename ), mFilename );
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
+    }
+
+    OpenGLTexture::~OpenGLTexture()
+    {
+        Finalize();
+    }
+
+    void OpenGLTexture::Initialize()
+    {
         glGenTextures ( 1, &mTexture );
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, mTexture );
         OPENGL_CHECK_ERROR_THROW;
         /**@todo Write a format/type dictionary?
-            These guesses only work for PNG at the moment.*/
+        These guesses only work for PNG at the moment.*/
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( image->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       image->Width(),
-                       image->Height(),
+                       ( mImage->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       mImage->Width(),
+                       mImage->Height(),
                        0,
-                       ( image->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       ( image->Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-                       image->Data() );
+                       ( mImage->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                       mImage->Data() );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
         OPENGL_CHECK_ERROR_THROW;
@@ -54,7 +71,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    OpenGLTexture::~OpenGLTexture()
+    void OpenGLTexture::Finalize()
     {
         if ( glIsTextureHandleResidentARB ( mHandle ) )
         {
@@ -70,6 +87,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         mTexture = 0;
     }
+
     const uint64_t & OpenGLTexture::GetHandle() const
     {
         return mHandle;

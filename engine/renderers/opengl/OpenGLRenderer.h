@@ -16,21 +16,22 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLRENDERER_H
 #define AEONGAMES_OPENGLRENDERER_H
 
-#include "aeongames/Renderer.h"
 #include <exception>
 #include <vector>
 #include <unordered_map>
 #include <utility>
 #include "aeongames/Memory.h"
+#include "aeongames/Renderer.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
     class Mesh;
-    class OpenGLMesh;
     class Program;
-    class OpenGLProgram;
     class Material;
+    class OpenGLMesh;
+    class OpenGLProgram;
+    class OpenGLModel;
     class OpenGLMaterial;
     class OpenGLRenderer : public Renderer
     {
@@ -51,9 +52,6 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
-        bool AllocateMeshRenderData ( std::shared_ptr<Mesh> aMesh );
-        bool AllocateProgramRenderData ( std::shared_ptr<Program> aProgram );
-        bool AllocateMaterialRenderData ( std::shared_ptr<Material> aMaterial );
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
@@ -116,9 +114,10 @@ namespace AeonGames
 #endif
         };
         std::vector<WindowData> mWindowRegistry;
-        std::unordered_map<std::shared_ptr<Mesh>, std::unique_ptr<OpenGLMesh>> mMeshMap;
-        std::unordered_map<std::shared_ptr<Program>, std::unique_ptr<OpenGLProgram>> mProgramMap;
-        std::unordered_map<std::shared_ptr<Material>, std::unique_ptr<OpenGLMaterial>> mMaterialMap;
+        std::unordered_map <
+        std::shared_ptr<Model>,
+            std::shared_ptr<OpenGLModel >>
+            mModelMap;
     };
 }
 #endif
