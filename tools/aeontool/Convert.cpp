@@ -140,18 +140,24 @@ namespace AeonGames
             // Determine file properties
             switch ( GetFileType ( magick_number ) )
             {
+            /* coverity[unterminated_case] */
             case FileType::AEONPRGB:
                 binary_input = true;
+            /* coverity[fallthrough] */
             case FileType::AEONPRGT:
                 message = &shader_program_buffer;
                 break;
+            /* coverity[unterminated_case] */
             case FileType::AEONMTLB:
                 binary_input = true;
+            /* coverity[fallthrough] */
             case FileType::AEONMTLT:
                 message = &material_buffer;
                 break;
+            /* coverity[unterminated_case] */
             case FileType::AEONMSHB:
                 binary_input = true;
+            /* coverity[fallthrough] */
             case FileType::AEONMSHT:
                 message = &mesh_buffer;
                 break;
