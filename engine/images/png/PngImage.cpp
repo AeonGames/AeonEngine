@@ -62,7 +62,7 @@ namespace AeonGames
         // File loading code
         FILE* file = fopen ( aFileName.c_str(), "rb" );
         uint8_t* data;
-        long dataSize;
+        size_t dataSize;
         if ( file != nullptr )
         {
             fseek ( file, 0, SEEK_END );
