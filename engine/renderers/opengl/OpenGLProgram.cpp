@@ -15,8 +15,10 @@ limitations under the License.
 */
 #include <cassert>
 #include <vector>
+#include "aeongames/ResourceCache.h"
 #include "aeongames/Program.h"
 #include "OpenGLProgram.h"
+#include "OpenGLTexture.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
@@ -200,17 +202,19 @@ namespace AeonGames
                     {
                     case GL_FLOAT_VEC4:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mProgram->GetUniformMetaData() [i].GetW();
-                    /* Intentional Pass-Thru*/
+                    /* Intentional Pass-Thru */
                     case GL_FLOAT_VEC3:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mProgram->GetUniformMetaData() [i].GetZ();
-                    /* Intentional Pass-Thru*/
+                    /* Intentional Pass-Thru */
                     case GL_FLOAT_VEC2:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mProgram->GetUniformMetaData() [i].GetY();
-                    /* Intentional Pass-Thru*/
+                    /* Intentional Pass-Thru */
                     case GL_FLOAT:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
                         break;
                     case GL_SAMPLER_2D:
+                        mTextures.emplace_back ( Get<OpenGLTexture> ( mProgram->GetUniformMetaData() [i].GetImage() ) );
+                        * ( reinterpret_cast<uint64_t*> ( mUniformData.data() + uniform_offset[i] ) ) = mTextures.back()->GetHandle();
                         break;
                     }
                 }

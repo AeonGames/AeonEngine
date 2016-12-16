@@ -42,7 +42,7 @@ namespace AeonGames
         DLL float GetY() const;
         DLL float GetZ() const;
         DLL float GetW() const;
-        const std::shared_ptr<Image> GetImage();
+        DLL const std::shared_ptr<Image> GetImage() const;
         ///@}
     private:
         std::string mName;
