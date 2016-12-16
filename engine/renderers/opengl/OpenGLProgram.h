@@ -24,6 +24,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Program;
+    class OpenGLTexture;
     class OpenGLProgram
     {
     public:
@@ -39,6 +40,7 @@ namespace AeonGames
         uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
         std::vector<uint8_t> mUniformData;
+        std::vector<std::shared_ptr<OpenGLTexture>> mTextures;
     };
 }
 #endif

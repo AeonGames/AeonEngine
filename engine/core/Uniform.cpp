@@ -146,9 +146,9 @@ namespace AeonGames
         assert ( mType == PropertyBuffer_Type_FLOAT_VEC4 );
         return mData[3];
     }
-    const std::shared_ptr<Image> Uniform::GetImage()
+    const std::shared_ptr<Image> Uniform::GetImage() const
     {
         assert ( mType == PropertyBuffer_Type_SAMPLER_2D );
-        return *reinterpret_cast<std::shared_ptr<Image>*> ( mData );
+        return * ( reinterpret_cast<const std::shared_ptr<Image>*> ( mData ) );
     }
 }

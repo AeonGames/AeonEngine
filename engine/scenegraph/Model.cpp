@@ -102,18 +102,4 @@ namespace AeonGames
     void Model::Finalize()
     {
     }
-
-#if 0
-    void Model::Render ( Renderer * aRenderer )
-    {
-        assert ( aRenderer );
-        if ( aRenderer )
-        {
-            float model_matrix[16];
-            GetGlobalTransform().GetMatrix ( model_matrix );
-            aRenderer->SetModelMatrix ( model_matrix );
-            aRenderer->Render ( mMesh, mProgram );
-        }
-    }
-#endif
 }

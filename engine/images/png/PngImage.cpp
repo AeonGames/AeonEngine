@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <iostream>
+#include <fstream>
 #include <png.h>
 #include <algorithm>
 #include <exception>
@@ -60,29 +61,14 @@ namespace AeonGames
     {
         //--------------------------------------------------------
         // File loading code
-        FILE* file = fopen ( aFileName.c_str(), "rb" );
-        std::vector<uint8_t> data;
-        long dataSize;
-        if ( file != nullptr )
-        {
-            fseek ( file, 0, SEEK_END );
-            dataSize = ftell ( file );
-            fseek ( file, 0, SEEK_SET );
-            data.resize ( dataSize );
-            if ( fread ( data.data(), data.size(), 1, file ) != dataSize )
-            {
-                fclose ( file );
-                throw std::runtime_error ( "Failed to read all data." );
-            }
-            fclose ( file );
-        }
-        else
-        {
-            throw std::runtime_error ( "File not found." );
-        }
+        std::ifstream file ( aFileName, std::ios::binary );
+        std::vector<uint8_t> buffer ( (
+                                          std::istreambuf_iterator<char> ( file ) ),
+                                      ( std::istreambuf_iterator<char>() ) );
+        file.close();
         //--------------------------------------------------------
 
-        if ( png_sig_cmp ( data.data(), 0, 8 ) == 0 )
+        if ( png_sig_cmp ( buffer.data(), 0, 8 ) == 0 )
         {
             png_structp png_ptr =
                 png_create_read_struct ( PNG_LIBPNG_VER_STRING,
@@ -100,8 +86,8 @@ namespace AeonGames
             {
                 throw std::runtime_error ( "Error during init_io." );
             }
-            png_read_memory_struct read_memory_struct = {data.data(), data.data() + 8,
-                                                         static_cast<png_size_t> ( data.size() )
+            png_read_memory_struct read_memory_struct = {buffer.data(), buffer.data() + 8,
+                                                         static_cast<png_size_t> ( buffer.size() *sizeof ( uint8_t ) )
                                                         };
             png_set_read_fn ( png_ptr, &read_memory_struct, png_read_memory_data );
             png_set_sig_bytes ( png_ptr, 8 );
