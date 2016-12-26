@@ -126,25 +126,25 @@ namespace AeonGames
             mType == PropertyBuffer_Type_FLOAT_VEC2 ||
             mType == PropertyBuffer_Type_FLOAT_VEC3 ||
             mType == PropertyBuffer_Type_FLOAT_VEC4 );
-        return mData[0];
+        return ( reinterpret_cast<const float*> ( mData ) ) [0];
     }
     float Uniform::GetY() const
     {
         assert ( mType == PropertyBuffer_Type_FLOAT_VEC2 ||
                  mType == PropertyBuffer_Type_FLOAT_VEC3 ||
                  mType == PropertyBuffer_Type_FLOAT_VEC4 );
-        return mData[1];
+        return ( reinterpret_cast<const float*> ( mData ) ) [1];
     }
     float Uniform::GetZ() const
     {
         assert ( mType == PropertyBuffer_Type_FLOAT_VEC3 ||
                  mType == PropertyBuffer_Type_FLOAT_VEC4 );
-        return mData[2];
+        return ( reinterpret_cast<const float*> ( mData ) ) [2];
     }
     float Uniform::GetW() const
     {
         assert ( mType == PropertyBuffer_Type_FLOAT_VEC4 );
-        return mData[3];
+        return ( reinterpret_cast<const float*> ( mData ) ) [3];
     }
     const std::shared_ptr<Image> Uniform::GetImage() const
     {

@@ -214,7 +214,10 @@ namespace AeonGames
                         break;
                     case GL_SAMPLER_2D:
                         mTextures.emplace_back ( Get<OpenGLTexture> ( mProgram->GetUniformMetaData() [i].GetImage() ) );
+                        uint64_t test = mTextures.back()->GetHandle();
                         * ( reinterpret_cast<uint64_t*> ( mUniformData.data() + uniform_offset[i] ) ) = mTextures.back()->GetHandle();
+                        test = * ( reinterpret_cast<uint64_t*> ( mUniformData.data() + uniform_offset[i] ) );
+                        test = 0;
                         break;
                     }
                 }
@@ -232,15 +235,22 @@ namespace AeonGames
 
     void OpenGLProgram::Finalize()
     {
+        OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsProgram ( mProgramId ) )
         {
+            OPENGL_CHECK_ERROR_NO_THROW;
             glDeleteProgram ( mProgramId );
+            OPENGL_CHECK_ERROR_NO_THROW;
             mProgramId = 0;
         }
+        OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsBuffer ( mPropertiesBuffer ) )
         {
+            OPENGL_CHECK_ERROR_NO_THROW;
             glDeleteBuffers ( 1, &mPropertiesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
             mPropertiesBuffer = 0;
         }
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 }

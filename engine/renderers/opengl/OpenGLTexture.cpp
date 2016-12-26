@@ -73,6 +73,7 @@ namespace AeonGames
 
     void OpenGLTexture::Finalize()
     {
+        OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsTextureHandleResidentARB ( mHandle ) )
         {
             glMakeTextureHandleNonResidentARB ( mHandle );
