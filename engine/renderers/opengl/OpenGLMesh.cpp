@@ -169,23 +169,33 @@ namespace AeonGames
 
     void OpenGLMesh::Finalize()
     {
+        OPENGL_CHECK_ERROR_NO_THROW;
         for ( auto& i : mBuffers )
         {
             if ( glIsVertexArray ( i.mArray ) )
             {
+                OPENGL_CHECK_ERROR_NO_THROW;
                 glDeleteVertexArrays ( 1, &i.mArray );
+                OPENGL_CHECK_ERROR_NO_THROW;
                 i.mArray = 0;
             }
+            OPENGL_CHECK_ERROR_NO_THROW;
             if ( glIsBuffer ( i.mVertexBuffer ) )
             {
+                OPENGL_CHECK_ERROR_NO_THROW;
                 glDeleteBuffers ( 1, &i.mVertexBuffer );
+                OPENGL_CHECK_ERROR_NO_THROW;
                 i.mVertexBuffer = 0;
             }
+            OPENGL_CHECK_ERROR_NO_THROW;
             if ( glIsBuffer ( i.mIndexBuffer ) )
             {
+                OPENGL_CHECK_ERROR_NO_THROW;
                 glDeleteBuffers ( 1, &i.mIndexBuffer );
+                OPENGL_CHECK_ERROR_NO_THROW;
                 i.mIndexBuffer = 0;
             }
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
     }
 }
