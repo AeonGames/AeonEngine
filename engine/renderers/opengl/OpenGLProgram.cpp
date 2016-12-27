@@ -214,10 +214,7 @@ namespace AeonGames
                         break;
                     case GL_SAMPLER_2D:
                         mTextures.emplace_back ( Get<OpenGLTexture> ( mProgram->GetUniformMetaData() [i].GetImage() ) );
-                        uint64_t test = mTextures.back()->GetHandle();
                         * ( reinterpret_cast<uint64_t*> ( mUniformData.data() + uniform_offset[i] ) ) = mTextures.back()->GetHandle();
-                        test = * ( reinterpret_cast<uint64_t*> ( mUniformData.data() + uniform_offset[i] ) );
-                        test = 0;
                         break;
                     }
                 }
