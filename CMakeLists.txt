@@ -193,3 +193,13 @@ add_custom_target(run-blender
         ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh/export.py
     COMMENT "Running Blender")
 endif()
+
+###########################################
+# Clean Build Directory Target
+###########################################
+if(FIND_EXECUTABLE)
+add_custom_target(clean-build
+    COMMAND
+        ${FIND_EXECUTABLE} '${CMAKE_BINARY_DIR}' ! -name 'CMakeCache.txt' ! -wholename '${CMAKE_BINARY_DIR}' -exec rm -rf {} +
+    COMMENT "Cleaning Build you will need to rerun cmake configure and generate")
+endif()
