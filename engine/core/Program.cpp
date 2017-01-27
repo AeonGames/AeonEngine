@@ -155,8 +155,22 @@ namespace AeonGames
                 mVertexShader.append ( "};\n" );
                 mFragmentShader.append ( "};\n" );
             }
-            mVertexShader.append ( program_buffer.vertex_shader().code() );
-            mFragmentShader.append ( program_buffer.fragment_shader().code() );
+            switch ( program_buffer.vertex_shader().source_case() )
+            {
+            case ShaderBuffer::SourceCase::kCode:
+                mVertexShader.append ( program_buffer.vertex_shader().code() );
+                break;
+            default:
+                assert ( 0 && "ByteCode Shader Type not implemented yet." );
+            }
+            switch ( program_buffer.fragment_shader().source_case() )
+            {
+            case ShaderBuffer::SourceCase::kCode:
+                mFragmentShader.append ( program_buffer.fragment_shader().code() );
+                break;
+            default:
+                assert ( 0 && "ByteCode Shader Type not implemented yet." );
+            }
         }
         program_buffer.Clear();
     }
