@@ -18,7 +18,10 @@ package AeonGames;
 import "property.proto";
 
 message ShaderBuffer {
-	string code = 1;
+    oneof source {
+	bytes bytecode = 1;
+	string code = 2;
+    }
 }
 
 message ProgramBuffer {
