@@ -47,6 +47,13 @@ namespace AeonGames
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
+        for ( auto& i : mTextures )
+        {
+            glActiveTexture ( GL_TEXTURE0 + i.second );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glBindTexture ( GL_TEXTURE_2D, i.first->GetTexture() );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
     }
 
     void OpenGLProgram::Initialize()
@@ -89,7 +96,9 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_THROW;
                 std::cout << mProgram->GetVertexShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
+                throw std::runtime_error ( log_string.c_str() );
             }
+            throw std::runtime_error ( "Error Compiling Shaders." );
         }
         glAttachShader ( mProgramId, vertex_shader );
         OPENGL_CHECK_ERROR_THROW;
@@ -154,6 +163,9 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glDeleteShader ( fragment_shader );
         OPENGL_CHECK_ERROR_THROW;
+        /* We need to bind the program to set any samplers. */
+        glUseProgram ( mProgramId );
+        OPENGL_CHECK_ERROR_THROW;
 
         GLint block_size;
 
@@ -196,6 +208,7 @@ namespace AeonGames
                 glUniformBlockBinding ( mProgramId, mPropertiesBlockIndex, 1 );
                 OPENGL_CHECK_ERROR_THROW;
                 mUniformData.resize ( block_size );
+                GLint image_unit = 0;
                 for ( std::size_t i = 0; i < mProgram->GetUniformMetaData().size(); ++i )
                 {
                     switch ( mProgram->GetUniformMetaData() [i].GetType() )
@@ -213,8 +226,15 @@ namespace AeonGames
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
                         break;
                     case GL_SAMPLER_2D:
-                        mTextures.emplace_back ( Get<OpenGLTexture> ( mProgram->GetUniformMetaData() [i].GetImage() ) );
-                        * ( reinterpret_cast<uint64_t*> ( mUniformData.data() + uniform_offset[i] ) ) = mTextures.back()->GetHandle();
+                        if ( image_unit >= ( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - GL_TEXTURE0 ) )
+                        {
+                            throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
+                        }
+                        mTextures.emplace_back ( Get<OpenGLTexture> ( mProgram->GetUniformMetaData() [i].GetImage() ), image_unit );
+                        auto location = glGetUniformLocation ( mProgramId, mProgram->GetUniformMetaData() [i].GetName().c_str() );
+                        OPENGL_CHECK_ERROR_THROW;
+                        glUniform1i ( location, image_unit++ );
+                        OPENGL_CHECK_ERROR_THROW;
                         break;
                     }
                 }

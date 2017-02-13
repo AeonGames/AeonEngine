@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <iostream>
+#include <QMessageBox>
 #include "MainWindow.h"
+#include "ModelViewer.h"
 #include "aeongames/AeonEngine.h"
 
 int ENTRYPOINT main ( int argc, char *argv[] )
@@ -31,21 +33,13 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         return -1;
     }
     int retval = 0;
-    QApplication application ( argc, argv );
+    AeonGames::ModelViewer application ( argc, argv );
     application.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
     application.setOrganizationName ( "AeonGames" );
     application.setOrganizationDomain ( "aeongames.com" );
     application.setApplicationName ( "AeonGames Model Viewer" );
     AeonGames::MainWindow* mainWindow;
-    try
-    {
-        mainWindow = new AeonGames::MainWindow();
-    }
-    catch ( std::runtime_error e )
-    {
-        std::cerr << e.what() << std::endl;
-        return -1;
-    }
+    mainWindow = new AeonGames::MainWindow();
     mainWindow->showNormal();
     retval = application.exec();
     delete mainWindow;

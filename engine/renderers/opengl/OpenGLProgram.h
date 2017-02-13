@@ -40,7 +40,7 @@ namespace AeonGames
         uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
         std::vector<uint8_t> mUniformData;
-        std::vector<std::shared_ptr<OpenGLTexture>> mTextures;
+        std::vector<std::pair<std::shared_ptr<OpenGLTexture>, GLint>> mTextures;
     };
 }
 #endif

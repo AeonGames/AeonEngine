@@ -73,8 +73,6 @@ namespace AeonGames
         LoadProtoBufObject<ProgramBuffer> ( program_buffer, mFilename, "AEONPRG" );
         {
             mVertexShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
-            mVertexShader.append ( "#extension GL_ARB_bindless_texture : require\n"
-                                   "layout (bindless_sampler) uniform;\n" );
             mVertexShader.append (
                 "layout(location = 0) in vec3 VertexPosition;\n"
                 "layout(location = 1) in vec3 VertexNormal;\n"
@@ -96,8 +94,6 @@ namespace AeonGames
             );
 
             mFragmentShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
-            mFragmentShader.append ( "#extension GL_ARB_bindless_texture : require\n"
-                                     "layout (bindless_sampler) uniform;\n" );
             mFragmentShader.append (
                 "layout(std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
@@ -113,36 +109,31 @@ namespace AeonGames
             mUniformMetaData.reserve ( program_buffer.property().size() );
             if ( program_buffer.property().size() > 0 )
             {
-                mVertexShader.append ( "layout(std140) uniform Properties{\n" );
-                mFragmentShader.append ( "layout(std140) uniform Properties{\n" );
+                std::string properties ( "layout(std140) uniform Properties{\n" );
+                std::string samplers ( "//----SAMPLERS-START----\n" );
                 for ( auto& i : program_buffer.property() )
                 {
                     switch ( i.type() )
                     {
                     case PropertyBuffer_Type_FLOAT:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
-                        mVertexShader.append ( mUniformMetaData.back().GetDeclaration() );
-                        mFragmentShader.append ( mUniformMetaData.back().GetDeclaration() );
+                        properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC2:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );
-                        mVertexShader.append ( mUniformMetaData.back().GetDeclaration() );
-                        mFragmentShader.append ( mUniformMetaData.back().GetDeclaration() );
+                        properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC3:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z() );
-                        mVertexShader.append ( mUniformMetaData.back().GetDeclaration() );
-                        mFragmentShader.append ( mUniformMetaData.back().GetDeclaration() );
+                        properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_FLOAT_VEC4:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
-                        mVertexShader.append ( mUniformMetaData.back().GetDeclaration() );
-                        mFragmentShader.append ( mUniformMetaData.back().GetDeclaration() );
+                        properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_2D:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
-                        mVertexShader.append ( mUniformMetaData.back().GetDeclaration() );
-                        mFragmentShader.append ( mUniformMetaData.back().GetDeclaration() );
+                        samplers.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
                     case PropertyBuffer_Type_SAMPLER_CUBE:
                         //type_name = "samplerCube ";
@@ -152,8 +143,12 @@ namespace AeonGames
                         assert ( 0 && "Unknown Type." );
                     }
                 }
-                mVertexShader.append ( "};\n" );
-                mFragmentShader.append ( "};\n" );
+                properties.append ( "};\n" );
+                samplers.append ( "//----SAMPLERS-END----\n" );
+                mVertexShader.append ( properties );
+                mVertexShader.append ( samplers );
+                mFragmentShader.append ( properties );
+                mFragmentShader.append ( samplers );
             }
             switch ( program_buffer.vertex_shader().source_case() )
             {
