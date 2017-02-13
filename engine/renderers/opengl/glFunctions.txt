@@ -92,10 +92,8 @@ glUniform2uiv
 glUniform3uiv
 glUniform4uiv
 glGetUniformIndices
-#if !GL_VERSION_1_3
 glCompressedTexImage2D
 glActiveTexture
-#endif
 glDetachShader
 glIsBuffer
 glDrawArraysInstanced
@@ -130,6 +128,8 @@ glBindBufferBase
 glUniformBlockBinding
 glGetActiveUniformsiv
 #endif
+#if 0
+// We're no longer using
 // GL_ARB_bindless_texture
 glGetTextureHandleARB
 glGetTextureSamplerHandleARB
@@ -148,3 +148,4 @@ glIsImageHandleResidentARB
 glVertexAttribL1ui64ARB
 glVertexAttribL1ui64vARB
 glGetVertexAttribLui64vARB
+#endif

@@ -110,15 +110,17 @@ namespace AeonGames
             declaration = "vec4 " + mName + ";\n";
             break;
         case PropertyBuffer_Type_SAMPLER_2D:
-            declaration = "sampler2D " + mName + ";\n";
+            declaration = "uniform sampler2D " + mName + ";\n";
             break;
         }
         return declaration;
     }
+
     const std::string & Uniform::GetName() const
     {
         return mName;
     }
+
     float Uniform::GetX() const
     {
         assert (

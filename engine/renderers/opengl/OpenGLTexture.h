@@ -29,14 +29,14 @@ namespace AeonGames
     public:
         OpenGLTexture ( const std::shared_ptr<Image> aImage );
         ~OpenGLTexture();
-        /**@todo This is a temporary hack since mHandle is specific of ARB_bindless_texture which is not core in any OpenGL version to date.*/
-        const uint64_t& GetHandle() const;
+        /**@todo Determine if we want to keep the texture id exposed like this.
+            Maybe all we need is a Bind function.*/
+        const uint32_t GetTexture() const;
     private:
         void Initialize();
         void Finalize();
         const std::shared_ptr<Image> mImage;
         uint32_t mTexture;
-        uint64_t mHandle;
     };
 }
 #endif

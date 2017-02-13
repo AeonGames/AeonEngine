@@ -24,10 +24,12 @@ set(MODELVIEWER_QT_HEADERS
     )
 
 set(MODELVIEWER_HEADERS
+    ModelViewer.h
     ${MODELVIEWER_QT_HEADERS})
 
 set(MODELVIEWER_SOURCES
     Main.cpp
+    ModelViewer.cpp
     MainWindow.cpp
     EngineWindow.cpp
     )

@@ -64,22 +64,10 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, 0 );
         OPENGL_CHECK_ERROR_THROW;
-        //-Bindless Texture-
-        mHandle = glGetTextureHandleARB ( mTexture );
-        OPENGL_CHECK_ERROR_THROW;
-        glMakeTextureHandleResidentARB ( mHandle );
-        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLTexture::Finalize()
     {
-        OPENGL_CHECK_ERROR_NO_THROW;
-        if ( glIsTextureHandleResidentARB ( mHandle ) )
-        {
-            glMakeTextureHandleNonResidentARB ( mHandle );
-            OPENGL_CHECK_ERROR_NO_THROW;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsTexture ( mTexture ) == GL_TRUE )
         {
             glDeleteTextures ( 1, &mTexture );
@@ -89,8 +77,8 @@ namespace AeonGames
         mTexture = 0;
     }
 
-    const uint64_t & OpenGLTexture::GetHandle() const
+    const uint32_t OpenGLTexture::GetTexture() const
     {
-        return mHandle;
+        return mTexture;
     }
 }
