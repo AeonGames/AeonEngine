@@ -39,7 +39,15 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     application.setOrganizationDomain ( "aeongames.com" );
     application.setApplicationName ( "AeonGames Model Viewer" );
     AeonGames::MainWindow* mainWindow;
-    mainWindow = new AeonGames::MainWindow();
+    try
+    {
+        mainWindow = new AeonGames::MainWindow();
+    }
+    catch ( std::runtime_error& e )
+    {
+        std::cout << e.what() << std::endl;
+        throw;
+    }
     mainWindow->showNormal();
     retval = application.exec();
     delete mainWindow;
