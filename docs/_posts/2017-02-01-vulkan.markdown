@@ -5,9 +5,6 @@ date:   2017-02-01 13:37:18 -0600
 categories: implementation
 ---
 
-## Vulkan
-### 2/1/2017
-
 I've been trying to get the Vulkan renderer working, however the way I envisioned modularity to be in this engine is very close to what you'd expect when writting OpenGL code only.
 I was expecting Vulkan to be somewhat similar to OpenGL, and I seem to have made a mistake there. In some ways it is, and in some others it isn't.
 There'll be time to ramble on some generalities, but the issue I am tackling right now is that of shader modules.
