@@ -1,6 +1,6 @@
 # Copyright (c) 2002-2006 Marcus Geelnard
 # Copyright (c) 2006-2010 Camilla Berglund <elmindreda@elmindreda.org>
-# Copyright (c) 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright (c) 2016,2017 Rodrigo Jose Hernandez Cordoba
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@
 # Find Vulkan
 #
 # VULKAN_INCLUDE_DIR
-# VULKAN_LIBRARY
+# VULKAN_SDK_DIR
 # VULKAN_FOUND
 
 if (WIN32)
@@ -44,6 +44,34 @@ if (WIN32)
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
             "$ENV{VULKAN_SDK}/Bin"
             "$ENV{VK_SDK_PATH}/Bin")
+        find_library(VULKAN_GLSLANG_LIBRARY NAMES glslang HINTS
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VK_SDK_PATH}/Bin")
+        find_library(VULKAN_OGLCOMPILER_LIBRARY NAMES OGLCompiler HINTS
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VK_SDK_PATH}/Bin")
+        find_library(VULKAN_OSDEPENDENT_LIBRARY NAMES OSDependent HINTS
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VK_SDK_PATH}/Bin")
+        find_library(VULKAN_HLSL_LIBRARY NAMES HLSL HINTS
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VK_SDK_PATH}/Bin")
+        find_library(VULKAN_SPIRV_LIBRARY NAMES SPIRV HINTS
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VK_SDK_PATH}/Bin")
+        find_library(VULKAN_GLSLANG_DRL_LIBRARY NAMES glslang-default-resource-limits HINTS
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VK_SDK_PATH}/Bin")
+
+        set(VULKAN_GLSLANG_LIBRARIES
+        ${VULKAN_GLSLANG_LIBRARY}
+        ${VULKAN_OGLCOMPILER_LIBRARY}
+        ${VULKAN_OSDEPENDENT_LIBRARY}
+        ${VULKAN_HLSL_LIBRARY}
+        ${VULKAN_SPIRV_LIBRARY}
+        ${VULKAN_GLSLANG_DRL_LIBRARY}
+        CACHE STRING "glslang validator libraries")
+            
     else()
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
             "$ENV{VULKAN_SDK}/Bin32"
@@ -55,9 +83,21 @@ else()
     find_library(VULKAN_LIBRARY NAMES vulkan HINTS
         "$ENV{VULKAN_SDK}/lib")
 endif()
+if(DEFINED ENV{VK_SDK_PATH})
+    set(VULKAN_SDK_DIR "$ENV{VK_SDK_PATH}" CACHE PATH "Vulkan SDK root directory")
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Vulkan DEFAULT_MSG VULKAN_LIBRARY VULKAN_INCLUDE_DIR)
 
-mark_as_advanced(VULKAN_INCLUDE_DIR VULKAN_LIBRARY)
-
+mark_as_advanced(   VULKAN_INCLUDE_DIR
+                    VULKAN_LIBRARY
+                    VULKAN_SDK_DIR
+                    VULKAN_GLSLANG_LIBRARIES
+                    VULKAN_GLSLANG_LIBRARY
+                    VULKAN_OGLCOMPILER_LIBRARY
+                    VULKAN_OSDEPENDENT_LIBRARY
+                    VULKAN_HLSL_LIBRARY
+                    VULKAN_SPIRV_LIBRARY
+                    VULKAN_GLSLANG_DRL_LIBRARY                    
+)
