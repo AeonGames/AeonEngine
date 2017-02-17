@@ -14,7 +14,6 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-find_package(Protobuf)
 if(PROTOBUF_FOUND)
 function(PROTOBUF_GENERATE_EXPORT_CPP SRCS HDRS MACRO_NAME)
   if(NOT ARGN)
