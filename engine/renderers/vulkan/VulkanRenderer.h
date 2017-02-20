@@ -20,6 +20,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include <exception>
 #include <vector>
+#include <unordered_map>
 #include "aeongames/Renderer.h"
 
 namespace AeonGames
@@ -32,6 +33,14 @@ namespace AeonGames
         void BeginRender() const final;
         void EndRender() const final;
         void Render ( const std::shared_ptr<Model> aModel ) const final;
+        bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
+        bool AddRenderingWindow ( uintptr_t aWindowId ) final;
+        void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
+        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;
+        void SetViewMatrix ( const float aMatrix[16] ) final;
+        void SetProjectionMatrix ( const float aMatrix[16] ) final;
+        void SetModelMatrix ( const float aMatrix[16] ) final;
+
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -74,6 +83,78 @@ namespace AeonGames
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
+
+        /** @todo From here on, these members are the same as the OpenGL renderer...
+            shall we create a common class? */
+        void UpdateMatrices();
+        float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mProjectionMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mModelMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mViewProjectionMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mModelViewMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            // mModelViewProjectionMatrix
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            /*  mNormalMatrix With Padding,
+            this should really be a 3x3 matrix,
+            but std140 packing requires 16 byte alignment
+            and a mat3 is escentially a vec3[3]*/
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+        };
+
+        float* mViewMatrix = mMatrices + ( 16 * 0 );
+        float* mProjectionMatrix = mMatrices + ( 16 * 1 );
+        float* mModelMatrix = mMatrices + ( 16 * 2 );
+        // Cache Matrices
+        float* mViewProjectionMatrix = mMatrices + ( 16 * 3 );
+        float* mModelViewMatrix = mMatrices + ( 16 * 4 );
+        float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
+        float* mNormalMatrix = mMatrices + ( 16 * 6 );
+
+        struct WindowData
+        {
+            uintptr_t mWindowId = 0;
+#ifdef _WIN32
+            HDC mDeviceContext = nullptr;
+            HGLRC mOpenGLContext = nullptr;
+#else
+            Display* mDisplay = nullptr;
+            GLXContext mOpenGLContext = nullptr;
+#endif
+        };
+        std::vector<WindowData> mWindowRegistry;
+#if 0
+        std::unordered_map <
+        std::shared_ptr<Model>,
+            std::shared_ptr<VulkanModel >>
+            mModelMap;
+#endif
+
     };
 }
 #endif

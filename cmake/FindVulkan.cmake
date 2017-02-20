@@ -33,45 +33,21 @@
 # Find Vulkan
 #
 # VULKAN_INCLUDE_DIR
-# VULKAN_SDK_DIR
+# VULKAN_GLSLANG_SOURCE_DIR
 # VULKAN_FOUND
 
 if (WIN32)
     find_path(VULKAN_INCLUDE_DIR NAMES vulkan/vulkan.h HINTS
         "$ENV{VULKAN_SDK}/Include"
         "$ENV{VK_SDK_PATH}/Include")
+    find_path(VULKAN_GLSLANG_SOURCE_DIR NAMES StandAlone/StandAlone.cpp HINTS
+        "$ENV{VULKAN_SDK}"
+        "$ENV{VK_SDK_PATH}"
+        PATH_SUFFIXES glslang)
     if ((CMAKE_CL_64) OR (CMAKE_SIZEOF_VOID_P EQUAL 8))
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
             "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-        find_library(VULKAN_GLSLANG_LIBRARY NAMES glslang HINTS
-            "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-        find_library(VULKAN_OGLCOMPILER_LIBRARY NAMES OGLCompiler HINTS
-            "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-        find_library(VULKAN_OSDEPENDENT_LIBRARY NAMES OSDependent HINTS
-            "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-        find_library(VULKAN_HLSL_LIBRARY NAMES HLSL HINTS
-            "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-        find_library(VULKAN_SPIRV_LIBRARY NAMES SPIRV HINTS
-            "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-        find_library(VULKAN_GLSLANG_DRL_LIBRARY NAMES glslang-default-resource-limits HINTS
-            "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")
-
-        set(VULKAN_GLSLANG_LIBRARIES
-        ${VULKAN_GLSLANG_LIBRARY}
-        ${VULKAN_OGLCOMPILER_LIBRARY}
-        ${VULKAN_OSDEPENDENT_LIBRARY}
-        ${VULKAN_HLSL_LIBRARY}
-        ${VULKAN_SPIRV_LIBRARY}
-        ${VULKAN_GLSLANG_DRL_LIBRARY}
-        CACHE STRING "glslang validator libraries")
-            
+            "$ENV{VK_SDK_PATH}/Bin")            
     else()
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
             "$ENV{VULKAN_SDK}/Bin32"
@@ -80,11 +56,12 @@ if (WIN32)
 else()
     find_path(VULKAN_INCLUDE_DIR NAMES vulkan/vulkan.h HINTS
         "$ENV{VULKAN_SDK}/include")
+    find_path(VULKAN_GLSLANG_SOURCE_DIR NAMES StandAlone/StandAlone.cpp HINTS
+        "$ENV{VULKAN_SDK}"
+        "$ENV{VK_SDK_PATH}"
+        PATH_SUFFIXES glslang)
     find_library(VULKAN_LIBRARY NAMES vulkan HINTS
         "$ENV{VULKAN_SDK}/lib")
-endif()
-if(DEFINED ENV{VK_SDK_PATH})
-    set(VULKAN_SDK_DIR "$ENV{VK_SDK_PATH}" CACHE PATH "Vulkan SDK root directory")
 endif()
 
 include(FindPackageHandleStandardArgs)
@@ -92,12 +69,5 @@ find_package_handle_standard_args(Vulkan DEFAULT_MSG VULKAN_LIBRARY VULKAN_INCLU
 
 mark_as_advanced(   VULKAN_INCLUDE_DIR
                     VULKAN_LIBRARY
-                    VULKAN_SDK_DIR
-                    VULKAN_GLSLANG_LIBRARIES
-                    VULKAN_GLSLANG_LIBRARY
-                    VULKAN_OGLCOMPILER_LIBRARY
-                    VULKAN_OSDEPENDENT_LIBRARY
-                    VULKAN_HLSL_LIBRARY
-                    VULKAN_SPIRV_LIBRARY
-                    VULKAN_GLSLANG_DRL_LIBRARY                    
+                    VULKAN_GLSLANG_SOURCE_DIR
 )
