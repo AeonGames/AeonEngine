@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(${VULKAN_SDK_DIR}/glslang ${CMAKE_BINARY_DIR}/glslang)
+add_subdirectory(${VULKAN_GLSLANG_SOURCE_DIR} ${VULKAN_GLSLANG_SOURCE_DIR})
 
 set(VULKAN_RENDERER_HEADERS
     VulkanRenderer.h)
 set(VULKAN_RENDERER_SOURCES
     VulkanRenderer.cpp
-   ${VULKAN_SDK_DIR}/glslang/StandAlone/StandAlone.cpp)
+    Plugin.cpp
+   ${VULKAN_GLSLANG_SOURCE_DIR}/StandAlone/StandAlone.cpp)
 
 set_source_files_properties(
-    ${VULKAN_SDK_DIR}/glslang/StandAlone/StandAlone.cpp
+    ${VULKAN_GLSLANG_SOURCE_DIR}/StandAlone/StandAlone.cpp
         PROPERTIES 
             COMPILE_FLAGS "-Dmain=compile"
 )
@@ -32,9 +33,10 @@ add_library(VulkanRenderer SHARED
     ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES}
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
-target_link_libraries(    VulkanRenderer
-                        ${VULKAN_LIBRARY}
+target_link_libraries(  VulkanRenderer
+                        AeonEngine
                         ProtoBufClasses
+                        ${VULKAN_LIBRARY}
                         glslang
                         OGLCompiler
                         OSDependent

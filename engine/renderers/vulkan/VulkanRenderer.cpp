@@ -30,6 +30,7 @@ limitations under the License.
 #include <stdexcept>
 #include "aeongames/LogLevel.h"
 #include "VulkanRenderer.h"
+#include "math/3DMath.h"
 
 namespace AeonGames
 {
@@ -524,6 +525,63 @@ namespace AeonGames
 
     void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
+    }
+
+    bool VulkanRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
+    {
+        return false;
+    }
+
+    bool VulkanRenderer::AddRenderingWindow ( uintptr_t aWindowId )
+    {
+        return false;
+    }
+
+    void VulkanRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
+    {
+    }
+
+    void VulkanRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
+    {
+    }
+
+    void VulkanRenderer::UpdateMatrices()
+    {
+        /** @todo Either publish this function or
+        add arguments so just some matrices are
+        updated based on which one changed.*/
+        // Update mViewProjectionMatrix
+        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+        // Update mModelViewMatrix
+        Multiply4x4Matrix ( mViewMatrix, mModelMatrix, mModelViewMatrix );
+        // Update mModelViewProjectionMatrix
+        Multiply4x4Matrix ( mViewProjectionMatrix, mModelMatrix, mModelViewProjectionMatrix );
+        /*  Calculate Normal Matrix
+        Inverting a 3x3 matrix is cheaper than inverting a 4x4 matrix,
+        so even if the shader alignment requires us to pad the 3x3 matrix into
+        a 4x3 matrix we do these operations on a 3x3 basis.*/
+        Extract3x3Matrix ( mModelViewMatrix, mNormalMatrix );
+        Invert3x3Matrix ( mNormalMatrix, mNormalMatrix );
+        Transpose3x3Matrix ( mNormalMatrix, mNormalMatrix );
+        Convert3x3To4x3 ( mNormalMatrix, mNormalMatrix );
+    }
+
+    void VulkanRenderer::SetViewMatrix ( const float aMatrix[16] )
+    {
+        memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
+        UpdateMatrices();
+    }
+
+    void VulkanRenderer::SetProjectionMatrix ( const float aMatrix[16] )
+    {
+        memcpy ( mProjectionMatrix, aMatrix, sizeof ( float ) * 16 );
+        UpdateMatrices();
+    }
+
+    void VulkanRenderer::SetModelMatrix ( const float aMatrix[16] )
+    {
+        memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
+        UpdateMatrices();
     }
 
 #if 0

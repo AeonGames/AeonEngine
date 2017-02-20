@@ -13,14 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-//#include <QtGui>
-//#include <QApplication>
 #include <QFileDialog>
-//#include <QFileInfo>
-//#include <QDesktopWidget>
-//#include <QDir>
-//#include <QMessageBox>
-//#include <QMdiSubWindow>
 #include "MainWindow.h"
 #include "EngineWindow.h"
 
@@ -33,7 +26,6 @@ namespace AeonGames
         engineWindowContainer = QWidget::createWindowContainer ( engineWindow, this );
         engineWindowContainer->setParent ( centralwidget );
         verticalLayout->addWidget ( engineWindowContainer );
-        //setAttribute ( Qt::WA_DeleteOnClose );
     }
 
     MainWindow::~MainWindow()
