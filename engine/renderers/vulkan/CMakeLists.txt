@@ -16,7 +16,7 @@ include_directories(${GLSlang_INCLUDE_DIR})
 
 set(SPIRV_HEADERS
     SPIR-V/Worklist.h
-    SPIR-V/ResourceLimits.h    
+    SPIR-V/ResourceLimits.h
 )
 set(SPIRV_SOURCES
     SPIR-V/ResourceLimits.cpp
@@ -35,7 +35,7 @@ add_library(VulkanRenderer SHARED
     ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES}
     ${SPIRV_HEADERS} ${SPIRV_SOURCES}
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
-  
+
 target_link_libraries(  VulkanRenderer
                         AeonEngine
                         ProtoBufClasses

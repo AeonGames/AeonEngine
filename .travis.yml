@@ -33,7 +33,7 @@ install:
   - git clone https://github.com/KhronosGroup/glslang.git
   - cd glslang
   - git checkout 8f674e821e1e5f628474b21d7fe21af2e86b5fb4
-  - cmake -G "Unix Makefiles" .
+  - cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local .
   - make -j4
   - sudo make -j4 install
   - sudo ldconfig
