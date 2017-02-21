@@ -12,21 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(${VULKAN_GLSLANG_SOURCE_DIR} ${VULKAN_GLSLANG_SOURCE_DIR})
-
 set(VULKAN_RENDERER_HEADERS
     VulkanRenderer.h)
 set(VULKAN_RENDERER_SOURCES
     VulkanRenderer.cpp
-    Plugin.cpp
-   ${VULKAN_GLSLANG_SOURCE_DIR}/StandAlone/StandAlone.cpp)
+    Plugin.cpp)
 
-set_source_files_properties(
-    ${VULKAN_GLSLANG_SOURCE_DIR}/StandAlone/StandAlone.cpp
-        PROPERTIES 
-            COMPILE_FLAGS "-Dmain=compile"
-)
-    
 source_group("vulkan" FILES ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES})
 
 add_library(VulkanRenderer SHARED
@@ -37,13 +28,6 @@ target_link_libraries(  VulkanRenderer
                         AeonEngine
                         ProtoBufClasses
                         ${VULKAN_LIBRARY}
-                        glslang
-                        OGLCompiler
-                        OSDependent
-                        SPIRV
-                        SPVRemapper
-                        glslang-default-resource-limits
-                        HLSL
 )
 
 if(MSVC)

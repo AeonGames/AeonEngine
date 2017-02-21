@@ -21,6 +21,7 @@ limitations under the License.
 #include <exception>
 #include <vector>
 #include <unordered_map>
+#include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
 
 namespace AeonGames
@@ -141,10 +142,8 @@ namespace AeonGames
             uintptr_t mWindowId = 0;
 #ifdef _WIN32
             HDC mDeviceContext = nullptr;
-            HGLRC mOpenGLContext = nullptr;
 #else
             Display* mDisplay = nullptr;
-            GLXContext mOpenGLContext = nullptr;
 #endif
         };
         std::vector<WindowData> mWindowRegistry;
