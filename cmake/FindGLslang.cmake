@@ -12,35 +12,92 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-find_program(GLSLANG_VALIDATOR_EXECUTABLE NAMES glslangValidator)
+find_program(GLSLANG_VALIDATOR_EXECUTABLE 
+    NAMES
+        glslangValidator
+    HINTS
+        /usr/local
+)
 
-find_path(GLSLANG_SPIRV_INCLUDE_DIR SPIRV/spirv.hpp)
+find_path(GLSLANG_SPIRV_INCLUDE_DIR
+    SPIRV/spirv.hpp
+    HINTS
+        /usr/local
+)
 
-find_library(GLSLANG_LIB NAMES glslang glslangd)
+find_library(GLSLANG_LIB
+    NAMES glslang glslangd
+    HINTS
+        /usr/local
+)
 
-find_library(OGLCompiler_LIB NAMES OGLCompiler OGLCompilerd)
+find_library(OGLCompiler_LIB
+    NAMES OGLCompiler OGLCompilerd
+    HINTS
+        /usr/local
+)
 
-find_library(OSDependent_LIB NAMES OSDependent OSDependentd)
+find_library(OSDependent_LIB
+    NAMES OSDependent OSDependentd
+    HINTS
+        /usr/local
+)
 
-find_library(HLSL_LIB NAMES HLSL HLSLd)
+find_library(HLSL_LIB
+    NAMES HLSL HLSLd
+    HINTS
+        /usr/local
+)
 
-find_library(SPIRV_LIB NAMES SPIRV SPIRVd)
+find_library(SPIRV_LIB
+    NAMES SPIRV SPIRVd
+    HINTS
+        /usr/local
+)
 
-find_library(SPIRV_REMAPPER_LIB NAMES SPVRemapper SPVRemapperd)
+find_library(SPIRV_REMAPPER_LIB
+    NAMES SPVRemapper SPVRemapperd
+    HINTS
+        /usr/local
+)
 
 # - Locate Debug Libraries if they exist -
 
-find_library(GLSLANG_DEBUG_LIB NAMES glslangd glslang)
+find_library(GLSLANG_DEBUG_LIB
+    NAMES glslangd glslang
+    HINTS
+        /usr/local
+)
 
-find_library(OGLCompiler_DEBUG_LIB NAMES OGLCompilerd OGLCompiler)
+find_library(OGLCompiler_DEBUG_LIB
+    NAMES OGLCompilerd OGLCompiler
+    HINTS
+        /usr/local
+)
 
-find_library(OSDependent_DEBUG_LIB NAMES OSDependentd OSDependent)
+find_library(OSDependent_DEBUG_LIB
+    NAMES OSDependentd OSDependent
+    HINTS
+        /usr/local
+)
 
-find_library(HLSL_DEBUG_LIB NAMES HLSLd HLSL)
+find_library(HLSL_DEBUG_LIB
+    NAMES HLSLd HLSL
+    HINTS
+        /usr/local
+)
 
-find_library(SPIRV_DEBUG_LIB NAMES SPIRV SPIRVd)
+find_library(SPIRV_DEBUG_LIB
+    NAMES SPIRV SPIRVd
+    HINTS
+        /usr/local
+)
 
-find_library(SPIRV_DEBUG_REMAPPER_LIB NAMES SPVRemapperd SPVRemapper)
+find_library(SPIRV_DEBUG_REMAPPER_LIB
+    NAMES SPVRemapperd SPVRemapper
+    HINTS
+        /usr/local
+)
 
 set(GLSLANG_LIBRARIES 
     optimized ${GLSLANG_LIB}
