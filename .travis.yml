@@ -10,11 +10,11 @@ env:
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - sudo apt-get -qq update
-  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev git
 install:
-  - wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
-  - tar -xzvf v3.1.0.tar.gz
-  - cd protobuf-3.1.0
+  - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
+  - tar -xzvf v3.2.0.tar.gz
+  - cd protobuf-3.2.0
   - ./autogen.sh
   - ./configure
   - make
@@ -30,6 +30,14 @@ install:
   - echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.30.0/etc/explicit_layer.d" >> ~/.bashrc
   - source ~/.bashrc
   - sudo ldconfig
+  - git clone https://github.com/KhronosGroup/glslang.git
+  - cd glslang
+  - git checkout 8f674e821e1e5f628474b21d7fe21af2e86b5fb4
+  - cmake -G "Unix Makefiles" .
+  - make -j4
+  - sudo make -j4 install
+  - sudo ldconfig
+  - cd ..
 before_script:
   - cmake -G "Unix Makefiles" .
 script: make -j4 VERBOSE=1
