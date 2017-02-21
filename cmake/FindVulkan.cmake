@@ -33,17 +33,12 @@
 # Find Vulkan
 #
 # VULKAN_INCLUDE_DIR
-# VULKAN_GLSLANG_SOURCE_DIR
 # VULKAN_FOUND
 
 if (WIN32)
     find_path(VULKAN_INCLUDE_DIR NAMES vulkan/vulkan.h HINTS
         "$ENV{VULKAN_SDK}/Include"
         "$ENV{VK_SDK_PATH}/Include")
-    find_path(VULKAN_GLSLANG_SOURCE_DIR NAMES StandAlone/StandAlone.cpp HINTS
-        "$ENV{VULKAN_SDK}"
-        "$ENV{VK_SDK_PATH}"
-        PATH_SUFFIXES glslang)
     if ((CMAKE_CL_64) OR (CMAKE_SIZEOF_VOID_P EQUAL 8))
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
             "$ENV{VULKAN_SDK}/Bin"
@@ -56,10 +51,6 @@ if (WIN32)
 else()
     find_path(VULKAN_INCLUDE_DIR NAMES vulkan/vulkan.h HINTS
         "$ENV{VULKAN_SDK}/include")
-    find_path(VULKAN_GLSLANG_SOURCE_DIR NAMES StandAlone/StandAlone.cpp HINTS
-        "$ENV{VULKAN_SDK}"
-        "$ENV{VK_SDK_PATH}"
-        PATH_SUFFIXES glslang)
     find_library(VULKAN_LIBRARY NAMES vulkan HINTS
         "$ENV{VULKAN_SDK}/lib")
 endif()
@@ -69,5 +60,4 @@ find_package_handle_standard_args(Vulkan DEFAULT_MSG VULKAN_LIBRARY VULKAN_INCLU
 
 mark_as_advanced(   VULKAN_INCLUDE_DIR
                     VULKAN_LIBRARY
-                    VULKAN_GLSLANG_SOURCE_DIR
 )
