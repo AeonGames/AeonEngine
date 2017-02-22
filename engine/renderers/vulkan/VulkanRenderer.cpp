@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -647,7 +647,7 @@ namespace AeonGames
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
         xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
-        xlib_surface_create_info_khr.window = aWindow;
+        xlib_surface_create_info_khr.window = aWindowId;
         if ( ( result = vkCreateXlibSurfaceKHR ( mVkInstance, &xlib_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) ) != VK_SUCCESS )
         {
             std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
