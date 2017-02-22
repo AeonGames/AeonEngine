@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ namespace AeonGames
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
 
-        /** @todo From here on, these members are the same as the OpenGL renderer...
+        /** @todo From here on, these members are the same as the Vulkan renderer...
             shall we create a common class? */
         void UpdateMatrices();
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =

@@ -24,10 +24,23 @@ set(SPIRV_SOURCES
 )
 
 set(VULKAN_RENDERER_HEADERS
-    VulkanRenderer.h)
+    VulkanRenderer.h
+    VulkanModel.h
+    VulkanMesh.h
+    VulkanProgram.h
+    VulkanMaterial.h
+    VulkanTexture.h
+)
+
 set(VULKAN_RENDERER_SOURCES
     VulkanRenderer.cpp
-    Plugin.cpp)
+    VulkanModel.cpp
+    VulkanMesh.cpp
+    VulkanProgram.cpp
+    VulkanMaterial.cpp
+    VulkanTexture.cpp
+    Plugin.cpp
+)
 
 source_group("vulkan" FILES ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES})
 
@@ -41,14 +54,15 @@ target_link_libraries(  VulkanRenderer
                         ProtoBufClasses
                         ${VULKAN_LIBRARY}
                         ${GLSLANG_LIBRARIES}
+                        Threads::Threads
 )
 
 if(MSVC)
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DVK_USE_PLATFORM_WIN32_KHR")
+        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DVK_USE_PLATFORM_WIN32_KHR -DPROTOBUF_USE_DLLS")
 elseif(MINGW OR MSYS)
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_WIN32_KHR")
+        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_WIN32_KHR -DPROTOBUF_USE_DLLS")
 elseif(UNIX)
     set_target_properties(VulkanRenderer PROPERTIES
         COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
