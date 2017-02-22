@@ -979,7 +979,10 @@ int compile ( int argc, char* argv[] )
             }
             for ( auto& t : threads )
             {
-                t.join();
+                if ( t.joinable() )
+                {
+                    t.join();
+                }
             }
         }
         else
