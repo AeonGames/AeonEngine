@@ -159,9 +159,6 @@ namespace AeonGames
         }
         catch ( ... )
         {
-#if 0
-            FinalizeRenderingWindow();
-#endif
             FinalizeCommandPool();
             FinalizeDevice();
             FinalizeDebug();
@@ -506,9 +503,6 @@ namespace AeonGames
 
     VulkanRenderer::~VulkanRenderer()
     {
-#if 0
-        FinalizeRenderingWindow();
-#endif
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -534,11 +528,166 @@ namespace AeonGames
 
     bool VulkanRenderer::AddRenderingWindow ( uintptr_t aWindowId )
     {
-        return false;
+        mWindowRegistry.emplace_back();
+        mWindowRegistry.back().mWindowId = aWindowId;
+        VkResult result;
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
+        VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
+        win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        win32_surface_create_info_khr.hwnd = reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId );
+        win32_surface_create_info_khr.hinstance = reinterpret_cast<HINSTANCE> ( GetWindowLongPtr ( win32_surface_create_info_khr.hwnd, GWLP_HINSTANCE ) );
+        if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) ) != VK_SUCCESS )
+        {
+            std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
+            return false;
+        }
+        // From here on this is platform dependent code, move it later
+        VkBool32 wsi_supported = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR ( mVkPhysicalDevice, mQueueFamilyIndex, mWindowRegistry.back().mVkSurfaceKHR, &wsi_supported );
+        if ( !wsi_supported )
+        {
+            assert ( 0 && "WSI not supported." );
+            return false;
+        }
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVkPhysicalDevice, mWindowRegistry.back().mVkSurfaceKHR, &mWindowRegistry.back().mVkSurfaceCapabilitiesKHR );
+
+        uint32_t surface_format_count = 0;
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mWindowRegistry.back().mVkSurfaceKHR, &surface_format_count, nullptr );
+        if ( surface_format_count == 0 )
+        {
+            assert ( 0 && "No surface formats." );
+            return false;
+        }
+        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mWindowRegistry.back().mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
+        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
+        {
+            mWindowRegistry.back().mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mWindowRegistry.back().mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+        }
+        else
+        {
+            mWindowRegistry.back().mVkSurfaceFormatKHR = surface_format_list[0];
+        }
+
+        VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+        {
+            uint32_t present_mode_count = 0;
+            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVkPhysicalDevice, mWindowRegistry.back().mVkSurfaceKHR, &present_mode_count, nullptr );
+            std::vector<VkPresentModeKHR> present_mode_list ( present_mode_count );
+            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVkPhysicalDevice, mWindowRegistry.back().mVkSurfaceKHR, &present_mode_count, present_mode_list.data() );
+            for ( auto& i : present_mode_list )
+            {
+                if ( i == VK_PRESENT_MODE_MAILBOX_KHR )
+                {
+                    present_mode = i;
+                    break;
+                }
+            }
+        }
+
+        if ( mWindowRegistry.back().mSwapchainImageCount < mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.minImageCount )
+        {
+            mWindowRegistry.back().mSwapchainImageCount = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.minImageCount;
+        }
+        if ( ( mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.maxImageCount > 0 ) &&
+             ( mWindowRegistry.back().mSwapchainImageCount > mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.maxImageCount ) )
+        {
+            mWindowRegistry.back().mSwapchainImageCount = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.maxImageCount;
+        }
+
+        VkSwapchainCreateInfoKHR swapchain_create_info{};
+        swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapchain_create_info.surface = mWindowRegistry.back().mVkSurfaceKHR;
+        swapchain_create_info.minImageCount = mWindowRegistry.back().mSwapchainImageCount;
+        swapchain_create_info.imageFormat = mWindowRegistry.back().mVkSurfaceFormatKHR.format;
+        swapchain_create_info.imageColorSpace = mWindowRegistry.back().mVkSurfaceFormatKHR.colorSpace;
+        swapchain_create_info.imageExtent.width = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.currentExtent.width;
+        swapchain_create_info.imageExtent.height = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.currentExtent.height;
+        swapchain_create_info.imageArrayLayers = 1;
+        swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapchain_create_info.queueFamilyIndexCount = 0;
+        swapchain_create_info.pQueueFamilyIndices = nullptr;
+        swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        swapchain_create_info.presentMode = present_mode;
+        swapchain_create_info.clipped = VK_TRUE;
+        swapchain_create_info.oldSwapchain = VK_NULL_HANDLE; // Used for Resising later.
+
+        vkCreateSwapchainKHR ( mVkDevice, &swapchain_create_info, nullptr, &mWindowRegistry.back().mVkSwapchainKHR );
+        vkGetSwapchainImagesKHR ( mVkDevice, mWindowRegistry.back().mVkSwapchainKHR, &mWindowRegistry.back().mSwapchainImageCount, nullptr );
+        mWindowRegistry.back().mVkSwapchainImages.resize ( mWindowRegistry.back().mSwapchainImageCount );
+        mWindowRegistry.back().mVkSwapchainImageViews.resize ( mWindowRegistry.back().mSwapchainImageCount );
+        vkGetSwapchainImagesKHR ( mVkDevice,
+                                  mWindowRegistry.back().mVkSwapchainKHR,
+                                  &mWindowRegistry.back().mSwapchainImageCount,
+                                  mWindowRegistry.back().mVkSwapchainImages.data() );
+        for ( uint32_t i = 0; i < mWindowRegistry.back().mSwapchainImageCount; ++i )
+        {
+            VkImageViewCreateInfo image_view_create_info{};
+            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            image_view_create_info.image = mWindowRegistry.back().mVkSwapchainImages[i];
+            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            image_view_create_info.format = mWindowRegistry.back().mVkSurfaceFormatKHR.format;
+            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            image_view_create_info.subresourceRange.baseMipLevel = 0;
+            image_view_create_info.subresourceRange.levelCount = 1;
+            image_view_create_info.subresourceRange.baseArrayLayer = 0;
+            image_view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( mVkDevice, &image_view_create_info, nullptr, &mWindowRegistry.back().mVkSwapchainImageViews[i] );
+        }
+        return true;
+#elif defined( VK_USE_PLATFORM_XLIB_KHR )
+        VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
+        xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
+        xlib_surface_create_info_khr.window = aWindow;
+        if ( ( result = vkCreateXlibSurfaceKHR ( mVkInstance, &xlib_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) ) != VK_SUCCESS )
+        {
+            std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
+            return false;
+        }
+        return true;
+#endif
     }
 
     void VulkanRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
     {
+        for ( auto& w : mWindowRegistry )
+        {
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
+            for ( uint32_t i = 0; i < w.mSwapchainImageCount; ++i )
+            {
+                if ( w.mVkSwapchainImageViews[i] != VK_NULL_HANDLE )
+                {
+                    vkDestroyImageView ( mVkDevice, w.mVkSwapchainImageViews[i], nullptr );
+                    w.mVkSwapchainImageViews[i] = VK_NULL_HANDLE;
+                }
+            }
+            if ( w.mVkSwapchainKHR != VK_NULL_HANDLE )
+            {
+                vkDestroySwapchainKHR ( mVkDevice, w.mVkSwapchainKHR, nullptr );
+                w.mVkSwapchainKHR = VK_NULL_HANDLE;
+            }
+            if ( w.mVkSurfaceKHR != VK_NULL_HANDLE )
+            {
+                vkDestroySurfaceKHR ( mVkInstance, w.mVkSurfaceKHR, nullptr );
+                w.mVkSurfaceKHR = VK_NULL_HANDLE;
+            }
+#elif defined( VK_USE_PLATFORM_XLIB_KHR )
+            if ( w.mVkSurfaceKHR != VK_NULL_HANDLE )
+            {
+                vkDestroySurfaceKHR ( mVkInstance, w.mVkSurfaceKHR, nullptr );
+                w.mVkSurfaceKHR = VK_NULL_HANDLE;
+            }
+#endif
+        }
     }
 
     void VulkanRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
@@ -583,166 +732,4 @@ namespace AeonGames
         memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
     }
-
-#if 0
-#if defined ( VK_USE_PLATFORM_WIN32_KHR )
-    bool VulkanRenderer::InitializeRenderingWindow ( HINSTANCE aInstance, HWND aHwnd )
-    {
-        VkResult result;
-        VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr{};
-        win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        win32_surface_create_info_khr.hinstance = aInstance;
-        win32_surface_create_info_khr.hwnd = aHwnd;
-        if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
-        {
-            std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
-            return false;
-        }
-        // From here on this is platform dependent code, move it later
-        VkBool32 wsi_supported = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR ( mVkPhysicalDevice, mQueueFamilyIndex, mVkSurfaceKHR, &wsi_supported );
-        if ( !wsi_supported )
-        {
-            assert ( 0 && "WSI not supported." );
-            return false;
-        }
-
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
-
-        uint32_t surface_format_count = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, nullptr );
-        if ( surface_format_count == 0 )
-        {
-            assert ( 0 && "No surface formats." );
-            return false;
-        }
-        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
-        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
-        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
-        {
-            mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
-            mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-        }
-        else
-        {
-            mVkSurfaceFormatKHR = surface_format_list[0];
-        }
-
-        VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
-        {
-            uint32_t present_mode_count = 0;
-            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &present_mode_count, nullptr );
-            std::vector<VkPresentModeKHR> present_mode_list ( present_mode_count );
-            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &present_mode_count, present_mode_list.data() );
-            for ( auto& i : present_mode_list )
-            {
-                if ( i == VK_PRESENT_MODE_MAILBOX_KHR )
-                {
-                    present_mode = i;
-                    break;
-                }
-            }
-        }
-
-        if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
-        {
-            mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
-        }
-        if ( ( mVkSurfaceCapabilitiesKHR.maxImageCount > 0 ) && ( mSwapchainImageCount > mVkSurfaceCapabilitiesKHR.maxImageCount ) )
-        {
-            mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.maxImageCount;
-        }
-
-        VkSwapchainCreateInfoKHR swapchain_create_info {};
-        swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapchain_create_info.surface = mVkSurfaceKHR;
-        swapchain_create_info.minImageCount = mSwapchainImageCount;
-        swapchain_create_info.imageFormat = mVkSurfaceFormatKHR.format;
-        swapchain_create_info.imageColorSpace = mVkSurfaceFormatKHR.colorSpace;
-        swapchain_create_info.imageExtent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
-        swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
-        swapchain_create_info.imageArrayLayers = 1;
-        swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        swapchain_create_info.queueFamilyIndexCount = 0;
-        swapchain_create_info.pQueueFamilyIndices = nullptr;
-        swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-        swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapchain_create_info.presentMode = present_mode;
-        swapchain_create_info.clipped = VK_TRUE;
-        swapchain_create_info.oldSwapchain = VK_NULL_HANDLE; // Used for Resising later.
-
-        vkCreateSwapchainKHR ( mVkDevice, &swapchain_create_info, nullptr, &mVkSwapchainKHR );
-        vkGetSwapchainImagesKHR ( mVkDevice, mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
-        mVkSwapchainImages.resize ( mSwapchainImageCount );
-        mVkSwapchainImageViews.resize ( mSwapchainImageCount );
-        vkGetSwapchainImagesKHR ( mVkDevice, mVkSwapchainKHR, &mSwapchainImageCount, mVkSwapchainImages.data() );
-        for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
-        {
-            VkImageViewCreateInfo image_view_create_info{};
-            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            image_view_create_info.image = mVkSwapchainImages[i];
-            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            image_view_create_info.format = mVkSurfaceFormatKHR.format;
-            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            image_view_create_info.subresourceRange.baseMipLevel = 0;
-            image_view_create_info.subresourceRange.levelCount = 1;
-            image_view_create_info.subresourceRange.baseArrayLayer = 0;
-            image_view_create_info.subresourceRange.layerCount = 1;
-            vkCreateImageView ( mVkDevice, &image_view_create_info, nullptr, &mVkSwapchainImageViews[i] );
-        }
-        return true;
-    }
-
-    void VulkanRenderer::FinalizeRenderingWindow ()
-    {
-        for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
-        {
-            if ( mVkSwapchainImageViews[i] != VK_NULL_HANDLE )
-            {
-                vkDestroyImageView ( mVkDevice, mVkSwapchainImageViews[i], nullptr );
-                mVkSwapchainImageViews[i] = VK_NULL_HANDLE;
-            }
-        }
-        if ( mVkSwapchainKHR != VK_NULL_HANDLE )
-        {
-            vkDestroySwapchainKHR ( mVkDevice, mVkSwapchainKHR, nullptr );
-            mVkSwapchainKHR = VK_NULL_HANDLE;
-        }
-        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
-        {
-            vkDestroySurfaceKHR ( mVkInstance, mVkSurfaceKHR, nullptr );
-            mVkSurfaceKHR = VK_NULL_HANDLE;
-        }
-    }
-#elif defined( VK_USE_PLATFORM_XLIB_KHR )
-    bool VulkanRenderer::InitializeRenderingWindow ( Display* aDisplay, Window aWindow )
-    {
-        VkResult result;
-        VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr{};
-        xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        xlib_surface_create_info_khr.dpy = aDisplay;
-        xlib_surface_create_info_khr.window = aWindow;
-        if ( ( result = vkCreateXlibSurfaceKHR ( mVkInstance, &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) ) != VK_SUCCESS )
-        {
-            std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
-            return false;
-        }
-        return true;
-    }
-
-    void VulkanRenderer::FinalizeRenderingWindow()
-    {
-        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
-        {
-            vkDestroySurfaceKHR ( mVkInstance, mVkSurfaceKHR, nullptr );
-            mVkSurfaceKHR = VK_NULL_HANDLE;
-        }
-    }
-#endif
-#endif
 }

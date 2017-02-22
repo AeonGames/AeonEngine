@@ -66,14 +66,6 @@ namespace AeonGames
         VkQueue mVkQueue = VK_NULL_HANDLE;
         VkFence mVkFence = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
-        //VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
-        //VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
-        //VkSurfaceFormatKHR mVkSurfaceFormatKHR {};
-        //VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
-        //uint32_t mSwapchainImageCount = 2;
-        //VkViewport mVkViewport = {};
-        std::vector<VkImage> mVkSwapchainImages;
-        std::vector<VkImageView> mVkSwapchainImageViews;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;
@@ -140,12 +132,18 @@ namespace AeonGames
         struct WindowData
         {
             uintptr_t mWindowId = 0;
-#ifdef _WIN32
-            HDC mDeviceContext = nullptr;
-#else
-            Display* mDisplay = nullptr;
+            VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+            VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
+            VkSurfaceFormatKHR mVkSurfaceFormatKHR {};
+            uint32_t mSwapchainImageCount = 2;
+            VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
+            VkViewport mVkViewport = {};
+            std::vector<VkImage> mVkSwapchainImages;
+            std::vector<VkImageView> mVkSwapchainImageViews;
 #endif
         };
+
         std::vector<WindowData> mWindowRegistry;
 #if 0
         std::unordered_map <

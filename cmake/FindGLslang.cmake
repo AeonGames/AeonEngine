@@ -26,37 +26,49 @@ find_path(GLSLANG_SPIRV_INCLUDE_DIR
 )
 
 find_library(GLSLANG_LIB
-    NAMES glslang glslangd
+    NAMES
+        glslang
+        glslangd
     HINTS
         /usr/local
 )
 
 find_library(OGLCompiler_LIB
-    NAMES OGLCompiler OGLCompilerd
+    NAMES
+        OGLCompiler
+        OGLCompilerd
     HINTS
         /usr/local
 )
 
 find_library(OSDependent_LIB
-    NAMES OSDependent OSDependentd
+    NAMES
+        OSDependent
+        OSDependentd
     HINTS
         /usr/local
 )
 
 find_library(HLSL_LIB
-    NAMES HLSL HLSLd
+    NAMES
+        HLSL
+        HLSLd
     HINTS
         /usr/local
 )
 
 find_library(SPIRV_LIB
-    NAMES SPIRV SPIRVd
+    NAMES
+        SPIRV
+        SPIRVd
     HINTS
         /usr/local
 )
 
 find_library(SPIRV_REMAPPER_LIB
-    NAMES SPVRemapper SPVRemapperd
+    NAMES
+        SPVRemapper
+        SPVRemapperd
     HINTS
         /usr/local
 )
@@ -64,37 +76,49 @@ find_library(SPIRV_REMAPPER_LIB
 # - Locate Debug Libraries if they exist -
 
 find_library(GLSLANG_DEBUG_LIB
-    NAMES glslangd glslang
+    NAMES
+        glslangd
+        glslang
     HINTS
         /usr/local
 )
 
 find_library(OGLCompiler_DEBUG_LIB
-    NAMES OGLCompilerd OGLCompiler
+    NAMES
+        OGLCompilerd
+        OGLCompiler
     HINTS
         /usr/local
 )
 
 find_library(OSDependent_DEBUG_LIB
-    NAMES OSDependentd OSDependent
+    NAMES
+        OSDependentd
+        OSDependent
     HINTS
         /usr/local
 )
 
 find_library(HLSL_DEBUG_LIB
-    NAMES HLSLd HLSL
+    NAMES
+        HLSLd
+        HLSL
     HINTS
         /usr/local
 )
 
 find_library(SPIRV_DEBUG_LIB
-    NAMES SPIRV SPIRVd
+    NAMES
+        SPIRVd
+        SPIRV
     HINTS
         /usr/local
 )
 
-find_library(SPIRV_DEBUG_REMAPPER_LIB
-    NAMES SPVRemapperd SPVRemapper
+find_library(SPIRV_REMAPPER_DEBUG_LIB
+    NAMES
+        SPVRemapperd
+        SPVRemapper
     HINTS
         /usr/local
 )
@@ -111,7 +135,7 @@ set(GLSLANG_LIBRARIES
     optimized ${SPIRV_LIB}
     debug ${SPIRV_DEBUG_LIB}
     optimized ${SPIRV_REMAPPER_LIB}
-    debug ${SPIRV_DEBUG_REMAPPER_LIB}
+    debug ${SPIRV_REMAPPER_DEBUG_LIB}
     CACHE STRING "GLSLANG_LIBRARIES")
 
 include(FindPackageHandleStandardArgs)
