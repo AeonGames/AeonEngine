@@ -76,6 +76,7 @@ namespace AeonGames
     {
         for ( auto& i : mBuffers )
         {
+            ( void ) i;
         }
     }
 }
