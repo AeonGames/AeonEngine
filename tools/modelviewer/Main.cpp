@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2016 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,14 +42,18 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     try
     {
         mainWindow = new AeonGames::MainWindow();
+        mainWindow->showNormal();
+        retval = application.exec();
     }
     catch ( std::runtime_error& e )
     {
         std::cout << e.what() << std::endl;
-        throw;
+        QMessageBox::critical ( nullptr, application.applicationName(),
+                                e.what(),
+                                QMessageBox::Ok,
+                                QMessageBox::Ok );
+        retval = -1;
     }
-    mainWindow->showNormal();
-    retval = application.exec();
     delete mainWindow;
     AeonGames::Finalize();
     return retval;

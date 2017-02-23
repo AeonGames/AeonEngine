@@ -21,7 +21,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanTexture::VulkanTexture ( const std::shared_ptr<Image> aImage ) :
-        mImage ( aImage )
+        mImage ( aImage ), mTexture ( 0 )
     {
         try
         {

@@ -129,8 +129,8 @@ std::string ConfigFile;
 //
 void ProcessConfigFile()
 {
-    char** configStrings = 0;
-    char* config = 0;
+    char** configStrings = nullptr;
+    char* config = nullptr;
     if ( ConfigFile.size() > 0 )
     {
         configStrings = ReadFileData ( ConfigFile.c_str() );
@@ -148,19 +148,15 @@ void ProcessConfigFile()
     if ( config == 0 )
     {
         Resources = glslang::DefaultTBuiltInResource;
+        if ( configStrings )
+        {
+            FreeFileData ( configStrings );
+        }
         return;
     }
 
     glslang::DecodeResourceLimits ( &Resources,  config );
-
-    if ( configStrings )
-    {
-        FreeFileData ( configStrings );
-    }
-    else
-    {
-        delete[] config;
-    }
+    FreeFileData ( configStrings );
 }
 
 // thread-safe list of shaders to asynchronously grab and compile
