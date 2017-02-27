@@ -27,6 +27,7 @@ limitations under the License.
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <array>
 #include <stdexcept>
 #include "aeongames/LogLevel.h"
 #include "VulkanRenderer.h"
@@ -270,6 +271,7 @@ namespace AeonGames
 
             mVkPhysicalDevice = physical_device_list[0];
             vkGetPhysicalDeviceProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceProperties );
+            vkGetPhysicalDeviceMemoryProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceMemoryProperties );
         }
 
         VkDeviceCreateInfo device_create_info{};
@@ -642,6 +644,93 @@ namespace AeonGames
             image_view_create_info.subresourceRange.layerCount = 1;
             vkCreateImageView ( mVkDevice, &image_view_create_info, nullptr, &mWindowRegistry.back().mVkSwapchainImageViews[i] );
         }
+
+        {
+            std::array<VkFormat, 5> try_formats
+            {
+                VK_FORMAT_D32_SFLOAT_S8_UINT,
+                VK_FORMAT_D24_UNORM_S8_UINT,
+                VK_FORMAT_D16_UNORM_S8_UINT,
+                VK_FORMAT_D32_SFLOAT,
+                VK_FORMAT_D16_UNORM
+            };
+            for ( auto format : try_formats )
+            {
+                VkFormatProperties format_properties{};
+                vkGetPhysicalDeviceFormatProperties ( mVkPhysicalDevice, format, &format_properties );
+                if ( format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT )
+                {
+                    mWindowRegistry.back().mVkDepthStencilFormat = format;
+                    break;
+                }
+            }
+
+            assert ( ( std::find ( try_formats.begin(), try_formats.end(), mWindowRegistry.back().mVkDepthStencilFormat ) != try_formats.end() )
+                     && "Unable to find a suitable depth stencil format" );
+            mWindowRegistry.back().mHasStencil =
+                ( mWindowRegistry.back().mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+                  mWindowRegistry.back().mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+                  mWindowRegistry.back().mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
+        }
+        VkImageCreateInfo image_create_info{};
+        image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.flags = 0;
+        image_create_info.format = mWindowRegistry.back().mVkDepthStencilFormat;
+        image_create_info.imageType = VK_IMAGE_TYPE_2D;
+        image_create_info.extent.width = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.currentExtent.width;
+        image_create_info.extent.height = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.currentExtent.height;
+        image_create_info.extent.depth = 1;
+        image_create_info.mipLevels = 1;
+        image_create_info.arrayLayers = 1;
+        image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_create_info.queueFamilyIndexCount = VK_QUEUE_FAMILY_IGNORED;
+        image_create_info.pQueueFamilyIndices = nullptr;
+        image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vkCreateImage ( mVkDevice, &image_create_info, nullptr, &mWindowRegistry.back().mVkDepthStencilImage );
+
+        VkMemoryRequirements memory_requirements;
+        vkGetImageMemoryRequirements ( mVkDevice, mWindowRegistry.back().mVkDepthStencilImage, &memory_requirements );
+
+        auto required_bits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        uint32_t memory_index = UINT32_MAX;
+        for ( uint32_t i = 0; i < mVkPhysicalDeviceMemoryProperties.memoryTypeCount; ++i )
+        {
+            if ( memory_requirements.memoryTypeBits & ( 1 << i ) )
+            {
+                if ( ( mVkPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & required_bits ) == required_bits )
+                {
+                    memory_index = i;
+                    break;
+                }
+            }
+        }
+        assert ( memory_index != UINT32_MAX && "Could not find a suitable memory index." );
+        VkMemoryAllocateInfo memory_allocate_info{};
+        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memory_allocate_info.allocationSize = memory_requirements.size;
+        memory_allocate_info.memoryTypeIndex = memory_index;
+        vkAllocateMemory ( mVkDevice, &memory_allocate_info, nullptr, &mWindowRegistry.back().mVkDepthStencilImageMemory );
+        vkBindImageMemory ( mVkDevice, mWindowRegistry.back().mVkDepthStencilImage, mWindowRegistry.back().mVkDepthStencilImageMemory, 0 );
+
+        VkImageViewCreateInfo image_view_create_info{};
+        image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        image_view_create_info.image = mWindowRegistry.back().mVkDepthStencilImage;
+        image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        image_view_create_info.format = mWindowRegistry.back().mVkDepthStencilFormat;
+        image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mWindowRegistry.back().mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        image_view_create_info.subresourceRange.baseMipLevel = 0;
+        image_view_create_info.subresourceRange.levelCount = 1;
+        image_view_create_info.subresourceRange.baseArrayLayer = 0;
+        image_view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( mVkDevice, &image_view_create_info, nullptr, &mWindowRegistry.back().mVkDepthStencilImageView );
+
         return true;
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
@@ -662,6 +751,22 @@ namespace AeonGames
         for ( auto& w : mWindowRegistry )
         {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
+            if ( w.mVkDepthStencilImageView != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVkDevice, w.mVkDepthStencilImageView, nullptr );
+                w.mVkDepthStencilImageView = VK_NULL_HANDLE;
+            }
+            if ( w.mVkDepthStencilImageMemory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVkDevice, w.mVkDepthStencilImageMemory, nullptr );
+                w.mVkDepthStencilImageMemory = VK_NULL_HANDLE;
+            }
+
+            if ( w.mVkDepthStencilImage != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( mVkDevice, w.mVkDepthStencilImage, nullptr );
+                w.mVkDepthStencilImage = VK_NULL_HANDLE;
+            }
             for ( uint32_t i = 0; i < w.mSwapchainImageCount; ++i )
             {
                 if ( w.mVkSwapchainImageViews[i] != VK_NULL_HANDLE )
