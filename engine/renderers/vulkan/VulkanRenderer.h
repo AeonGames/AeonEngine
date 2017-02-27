@@ -59,7 +59,8 @@ namespace AeonGames
         VkInstance mVkInstance = VK_NULL_HANDLE;
         VkDevice mVkDevice = VK_NULL_HANDLE;
         VkPhysicalDevice mVkPhysicalDevice = VK_NULL_HANDLE;
-        VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties {};
+        VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties{};
+        VkPhysicalDeviceMemoryProperties  mVkPhysicalDeviceMemoryProperties{};
         VkDebugReportCallbackEXT mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
@@ -141,6 +142,11 @@ namespace AeonGames
             VkViewport mVkViewport = {};
             std::vector<VkImage> mVkSwapchainImages;
             std::vector<VkImageView> mVkSwapchainImageViews;
+            VkImage mVkDepthStencilImage = VK_NULL_HANDLE;
+            VkDeviceMemory mVkDepthStencilImageMemory = VK_NULL_HANDLE;
+            VkImageView mVkDepthStencilImageView = VK_NULL_HANDLE;
+            VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
+            bool mHasStencil = false;
 #endif
         };
 
