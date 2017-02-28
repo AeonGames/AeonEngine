@@ -147,6 +147,7 @@ namespace AeonGames
             VkImageView mVkDepthStencilImageView = VK_NULL_HANDLE;
             VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
             bool mHasStencil = false;
+            VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
 #endif
         };
 
