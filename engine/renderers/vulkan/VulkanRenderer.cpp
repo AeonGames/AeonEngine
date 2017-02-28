@@ -731,6 +731,55 @@ namespace AeonGames
         image_view_create_info.subresourceRange.layerCount = 1;
         vkCreateImageView ( mVkDevice, &image_view_create_info, nullptr, &mWindowRegistry.back().mVkDepthStencilImageView );
 
+        std::array<VkAttachmentDescription, 2> attachment_descriptions{};
+        attachment_descriptions[0].flags = 0;
+        attachment_descriptions[0].format = mWindowRegistry.back().mVkDepthStencilFormat;
+        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        attachment_descriptions[1].flags = 0;
+        attachment_descriptions[1].format = mWindowRegistry.back().mVkSurfaceFormatKHR.format;
+        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference depth_stencil_attachment_reference{};
+        depth_stencil_attachment_reference.attachment = 0;
+        depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        std::array<VkAttachmentReference, 1> color_attachment_references{};
+        color_attachment_references[0].attachment = 1;
+        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        std::array<VkSubpassDescription, 1> subpass_descriptions{};
+        subpass_descriptions[0].flags = 0;
+        subpass_descriptions[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_descriptions[0].inputAttachmentCount = 0;
+        subpass_descriptions[0].pInputAttachments = nullptr;
+        subpass_descriptions[0].colorAttachmentCount = static_cast<uint32_t> ( color_attachment_references.size() );
+        subpass_descriptions[0].pColorAttachments = color_attachment_references.data();
+        subpass_descriptions[0].pResolveAttachments = nullptr;
+        subpass_descriptions[0].pDepthStencilAttachment = &depth_stencil_attachment_reference;
+        subpass_descriptions[0].preserveAttachmentCount = 0;
+        subpass_descriptions[0].pPreserveAttachments = nullptr;
+
+
+        VkRenderPassCreateInfo render_pass_create_info{};
+        render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
+        render_pass_create_info.pAttachments = attachment_descriptions.data();
+        render_pass_create_info.dependencyCount = 0;
+        render_pass_create_info.pDependencies = nullptr;
+        render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
+        render_pass_create_info.pSubpasses = subpass_descriptions.data();
+        vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mWindowRegistry.back().mVkRenderPass );
+
         return true;
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
@@ -751,6 +800,11 @@ namespace AeonGames
         for ( auto& w : mWindowRegistry )
         {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
+            if ( w.mVkRenderPass != VK_NULL_HANDLE )
+            {
+                vkDestroyRenderPass ( mVkDevice, w.mVkRenderPass, nullptr );
+                w.mVkRenderPass = VK_NULL_HANDLE;
+            }
             if ( w.mVkDepthStencilImageView != VK_NULL_HANDLE )
             {
                 vkDestroyImageView ( mVkDevice, w.mVkDepthStencilImageView, nullptr );
