@@ -148,6 +148,7 @@ namespace AeonGames
             VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
             bool mHasStencil = false;
             VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
+            std::vector<VkFramebuffer> mVkFramebuffers;
 #endif
         };
 

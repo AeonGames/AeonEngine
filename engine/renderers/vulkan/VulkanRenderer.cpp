@@ -780,6 +780,25 @@ namespace AeonGames
         render_pass_create_info.pSubpasses = subpass_descriptions.data();
         vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mWindowRegistry.back().mVkRenderPass );
 
+        mWindowRegistry.back().mVkFramebuffers.resize ( mWindowRegistry.back().mSwapchainImageCount );
+        for ( uint32_t i = 0; i < mWindowRegistry.back().mSwapchainImageCount; ++i )
+        {
+            std::array<VkImageView, 2> attachments
+            {
+                mWindowRegistry.back().mVkDepthStencilImageView,
+                mWindowRegistry.back().mVkSwapchainImageViews[i]
+            };
+            VkFramebufferCreateInfo framebuffer_create_info{};
+            framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebuffer_create_info.renderPass = mWindowRegistry.back().mVkRenderPass;
+            framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( attachments.size() );
+            framebuffer_create_info.pAttachments = attachments.data();
+            framebuffer_create_info.width = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.currentExtent.width;
+            framebuffer_create_info.height = mWindowRegistry.back().mVkSurfaceCapabilitiesKHR.currentExtent.height;
+            framebuffer_create_info.layers = 1;
+            vkCreateFramebuffer ( mVkDevice, &framebuffer_create_info, nullptr, &mWindowRegistry.back().mVkFramebuffers[i] );
+        }
+
         return true;
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
@@ -800,6 +819,14 @@ namespace AeonGames
         for ( auto& w : mWindowRegistry )
         {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
+            for ( auto& i : w.mVkFramebuffers )
+            {
+                if ( i != VK_NULL_HANDLE )
+                {
+                    vkDestroyFramebuffer ( mVkDevice, i, nullptr );
+                    i = VK_NULL_HANDLE;
+                }
+            }
             if ( w.mVkRenderPass != VK_NULL_HANDLE )
             {
                 vkDestroyRenderPass ( mVkDevice, w.mVkRenderPass, nullptr );
@@ -821,12 +848,12 @@ namespace AeonGames
                 vkDestroyImage ( mVkDevice, w.mVkDepthStencilImage, nullptr );
                 w.mVkDepthStencilImage = VK_NULL_HANDLE;
             }
-            for ( uint32_t i = 0; i < w.mSwapchainImageCount; ++i )
+            for ( auto& i : w.mVkSwapchainImageViews )
             {
-                if ( w.mVkSwapchainImageViews[i] != VK_NULL_HANDLE )
+                if ( i != VK_NULL_HANDLE )
                 {
-                    vkDestroyImageView ( mVkDevice, w.mVkSwapchainImageViews[i], nullptr );
-                    w.mVkSwapchainImageViews[i] = VK_NULL_HANDLE;
+                    vkDestroyImageView ( mVkDevice, i, nullptr );
+                    i = VK_NULL_HANDLE;
                 }
             }
             if ( w.mVkSwapchainKHR != VK_NULL_HANDLE )
