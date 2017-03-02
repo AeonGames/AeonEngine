@@ -156,11 +156,11 @@ namespace AeonGames
                 InitializeDebug();
             }
             InitializeDevice();
-            InitializeSemaphoreAndFence();
+            InitializeSemaphore();
         }
         catch ( ... )
         {
-            FinalizeInitializeSemaphoreAndFence();
+            FinalizeSemaphore();
             FinalizeDevice();
             FinalizeDebug();
             FinalizeInstance();
@@ -206,8 +206,7 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeDebug()
     {
-        VkResult result;
-        if ( !mVkInstance && ( result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) ) != VK_SUCCESS )
+        if ( VkResult result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) )
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer debug report callback. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
@@ -226,7 +225,6 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeInstance()
     {
-        VkResult result;
         VkInstanceCreateInfo instance_create_info {};
         VkApplicationInfo application_info {};
 
@@ -245,8 +243,7 @@ namespace AeonGames
         {
             instance_create_info.pNext = &mDebugReportCallbackCreateInfo;
         }
-
-        if ( ( result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) ) != VK_SUCCESS )
+        if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer instance. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
@@ -276,7 +273,6 @@ namespace AeonGames
 
         VkDeviceCreateInfo device_create_info{};
         VkDeviceQueueCreateInfo device_queue_create_info{};
-
         {
             uint32_t family_properties_count;
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, nullptr );
@@ -345,8 +341,7 @@ namespace AeonGames
         device_create_info.ppEnabledExtensionNames = mDeviceExtensionNames.data();
 
         /// @todo Grab best device rather than first one
-        VkResult result;
-        if ( ( result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) ) != VK_SUCCESS )
+        if ( VkResult result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) )
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer device. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
@@ -355,21 +350,12 @@ namespace AeonGames
         vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
     }
 
-    void VulkanRenderer::InitializeSemaphoreAndFence()
+    void VulkanRenderer::InitializeSemaphore()
     {
-        VkFenceCreateInfo fence_create_info {};
-        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        VkResult result;
-        if ( ( result = vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "Could not create VulkanRenderer fence. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
         VkSemaphoreCreateInfo semaphore_create_info{};
         semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-        if ( ( result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkSemaphore ) ) != VK_SUCCESS )
+        if ( VkResult result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkSemaphore ) )
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
@@ -404,24 +390,19 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::FinalizeInitializeSemaphoreAndFence()
+    void VulkanRenderer::FinalizeSemaphore()
     {
         if ( mVkSemaphore != VK_NULL_HANDLE )
         {
             vkDestroySemaphore ( mVkDevice, mVkSemaphore, nullptr );
             mVkSemaphore = VK_NULL_HANDLE;
         }
-        if ( mVkFence != VK_NULL_HANDLE )
-        {
-            vkDestroyFence ( mVkDevice, mVkFence, nullptr );
-            mVkFence = VK_NULL_HANDLE;
-        }
     }
 
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
-        FinalizeInitializeSemaphoreAndFence();
+        FinalizeSemaphore();
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
@@ -508,13 +489,12 @@ namespace AeonGames
     {
         mWindowRegistry.emplace_back();
         mWindowRegistry.back().mWindowId = aWindowId;
-        VkResult result;
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
         VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
         win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         win32_surface_create_info_khr.hwnd = reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId );
         win32_surface_create_info_khr.hinstance = reinterpret_cast<HINSTANCE> ( GetWindowLongPtr ( win32_surface_create_info_khr.hwnd, GWLP_HINSTANCE ) );
-        if ( ( result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) ) != VK_SUCCESS )
+        if ( VkResult result = vkCreateWin32SurfaceKHR ( mVkInstance, &win32_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) )
         {
             std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
             return false;

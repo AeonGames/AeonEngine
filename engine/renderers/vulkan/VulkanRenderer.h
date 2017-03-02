@@ -45,14 +45,14 @@ namespace AeonGames
     private:
         void InitializeInstance();
         void InitializeDevice();
-        void InitializeSemaphoreAndFence();
+        void InitializeSemaphore();
         void InitializeDebug();
         void SetupLayersAndExtensions();
         void SetupDebug();
         void LoadFunctions();
         void FinalizeInstance();
         void FinalizeDevice();
-        void FinalizeInitializeSemaphoreAndFence();
+        void FinalizeSemaphore();
         void FinalizeDebug();
 
         bool mValidate = true;
@@ -65,7 +65,6 @@ namespace AeonGames
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
         VkQueue mVkQueue = VK_NULL_HANDLE;
-        VkFence mVkFence = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
