@@ -505,6 +505,7 @@ namespace AeonGames
 
     VulkanRenderer::~VulkanRenderer()
     {
+        vkQueueWaitIdle ( mVkQueue );
         FinalizeCommandPool();
         FinalizeDevice();
         FinalizeDebug();
@@ -513,10 +514,68 @@ namespace AeonGames
 
     void VulkanRenderer::BeginRender() const
     {
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
+        for ( auto& i : mWindowRegistry )
+        {
+            vkAcquireNextImageKHR ( mVkDevice, i.mVkSwapchainKHR, UINT64_MAX, VK_NULL_HANDLE, i.mVkFence, const_cast<uint32_t*> ( &i.mActiveImageIndex ) );
+            vkWaitForFences ( mVkDevice, 1, &i.mVkFence, VK_TRUE, UINT64_MAX );
+            vkResetFences ( mVkDevice, 1, &i.mVkFence );
+            /** @todo This will probably break for more than one Window, revisit!. */
+            vkQueueWaitIdle ( mVkQueue );
+            VkCommandBufferBeginInfo command_buffer_begin_info{};
+            command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            vkBeginCommandBuffer ( i.mVkCommandBuffer, &command_buffer_begin_info );
+
+            VkRect2D render_area{ {0, 0}, i.mVkSurfaceCapabilitiesKHR.currentExtent };
+            /**@todo These clear values work for now since we want all black,
+            the proper fields should be set accordingly if a different color is needed.
+            Also which of the color union member is filled depends on the surface format.*/
+            std::array<VkClearValue, 2> clear_values{{{0}, {0}}};
+            VkRenderPassBeginInfo render_pass_begin_info{};
+            render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            render_pass_begin_info.renderPass = i.mVkRenderPass;
+            render_pass_begin_info.framebuffer = i.mVkFramebuffers[i.mActiveImageIndex];
+            render_pass_begin_info.renderArea = render_area;
+            render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
+            render_pass_begin_info.pClearValues = clear_values.data();
+            vkCmdBeginRenderPass ( i.mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+            VkSubmitInfo submit_info{};
+            submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit_info.waitSemaphoreCount = 0;
+            submit_info.pWaitSemaphores = nullptr;
+            submit_info.pWaitDstStageMask = nullptr;
+            submit_info.commandBufferCount = 1;
+            submit_info.pCommandBuffers = &i.mVkCommandBuffer;
+            submit_info.signalSemaphoreCount = 1;
+            submit_info.pSignalSemaphores = &mVkSemaphore;
+            vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE );
+        }
+#else
+#endif
     }
 
     void VulkanRenderer::EndRender() const
     {
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
+        /** @todo This will probably break for more than one Window, revisit!. */
+        for ( auto& i : mWindowRegistry )
+        {
+            vkCmdEndRenderPass ( i.mVkCommandBuffer );
+            vkEndCommandBuffer ( i.mVkCommandBuffer );
+            VkResult result = VkResult::VK_RESULT_MAX_ENUM;
+            VkPresentInfoKHR present_info{};
+            present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            present_info.waitSemaphoreCount = 1;
+            present_info.pWaitSemaphores = &mVkSemaphore;
+            present_info.swapchainCount = 1;
+            present_info.pSwapchains = &i.mVkSwapchainKHR;
+            present_info.pImageIndices = &i.mActiveImageIndex;
+            present_info.pResults = &result;
+            vkQueuePresentKHR ( mVkQueue, &present_info );
+        }
+#else
+#endif
     }
 
     void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel ) const
@@ -799,6 +858,23 @@ namespace AeonGames
             vkCreateFramebuffer ( mVkDevice, &framebuffer_create_info, nullptr, &mWindowRegistry.back().mVkFramebuffers[i] );
         }
 
+        VkFenceCreateInfo fence_create_info{};
+        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mWindowRegistry.back().mVkFence );
+
+        VkCommandPoolCreateInfo command_pool_create_info{};
+        command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        command_pool_create_info.queueFamilyIndex = mQueueFamilyIndex;
+        vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mWindowRegistry.back().mVkCommandPool );
+
+        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        command_buffer_allocate_info.commandPool = mWindowRegistry.back().mVkCommandPool;
+        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        command_buffer_allocate_info.commandBufferCount = 1;
+        vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mWindowRegistry.back().mVkCommandBuffer );
+
         return true;
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
@@ -816,9 +892,16 @@ namespace AeonGames
 
     void VulkanRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
     {
+        vkQueueWaitIdle ( mVkQueue );
         for ( auto& w : mWindowRegistry )
         {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
+            if ( w.mVkFence != VK_NULL_HANDLE )
+            {
+                vkDestroyFence ( mVkDevice, w.mVkFence, nullptr );
+                w.mVkFence = VK_NULL_HANDLE;
+            }
+
             for ( auto& i : w.mVkFramebuffers )
             {
                 if ( i != VK_NULL_HANDLE )

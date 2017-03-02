@@ -132,6 +132,7 @@ namespace AeonGames
 
         struct WindowData
         {
+            /**@todo Reorder fields for better memory alignment.*/
             uintptr_t mWindowId = 0;
             VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -149,6 +150,11 @@ namespace AeonGames
             bool mHasStencil = false;
             VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
             std::vector<VkFramebuffer> mVkFramebuffers;
+            uint32_t mActiveImageIndex = UINT32_MAX;
+            VkFence mVkFence = VK_NULL_HANDLE;
+            /* Not sure if the following should be here */
+            VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
+            VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
 #endif
         };
 
