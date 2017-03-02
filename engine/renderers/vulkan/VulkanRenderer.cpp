@@ -156,11 +156,11 @@ namespace AeonGames
                 InitializeDebug();
             }
             InitializeDevice();
-            InitializeCommandPool();
+            InitializeSemaphoreAndFence();
         }
         catch ( ... )
         {
-            FinalizeCommandPool();
+            FinalizeInitializeSemaphoreAndFence();
             FinalizeDevice();
             FinalizeDebug();
             FinalizeInstance();
@@ -336,7 +336,6 @@ namespace AeonGames
         device_queue_create_info.queueFamilyIndex = mQueueFamilyIndex;
         device_queue_create_info.pQueuePriorities = queue_priorities;
 
-
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         device_create_info.queueCreateInfoCount = 1;
         device_create_info.pQueueCreateInfos = &device_queue_create_info;
@@ -356,69 +355,17 @@ namespace AeonGames
         vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
     }
 
-    void VulkanRenderer::InitializeCommandPool()
+    void VulkanRenderer::InitializeSemaphoreAndFence()
     {
-        assert ( mVkDevice != VK_NULL_HANDLE );
-        VkCommandPoolCreateInfo command_pool_create_info{};
-        command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        command_pool_create_info.queueFamilyIndex = mQueueFamilyIndex;
-        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        VkResult result;
-        if ( ( result = vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkCommandPool ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "Could not create VulkanRenderer command pool. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        command_buffer_allocate_info.commandPool = mVkCommandPool;
-        command_buffer_allocate_info.commandBufferCount = 1;
-        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-
-        if ( ( result = vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "Could not allocate VulkanRenderer command buffers. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        VkCommandBufferBeginInfo command_buffer_begin_info{};
-        command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if ( ( result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "vkBeginCommandBuffer call failed. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        vkCmdPipelineBarrier ( mVkCommandBuffer,
-                               VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                               VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                               0,
-                               0, nullptr,
-                               0, nullptr,
-                               0, nullptr );
-
-        if ( ( result = vkEndCommandBuffer ( mVkCommandBuffer ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "vkEndCommandBuffer call failed. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
         VkFenceCreateInfo fence_create_info {};
         fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
+        VkResult result;
         if ( ( result = vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence ) ) != VK_SUCCESS )
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer fence. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-
         VkSemaphoreCreateInfo semaphore_create_info{};
         semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -428,33 +375,6 @@ namespace AeonGames
             stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-
-        VkSubmitInfo submit_info{};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &mVkCommandBuffer;
-        submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &mVkSemaphore;
-
-        if ( ( result = vkQueueSubmit ( mVkQueue, 1, &submit_info, mVkFence ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "Could not submit VulkanRenderer queue. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-#if 0
-        if ( ( result = vkWaitForFences ( mVkDevice, 1, &mVkFence, VK_TRUE, UINT64_MAX ) ) != VK_SUCCESS )
-        {
-            return false;
-        }
-#else
-        if ( ( result = vkQueueWaitIdle ( mVkQueue ) ) != VK_SUCCESS )
-        {
-            std::ostringstream stream;
-            stream << "Call to vkQueueWaitIdle failed. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-#endif
     }
 
     void VulkanRenderer::FinalizeDebug()
@@ -484,7 +404,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::FinalizeCommandPool()
+    void VulkanRenderer::FinalizeInitializeSemaphoreAndFence()
     {
         if ( mVkSemaphore != VK_NULL_HANDLE )
         {
@@ -496,17 +416,12 @@ namespace AeonGames
             vkDestroyFence ( mVkDevice, mVkFence, nullptr );
             mVkFence = VK_NULL_HANDLE;
         }
-        if ( mVkCommandPool != VK_NULL_HANDLE )
-        {
-            vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
-            mVkCommandPool = VK_NULL_HANDLE;
-        }
     }
 
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
-        FinalizeCommandPool();
+        FinalizeInitializeSemaphoreAndFence();
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
@@ -540,16 +455,6 @@ namespace AeonGames
             render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
             render_pass_begin_info.pClearValues = clear_values.data();
             vkCmdBeginRenderPass ( i.mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
-            VkSubmitInfo submit_info{};
-            submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            submit_info.waitSemaphoreCount = 0;
-            submit_info.pWaitSemaphores = nullptr;
-            submit_info.pWaitDstStageMask = nullptr;
-            submit_info.commandBufferCount = 1;
-            submit_info.pCommandBuffers = &i.mVkCommandBuffer;
-            submit_info.signalSemaphoreCount = 1;
-            submit_info.pSignalSemaphores = &mVkSemaphore;
-            vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE );
         }
 #else
 #endif
@@ -563,6 +468,18 @@ namespace AeonGames
         {
             vkCmdEndRenderPass ( i.mVkCommandBuffer );
             vkEndCommandBuffer ( i.mVkCommandBuffer );
+
+            VkSubmitInfo submit_info{};
+            submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit_info.waitSemaphoreCount = 0;
+            submit_info.pWaitSemaphores = nullptr;
+            submit_info.pWaitDstStageMask = nullptr;
+            submit_info.commandBufferCount = 1;
+            submit_info.pCommandBuffers = &i.mVkCommandBuffer;
+            submit_info.signalSemaphoreCount = 1;
+            submit_info.pSignalSemaphores = &mVkSemaphore;
+            vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE );
+
             VkResult result = VkResult::VK_RESULT_MAX_ENUM;
             VkPresentInfoKHR present_info{};
             present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -896,6 +813,12 @@ namespace AeonGames
         for ( auto& w : mWindowRegistry )
         {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
+            if ( w.mVkCommandPool != VK_NULL_HANDLE )
+            {
+                vkDestroyCommandPool ( mVkDevice, w.mVkCommandPool, nullptr );
+                w.mVkCommandPool = VK_NULL_HANDLE;
+            }
+
             if ( w.mVkFence != VK_NULL_HANDLE )
             {
                 vkDestroyFence ( mVkDevice, w.mVkFence, nullptr );

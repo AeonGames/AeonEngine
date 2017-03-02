@@ -45,14 +45,14 @@ namespace AeonGames
     private:
         void InitializeInstance();
         void InitializeDevice();
-        void InitializeCommandPool();
+        void InitializeSemaphoreAndFence();
         void InitializeDebug();
         void SetupLayersAndExtensions();
         void SetupDebug();
         void LoadFunctions();
         void FinalizeInstance();
         void FinalizeDevice();
-        void FinalizeCommandPool();
+        void FinalizeInitializeSemaphoreAndFence();
         void FinalizeDebug();
 
         bool mValidate = true;
