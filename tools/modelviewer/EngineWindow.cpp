@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -200,6 +200,7 @@ namespace AeonGames
 
     void EngineWindow::mouseMoveEvent ( QMouseEvent * event )
     {
+#if 0
         if ( event->buttons() & Qt::LeftButton )
         {
             QPoint movement = event->globalPos() - mLastCursorPosition;
@@ -207,8 +208,9 @@ namespace AeonGames
             mCameraRotation = QQuaternion::fromAxisAndAngle ( 0, 0, 1, - ( static_cast<float> ( movement.x() ) / 2.0f ) ) * mCameraRotation;
             mCameraRotation = mCameraRotation * QQuaternion::fromAxisAndAngle ( 1, 0, 0, - ( static_cast<float> ( movement.y() ) / 2.0f ) );
             updateViewMatrix();
-            event->accept();
         }
+#endif
+        event->accept();
     }
 
     void EngineWindow::mousePressEvent ( QMouseEvent * event )
