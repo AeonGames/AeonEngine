@@ -24,6 +24,7 @@ set(MODELVIEWER_QT_HEADERS
     )
 
 set(MODELVIEWER_HEADERS
+    Debug.h
     ModelViewer.h
     ${MODELVIEWER_QT_HEADERS})
 
@@ -32,6 +33,7 @@ set(MODELVIEWER_SOURCES
     ModelViewer.cpp
     MainWindow.cpp
     EngineWindow.cpp
+    Debug.cpp
     )
 
 set(MODELVIEWER_UI

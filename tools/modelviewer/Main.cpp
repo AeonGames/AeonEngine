@@ -17,18 +17,24 @@ limitations under the License.
 #include <QMessageBox>
 #include "MainWindow.h"
 #include "ModelViewer.h"
+#include "Debug.h"
 #include "aeongames/AeonEngine.h"
+
 #ifdef _MSC_VER
 int AllocHook ( int allocType, void *userData, size_t size, int
                 blockType, long requestNumber, const unsigned char *filename, int
                 lineNumber )
 {
     _CrtSetAllocHook ( NULL );
-    // DO STUFF HERE
+#if 0
+    std::vector<std::string> stack;
+    GetCallStack ( 0, stack );
+#endif
     _CrtSetAllocHook ( AllocHook );
     return TRUE;
 }
 #endif
+
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
 #ifdef _MSC_VER
@@ -37,7 +43,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     http://msdn.microsoft.com/en-us/library/5at7yxcs%28v=vs.71%29.aspx */
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
-    //_CrtSetAllocHook(AllocHook);
+    _CrtSetAllocHook ( AllocHook );
 #endif
     if ( !AeonGames::Initialize() )
     {
