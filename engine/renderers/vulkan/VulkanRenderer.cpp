@@ -778,7 +778,7 @@ namespace AeonGames
         xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
         xlib_surface_create_info_khr.window = aWindowId;
-        if ( ( result = vkCreateXlibSurfaceKHR ( mVkInstance, &xlib_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) ) != VK_SUCCESS )
+        if ( VkResult result = vkCreateXlibSurfaceKHR ( mVkInstance, &xlib_surface_create_info_khr, nullptr, &mWindowRegistry.back().mVkSurfaceKHR ) )
         {
             std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
             return false;
