@@ -13,23 +13,36 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <cstdio>
 #include <iostream>
 #include <QMessageBox>
+#include <mutex>
 #include "MainWindow.h"
 #include "ModelViewer.h"
 #include "Debug.h"
 #include "aeongames/AeonEngine.h"
 
 #ifdef _MSC_VER
+FILE* gAllocationLog = NULL;
 int AllocHook ( int allocType, void *userData, size_t size, int
                 blockType, long requestNumber, const unsigned char *filename, int
                 lineNumber )
 {
+    static std::mutex m;
+    if ( !size && !requestNumber )
+    {
+        return TRUE;
+    }
+    std::lock_guard<std::mutex> hold ( m );
     _CrtSetAllocHook ( NULL );
-#if 0
-    std::vector<std::string> stack;
-    GetCallStack ( 0, stack );
-#endif
+    if ( gAllocationLog && requestNumber && size )
+    {
+        fprintf ( gAllocationLog, "%s %ld Size %llu\n",
+                  ( allocType == _HOOK_ALLOC ) ? "ALLOCATION" :
+                  ( allocType == _HOOK_REALLOC ) ? "REALLOCATION" : "DEALLOCATION",
+                  requestNumber,
+                  size );
+    }
     _CrtSetAllocHook ( AllocHook );
     return TRUE;
 }
@@ -38,12 +51,13 @@ int AllocHook ( int allocType, void *userData, size_t size, int
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
 #ifdef _MSC_VER
+    //gAllocationLog = fopen("allocation.log", "wt");
     /*  Call _CrtDumpMemoryLeaks on exit, required because Qt does a lot of static allocations,
     which are detected as false positives.
     http://msdn.microsoft.com/en-us/library/5at7yxcs%28v=vs.71%29.aspx */
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
-    _CrtSetAllocHook ( AllocHook );
+    //_CrtSetAllocHook ( AllocHook );
 #endif
     if ( !AeonGames::Initialize() )
     {
@@ -73,5 +87,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     }
     delete mainWindow;
     AeonGames::Finalize();
+    //_CrtSetAllocHook(NULL);
+    //if (gAllocationLog) { fclose(gAllocationLog); };
     return retval;
 }
