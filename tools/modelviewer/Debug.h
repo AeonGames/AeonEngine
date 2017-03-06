@@ -21,10 +21,10 @@ limitations under the License.
 #ifdef _MSC_VER
 #include <vector>
 #include <tlhelp32.h>
-#define DUMP_SIZE_MAX   8000
-#define CALL_TRACE_MAX  ((DUMP_SIZE_MAX - 2000) / (MAX_PATH + 40))
-void GetProcName ( HMODULE hModule, void* address );
-BOOL WINAPI GetModuleByRetAddr ( PBYTE Ret_Addr, PCHAR Module_Name );
-void WINAPI GetCallStack ( int test, std::vector<std::string>& aFunctionNames );
+//#define DUMP_SIZE_MAX   8000
+//#define CALL_TRACE_MAX  ((DUMP_SIZE_MAX - 2000) / (MAX_PATH + 40))
+LPCSTR WINAPI GetProcName ( _In_ HMODULE hModule, _In_ FARPROC lpAddress );
+BOOL WINAPI GetModuleEntryByAddr ( _In_ FARPROC lpAddress, _In_ PMODULEENTRY32 lpModuleEntry );
+FARPROC WINAPI GetCallStackReturnAddress ( _In_ size_t index, _In_ PMODULEENTRY32 lpModuleEntry );
 #endif
 #endif
