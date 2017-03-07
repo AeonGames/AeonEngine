@@ -790,76 +790,74 @@ namespace AeonGames
     void VulkanRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
     {
         vkQueueWaitIdle ( mVkQueue );
-        for ( auto& w : mWindowRegistry )
+        mWindowRegistry.erase (
+            std::remove_if (
+                mWindowRegistry.begin(),
+                mWindowRegistry.end(),
+                [this, &aWindowId] ( const WindowData & window ) -> bool
         {
+            if ( window.mWindowId == aWindowId )
+            {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
-            if ( w.mVkCommandPool != VK_NULL_HANDLE )
-            {
-                vkDestroyCommandPool ( mVkDevice, w.mVkCommandPool, nullptr );
-                w.mVkCommandPool = VK_NULL_HANDLE;
-            }
-
-            if ( w.mVkFence != VK_NULL_HANDLE )
-            {
-                vkDestroyFence ( mVkDevice, w.mVkFence, nullptr );
-                w.mVkFence = VK_NULL_HANDLE;
-            }
-
-            for ( auto& i : w.mVkFramebuffers )
-            {
-                if ( i != VK_NULL_HANDLE )
+                if ( window.mVkCommandPool != VK_NULL_HANDLE )
                 {
-                    vkDestroyFramebuffer ( mVkDevice, i, nullptr );
-                    i = VK_NULL_HANDLE;
+                    vkDestroyCommandPool ( mVkDevice, window.mVkCommandPool, nullptr );
                 }
-            }
-            if ( w.mVkRenderPass != VK_NULL_HANDLE )
-            {
-                vkDestroyRenderPass ( mVkDevice, w.mVkRenderPass, nullptr );
-                w.mVkRenderPass = VK_NULL_HANDLE;
-            }
-            if ( w.mVkDepthStencilImageView != VK_NULL_HANDLE )
-            {
-                vkDestroyImageView ( mVkDevice, w.mVkDepthStencilImageView, nullptr );
-                w.mVkDepthStencilImageView = VK_NULL_HANDLE;
-            }
-            if ( w.mVkDepthStencilImageMemory != VK_NULL_HANDLE )
-            {
-                vkFreeMemory ( mVkDevice, w.mVkDepthStencilImageMemory, nullptr );
-                w.mVkDepthStencilImageMemory = VK_NULL_HANDLE;
-            }
 
-            if ( w.mVkDepthStencilImage != VK_NULL_HANDLE )
-            {
-                vkDestroyImage ( mVkDevice, w.mVkDepthStencilImage, nullptr );
-                w.mVkDepthStencilImage = VK_NULL_HANDLE;
-            }
-            for ( auto& i : w.mVkSwapchainImageViews )
-            {
-                if ( i != VK_NULL_HANDLE )
+                if ( window.mVkFence != VK_NULL_HANDLE )
                 {
-                    vkDestroyImageView ( mVkDevice, i, nullptr );
-                    i = VK_NULL_HANDLE;
+                    vkDestroyFence ( mVkDevice, window.mVkFence, nullptr );
                 }
-            }
-            if ( w.mVkSwapchainKHR != VK_NULL_HANDLE )
-            {
-                vkDestroySwapchainKHR ( mVkDevice, w.mVkSwapchainKHR, nullptr );
-                w.mVkSwapchainKHR = VK_NULL_HANDLE;
-            }
-            if ( w.mVkSurfaceKHR != VK_NULL_HANDLE )
-            {
-                vkDestroySurfaceKHR ( mVkInstance, w.mVkSurfaceKHR, nullptr );
-                w.mVkSurfaceKHR = VK_NULL_HANDLE;
-            }
+
+                for ( auto& i : window.mVkFramebuffers )
+                {
+                    if ( i != VK_NULL_HANDLE )
+                    {
+                        vkDestroyFramebuffer ( mVkDevice, i, nullptr );
+                    }
+                }
+                if ( window.mVkRenderPass != VK_NULL_HANDLE )
+                {
+                    vkDestroyRenderPass ( mVkDevice, window.mVkRenderPass, nullptr );
+                }
+                if ( window.mVkDepthStencilImageView != VK_NULL_HANDLE )
+                {
+                    vkDestroyImageView ( mVkDevice, window.mVkDepthStencilImageView, nullptr );
+                }
+                if ( window.mVkDepthStencilImageMemory != VK_NULL_HANDLE )
+                {
+                    vkFreeMemory ( mVkDevice, window.mVkDepthStencilImageMemory, nullptr );
+                }
+
+                if ( window.mVkDepthStencilImage != VK_NULL_HANDLE )
+                {
+                    vkDestroyImage ( mVkDevice, window.mVkDepthStencilImage, nullptr );
+                }
+                for ( auto& i : window.mVkSwapchainImageViews )
+                {
+                    if ( i != VK_NULL_HANDLE )
+                    {
+                        vkDestroyImageView ( mVkDevice, i, nullptr );
+                    }
+                }
+                if ( window.mVkSwapchainKHR != VK_NULL_HANDLE )
+                {
+                    vkDestroySwapchainKHR ( mVkDevice, window.mVkSwapchainKHR, nullptr );
+                }
+                if ( window.mVkSurfaceKHR != VK_NULL_HANDLE )
+                {
+                    vkDestroySurfaceKHR ( mVkInstance, window.mVkSurfaceKHR, nullptr );
+                }
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
-            if ( w.mVkSurfaceKHR != VK_NULL_HANDLE )
-            {
-                vkDestroySurfaceKHR ( mVkInstance, w.mVkSurfaceKHR, nullptr );
-                w.mVkSurfaceKHR = VK_NULL_HANDLE;
-            }
+                if ( window.mVkSurfaceKHR != VK_NULL_HANDLE )
+                {
+                    vkDestroySurfaceKHR ( mVkInstance, window.mVkSurfaceKHR, nullptr );
+                }
 #endif
-        }
+                return true;
+            }
+            return false;
+        } ), mWindowRegistry.end() );
     }
 
     void VulkanRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
