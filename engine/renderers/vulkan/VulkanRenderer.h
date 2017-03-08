@@ -41,7 +41,7 @@ namespace AeonGames
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
-
+        const VkDevice& GetDevice() const;
     private:
         void InitializeInstance();
         void InitializeDevice();

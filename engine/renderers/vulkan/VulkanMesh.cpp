@@ -20,6 +20,8 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
+
+#if 0
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -30,15 +32,17 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#endif
 
 #include "aeongames/Utilities.h"
 #include "aeongames/Mesh.h"
+#include "VulkanRenderer.h"
 #include "VulkanMesh.h"
 
 namespace AeonGames
 {
-    VulkanMesh::VulkanMesh ( const std::shared_ptr<Mesh> aMesh ) :
-        mMesh ( aMesh )
+    VulkanMesh::VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const VulkanRenderer& aVulkanRenderer ) :
+        mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
         {
@@ -69,6 +73,40 @@ namespace AeonGames
         mBuffers.resize ( triangle_groups.size() );
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
+            if ( triangle_groups[i].mVertexCount )
+            {
+                VkBufferCreateInfo buffer_create_info{};
+                buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+                buffer_create_info.pNext = nullptr;
+                buffer_create_info.flags = 0;
+                buffer_create_info.size = triangle_groups[i].mVertexBuffer.size();
+                buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+                buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                buffer_create_info.queueFamilyIndexCount = 0;
+                buffer_create_info.pQueueFamilyIndices = nullptr;
+
+                if ( VkResult result = vkCreateBuffer ( mVulkanRenderer.GetDevice(), &buffer_create_info, nullptr, &mBuffers[i].mVertexBuffer ) )
+                {
+                    throw std::runtime_error ( "vkCreateBuffer failed for vertex buffer" );
+                }
+            }
+            if ( triangle_groups[i].mIndexCount )
+            {
+                VkBufferCreateInfo buffer_create_info{};
+                buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+                buffer_create_info.pNext = nullptr;
+                buffer_create_info.flags = 0;
+                buffer_create_info.size = triangle_groups[i].mIndexBuffer.size();
+                buffer_create_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+                buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                buffer_create_info.queueFamilyIndexCount = 0;
+                buffer_create_info.pQueueFamilyIndices = nullptr;
+
+                if ( VkResult result = vkCreateBuffer ( mVulkanRenderer.GetDevice(), &buffer_create_info, nullptr, &mBuffers[i].mIndexBuffer ) )
+                {
+                    throw std::runtime_error ( "vkCreateBuffer failed for index buffer" );
+                }
+            }
         }
     }
 
@@ -76,7 +114,16 @@ namespace AeonGames
     {
         for ( auto& i : mBuffers )
         {
-            ( void ) i;
+            if ( i.mVertexBuffer != VK_NULL_HANDLE )
+            {
+                vkDestroyBuffer ( mVulkanRenderer.GetDevice(), i.mVertexBuffer, nullptr );
+                i.mVertexBuffer = VK_NULL_HANDLE;
+            }
+            if ( i.mIndexBuffer != VK_NULL_HANDLE )
+            {
+                vkDestroyBuffer ( mVulkanRenderer.GetDevice(), i.mIndexBuffer, nullptr );
+                i.mIndexBuffer = VK_NULL_HANDLE;
+            }
         }
     }
 }

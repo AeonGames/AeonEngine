@@ -17,14 +17,15 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Model.h"
 #include "aeongames/ResourceCache.h"
+#include "VulkanRenderer.h"
 #include "VulkanModel.h"
 #include "VulkanProgram.h"
 #include "VulkanMesh.h"
 
 namespace AeonGames
 {
-    VulkanModel::VulkanModel ( const std::shared_ptr<Model> aModel ) :
-        mModel ( aModel )
+    VulkanModel::VulkanModel ( const std::shared_ptr<Model> aModel, const VulkanRenderer& aVulkanRenderer ) :
+        mModel ( aModel ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
         {
@@ -55,7 +56,7 @@ namespace AeonGames
     void VulkanModel::Initialize()
     {
         mProgram = Get<VulkanProgram> ( mModel->GetProgram() );
-        mMesh = Get<VulkanMesh> ( mModel->GetMesh() );
+        mMesh = Get<VulkanMesh> ( mModel->GetMesh(), mVulkanRenderer );
     }
 
     void VulkanModel::Finalize()
