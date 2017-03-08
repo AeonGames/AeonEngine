@@ -168,6 +168,11 @@ namespace AeonGames
         }
     }
 
+    const VkDevice & VulkanRenderer::GetDevice() const
+    {
+        return mVkDevice;
+    }
+
     void VulkanRenderer::LoadFunctions()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );

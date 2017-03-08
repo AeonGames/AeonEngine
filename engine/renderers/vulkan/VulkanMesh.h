@@ -18,26 +18,28 @@ limitations under the License.
 
 #include <exception>
 #include <string>
+#include <vulkan/vulkan.h>
 #include "aeongames/Memory.h"
 
 namespace AeonGames
 {
     class Mesh;
+    class VulkanRenderer;
     class VulkanMesh
     {
     public:
-        VulkanMesh ( const std::shared_ptr<Mesh> aMesh );
+        VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const VulkanRenderer& aVulkanRenderer );
         ~VulkanMesh();
         void Render() const;
     private:
         void Initialize();
         void Finalize();
         const std::shared_ptr<Mesh> mMesh;
+        const VulkanRenderer& mVulkanRenderer;
         struct Buffers
         {
-            uint32_t mArray = 0;
-            uint32_t mVertexBuffer = 0;
-            uint32_t mIndexBuffer = 0;
+            VkBuffer mVertexBuffer = VK_NULL_HANDLE;
+            VkBuffer mIndexBuffer = VK_NULL_HANDLE;
         };
         std::vector<Buffers> mBuffers;
     };
