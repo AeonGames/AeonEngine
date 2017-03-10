@@ -1,6 +1,8 @@
 # AeonEngine [![Build Status](https://travis-ci.org/AeonGames/AeonEngine.svg?branch=master)](https://travis-ci.org/AeonGames/AeonEngine) [![Coverity Scan Build Status](https://scan.coverity.com/projects/10765/badge.svg)](https://scan.coverity.com/projects/aeongames-aeonengine)
 Aeon Games Flagship Game Engine
 
+Check out the [development blog](http://www.aeongames.com/AeonEngine/) for the engine's latest news.
+
 This is the 3rd iteration of the engine, the first one was started circa 1996 and was lost on a hard drive crash, the second one was started circa 2001 and still exists, but is a mess and a patchwork of collected ideas of 15 years of trying to keep up.
 
 THIS IS A WORK IN PROGRESS.

@@ -1,10 +1,10 @@
 Instalation
 ===========
 
-In order to use the Blender addon exporters for AeonEngine, you need to install the python protobuffer library on your Blender setup because it is a pain to have Blender use the local python instalation and either way you need to build and install the PB library somewhere.
+In order to use the Blender addon exporters for AeonEngine, you need to install the python protobuffer library onto your Blender setup because it is a pain to have Blender use the local python instalation. Either way you need to build and install the PB library somewhere.
 Specifically, you will need to install pip and then build and install the PB library from source.
 
-I may expand some more on this, but right now this is mostly something I can look up to set up an environment since the process is quite involved and I couldn't or haven't been able to easily automate.
+I may expand some more on this, but right now this is mostly something to look up when configuring an environment. The process is quite involved and I couldn't or haven't been able to easily automate it.
 
 1. Run as administrator or root a command line window or terminal.
 2. Add the directory containing the python executable from Blender into the PATH enviroment variable. (Only valid for Windows, Ubuntu 16.04 now uses the system's python, but you may have to install pip for python3 since the default is python 2.x).
@@ -17,7 +17,7 @@ I may expand some more on this, but right now this is mostly something I can loo
 
 Thats it. To actually run the exporters:
 
-1. Make or build the generate-python-protobuf-source target of this project.
+1. Make or build the generate-python-protobuf-source target of [this project](https://github.com/AeonGames/AeonEngine).
 2. Run Blender and go to File->User Preferences and click on the "Files" Tab.
 3. Type or browse for this folder on the "Scripts" field.
 4. Save preferences and restart Blender.

@@ -29,6 +29,7 @@ limitations under the License.
 #include <vector>
 #include <array>
 #include <stdexcept>
+#include <algorithm>
 #include "aeongames/LogLevel.h"
 #include "VulkanRenderer.h"
 #include "math/3DMath.h"
