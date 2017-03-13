@@ -36,7 +36,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    static const char* GetVulkanRendererResultString ( VkResult aResult )
+    const char* GetVulkanRendererResultString ( VkResult aResult )
     {
         switch ( aResult )
         {
@@ -172,6 +172,11 @@ namespace AeonGames
     const VkDevice & VulkanRenderer::GetDevice() const
     {
         return mVkDevice;
+    }
+
+    const VkPhysicalDeviceMemoryProperties & VulkanRenderer::GetPhysicalDeviceMemoryProperties() const
+    {
+        return mVkPhysicalDeviceMemoryProperties;
     }
 
     void VulkanRenderer::LoadFunctions()

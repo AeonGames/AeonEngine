@@ -39,7 +39,9 @@ namespace AeonGames
         struct Buffers
         {
             VkBuffer mVertexBuffer = VK_NULL_HANDLE;
+            VkDeviceMemory mVertexMemory = VK_NULL_HANDLE;
             VkBuffer mIndexBuffer = VK_NULL_HANDLE;
+            VkDeviceMemory mIndexMemory = VK_NULL_HANDLE;
         };
         std::vector<Buffers> mBuffers;
     };
