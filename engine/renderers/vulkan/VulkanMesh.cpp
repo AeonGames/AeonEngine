@@ -20,20 +20,6 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
-
-#if 0
-#include "aeongames/ProtoBufClasses.h"
-#include "ProtoBufHelpers.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4251 )
-#endif
-#include "mesh.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-#endif
-
 #include "aeongames/Utilities.h"
 #include "aeongames/Mesh.h"
 #include "VulkanRenderer.h"
@@ -41,6 +27,8 @@ limitations under the License.
 
 namespace AeonGames
 {
+    extern const char* GetVulkanRendererResultString ( VkResult aResult );
+
     VulkanMesh::VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const VulkanRenderer& aVulkanRenderer ) :
         mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer )
     {
@@ -70,6 +58,23 @@ namespace AeonGames
     void VulkanMesh::Initialize()
     {
         auto& triangle_groups = mMesh->GetTriangleGroups();
+        auto& physical_device_memory_properties = mVulkanRenderer.GetPhysicalDeviceMemoryProperties();
+        uint32_t memory_index = UINT32_MAX;
+        for ( uint32_t i = 0; i < physical_device_memory_properties.memoryTypeCount; ++i )
+        {
+            if ( ( physical_device_memory_properties.memoryTypes[i].propertyFlags &
+                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) &&
+                 ( physical_device_memory_properties.memoryTypes[i].propertyFlags &
+                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ) )
+            {
+                memory_index = i;
+                break;
+            }
+        }
+        if ( memory_index == UINT32_MAX )
+        {
+            throw std::runtime_error ( "No suitable memory type found for mesh buffers" );
+        }
         mBuffers.resize ( triangle_groups.size() );
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
@@ -87,8 +92,34 @@ namespace AeonGames
 
                 if ( VkResult result = vkCreateBuffer ( mVulkanRenderer.GetDevice(), &buffer_create_info, nullptr, &mBuffers[i].mVertexBuffer ) )
                 {
-                    throw std::runtime_error ( "vkCreateBuffer failed for vertex buffer" );
+                    std::ostringstream stream;
+                    stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
                 }
+
+                VkMemoryAllocateInfo memory_allocate_info{};
+                memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+                memory_allocate_info.pNext = nullptr;
+                memory_allocate_info.allocationSize = triangle_groups[i].mVertexBuffer.size();
+                memory_allocate_info.memoryTypeIndex = memory_index;
+
+                if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mBuffers[i].mVertexMemory ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkAllocateMemory failed for vertex buffer. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+                void* data = nullptr;
+                if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), mBuffers[i].mVertexMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkMapMemory failed for vertex buffer. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+
+                memcpy ( data, triangle_groups[i].mVertexBuffer.data(), triangle_groups[i].mVertexBuffer.size() );
+
+                vkUnmapMemory ( mVulkanRenderer.GetDevice(), mBuffers[i].mVertexMemory );
             }
             if ( triangle_groups[i].mIndexCount )
             {
@@ -106,6 +137,31 @@ namespace AeonGames
                 {
                     throw std::runtime_error ( "vkCreateBuffer failed for index buffer" );
                 }
+
+                VkMemoryAllocateInfo memory_allocate_info{};
+                memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+                memory_allocate_info.pNext = nullptr;
+                memory_allocate_info.allocationSize = triangle_groups[i].mIndexBuffer.size();
+                memory_allocate_info.memoryTypeIndex = memory_index;
+
+                if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mBuffers[i].mIndexMemory ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkAllocateMemory failed for index buffer. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+
+                void* data = nullptr;
+                if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), mBuffers[i].mIndexMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkMapMemory failed for index buffer. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+
+                memcpy ( data, triangle_groups[i].mIndexBuffer.data(), triangle_groups[i].mIndexBuffer.size() );
+
+                vkUnmapMemory ( mVulkanRenderer.GetDevice(), mBuffers[i].mIndexMemory );
             }
         }
     }
@@ -119,10 +175,20 @@ namespace AeonGames
                 vkDestroyBuffer ( mVulkanRenderer.GetDevice(), i.mVertexBuffer, nullptr );
                 i.mVertexBuffer = VK_NULL_HANDLE;
             }
+            if ( i.mVertexMemory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVulkanRenderer.GetDevice(), i.mVertexMemory, nullptr );
+                i.mVertexMemory = VK_NULL_HANDLE;
+            }
             if ( i.mIndexBuffer != VK_NULL_HANDLE )
             {
                 vkDestroyBuffer ( mVulkanRenderer.GetDevice(), i.mIndexBuffer, nullptr );
                 i.mIndexBuffer = VK_NULL_HANDLE;
+            }
+            if ( i.mIndexMemory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVulkanRenderer.GetDevice(), i.mIndexMemory, nullptr );
+                i.mIndexMemory = VK_NULL_HANDLE;
             }
         }
     }
