@@ -15,7 +15,7 @@ Ubuntu 14.04 and up:
 ## Install required Packages
     sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev
     
-## Install libprotobuf-dev from source
+## Build and install libprotobuf-dev from source
     wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
     tar -xzvf v3.1.0.tar.gz
     cd protobuf-3.1.0
@@ -25,8 +25,20 @@ Ubuntu 14.04 and up:
     sudo make install
     sudo ldconfig
     cd ..
+
+## Build and install glslang from source
+    git clone https://github.com/KhronosGroup/glslang.git
+    cd glslang
+    git checkout 8f674e821e1e5f628474b21d7fe21af2e86b5fb4
+    mkdir build
+    cd build
+    cmake -G "Unix Makefiles" ..
+    make
+    sudo make install
+    sudo ldconfig
+    cd ../..
     
-## UBUNTU 14.x: Locally install libvulkan-dev from self extracting executable into home directory
+## *UBUNTU 14.x*: Locally install libvulkan-dev from self extracting executable into home directory
     cd ~/
     wget https://vulkan.lunarg.com/sdk/download/1.0.30.0/linux/vulkansdk-linux-x86_64-1.0.30.0.run
     chmod a+x vulkansdk-linux-x86_64-1.0.30.0.run
@@ -39,7 +51,7 @@ Ubuntu 14.04 and up:
     source ~/.bashrc
     sudo ldconfig
     
-## UBUNTU 16.x: Use apt to install Vulkan SDK
+## *UBUNTU 16.x*: Use apt to install Vulkan SDK
     sudo apt-get install -y libvulkan-dev
 
 ## Generate Makefiles with CMake
