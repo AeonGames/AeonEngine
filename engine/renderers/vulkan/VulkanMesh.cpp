@@ -135,7 +135,9 @@ namespace AeonGames
 
                 if ( VkResult result = vkCreateBuffer ( mVulkanRenderer.GetDevice(), &buffer_create_info, nullptr, &mBuffers[i].mIndexBuffer ) )
                 {
-                    throw std::runtime_error ( "vkCreateBuffer failed for index buffer" );
+                    std::ostringstream stream;
+                    stream << "vkCreateBuffer failed for index buffer. error code: ( " << GetVulkanRendererResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
                 }
 
                 VkMemoryAllocateInfo memory_allocate_info{};
