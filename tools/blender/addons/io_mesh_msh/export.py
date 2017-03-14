@@ -48,6 +48,7 @@ DOUBLE = 0x0A
 
 
 class MSHExporter(bpy.types.Operator):
+
     '''Exports a mesh to an AeonGames Mesh (MSH) file'''
     bl_idname = "export_mesh.msh"
     bl_label = "Export AeonGames Mesh"
@@ -355,7 +356,7 @@ class MSHExporter(bpy.types.Operator):
             if (object.type == 'MESH'):
                 triangle_group = mesh_buffer.TriangleGroup.add()
                 self.fill_triangle_group(triangle_group, object)
-                #cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
+                # cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
                 # print(
                 # timeit.timeit(
                 # lambda: self.fill_triangle_group(

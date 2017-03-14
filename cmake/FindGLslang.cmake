@@ -15,13 +15,13 @@
 find_program(GLSLANG_VALIDATOR_EXECUTABLE 
     NAMES
         glslangValidator
-    HINTS
+    PATHS
         /usr/local
 )
 
 find_path(GLSLANG_SPIRV_INCLUDE_DIR
     SPIRV/spirv.hpp
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -29,7 +29,7 @@ find_library(GLSLANG_LIB
     NAMES
         glslang
         glslangd
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -37,7 +37,7 @@ find_library(OGLCompiler_LIB
     NAMES
         OGLCompiler
         OGLCompilerd
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -45,7 +45,7 @@ find_library(OSDependent_LIB
     NAMES
         OSDependent
         OSDependentd
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -53,7 +53,7 @@ find_library(HLSL_LIB
     NAMES
         HLSL
         HLSLd
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -61,7 +61,7 @@ find_library(SPIRV_LIB
     NAMES
         SPIRV
         SPIRVd
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -69,7 +69,7 @@ find_library(SPIRV_REMAPPER_LIB
     NAMES
         SPVRemapper
         SPVRemapperd
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -79,7 +79,7 @@ find_library(GLSLANG_DEBUG_LIB
     NAMES
         glslangd
         glslang
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -87,7 +87,7 @@ find_library(OGLCompiler_DEBUG_LIB
     NAMES
         OGLCompilerd
         OGLCompiler
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -95,7 +95,7 @@ find_library(OSDependent_DEBUG_LIB
     NAMES
         OSDependentd
         OSDependent
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -103,7 +103,7 @@ find_library(HLSL_DEBUG_LIB
     NAMES
         HLSLd
         HLSL
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -111,7 +111,7 @@ find_library(SPIRV_DEBUG_LIB
     NAMES
         SPIRVd
         SPIRV
-    HINTS
+    PATHS
         /usr/local
 )
 
@@ -119,7 +119,7 @@ find_library(SPIRV_REMAPPER_DEBUG_LIB
     NAMES
         SPVRemapperd
         SPVRemapper
-    HINTS
+    PATHS
         /usr/local
 )
 
