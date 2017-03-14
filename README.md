@@ -13,7 +13,7 @@ Ubuntu 14.04 and up:
 --------------------
 
 ## Install required Packages
-    sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev
+    sudo apt-get install -y sed python python3 python-autopep8 python-pep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev astyle
     
 ## Build and install libprotobuf-dev from source
     wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
