@@ -141,10 +141,14 @@ elseif(UNIX)
 endif()
 
 if(CLANG_TIDY_EXECUTABLE)
-    add_custom_target(check-engine-code
-        COMMAND ${CLANG_TIDY_EXECUTABLE} -fix -header-filter=.* -checks=modernize-* -p ${CMAKE_BINARY_DIR} ${ENGINE_SOURCES}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Checking Engine Code")
+    set_target_properties(AeonEngine PROPERTIES
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE} ${CLANG_TIDY_CHECKS}")
+    if(CMAKE_GENERATOR MATCHES "Makefile")
+        add_custom_target(check-engine-code
+            COMMAND ${CLANG_TIDY_EXECUTABLE} -fix -header-filter=.* -checks=modernize-* -p ${CMAKE_BINARY_DIR} ${ENGINE_SOURCES}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMENT "Checking Engine Code")
+    endif()
 endif()
 add_subdirectory(renderers/opengl)
 add_subdirectory(renderers/vulkan)
