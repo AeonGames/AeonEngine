@@ -113,3 +113,7 @@ elseif(UNIX)
     set_target_properties(OpenGLRenderer PROPERTIES
         COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors")
 endif()
+if(USE_CLANG_TIDY)
+    set_target_properties(OpenGLRenderer PROPERTIES
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
+endif()
