@@ -64,9 +64,11 @@ if(PYTHONINTERP_FOUND)
     find_python_module(autopep8)
 endif()
 find_program(XXD_EXECUTABLE NAMES xxd xxd.exe)
+
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
+    set(CLANG_TIDY_CHECKS "-warnings-as-errors;-checks=modernize-*")
 endif()
 
 if(CMAKE_HOST_UNIX)
