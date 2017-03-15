@@ -435,10 +435,12 @@ namespace AeonGames
             vkBeginCommandBuffer ( i.mVkCommandBuffer, &command_buffer_begin_info );
 
             VkRect2D render_area{ {0, 0}, i.mVkSurfaceCapabilitiesKHR.currentExtent };
-            /**@todo These clear values work for now since we want all black,
-            the proper fields should be set accordingly if a different color is needed.
-            Also which of the color union member is filled depends on the surface format.*/
+            /* [0] is depth/stencil [1] is color.*/
             std::array<VkClearValue, 2> clear_values{{{0}, {0}}};
+            clear_values[1].color.float32[0] = 0.5f;
+            clear_values[1].color.float32[1] = 0.5f;
+            clear_values[1].color.float32[2] = 0.5f;
+            clear_values[1].color.float32[3] = 0.0f;
             VkRenderPassBeginInfo render_pass_begin_info{};
             render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             render_pass_begin_info.renderPass = i.mVkRenderPass;
@@ -510,7 +512,7 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Level::Error ) << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
             return false;
         }
-        // From here on this is platform dependent code, move it later
+
         VkBool32 wsi_supported = false;
         vkGetPhysicalDeviceSurfaceSupportKHR ( mVkPhysicalDevice, mQueueFamilyIndex, mWindowRegistry.back().mVkSurfaceKHR, &wsi_supported );
         if ( !wsi_supported )
@@ -518,7 +520,6 @@ namespace AeonGames
             assert ( 0 && "WSI not supported." );
             return false;
         }
-
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVkPhysicalDevice, mWindowRegistry.back().mVkSurfaceKHR, &mWindowRegistry.back().mVkSurfaceCapabilitiesKHR );
 
         uint32_t surface_format_count = 0;
@@ -583,7 +584,7 @@ namespace AeonGames
         swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         swapchain_create_info.presentMode = present_mode;
         swapchain_create_info.clipped = VK_TRUE;
-        swapchain_create_info.oldSwapchain = VK_NULL_HANDLE; // Used for Resising later.
+        swapchain_create_info.oldSwapchain = mWindowRegistry.back().mVkSwapchainKHR; // Used for Resising.
 
         vkCreateSwapchainKHR ( mVkDevice, &swapchain_create_info, nullptr, &mWindowRegistry.back().mVkSwapchainKHR );
         vkGetSwapchainImagesKHR ( mVkDevice, mWindowRegistry.back().mVkSwapchainKHR, &mWindowRegistry.back().mSwapchainImageCount, nullptr );
