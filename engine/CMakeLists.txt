@@ -140,15 +140,9 @@ elseif(UNIX)
     target_link_libraries(AeonEngine ProtoBufClasses dl)
 endif()
 
-if(CLANG_TIDY_EXECUTABLE)
+if(USE_CLANG_TIDY)
     set_target_properties(AeonEngine PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE} ${CLANG_TIDY_CHECKS}")
-    if(CMAKE_GENERATOR MATCHES "Makefile")
-        add_custom_target(check-engine-code
-            COMMAND ${CLANG_TIDY_EXECUTABLE} -fix -header-filter=.* -checks=modernize-* -p ${CMAKE_BINARY_DIR} ${ENGINE_SOURCES}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Checking Engine Code")
-    endif()
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
 endif()
 add_subdirectory(renderers/opengl)
 add_subdirectory(renderers/vulkan)

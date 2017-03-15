@@ -67,3 +67,7 @@ elseif(UNIX)
     set_target_properties(VulkanRenderer PROPERTIES
         COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
 endif()
+if(USE_CLANG_TIDY)
+    set_target_properties(VulkanRenderer PROPERTIES
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
+endif()

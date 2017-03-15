@@ -5,3 +5,7 @@ if(MSVC)
     set_target_properties(PngImage PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
 endif()
 target_link_libraries(PngImage AeonEngine ${PNG_LIBRARIES})
+if(USE_CLANG_TIDY)
+    set_target_properties(PngImage PROPERTIES
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
+endif()
