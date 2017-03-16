@@ -22,7 +22,7 @@ namespace AeonGames
     class Material
     {
     public:
-        Material ( const std::string& aFilename );
+        Material ( std::string  aFilename );
         ~Material();
     private:
         void Initialize();

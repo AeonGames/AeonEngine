@@ -67,7 +67,7 @@ namespace AeonGames
             {
                 glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffers[i].mIndexBuffer );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glDrawElements ( GL_TRIANGLES, triangle_groups[i].mIndexCount, triangle_groups[i].mIndexType, 0 );
+                glDrawElements ( GL_TRIANGLES, triangle_groups[i].mIndexCount, triangle_groups[i].mIndexType, nullptr );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             else

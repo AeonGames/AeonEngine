@@ -229,7 +229,7 @@ namespace AeonGames
 
     void EngineWindow::wheelEvent ( QWheelEvent *event )
     {
-        mCameraLocation += ( ( mCameraRotation.rotatedVector ( forward ) * mStep ) * ( event->angleDelta().y() / fabs ( event->angleDelta().y() ) ) );
+        mCameraLocation += ( ( mCameraRotation.rotatedVector ( forward ) * mStep ) * ( event->angleDelta().y() / std::abs ( event->angleDelta().y() ) ) );
         updateViewMatrix();
         event->accept();
     }

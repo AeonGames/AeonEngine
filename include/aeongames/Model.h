@@ -27,7 +27,7 @@ namespace AeonGames
     class Model
     {
     public:
-        DLL Model ( const std::string& aFilename );
+        DLL Model ( std::string  aFilename );
         DLL ~Model();
         DLL const std::string& GetFilename() const;
         DLL const std::shared_ptr<Program> GetProgram() const;

@@ -40,7 +40,5 @@ namespace AeonGames
     }
 
     Configuration::~Configuration()
-    {
-
-    }
+        = default;
 }

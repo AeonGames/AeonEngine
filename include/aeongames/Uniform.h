@@ -27,11 +27,11 @@ namespace AeonGames
     class Uniform
     {
     public:
-        Uniform ( const std::string& aName, float aX );
-        Uniform ( const std::string& aName, float aX, float aY );
-        Uniform ( const std::string& aName, float aX, float aY, float aZ );
-        Uniform ( const std::string& aName, float aX, float aY, float aZ, float aW );
-        Uniform ( const std::string& aName, const std::string& aFilename );
+        Uniform ( std::string  aName, float aX );
+        Uniform ( std::string  aName, float aX, float aY );
+        Uniform ( std::string  aName, float aX, float aY, float aZ );
+        Uniform ( std::string  aName, float aX, float aY, float aZ, float aW );
+        Uniform ( std::string  aName, const std::string& aFilename );
         ~Uniform();
         ///@name Getters
         ///@{

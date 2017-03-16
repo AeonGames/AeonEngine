@@ -34,7 +34,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Model::Model ( const std::string & aFilename ) : mFilename ( aFilename )
+    Model::Model ( std::string  aFilename ) : mFilename ( std::move ( aFilename ) )
     {
         try
         {
@@ -48,8 +48,7 @@ namespace AeonGames
     }
 
     Model::~Model()
-    {
-    }
+        = default;
 
     const std::string & Model::GetFilename() const
     {
