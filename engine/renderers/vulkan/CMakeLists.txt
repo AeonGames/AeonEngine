@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright 2016-2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ set(SPIRV_SOURCES
 
 set(VULKAN_RENDERER_HEADERS
     VulkanRenderer.h
+    VulkanWindow.h
     VulkanModel.h
     VulkanMesh.h
     VulkanProgram.h
@@ -34,6 +35,7 @@ set(VULKAN_RENDERER_HEADERS
 
 set(VULKAN_RENDERER_SOURCES
     VulkanRenderer.cpp
+    VulkanWindow.cpp
     VulkanModel.cpp
     VulkanMesh.cpp
     VulkanProgram.cpp
