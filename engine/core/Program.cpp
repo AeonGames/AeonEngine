@@ -34,8 +34,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Program::Program ( const std::string& aFilename ) :
-        mFilename ( aFilename ), mVertexShader(), mFragmentShader()
+    Program::Program ( std::string  aFilename ) :
+        mFilename ( std::move ( aFilename ) ), mVertexShader(), mFragmentShader()
     {
         try
         {
@@ -49,8 +49,7 @@ namespace AeonGames
     }
 
     Program::~Program()
-    {
-    }
+        = default;
 
     const std::string & Program::GetVertexShaderSource() const
     {

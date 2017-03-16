@@ -47,8 +47,7 @@ namespace AeonGames
     }
 
     VulkanMaterial::~VulkanMaterial()
-    {
-    }
+        = default;
 
     void VulkanMaterial::Initialize()
     {

@@ -51,7 +51,7 @@ namespace AeonGames
         CodeFieldValuePrinter() : google::protobuf::TextFormat::FieldValuePrinter()
         {
         };
-        virtual std::string PrintString ( const std::string & val ) const override
+        std::string PrintString ( const std::string & val ) const override
         {
             std::string pattern ( "\\\\n" );
             std::string format ( "$&\"\n\"" );
@@ -111,9 +111,7 @@ namespace AeonGames
         }
     }
     Convert::~Convert()
-    {
-
-    }
+        = default;
     int Convert::Run()
     {
         ProgramBuffer shader_program_buffer;

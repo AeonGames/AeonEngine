@@ -23,7 +23,7 @@ namespace AeonGames
     class Texture
     {
     public:
-        Texture ( const std::string& aFilename );
+        Texture ( std::string  aFilename );
         ~Texture();
     private:
         std::string mFilename;

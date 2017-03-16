@@ -21,7 +21,7 @@ namespace AeonGames
     ModelViewer::ModelViewer ( int &argc, char *argv[] ) : QApplication ( argc, argv )
     {}
     ModelViewer::~ModelViewer()
-    {}
+        = default;
     bool ModelViewer::notify ( QObject *receiver, QEvent *event )
     {
         try

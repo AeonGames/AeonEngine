@@ -29,8 +29,7 @@ namespace AeonGames
     }
 
     MainWindow::~MainWindow()
-    {
-    }
+        = default;
 
     void MainWindow::on_actionExit_triggered()
     {

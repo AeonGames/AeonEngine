@@ -37,8 +37,7 @@ namespace AeonGames
         {
         }
         ~Impl()
-        {
-        }
+            = default;
         std::shared_ptr<Scene> mScene = nullptr;
     };
 

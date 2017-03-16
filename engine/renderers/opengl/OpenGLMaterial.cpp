@@ -48,8 +48,7 @@ namespace AeonGames
     }
 
     OpenGLMaterial::~OpenGLMaterial()
-    {
-    }
+        = default;
 
     void OpenGLMaterial::Initialize()
     {

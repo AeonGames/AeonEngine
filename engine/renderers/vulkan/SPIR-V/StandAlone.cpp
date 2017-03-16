@@ -145,7 +145,7 @@ void ProcessConfigFile()
         }
     }
 
-    if ( config == 0 )
+    if ( config == nullptr )
     {
         Resources = glslang::DefaultTBuiltInResource;
         if ( configStrings )
@@ -163,7 +163,7 @@ void ProcessConfigFile()
 glslang::TWorklist Worklist;
 
 // array of unique places to leave the shader names and infologs for the asynchronous compiles
-glslang::TWorkItem** Work = 0;
+glslang::TWorkItem** Work = nullptr;
 int NumWorkItems = 0;
 
 int Options = 0;
@@ -304,7 +304,7 @@ void ProcessArguments ( int argc, char* argv[] )
     Work = new glslang::TWorkItem*[NumWorkItems];
     for ( int w = 0; w < NumWorkItems; ++w )
     {
-        Work[w] = 0;
+        Work[w] = nullptr;
     }
 
     argc--;
@@ -602,7 +602,7 @@ void CompileShaders()
     while ( Worklist.remove ( workItem ) )
     {
         ShHandle compiler = ShConstructCompiler ( FindLanguage ( workItem->name ), Options );
-        if ( compiler == 0 )
+        if ( compiler == nullptr )
         {
             return;
         }
@@ -687,11 +687,10 @@ void CompileAndLinkShaderUnits ( std::vector<ShaderCompUnit> compUnits )
     //
 
     glslang::TProgram& program = *new glslang::TProgram;
-    for ( auto it = compUnits.cbegin(); it != compUnits.cend(); ++it )
+    for ( const auto & compUnit : compUnits )
     {
-        const auto &compUnit = *it;
-        glslang::TShader* shader = new glslang::TShader ( compUnit.stage );
-        shader->setStringsWithLengthsAndNames ( compUnit.text, NULL, compUnit.fileNameList, 1 );
+        auto  shader = new glslang::TShader ( compUnit.stage );
+        shader->setStringsWithLengthsAndNames ( compUnit.text, nullptr, compUnit.fileNameList, 1 );
         if ( entryPointName ) // HLSL todo: this needs to be tracked per compUnits
         {
             shader->setEntryPoint ( entryPointName );
@@ -888,9 +887,9 @@ void CompileAndLinkShaderFiles()
         }
     }
 
-    for ( auto it = compUnits.begin(); it != compUnits.end(); ++it )
+    for ( auto & compUnit : compUnits )
     {
-        FreeFileData ( it->text );
+        FreeFileData ( compUnit.text );
     }
 }
 
@@ -1093,7 +1092,7 @@ void CompileFile ( const char* fileName, ShHandle compiler )
         usage();
     }
 
-    int* lengths = new int[NumShaderStrings];
+    auto  lengths = new int[NumShaderStrings];
 
     // move to length-based strings, rather than null-terminated strings
     for ( int s = 0; s < NumShaderStrings; ++s )

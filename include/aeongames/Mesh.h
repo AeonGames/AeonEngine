@@ -41,7 +41,7 @@ namespace AeonGames
             std::string mVertexBuffer;
             std::string mIndexBuffer;
         };
-        Mesh ( const std::string& aFilename );
+        Mesh ( std::string  aFilename );
         ~Mesh();
         DLL uint32_t GetStride ( uint32_t aFlags ) const;
         DLL uint32_t GetIndexSize ( uint32_t aIndexType ) const;

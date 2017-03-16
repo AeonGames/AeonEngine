@@ -72,13 +72,13 @@ namespace AeonGames
         {
             png_structp png_ptr =
                 png_create_read_struct ( PNG_LIBPNG_VER_STRING,
-                                         NULL, NULL, NULL );
-            if ( png_ptr == NULL )
+                                         nullptr, nullptr, nullptr );
+            if ( png_ptr == nullptr )
             {
                 throw std::runtime_error ( "png_create_read_struct failed." );
             }
             png_infop info_ptr = png_create_info_struct ( png_ptr );
-            if ( info_ptr == NULL )
+            if ( info_ptr == nullptr )
             {
                 throw std::runtime_error ( "png_create_info_struct failed." );
             }
@@ -129,7 +129,7 @@ namespace AeonGames
             }
             // --------------------------------------
             png_read_image ( png_ptr, row_pointers.data() );
-            png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) 0 );
+            png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) nullptr );
         }
         else
         {
@@ -137,8 +137,7 @@ namespace AeonGames
         }
     }
     PngImage::~PngImage()
-    {
-    }
+        = default;
     uint32_t PngImage::Width() const
     {
         return mWidth;

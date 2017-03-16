@@ -32,8 +32,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Material::Material ( const std::string& aFilename ) :
-        mFilename ( aFilename )
+    Material::Material ( std::string  aFilename ) :
+        mFilename ( std::move ( aFilename ) )
     {
         try
         {
@@ -47,8 +47,7 @@ namespace AeonGames
     }
 
     Material::~Material()
-    {
-    }
+        = default;
 
     void Material::Initialize()
     {

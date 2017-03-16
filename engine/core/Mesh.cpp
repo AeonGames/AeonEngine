@@ -36,9 +36,9 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Mesh::Mesh ( const std::string& aFilename )
+    Mesh::Mesh ( std::string  aFilename )
         :
-        mFilename ( aFilename )
+        mFilename ( std::move ( aFilename ) )
     {
         try
         {

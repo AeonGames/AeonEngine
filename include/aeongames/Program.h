@@ -26,7 +26,7 @@ namespace AeonGames
     class Program
     {
     public:
-        Program ( const std::string& aFilename );
+        Program ( std::string  aFilename );
         ~Program();
         DLL const std::string& GetVertexShaderSource() const;
         DLL const std::string& GetFragmentShaderSource() const;
