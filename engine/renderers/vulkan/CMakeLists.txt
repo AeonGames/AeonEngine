@@ -24,6 +24,7 @@ set(SPIRV_SOURCES
 )
 
 set(VULKAN_RENDERER_HEADERS
+    VulkanUtilities.h
     VulkanRenderer.h
     VulkanWindow.h
     VulkanModel.h
@@ -34,6 +35,7 @@ set(VULKAN_RENDERER_HEADERS
 )
 
 set(VULKAN_RENDERER_SOURCES
+    VulkanUtilities.cpp
     VulkanRenderer.cpp
     VulkanWindow.cpp
     VulkanModel.cpp

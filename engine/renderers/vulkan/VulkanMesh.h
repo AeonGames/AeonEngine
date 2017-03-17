@@ -28,14 +28,14 @@ namespace AeonGames
     class VulkanMesh
     {
     public:
-        VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const VulkanRenderer& aVulkanRenderer );
+        VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const VulkanRenderer* aVulkanRenderer );
         ~VulkanMesh();
         void Render() const;
     private:
         void Initialize();
         void Finalize();
         const std::shared_ptr<Mesh> mMesh;
-        const VulkanRenderer& mVulkanRenderer;
+        const VulkanRenderer* mVulkanRenderer;
         struct Buffers
         {
             VkBuffer mVertexBuffer = VK_NULL_HANDLE;

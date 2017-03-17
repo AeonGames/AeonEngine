@@ -78,6 +78,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         mainWindow = new AeonGames::MainWindow();
         mainWindow->showNormal();
         retval = application.exec();
+        delete mainWindow;
     }
     catch ( std::runtime_error& e )
     {
@@ -88,7 +89,6 @@ int ENTRYPOINT main ( int argc, char *argv[] )
                                 QMessageBox::Ok );
         retval = -1;
     }
-    delete mainWindow;
     AeonGames::Finalize();
 #ifdef _MSC_VER
 #if 0

@@ -17,6 +17,8 @@ limitations under the License.
 #define AEONGAMES_VULKANWINDOW_H
 
 #include <cstdint>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace AeonGames
 {
@@ -24,13 +26,38 @@ namespace AeonGames
     class VulkanWindow
     {
     public:
-        VulkanWindow ( uintptr_t aWindowId, const VulkanRenderer& aVulkanRenderer );
+        VulkanWindow ( uintptr_t aWindowId, const VulkanRenderer* aVulkanRenderer );
         ~VulkanWindow();
+        uintptr_t GetWindowId() const;
+        void BeginRender() const;
+        void EndRender() const;
     private:
         void Initialize();
         void Finalize();
         uintptr_t mWindowId;
-        const VulkanRenderer& mVulkanRenderer;
+        VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
+        const VulkanRenderer* mVulkanRenderer;
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+        VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
+        VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
+        uint32_t mSwapchainImageCount = 2;
+        VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
+        VkViewport mVkViewport = {};
+        std::vector<VkImage> mVkSwapchainImages;
+        std::vector<VkImageView> mVkSwapchainImageViews;
+        VkImage mVkDepthStencilImage = VK_NULL_HANDLE;
+        VkDeviceMemory mVkDepthStencilImageMemory = VK_NULL_HANDLE;
+        VkImageView mVkDepthStencilImageView = VK_NULL_HANDLE;
+        VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
+        bool mHasStencil = false;
+        VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
+        std::vector<VkFramebuffer> mVkFramebuffers;
+        uint32_t mActiveImageIndex = UINT32_MAX;
+        VkFence mVkFence = VK_NULL_HANDLE;
+        /* Not sure if the following should be here */
+        VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
+        VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
+#endif
     };
 }
 #endif

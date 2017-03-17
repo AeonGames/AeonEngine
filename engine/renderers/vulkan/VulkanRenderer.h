@@ -23,9 +23,12 @@ limitations under the License.
 #include <unordered_map>
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/Memory.h"
+#include "VulkanWindow.h"
 
 namespace AeonGames
 {
+    class VulkanWindow;
     class VulkanRenderer : public Renderer
     {
     public:
@@ -41,8 +44,13 @@ namespace AeonGames
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
+        const VkInstance& GetInstance() const;
+        const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
+        const VkQueue& GetQueue() const;
+        const VkSemaphore& GetSemaphore() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
+        uint32_t GetQueueFamilyIndex() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -129,43 +137,13 @@ namespace AeonGames
         float* mModelViewMatrix = mMatrices + ( 16 * 4 );
         float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
         float* mNormalMatrix = mMatrices + ( 16 * 6 );
-
-        struct WindowData
-        {
-            /**@todo Reorder fields for better memory alignment.*/
-            uintptr_t mWindowId = 0;
-            VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-            VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
-            VkSurfaceFormatKHR mVkSurfaceFormatKHR {};
-            uint32_t mSwapchainImageCount = 2;
-            VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
-            VkViewport mVkViewport = {};
-            std::vector<VkImage> mVkSwapchainImages;
-            std::vector<VkImageView> mVkSwapchainImageViews;
-            VkImage mVkDepthStencilImage = VK_NULL_HANDLE;
-            VkDeviceMemory mVkDepthStencilImageMemory = VK_NULL_HANDLE;
-            VkImageView mVkDepthStencilImageView = VK_NULL_HANDLE;
-            VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
-            bool mHasStencil = false;
-            VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
-            std::vector<VkFramebuffer> mVkFramebuffers;
-            uint32_t mActiveImageIndex = UINT32_MAX;
-            VkFence mVkFence = VK_NULL_HANDLE;
-            /* Not sure if the following should be here */
-            VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
-            VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
-#endif
-        };
-
-        std::vector<WindowData> mWindowRegistry;
+        std::vector<std::unique_ptr<VulkanWindow>> mWindowRegistry;
 #if 0
         std::unordered_map <
         std::shared_ptr<Model>,
             std::shared_ptr<VulkanModel >>
             mModelMap;
 #endif
-
     };
 }
 #endif
