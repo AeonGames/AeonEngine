@@ -18,6 +18,7 @@ limitations under the License.
 #include "vulkan/vulkan.h"
 namespace AeonGames
 {
+    static_assert ( VK_SUCCESS == 0, "VK_SUCCESS is NOT zero!" );
     const char* GetVulkanResultString ( VkResult aResult );
 
     VKAPI_ATTR VkBool32 VKAPI_CALL
