@@ -70,12 +70,7 @@ if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
     set(CLANG_TIDY_CHECKS "-checks=modernize-*")
-    if(CMAKE_GENERATOR MATCHES "Makefile")
-        add_custom_target(clang-tidy-fix-engine-code
-            COMMAND ${CLANG_TIDY_EXECUTABLE} -fix ${CLANG_TIDY_CHECKS} -p ${CMAKE_BINARY_DIR} ${ENGINE_SOURCES}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Fixing Engine Code with clang-tidy")
-    endif()
+    include(AeonEngineFunctions)    
 endif()
 
 if(CMAKE_HOST_UNIX)
