@@ -45,12 +45,8 @@ namespace AeonGames
         return mWindowId;
     }
 
-    void VulkanWindow::Initialize()
+    void VulkanWindow::CreateSurface()
     {
-        if ( !mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
-        }
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
         VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
         win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -62,7 +58,18 @@ namespace AeonGames
             stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-
+#elif defined( VK_USE_PLATFORM_XLIB_KHR )
+        VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
+        xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
+        xlib_surface_create_info_khr.window = aWindowId;
+        if ( VkResult result = vkCreateXlibSurfaceKHR ( mVulkanRenderer->GetInstance(), &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) )
+        {
+            std::ostringstream stream;
+            stream << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+#endif
         VkBool32 wsi_supported = false;
         vkGetPhysicalDeviceSurfaceSupportKHR ( mVulkanRenderer->GetPhysicalDevice(), mVulkanRenderer->GetQueueFamilyIndex(), mVkSurfaceKHR, &wsi_supported );
         if ( !wsi_supported )
@@ -93,22 +100,6 @@ namespace AeonGames
             mVkSurfaceFormatKHR = surface_format_list[0];
         }
 
-        VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
-        {
-            uint32_t present_mode_count = 0;
-            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &present_mode_count, nullptr );
-            std::vector<VkPresentModeKHR> present_mode_list ( present_mode_count );
-            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &present_mode_count, present_mode_list.data() );
-            for ( auto& i : present_mode_list )
-            {
-                if ( i == VK_PRESENT_MODE_MAILBOX_KHR )
-                {
-                    present_mode = i;
-                    break;
-                }
-            }
-        }
-
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
@@ -118,7 +109,10 @@ namespace AeonGames
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.maxImageCount;
         }
+    }
 
+    void VulkanWindow::CreateSwapchain()
+    {
         VkSwapchainCreateInfoKHR swapchain_create_info{};
         swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchain_create_info.surface = mVkSurfaceKHR;
@@ -134,11 +128,42 @@ namespace AeonGames
         swapchain_create_info.pQueueFamilyIndices = nullptr;
         swapchain_create_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
         swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapchain_create_info.presentMode = present_mode;
+        swapchain_create_info.presentMode = VK_PRESENT_MODE_FIFO_KHR; // This may be reset below.
         swapchain_create_info.clipped = VK_TRUE;
         swapchain_create_info.oldSwapchain = mVkSwapchainKHR; // Used for Resising.
+        {
+            uint32_t present_mode_count = 0;
+            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &present_mode_count, nullptr );
+            std::vector<VkPresentModeKHR> present_mode_list ( present_mode_count );
+            vkGetPhysicalDeviceSurfacePresentModesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &present_mode_count, present_mode_list.data() );
+            for ( auto& i : present_mode_list )
+            {
+                if ( i == VK_PRESENT_MODE_MAILBOX_KHR )
+                {
+                    swapchain_create_info.presentMode = i;
+                    break;
+                }
+            }
+        }
+        if ( VkResult result = vkCreateSwapchainKHR ( mVulkanRenderer->GetDevice(), &swapchain_create_info, nullptr, &mVkSwapchainKHR ) )
+        {
+            {
+                std::ostringstream stream;
+                stream << "Call to vkCreateSwapchainKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+    }
 
-        vkCreateSwapchainKHR ( mVulkanRenderer->GetDevice(), &swapchain_create_info, nullptr, &mVkSwapchainKHR );
+    void VulkanWindow::Initialize()
+    {
+        if ( !mVulkanRenderer )
+        {
+            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
+        }
+        CreateSurface();
+        CreateSwapchain();
+
         vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
         mVkSwapchainImages.resize ( mSwapchainImageCount );
         mVkSwapchainImageViews.resize ( mSwapchainImageCount );
@@ -164,7 +189,6 @@ namespace AeonGames
             image_view_create_info.subresourceRange.layerCount = 1;
             vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkSwapchainImageViews[i] );
         }
-
         {
             std::array<VkFormat, 5> try_formats
             {
@@ -345,20 +369,6 @@ namespace AeonGames
         command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         command_buffer_allocate_info.commandBufferCount = 1;
         vkAllocateCommandBuffers ( mVulkanRenderer->GetDevice(), &command_buffer_allocate_info, &mVkCommandBuffer );
-
-#elif defined( VK_USE_PLATFORM_XLIB_KHR )
-        VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
-        xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
-        xlib_surface_create_info_khr.window = aWindowId;
-        if ( VkResult result = vkCreateXlibSurfaceKHR ( mVulkanRenderer->GetInstance(), &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) )
-        {
-            std::ostringstream stream;
-            stream << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-#endif
-
     }
 
     void VulkanWindow::Finalize()

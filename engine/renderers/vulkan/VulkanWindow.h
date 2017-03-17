@@ -34,6 +34,8 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
+        void CreateSurface();
+        void CreateSwapchain();
         uintptr_t mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         const VulkanRenderer* mVulkanRenderer;
