@@ -70,7 +70,7 @@ if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
     set(CLANG_TIDY_CHECKS "-checks=modernize-*")
-    include(AeonEngineFunctions)    
+    include(AeonEngineFunctions)
 endif()
 
 if(CMAKE_HOST_UNIX)

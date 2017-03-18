@@ -154,6 +154,8 @@ namespace AeonGames
         mInstanceExtensionNames.push_back ( VK_KHR_SURFACE_EXTENSION_NAME );
 #ifdef VK_USE_PLATFORM_WIN32_KHR
         mInstanceExtensionNames.push_back ( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
+#else
+        mInstanceExtensionNames.push_back ( VK_KHR_XLIB_SURFACE_EXTENSION_NAME );
 #endif
         mDeviceExtensionNames.push_back ( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
     }

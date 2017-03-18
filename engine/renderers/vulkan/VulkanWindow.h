@@ -39,7 +39,6 @@ namespace AeonGames
         uintptr_t mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         const VulkanRenderer* mVulkanRenderer;
-#ifdef VK_USE_PLATFORM_WIN32_KHR
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         uint32_t mSwapchainImageCount = 2;
@@ -59,7 +58,6 @@ namespace AeonGames
         /* Not sure if the following should be here */
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
-#endif
     };
 }
 #endif
