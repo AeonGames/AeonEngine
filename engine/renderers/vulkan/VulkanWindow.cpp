@@ -17,6 +17,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include <sstream>
+#include <algorithm>
 #include <array>
 
 namespace AeonGames
@@ -62,11 +63,11 @@ namespace AeonGames
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
         xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
-        xlib_surface_create_info_khr.window = aWindowId;
+        xlib_surface_create_info_khr.window = mWindowId;
         if ( VkResult result = vkCreateXlibSurfaceKHR ( mVulkanRenderer->GetInstance(), &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) )
         {
             std::ostringstream stream;
-            stream << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanRendererResultString ( result ) << " )";
+            stream << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 #endif
