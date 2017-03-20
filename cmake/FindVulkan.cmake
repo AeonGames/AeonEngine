@@ -41,10 +41,14 @@ if (WIN32)
         "$ENV{VK_SDK_PATH}/Include")
     if ((CMAKE_CL_64) OR (CMAKE_SIZEOF_VOID_P EQUAL 8))
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
+            "$ENV{VULKAN_SDK}/Lib"
+            "$ENV{VK_SDK_PATH}/Lib"
             "$ENV{VULKAN_SDK}/Bin"
-            "$ENV{VK_SDK_PATH}/Bin")            
+            "$ENV{VK_SDK_PATH}/Bin")
     else()
         find_library(VULKAN_LIBRARY NAMES vulkan-1 HINTS
+            "$ENV{VULKAN_SDK}/Lib32"
+            "$ENV{VK_SDK_PATH}/Lib32"
             "$ENV{VULKAN_SDK}/Bin32"
             "$ENV{VK_SDK_PATH}/Bin32")
     endif()

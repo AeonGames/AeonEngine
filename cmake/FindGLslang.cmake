@@ -136,7 +136,8 @@ set(GLSLANG_LIBRARIES
     debug ${SPIRV_DEBUG_LIB}
     optimized ${SPIRV_REMAPPER_LIB}
     debug ${SPIRV_REMAPPER_DEBUG_LIB}
-    CACHE STRING "GLSLANG_LIBRARIES")
+    CACHE STRING "GLSLANG_LIBRARIES"
+)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(GLslang 
@@ -159,4 +160,5 @@ mark_as_advanced(
     HLSL_LIB
     SPIRV_LIB
     SPIRV_REMAPPER_LIB
+    GLSLANG_LIBRARIES
 )
