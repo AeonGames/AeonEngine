@@ -36,6 +36,19 @@ namespace AeonGames
         void Finalize();
         void CreateSurface();
         void CreateSwapchain();
+        void CreateImageViews();
+        void CreateDepthStencil();
+        void CreateRenderPass();
+        void CreateFrameBuffers();
+        void CreateCommandPool();
+        void DestroySurface();
+        void DestroySwapchain();
+        void DestroyImageViews();
+        void DestroyDepthStencil();
+        void DestroyRenderPass();
+        void DestroyFrameBuffers();
+        void DestroyCommandPool();
+
         uintptr_t mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         const VulkanRenderer* mVulkanRenderer;
@@ -54,8 +67,6 @@ namespace AeonGames
         VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
         std::vector<VkFramebuffer> mVkFramebuffers;
         uint32_t mActiveImageIndex = UINT32_MAX;
-        VkFence mVkFence = VK_NULL_HANDLE;
-        /* Not sure if the following should be here */
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
     };

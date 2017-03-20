@@ -156,15 +156,8 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Initialize()
+    void VulkanWindow::CreateImageViews()
     {
-        if ( !mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
-        }
-        CreateSurface();
-        CreateSwapchain();
-
         vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
         mVkSwapchainImages.resize ( mSwapchainImageCount );
         mVkSwapchainImageViews.resize ( mSwapchainImageCount );
@@ -190,6 +183,10 @@ namespace AeonGames
             image_view_create_info.subresourceRange.layerCount = 1;
             vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkSwapchainImageViews[i] );
         }
+    }
+
+    void VulkanWindow::CreateDepthStencil()
+    {
         {
             std::array<VkFormat, 5> try_formats
             {
@@ -285,7 +282,10 @@ namespace AeonGames
         image_view_create_info.subresourceRange.baseArrayLayer = 0;
         image_view_create_info.subresourceRange.layerCount = 1;
         vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkDepthStencilImageView );
+    }
 
+    void VulkanWindow::CreateRenderPass()
+    {
         std::array<VkAttachmentDescription, 2> attachment_descriptions{};
         attachment_descriptions[0].flags = 0;
         attachment_descriptions[0].format = mVkDepthStencilFormat;
@@ -334,7 +334,10 @@ namespace AeonGames
         render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
         render_pass_create_info.pSubpasses = subpass_descriptions.data();
         vkCreateRenderPass ( mVulkanRenderer->GetDevice(), &render_pass_create_info, nullptr, &mVkRenderPass );
+    }
 
+    void VulkanWindow::CreateFrameBuffers()
+    {
         mVkFramebuffers.resize ( mSwapchainImageCount );
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
         {
@@ -353,11 +356,10 @@ namespace AeonGames
             framebuffer_create_info.layers = 1;
             vkCreateFramebuffer ( mVulkanRenderer->GetDevice(), &framebuffer_create_info, nullptr, &mVkFramebuffers[i] );
         }
+    }
 
-        VkFenceCreateInfo fence_create_info{};
-        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        vkCreateFence ( mVulkanRenderer->GetDevice(), &fence_create_info, nullptr, &mVkFence );
-
+    void VulkanWindow::CreateCommandPool()
+    {
         VkCommandPoolCreateInfo command_pool_create_info{};
         command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -372,72 +374,45 @@ namespace AeonGames
         vkAllocateCommandBuffers ( mVulkanRenderer->GetDevice(), &command_buffer_allocate_info, &mVkCommandBuffer );
     }
 
+    void VulkanWindow::Initialize()
+    {
+        if ( !mVulkanRenderer )
+        {
+            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
+        }
+        CreateSurface();
+        CreateSwapchain();
+        CreateImageViews();
+        CreateDepthStencil();
+        CreateRenderPass();
+        CreateFrameBuffers();
+        CreateCommandPool();
+    }
+
     void VulkanWindow::Finalize()
     {
-#if defined ( VK_USE_PLATFORM_WIN32_KHR )
-        if ( mVkCommandPool != VK_NULL_HANDLE )
-        {
-            vkDestroyCommandPool ( mVulkanRenderer->GetDevice(), mVkCommandPool, nullptr );
-        }
-
-        if ( mVkFence != VK_NULL_HANDLE )
-        {
-            vkDestroyFence ( mVulkanRenderer->GetDevice(), mVkFence, nullptr );
-        }
-
-        for ( auto& i : mVkFramebuffers )
-        {
-            if ( i != VK_NULL_HANDLE )
-            {
-                vkDestroyFramebuffer ( mVulkanRenderer->GetDevice(), i, nullptr );
-            }
-        }
-        if ( mVkRenderPass != VK_NULL_HANDLE )
-        {
-            vkDestroyRenderPass ( mVulkanRenderer->GetDevice(), mVkRenderPass, nullptr );
-        }
-        if ( mVkDepthStencilImageView != VK_NULL_HANDLE )
-        {
-            vkDestroyImageView ( mVulkanRenderer->GetDevice(), mVkDepthStencilImageView, nullptr );
-        }
-        if ( mVkDepthStencilImageMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mVkDepthStencilImageMemory, nullptr );
-        }
-
-        if ( mVkDepthStencilImage != VK_NULL_HANDLE )
-        {
-            vkDestroyImage ( mVulkanRenderer->GetDevice(), mVkDepthStencilImage, nullptr );
-        }
-        for ( auto& i : mVkSwapchainImageViews )
-        {
-            if ( i != VK_NULL_HANDLE )
-            {
-                vkDestroyImageView ( mVulkanRenderer->GetDevice(), i, nullptr );
-            }
-        }
-        if ( mVkSwapchainKHR != VK_NULL_HANDLE )
-        {
-            vkDestroySwapchainKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, nullptr );
-        }
-        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
-        {
-            vkDestroySurfaceKHR ( mVulkanRenderer->GetInstance(), mVkSurfaceKHR, nullptr );
-        }
-#elif defined( VK_USE_PLATFORM_XLIB_KHR )
-        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
-        {
-            vkDestroySurfaceKHR ( mVulkanRenderer->GetInstance(), mVkSurfaceKHR, nullptr );
-        }
-#endif
+        DestroyCommandPool();
+        DestroyFrameBuffers();
+        DestroyRenderPass();
+        DestroyDepthStencil();
+        DestroyImageViews();
+        DestroySwapchain();
+        DestroySurface();
     }
 
     void VulkanWindow::BeginRender() const
     {
-#if defined ( VK_USE_PLATFORM_WIN32_KHR )
-        vkAcquireNextImageKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, UINT64_MAX, VK_NULL_HANDLE, mVkFence, const_cast<uint32_t*> ( &mActiveImageIndex ) );
-        vkWaitForFences ( mVulkanRenderer->GetDevice(), 1, &mVkFence, VK_TRUE, UINT64_MAX );
-        vkResetFences ( mVulkanRenderer->GetDevice(), 1, &mVkFence );
+        vkAcquireNextImageKHR (
+            mVulkanRenderer->GetDevice(),
+            mVkSwapchainKHR,
+            UINT64_MAX, VK_NULL_HANDLE,
+            mVulkanRenderer->GetFence(),
+            const_cast<uint32_t*> ( &mActiveImageIndex ) );
+        vkWaitForFences ( mVulkanRenderer->GetDevice(), 1,
+                          &mVulkanRenderer->GetFence(),
+                          VK_TRUE, UINT64_MAX );
+        vkResetFences ( mVulkanRenderer->GetDevice(), 1,
+                        &mVulkanRenderer->GetFence() );
         /** @todo This will probably break for more than one Window, revisit!. */
         vkQueueWaitIdle ( mVulkanRenderer->GetQueue() );
         VkCommandBufferBeginInfo command_buffer_begin_info{};
@@ -460,13 +435,10 @@ namespace AeonGames
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
-#else
-#endif
     }
 
     void VulkanWindow::EndRender() const
     {
-#if defined ( VK_USE_PLATFORM_WIN32_KHR )
         vkCmdEndRenderPass ( mVkCommandBuffer );
         vkEndCommandBuffer ( mVkCommandBuffer );
 
@@ -491,8 +463,77 @@ namespace AeonGames
         present_info.pImageIndices = &mActiveImageIndex;
         present_info.pResults = &result;
         vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info );
-#else
-#endif
+    }
+
+    void VulkanWindow::DestroySurface()
+    {
+        if ( mVkSurfaceKHR != VK_NULL_HANDLE )
+        {
+            vkDestroySurfaceKHR ( mVulkanRenderer->GetInstance(), mVkSurfaceKHR, nullptr );
+        }
+    }
+
+    void VulkanWindow::DestroySwapchain()
+    {
+        if ( mVkSwapchainKHR != VK_NULL_HANDLE )
+        {
+            vkDestroySwapchainKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, nullptr );
+        }
+    }
+
+    void VulkanWindow::DestroyImageViews()
+    {
+        for ( auto& i : mVkSwapchainImageViews )
+        {
+            if ( i != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVulkanRenderer->GetDevice(), i, nullptr );
+            }
+        }
+    }
+
+    void VulkanWindow::DestroyDepthStencil()
+    {
+        if ( mVkDepthStencilImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( mVulkanRenderer->GetDevice(), mVkDepthStencilImageView, nullptr );
+        }
+        if ( mVkDepthStencilImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVulkanRenderer->GetDevice(), mVkDepthStencilImageMemory, nullptr );
+        }
+
+        if ( mVkDepthStencilImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( mVulkanRenderer->GetDevice(), mVkDepthStencilImage, nullptr );
+        }
+    }
+
+    void VulkanWindow::DestroyRenderPass()
+    {
+        if ( mVkRenderPass != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass ( mVulkanRenderer->GetDevice(), mVkRenderPass, nullptr );
+        }
+    }
+
+    void VulkanWindow::DestroyFrameBuffers()
+    {
+        for ( auto& i : mVkFramebuffers )
+        {
+            if ( i != VK_NULL_HANDLE )
+            {
+                vkDestroyFramebuffer ( mVulkanRenderer->GetDevice(), i, nullptr );
+            }
+        }
+    }
+
+    void VulkanWindow::DestroyCommandPool()
+    {
+        if ( mVkCommandPool != VK_NULL_HANDLE )
+        {
+            vkDestroyCommandPool ( mVulkanRenderer->GetDevice(), mVkCommandPool, nullptr );
+        }
     }
 
 }
