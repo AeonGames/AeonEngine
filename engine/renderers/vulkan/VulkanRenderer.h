@@ -49,12 +49,14 @@ namespace AeonGames
         const VkDevice& GetDevice() const;
         const VkQueue& GetQueue() const;
         const VkSemaphore& GetSemaphore() const;
+        const VkFence& GetFence() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
         uint32_t GetQueueFamilyIndex() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
         void InitializeSemaphore();
+        void InitializeFence();
         void InitializeDebug();
         void SetupLayersAndExtensions();
         void SetupDebug();
@@ -62,6 +64,7 @@ namespace AeonGames
         void FinalizeInstance();
         void FinalizeDevice();
         void FinalizeSemaphore();
+        void FinalizeFence();
         void FinalizeDebug();
 
         bool mValidate = true;
@@ -75,6 +78,7 @@ namespace AeonGames
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
         VkQueue mVkQueue = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
+        VkFence mVkFence = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;

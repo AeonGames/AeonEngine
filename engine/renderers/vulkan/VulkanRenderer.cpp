@@ -57,9 +57,11 @@ namespace AeonGames
             }
             InitializeDevice();
             InitializeSemaphore();
+            InitializeFence();
         }
         catch ( ... )
         {
+            FinalizeFence();
             FinalizeSemaphore();
             FinalizeDevice();
             FinalizeDebug();
@@ -81,6 +83,11 @@ namespace AeonGames
     const VkSemaphore & VulkanRenderer::GetSemaphore() const
     {
         return mVkSemaphore;
+    }
+
+    const VkFence & VulkanRenderer::GetFence() const
+    {
+        return mVkFence;
     }
 
     const VkInstance & VulkanRenderer::GetInstance() const
@@ -300,6 +307,13 @@ namespace AeonGames
         }
     }
 
+    void VulkanRenderer::InitializeFence()
+    {
+        VkFenceCreateInfo fence_create_info{};
+        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence );
+    }
+
     void VulkanRenderer::FinalizeDebug()
     {
         if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
@@ -336,9 +350,19 @@ namespace AeonGames
         }
     }
 
+    void VulkanRenderer::FinalizeFence()
+    {
+        if ( mVkFence != VK_NULL_HANDLE )
+        {
+            vkDestroyFence ( mVkDevice, mVkFence, nullptr );
+            mVkFence = VK_NULL_HANDLE;
+        }
+    }
+
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        FinalizeFence();
         FinalizeSemaphore();
         FinalizeDevice();
         FinalizeDebug();
