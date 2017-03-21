@@ -425,8 +425,20 @@ namespace AeonGames
         } ), mWindowRegistry.end() );
     }
 
-    void VulkanRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
+    void VulkanRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight )
     {
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                [&aWindowId] ( const std::unique_ptr<VulkanWindow>& aWindow ) -> bool
+        {
+            return aWindow->GetWindowId() == aWindowId;
+        } );
+        if ( i != mWindowRegistry.end() )
+        {
+            if ( aWidth > 0 && aHeight > 0 )
+            {
+                ( *i )->Resize ( aWidth, aHeight );
+            }
+        }
     }
 
     void VulkanRenderer::UpdateMatrices()

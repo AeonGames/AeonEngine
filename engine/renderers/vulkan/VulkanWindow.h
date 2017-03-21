@@ -31,6 +31,7 @@ namespace AeonGames
         uintptr_t GetWindowId() const;
         void BeginRender() const;
         void EndRender() const;
+        void Resize ( uint32_t aWidth, uint32_t aHeight );
     private:
         void Initialize();
         void Finalize();

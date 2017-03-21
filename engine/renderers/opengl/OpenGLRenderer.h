@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ namespace AeonGames
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
         bool AddRenderingWindow ( uintptr_t aWindowId ) final;
         void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
-        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;
+        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;

@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ namespace AeonGames
         ///@{
         virtual bool AddRenderingWindow ( uintptr_t aWindowId ) = 0;
         virtual void RemoveRenderingWindow ( uintptr_t aWindowId ) = 0;
-        virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const = 0;
+        virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) = 0;
         ///@}
         ///@name Matrix Functions
         ///@{

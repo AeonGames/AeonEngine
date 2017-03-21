@@ -40,7 +40,7 @@ namespace AeonGames
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
         bool AddRenderingWindow ( uintptr_t aWindowId ) final;
         void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
-        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const final;
+        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
