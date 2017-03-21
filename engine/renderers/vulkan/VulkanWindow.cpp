@@ -79,6 +79,10 @@ namespace AeonGames
             stream << "WSI not supported.";
             throw std::runtime_error ( stream.str().c_str() );
         }
+    }
+
+    void VulkanWindow::CreateSwapchain()
+    {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
 
         uint32_t surface_format_count = 0;
@@ -110,10 +114,6 @@ namespace AeonGames
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.maxImageCount;
         }
-    }
-
-    void VulkanWindow::CreateSwapchain()
-    {
         VkSwapchainCreateInfoKHR swapchain_create_info{};
         swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchain_create_info.surface = mVkSurfaceKHR;
@@ -395,6 +395,19 @@ namespace AeonGames
 
     void VulkanWindow::Finalize()
     {
+        if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer->GetQueue() ) )
+        {
+            std::ostringstream stream;
+            stream << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        if ( VkResult result = vkDeviceWaitIdle ( mVulkanRenderer->GetDevice() ) )
+        {
+            std::ostringstream stream;
+            stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
+            throw std::runtime_error ( stream.str().c_str() );
+        }
         DestroyCommandPool();
         DestroyFrameBuffers();
         DestroyRenderPass();
@@ -471,6 +484,36 @@ namespace AeonGames
 
     void VulkanWindow::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
+        if ( ( mVkSurfaceCapabilitiesKHR.currentExtent.width &&
+               mVkSurfaceCapabilitiesKHR.currentExtent.height ) &&
+             ( mVkSurfaceCapabilitiesKHR.currentExtent.width != aWidth ||
+               mVkSurfaceCapabilitiesKHR.currentExtent.height != aHeight ) )
+        {
+            if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer->GetQueue() ) )
+            {
+                std::ostringstream stream;
+                stream << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            if ( VkResult result = vkDeviceWaitIdle ( mVulkanRenderer->GetDevice() ) )
+            {
+                std::ostringstream stream;
+                stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            DestroyCommandPool();
+            DestroyFrameBuffers();
+            DestroyRenderPass();
+            DestroyDepthStencil();
+            DestroyImageViews();
+            CreateSwapchain();
+            CreateImageViews();
+            CreateDepthStencil();
+            CreateRenderPass();
+            CreateFrameBuffers();
+            CreateCommandPool();
+        }
     }
 
     void VulkanWindow::DestroySurface()

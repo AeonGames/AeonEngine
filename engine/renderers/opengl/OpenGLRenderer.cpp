@@ -415,7 +415,7 @@ namespace AeonGames
         } );
         if ( i != mWindowRegistry.end() )
         {
-            if ( aWidth > 0 && aHeight > 0 )
+            if ( aWidth && aHeight )
             {
 #ifdef WIN32
                 wglMakeCurrent ( i->mDeviceContext, i->mOpenGLContext );
