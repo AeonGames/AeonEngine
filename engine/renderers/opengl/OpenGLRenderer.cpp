@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -406,7 +406,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) const
+    void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight )
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [&aWindowId] ( const WindowData & aWindowData )

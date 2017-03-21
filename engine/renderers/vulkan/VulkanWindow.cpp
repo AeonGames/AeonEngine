@@ -154,6 +154,10 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
+        if ( swapchain_create_info.oldSwapchain != VK_NULL_HANDLE )
+        {
+            vkDestroySwapchainKHR ( mVulkanRenderer->GetDevice(), swapchain_create_info.oldSwapchain, nullptr );
+        }
     }
 
     void VulkanWindow::CreateImageViews()
@@ -463,6 +467,10 @@ namespace AeonGames
         present_info.pImageIndices = &mActiveImageIndex;
         present_info.pResults = &result;
         vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info );
+    }
+
+    void VulkanWindow::Resize ( uint32_t aWidth, uint32_t aHeight )
+    {
     }
 
     void VulkanWindow::DestroySurface()
