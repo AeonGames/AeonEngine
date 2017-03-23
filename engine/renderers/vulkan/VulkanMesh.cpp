@@ -66,9 +66,8 @@ namespace AeonGames
         for ( uint32_t i = 0; i < physical_device_memory_properties.memoryTypeCount; ++i )
         {
             if ( ( physical_device_memory_properties.memoryTypes[i].propertyFlags &
-                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) &&
-                 ( physical_device_memory_properties.memoryTypes[i].propertyFlags &
-                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ) )
+                   ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
+                 == ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
             {
                 memory_index = i;
                 break;
@@ -175,25 +174,25 @@ namespace AeonGames
     {
         for ( auto& i : mBuffers )
         {
-            if ( i.mVertexBuffer != VK_NULL_HANDLE )
-            {
-                vkDestroyBuffer ( mVulkanRenderer->GetDevice(), i.mVertexBuffer, nullptr );
-                i.mVertexBuffer = VK_NULL_HANDLE;
-            }
             if ( i.mVertexMemory != VK_NULL_HANDLE )
             {
                 vkFreeMemory ( mVulkanRenderer->GetDevice(), i.mVertexMemory, nullptr );
                 i.mVertexMemory = VK_NULL_HANDLE;
             }
-            if ( i.mIndexBuffer != VK_NULL_HANDLE )
+            if ( i.mVertexBuffer != VK_NULL_HANDLE )
             {
-                vkDestroyBuffer ( mVulkanRenderer->GetDevice(), i.mIndexBuffer, nullptr );
-                i.mIndexBuffer = VK_NULL_HANDLE;
+                vkDestroyBuffer ( mVulkanRenderer->GetDevice(), i.mVertexBuffer, nullptr );
+                i.mVertexBuffer = VK_NULL_HANDLE;
             }
             if ( i.mIndexMemory != VK_NULL_HANDLE )
             {
                 vkFreeMemory ( mVulkanRenderer->GetDevice(), i.mIndexMemory, nullptr );
                 i.mIndexMemory = VK_NULL_HANDLE;
+            }
+            if ( i.mIndexBuffer != VK_NULL_HANDLE )
+            {
+                vkDestroyBuffer ( mVulkanRenderer->GetDevice(), i.mIndexBuffer, nullptr );
+                i.mIndexBuffer = VK_NULL_HANDLE;
             }
         }
     }
