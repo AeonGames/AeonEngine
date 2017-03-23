@@ -31,9 +31,11 @@ limitations under the License.
 #include <stdexcept>
 #include <algorithm>
 #include "aeongames/LogLevel.h"
+#include "aeongames/Memory.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanUtilities.h"
+#include "VulkanModel.h"
 #include "math/3DMath.h"
 
 namespace AeonGames
@@ -362,6 +364,12 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        for ( auto& i : mModelMap )
+        {
+            /** @note This is here because we need any allocated models to be
+            destroyed before the device */
+            i.second.reset();
+        }
         FinalizeFence();
         FinalizeSemaphore();
         FinalizeDevice();
@@ -391,7 +399,14 @@ namespace AeonGames
 
     bool VulkanRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
     {
-        return false;
+        if ( mModelMap.find ( aModel ) == mModelMap.end() )
+        {
+            /* We dont really need to cache Vulkan Models,
+            since mModelMap IS our model cache.
+            We DO need a deallocation function.*/
+            mModelMap[aModel] = std::make_unique<VulkanModel> ( aModel, this );
+        }
+        return true;
     }
 
     bool VulkanRenderer::AddRenderingWindow ( uintptr_t aWindowId )

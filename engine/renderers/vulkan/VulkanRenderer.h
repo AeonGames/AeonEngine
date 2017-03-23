@@ -29,6 +29,7 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanWindow;
+    class VulkanModel;
     class VulkanRenderer : public Renderer
     {
     public:
@@ -142,12 +143,10 @@ namespace AeonGames
         float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
         float* mNormalMatrix = mMatrices + ( 16 * 6 );
         std::vector<std::unique_ptr<VulkanWindow>> mWindowRegistry;
-#if 0
         std::unordered_map <
         std::shared_ptr<Model>,
             std::shared_ptr<VulkanModel >>
             mModelMap;
-#endif
     };
 }
 #endif
