@@ -44,7 +44,6 @@
 #include "Worklist.h"
 #include "glslang/Include/ShHandle.h"
 #include "glslang/Include/revision.h"
-#include "glslang/Public/ShaderLang.h"
 #include "SPIRV/GlslangToSpv.h"
 #include "SPIRV/GLSL.std.450.h"
 #include "SPIRV/doc.h"
@@ -55,118 +54,13 @@
 #include <cmath>
 #include <array>
 #include <thread>
-
-extern "C" {
-    SH_IMPORT_EXPORT void ShOutputHtml();
-}
-
-// Command-line options
-enum TOptions
-{
-    EOptionNone                 = 0,
-    EOptionIntermediate         = ( 1 <<  0 ),
-    EOptionSuppressInfolog      = ( 1 <<  1 ),
-    EOptionMemoryLeakMode       = ( 1 <<  2 ),
-    EOptionRelaxedErrors        = ( 1 <<  3 ),
-    EOptionGiveWarnings         = ( 1 <<  4 ),
-    EOptionLinkProgram          = ( 1 <<  5 ),
-    EOptionMultiThreaded        = ( 1 <<  6 ),
-    EOptionDumpConfig           = ( 1 <<  7 ),
-    EOptionDumpReflection       = ( 1 <<  8 ),
-    EOptionSuppressWarnings     = ( 1 <<  9 ),
-    EOptionDumpVersions         = ( 1 << 10 ),
-    EOptionSpv                  = ( 1 << 11 ),
-    EOptionHumanReadableSpv     = ( 1 << 12 ),
-    EOptionVulkanRules          = ( 1 << 13 ),
-    EOptionDefaultDesktop       = ( 1 << 14 ),
-    EOptionOutputPreprocessed   = ( 1 << 15 ),
-    EOptionOutputHexadecimal    = ( 1 << 16 ),
-    EOptionReadHlsl             = ( 1 << 17 ),
-    EOptionCascadingErrors      = ( 1 << 18 ),
-    EOptionAutoMapBindings      = ( 1 << 19 ),
-    EOptionFlattenUniformArrays = ( 1 << 20 ),
-    EOptionNoStorageFormat      = ( 1 << 21 ),
-    EOptionKeepUncalled         = ( 1 << 22 ),
-};
-
-//
-// Return codes from main/exit().
-//
-enum TFailCode
-{
-    ESuccess = 0,
-    EFailUsage,
-    EFailCompile,
-    EFailLink,
-    EFailCompilerCreate,
-    EFailThreadCreate,
-    EFailLinkerCreate
-};
+#include "CompilerLinker.h"
 
 //
 // Forward declarations.
 //
-EShLanguage FindLanguage ( const std::string& name, bool parseSuffix = true );
-void CompileFile ( const char* fileName, ShHandle );
-void usage();
-void FreeFileData ( char** data );
-char** ReadFileData ( const char* fileName );
 void InfoLogMsg ( const char* msg, const char* name, const int num );
 
-// Globally track if any compile or link failure.
-bool CompileFailed = false;
-bool LinkFailed = false;
-
-// Use to test breaking up a single shader file into multiple strings.
-// Set in ReadFileData().
-int NumShaderStrings;
-
-TBuiltInResource Resources;
-std::string ConfigFile;
-
-//
-// Parse either a .conf file provided by the user or the default from glslang::DefaultTBuiltInResource
-//
-void ProcessConfigFile()
-{
-    char** configStrings = nullptr;
-    char* config = nullptr;
-    if ( ConfigFile.size() > 0 )
-    {
-        configStrings = ReadFileData ( ConfigFile.c_str() );
-        if ( configStrings )
-        {
-            config = *configStrings;
-        }
-        else
-        {
-            printf ( "Error opening configuration file; will instead use the default configuration\n" );
-            usage();
-        }
-    }
-
-    if ( config == nullptr )
-    {
-        Resources = glslang::DefaultTBuiltInResource;
-        if ( configStrings )
-        {
-            FreeFileData ( configStrings );
-        }
-        return;
-    }
-
-    glslang::DecodeResourceLimits ( &Resources,  config );
-    FreeFileData ( configStrings );
-}
-
-// thread-safe list of shaders to asynchronously grab and compile
-glslang::TWorklist Worklist;
-
-// array of unique places to leave the shader names and infologs for the asynchronous compiles
-glslang::TWorkItem** Work = nullptr;
-int NumWorkItems = 0;
-
-int Options = 0;
 const char* ExecutableName = nullptr;
 const char* binaryFileName = nullptr;
 const char* entryPointName = nullptr;
@@ -221,25 +115,6 @@ const char* GetBinaryName ( EShLanguage stage )
 }
 
 //
-// *.conf => this is a config file that can set limits/resources
-//
-bool SetConfigFile ( const std::string& name )
-{
-    if ( name.size() < 5 )
-    {
-        return false;
-    }
-
-    if ( name.compare ( name.size() - 5, 5, ".conf" ) == 0 )
-    {
-        ConfigFile = name;
-        return true;
-    }
-
-    return false;
-}
-
-//
 // Give error and exit with failure code.
 //
 void Error ( const char* message )
@@ -248,6 +123,7 @@ void Error ( const char* message )
     exit ( EFailUsage );
 }
 
+#if 0
 //
 // Process an optional binding base of the form:
 //   --argname [stage] base
@@ -255,18 +131,8 @@ void Error ( const char* message )
 //
 void ProcessBindingBase ( int& argc, char**& argv, std::array<unsigned int, EShLangCount>& base )
 {
-    if ( argc < 2 )
-    {
-        usage();
-    }
-
     if ( !isdigit ( argv[1][0] ) )
     {
-        if ( argc < 3 ) // this form needs one more argument
-        {
-            usage();
-        }
-
         // Parse form: --argname stage base
         const EShLanguage lang = FindLanguage ( argv[1], false );
         base[lang] = atoi ( argv[2] );
@@ -398,10 +264,6 @@ void ProcessArguments ( int argc, char* argv[] )
                 {
                     Options |= EOptionKeepUncalled;
                 }
-                else
-                {
-                    usage();
-                }
             }
             break;
             case 'H':
@@ -466,9 +328,6 @@ void ProcessArguments ( int argc, char* argv[] )
                     Error ( "no <entry-point> provided for -e" );
                 }
                 break;
-            case 'h':
-                usage();
-                break;
             case 'i':
                 Options |= EOptionIntermediate;
                 break;
@@ -514,7 +373,6 @@ void ProcessArguments ( int argc, char* argv[] )
                 Options |= EOptionOutputHexadecimal;
                 break;
             default:
-                usage();
                 break;
             }
         }
@@ -547,76 +405,7 @@ void ProcessArguments ( int argc, char* argv[] )
         Error ( "uniform array flattening only valid when compiling HLSL source." );
     }
 }
-
-//
-// Translate the meaningful subset of command-line options to parser-behavior options.
-//
-void SetMessageOptions ( EShMessages& messages )
-{
-    if ( Options & EOptionRelaxedErrors )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgRelaxedErrors );
-    }
-    if ( Options & EOptionIntermediate )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgAST );
-    }
-    if ( Options & EOptionSuppressWarnings )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgSuppressWarnings );
-    }
-    if ( Options & EOptionSpv )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgSpvRules );
-    }
-    if ( Options & EOptionVulkanRules )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgVulkanRules );
-    }
-    if ( Options & EOptionOutputPreprocessed )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgOnlyPreprocessor );
-    }
-    if ( Options & EOptionReadHlsl )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgReadHlsl );
-    }
-    if ( Options & EOptionCascadingErrors )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgCascadingErrors );
-    }
-    if ( Options & EOptionKeepUncalled )
-    {
-        messages = ( EShMessages ) ( messages | EShMsgKeepUncalled );
-    }
-}
-
-//
-// Thread entry point, for non-linking asynchronous mode.
-//
-// Return 0 for failure, 1 for success.
-//
-void CompileShaders()
-{
-    glslang::TWorkItem* workItem;
-    while ( Worklist.remove ( workItem ) )
-    {
-        ShHandle compiler = ShConstructCompiler ( FindLanguage ( workItem->name ), Options );
-        if ( compiler == nullptr )
-        {
-            return;
-        }
-        CompileFile ( workItem->name.c_str(), compiler );
-
-        if ( ! ( Options & EOptionSuppressInfolog ) )
-        {
-            workItem->results = ShGetInfoLog ( compiler );
-        }
-
-        ShDestruct ( compiler );
-    }
-    return;
-}
+#endif
 
 // Outputs the given string, but only if it is non-null and non-empty.
 // This prevents erroneous newlines from appearing.
@@ -637,266 +426,9 @@ void StderrIfNonEmpty ( const char* str )
         fprintf ( stderr, "%s\n", str );
     }
 }
-
-// Simple bundling of what makes a compilation unit for ease in passing around,
-// and separation of handling file IO versus API (programmatic) compilation.
-struct ShaderCompUnit
-{
-    EShLanguage stage;
-    std::string fileName;
-    char** text;             // memory owned/managed externally
-    const char*  fileNameList[1];
-
-    // Need to have a special constructors to adjust the fileNameList, since back end needs a list of ptrs
-    ShaderCompUnit ( EShLanguage istage, std::string &ifileName, char** itext )
-    {
-        stage = istage;
-        fileName = ifileName;
-        text    = itext;
-        fileNameList[0] = fileName.c_str();
-    }
-
-    ShaderCompUnit ( const ShaderCompUnit &rhs )
-    {
-        stage = rhs.stage;
-        fileName = rhs.fileName;
-        text = rhs.text;
-        fileNameList[0] = fileName.c_str();
-    }
-
-};
-
-//
-// For linking mode: Will independently parse each compilation unit, but then put them
-// in the same program and link them together, making at most one linked module per
-// pipeline stage.
-//
-// Uses the new C++ interface instead of the old handle-based interface.
-//
-
-void CompileAndLinkShaderUnits ( std::vector<ShaderCompUnit> compUnits )
-{
-    // keep track of what to free
-    std::list<glslang::TShader*> shaders;
-
-    EShMessages messages = EShMsgDefault;
-    SetMessageOptions ( messages );
-
-    //
-    // Per-shader processing...
-    //
-
-    glslang::TProgram& program = *new glslang::TProgram;
-    for ( const auto & compUnit : compUnits )
-    {
-        auto  shader = new glslang::TShader ( compUnit.stage );
-        shader->setStringsWithLengthsAndNames ( compUnit.text, nullptr, compUnit.fileNameList, 1 );
-        if ( entryPointName ) // HLSL todo: this needs to be tracked per compUnits
-        {
-            shader->setEntryPoint ( entryPointName );
-        }
-        if ( sourceEntryPointName )
-        {
-            shader->setSourceEntryPoint ( sourceEntryPointName );
-        }
-
-        shader->setShiftSamplerBinding ( baseSamplerBinding[compUnit.stage] );
-        shader->setShiftTextureBinding ( baseTextureBinding[compUnit.stage] );
-        shader->setShiftImageBinding ( baseImageBinding[compUnit.stage] );
-        shader->setShiftUboBinding ( baseUboBinding[compUnit.stage] );
-        shader->setFlattenUniformArrays ( ( Options & EOptionFlattenUniformArrays ) != 0 );
-        shader->setNoStorageFormat ( ( Options & EOptionNoStorageFormat ) != 0 );
-
-        if ( Options & EOptionAutoMapBindings )
-        {
-            shader->setAutoMapBindings ( true );
-        }
-
-        shaders.push_back ( shader );
-
-        const int defaultVersion = Options & EOptionDefaultDesktop ? 110 : 100;
-
-        if ( Options & EOptionOutputPreprocessed )
-        {
-            std::string str;
-            glslang::TShader::ForbidIncluder includer;
-            if ( shader->preprocess ( &Resources, defaultVersion, ENoProfile, false, false,
-                                      messages, &str, includer ) )
-            {
-                PutsIfNonEmpty ( str.c_str() );
-            }
-            else
-            {
-                CompileFailed = true;
-            }
-            StderrIfNonEmpty ( shader->getInfoLog() );
-            StderrIfNonEmpty ( shader->getInfoDebugLog() );
-            continue;
-        }
-        if ( ! shader->parse ( &Resources, defaultVersion, false, messages ) )
-        {
-            CompileFailed = true;
-        }
-
-        program.addShader ( shader );
-
-        if ( ! ( Options & EOptionSuppressInfolog ) &&
-             ! ( Options & EOptionMemoryLeakMode ) )
-        {
-            PutsIfNonEmpty ( compUnit.fileName.c_str() );
-            PutsIfNonEmpty ( shader->getInfoLog() );
-            PutsIfNonEmpty ( shader->getInfoDebugLog() );
-        }
-    }
-
-    //
-    // Program-level processing...
-    //
-
-    // Link
-    if ( ! ( Options & EOptionOutputPreprocessed ) && ! program.link ( messages ) )
-    {
-        LinkFailed = true;
-    }
-
-    // Map IO
-    if ( Options & EOptionSpv )
-    {
-        if ( !program.mapIO() )
-        {
-            LinkFailed = true;
-        }
-    }
-
-    // Report
-    if ( ! ( Options & EOptionSuppressInfolog ) &&
-         ! ( Options & EOptionMemoryLeakMode ) )
-    {
-        PutsIfNonEmpty ( program.getInfoLog() );
-        PutsIfNonEmpty ( program.getInfoDebugLog() );
-    }
-
-    // Reflect
-    if ( Options & EOptionDumpReflection )
-    {
-        program.buildReflection();
-        program.dumpReflection();
-    }
-
-    // Dump SPIR-V
-    if ( Options & EOptionSpv )
-    {
-        if ( CompileFailed || LinkFailed )
-        {
-            printf ( "SPIR-V is not generated for failed compile or link\n" );
-        }
-        else
-        {
-            for ( int stage = 0; stage < EShLangCount; ++stage )
-            {
-                if ( program.getIntermediate ( ( EShLanguage ) stage ) )
-                {
-                    std::vector<unsigned int> spirv;
-                    std::string warningsErrors;
-                    spv::SpvBuildLogger logger;
-                    glslang::GlslangToSpv ( *program.getIntermediate ( ( EShLanguage ) stage ), spirv, &logger );
-
-                    // Dump the spv to a file or stdout, etc., but only if not doing
-                    // memory/perf testing, as it's not internal to programmatic use.
-                    if ( ! ( Options & EOptionMemoryLeakMode ) )
-                    {
-                        printf ( "%s", logger.getAllMessages().c_str() );
-                        if ( Options & EOptionOutputHexadecimal )
-                        {
-                            glslang::OutputSpvHex ( spirv, GetBinaryName ( ( EShLanguage ) stage ), variableName );
-                        }
-                        else
-                        {
-                            glslang::OutputSpvBin ( spirv, GetBinaryName ( ( EShLanguage ) stage ) );
-                        }
-                        if ( Options & EOptionHumanReadableSpv )
-                        {
-                            spv::Disassemble ( std::cout, spirv );
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Free everything up, program has to go before the shaders
-    // because it might have merged stuff from the shaders, and
-    // the stuff from the shaders has to have its destructors called
-    // before the pools holding the memory in the shaders is freed.
-    delete &program;
-    while ( shaders.size() > 0 )
-    {
-        delete shaders.back();
-        shaders.pop_back();
-    }
-}
-
-//
-// Do file IO part of compile and link, handing off the pure
-// API/programmatic mode to CompileAndLinkShaderUnits(), which can
-// be put in a loop for testing memory footprint and performance.
-//
-// This is just for linking mode: meaning all the shaders will be put into the
-// the same program linked together.
-//
-// This means there are a limited number of work items (not multi-threading mode)
-// and that the point is testing at the linking level. Hence, to enable
-// performance and memory testing, the actual compile/link can be put in
-// a loop, independent of processing the work items and file IO.
-//
-void CompileAndLinkShaderFiles()
-{
-    std::vector<ShaderCompUnit> compUnits;
-
-    // Transfer all the work items from to a simple list of
-    // of compilation units.  (We don't care about the thread
-    // work-item distribution properties in this path, which
-    // is okay due to the limited number of shaders, know since
-    // they are all getting linked together.)
-    glslang::TWorkItem* workItem;
-    while ( Worklist.remove ( workItem ) )
-    {
-        ShaderCompUnit compUnit (
-            FindLanguage ( workItem->name ),
-            workItem->name,
-            ReadFileData ( workItem->name.c_str() )
-        );
-
-        if ( ! compUnit.text )
-        {
-            usage();
-            return;
-        }
-
-        compUnits.push_back ( compUnit );
-    }
-
-    // Actual call to programmatic processing of compile and link,
-    // in a loop for testing memory and performance.  This part contains
-    // all the perf/memory that a programmatic consumer will care about.
-    for ( int i = 0; i < ( ( Options & EOptionMemoryLeakMode ) ? 100 : 1 ); ++i )
-    {
-        for ( int j = 0; j < ( ( Options & EOptionMemoryLeakMode ) ? 100 : 1 ); ++j )
-        {
-            CompileAndLinkShaderUnits ( compUnits );
-        }
-    }
-
-    for ( auto & compUnit : compUnits )
-    {
-        FreeFileData ( compUnit.text );
-    }
-}
-
+#if 0
 int compile ( int argc, char* argv[] )
 {
-    ProcessArguments ( argc, argv );
-
     if ( Options & EOptionDumpConfig )
     {
         printf ( "%s", glslang::GetDefaultTBuiltInResourceString().c_str() );
@@ -924,11 +456,6 @@ int compile ( int argc, char* argv[] )
         }
     }
 
-    if ( Worklist.empty() )
-    {
-        usage();
-    }
-
     ProcessConfigFile();
 
     //
@@ -939,9 +466,6 @@ int compile ( int argc, char* argv[] )
     if ( Options & EOptionLinkProgram ||
          Options & EOptionOutputPreprocessed )
     {
-        glslang::InitializeProcess();
-        CompileAndLinkShaderFiles();
-        glslang::FinalizeProcess();
         for ( int w = 0; w < NumWorkItems; ++w )
         {
             if ( Work[w] )
@@ -1015,7 +539,8 @@ int compile ( int argc, char* argv[] )
 
     return 0;
 }
-
+#endif
+#if 0
 //
 //   Deduce the language from the filename.  Files must end in one of the
 //   following extensions:
@@ -1038,7 +563,6 @@ EShLanguage FindLanguage ( const std::string& name, bool parseSuffix )
         ext = name.rfind ( '.' );
         if ( ext == std::string::npos )
         {
-            usage();
             return EShLangVertex;
         }
         ++ext;
@@ -1074,8 +598,6 @@ EShLanguage FindLanguage ( const std::string& name, bool parseSuffix )
     {
         return EShLangCompute;
     }
-
-    usage();
     return EShLangVertex;
 }
 
@@ -1089,7 +611,6 @@ void CompileFile ( const char* fileName, ShHandle compiler )
     char** shaderStrings = ReadFileData ( fileName );
     if ( ! shaderStrings )
     {
-        usage();
     }
 
     auto  lengths = new int[NumShaderStrings];
@@ -1215,6 +736,7 @@ void usage()
 
     exit ( EFailUsage );
 }
+#endif
 
 #if !defined _MSC_VER && !defined MINGW_HAS_SECURE_API
 
@@ -1250,98 +772,6 @@ int fopen_s (
 
 #endif
 
-//
-//   Malloc a string of sufficient size and read a string into it.
-//
-char** ReadFileData ( const char* fileName )
-{
-    FILE *in = nullptr;
-    int errorCode = fopen_s ( &in, fileName, "r" );
-
-    int count = 0;
-    const int maxSourceStrings = 5;  // for testing splitting shader/tokens across multiple strings
-    char** return_data = ( char** ) malloc ( sizeof ( char * ) * ( maxSourceStrings + 1 ) ); // freed in FreeFileData()
-
-    if ( errorCode || in == nullptr )
-    {
-        Error ( "unable to open input file" );
-    }
-
-    while ( fgetc ( in ) != EOF )
-    {
-        count++;
-    }
-
-    fseek ( in, 0, SEEK_SET );
-
-    char *fdata = ( char* ) malloc ( count + 2 ); // freed before return of this function
-    if ( ! fdata )
-    {
-        Error ( "can't allocate memory" );
-    }
-
-    if ( ( int ) fread ( fdata, 1, count, in ) != count )
-    {
-        free ( fdata );
-        Error ( "can't read input file" );
-    }
-
-    fdata[count] = '\0';
-    fclose ( in );
-
-    if ( count == 0 )
-    {
-        // recover from empty file
-        return_data[0] = ( char* ) malloc ( count + 2 ); // freed in FreeFileData()
-        return_data[0][0] = '\0';
-        NumShaderStrings = 0;
-        free ( fdata );
-
-        return return_data;
-    }
-    else
-    {
-        NumShaderStrings = 1;    // Set to larger than 1 for testing multiple strings
-    }
-
-    // compute how to split up the file into multiple strings, for testing multiple strings
-    int len = ( int ) ( ceil ) ( ( float ) count / ( float ) NumShaderStrings );
-    int ptr_len = 0;
-    int i = 0;
-    while ( count > 0 )
-    {
-        return_data[i] = ( char* ) malloc ( len + 2 ); // freed in FreeFileData()
-        memcpy ( return_data[i], fdata + ptr_len, len );
-        return_data[i][len] = '\0';
-        count -= len;
-        ptr_len += len;
-        if ( count < len )
-        {
-            if ( count == 0 )
-            {
-                NumShaderStrings = i + 1;
-                break;
-            }
-            len = count;
-        }
-        ++i;
-    }
-
-    free ( fdata );
-
-    return return_data;
-}
-
-void FreeFileData ( char** data )
-{
-    for ( int i = 0; i < NumShaderStrings; i++ )
-    {
-        free ( data[i] );
-    }
-
-    free ( data );
-}
-
 void InfoLogMsg ( const char* msg, const char* name, const int num )
 {
     if ( num >= 0 )
@@ -1353,3 +783,269 @@ void InfoLogMsg ( const char* msg, const char* name, const int num )
         printf ( "#### %s %s INFO LOG ####\n", msg, name );
     }
 }
+
+namespace AeonGames
+{
+    CompilerLinker::CompilerLinker ( TOptions aOptions ) : mOptions ( aOptions )
+    {
+        // Make sure that -E is not specified alongside linking (which includes SPV generation)
+        if ( ( mOptions & EOptionOutputPreprocessed ) && ( mOptions & EOptionLinkProgram ) )
+        {
+            Error ( "can't use -E when linking is selected" );
+        }
+
+        // -o or -x makes no sense if there is no target binary
+        if ( binaryFileName && ( mOptions & EOptionSpv ) == 0 )
+        {
+            Error ( "no binary generation requested (e.g., -V)" );
+        }
+
+        if ( ( mOptions & EOptionFlattenUniformArrays ) != 0 &&
+             ( mOptions & EOptionReadHlsl ) == 0 )
+        {
+            Error ( "uniform array flattening only valid when compiling HLSL source." );
+        }
+    }
+
+    CompilerLinker::~CompilerLinker()
+    {
+    }
+
+    void CompilerLinker::AddShaderSource ( EShLanguage aLanguage, const char* aSource )
+    {
+        mShaderCompilationUnits[aLanguage] = aSource;
+    }
+
+    void CompilerLinker::RemoveShaderSource ( EShLanguage aLanguage )
+    {
+        mShaderCompilationUnits[aLanguage] = nullptr;
+    }
+
+    //
+    // Translate the meaningful subset of command-line options to parser-behavior options.
+    //
+    void CompilerLinker::SetMessageOptions ( EShMessages& messages ) const
+    {
+        if ( mOptions & EOptionRelaxedErrors )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgRelaxedErrors );
+        }
+        if ( mOptions & EOptionIntermediate )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgAST );
+        }
+        if ( mOptions & EOptionSuppressWarnings )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgSuppressWarnings );
+        }
+        if ( mOptions & EOptionSpv )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgSpvRules );
+        }
+        if ( mOptions & EOptionVulkanRules )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgVulkanRules );
+        }
+        if ( mOptions & EOptionOutputPreprocessed )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgOnlyPreprocessor );
+        }
+        if ( mOptions & EOptionReadHlsl )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgReadHlsl );
+        }
+        if ( mOptions & EOptionCascadingErrors )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgCascadingErrors );
+        }
+        if ( mOptions & EOptionKeepUncalled )
+        {
+            messages = ( EShMessages ) ( messages | EShMsgKeepUncalled );
+        }
+    }
+
+    //
+    // For linking mode: Will independently parse each compilation unit, but then put them
+    // in the same program and link them together, making at most one linked module per
+    // pipeline stage.
+    //
+    // Uses the new C++ interface instead of the old handle-based interface.
+    //
+    void CompilerLinker::CompileAndLink()
+    {
+        glslang::InitializeProcess();
+        // keep track of what to free
+        std::list<glslang::TShader*> shaders;
+
+        EShMessages messages = EShMsgDefault;
+        SetMessageOptions ( messages );
+
+        //
+        // Per-shader processing...
+        //
+
+        glslang::TProgram& program = *new glslang::TProgram;
+        for ( size_t i = 0; i < mShaderCompilationUnits.size(); ++i )
+        {
+            if ( !mShaderCompilationUnits[i] )
+            {
+                continue;
+            }
+            auto  shader = new glslang::TShader ( static_cast<EShLanguage> ( i ) );
+            std::array<const char*, 1> source{ mShaderCompilationUnits[i] };
+            shader->setStringsWithLengthsAndNames ( source.data(), nullptr, nullptr, 0 );
+            if ( entryPointName ) // HLSL todo: this needs to be tracked per compUnits
+            {
+                shader->setEntryPoint ( entryPointName );
+            }
+            if ( sourceEntryPointName )
+            {
+                shader->setSourceEntryPoint ( sourceEntryPointName );
+            }
+
+            shader->setShiftSamplerBinding ( baseSamplerBinding[i] );
+            shader->setShiftTextureBinding ( baseTextureBinding[i] );
+            shader->setShiftImageBinding ( baseImageBinding[i] );
+            shader->setShiftUboBinding ( baseUboBinding[i] );
+            shader->setFlattenUniformArrays ( ( mOptions & EOptionFlattenUniformArrays ) != 0 );
+            shader->setNoStorageFormat ( ( mOptions & EOptionNoStorageFormat ) != 0 );
+
+            if ( mOptions & EOptionAutoMapBindings )
+            {
+                shader->setAutoMapBindings ( true );
+            }
+
+            shaders.push_back ( shader );
+
+            const int defaultVersion = mOptions & EOptionDefaultDesktop ? 110 : 100;
+
+            if ( mOptions & EOptionOutputPreprocessed )
+            {
+                std::string str;
+                glslang::TShader::ForbidIncluder includer;
+                if ( shader->preprocess ( &glslang::DefaultTBuiltInResource, defaultVersion, ENoProfile, false, false,
+                                          messages, &str, includer ) )
+                {
+                    PutsIfNonEmpty ( str.c_str() );
+                }
+                else
+                {
+                    mCompileFailed = true;
+                }
+                StderrIfNonEmpty ( shader->getInfoLog() );
+                StderrIfNonEmpty ( shader->getInfoDebugLog() );
+                continue;
+            }
+            if ( !shader->parse ( &glslang::DefaultTBuiltInResource, defaultVersion, false, messages ) )
+            {
+                mCompileFailed = true;
+            }
+
+            program.addShader ( shader );
+
+            if ( ! ( mOptions & EOptionSuppressInfolog ) &&
+                 ! ( mOptions & EOptionMemoryLeakMode ) )
+            {
+                PutsIfNonEmpty ( shader->getInfoLog() );
+                PutsIfNonEmpty ( shader->getInfoDebugLog() );
+            }
+        }
+
+        //
+        // Program-level processing...
+        //
+
+        // Link
+        if ( ! ( mOptions & EOptionOutputPreprocessed ) && !program.link ( messages ) )
+        {
+            mLinkFailed = true;
+        }
+
+        // Map IO
+        if ( mOptions & EOptionSpv )
+        {
+            if ( !program.mapIO() )
+            {
+                mLinkFailed = true;
+            }
+        }
+
+        // Report
+        if ( ! ( mOptions & EOptionSuppressInfolog ) &&
+             ! ( mOptions & EOptionMemoryLeakMode ) )
+        {
+            PutsIfNonEmpty ( program.getInfoLog() );
+            PutsIfNonEmpty ( program.getInfoDebugLog() );
+        }
+
+        // Reflect
+        if ( mOptions & EOptionDumpReflection )
+        {
+            program.buildReflection();
+            program.dumpReflection();
+        }
+
+        // Dump SPIR-V
+        if ( mOptions & EOptionSpv )
+        {
+            if ( mCompileFailed || mLinkFailed )
+            {
+                printf ( "SPIR-V is not generated for failed compile or link\n" );
+            }
+            else
+            {
+                for ( int stage = 0; stage < EShLangCount; ++stage )
+                {
+                    if ( program.getIntermediate ( ( EShLanguage ) stage ) )
+                    {
+                        std::vector<unsigned int> spirv;
+                        std::string warningsErrors;
+                        spv::SpvBuildLogger logger;
+                        glslang::GlslangToSpv ( *program.getIntermediate ( ( EShLanguage ) stage ), spirv, &logger );
+
+                        // Dump the spv to a file or stdout, etc., but only if not doing
+                        // memory/perf testing, as it's not internal to programmatic use.
+                        if ( ! ( mOptions & EOptionMemoryLeakMode ) )
+                        {
+                            printf ( "%s", logger.getAllMessages().c_str() );
+                            if ( mOptions & EOptionOutputHexadecimal )
+                            {
+                                glslang::OutputSpvHex ( spirv, GetBinaryName ( ( EShLanguage ) stage ), variableName );
+                            }
+                            else
+                            {
+                                glslang::OutputSpvBin ( spirv, GetBinaryName ( ( EShLanguage ) stage ) );
+                            }
+                            if ( mOptions & EOptionHumanReadableSpv )
+                            {
+                                spv::Disassemble ( std::cout, spirv );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Free everything up, program has to go before the shaders
+        // because it might have merged stuff from the shaders, and
+        // the stuff from the shaders has to have its destructors called
+        // before the pools holding the memory in the shaders is freed.
+        delete &program;
+        while ( shaders.size() > 0 )
+        {
+            delete shaders.back();
+            shaders.pop_back();
+        }
+        glslang::FinalizeProcess();
+    }
+
+    bool CompilerLinker::CompileFailed() const
+    {
+        return mCompileFailed;
+    }
+
+    bool CompilerLinker::LinkFailed() const
+    {
+        return mLinkFailed;
+    }
+}
+
