@@ -15,12 +15,13 @@
 include_directories(${GLSlang_INCLUDE_DIR})
 
 set(SPIRV_HEADERS
+    SPIR-V/CompilerLinker.h
     SPIR-V/Worklist.h
     SPIR-V/ResourceLimits.h
 )
 set(SPIRV_SOURCES
     SPIR-V/ResourceLimits.cpp
-    SPIR-V/StandAlone.cpp
+    SPIR-V/CompilerLinker.cpp
 )
 
 set(VULKAN_RENDERER_HEADERS
@@ -46,7 +47,8 @@ set(VULKAN_RENDERER_SOURCES
     Plugin.cpp
 )
 
-source_group("vulkan" FILES ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES})
+source_group("Renderer" FILES ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES})
+source_group("Compiler" FILES ${SPIRV_HEADERS} ${SPIRV_SOURCES})
 
 add_library(VulkanRenderer SHARED
     ${VULKAN_RENDERER_HEADERS} ${VULKAN_RENDERER_SOURCES}
