@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ limitations under the License.
 #include "aeongames/Plugin.h"
 #include "VulkanRenderer.h"
 #include "aeongames/Memory.h"
+#include "glslang/Public/ShaderLang.h"
 
 extern "C"
 {
     bool VulkanStartUp()
     {
+        glslang::InitializeProcess();
         return AeonGames::RegisterRendererLoader ( "Vulkan",
                 [] ()
         {
@@ -33,6 +35,7 @@ extern "C"
     void VulkanShutdown()
     {
         AeonGames::UnregisterRendererLoader ( "Vulkan" );
+        glslang::FinalizeProcess();
     }
 
     PLUGIN PluginModuleInterface PMI =

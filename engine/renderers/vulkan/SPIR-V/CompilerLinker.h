@@ -20,68 +20,67 @@ limitations under the License.
 #include <string>
 #include "glslang/Public/ShaderLang.h"
 
-// Command-line options
-enum TOptions
-{
-    EOptionNone = 0,
-    EOptionIntermediate = ( 1 << 0 ),
-    EOptionSuppressInfolog = ( 1 << 1 ),
-    EOptionMemoryLeakMode = ( 1 << 2 ),
-    EOptionRelaxedErrors = ( 1 << 3 ),
-    EOptionGiveWarnings = ( 1 << 4 ),
-    EOptionLinkProgram = ( 1 << 5 ),
-    EOptionMultiThreaded = ( 1 << 6 ),
-    EOptionDumpConfig = ( 1 << 7 ),
-    EOptionDumpReflection = ( 1 << 8 ),
-    EOptionSuppressWarnings = ( 1 << 9 ),
-    EOptionDumpVersions = ( 1 << 10 ),
-    EOptionSpv = ( 1 << 11 ),
-    EOptionHumanReadableSpv = ( 1 << 12 ),
-    EOptionVulkanRules = ( 1 << 13 ),
-    EOptionDefaultDesktop = ( 1 << 14 ),
-    EOptionOutputPreprocessed = ( 1 << 15 ),
-    EOptionOutputHexadecimal = ( 1 << 16 ),
-    EOptionReadHlsl = ( 1 << 17 ),
-    EOptionCascadingErrors = ( 1 << 18 ),
-    EOptionAutoMapBindings = ( 1 << 19 ),
-    EOptionFlattenUniformArrays = ( 1 << 20 ),
-    EOptionNoStorageFormat = ( 1 << 21 ),
-    EOptionKeepUncalled = ( 1 << 22 ),
-};
-
-//
-// Return codes from main/exit().
-//
-enum TFailCode
-{
-    ESuccess = 0,
-    EFailUsage,
-    EFailCompile,
-    EFailLink,
-    EFailCompilerCreate,
-    EFailThreadCreate,
-    EFailLinkerCreate
-};
-
 namespace AeonGames
 {
     class CompilerLinker
     {
     public:
-        CompilerLinker ( TOptions aOptions );
+        // Command-line options
+        enum TOptions
+        {
+            EOptionNone = 0,
+            EOptionIntermediate = ( 1 << 0 ),
+            EOptionSuppressInfolog = ( 1 << 1 ),
+            EOptionMemoryLeakMode = ( 1 << 2 ),
+            EOptionRelaxedErrors = ( 1 << 3 ),
+            EOptionGiveWarnings = ( 1 << 4 ),
+            EOptionLinkProgram = ( 1 << 5 ),
+            EOptionMultiThreaded = ( 1 << 6 ),
+            EOptionDumpConfig = ( 1 << 7 ),
+            EOptionDumpReflection = ( 1 << 8 ),
+            EOptionSuppressWarnings = ( 1 << 9 ),
+            EOptionDumpVersions = ( 1 << 10 ),
+            EOptionSpv = ( 1 << 11 ),
+            EOptionHumanReadableSpv = ( 1 << 12 ),
+            EOptionVulkanRules = ( 1 << 13 ),
+            EOptionDefaultDesktop = ( 1 << 14 ),
+            EOptionOutputPreprocessed = ( 1 << 15 ),
+            EOptionOutputHexadecimal = ( 1 << 16 ),
+            EOptionReadHlsl = ( 1 << 17 ),
+            EOptionCascadingErrors = ( 1 << 18 ),
+            EOptionAutoMapBindings = ( 1 << 19 ),
+            EOptionFlattenUniformArrays = ( 1 << 20 ),
+            EOptionNoStorageFormat = ( 1 << 21 ),
+            EOptionKeepUncalled = ( 1 << 22 ),
+        };
+        //
+        // Return codes from main/exit().
+        //
+        enum FailCode
+        {
+            ESuccess = 0,
+            EFailCompile,
+            EFailLink,
+        };
+
+        CompilerLinker ( TOptions aOptions = static_cast<TOptions> ( EOptionSpv | EOptionVulkanRules | EOptionLinkProgram ) );
         ~CompilerLinker();
-        void AddShaderSource ( EShLanguage aLanguage, const char* aSource );
-        void RemoveShaderSource ( EShLanguage aLanguage );
-        void CompileAndLink();
-        bool CompileFailed() const;
-        bool LinkFailed() const;
+        void AddShaderSource ( EShLanguage aStage, const char* aSource );
+        void RemoveShaderSource ( EShLanguage aStage );
+        FailCode CompileAndLink();
+        const std::vector<uint32_t>& GetSpirV ( EShLanguage aStage ) const;
+        const std::string& GetLog() const;
     private:
         void SetMessageOptions ( EShMessages& messages ) const;
         const char* GetStageName ( EShLanguage aStage ) const;
         TOptions mOptions;
-        bool mCompileFailed = false;
-        bool mLinkFailed = false;
-        std::array<const char*, EShLangCount> mShaderCompilationUnits;
+        std::string mLog;
+        std::array<const char*, EShLangCount> mShaderCompilationUnits = {nullptr};
+        std::array<uint32_t, EShLangCount> mBaseSamplerBinding;
+        std::array<uint32_t, EShLangCount> mBaseTextureBinding;
+        std::array<uint32_t, EShLangCount> mBaseImageBinding;
+        std::array<uint32_t, EShLangCount> mBaseUboBinding;
+        std::array<std::vector<uint32_t>, EShLangCount> mSpirV;
     };
 }
 #endif

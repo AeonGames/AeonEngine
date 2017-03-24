@@ -55,19 +55,6 @@
 #include <thread>
 #include "CompilerLinker.h"
 
-//
-// Forward declarations.
-//
-void InfoLogMsg ( const char* msg, const char* name, const int num );
-
-const char* binaryFileName = nullptr;
-const char* variableName = nullptr;
-
-std::array<unsigned int, EShLangCount> baseSamplerBinding;
-std::array<unsigned int, EShLangCount> baseTextureBinding;
-std::array<unsigned int, EShLangCount> baseImageBinding;
-std::array<unsigned int, EShLangCount> baseUboBinding;
-
 #if 0
 //
 // Process an optional binding base of the form:
@@ -117,7 +104,6 @@ void ProcessArguments ( int argc, char* argv[] )
     {
         Work[w] = nullptr;
     }
-
     argc--;
     argv++;
     for ( ; argc >= 1; argc--, argv++ )
@@ -351,26 +337,6 @@ void ProcessArguments ( int argc, char* argv[] )
     }
 }
 #endif
-
-// Outputs the given string, but only if it is non-null and non-empty.
-// This prevents erroneous newlines from appearing.
-void PutsIfNonEmpty ( const char* str )
-{
-    if ( str && str[0] )
-    {
-        puts ( str );
-    }
-}
-
-// Outputs the given string to stderr, but only if it is non-null and non-empty.
-// This prevents erroneous newlines from appearing.
-void StderrIfNonEmpty ( const char* str )
-{
-    if ( str && str[0] )
-    {
-        fprintf ( stderr, "%s\n", str );
-    }
-}
 #if 0
 int compile ( int argc, char* argv[] )
 {
@@ -683,52 +649,6 @@ void usage()
 }
 #endif
 
-#if !defined _MSC_VER && !defined MINGW_HAS_SECURE_API
-
-#include <errno.h>
-
-int fopen_s (
-    FILE** pFile,
-    const char* filename,
-    const char* mode
-)
-{
-    if ( !pFile || !filename || !mode )
-    {
-        return EINVAL;
-    }
-
-    FILE* f = fopen ( filename, mode );
-    if ( ! f )
-    {
-        if ( errno != 0 )
-        {
-            return errno;
-        }
-        else
-        {
-            return ENOENT;
-        }
-    }
-    *pFile = f;
-
-    return 0;
-}
-
-#endif
-
-void InfoLogMsg ( const char* msg, const char* name, const int num )
-{
-    if ( num >= 0 )
-    {
-        printf ( "#### %s %s %d INFO LOG ####\n", msg, name, num );
-    }
-    else
-    {
-        printf ( "#### %s %s INFO LOG ####\n", msg, name );
-    }
-}
-
 namespace AeonGames
 {
     CompilerLinker::CompilerLinker ( TOptions aOptions ) : mOptions ( aOptions )
@@ -737,12 +657,6 @@ namespace AeonGames
         if ( ( mOptions & EOptionOutputPreprocessed ) && ( mOptions & EOptionLinkProgram ) )
         {
             throw std::runtime_error ( "can't use -E when linking is selected" );
-        }
-
-        // -o or -x makes no sense if there is no target binary
-        if ( binaryFileName && ( mOptions & EOptionSpv ) == 0 )
-        {
-            throw std::runtime_error ( "no binary generation requested (e.g., -V)" );
         }
 
         if ( ( mOptions & EOptionFlattenUniformArrays ) != 0 &&
@@ -825,6 +739,8 @@ namespace AeonGames
             return "Fragment";
         case EShLangCompute:
             return "Compute";
+        case EShLangCount:
+            break;
         }
         return "Invalid Stage";
     }
@@ -836,86 +752,65 @@ namespace AeonGames
     //
     // Uses the new C++ interface instead of the old handle-based interface.
     //
-    void CompilerLinker::CompileAndLink()
+    CompilerLinker::FailCode CompilerLinker::CompileAndLink()
     {
-        glslang::InitializeProcess();
-
-        // keep track of what to free
-        std::list<glslang::TShader*> shaders;
-
+        bool compile_failed = false;
+        bool link_failed = false;
+        mLog.clear();
+        /*  The original code used heap memory for program and shaders
+            in order to destroy the program first and the shaders last,
+            that shouldn't be necesary with this new approach,
+            keep the order of declaration of the following two locals
+            to ensure program is destroyed before shaders. */
+        std::vector<glslang::TShader> shaders;
+        glslang::TProgram program;
         EShMessages messages = EShMsgDefault;
         SetMessageOptions ( messages );
-
         //
         // Per-shader processing...
         //
-        glslang::TProgram& program = *new glslang::TProgram;
+        shaders.reserve ( mShaderCompilationUnits.size() );
         for ( size_t i = 0; i < mShaderCompilationUnits.size(); ++i )
         {
             if ( !mShaderCompilationUnits[i] )
             {
                 continue;
             }
-            auto  shader = new glslang::TShader ( static_cast<EShLanguage> ( i ) );
+            shaders.emplace_back ( static_cast<EShLanguage> ( i ) );
             std::array<const char*, 1> source{ mShaderCompilationUnits[i] };
             auto stage_name = GetStageName ( static_cast<EShLanguage> ( i ) );
-            shader->setStringsWithLengthsAndNames ( source.data(), nullptr, &stage_name, 1 );
-            shader->setShiftSamplerBinding ( baseSamplerBinding[i] );
-            shader->setShiftTextureBinding ( baseTextureBinding[i] );
-            shader->setShiftImageBinding ( baseImageBinding[i] );
-            shader->setShiftUboBinding ( baseUboBinding[i] );
-            shader->setFlattenUniformArrays ( ( mOptions & EOptionFlattenUniformArrays ) != 0 );
-            shader->setNoStorageFormat ( ( mOptions & EOptionNoStorageFormat ) != 0 );
-
+            shaders.back().setStringsWithLengthsAndNames ( source.data(), nullptr, &stage_name, 1 );
+            shaders.back().setShiftSamplerBinding ( mBaseSamplerBinding[i] );
+            shaders.back().setShiftTextureBinding ( mBaseTextureBinding[i] );
+            shaders.back().setShiftImageBinding ( mBaseImageBinding[i] );
+            shaders.back().setShiftUboBinding ( mBaseUboBinding[i] );
+            shaders.back().setFlattenUniformArrays ( ( mOptions & EOptionFlattenUniformArrays ) != 0 );
+            shaders.back().setNoStorageFormat ( ( mOptions & EOptionNoStorageFormat ) != 0 );
             if ( mOptions & EOptionAutoMapBindings )
             {
-                shader->setAutoMapBindings ( true );
+                shaders.back().setAutoMapBindings ( true );
             }
-
-            shaders.push_back ( shader );
-
             const int defaultVersion = mOptions & EOptionDefaultDesktop ? 110 : 100;
-
-            if ( mOptions & EOptionOutputPreprocessed )
+            if ( !shaders.back().parse ( &glslang::DefaultTBuiltInResource, defaultVersion, false, messages ) )
             {
-                std::string str;
-                glslang::TShader::ForbidIncluder includer;
-                if ( shader->preprocess ( &glslang::DefaultTBuiltInResource, defaultVersion, ENoProfile, false, false,
-                                          messages, &str, includer ) )
-                {
-                    PutsIfNonEmpty ( str.c_str() );
-                }
-                else
-                {
-                    mCompileFailed = true;
-                }
-                StderrIfNonEmpty ( shader->getInfoLog() );
-                StderrIfNonEmpty ( shader->getInfoDebugLog() );
-                continue;
-            }
-            if ( !shader->parse ( &glslang::DefaultTBuiltInResource, defaultVersion, false, messages ) )
-            {
-                mCompileFailed = true;
-            }
-
-            program.addShader ( shader );
-
-            if ( ! ( mOptions & EOptionSuppressInfolog ) &&
-                 ! ( mOptions & EOptionMemoryLeakMode ) )
-            {
-                PutsIfNonEmpty ( shader->getInfoLog() );
-                PutsIfNonEmpty ( shader->getInfoDebugLog() );
+                compile_failed = true;
             }
         }
-
+        /* We have to add the shaders
+        AFTER we know the shaders array
+        is no longer going be shifted around,
+        IE: When we're not going to be adding any more to it. */
+        for ( auto& i : shaders )
+        {
+            program.addShader ( &i );
+        }
         //
         // Program-level processing...
         //
-
         // Link
         if ( ! ( mOptions & EOptionOutputPreprocessed ) && !program.link ( messages ) )
         {
-            mLinkFailed = true;
+            link_failed = true;
         }
 
         // Map IO
@@ -923,16 +818,8 @@ namespace AeonGames
         {
             if ( !program.mapIO() )
             {
-                mLinkFailed = true;
+                link_failed = true;
             }
-        }
-
-        // Report
-        if ( ! ( mOptions & EOptionSuppressInfolog ) &&
-             ! ( mOptions & EOptionMemoryLeakMode ) )
-        {
-            PutsIfNonEmpty ( program.getInfoLog() );
-            PutsIfNonEmpty ( program.getInfoDebugLog() );
         }
 
         // Reflect
@@ -945,9 +832,10 @@ namespace AeonGames
         // Dump SPIR-V
         if ( mOptions & EOptionSpv )
         {
-            if ( mCompileFailed || mLinkFailed )
+            if ( compile_failed || link_failed )
             {
-                printf ( "SPIR-V is not generated for failed compile or link\n" );
+                mLog.append ( program.getInfoLog() );
+                mLog.append ( program.getInfoDebugLog() );
             }
             else
             {
@@ -955,56 +843,33 @@ namespace AeonGames
                 {
                     if ( program.getIntermediate ( ( EShLanguage ) stage ) )
                     {
-                        std::vector<unsigned int> spirv;
+                        mSpirV[stage].clear();
                         std::string warningsErrors;
                         spv::SpvBuildLogger logger;
-                        glslang::GlslangToSpv ( *program.getIntermediate ( ( EShLanguage ) stage ), spirv, &logger );
-                        /* @todo return or store spirv in a member variable. */
-#if 0
-                        // Dump the spv to a file or stdout, etc., but only if not doing
-                        // memory/perf testing, as it's not internal to programmatic use.
-                        if ( ! ( mOptions & EOptionMemoryLeakMode ) )
-                        {
-                            printf ( "%s", logger.getAllMessages().c_str() );
-                            if ( mOptions & EOptionOutputHexadecimal )
-                            {
-                                glslang::OutputSpvHex ( spirv, GetBinaryName ( ( EShLanguage ) stage ), variableName );
-                            }
-                            else
-                            {
-                                glslang::OutputSpvBin ( spirv, GetBinaryName ( ( EShLanguage ) stage ) );
-                            }
-                            if ( mOptions & EOptionHumanReadableSpv )
-                            {
-                                spv::Disassemble ( std::cout, spirv );
-                            }
-                        }
-#endif
+                        glslang::GlslangToSpv ( *program.getIntermediate ( ( EShLanguage ) stage ), mSpirV[stage], &logger );
                     }
                 }
             }
         }
-        // Free everything up, program has to go before the shaders
-        // because it might have merged stuff from the shaders, and
-        // the stuff from the shaders has to have its destructors called
-        // before the pools holding the memory in the shaders is freed.
-        delete &program;
-        while ( shaders.size() > 0 )
+        if ( compile_failed )
         {
-            delete shaders.back();
-            shaders.pop_back();
+            return EFailCompile;
         }
-        glslang::FinalizeProcess();
+        else if ( link_failed )
+        {
+            return EFailLink;
+        }
+        return ESuccess;
     }
 
-    bool CompilerLinker::CompileFailed() const
+    const std::vector<uint32_t>& CompilerLinker::GetSpirV ( EShLanguage aStage ) const
     {
-        return mCompileFailed;
+        return mSpirV[aStage];
     }
 
-    bool CompilerLinker::LinkFailed() const
+    const std::string & CompilerLinker::GetLog() const
     {
-        return mLinkFailed;
+        return mLog;
     }
 }
 
