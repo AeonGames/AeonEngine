@@ -41,7 +41,6 @@
 #endif
 
 #include "ResourceLimits.h"
-#include "Worklist.h"
 #include "glslang/Include/ShHandle.h"
 #include "glslang/Include/revision.h"
 #include "SPIRV/GlslangToSpv.h"
@@ -61,67 +60,13 @@
 //
 void InfoLogMsg ( const char* msg, const char* name, const int num );
 
-const char* ExecutableName = nullptr;
 const char* binaryFileName = nullptr;
-const char* entryPointName = nullptr;
-const char* sourceEntryPointName = nullptr;
-const char* shaderStageName = nullptr;
 const char* variableName = nullptr;
 
 std::array<unsigned int, EShLangCount> baseSamplerBinding;
 std::array<unsigned int, EShLangCount> baseTextureBinding;
 std::array<unsigned int, EShLangCount> baseImageBinding;
 std::array<unsigned int, EShLangCount> baseUboBinding;
-
-//
-// Create the default name for saving a binary if -o is not provided.
-//
-const char* GetBinaryName ( EShLanguage stage )
-{
-    const char* name;
-    if ( binaryFileName == nullptr )
-    {
-        switch ( stage )
-        {
-        case EShLangVertex:
-            name = "vert.spv";
-            break;
-        case EShLangTessControl:
-            name = "tesc.spv";
-            break;
-        case EShLangTessEvaluation:
-            name = "tese.spv";
-            break;
-        case EShLangGeometry:
-            name = "geom.spv";
-            break;
-        case EShLangFragment:
-            name = "frag.spv";
-            break;
-        case EShLangCompute:
-            name = "comp.spv";
-            break;
-        default:
-            name = "unknown";
-            break;
-        }
-    }
-    else
-    {
-        name = binaryFileName;
-    }
-
-    return name;
-}
-
-//
-// Give error and exit with failure code.
-//
-void Error ( const char* message )
-{
-    printf ( "%s: Error %s (use -h for usage)\n", ExecutableName, message );
-    exit ( EFailUsage );
-}
 
 #if 0
 //
@@ -791,19 +736,19 @@ namespace AeonGames
         // Make sure that -E is not specified alongside linking (which includes SPV generation)
         if ( ( mOptions & EOptionOutputPreprocessed ) && ( mOptions & EOptionLinkProgram ) )
         {
-            Error ( "can't use -E when linking is selected" );
+            throw std::runtime_error ( "can't use -E when linking is selected" );
         }
 
         // -o or -x makes no sense if there is no target binary
         if ( binaryFileName && ( mOptions & EOptionSpv ) == 0 )
         {
-            Error ( "no binary generation requested (e.g., -V)" );
+            throw std::runtime_error ( "no binary generation requested (e.g., -V)" );
         }
 
         if ( ( mOptions & EOptionFlattenUniformArrays ) != 0 &&
              ( mOptions & EOptionReadHlsl ) == 0 )
         {
-            Error ( "uniform array flattening only valid when compiling HLSL source." );
+            throw std::runtime_error ( "uniform array flattening only valid when compiling HLSL source." );
         }
     }
 
@@ -864,6 +809,26 @@ namespace AeonGames
         }
     }
 
+    const char * CompilerLinker::GetStageName ( EShLanguage aStage ) const
+    {
+        switch ( aStage )
+        {
+        case EShLangVertex:
+            return "Vertex";
+        case EShLangTessControl:
+            return "TessControl";
+        case EShLangTessEvaluation:
+            return "TessEvaluation";
+        case EShLangGeometry:
+            return "Geometry";
+        case EShLangFragment:
+            return "Fragment";
+        case EShLangCompute:
+            return "Compute";
+        }
+        return "Invalid Stage";
+    }
+
     //
     // For linking mode: Will independently parse each compilation unit, but then put them
     // in the same program and link them together, making at most one linked module per
@@ -874,6 +839,7 @@ namespace AeonGames
     void CompilerLinker::CompileAndLink()
     {
         glslang::InitializeProcess();
+
         // keep track of what to free
         std::list<glslang::TShader*> shaders;
 
@@ -883,7 +849,6 @@ namespace AeonGames
         //
         // Per-shader processing...
         //
-
         glslang::TProgram& program = *new glslang::TProgram;
         for ( size_t i = 0; i < mShaderCompilationUnits.size(); ++i )
         {
@@ -893,16 +858,8 @@ namespace AeonGames
             }
             auto  shader = new glslang::TShader ( static_cast<EShLanguage> ( i ) );
             std::array<const char*, 1> source{ mShaderCompilationUnits[i] };
-            shader->setStringsWithLengthsAndNames ( source.data(), nullptr, nullptr, 0 );
-            if ( entryPointName ) // HLSL todo: this needs to be tracked per compUnits
-            {
-                shader->setEntryPoint ( entryPointName );
-            }
-            if ( sourceEntryPointName )
-            {
-                shader->setSourceEntryPoint ( sourceEntryPointName );
-            }
-
+            auto stage_name = GetStageName ( static_cast<EShLanguage> ( i ) );
+            shader->setStringsWithLengthsAndNames ( source.data(), nullptr, &stage_name, 1 );
             shader->setShiftSamplerBinding ( baseSamplerBinding[i] );
             shader->setShiftTextureBinding ( baseTextureBinding[i] );
             shader->setShiftImageBinding ( baseImageBinding[i] );
@@ -1002,7 +959,8 @@ namespace AeonGames
                         std::string warningsErrors;
                         spv::SpvBuildLogger logger;
                         glslang::GlslangToSpv ( *program.getIntermediate ( ( EShLanguage ) stage ), spirv, &logger );
-
+                        /* @todo return or store spirv in a member variable. */
+#if 0
                         // Dump the spv to a file or stdout, etc., but only if not doing
                         // memory/perf testing, as it's not internal to programmatic use.
                         if ( ! ( mOptions & EOptionMemoryLeakMode ) )
@@ -1021,6 +979,7 @@ namespace AeonGames
                                 spv::Disassemble ( std::cout, spirv );
                             }
                         }
+#endif
                     }
                 }
             }

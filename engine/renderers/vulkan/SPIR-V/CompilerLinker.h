@@ -77,10 +77,10 @@ namespace AeonGames
         bool LinkFailed() const;
     private:
         void SetMessageOptions ( EShMessages& messages ) const;
+        const char* GetStageName ( EShLanguage aStage ) const;
         TOptions mOptions;
         bool mCompileFailed = false;
         bool mLinkFailed = false;
-        /**/
         std::array<const char*, EShLangCount> mShaderCompilationUnits;
     };
 }
