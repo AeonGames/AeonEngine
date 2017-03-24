@@ -60,7 +60,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        mProgram = Get<VulkanProgram> ( mModel->GetProgram() );
+        mProgram = Get<VulkanProgram> ( mModel->GetProgram(), mVulkanRenderer );
         mMesh = Get<VulkanMesh> ( mModel->GetMesh(), mVulkanRenderer );
     }
 

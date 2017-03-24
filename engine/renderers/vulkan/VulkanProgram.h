@@ -17,29 +17,34 @@ limitations under the License.
 #define AEONGAMES_VULKANPROGRAM_H
 #include <cstdint>
 #include <string>
-#include "VulkanMaterial.h"
-#include "aeongames/Uniform.h"
+#include <vulkan/vulkan.h>
 
 namespace AeonGames
 {
     class Program;
     class VulkanTexture;
+    class VulkanRenderer;
     class VulkanProgram
     {
     public:
-        VulkanProgram ( const std::shared_ptr<Program> aProgram );
+        VulkanProgram ( const std::shared_ptr<Program> aProgram, const VulkanRenderer* aVulkanRenderer );
         ~VulkanProgram();
         void Use() const;
     private:
         void Initialize();
         void Finalize();
         const std::shared_ptr<Program> mProgram;
+        const VulkanRenderer* mVulkanRenderer;
+        VkShaderModule mVkVertexShaderModule = VK_NULL_HANDLE;
+        VkShaderModule mVkFragmentShaderModule = VK_NULL_HANDLE;
+#if 0
         uint32_t mProgramId;
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
         std::vector<uint8_t> mUniformData;
         std::vector<std::pair<std::shared_ptr<VulkanTexture>, int>> mTextures;
+#endif
     };
 }
 #endif
