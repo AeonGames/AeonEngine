@@ -62,7 +62,10 @@ namespace AeonGames
         compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mProgram->GetFragmentShaderSource().c_str() );
         if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
         {
-            throw std::runtime_error ( compiler_linker.GetLog().c_str() );
+            std::ostringstream stream;
+            stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
+                   " Error:" << std::endl << compiler_linker.GetLog();
+            throw std::runtime_error ( stream.str().c_str() );
         }
         {
             VkShaderModuleCreateInfo shader_module_create_info{};
