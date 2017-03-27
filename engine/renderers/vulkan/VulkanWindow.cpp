@@ -17,6 +17,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include <sstream>
+#include <iostream>
 #include <algorithm>
 #include <array>
 
@@ -397,16 +398,11 @@ namespace AeonGames
     {
         if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer->GetQueue() ) )
         {
-            std::ostringstream stream;
-            stream << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
-            throw std::runtime_error ( stream.str().c_str() );
+            std::cerr << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
         }
-
         if ( VkResult result = vkDeviceWaitIdle ( mVulkanRenderer->GetDevice() ) )
         {
-            std::ostringstream stream;
-            stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
-            throw std::runtime_error ( stream.str().c_str() );
+            std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
         DestroyCommandPool();
         DestroyFrameBuffers();
