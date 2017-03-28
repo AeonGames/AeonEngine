@@ -85,7 +85,6 @@ namespace AeonGames
     void VulkanWindow::CreateSwapchain()
     {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
-
         uint32_t surface_format_count = 0;
         vkGetPhysicalDeviceSurfaceFormatsKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &surface_format_count, nullptr );
         if ( surface_format_count == 0 )
@@ -96,6 +95,7 @@ namespace AeonGames
         }
         std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
         vkGetPhysicalDeviceSurfaceFormatsKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
+#if 0
         if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
         {
             mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
@@ -105,7 +105,7 @@ namespace AeonGames
         {
             mVkSurfaceFormatKHR = surface_format_list[0];
         }
-
+#endif
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
@@ -119,8 +119,8 @@ namespace AeonGames
         swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchain_create_info.surface = mVkSurfaceKHR;
         swapchain_create_info.minImageCount = mSwapchainImageCount;
-        swapchain_create_info.imageFormat = mVkSurfaceFormatKHR.format;
-        swapchain_create_info.imageColorSpace = mVkSurfaceFormatKHR.colorSpace;
+        swapchain_create_info.imageFormat = mVulkanRenderer->GetSurfaceFormatKHR().format;
+        swapchain_create_info.imageColorSpace = mVulkanRenderer->GetSurfaceFormatKHR().colorSpace;
         swapchain_create_info.imageExtent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
         swapchain_create_info.imageArrayLayers = 1;
@@ -176,7 +176,7 @@ namespace AeonGames
             image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             image_view_create_info.image = mVkSwapchainImages[i];
             image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            image_view_create_info.format = mVkSurfaceFormatKHR.format;
+            image_view_create_info.format = mVulkanRenderer->GetSurfaceFormatKHR().format;
             image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
             image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -192,41 +192,14 @@ namespace AeonGames
 
     void VulkanWindow::CreateDepthStencil()
     {
-        {
-            std::array<VkFormat, 5> try_formats
-            {
-                VK_FORMAT_D32_SFLOAT_S8_UINT,
-                VK_FORMAT_D24_UNORM_S8_UINT,
-                VK_FORMAT_D16_UNORM_S8_UINT,
-                VK_FORMAT_D32_SFLOAT,
-                VK_FORMAT_D16_UNORM
-            };
-            for ( auto format : try_formats )
-            {
-                VkFormatProperties format_properties{};
-                vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer->GetPhysicalDevice(), format, &format_properties );
-                if ( format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT )
-                {
-                    mVkDepthStencilFormat = format;
-                    break;
-                }
-            }
-
-            if ( std::find ( try_formats.begin(), try_formats.end(), mVkDepthStencilFormat ) == try_formats.end() )
-            {
-                std::ostringstream stream;
-                stream << "Unable to find a suitable depth stencil format";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            mHasStencil =
-                ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
-                  mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
-                  mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
-        }
+        mHasStencil =
+            ( mVulkanRenderer->GetDepthStencilFormat() == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVulkanRenderer->GetDepthStencilFormat() == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVulkanRenderer->GetDepthStencilFormat() == VK_FORMAT_D16_UNORM_S8_UINT );
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_create_info.flags = 0;
-        image_create_info.format = mVkDepthStencilFormat;
+        image_create_info.format = mVulkanRenderer->GetDepthStencilFormat();
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
         image_create_info.extent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         image_create_info.extent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
@@ -276,7 +249,7 @@ namespace AeonGames
         image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         image_view_create_info.image = mVkDepthStencilImage;
         image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        image_view_create_info.format = mVkDepthStencilFormat;
+        image_view_create_info.format = mVulkanRenderer->GetDepthStencilFormat();
         image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -287,57 +260,6 @@ namespace AeonGames
         image_view_create_info.subresourceRange.baseArrayLayer = 0;
         image_view_create_info.subresourceRange.layerCount = 1;
         vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkDepthStencilImageView );
-    }
-
-    void VulkanWindow::CreateRenderPass()
-    {
-        std::array<VkAttachmentDescription, 2> attachment_descriptions{};
-        attachment_descriptions[0].flags = 0;
-        attachment_descriptions[0].format = mVkDepthStencilFormat;
-        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        attachment_descriptions[1].flags = 0;
-        attachment_descriptions[1].format = mVkSurfaceFormatKHR.format;
-        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference depth_stencil_attachment_reference{};
-        depth_stencil_attachment_reference.attachment = 0;
-        depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        std::array<VkAttachmentReference, 1> color_attachment_references{};
-        color_attachment_references[0].attachment = 1;
-        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        std::array<VkSubpassDescription, 1> subpass_descriptions{};
-        subpass_descriptions[0].flags = 0;
-        subpass_descriptions[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_descriptions[0].inputAttachmentCount = 0;
-        subpass_descriptions[0].pInputAttachments = nullptr;
-        subpass_descriptions[0].colorAttachmentCount = static_cast<uint32_t> ( color_attachment_references.size() );
-        subpass_descriptions[0].pColorAttachments = color_attachment_references.data();
-        subpass_descriptions[0].pResolveAttachments = nullptr;
-        subpass_descriptions[0].pDepthStencilAttachment = &depth_stencil_attachment_reference;
-        subpass_descriptions[0].preserveAttachmentCount = 0;
-        subpass_descriptions[0].pPreserveAttachments = nullptr;
-
-        VkRenderPassCreateInfo render_pass_create_info{};
-        render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
-        render_pass_create_info.pAttachments = attachment_descriptions.data();
-        render_pass_create_info.dependencyCount = 0;
-        render_pass_create_info.pDependencies = nullptr;
-        render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
-        render_pass_create_info.pSubpasses = subpass_descriptions.data();
-        vkCreateRenderPass ( mVulkanRenderer->GetDevice(), &render_pass_create_info, nullptr, &mVkRenderPass );
     }
 
     void VulkanWindow::CreateFrameBuffers()
@@ -352,7 +274,7 @@ namespace AeonGames
             };
             VkFramebufferCreateInfo framebuffer_create_info{};
             framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebuffer_create_info.renderPass = mVkRenderPass;
+            framebuffer_create_info.renderPass = mVulkanRenderer->GetRenderPass();
             framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( attachments.size() );
             framebuffer_create_info.pAttachments = attachments.data();
             framebuffer_create_info.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
@@ -388,7 +310,6 @@ namespace AeonGames
         CreateSwapchain();
         CreateImageViews();
         CreateDepthStencil();
-        CreateRenderPass();
         CreateFrameBuffers();
         CreateCommandPool();
     }
@@ -405,7 +326,6 @@ namespace AeonGames
         }
         DestroyCommandPool();
         DestroyFrameBuffers();
-        DestroyRenderPass();
         DestroyDepthStencil();
         DestroyImageViews();
         DestroySwapchain();
@@ -441,7 +361,7 @@ namespace AeonGames
         clear_values[1].color.float32[3] = 0.0f;
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = mVkRenderPass;
+        render_pass_begin_info.renderPass = mVulkanRenderer->GetRenderPass();
         render_pass_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
         render_pass_begin_info.renderArea = render_area;
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
@@ -499,13 +419,11 @@ namespace AeonGames
             }
             DestroyCommandPool();
             DestroyFrameBuffers();
-            DestroyRenderPass();
             DestroyDepthStencil();
             DestroyImageViews();
             CreateSwapchain();
             CreateImageViews();
             CreateDepthStencil();
-            CreateRenderPass();
             CreateFrameBuffers();
             CreateCommandPool();
         }
@@ -552,14 +470,6 @@ namespace AeonGames
         if ( mVkDepthStencilImage != VK_NULL_HANDLE )
         {
             vkDestroyImage ( mVulkanRenderer->GetDevice(), mVkDepthStencilImage, nullptr );
-        }
-    }
-
-    void VulkanWindow::DestroyRenderPass()
-    {
-        if ( mVkRenderPass != VK_NULL_HANDLE )
-        {
-            vkDestroyRenderPass ( mVulkanRenderer->GetDevice(), mVkRenderPass, nullptr );
         }
     }
 

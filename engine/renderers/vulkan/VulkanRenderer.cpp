@@ -60,9 +60,11 @@ namespace AeonGames
             InitializeDevice();
             InitializeSemaphore();
             InitializeFence();
+            InitializeRenderPass();
         }
         catch ( ... )
         {
+            FinalizeRenderPass();
             FinalizeFence();
             FinalizeSemaphore();
             FinalizeDevice();
@@ -105,6 +107,21 @@ namespace AeonGames
     const VkPhysicalDeviceMemoryProperties & VulkanRenderer::GetPhysicalDeviceMemoryProperties() const
     {
         return mVkPhysicalDeviceMemoryProperties;
+    }
+
+    const VkRenderPass & VulkanRenderer::GetRenderPass() const
+    {
+        return mVkRenderPass;
+    }
+
+    const VkFormat & VulkanRenderer::GetDepthStencilFormat() const
+    {
+        return mVkDepthStencilFormat;
+    }
+
+    const VkSurfaceFormatKHR & VulkanRenderer::GetSurfaceFormatKHR() const
+    {
+        return mVkSurfaceFormatKHR;
     }
 
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
@@ -316,6 +333,87 @@ namespace AeonGames
         vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence );
     }
 
+    void VulkanRenderer::InitializeRenderPass()
+    {
+        mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
+        mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+
+        std::array<VkFormat, 5> try_formats
+        {
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D24_UNORM_S8_UINT,
+            VK_FORMAT_D16_UNORM_S8_UINT,
+            VK_FORMAT_D32_SFLOAT,
+            VK_FORMAT_D16_UNORM
+        };
+        for ( auto format : try_formats )
+        {
+            VkFormatProperties format_properties{};
+            vkGetPhysicalDeviceFormatProperties ( mVkPhysicalDevice, format, &format_properties );
+            if ( format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT )
+            {
+                mVkDepthStencilFormat = format;
+                break;
+            }
+        }
+
+        if ( std::find ( try_formats.begin(), try_formats.end(), mVkDepthStencilFormat ) == try_formats.end() )
+        {
+            std::ostringstream stream;
+            stream << "Unable to find a suitable depth stencil format";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::array<VkAttachmentDescription, 2> attachment_descriptions{};
+        attachment_descriptions[0].flags = 0;
+        attachment_descriptions[0].format = mVkDepthStencilFormat;
+        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        attachment_descriptions[1].flags = 0;
+        attachment_descriptions[1].format = mVkSurfaceFormatKHR.format;
+        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference depth_stencil_attachment_reference{};
+        depth_stencil_attachment_reference.attachment = 0;
+        depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        std::array<VkAttachmentReference, 1> color_attachment_references{};
+        color_attachment_references[0].attachment = 1;
+        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        std::array<VkSubpassDescription, 1> subpass_descriptions{};
+        subpass_descriptions[0].flags = 0;
+        subpass_descriptions[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_descriptions[0].inputAttachmentCount = 0;
+        subpass_descriptions[0].pInputAttachments = nullptr;
+        subpass_descriptions[0].colorAttachmentCount = static_cast<uint32_t> ( color_attachment_references.size() );
+        subpass_descriptions[0].pColorAttachments = color_attachment_references.data();
+        subpass_descriptions[0].pResolveAttachments = nullptr;
+        subpass_descriptions[0].pDepthStencilAttachment = &depth_stencil_attachment_reference;
+        subpass_descriptions[0].preserveAttachmentCount = 0;
+        subpass_descriptions[0].pPreserveAttachments = nullptr;
+
+        VkRenderPassCreateInfo render_pass_create_info{};
+        render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
+        render_pass_create_info.pAttachments = attachment_descriptions.data();
+        render_pass_create_info.dependencyCount = 0;
+        render_pass_create_info.pDependencies = nullptr;
+        render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
+        render_pass_create_info.pSubpasses = subpass_descriptions.data();
+        vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mVkRenderPass );
+
+    }
+
     void VulkanRenderer::FinalizeDebug()
     {
         if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
@@ -361,6 +459,14 @@ namespace AeonGames
         }
     }
 
+    void VulkanRenderer::FinalizeRenderPass()
+    {
+        if ( mVkRenderPass != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass ( mVkDevice, mVkRenderPass, nullptr );
+        }
+    }
+
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
@@ -370,6 +476,7 @@ namespace AeonGames
             destroyed before the device */
             i.second.reset();
         }
+        FinalizeRenderPass();
         FinalizeFence();
         FinalizeSemaphore();
         FinalizeDevice();

@@ -92,7 +92,6 @@ namespace AeonGames
             }
         }
 
-        /* Begin Work in Progress */
         std::array<VkPipelineShaderStageCreateInfo, 2> pipeline_shader_stage_create_infos{ {} };
         pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[0].pNext = nullptr;
@@ -179,28 +178,18 @@ namespace AeonGames
         graphics_pipeline_create_info.pDepthStencilState = nullptr;
         graphics_pipeline_create_info.pColorBlendState = nullptr;
         graphics_pipeline_create_info.pDynamicState = nullptr;
+        /* This code won't work until the layout field contains something valid.*/
         graphics_pipeline_create_info.layout = VK_NULL_HANDLE;
-        /*  We need to get a window independent render pass.
-            I Wonder if it is better to keep render passes at the renderer level
-            or the pipeline level.*/
-        //graphics_pipeline_create_info.renderPass;
+        graphics_pipeline_create_info.renderPass = mVulkanRenderer->GetRenderPass();
         graphics_pipeline_create_info.subpass = 0;
         graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         graphics_pipeline_create_info.basePipelineIndex = 0;
-
-#if 0
-        /*  This code is correct but has been commented out while the render pass
-            is moved out of VulkanWindow. Moving the render pass implies
-            also moving surface and depthstencil formats out,
-            something I will probably be doing next.*/
         if ( VkResult result = vkCreateGraphicsPipelines ( mVulkanRenderer->GetDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_create_info, nullptr, &mVkPipeline ) )
         {
             std::ostringstream stream;
             stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-#endif
-        /* End Work in Progress */
     }
 
     void VulkanProgram::Finalize()
