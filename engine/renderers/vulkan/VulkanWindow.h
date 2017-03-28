@@ -39,14 +39,12 @@ namespace AeonGames
         void CreateSwapchain();
         void CreateImageViews();
         void CreateDepthStencil();
-        void CreateRenderPass();
         void CreateFrameBuffers();
         void CreateCommandPool();
         void DestroySurface();
         void DestroySwapchain();
         void DestroyImageViews();
         void DestroyDepthStencil();
-        void DestroyRenderPass();
         void DestroyFrameBuffers();
         void DestroyCommandPool();
 
@@ -54,7 +52,6 @@ namespace AeonGames
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         const VulkanRenderer* mVulkanRenderer;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
-        VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         uint32_t mSwapchainImageCount = 2;
         VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
         VkViewport mVkViewport = {};
@@ -63,9 +60,7 @@ namespace AeonGames
         VkImage mVkDepthStencilImage = VK_NULL_HANDLE;
         VkDeviceMemory mVkDepthStencilImageMemory = VK_NULL_HANDLE;
         VkImageView mVkDepthStencilImageView = VK_NULL_HANDLE;
-        VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
         bool mHasStencil = false;
-        VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
         std::vector<VkFramebuffer> mVkFramebuffers;
         uint32_t mActiveImageIndex = UINT32_MAX;
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;

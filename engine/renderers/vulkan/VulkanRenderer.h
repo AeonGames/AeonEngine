@@ -52,12 +52,16 @@ namespace AeonGames
         const VkSemaphore& GetSemaphore() const;
         const VkFence& GetFence() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
+        const VkRenderPass& GetRenderPass() const;
+        const VkFormat& GetDepthStencilFormat() const;
+        const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
         uint32_t GetQueueFamilyIndex() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
         void InitializeSemaphore();
         void InitializeFence();
+        void InitializeRenderPass();
         void InitializeDebug();
         void SetupLayersAndExtensions();
         void SetupDebug();
@@ -66,6 +70,7 @@ namespace AeonGames
         void FinalizeDevice();
         void FinalizeSemaphore();
         void FinalizeFence();
+        void FinalizeRenderPass();
         void FinalizeDebug();
 
         bool mValidate = true;
@@ -80,6 +85,9 @@ namespace AeonGames
         VkQueue mVkQueue = VK_NULL_HANDLE;
         VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
         VkFence mVkFence = VK_NULL_HANDLE;
+        VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
+        VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
+        VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;
