@@ -329,7 +329,6 @@ namespace AeonGames
         subpass_descriptions[0].preserveAttachmentCount = 0;
         subpass_descriptions[0].pPreserveAttachments = nullptr;
 
-
         VkRenderPassCreateInfo render_pass_create_info{};
         render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );

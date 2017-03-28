@@ -37,6 +37,7 @@ namespace AeonGames
         const VulkanRenderer* mVulkanRenderer;
         VkShaderModule mVkVertexShaderModule = VK_NULL_HANDLE;
         VkShaderModule mVkFragmentShaderModule = VK_NULL_HANDLE;
+        VkPipeline mVkPipeline = VK_NULL_HANDLE;
 #if 0
         uint32_t mProgramId;
         uint32_t mMatricesBlockIndex = 0;
