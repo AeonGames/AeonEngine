@@ -18,7 +18,7 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include <string>
 #include <cstdint>
-#include <safeint.h>
+
 namespace AeonGames
 {
     DLL const std::string GetFileExtension ( const std::string aFilePath );
