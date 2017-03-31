@@ -72,7 +72,7 @@ namespace AeonGames
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).data();
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkVertexShaderModule ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -84,7 +84,7 @@ namespace AeonGames
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).data();
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkFragmentShaderModule ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -96,7 +96,7 @@ namespace AeonGames
         pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[0].pNext = nullptr;
         pipeline_shader_stage_create_infos[0].flags = 0;
-        pipeline_shader_stage_create_infos[0].module = mVkVertexShaderModule;
+        pipeline_shader_stage_create_infos[0].module = mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )];
         pipeline_shader_stage_create_infos[0].pName = "main";
         pipeline_shader_stage_create_infos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
         pipeline_shader_stage_create_infos[0].pSpecializationInfo = nullptr;
@@ -104,7 +104,7 @@ namespace AeonGames
         pipeline_shader_stage_create_infos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[1].pNext = nullptr;
         pipeline_shader_stage_create_infos[1].flags = 0;
-        pipeline_shader_stage_create_infos[1].module = mVkFragmentShaderModule;
+        pipeline_shader_stage_create_infos[1].module = mVkShaderModules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )];
         pipeline_shader_stage_create_infos[1].pName = "main";
         pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
@@ -199,15 +199,13 @@ namespace AeonGames
             vkDestroyPipeline ( mVulkanRenderer->GetDevice(), mVkPipeline, nullptr );
             mVkPipeline = VK_NULL_HANDLE;
         }
-        if ( mVkVertexShaderModule != VK_NULL_HANDLE )
+        for ( auto& i : mVkShaderModules )
         {
-            vkDestroyShaderModule ( mVulkanRenderer->GetDevice(), mVkVertexShaderModule, nullptr );
-            mVkVertexShaderModule = VK_NULL_HANDLE;
-        }
-        if ( mVkFragmentShaderModule != VK_NULL_HANDLE )
-        {
-            vkDestroyShaderModule ( mVulkanRenderer->GetDevice(), mVkFragmentShaderModule, nullptr );
-            mVkFragmentShaderModule = VK_NULL_HANDLE;
+            if ( i != VK_NULL_HANDLE )
+            {
+                vkDestroyShaderModule ( mVulkanRenderer->GetDevice(), i, nullptr );
+                i = VK_NULL_HANDLE;
+            }
         }
     }
 }

@@ -17,7 +17,9 @@ limitations under the License.
 #define AEONGAMES_VULKANPROGRAM_H
 #include <cstdint>
 #include <string>
+#include <array>
 #include <vulkan/vulkan.h>
+#include "aeongames/Utilities.h"
 
 namespace AeonGames
 {
@@ -35,8 +37,8 @@ namespace AeonGames
         void Finalize();
         const std::shared_ptr<Program> mProgram;
         const VulkanRenderer* mVulkanRenderer;
-        VkShaderModule mVkVertexShaderModule = VK_NULL_HANDLE;
-        VkShaderModule mVkFragmentShaderModule = VK_NULL_HANDLE;
+        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
+        mVkShaderModules{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
 #if 0
         uint32_t mProgramId;
