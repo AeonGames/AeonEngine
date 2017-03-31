@@ -163,6 +163,16 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
         pipeline_rasterization_state_create_info.lineWidth = 0.0f;
 
+        /* Layout Creation Start */
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.pNext = nullptr;
+        descriptor_set_layout_create_info.flags = 0;
+        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
+        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+        /* Layout Creation End */
+
         VkGraphicsPipelineCreateInfo graphics_pipeline_create_info {};
         graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         graphics_pipeline_create_info.pNext = nullptr;

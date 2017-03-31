@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2016 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -139,7 +139,7 @@ namespace AeonGames
                         /* To be continued ... */
                         break;
                     default:
-                        assert ( 0 && "Unknown Type." );
+                        throw std::runtime_error ( "Unknown Type." );
                     }
                 }
                 properties.append ( "};\n" );
@@ -155,7 +155,7 @@ namespace AeonGames
                 mVertexShader.append ( program_buffer.vertex_shader().code() );
                 break;
             default:
-                assert ( 0 && "ByteCode Shader Type not implemented yet." );
+                throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
             }
             switch ( program_buffer.fragment_shader().source_case() )
             {
@@ -163,10 +163,18 @@ namespace AeonGames
                 mFragmentShader.append ( program_buffer.fragment_shader().code() );
                 break;
             default:
-                assert ( 0 && "ByteCode Shader Type not implemented yet." );
+                throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
             }
         }
         program_buffer.Clear();
+#if 0
+        std::ofstream shader_vert ( "shader.vert" );
+        std::ofstream shader_frag ( "shader.frag" );
+        shader_vert << mVertexShader;
+        shader_frag << mFragmentShader;
+        shader_vert.close();
+        shader_frag.close();
+#endif
     }
 
     void Program::Finalize()
