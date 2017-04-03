@@ -40,6 +40,7 @@ namespace AeonGames
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ {VK_NULL_HANDLE} };
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
+        VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
 #if 0
         uint32_t mProgramId;
         uint32_t mMatricesBlockIndex = 0;
