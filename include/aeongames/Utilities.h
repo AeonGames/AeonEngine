@@ -102,7 +102,7 @@ namespace AeonGames
     {
         v = v - ( ( v >> 1 ) & 0x55555555 );
         v = ( v & 0x33333333 ) + ( ( v >> 2 ) & 0x33333333 );
-        return ( ( v + ( v >> 4 ) & 0xF0F0F0F ) * 0x1010101 ) >> 24;
+        return ( ( ( v + ( v >> 4 ) ) & 0xF0F0F0F ) * 0x1010101 ) >> 24;
     }
     static_assert ( popcount ( 0x0 ) == 0, "Popcount Failure." );
     static_assert ( popcount ( 0x1 ) == 1, "Popcount Failure." );
