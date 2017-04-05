@@ -142,7 +142,7 @@ namespace AeonGames
         {
             mVertexShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             mVertexShader.append (
-                "layout(binding = 0,std140) uniform Matrices{\n"
+                "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -187,8 +187,9 @@ namespace AeonGames
             }
 
             mFragmentShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
+#if 0
             mFragmentShader.append (
-                "layout(binding = 0,std140) uniform Matrices{\n"
+                "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -197,7 +198,7 @@ namespace AeonGames
                 "mat4 ModelViewProjectionMatrix;\n"
                 "mat3 NormalMatrix;\n"
                 "};\n" );
-
+#endif
             mUniformMetaData.clear();
             mUniformMetaData.reserve ( program_buffer.property().size() );
             if ( program_buffer.property().size() > 0 )
@@ -263,7 +264,7 @@ namespace AeonGames
             }
         }
         program_buffer.Clear();
-#if 0
+#if 1
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
         shader_vert << mVertexShader;
