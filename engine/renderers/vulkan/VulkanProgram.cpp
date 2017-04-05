@@ -177,13 +177,13 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasClamp = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
-        pipeline_rasterization_state_create_info.lineWidth = 0.0f;
+        pipeline_rasterization_state_create_info.lineWidth = 1.0f;
 
         std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings[0].binding = 0;
-        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_set_layout_bindings[0].descriptorCount = 1;
-        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -198,11 +198,12 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ mVkDescriptorSetLayout };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = 1;
-        pipeline_layout_create_info.pSetLayouts = &mVkDescriptorSetLayout;
+        pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts.data();
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer->GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;
