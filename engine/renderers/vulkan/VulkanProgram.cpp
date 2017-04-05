@@ -109,14 +109,30 @@ namespace AeonGames
         pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
 
-        VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info{};
+        std::array<VkVertexInputBindingDescription, 1> vertex_input_binding_descriptions { {} };
+        vertex_input_binding_descriptions[0].binding = 0;
+        vertex_input_binding_descriptions[0].stride = mProgram->GetStride();
+        vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        uint32_t attributes = mProgram->GetAttributes();
+        std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
+        for ( auto& i : vertex_input_attribute_descriptions )
+        {
+            uint32_t attribute_bit = ( 1 << ffs ( attributes ) );
+            i.location = mProgram->GetLocation ( static_cast<Program::AttributeBits> ( attribute_bit ) );
+            i.binding = 0;
+            i.format = GetVulkanFormat ( mProgram->GetFormat ( static_cast<Program::AttributeBits> ( attribute_bit ) ) );
+            i.offset = mProgram->GetOffset ( static_cast<Program::AttributeBits> ( attribute_bit ) );
+            attributes ^= attribute_bit;
+        }
+
+        VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info {};
         pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         pipeline_vertex_input_state_create_info.pNext = nullptr;
         pipeline_vertex_input_state_create_info.flags = 0;
-        pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = 0;
-        pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = nullptr;
-        pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = 0;
-        pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = nullptr;
+        pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = static_cast<uint32_t> ( vertex_input_binding_descriptions.size() );
+        pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = vertex_input_binding_descriptions.data();
+        pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t> ( vertex_input_attribute_descriptions.size() );
+        pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vertex_input_attribute_descriptions.data();
 
         VkPipelineInputAssemblyStateCreateInfo pipeline_input_assembly_state_create_info{};
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -163,16 +179,36 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
         pipeline_rasterization_state_create_info.lineWidth = 0.0f;
 
-        /* Layout Creation Start */
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
+        std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
+        descriptor_set_layout_bindings[0].binding = 0;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_set_layout_bindings[0].descriptorCount = 1;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
         descriptor_set_layout_create_info.flags = 0;
         descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout );
-        /* Layout Creation End */
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
+        pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipeline_layout_create_info.pNext = nullptr;
+        pipeline_layout_create_info.setLayoutCount = 1;
+        pipeline_layout_create_info.pSetLayouts = &mVkDescriptorSetLayout;
+        if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer->GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "Pipeline Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
 
         VkGraphicsPipelineCreateInfo graphics_pipeline_create_info {};
         graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -189,8 +225,7 @@ namespace AeonGames
         graphics_pipeline_create_info.pDepthStencilState = nullptr;
         graphics_pipeline_create_info.pColorBlendState = nullptr;
         graphics_pipeline_create_info.pDynamicState = nullptr;
-        /* This code won't work until the layout field contains something valid.*/
-        graphics_pipeline_create_info.layout = VK_NULL_HANDLE;
+        graphics_pipeline_create_info.layout = mVkPipelineLayout;
         graphics_pipeline_create_info.renderPass = mVulkanRenderer->GetRenderPass();
         graphics_pipeline_create_info.subpass = 0;
         graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
@@ -209,6 +244,16 @@ namespace AeonGames
         {
             vkDestroyPipeline ( mVulkanRenderer->GetDevice(), mVkPipeline, nullptr );
             mVkPipeline = VK_NULL_HANDLE;
+        }
+        if ( mVkPipelineLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyPipelineLayout ( mVulkanRenderer->GetDevice(), mVkPipelineLayout, nullptr );
+            mVkPipelineLayout = VK_NULL_HANDLE;
+        }
+        if ( mVkDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkDescriptorSetLayout, nullptr );
+            mVkDescriptorSetLayout = VK_NULL_HANDLE;
         }
         for ( auto& i : mVkShaderModules )
         {

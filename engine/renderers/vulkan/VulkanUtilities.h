@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_VULKANUTILITIES_H
 #define AEONGAMES_VULKANUTILITIES_H
 #include "vulkan/vulkan.h"
+#include "aeongames/Program.h"
 namespace AeonGames
 {
     static_assert ( VK_SUCCESS == 0, "VK_SUCCESS is NOT zero!" );
@@ -31,5 +32,18 @@ namespace AeonGames
         const char *aLayerPrefix,
         const char *aMsg,
         void *aUserData );
+    inline VkFormat GetVulkanFormat ( Program::AttributeFormat aFormat )
+    {
+        switch ( aFormat )
+        {
+        case Program::Vector2Float:
+            return VK_FORMAT_R32G32_SFLOAT;
+        case Program::Vector3Float:
+            return VK_FORMAT_R32G32B32_SFLOAT;
+        case Program::Vector4Byte:
+            return VK_FORMAT_R8G8B8A8_UINT;
+        }
+        return VK_FORMAT_UNDEFINED;
+    }
 }
 #endif

@@ -16,7 +16,9 @@ limitations under the License.
 #include <fstream>
 #include <sstream>
 #include <ostream>
+#include <iostream>
 #include <regex>
+#include <array>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #include "aeongames/Utilities.h"
@@ -34,8 +36,19 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static const std::array<const char*, 7> AttributeStrings
+    {
+        "VertexPosition",
+        "VertexNormal",
+        "VertexTangent",
+        "VertexBitangent",
+        "VertexUV",
+        "VertexWeightIndices",
+        "VertexWeights"
+    };
+
     Program::Program ( std::string  aFilename ) :
-        mFilename ( std::move ( aFilename ) ), mVertexShader(), mFragmentShader()
+        mFilename ( std::move ( aFilename ) ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
         try
         {
@@ -66,6 +79,62 @@ namespace AeonGames
         return mUniformMetaData;
     }
 
+    uint32_t Program::GetAttributes() const
+    {
+        return mAttributes;
+    }
+
+    uint32_t Program::GetLocation ( AttributeBits aAttributeBit ) const
+    {
+        return ffs ( aAttributeBit );
+    }
+
+    uint32_t Program::GetStride() const
+    {
+        uint32_t stride = 0;
+        for ( uint32_t i = 0; i < ffs ( ~VertexAllBits ); ++i )
+        {
+            if ( mAttributes & ( 1 << i ) )
+            {
+                stride += GetSize ( static_cast<AttributeBits> ( 1 << i ) );
+            }
+        }
+        return stride;
+    }
+
+    Program::AttributeFormat Program::GetFormat ( AttributeBits aAttributeBit ) const
+    {
+        return ( aAttributeBit & VertexUVBit ) ? Vector2Float :
+               ( aAttributeBit & ( VertexWeightIndicesBit | VertexWeightsBit ) ) ? Vector4Byte : Vector3Float;
+    }
+
+    uint32_t Program::GetSize ( AttributeBits aAttributeBit ) const
+    {
+        switch ( GetFormat ( aAttributeBit ) )
+        {
+        case Vector2Float:
+            return sizeof ( float ) * 2;
+        case Vector3Float:
+            return sizeof ( float ) * 3;
+        case Vector4Byte:
+            return sizeof ( uint8_t ) * 4;
+        }
+        return 0;
+    }
+
+    uint32_t Program::GetOffset ( AttributeBits aAttributeBit ) const
+    {
+        uint32_t offset = 0;
+        for ( uint32_t i = 1; i != aAttributeBit; i = i << 1 )
+        {
+            if ( i & mAttributes )
+            {
+                offset += GetSize ( static_cast<AttributeBits> ( i ) );
+            }
+        }
+        return offset;
+    }
+
     void Program::Initialize()
     {
         static ProgramBuffer program_buffer;
@@ -73,15 +142,7 @@ namespace AeonGames
         {
             mVertexShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             mVertexShader.append (
-                "layout(location = 0) in vec3 VertexPosition;\n"
-                "layout(location = 1) in vec3 VertexNormal;\n"
-                "layout(location = 2) in vec3 VertexTangent;\n"
-                "layout(location = 3) in vec3 VertexBitangent;\n"
-                "layout(location = 4) in vec2 VertexUV;\n"
-                "layout(location = 5) in vec4 VertexWeightIndices;\n"
-                "layout(location = 6) in vec4 VertexWeights;\n" );
-            mVertexShader.append (
-                "layout(std140) uniform Matrices{\n"
+                "layout(binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -92,9 +153,42 @@ namespace AeonGames
                 "};\n"
             );
 
+            /* Find out which attributes are being used and add them to the shader source */
+            std::smatch attribute_matches;
+            std::regex attribute_regex (
+                "\\bVertexPosition\\b|"
+                "\\bVertexNormal\\b|"
+                "\\bVertexTangent\\b|"
+                "\\bVertexBitangent\\b|"
+                "\\bVertexUV\\b|"
+                "\\bVertexWeightIndices\\b|"
+                "\\bVertexWeights\\b" );
+            std::string code = program_buffer.vertex_shader().code();
+            while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
+            {
+                std::cout << attribute_matches.str() << std::endl;
+                for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
+                {
+                    if ( attribute_matches.str().substr ( 6 ) == AttributeStrings[i] + 6 )
+                    {
+                        if ( ! ( mAttributes & ( 1 << i ) ) )
+                        {
+                            mAttributes |= ( 1 << i );
+                            mVertexShader.append ( "layout(location = " );
+                            mVertexShader.append ( std::to_string ( i ) );
+                            mVertexShader.append ( ") in vec3 " );
+                            mVertexShader.append ( AttributeStrings[i] );
+                            mVertexShader.append ( ";\n" );
+                        }
+                        break;
+                    }
+                }
+                code = attribute_matches.suffix();
+            }
+
             mFragmentShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
             mFragmentShader.append (
-                "layout(std140) uniform Matrices{\n"
+                "layout(binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -152,8 +246,10 @@ namespace AeonGames
             switch ( program_buffer.vertex_shader().source_case() )
             {
             case ShaderBuffer::SourceCase::kCode:
+            {
                 mVertexShader.append ( program_buffer.vertex_shader().code() );
-                break;
+            }
+            break;
             default:
                 throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
             }
