@@ -97,5 +97,21 @@ namespace AeonGames
     static_assert ( ffs ( ~0x3fffffff ) == 30, "Find First Bit Set Failure." );
     static_assert ( ffs ( ~0x7fffffff ) == 31, "Find First Bit Set Failure." );
     static_assert ( ffs ( ~0xffffffff ) == 32, "Find First Bit Set Failure." );
+
+    constexpr uint32_t popcount ( uint32_t v )
+    {
+        v = v - ( ( v >> 1 ) & 0x55555555 );
+        v = ( v & 0x33333333 ) + ( ( v >> 2 ) & 0x33333333 );
+        return ( ( v + ( v >> 4 ) & 0xF0F0F0F ) * 0x1010101 ) >> 24;
+    }
+    static_assert ( popcount ( 0x0 ) == 0, "Popcount Failure." );
+    static_assert ( popcount ( 0x1 ) == 1, "Popcount Failure." );
+    static_assert ( popcount ( 0x2 ) == 1, "Popcount Failure." );
+    static_assert ( popcount ( 0x3 ) == 2, "Popcount Failure." );
+    static_assert ( popcount ( 0x4 ) == 1, "Popcount Failure." );
+    static_assert ( popcount ( 0x5 ) == 2, "Popcount Failure." );
+    static_assert ( popcount ( 0x6 ) == 2, "Popcount Failure." );
+    static_assert ( popcount ( 0x7 ) == 3, "Popcount Failure." );
+    static_assert ( popcount ( 0x8 ) == 1, "Popcount Failure." );
 }
 #endif
