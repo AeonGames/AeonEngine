@@ -181,9 +181,9 @@ namespace AeonGames
 
         std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings[0].binding = 0;
-        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_set_layout_bindings[0].descriptorCount = 1;
-        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
