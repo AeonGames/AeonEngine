@@ -75,11 +75,11 @@ namespace AeonGames
         const char* GetStageName ( EShLanguage aStage ) const;
         TOptions mOptions;
         std::string mLog;
-        std::array<const char*, EShLangCount> mShaderCompilationUnits = {{nullptr}};
-        std::array<uint32_t, EShLangCount> mBaseSamplerBinding;
-        std::array<uint32_t, EShLangCount> mBaseTextureBinding;
-        std::array<uint32_t, EShLangCount> mBaseImageBinding;
-        std::array<uint32_t, EShLangCount> mBaseUboBinding;
+        std::array<const char*, EShLangCount> mShaderCompilationUnits {{nullptr}};
+        std::array<uint32_t, EShLangCount> mBaseSamplerBinding{{0}};
+        std::array<uint32_t, EShLangCount> mBaseTextureBinding{ { 0 } };
+        std::array<uint32_t, EShLangCount> mBaseImageBinding{ { 0 } };
+        std::array<uint32_t, EShLangCount> mBaseUboBinding{ { 0 } };
         std::array<std::vector<uint32_t>, EShLangCount> mSpirV;
     };
 }

@@ -16,6 +16,7 @@ limitations under the License.
 #include <cassert>
 #include <vector>
 #include <sstream>
+#include <fstream>
 #include <vulkan/vulkan.h>
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Program.h"
@@ -72,6 +73,7 @@ namespace AeonGames
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).data();
+
             if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
             {
                 std::ostringstream stream;
