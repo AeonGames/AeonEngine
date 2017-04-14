@@ -61,9 +61,11 @@ namespace AeonGames
             InitializeSemaphore();
             InitializeFence();
             InitializeRenderPass();
+            InitializeMatricesUniform();
         }
         catch ( ... )
         {
+            FinalizeMatricesUniform();
             FinalizeRenderPass();
             FinalizeFence();
             FinalizeSemaphore();
@@ -124,6 +126,11 @@ namespace AeonGames
         return mVkSurfaceFormatKHR;
     }
 
+    const VkBuffer & VulkanRenderer::GetMatricesUniformBuffer() const
+    {
+        return mMatricesUniformBuffer;
+    }
+
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
     {
         return mQueueFamilyIndex;
@@ -173,6 +180,57 @@ namespace AeonGames
             stream << "Could not create VulkanRenderer debug report callback. error code: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+    }
+
+    void VulkanRenderer::InitializeMatricesUniform()
+    {
+        VkBufferCreateInfo buffer_create_info{};
+        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        buffer_create_info.pNext = nullptr;
+        buffer_create_info.flags = 0;
+        buffer_create_info.size = sizeof ( Matrices );
+        buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        buffer_create_info.queueFamilyIndexCount = 0;
+        buffer_create_info.pQueueFamilyIndices = nullptr;
+
+        if ( VkResult result = vkCreateBuffer ( mVkDevice, &buffer_create_info, nullptr, &mMatricesUniformBuffer ) )
+        {
+            std::ostringstream stream;
+            stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkMemoryRequirements memory_requirements;
+        vkGetBufferMemoryRequirements ( mVkDevice, mMatricesUniformBuffer, &memory_requirements );
+
+        VkMemoryAllocateInfo memory_allocate_info{};
+        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memory_allocate_info.pNext = nullptr;
+        memory_allocate_info.allocationSize = memory_requirements.size;
+        memory_allocate_info.memoryTypeIndex = UINT32_MAX;
+        for ( uint32_t i = 0; i < mVkPhysicalDeviceMemoryProperties.memoryTypeCount; ++i )
+        {
+            if ( ( mVkPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags &
+                   ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
+                 == ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
+            {
+                memory_allocate_info.memoryTypeIndex = i;
+                break;
+            }
+        }
+        if ( memory_allocate_info.memoryTypeIndex == UINT32_MAX )
+        {
+            throw std::runtime_error ( "No suitable memory type found for mesh buffers" );
+        }
+
+        if ( VkResult result = vkAllocateMemory ( mVkDevice, &memory_allocate_info, nullptr, &mMatricesUniformMemory ) )
+        {
+            std::ostringstream stream;
+            stream << "vkAllocateMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        vkBindBufferMemory ( mVkDevice, mMatricesUniformBuffer, mMatricesUniformMemory, 0 );
     }
 
     void VulkanRenderer::SetupLayersAndExtensions()
@@ -411,7 +469,6 @@ namespace AeonGames
         render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
         render_pass_create_info.pSubpasses = subpass_descriptions.data();
         vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mVkRenderPass );
-
     }
 
     void VulkanRenderer::FinalizeDebug()
@@ -420,6 +477,20 @@ namespace AeonGames
         {
             vkDestroyDebugReportCallbackEXT ( mVkInstance, mVkDebugReportCallbackEXT, nullptr );
             mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanRenderer::FinalizeMatricesUniform()
+    {
+        if ( mMatricesUniformMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVkDevice, mMatricesUniformMemory, nullptr );
+            mMatricesUniformMemory = VK_NULL_HANDLE;
+        }
+        if ( mMatricesUniformBuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyBuffer ( mVkDevice, mMatricesUniformBuffer, nullptr );
+            mMatricesUniformBuffer = VK_NULL_HANDLE;
         }
     }
 
@@ -476,6 +547,7 @@ namespace AeonGames
             destroyed before the device */
             i.second.reset();
         }
+        FinalizeMatricesUniform();
         FinalizeRenderPass();
         FinalizeFence();
         FinalizeSemaphore();
@@ -569,36 +641,53 @@ namespace AeonGames
         add arguments so just some matrices are
         updated based on which one changed.*/
         // Update mViewProjectionMatrix
-        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
+        Multiply4x4Matrix (
+            mMatrices.mProjectionMatrix,
+            mMatrices.mViewMatrix,
+            mMatrices.mViewProjectionMatrix );
         // Update mModelViewMatrix
-        Multiply4x4Matrix ( mViewMatrix, mModelMatrix, mModelViewMatrix );
+        Multiply4x4Matrix (
+            mMatrices.mViewMatrix,
+            mMatrices.mModelMatrix,
+            mMatrices.mModelViewMatrix );
         // Update mModelViewProjectionMatrix
-        Multiply4x4Matrix ( mViewProjectionMatrix, mModelMatrix, mModelViewProjectionMatrix );
+        Multiply4x4Matrix (
+            mMatrices.mViewProjectionMatrix,
+            mMatrices.mModelMatrix,
+            mMatrices.mModelViewProjectionMatrix );
         /*  Calculate Normal Matrix
         Inverting a 3x3 matrix is cheaper than inverting a 4x4 matrix,
         so even if the shader alignment requires us to pad the 3x3 matrix into
         a 4x3 matrix we do these operations on a 3x3 basis.*/
-        Extract3x3Matrix ( mModelViewMatrix, mNormalMatrix );
-        Invert3x3Matrix ( mNormalMatrix, mNormalMatrix );
-        Transpose3x3Matrix ( mNormalMatrix, mNormalMatrix );
-        Convert3x3To4x3 ( mNormalMatrix, mNormalMatrix );
+        Extract3x3Matrix (
+            mMatrices.mModelViewMatrix,
+            mMatrices.mNormalMatrix );
+        Invert3x3Matrix (
+            mMatrices.mNormalMatrix,
+            mMatrices.mNormalMatrix );
+        Transpose3x3Matrix (
+            mMatrices.mNormalMatrix,
+            mMatrices.mNormalMatrix );
+        Convert3x3To4x3 (
+            mMatrices.mNormalMatrix,
+            mMatrices.mNormalMatrix );
     }
 
     void VulkanRenderer::SetViewMatrix ( const float aMatrix[16] )
     {
-        memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
+        memcpy ( mMatrices.mViewMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
     }
 
     void VulkanRenderer::SetProjectionMatrix ( const float aMatrix[16] )
     {
-        memcpy ( mProjectionMatrix, aMatrix, sizeof ( float ) * 16 );
+        memcpy ( mMatrices.mProjectionMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
     }
 
     void VulkanRenderer::SetModelMatrix ( const float aMatrix[16] )
     {
-        memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
+        memcpy ( mMatrices.mModelMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
     }
 }

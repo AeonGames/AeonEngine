@@ -151,14 +151,12 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-#if 0
             mRenderer->BeginRender();
             if ( mModel )
             {
                 mRenderer->Render ( mModel );
             }
             mRenderer->EndRender();
-#endif
             return true;
         default:
             return QWindow::event ( aEvent );
@@ -231,7 +229,8 @@ namespace AeonGames
 
     void EngineWindow::wheelEvent ( QWheelEvent *event )
     {
-        mCameraLocation += ( ( mCameraRotation.rotatedVector ( forward ) * mStep ) * ( event->angleDelta().y() / std::abs ( event->angleDelta().y() ) ) );
+        mCameraLocation += ( ( mCameraRotation.rotatedVector ( forward ) * mStep ) *
+                             ( event->angleDelta().y() / std::abs ( event->angleDelta().y() ) ) );
         updateViewMatrix();
         event->accept();
     }

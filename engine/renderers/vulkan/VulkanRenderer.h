@@ -55,6 +55,7 @@ namespace AeonGames
         const VkRenderPass& GetRenderPass() const;
         const VkFormat& GetDepthStencilFormat() const;
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
+        const VkBuffer& GetMatricesUniformBuffer() const;
         uint32_t GetQueueFamilyIndex() const;
     private:
         void InitializeInstance();
@@ -63,6 +64,7 @@ namespace AeonGames
         void InitializeFence();
         void InitializeRenderPass();
         void InitializeDebug();
+        void InitializeMatricesUniform();
         void SetupLayersAndExtensions();
         void SetupDebug();
         void LoadFunctions();
@@ -72,6 +74,7 @@ namespace AeonGames
         void FinalizeFence();
         void FinalizeRenderPass();
         void FinalizeDebug();
+        void FinalizeMatricesUniform();
 
         bool mValidate = true;
         VkInstance mVkInstance = VK_NULL_HANDLE;
@@ -87,6 +90,8 @@ namespace AeonGames
         VkFence mVkFence = VK_NULL_HANDLE;
         VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
         VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
+        VkBuffer mMatricesUniformBuffer = VK_NULL_HANDLE;
+        VkDeviceMemory mMatricesUniformMemory = VK_NULL_HANDLE;
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
@@ -99,57 +104,74 @@ namespace AeonGames
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
 
-        /** @todo From here on, these members are the same as the Vulkan renderer...
+        /** @todo From here on, these members are the same as the OpenGL renderer...
             shall we create a common class? */
         void UpdateMatrices();
-        float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
+
+        struct Matrices
         {
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
+            float mViewMatrix[16];
+            float mProjectionMatrix[16];
+            float mModelMatrix[16];
+            // Cache Matrices
+            float mViewProjectionMatrix[16];
+            float mModelViewMatrix[16];
+            float mModelViewProjectionMatrix[16];
+            float mNormalMatrix[12];
+        };
+        Matrices mMatrices =
+        {
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            },
             // mProjectionMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            },
             // mModelMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            },
             // mViewProjectionMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            },
             // mModelViewMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            },
             // mModelViewProjectionMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            },
             /*  mNormalMatrix With Padding,
             this should really be a 3x3 matrix,
             but std140 packing requires 16 byte alignment
             and a mat3 is escentially a vec3[3]*/
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0
+            }
         };
-
-        float* mViewMatrix = mMatrices + ( 16 * 0 );
-        float* mProjectionMatrix = mMatrices + ( 16 * 1 );
-        float* mModelMatrix = mMatrices + ( 16 * 2 );
-        // Cache Matrices
-        float* mViewProjectionMatrix = mMatrices + ( 16 * 3 );
-        float* mModelViewMatrix = mMatrices + ( 16 * 4 );
-        float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
-        float* mNormalMatrix = mMatrices + ( 16 * 6 );
         std::vector<std::unique_ptr<VulkanWindow>> mWindowRegistry;
         std::unordered_map <
         std::shared_ptr<Model>,

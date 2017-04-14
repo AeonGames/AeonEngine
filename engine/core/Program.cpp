@@ -155,7 +155,8 @@ namespace AeonGames
 
             /* Find out which attributes are being used and add them to the shader source */
             std::smatch attribute_matches;
-            std::regex attribute_regex (
+            /**@note static const regex: construct once, use for ever.*/
+            static const std::regex attribute_regex (
                 "\\bVertexPosition\\b|"
                 "\\bVertexNormal\\b|"
                 "\\bVertexTangent\\b|"
@@ -187,7 +188,6 @@ namespace AeonGames
             }
 
             mFragmentShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
-#if 0
             mFragmentShader.append (
                 "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
@@ -198,7 +198,6 @@ namespace AeonGames
                 "mat4 ModelViewProjectionMatrix;\n"
                 "mat3 NormalMatrix;\n"
                 "};\n" );
-#endif
             mUniformMetaData.clear();
             mUniformMetaData.reserve ( program_buffer.property().size() );
             if ( program_buffer.property().size() > 0 )
@@ -264,7 +263,7 @@ namespace AeonGames
             }
         }
         program_buffer.Clear();
-#if 1
+#if 0
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
         shader_vert << mVertexShader;

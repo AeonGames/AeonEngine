@@ -93,19 +93,19 @@ namespace AeonGames
             stream << "Physical device reports no surface formats.";
             throw std::runtime_error ( stream.str().c_str() );
         }
+
+        VkSurfaceFormatKHR surface_format_khr;
         std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
         vkGetPhysicalDeviceSurfaceFormatsKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
-#if 0
         if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
         {
-            mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
-            mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+            surface_format_khr = mVulkanRenderer->GetSurfaceFormatKHR();
         }
         else
         {
-            mVkSurfaceFormatKHR = surface_format_list[0];
+            surface_format_khr = surface_format_list[0];
         }
-#endif
+
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
@@ -119,8 +119,8 @@ namespace AeonGames
         swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchain_create_info.surface = mVkSurfaceKHR;
         swapchain_create_info.minImageCount = mSwapchainImageCount;
-        swapchain_create_info.imageFormat = mVulkanRenderer->GetSurfaceFormatKHR().format;
-        swapchain_create_info.imageColorSpace = mVulkanRenderer->GetSurfaceFormatKHR().colorSpace;
+        swapchain_create_info.imageFormat = surface_format_khr.format;
+        swapchain_create_info.imageColorSpace = surface_format_khr.colorSpace;
         swapchain_create_info.imageExtent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
         swapchain_create_info.imageArrayLayers = 1;
@@ -149,11 +149,9 @@ namespace AeonGames
         }
         if ( VkResult result = vkCreateSwapchainKHR ( mVulkanRenderer->GetDevice(), &swapchain_create_info, nullptr, &mVkSwapchainKHR ) )
         {
-            {
-                std::ostringstream stream;
-                stream << "Call to vkCreateSwapchainKHR failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
+            std::ostringstream stream;
+            stream << "Call to vkCreateSwapchainKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
         if ( swapchain_create_info.oldSwapchain != VK_NULL_HANDLE )
         {
@@ -210,10 +208,15 @@ namespace AeonGames
         image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
         image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
         image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        image_create_info.queueFamilyIndexCount = VK_QUEUE_FAMILY_IGNORED;
+        image_create_info.queueFamilyIndexCount = 0;
         image_create_info.pQueueFamilyIndices = nullptr;
         image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vkCreateImage ( mVulkanRenderer->GetDevice(), &image_create_info, nullptr, &mVkDepthStencilImage );
+        if ( VkResult result = vkCreateImage ( mVulkanRenderer->GetDevice(), &image_create_info, nullptr, &mVkDepthStencilImage ) )
+        {
+            std::ostringstream stream;
+            stream << "Call to vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
 
         VkMemoryRequirements memory_requirements;
         vkGetImageMemoryRequirements ( mVulkanRenderer->GetDevice(), mVkDepthStencilImage, &memory_requirements );
@@ -334,23 +337,39 @@ namespace AeonGames
 
     void VulkanWindow::BeginRender() const
     {
-        vkAcquireNextImageKHR (
-            mVulkanRenderer->GetDevice(),
-            mVkSwapchainKHR,
-            UINT64_MAX, VK_NULL_HANDLE,
-            mVulkanRenderer->GetFence(),
-            const_cast<uint32_t*> ( &mActiveImageIndex ) );
-        vkWaitForFences ( mVulkanRenderer->GetDevice(), 1,
-                          &mVulkanRenderer->GetFence(),
-                          VK_TRUE, UINT64_MAX );
-        vkResetFences ( mVulkanRenderer->GetDevice(), 1,
-                        &mVulkanRenderer->GetFence() );
+        if ( VkResult result = vkAcquireNextImageKHR (
+                                   mVulkanRenderer->GetDevice(),
+                                   mVkSwapchainKHR,
+                                   UINT64_MAX, VK_NULL_HANDLE,
+                                   mVulkanRenderer->GetFence(),
+                                   const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
+        if ( VkResult result = vkWaitForFences ( mVulkanRenderer->GetDevice(), 1,
+                               &mVulkanRenderer->GetFence(),
+                               VK_TRUE, UINT64_MAX ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
+        if ( VkResult result = vkResetFences ( mVulkanRenderer->GetDevice(), 1,
+                                               &mVulkanRenderer->GetFence() ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
         /** @todo This will probably break for more than one Window, revisit!. */
-        vkQueueWaitIdle ( mVulkanRenderer->GetQueue() );
+        if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer->GetQueue() ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
+
         VkCommandBufferBeginInfo command_buffer_begin_info{};
         command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info );
+        if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
 
         VkRect2D render_area{ { 0, 0 }, mVkSurfaceCapabilitiesKHR.currentExtent };
         /* [0] is depth/stencil [1] is color.*/
@@ -372,7 +391,10 @@ namespace AeonGames
     void VulkanWindow::EndRender() const
     {
         vkCmdEndRenderPass ( mVkCommandBuffer );
-        vkEndCommandBuffer ( mVkCommandBuffer );
+        if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
 
         VkSubmitInfo submit_info{};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -383,9 +405,12 @@ namespace AeonGames
         submit_info.pCommandBuffers = &mVkCommandBuffer;
         submit_info.signalSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &mVulkanRenderer->GetSemaphore();
-        vkQueueSubmit ( mVulkanRenderer->GetQueue(), 1, &submit_info, VK_NULL_HANDLE );
+        if ( VkResult result = vkQueueSubmit ( mVulkanRenderer->GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
 
-        VkResult result = VkResult::VK_RESULT_MAX_ENUM;
+        std::array<VkResult, 1> result_array{ {VkResult::VK_SUCCESS} };
         VkPresentInfoKHR present_info{};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         present_info.waitSemaphoreCount = 1;
@@ -393,8 +418,12 @@ namespace AeonGames
         present_info.swapchainCount = 1;
         present_info.pSwapchains = &mVkSwapchainKHR;
         present_info.pImageIndices = &mActiveImageIndex;
-        present_info.pResults = &result;
-        vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info );
+        present_info.pResults = result_array.data();
+        present_info.pResults = nullptr;
+        if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
     }
 
     void VulkanWindow::Resize ( uint32_t aWidth, uint32_t aHeight )
