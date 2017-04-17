@@ -29,9 +29,13 @@ namespace AeonGames
         VulkanWindow ( uintptr_t aWindowId, const VulkanRenderer* aVulkanRenderer );
         ~VulkanWindow();
         uintptr_t GetWindowId() const;
-        void BeginRender() const;
-        void EndRender() const;
         void Resize ( uint32_t aWidth, uint32_t aHeight );
+        const VkSwapchainKHR& GetSwapchain() const;
+        uint32_t GetWidth() const;
+        uint32_t GetHeight() const;
+        const uint32_t& GetActiveImageIndex() const;
+        const VkFramebuffer& GetActiveFrameBuffer() const;
+        void AcquireNextImage();
     private:
         void Initialize();
         void Finalize();
@@ -40,13 +44,11 @@ namespace AeonGames
         void CreateImageViews();
         void CreateDepthStencil();
         void CreateFrameBuffers();
-        void CreateCommandPool();
         void DestroySurface();
         void DestroySwapchain();
         void DestroyImageViews();
         void DestroyDepthStencil();
         void DestroyFrameBuffers();
-        void DestroyCommandPool();
 
         uintptr_t mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
@@ -54,7 +56,6 @@ namespace AeonGames
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount = 2;
         VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
-        VkViewport mVkViewport = {};
         std::vector<VkImage> mVkSwapchainImages;
         std::vector<VkImageView> mVkSwapchainImageViews;
         VkImage mVkDepthStencilImage = VK_NULL_HANDLE;
@@ -63,8 +64,6 @@ namespace AeonGames
         bool mHasStencil = false;
         std::vector<VkFramebuffer> mVkFramebuffers;
         uint32_t mActiveImageIndex = UINT32_MAX;
-        VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
-        VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
     };
 }
 #endif

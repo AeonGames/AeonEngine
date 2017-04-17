@@ -35,8 +35,8 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        void BeginRender() const final;
-        void EndRender() const final;
+        void BeginRender ( uintptr_t aWindowId ) const final;
+        void EndRender ( uintptr_t aWindowId ) const final;
         void Render ( const std::shared_ptr<Model> aModel ) const final;
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
         bool AddRenderingWindow ( uintptr_t aWindowId ) final;
@@ -63,6 +63,7 @@ namespace AeonGames
         void InitializeSemaphore();
         void InitializeFence();
         void InitializeRenderPass();
+        void InitializeCommandPool();
         void InitializeDebug();
         void InitializeMatricesUniform();
         void SetupLayersAndExtensions();
@@ -73,6 +74,7 @@ namespace AeonGames
         void FinalizeSemaphore();
         void FinalizeFence();
         void FinalizeRenderPass();
+        void FinalizeCommandPool();
         void FinalizeDebug();
         void FinalizeMatricesUniform();
 

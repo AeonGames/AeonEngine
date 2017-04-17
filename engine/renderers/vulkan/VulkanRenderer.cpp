@@ -62,9 +62,11 @@ namespace AeonGames
             InitializeFence();
             InitializeRenderPass();
             InitializeMatricesUniform();
+            InitializeCommandPool();
         }
         catch ( ... )
         {
+            FinalizeCommandPool();
             FinalizeMatricesUniform();
             FinalizeRenderPass();
             FinalizeFence();
@@ -74,6 +76,25 @@ namespace AeonGames
             FinalizeInstance();
             throw;
         }
+    }
+
+    VulkanRenderer::~VulkanRenderer()
+    {
+        vkQueueWaitIdle ( mVkQueue );
+        for ( auto& i : mModelMap )
+        {
+            /** @note This is here because we need any allocated models to be
+            destroyed before the device */
+            i.second.reset();
+        }
+        FinalizeCommandPool();
+        FinalizeMatricesUniform();
+        FinalizeRenderPass();
+        FinalizeFence();
+        FinalizeSemaphore();
+        FinalizeDevice();
+        FinalizeDebug();
+        FinalizeInstance();
     }
 
     const VkDevice & VulkanRenderer::GetDevice() const
@@ -274,7 +295,10 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeDevice()
     {
-        assert ( mVkInstance && "mVkInstance is a nullptr." );
+        if ( !mVkInstance )
+        {
+            throw std::runtime_error ( "mVkInstance is a nullptr." );
+        }
         {
             uint32_t physical_device_count;
             vkEnumeratePhysicalDevices ( mVkInstance, &physical_device_count, nullptr );
@@ -471,6 +495,30 @@ namespace AeonGames
         vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mVkRenderPass );
     }
 
+    void VulkanRenderer::InitializeCommandPool()
+    {
+        VkCommandPoolCreateInfo command_pool_create_info{};
+        command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        command_pool_create_info.queueFamilyIndex = mQueueFamilyIndex;
+        vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkCommandPool );
+
+        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        command_buffer_allocate_info.commandPool = mVkCommandPool;
+        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        command_buffer_allocate_info.commandBufferCount = 1;
+        vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer );
+    }
+
+    void VulkanRenderer::FinalizeCommandPool()
+    {
+        if ( mVkCommandPool != VK_NULL_HANDLE )
+        {
+            vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
+        }
+    }
+
     void VulkanRenderer::FinalizeDebug()
     {
         if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
@@ -538,37 +586,107 @@ namespace AeonGames
         }
     }
 
-    VulkanRenderer::~VulkanRenderer()
+    void VulkanRenderer::BeginRender ( uintptr_t aWindowId ) const
     {
-        vkQueueWaitIdle ( mVkQueue );
-        for ( auto& i : mModelMap )
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
         {
-            /** @note This is here because we need any allocated models to be
-            destroyed before the device */
-            i.second.reset();
+            if ( window->GetWindowId() == aWindowId )
+            {
+                return true;
+            }
+            return false;
+        } );
+        if ( i != mWindowRegistry.end() )
+        {
+            ( *i )->AcquireNextImage();
+            if ( VkResult result = vkWaitForFences ( mVkDevice, 1,
+                                   &mVkFence,
+                                   VK_TRUE, UINT64_MAX ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
+            if ( VkResult result = vkResetFences ( mVkDevice, 1,
+                                                   &mVkFence ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
+            if ( VkResult result = vkQueueWaitIdle ( mVkQueue ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
+
+            VkCommandBufferBeginInfo command_buffer_begin_info{};
+            command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
+
+            VkRect2D render_area{ { 0, 0 }, { ( *i )->GetWidth(), ( *i )->GetHeight() } };
+            /* [0] is depth/stencil [1] is color.*/
+            std::array<VkClearValue, 2> clear_values{ { { 0 }, { 0 } } };
+            clear_values[1].color.float32[0] = 0.5f;
+            clear_values[1].color.float32[1] = 0.5f;
+            clear_values[1].color.float32[2] = 0.5f;
+            clear_values[1].color.float32[3] = 0.0f;
+            VkRenderPassBeginInfo render_pass_begin_info{};
+            render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            render_pass_begin_info.renderPass = mVkRenderPass;
+            render_pass_begin_info.framebuffer = ( *i )->GetActiveFrameBuffer();
+            render_pass_begin_info.renderArea = render_area;
+            render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
+            render_pass_begin_info.pClearValues = clear_values.data();
+            vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
         }
-        FinalizeMatricesUniform();
-        FinalizeRenderPass();
-        FinalizeFence();
-        FinalizeSemaphore();
-        FinalizeDevice();
-        FinalizeDebug();
-        FinalizeInstance();
     }
 
-    void VulkanRenderer::BeginRender() const
+    void VulkanRenderer::EndRender ( uintptr_t aWindowId ) const
     {
-        for ( auto& i : mWindowRegistry )
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
         {
-            i->BeginRender();
-        }
-    }
-
-    void VulkanRenderer::EndRender() const
-    {
-        for ( auto& i : mWindowRegistry )
+            if ( window->GetWindowId() == aWindowId )
+            {
+                return true;
+            }
+            return false;
+        } );
+        if ( i != mWindowRegistry.end() )
         {
-            i->EndRender();
+            vkCmdEndRenderPass ( mVkCommandBuffer );
+            if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
+            VkSubmitInfo submit_info{};
+            submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit_info.waitSemaphoreCount = 0;
+            submit_info.pWaitSemaphores = nullptr;
+            submit_info.pWaitDstStageMask = nullptr;
+            submit_info.commandBufferCount = 1;
+            submit_info.pCommandBuffers = &mVkCommandBuffer;
+            submit_info.signalSemaphoreCount = 1;
+            submit_info.pSignalSemaphores = &mVkSemaphore;
+            if ( VkResult result = vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
+            std::array<VkResult, 1> result_array{ { VkResult::VK_SUCCESS } };
+            VkPresentInfoKHR present_info{};
+            present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            present_info.waitSemaphoreCount = 1;
+            present_info.pWaitSemaphores = &mVkSemaphore;
+            present_info.swapchainCount = 1;
+            present_info.pSwapchains = & ( *i )->GetSwapchain();
+            present_info.pImageIndices = & ( *i )->GetActiveImageIndex();
+            present_info.pResults = result_array.data();
+            present_info.pResults = nullptr;
+            if ( VkResult result = vkQueuePresentKHR ( mVkQueue, &present_info ) )
+            {
+                std::cout << GetVulkanResultString ( result ) << std::endl;
+            }
         }
     }
 

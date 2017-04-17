@@ -287,20 +287,27 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::CreateCommandPool()
+    const uint32_t& VulkanWindow::GetActiveImageIndex() const
     {
-        VkCommandPoolCreateInfo command_pool_create_info{};
-        command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        command_pool_create_info.queueFamilyIndex = mVulkanRenderer->GetQueueFamilyIndex();
-        vkCreateCommandPool ( mVulkanRenderer->GetDevice(), &command_pool_create_info, nullptr, &mVkCommandPool );
+        return mActiveImageIndex;
+    }
 
-        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        command_buffer_allocate_info.commandPool = mVkCommandPool;
-        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        command_buffer_allocate_info.commandBufferCount = 1;
-        vkAllocateCommandBuffers ( mVulkanRenderer->GetDevice(), &command_buffer_allocate_info, &mVkCommandBuffer );
+    const VkFramebuffer & VulkanWindow::GetActiveFrameBuffer() const
+    {
+        return mVkFramebuffers[mActiveImageIndex];
+    }
+
+    void VulkanWindow::AcquireNextImage()
+    {
+        if ( VkResult result = vkAcquireNextImageKHR (
+                                   mVulkanRenderer->GetDevice(),
+                                   mVkSwapchainKHR,
+                                   UINT64_MAX, VK_NULL_HANDLE,
+                                   mVulkanRenderer->GetFence(),
+                                   const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << std::endl;
+        }
     }
 
     void VulkanWindow::Initialize()
@@ -314,7 +321,6 @@ namespace AeonGames
         CreateImageViews();
         CreateDepthStencil();
         CreateFrameBuffers();
-        CreateCommandPool();
     }
 
     void VulkanWindow::Finalize()
@@ -327,103 +333,11 @@ namespace AeonGames
         {
             std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
-        DestroyCommandPool();
         DestroyFrameBuffers();
         DestroyDepthStencil();
         DestroyImageViews();
         DestroySwapchain();
         DestroySurface();
-    }
-
-    void VulkanWindow::BeginRender() const
-    {
-        if ( VkResult result = vkAcquireNextImageKHR (
-                                   mVulkanRenderer->GetDevice(),
-                                   mVkSwapchainKHR,
-                                   UINT64_MAX, VK_NULL_HANDLE,
-                                   mVulkanRenderer->GetFence(),
-                                   const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-        if ( VkResult result = vkWaitForFences ( mVulkanRenderer->GetDevice(), 1,
-                               &mVulkanRenderer->GetFence(),
-                               VK_TRUE, UINT64_MAX ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-        if ( VkResult result = vkResetFences ( mVulkanRenderer->GetDevice(), 1,
-                                               &mVulkanRenderer->GetFence() ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-        /** @todo This will probably break for more than one Window, revisit!. */
-        if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer->GetQueue() ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-
-        VkCommandBufferBeginInfo command_buffer_begin_info{};
-        command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-
-        VkRect2D render_area{ { 0, 0 }, mVkSurfaceCapabilitiesKHR.currentExtent };
-        /* [0] is depth/stencil [1] is color.*/
-        std::array<VkClearValue, 2> clear_values{ { { 0 }, { 0 } } };
-        clear_values[1].color.float32[0] = 0.5f;
-        clear_values[1].color.float32[1] = 0.5f;
-        clear_values[1].color.float32[2] = 0.5f;
-        clear_values[1].color.float32[3] = 0.0f;
-        VkRenderPassBeginInfo render_pass_begin_info{};
-        render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = mVulkanRenderer->GetRenderPass();
-        render_pass_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
-        render_pass_begin_info.renderArea = render_area;
-        render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
-        render_pass_begin_info.pClearValues = clear_values.data();
-        vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
-    }
-
-    void VulkanWindow::EndRender() const
-    {
-        vkCmdEndRenderPass ( mVkCommandBuffer );
-        if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-
-        VkSubmitInfo submit_info{};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.waitSemaphoreCount = 0;
-        submit_info.pWaitSemaphores = nullptr;
-        submit_info.pWaitDstStageMask = nullptr;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &mVkCommandBuffer;
-        submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &mVulkanRenderer->GetSemaphore();
-        if ( VkResult result = vkQueueSubmit ( mVulkanRenderer->GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
-
-        std::array<VkResult, 1> result_array{ {VkResult::VK_SUCCESS} };
-        VkPresentInfoKHR present_info{};
-        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = &mVulkanRenderer->GetSemaphore();
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = &mVkSwapchainKHR;
-        present_info.pImageIndices = &mActiveImageIndex;
-        present_info.pResults = result_array.data();
-        present_info.pResults = nullptr;
-        if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
-        }
     }
 
     void VulkanWindow::Resize ( uint32_t aWidth, uint32_t aHeight )
@@ -446,7 +360,6 @@ namespace AeonGames
                 stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
                 throw std::runtime_error ( stream.str().c_str() );
             }
-            DestroyCommandPool();
             DestroyFrameBuffers();
             DestroyDepthStencil();
             DestroyImageViews();
@@ -454,8 +367,22 @@ namespace AeonGames
             CreateImageViews();
             CreateDepthStencil();
             CreateFrameBuffers();
-            CreateCommandPool();
         }
+    }
+
+    const VkSwapchainKHR& VulkanWindow::GetSwapchain() const
+    {
+        return mVkSwapchainKHR;
+    }
+
+    uint32_t VulkanWindow::GetWidth() const
+    {
+        return mVkSurfaceCapabilitiesKHR.currentExtent.width;
+    }
+
+    uint32_t VulkanWindow::GetHeight() const
+    {
+        return mVkSurfaceCapabilitiesKHR.currentExtent.height;
     }
 
     void VulkanWindow::DestroySurface()
@@ -512,13 +439,4 @@ namespace AeonGames
             }
         }
     }
-
-    void VulkanWindow::DestroyCommandPool()
-    {
-        if ( mVkCommandPool != VK_NULL_HANDLE )
-        {
-            vkDestroyCommandPool ( mVulkanRenderer->GetDevice(), mVkCommandPool, nullptr );
-        }
-    }
-
 }
