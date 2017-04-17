@@ -151,12 +151,12 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            mRenderer->BeginRender();
+            mRenderer->BeginRender ( winId() );
             if ( mModel )
             {
                 mRenderer->Render ( mModel );
             }
-            mRenderer->EndRender();
+            mRenderer->EndRender ( winId() );
             return true;
         default:
             return QWindow::event ( aEvent );

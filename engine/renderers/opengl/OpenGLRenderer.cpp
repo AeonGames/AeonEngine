@@ -72,20 +72,29 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLRenderer::BeginRender() const
+    void OpenGLRenderer::BeginRender ( uintptr_t aWindowId ) const
     {
-        for ( auto& i : mWindowRegistry )
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                [this, &aWindowId] ( const WindowData & window ) -> bool
+        {
+            if ( window.mWindowId == aWindowId )
+            {
+                return true;
+            }
+            return false;
+        } );
+        if ( i != mWindowRegistry.end() )
         {
 #ifdef _WIN32
-            if ( i.mDeviceContext != nullptr )
+            if ( ( *i ).mDeviceContext != nullptr )
             {
-                wglMakeCurrent ( i.mDeviceContext, i.mOpenGLContext );
+                wglMakeCurrent ( ( *i ).mDeviceContext, ( *i ).mOpenGLContext );
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #else
-            if ( i.mOpenGLContext != nullptr )
+            if ( ( *i ).mOpenGLContext != nullptr )
             {
-                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mOpenGLContext );
+                glXMakeCurrent ( ( *i ).mDisplay, reinterpret_cast<Window> ( ( *i ).mWindowId ), ( *i ).mOpenGLContext );
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #endif
@@ -113,21 +122,30 @@ namespace AeonGames
         return true;
     }
 
-    void OpenGLRenderer::EndRender() const
+    void OpenGLRenderer::EndRender ( uintptr_t aWindowId ) const
     {
-        for ( auto& i : mWindowRegistry )
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                [this, &aWindowId] ( const WindowData & window ) -> bool
+        {
+            if ( window.mWindowId == aWindowId )
+            {
+                return true;
+            }
+            return false;
+        } );
+        if ( i != mWindowRegistry.end() )
         {
 #if _WIN32
-            if ( i.mDeviceContext != nullptr )
+            if ( ( *i ).mDeviceContext != nullptr )
             {
-                wglMakeCurrent ( i.mDeviceContext, i.mOpenGLContext );
-                SwapBuffers ( i.mDeviceContext );
+                wglMakeCurrent ( ( *i ).mDeviceContext, ( *i ).mOpenGLContext );
+                SwapBuffers ( ( *i ).mDeviceContext );
             }
 #else
-            if ( i.mOpenGLContext != nullptr )
+            if ( ( *i ).mOpenGLContext != nullptr )
             {
-                glXMakeCurrent ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ), i.mOpenGLContext );
-                glXSwapBuffers ( i.mDisplay, reinterpret_cast<Window> ( i.mWindowId ) );
+                glXMakeCurrent ( ( *i ).mDisplay, reinterpret_cast<Window> ( ( *i ).mWindowId ), ( *i ).mOpenGLContext );
+                glXSwapBuffers ( ( *i ).mDisplay, reinterpret_cast<Window> ( ( *i ).mWindowId ) );
             }
 #endif
         }
