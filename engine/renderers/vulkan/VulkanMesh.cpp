@@ -51,6 +51,17 @@ namespace AeonGames
         auto& triangle_groups = mMesh->GetTriangleGroups();
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
+            /**@todo Get the VkCommandBuffer to use
+                in the vkCmdBindVertexBuffers call.
+                Will likely involve moving stuff from Window to Renderer.
+                The Window class should probably manage WSI code only anyway.*/
+            //vkCmdBindVertexBuffers()
+            if ( triangle_groups[i].mIndexCount )
+            {
+            }
+            else
+            {
+            }
         }
     }
 
