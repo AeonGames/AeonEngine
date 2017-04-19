@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/ResourceCache.h"
 #include "OpenGLModel.h"
-#include "OpenGLFunctions.h"
 #include "OpenGLProgram.h"
 #include "OpenGLMesh.h"
 
@@ -43,14 +42,15 @@ namespace AeonGames
         Finalize();
     }
 
-    const std::shared_ptr<OpenGLProgram> OpenGLModel::GetProgram() const
+    void OpenGLModel::Render ( GLuint aMatricesBuffer ) const
     {
-        return mProgram;
-    }
-
-    const std::shared_ptr<OpenGLMesh> OpenGLModel::GetMesh() const
-    {
-        return mMesh;
+        /**@todo Revisit, may be a better idea
+        to keep a back reference to the renderer
+        instead of taking a parameter. */
+        mProgram->Use();
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, aMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        mMesh->Render();
     }
 
     void OpenGLModel::Initialize()

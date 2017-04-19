@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OPENGLMODEL_H
 #define AEONGAMES_OPENGLMODEL_H
+#include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
@@ -26,8 +27,7 @@ namespace AeonGames
     public:
         OpenGLModel ( const std::shared_ptr<Model> aModel );
         ~OpenGLModel();
-        const std::shared_ptr<OpenGLProgram> GetProgram() const;
-        const std::shared_ptr<OpenGLMesh> GetMesh() const;
+        void Render ( GLuint aMatricesBuffer ) const;
     private:
         void Initialize();
         void Finalize();

@@ -44,14 +44,10 @@ namespace AeonGames
         Finalize();
     }
 
-    const std::shared_ptr<VulkanProgram> VulkanModel::GetProgram() const
+    void VulkanModel::Render() const
     {
-        return mProgram;
-    }
-
-    const std::shared_ptr<VulkanMesh> VulkanModel::GetMesh() const
-    {
-        return mMesh;
+        mProgram->Use();
+        mMesh->Render();
     }
 
     void VulkanModel::Initialize()

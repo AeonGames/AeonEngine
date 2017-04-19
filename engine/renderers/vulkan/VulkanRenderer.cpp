@@ -32,9 +32,12 @@ limitations under the License.
 #include <algorithm>
 #include "aeongames/LogLevel.h"
 #include "aeongames/Memory.h"
+#include "aeongames/Model.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanUtilities.h"
+#include "VulkanProgram.h"
+#include "VulkanMesh.h"
 #include "VulkanModel.h"
 #include "math/3DMath.h"
 
@@ -83,8 +86,10 @@ namespace AeonGames
         vkQueueWaitIdle ( mVkQueue );
         for ( auto& i : mModelMap )
         {
-            /** @note This is here because we need any allocated models to be
-            destroyed before the device */
+            /** @note This is here
+            because we need any allocated
+            models to be destroyed before
+            the device is.*/
             i.second.reset();
         }
         FinalizeCommandPool();
@@ -271,9 +276,9 @@ namespace AeonGames
         VkApplicationInfo application_info {};
 
         application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application_info.apiVersion = 0;//VK_API_VERSION_1_0;
+        application_info.apiVersion = 0;
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
-        application_info.pApplicationName = "AeonEngine VulkanRenderer Renderer";
+        application_info.pApplicationName = "AeonEngine Vulkan Renderer";
 
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
@@ -692,6 +697,8 @@ namespace AeonGames
 
     void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
+        auto& model = mModelMap.at ( aModel );
+        model->Render();
     }
 
     bool VulkanRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
