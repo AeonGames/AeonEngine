@@ -104,10 +104,7 @@ namespace AeonGames
     void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
         auto& model = mModelMap.at ( aModel );
-        model->GetProgram()->Use();
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        model->GetMesh()->Render();
+        model->Render ( mMatricesBuffer );
     }
 
     bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )

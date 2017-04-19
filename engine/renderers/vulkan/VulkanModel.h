@@ -27,8 +27,7 @@ namespace AeonGames
     public:
         VulkanModel ( const std::shared_ptr<Model> aModel, const VulkanRenderer* aVulkanRenderer );
         ~VulkanModel();
-        const std::shared_ptr<VulkanProgram> GetProgram() const;
-        const std::shared_ptr<VulkanMesh> GetMesh() const;
+        void Render() const;
     private:
         void Initialize();
         void Finalize();
