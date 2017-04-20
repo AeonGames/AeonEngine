@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -160,17 +160,26 @@ namespace AeonGames
         return stride;
     }
 
-    uint32_t Mesh::GetIndexSize ( uint32_t aIndexType ) const
+    uint32_t Mesh::GetIndexSize ( IndexType aIndexType ) const
     {
-        /**@todo change the magick numbers to an index type enum.*/
         switch ( aIndexType )
         {
-        case 1:
+        case BYTE:
+        case UNSIGNED_BYTE:
             return 1;
-        case 3:
+        case SHORT:
+        case UNSIGNED_SHORT:
+        case TWO_BYTES:
             return 2;
-        case 5:
+        case THREE_BYTES:
+            return 3;
+        case INT:
+        case UNSIGNED_INT:
+        case FLOAT:
+        case FOUR_BYTES:
             return 4;
+        case DOUBLE:
+            return 8;
         };
         assert ( 0 && "Invalid Index Type." );
         return 0;
