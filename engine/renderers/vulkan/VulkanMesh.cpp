@@ -241,8 +241,9 @@ namespace AeonGames
             return VK_INDEX_TYPE_UINT16;
         case Mesh::UNSIGNED_INT:
             return VK_INDEX_TYPE_UINT32;
+        default:
+            throw std::runtime_error ( "Invalid Index Type." );
         };
-        throw std::runtime_error ( "Invalid Index Type." );
         return VK_INDEX_TYPE_MAX_ENUM;
     }
 }
