@@ -56,6 +56,7 @@ namespace AeonGames
         const VkFormat& GetDepthStencilFormat() const;
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
         const VkBuffer& GetMatricesUniformBuffer() const;
+        const VkCommandBuffer& GetCommandBuffer() const;
         uint32_t GetQueueFamilyIndex() const;
     private:
         void InitializeInstance();

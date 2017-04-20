@@ -157,6 +157,11 @@ namespace AeonGames
         return mMatricesUniformBuffer;
     }
 
+    const VkCommandBuffer & VulkanRenderer::GetCommandBuffer() const
+    {
+        return mVkCommandBuffer;
+    }
+
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
     {
         return mQueueFamilyIndex;

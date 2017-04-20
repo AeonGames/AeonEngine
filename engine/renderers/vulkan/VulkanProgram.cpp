@@ -50,6 +50,7 @@ namespace AeonGames
 
     void VulkanProgram::Use() const
     {
+        vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
     }
 
     void VulkanProgram::Initialize()

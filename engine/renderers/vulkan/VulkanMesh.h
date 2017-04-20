@@ -20,10 +20,10 @@ limitations under the License.
 #include <string>
 #include <vulkan/vulkan.h>
 #include "aeongames/Memory.h"
+#include "aeongames/Mesh.h"
 
 namespace AeonGames
 {
-    class Mesh;
     class VulkanRenderer;
     class VulkanMesh
     {
@@ -34,6 +34,7 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
+        VkIndexType GetIndexType ( Mesh::IndexType aIndexType ) const;
         const std::shared_ptr<Mesh> mMesh;
         const VulkanRenderer* mVulkanRenderer;
         struct Buffers

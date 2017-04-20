@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,22 @@ namespace AeonGames
             UV_BIT = 0b10000,
             WEIGHT_BIT = 0b100000,
         };
+        enum IndexType
+        {
+            /**@todo Refactor to make order better match sizes.
+               This will involve changing the exporter and the msh format specification.*/
+            BYTE = 0x00,
+            UNSIGNED_BYTE = 0x01,
+            SHORT = 0x02,
+            UNSIGNED_SHORT = 0x03,
+            INT = 0x04,
+            UNSIGNED_INT = 0x05,
+            FLOAT = 0x06,
+            TWO_BYTES = 0x07,
+            THREE_BYTES = 0x08,
+            FOUR_BYTES = 0x09,
+            DOUBLE = 0x0A
+        };
         struct TriangleGroup
         {
             float mCenterRadii[6];
@@ -44,7 +60,7 @@ namespace AeonGames
         Mesh ( std::string  aFilename );
         ~Mesh();
         DLL uint32_t GetStride ( uint32_t aFlags ) const;
-        DLL uint32_t GetIndexSize ( uint32_t aIndexType ) const;
+        DLL uint32_t GetIndexSize ( IndexType aIndexType ) const;
         DLL const float * const GetCenterRadii() const;
         DLL const std::vector<TriangleGroup>& GetTriangleGroups() const;
     private:

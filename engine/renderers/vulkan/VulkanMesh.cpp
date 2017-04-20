@@ -51,16 +51,18 @@ namespace AeonGames
         auto& triangle_groups = mMesh->GetTriangleGroups();
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
-            /**@todo Get the VkCommandBuffer to use
-                in the vkCmdBindVertexBuffers call.
-                Will likely involve moving stuff from Window to Renderer.
-                The Window class should probably manage WSI code only anyway.*/
-            //vkCmdBindVertexBuffers()
+            const VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &mBuffers[i].mVertexBuffer, &offset );
             if ( triangle_groups[i].mIndexCount )
             {
+                vkCmdBindIndexBuffer ( mVulkanRenderer->GetCommandBuffer(),
+                                       mBuffers[i].mIndexBuffer, 0,
+                                       GetIndexType ( static_cast<AeonGames::Mesh::IndexType> ( triangle_groups[i].mIndexType ) ) );
+                vkCmdDrawIndexed ( mVulkanRenderer->GetCommandBuffer(), triangle_groups[i].mIndexCount, 1, 0, 0, 1 );
             }
             else
             {
+                vkCmdDraw ( mVulkanRenderer->GetCommandBuffer(), triangle_groups[i].mVertexCount, 1, 0, 0 );
             }
         }
     }
@@ -140,6 +142,7 @@ namespace AeonGames
                 buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
                 buffer_create_info.pNext = nullptr;
                 buffer_create_info.flags = 0;
+                /**@todo Upcast index buffer to 16 bits when index type is 8 bits.*/
                 buffer_create_info.size = triangle_groups[i].mIndexBuffer.size();
                 buffer_create_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
                 buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -206,5 +209,29 @@ namespace AeonGames
                 i.mIndexBuffer = VK_NULL_HANDLE;
             }
         }
+    }
+
+    VkIndexType VulkanMesh::GetIndexType ( Mesh::IndexType aIndexType ) const
+    {
+        switch ( aIndexType )
+        {
+        /**@todo WTF?!?
+        Vulkan has no support for 1, 3 or 8 byte indices.
+        This means we'll have to change the mesh format
+        to limit indices to 2 or 4 bytes only,
+        otherwise different meshes that work on OpenGL
+        may not work on Vulkan...
+        OR ad a runtime processing step to
+        either upcast or downcast other index types,
+        this may add a penalty to Vulkan :( sad.
+        I might just ditch all SIGNED, 3 and 8
+        and upcast UBYTE to USHORT.*/
+        case Mesh::UNSIGNED_SHORT:
+            return VK_INDEX_TYPE_UINT16;
+        case Mesh::UNSIGNED_INT:
+            return VK_INDEX_TYPE_UINT32;
+        };
+        throw std::runtime_error ( "Invalid Index Type." );
+        return VK_INDEX_TYPE_MAX_ENUM;
     }
 }
