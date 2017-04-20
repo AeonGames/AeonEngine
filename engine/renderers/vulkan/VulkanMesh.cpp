@@ -226,17 +226,8 @@ namespace AeonGames
     {
         switch ( aIndexType )
         {
-        /**@todo WTF?!?
-        Vulkan has no support for 1, 3 or 8 byte indices.
-        This means we'll have to change the mesh format
-        to limit indices to 2 or 4 bytes only,
-        otherwise different meshes that work on OpenGL
-        may not work on Vulkan...
-        OR ad a runtime processing step to
-        either upcast or downcast other index types,
-        this may add a penalty to Vulkan :( sad.
-        I might just ditch all SIGNED, 3 and 8
-        and upcast UBYTE to USHORT.*/
+        /**@note BYTE has been upcasted*/
+        case Mesh::UNSIGNED_BYTE:
         case Mesh::UNSIGNED_SHORT:
             return VK_INDEX_TYPE_UINT16;
         case Mesh::UNSIGNED_INT:
