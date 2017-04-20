@@ -110,7 +110,7 @@ namespace AeonGames
 
             mTriangleGroups.back().mVertexCount = i.vertexcount();
             mTriangleGroups.back().mIndexCount = i.indexcount();
-            mTriangleGroups.back().mIndexType = 0x1400 | i.indextype();
+            mTriangleGroups.back().mIndexType = i.indextype();
 
             mTriangleGroups.back().mVertexFlags = i.vertexflags();
             // Sadly we must copy here

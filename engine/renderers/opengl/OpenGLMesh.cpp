@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,7 +67,8 @@ namespace AeonGames
             {
                 glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mBuffers[i].mIndexBuffer );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glDrawElements ( GL_TRIANGLES, triangle_groups[i].mIndexCount, triangle_groups[i].mIndexType, nullptr );
+                glDrawElements ( GL_TRIANGLES, triangle_groups[i].mIndexCount,
+                                 0x1400 | triangle_groups[i].mIndexType, nullptr );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             else
