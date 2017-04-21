@@ -112,10 +112,13 @@ namespace AeonGames
                     throw std::runtime_error ( stream.str().c_str() );
                 }
 
+                VkMemoryRequirements memory_requirements{};
+                vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexBuffer, &memory_requirements );
+
                 VkMemoryAllocateInfo memory_allocate_info{};
                 memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
                 memory_allocate_info.pNext = nullptr;
-                memory_allocate_info.allocationSize = triangle_groups[i].mVertexBuffer.size();
+                memory_allocate_info.allocationSize = memory_requirements.size;
                 memory_allocate_info.memoryTypeIndex = memory_index;
 
                 if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mBuffers[i].mVertexMemory ) )
@@ -135,6 +138,13 @@ namespace AeonGames
                 memcpy ( data, triangle_groups[i].mVertexBuffer.data(), triangle_groups[i].mVertexBuffer.size() );
 
                 vkUnmapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexMemory );
+
+                if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexBuffer, mBuffers[i].mVertexMemory, 0 ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkBindBufferMemory failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
             }
             if ( triangle_groups[i].mIndexCount )
             {
@@ -157,10 +167,13 @@ namespace AeonGames
                     throw std::runtime_error ( stream.str().c_str() );
                 }
 
+                VkMemoryRequirements memory_requirements{};
+                vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexBuffer, &memory_requirements );
+
                 VkMemoryAllocateInfo memory_allocate_info{};
                 memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
                 memory_allocate_info.pNext = nullptr;
-                memory_allocate_info.allocationSize = triangle_groups[i].mIndexBuffer.size();
+                memory_allocate_info.allocationSize = memory_requirements.size;
                 memory_allocate_info.memoryTypeIndex = memory_index;
 
                 if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mBuffers[i].mIndexMemory ) )
@@ -191,6 +204,13 @@ namespace AeonGames
                     }
                 }
                 vkUnmapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexMemory );
+
+                if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexBuffer, mBuffers[i].mIndexMemory, 0 ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkBindBufferMemory failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
             }
         }
     }

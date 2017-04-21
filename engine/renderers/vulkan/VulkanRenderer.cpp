@@ -66,9 +66,11 @@ namespace AeonGames
             InitializeRenderPass();
             InitializeMatricesUniform();
             InitializeCommandPool();
+            InitializeDescriptorPool();
         }
         catch ( ... )
         {
+            FinalizeDescriptorPool();
             FinalizeCommandPool();
             FinalizeMatricesUniform();
             FinalizeRenderPass();
@@ -92,6 +94,7 @@ namespace AeonGames
             the device is.*/
             i.second.reset();
         }
+        FinalizeDescriptorPool();
         FinalizeCommandPool();
         FinalizeMatricesUniform();
         FinalizeRenderPass();
@@ -521,11 +524,38 @@ namespace AeonGames
         vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer );
     }
 
+    void VulkanRenderer::InitializeDescriptorPool()
+    {
+        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptor_pool_create_info.pNext = nullptr;
+        descriptor_pool_create_info.flags = 0;
+        descriptor_pool_create_info.maxSets = 0;
+        descriptor_pool_create_info.poolSizeCount = 0;
+        descriptor_pool_create_info.pPoolSizes = nullptr;
+
+        if ( VkResult result = vkCreateDescriptorPool ( mVkDevice, &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
+        {
+            std::ostringstream stream;
+            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
     void VulkanRenderer::FinalizeCommandPool()
     {
         if ( mVkCommandPool != VK_NULL_HANDLE )
         {
             vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
+            mVkCommandPool = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanRenderer::FinalizeDescriptorPool()
+    {
+        if ( mVkDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVkDevice, mVkDescriptorPool, nullptr );
         }
     }
 
@@ -702,6 +732,13 @@ namespace AeonGames
 
     void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
+        void* data = nullptr;
+        if ( VkResult result = vkMapMemory ( mVkDevice, mMatricesUniformMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+        {
+            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+        }
+        memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
+        vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
         auto& model = mModelMap.at ( aModel );
         model->Render();
     }
