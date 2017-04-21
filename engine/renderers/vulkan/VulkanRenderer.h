@@ -65,6 +65,7 @@ namespace AeonGames
         void InitializeFence();
         void InitializeRenderPass();
         void InitializeCommandPool();
+        void InitializeDescriptorPool();
         void InitializeDebug();
         void InitializeMatricesUniform();
         void SetupLayersAndExtensions();
@@ -76,6 +77,7 @@ namespace AeonGames
         void FinalizeFence();
         void FinalizeRenderPass();
         void FinalizeCommandPool();
+        void FinalizeDescriptorPool();
         void FinalizeDebug();
         void FinalizeMatricesUniform();
 
@@ -96,6 +98,7 @@ namespace AeonGames
         VkBuffer mMatricesUniformBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mMatricesUniformMemory = VK_NULL_HANDLE;
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
+        VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;

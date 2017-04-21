@@ -34,7 +34,6 @@ namespace AeonGames
                                     e.what(),
                                     QMessageBox::Ok,
                                     QMessageBox::Ok );
-            quit();
             return false;
         }
     }
