@@ -526,13 +526,17 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeDescriptorPool()
     {
+        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{ {} };
+        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_pool_sizes[0].descriptorCount = 1;
+
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_create_info.pNext = nullptr;
         descriptor_pool_create_info.flags = 0;
-        descriptor_pool_create_info.maxSets = 0;
-        descriptor_pool_create_info.poolSizeCount = 0;
-        descriptor_pool_create_info.pPoolSizes = nullptr;
+        descriptor_pool_create_info.maxSets = 1;
+        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
+        descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
 
         if ( VkResult result = vkCreateDescriptorPool ( mVkDevice, &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
         {
