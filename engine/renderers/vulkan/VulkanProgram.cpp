@@ -51,6 +51,8 @@ namespace AeonGames
     void VulkanProgram::Use() const
     {
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+        vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, 1, &mVulkanRenderer->GetDescriptorSet(), 0, nullptr );
     }
 
     void VulkanProgram::Initialize()
@@ -182,26 +184,7 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
         pipeline_rasterization_state_create_info.lineWidth = 1.0f;
 
-        std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings[0].binding = 0;
-        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_set_layout_bindings[0].descriptorCount = 1;
-        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
-        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
-        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_set_layout_create_info.pNext = nullptr;
-        descriptor_set_layout_create_info.flags = 0;
-        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
-        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout ) )
-        {
-            std::ostringstream stream;
-            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ mVkDescriptorSetLayout };
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ mVulkanRenderer->GetDescriptorSetLayout() };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
@@ -253,11 +236,6 @@ namespace AeonGames
         {
             vkDestroyPipelineLayout ( mVulkanRenderer->GetDevice(), mVkPipelineLayout, nullptr );
             mVkPipelineLayout = VK_NULL_HANDLE;
-        }
-        if ( mVkDescriptorSetLayout != VK_NULL_HANDLE )
-        {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkDescriptorSetLayout, nullptr );
-            mVkDescriptorSetLayout = VK_NULL_HANDLE;
         }
         for ( auto& i : mVkShaderModules )
         {

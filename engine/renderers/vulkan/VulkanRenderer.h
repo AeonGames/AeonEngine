@@ -57,6 +57,8 @@ namespace AeonGames
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
         const VkBuffer& GetMatricesUniformBuffer() const;
         const VkCommandBuffer& GetCommandBuffer() const;
+        const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
+        const VkDescriptorSet& GetDescriptorSet() const;
         uint32_t GetQueueFamilyIndex() const;
     private:
         void InitializeInstance();
@@ -98,7 +100,9 @@ namespace AeonGames
         VkBuffer mMatricesUniformBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mMatricesUniformMemory = VK_NULL_HANDLE;
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
+        VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
+        VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;

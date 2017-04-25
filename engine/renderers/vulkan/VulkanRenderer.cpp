@@ -165,6 +165,16 @@ namespace AeonGames
         return mVkCommandBuffer;
     }
 
+    const VkDescriptorSetLayout & VulkanRenderer::GetDescriptorSetLayout() const
+    {
+        return mVkDescriptorSetLayout;
+    }
+
+    const VkDescriptorSet & VulkanRenderer::GetDescriptorSet() const
+    {
+        return mVkDescriptorSet;
+    }
+
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
     {
         return mQueueFamilyIndex;
@@ -544,6 +554,56 @@ namespace AeonGames
             stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+
+        std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
+        descriptor_set_layout_bindings[0].binding = 0;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_set_layout_bindings[0].descriptorCount = 1;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.pNext = nullptr;
+        descriptor_set_layout_create_info.flags = 0;
+        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
+        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkDescriptorSetLayout } };
+        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+        if ( VkResult result = vkAllocateDescriptorSets ( mVkDevice, &descriptor_set_allocate_info, &mVkDescriptorSet ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkDescriptorBufferInfo descriptor_buffer_info = {};
+        descriptor_buffer_info.buffer = mMatricesUniformBuffer;
+        descriptor_buffer_info.offset = 0;
+        descriptor_buffer_info.range = sizeof ( Matrices );
+
+        VkWriteDescriptorSet write_descriptor_set = {};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.dstSet = mVkDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = 1;
+        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets ( mVkDevice, 1, &write_descriptor_set, 0, nullptr );
     }
 
     void VulkanRenderer::FinalizeCommandPool()
@@ -557,6 +617,11 @@ namespace AeonGames
 
     void VulkanRenderer::FinalizeDescriptorPool()
     {
+        if ( mVkDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVkDevice, mVkDescriptorSetLayout, nullptr );
+            mVkDescriptorSetLayout = VK_NULL_HANDLE;
+        }
         if ( mVkDescriptorPool != VK_NULL_HANDLE )
         {
             vkDestroyDescriptorPool ( mVkDevice, mVkDescriptorPool, nullptr );
