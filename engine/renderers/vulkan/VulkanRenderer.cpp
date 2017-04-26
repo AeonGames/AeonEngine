@@ -370,6 +370,23 @@ namespace AeonGames
         }
 
         {
+            uint32_t extension_property_count;
+            vkEnumerateDeviceExtensionProperties ( mVkPhysicalDevice, nullptr, &extension_property_count, nullptr );
+
+            std::vector<VkExtensionProperties> extension_properties ( extension_property_count );
+            vkEnumerateDeviceExtensionProperties ( mVkPhysicalDevice, nullptr, &extension_property_count, extension_properties.data() );
+            std::cout << "Vulkan Extensions" << std::endl;
+            for ( auto& i : extension_properties )
+            {
+                std::cout << " " << i.extensionName << "t|\t" << i.specVersion << std::endl;
+                if ( !strcmp ( i.extensionName, VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) )
+                {
+                    mDeviceExtensionNames.emplace_back ( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
+                }
+            }
+        }
+
+        {
             uint32_t instance_layer_count;
             vkEnumerateInstanceLayerProperties ( &instance_layer_count, nullptr );
             std::vector<VkLayerProperties> instance_layer_list ( instance_layer_count );

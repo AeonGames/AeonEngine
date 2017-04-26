@@ -109,15 +109,19 @@ namespace AeonGames
         std::vector<const char*> mInstanceExtensionNames;
         std::vector<const char*> mDeviceLayerNames;
         std::vector<const char*> mDeviceExtensionNames;
-        // Vulkan Functions
+        // Instance Functions
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
-
+        // Device Extension Functions
+        PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT = VK_NULL_HANDLE;
+        PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT = VK_NULL_HANDLE;
+        PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT = VK_NULL_HANDLE;
+        PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT = VK_NULL_HANDLE;
+        PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT = VK_NULL_HANDLE;
         /** @todo From here on, these members are the same as the OpenGL renderer...
             shall we create a common class? */
         void UpdateMatrices();
-
         struct Matrices
         {
             float mViewMatrix[16];
