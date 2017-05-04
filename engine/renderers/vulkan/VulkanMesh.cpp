@@ -195,7 +195,7 @@ namespace AeonGames
                 buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
                 buffer_create_info.pNext = nullptr;
                 buffer_create_info.flags = 0;
-                /**@note Upcast index buffer to 16 bits when index type is 8 bits.*/
+                /**@note Upcasting index buffer to 16 bits when index type is 8 bits.*/
                 buffer_create_info.size = triangle_groups[i].mIndexBuffer.length() *
                                           ( ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) ? 2 : 1 );
                 buffer_create_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;

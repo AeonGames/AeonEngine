@@ -166,6 +166,7 @@ namespace AeonGames
         pipeline_viewport_state_create_info.flags = 0;
         pipeline_viewport_state_create_info.viewportCount = 1;
         pipeline_viewport_state_create_info.pViewports = &viewport;
+
         pipeline_viewport_state_create_info.scissorCount = 1;
         pipeline_viewport_state_create_info.pScissors = &scissor;
 
@@ -176,13 +177,25 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_TRUE;
         pipeline_rasterization_state_create_info.polygonMode = VK_POLYGON_MODE_FILL;
-        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE;
+        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_BACK_BIT;
         pipeline_rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         pipeline_rasterization_state_create_info.depthBiasEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasClamp = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
         pipeline_rasterization_state_create_info.lineWidth = 1.0f;
+
+        std::array<VkDynamicState, 2> dynamic_states
+        {
+            VK_DYNAMIC_STATE_VIEWPORT,
+            VK_DYNAMIC_STATE_SCISSOR
+        };
+        VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
+        pipeline_dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        pipeline_dynamic_state_create_info.pNext = nullptr;
+        pipeline_dynamic_state_create_info.flags = 0;
+        pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
+        pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
         std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ mVulkanRenderer->GetDescriptorSetLayout() };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
@@ -211,7 +224,7 @@ namespace AeonGames
         graphics_pipeline_create_info.pMultisampleState = nullptr;
         graphics_pipeline_create_info.pDepthStencilState = nullptr;
         graphics_pipeline_create_info.pColorBlendState = nullptr;
-        graphics_pipeline_create_info.pDynamicState = nullptr;
+        graphics_pipeline_create_info.pDynamicState = &pipeline_dynamic_state_create_info;
         graphics_pipeline_create_info.layout = mVkPipelineLayout;
         graphics_pipeline_create_info.renderPass = mVulkanRenderer->GetRenderPass();
         graphics_pipeline_create_info.subpass = 0;
