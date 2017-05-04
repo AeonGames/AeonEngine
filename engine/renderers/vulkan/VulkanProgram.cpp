@@ -116,7 +116,7 @@ namespace AeonGames
 
         std::array<VkVertexInputBindingDescription, 1> vertex_input_binding_descriptions { {} };
         vertex_input_binding_descriptions[0].binding = 0;
-        vertex_input_binding_descriptions[0].stride = mProgram->GetStride();
+        vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         uint32_t attributes = mProgram->GetAttributes();
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );

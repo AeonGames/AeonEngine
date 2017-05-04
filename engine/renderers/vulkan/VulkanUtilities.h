@@ -22,6 +22,22 @@ namespace AeonGames
     static_assert ( VK_SUCCESS == 0, "VK_SUCCESS is NOT zero!" );
     const char* GetVulkanResultString ( VkResult aResult );
 
+    struct Vertex
+    {
+        float position[3];
+        float normal[3];
+        float tangent[3];
+        float bitangent[3];
+        float uv[2];
+        uint8_t weight_indices[4];
+        uint8_t weight_influences[4];
+    };
+
+    static_assert (
+        sizeof ( Vertex ) ==
+        ( sizeof ( float ) * 14 + sizeof ( uint8_t ) * 8 ),
+        "Vertex Structure Contains Padding." );
+
     VKAPI_ATTR VkBool32 VKAPI_CALL
     DebugCallback (
         VkFlags aFlags,
