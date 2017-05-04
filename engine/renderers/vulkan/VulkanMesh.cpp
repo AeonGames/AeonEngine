@@ -99,7 +99,8 @@ namespace AeonGames
                 buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
                 buffer_create_info.pNext = nullptr;
                 buffer_create_info.flags = 0;
-                buffer_create_info.size = triangle_groups[i].mVertexBuffer.size();
+                /* We need to inflate the vertex buffer because Vulkan doesn't take per attribute strides. */
+                buffer_create_info.size = sizeof ( Vertex ) * triangle_groups[i].mVertexCount;
                 buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
                 buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 buffer_create_info.queueFamilyIndexCount = 0;
@@ -127,15 +128,57 @@ namespace AeonGames
                     stream << "vkAllocateMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
                     throw std::runtime_error ( stream.str().c_str() );
                 }
-                void* data = nullptr;
-                if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+
+                Vertex* vertices = nullptr;
+                if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &vertices ) ) )
                 {
                     std::ostringstream stream;
                     stream << "vkMapMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
                     throw std::runtime_error ( stream.str().c_str() );
                 }
 
-                memcpy ( data, triangle_groups[i].mVertexBuffer.data(), triangle_groups[i].mVertexBuffer.size() );
+                memset ( vertices, 0, buffer_create_info.size );
+                uintptr_t offset = 0;
+                for ( uint32_t j = 0; j < triangle_groups[i].mVertexCount; ++j )
+                {
+                    if ( triangle_groups[i].mVertexFlags & Mesh::POSITION_BIT )
+                    {
+                        memcpy ( vertices[j].position, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::position ) );
+                        offset += sizeof ( Vertex::position );
+                    }
+
+                    if ( triangle_groups[i].mVertexFlags & Mesh::NORMAL_BIT )
+                    {
+                        memcpy ( vertices[j].normal, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::normal ) );
+                        offset += sizeof ( Vertex::normal );
+                    }
+
+                    if ( triangle_groups[i].mVertexFlags & Mesh::TANGENT_BIT )
+                    {
+                        memcpy ( vertices[j].tangent, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::tangent ) );
+                        offset += sizeof ( Vertex::tangent );
+                    }
+
+                    if ( triangle_groups[i].mVertexFlags & Mesh::BITANGENT_BIT )
+                    {
+                        memcpy ( vertices[j].bitangent, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::bitangent ) );
+                        offset += sizeof ( Vertex::bitangent );
+                    }
+
+                    if ( triangle_groups[i].mVertexFlags & Mesh::UV_BIT )
+                    {
+                        memcpy ( vertices[j].uv, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::uv ) );
+                        offset += sizeof ( Vertex::uv );
+                    }
+
+                    if ( triangle_groups[i].mVertexFlags & Mesh::WEIGHT_BIT )
+                    {
+                        memcpy ( vertices[j].weight_indices, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::weight_indices ) );
+                        offset += sizeof ( Vertex::weight_indices );
+                        memcpy ( vertices[j].weight_influences, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::weight_influences ) );
+                        offset += sizeof ( Vertex::weight_influences );
+                    }
+                }
 
                 vkUnmapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexMemory );
 
