@@ -48,11 +48,13 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanProgram::Use() const
+    void VulkanProgram::Use ( const VulkanWindow& aWindow ) const
     {
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, 1, &mVulkanRenderer->GetDescriptorSet(), 0, nullptr );
+        vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetViewport() );
+        vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
     }
 
     void VulkanProgram::Initialize()

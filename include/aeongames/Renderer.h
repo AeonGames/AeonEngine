@@ -34,8 +34,8 @@ namespace AeonGames
         ///@name Rendering Functions
         ///@{
         virtual void BeginRender ( uintptr_t aWindowId ) const = 0;
+        virtual void Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const = 0;
         virtual void EndRender ( uintptr_t aWindowId ) const = 0;
-        virtual void Render ( const std::shared_ptr<Model> aModel ) const = 0;
         ///@}
         ///@name Resource Allocation Functions
         ///@{

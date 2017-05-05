@@ -44,9 +44,9 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render() const
+    void VulkanModel::Render ( const VulkanWindow& aWindow ) const
     {
-        mProgram->Use();
+        mProgram->Use ( aWindow );
         mMesh->Render();
     }
 

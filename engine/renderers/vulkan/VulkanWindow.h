@@ -36,6 +36,8 @@ namespace AeonGames
         const uint32_t& GetActiveImageIndex() const;
         const VkFramebuffer& GetActiveFrameBuffer() const;
         void AcquireNextImage();
+        const VkViewport& GetViewport() const;
+        const VkRect2D& GetScissor() const;
     private:
         void Initialize();
         void Finalize();
@@ -64,6 +66,8 @@ namespace AeonGames
         bool mHasStencil = false;
         std::vector<VkFramebuffer> mVkFramebuffers;
         uint32_t mActiveImageIndex = UINT32_MAX;
+        VkViewport mVkViewport{};
+        VkRect2D mVkScissor{};
     };
 }
 #endif

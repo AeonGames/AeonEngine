@@ -154,7 +154,7 @@ namespace AeonGames
             mRenderer->BeginRender ( winId() );
             if ( mModel )
             {
-                mRenderer->Render ( mModel );
+                mRenderer->Render ( winId(), mModel );
             }
             mRenderer->EndRender ( winId() );
             return true;

@@ -101,7 +101,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
+    void OpenGLRenderer::Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const
     {
         auto& model = mModelMap.at ( aModel );
         model->Render ( mMatricesBuffer );
