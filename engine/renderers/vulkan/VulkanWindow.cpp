@@ -50,6 +50,20 @@ namespace AeonGames
     void VulkanWindow::CreateSurface()
     {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
+        RECT rect;
+        GetClientRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
+        mVkViewport.x = 0.0f;
+        mVkViewport.y = 0.0f;
+        mVkViewport.width = static_cast<float> ( rect.right );
+        mVkViewport.height = static_cast<float> ( rect.bottom );
+        mVkViewport.minDepth = 0.0f;
+        mVkViewport.maxDepth = 1.0f;
+
+        mVkScissor.offset.x = 0;
+        mVkScissor.offset.y = 0;
+        mVkScissor.extent.width = rect.right;
+        mVkScissor.extent.height = rect.bottom;
+
         VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
         win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         win32_surface_create_info_khr.hwnd = reinterpret_cast<HWND> ( mWindowId );
@@ -310,6 +324,16 @@ namespace AeonGames
         }
     }
 
+    const VkViewport & VulkanWindow::GetViewport() const
+    {
+        return mVkViewport;
+    }
+
+    const VkRect2D & VulkanWindow::GetScissor() const
+    {
+        return mVkScissor;
+    }
+
     void VulkanWindow::Initialize()
     {
         if ( !mVulkanRenderer )
@@ -360,6 +384,12 @@ namespace AeonGames
                 stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
                 throw std::runtime_error ( stream.str().c_str() );
             }
+
+            mVkViewport.width = static_cast<float> ( aWidth );
+            mVkViewport.height = static_cast<float> ( aHeight );
+            mVkScissor.extent.width = aWidth;
+            mVkScissor.extent.height = aHeight;
+
             DestroyFrameBuffers();
             DestroyDepthStencil();
             DestroyImageViews();

@@ -816,17 +816,29 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel ) const
+    void VulkanRenderer::Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const
     {
-        void* data = nullptr;
-        if ( VkResult result = vkMapMemory ( mVkDevice, mMatricesUniformMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
         {
-            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            if ( window->GetWindowId() == aWindowId )
+            {
+                return true;
+            }
+            return false;
+        } );
+        if ( i != mWindowRegistry.end() )
+        {
+            void* data = nullptr;
+            if ( VkResult result = vkMapMemory ( mVkDevice, mMatricesUniformMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+            {
+                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            }
+            memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
+            vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
+            auto& model = mModelMap.at ( aModel );
+            model->Render ( *i->get() );
         }
-        memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
-        vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
-        auto& model = mModelMap.at ( aModel );
-        model->Render();
     }
 
     bool VulkanRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )

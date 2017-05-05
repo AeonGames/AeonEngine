@@ -24,6 +24,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Program;
+    class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
     class VulkanProgram
@@ -31,7 +32,7 @@ namespace AeonGames
     public:
         VulkanProgram ( const std::shared_ptr<Program> aProgram, const VulkanRenderer* aVulkanRenderer );
         ~VulkanProgram();
-        void Use() const;
+        void Use ( const VulkanWindow& aWindow ) const;
     private:
         void Initialize();
         void Finalize();

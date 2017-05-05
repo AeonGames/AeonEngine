@@ -39,8 +39,8 @@ namespace AeonGames
         OpenGLRenderer();
         ~OpenGLRenderer() override;
         void BeginRender ( uintptr_t aWindowId ) const final;
+        void Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const final;
         void EndRender ( uintptr_t aWindowId ) const final;
-        void Render ( const std::shared_ptr<Model> aModel ) const final;
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
         bool AddRenderingWindow ( uintptr_t aWindowId ) final;
         void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
