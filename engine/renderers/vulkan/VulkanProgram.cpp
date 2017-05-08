@@ -145,39 +145,24 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = 1.0f;
-        viewport.height = 1.0f;
-        viewport.minDepth = 0.1f;
-        viewport.maxDepth = 1000.0f;
-
-        VkRect2D scissor{};
-        scissor.offset.x = 0;
-        scissor.offset.y = 0;
-        scissor.extent.width = 1;
-        scissor.extent.height = 1;
-
-        VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info{};
+        VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
         pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         pipeline_viewport_state_create_info.pNext = nullptr;
         pipeline_viewport_state_create_info.flags = 0;
         pipeline_viewport_state_create_info.viewportCount = 1;
-        pipeline_viewport_state_create_info.pViewports = &viewport;
-
+        pipeline_viewport_state_create_info.pViewports = nullptr;
         pipeline_viewport_state_create_info.scissorCount = 1;
-        pipeline_viewport_state_create_info.pScissors = &scissor;
+        pipeline_viewport_state_create_info.pScissors = nullptr;
 
         VkPipelineRasterizationStateCreateInfo pipeline_rasterization_state_create_info{};
         pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         pipeline_rasterization_state_create_info.pNext = nullptr;
         pipeline_rasterization_state_create_info.flags = 0;
         pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
-        pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_TRUE;
+        pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.polygonMode = VK_POLYGON_MODE_FILL;
         pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_BACK_BIT;
         pipeline_rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -186,6 +171,50 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthBiasClamp = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
         pipeline_rasterization_state_create_info.lineWidth = 1.0f;
+
+        VkPipelineMultisampleStateCreateInfo pipeline_multisample_state_create_info{};
+        pipeline_multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        pipeline_multisample_state_create_info.pNext = nullptr;
+        pipeline_multisample_state_create_info.flags = 0;
+        pipeline_multisample_state_create_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        pipeline_multisample_state_create_info.minSampleShading = 1.0f;
+        pipeline_multisample_state_create_info.pSampleMask = nullptr;
+        pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_FALSE;
+        pipeline_multisample_state_create_info.alphaToOneEnable = VK_FALSE;
+
+        VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info{};
+        pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        pipeline_depth_stencil_state_create_info.pNext = nullptr;
+        pipeline_depth_stencil_state_create_info.flags = 0;
+        pipeline_depth_stencil_state_create_info.depthTestEnable = VK_TRUE;
+        pipeline_depth_stencil_state_create_info.depthWriteEnable = VK_TRUE;
+        pipeline_depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS;
+        pipeline_depth_stencil_state_create_info.depthBoundsTestEnable = VK_FALSE;
+        pipeline_depth_stencil_state_create_info.stencilTestEnable = VK_FALSE;
+        //pipeline_depth_stencil_state_create_info.front;
+        //pipeline_depth_stencil_state_create_info.back;
+        pipeline_depth_stencil_state_create_info.minDepthBounds = 0.0f;
+        pipeline_depth_stencil_state_create_info.maxDepthBounds = 1.0f;
+
+        std::array<VkPipelineColorBlendAttachmentState, 1> pipeline_color_blend_attachment_states{ {} };
+        pipeline_color_blend_attachment_states[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        pipeline_color_blend_attachment_states[0].blendEnable = VK_FALSE;
+        pipeline_color_blend_attachment_states[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        pipeline_color_blend_attachment_states[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        pipeline_color_blend_attachment_states[0].colorBlendOp = VK_BLEND_OP_ADD;
+        pipeline_color_blend_attachment_states[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        pipeline_color_blend_attachment_states[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        pipeline_color_blend_attachment_states[0].alphaBlendOp = VK_BLEND_OP_ADD;
+
+        VkPipelineColorBlendStateCreateInfo pipeline_color_blend_state_create_info{};
+        pipeline_color_blend_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        pipeline_color_blend_state_create_info.pNext = nullptr;
+        pipeline_color_blend_state_create_info.flags = 0;
+        pipeline_color_blend_state_create_info.logicOpEnable = VK_FALSE;
+        pipeline_color_blend_state_create_info.logicOp = VK_LOGIC_OP_COPY;
+        pipeline_color_blend_state_create_info.attachmentCount = static_cast<uint32_t> ( pipeline_color_blend_attachment_states.size() );
+        pipeline_color_blend_state_create_info.pAttachments = pipeline_color_blend_attachment_states.data();
+        memset ( pipeline_color_blend_state_create_info.blendConstants, 0, sizeof ( VkPipelineColorBlendStateCreateInfo::blendConstants ) );
 
         std::array<VkDynamicState, 2> dynamic_states
         {
@@ -223,9 +252,9 @@ namespace AeonGames
         graphics_pipeline_create_info.pTessellationState = nullptr;
         graphics_pipeline_create_info.pViewportState = &pipeline_viewport_state_create_info;
         graphics_pipeline_create_info.pRasterizationState = &pipeline_rasterization_state_create_info;
-        graphics_pipeline_create_info.pMultisampleState = nullptr;
-        graphics_pipeline_create_info.pDepthStencilState = nullptr;
-        graphics_pipeline_create_info.pColorBlendState = nullptr;
+        graphics_pipeline_create_info.pMultisampleState = &pipeline_multisample_state_create_info;
+        graphics_pipeline_create_info.pDepthStencilState = &pipeline_depth_stencil_state_create_info;
+        graphics_pipeline_create_info.pColorBlendState = &pipeline_color_blend_state_create_info;
         graphics_pipeline_create_info.pDynamicState = &pipeline_dynamic_state_create_info;
         graphics_pipeline_create_info.layout = mVkPipelineLayout;
         graphics_pipeline_create_info.renderPass = mVulkanRenderer->GetRenderPass();
