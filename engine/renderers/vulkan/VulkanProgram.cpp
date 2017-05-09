@@ -161,12 +161,12 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         pipeline_rasterization_state_create_info.pNext = nullptr;
         pipeline_rasterization_state_create_info.flags = 0;
-        pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
+        pipeline_rasterization_state_create_info.depthClampEnable = VK_TRUE;
         pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.polygonMode = VK_POLYGON_MODE_FILL;
-        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_BACK_BIT;
+        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
         pipeline_rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        pipeline_rasterization_state_create_info.depthBiasEnable = VK_FALSE;
+        pipeline_rasterization_state_create_info.depthBiasEnable = VK_TRUE;
         pipeline_rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasClamp = 0.0f;
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
@@ -176,11 +176,12 @@ namespace AeonGames
         pipeline_multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         pipeline_multisample_state_create_info.pNext = nullptr;
         pipeline_multisample_state_create_info.flags = 0;
+        pipeline_multisample_state_create_info.sampleShadingEnable = VK_TRUE;
         pipeline_multisample_state_create_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-        pipeline_multisample_state_create_info.minSampleShading = 1.0f;
+        pipeline_multisample_state_create_info.minSampleShading = 0.0f;
         pipeline_multisample_state_create_info.pSampleMask = nullptr;
-        pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_FALSE;
-        pipeline_multisample_state_create_info.alphaToOneEnable = VK_FALSE;
+        pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_TRUE;
+        pipeline_multisample_state_create_info.alphaToOneEnable = VK_TRUE;
 
         VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info{};
         pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -198,7 +199,7 @@ namespace AeonGames
 
         std::array<VkPipelineColorBlendAttachmentState, 1> pipeline_color_blend_attachment_states{ {} };
         pipeline_color_blend_attachment_states[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        pipeline_color_blend_attachment_states[0].blendEnable = VK_FALSE;
+        pipeline_color_blend_attachment_states[0].blendEnable = VK_TRUE;
         pipeline_color_blend_attachment_states[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
         pipeline_color_blend_attachment_states[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
         pipeline_color_blend_attachment_states[0].colorBlendOp = VK_BLEND_OP_ADD;
