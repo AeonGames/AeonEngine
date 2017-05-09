@@ -61,7 +61,7 @@ namespace AeonGames
                 InitializeDebug();
             }
             InitializeDevice();
-            InitializeSemaphore();
+            InitializeSemaphores();
             InitializeFence();
             InitializeRenderPass();
             InitializeMatricesUniform();
@@ -75,7 +75,7 @@ namespace AeonGames
             FinalizeMatricesUniform();
             FinalizeRenderPass();
             FinalizeFence();
-            FinalizeSemaphore();
+            FinalizeSemaphores();
             FinalizeDevice();
             FinalizeDebug();
             FinalizeInstance();
@@ -99,7 +99,7 @@ namespace AeonGames
         FinalizeMatricesUniform();
         FinalizeRenderPass();
         FinalizeFence();
-        FinalizeSemaphore();
+        FinalizeSemaphores();
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
@@ -113,11 +113,6 @@ namespace AeonGames
     const VkQueue & VulkanRenderer::GetQueue() const
     {
         return mVkQueue;
-    }
-
-    const VkSemaphore & VulkanRenderer::GetSemaphore() const
-    {
-        return mVkSemaphore;
     }
 
     const VkFence & VulkanRenderer::GetFence() const
@@ -435,12 +430,18 @@ namespace AeonGames
         vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
     }
 
-    void VulkanRenderer::InitializeSemaphore()
+    void VulkanRenderer::InitializeSemaphores()
     {
         VkSemaphoreCreateInfo semaphore_create_info{};
         semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-        if ( VkResult result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkSemaphore ) )
+        if ( VkResult result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkSignalSemaphore ) )
+        {
+            std::ostringstream stream;
+            stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        if ( VkResult result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkWaitSemaphore ) )
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
@@ -686,12 +687,17 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::FinalizeSemaphore()
+    void VulkanRenderer::FinalizeSemaphores()
     {
-        if ( mVkSemaphore != VK_NULL_HANDLE )
+        if ( mVkSignalSemaphore != VK_NULL_HANDLE )
         {
-            vkDestroySemaphore ( mVkDevice, mVkSemaphore, nullptr );
-            mVkSemaphore = VK_NULL_HANDLE;
+            vkDestroySemaphore ( mVkDevice, mVkSignalSemaphore, nullptr );
+            mVkSignalSemaphore = VK_NULL_HANDLE;
+        }
+        if ( mVkWaitSemaphore != VK_NULL_HANDLE )
+        {
+            vkDestroySemaphore ( mVkDevice, mVkWaitSemaphore, nullptr );
+            mVkWaitSemaphore = VK_NULL_HANDLE;
         }
     }
 
@@ -787,14 +793,21 @@ namespace AeonGames
                 std::cout << GetVulkanResultString ( result ) << std::endl;
             }
             VkSubmitInfo submit_info{};
+            VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+#if 0
+            submit_info.waitSemaphoreCount = 1;
+            submit_info.pWaitSemaphores = &mVkWaitSemaphore;
+            submit_info.pWaitDstStageMask = &wait_stage;
+#else
             submit_info.waitSemaphoreCount = 0;
             submit_info.pWaitSemaphores = nullptr;
             submit_info.pWaitDstStageMask = nullptr;
+#endif
             submit_info.commandBufferCount = 1;
             submit_info.pCommandBuffers = &mVkCommandBuffer;
             submit_info.signalSemaphoreCount = 1;
-            submit_info.pSignalSemaphores = &mVkSemaphore;
+            submit_info.pSignalSemaphores = &mVkSignalSemaphore;
             if ( VkResult result = vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE ) )
             {
                 std::cout << GetVulkanResultString ( result ) << std::endl;
@@ -803,12 +816,12 @@ namespace AeonGames
             VkPresentInfoKHR present_info{};
             present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
             present_info.waitSemaphoreCount = 1;
-            present_info.pWaitSemaphores = &mVkSemaphore;
+            present_info.pWaitSemaphores = &mVkSignalSemaphore;
             present_info.swapchainCount = 1;
             present_info.pSwapchains = & ( *i )->GetSwapchain();
             present_info.pImageIndices = & ( *i )->GetActiveImageIndex();
             present_info.pResults = result_array.data();
-            present_info.pResults = nullptr;
+            //present_info.pResults = nullptr;
             if ( VkResult result = vkQueuePresentKHR ( mVkQueue, &present_info ) )
             {
                 std::cout << GetVulkanResultString ( result ) << std::endl;

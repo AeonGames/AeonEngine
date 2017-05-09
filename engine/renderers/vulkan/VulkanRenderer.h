@@ -49,7 +49,6 @@ namespace AeonGames
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
         const VkQueue& GetQueue() const;
-        const VkSemaphore& GetSemaphore() const;
         const VkFence& GetFence() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
         const VkRenderPass& GetRenderPass() const;
@@ -63,7 +62,7 @@ namespace AeonGames
     private:
         void InitializeInstance();
         void InitializeDevice();
-        void InitializeSemaphore();
+        void InitializeSemaphores();
         void InitializeFence();
         void InitializeRenderPass();
         void InitializeCommandPool();
@@ -75,7 +74,7 @@ namespace AeonGames
         void LoadFunctions();
         void FinalizeInstance();
         void FinalizeDevice();
-        void FinalizeSemaphore();
+        void FinalizeSemaphores();
         void FinalizeFence();
         void FinalizeRenderPass();
         void FinalizeCommandPool();
@@ -93,7 +92,8 @@ namespace AeonGames
         VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
         VkQueue mVkQueue = VK_NULL_HANDLE;
-        VkSemaphore mVkSemaphore = VK_NULL_HANDLE;
+        VkSemaphore mVkSignalSemaphore = VK_NULL_HANDLE;
+        VkSemaphore mVkWaitSemaphore = VK_NULL_HANDLE;
         VkFence mVkFence = VK_NULL_HANDLE;
         VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
         VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
