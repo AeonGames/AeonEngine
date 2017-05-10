@@ -487,31 +487,34 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        std::array<VkAttachmentDescription, 2> attachment_descriptions{};
+        std::array<VkAttachmentDescription, 2> attachment_descriptions{ {} };
         attachment_descriptions[0].flags = 0;
-        attachment_descriptions[0].format = mVkDepthStencilFormat;
+        attachment_descriptions[0].format = mVkSurfaceFormatKHR.format;
         attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
         attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
         attachment_descriptions[1].flags = 0;
-        attachment_descriptions[1].format = mVkSurfaceFormatKHR.format;
+        attachment_descriptions[1].format = mVkDepthStencilFormat;
         attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
         attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        std::array<VkAttachmentReference, 1> color_attachment_references{};
+        color_attachment_references[0].attachment = 0;
+        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference depth_stencil_attachment_reference{};
-        depth_stencil_attachment_reference.attachment = 0;
+        depth_stencil_attachment_reference.attachment = 1;
         depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        std::array<VkAttachmentReference, 1> color_attachment_references{};
-        color_attachment_references[0].attachment = 1;
-        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         std::array<VkSubpassDescription, 1> subpass_descriptions{};
         subpass_descriptions[0].flags = 0;
@@ -525,12 +528,20 @@ namespace AeonGames
         subpass_descriptions[0].preserveAttachmentCount = 0;
         subpass_descriptions[0].pPreserveAttachments = nullptr;
 
+        VkSubpassDependency subpass_dependency = {};
+        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependency.dstSubpass = 0;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.srcAccessMask = 0;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
         VkRenderPassCreateInfo render_pass_create_info{};
         render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
         render_pass_create_info.pAttachments = attachment_descriptions.data();
-        render_pass_create_info.dependencyCount = 0;
-        render_pass_create_info.pDependencies = nullptr;
+        render_pass_create_info.dependencyCount = 1;
+        render_pass_create_info.pDependencies = &subpass_dependency;
         render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
         render_pass_create_info.pSubpasses = subpass_descriptions.data();
         vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mVkRenderPass );
@@ -757,12 +768,15 @@ namespace AeonGames
             }
 
             VkRect2D render_area{ { 0, 0 }, { ( *i )->GetWidth(), ( *i )->GetHeight() } };
-            /* [0] is depth/stencil [1] is color.*/
+            /* [1] is depth/stencil [0] is color.*/
             std::array<VkClearValue, 2> clear_values{ { { 0 }, { 0 } } };
-            clear_values[1].color.float32[0] = 0.5f;
-            clear_values[1].color.float32[1] = 0.5f;
-            clear_values[1].color.float32[2] = 0.5f;
-            clear_values[1].color.float32[3] = 0.0f;
+            clear_values[0].color.float32[0] = 0.5f;
+            clear_values[0].color.float32[1] = 0.5f;
+            clear_values[0].color.float32[2] = 0.5f;
+            clear_values[0].color.float32[3] = 0.0f;
+            clear_values[1].depthStencil.depth = 1.0f;
+            clear_values[1].depthStencil.stencil = 0;
+
             VkRenderPassBeginInfo render_pass_begin_info{};
             render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             render_pass_begin_info.renderPass = mVkRenderPass;
@@ -795,15 +809,9 @@ namespace AeonGames
             VkSubmitInfo submit_info{};
             VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-#if 0
-            submit_info.waitSemaphoreCount = 1;
-            submit_info.pWaitSemaphores = &mVkWaitSemaphore;
-            submit_info.pWaitDstStageMask = &wait_stage;
-#else
             submit_info.waitSemaphoreCount = 0;
             submit_info.pWaitSemaphores = nullptr;
             submit_info.pWaitDstStageMask = nullptr;
-#endif
             submit_info.commandBufferCount = 1;
             submit_info.pCommandBuffers = &mVkCommandBuffer;
             submit_info.signalSemaphoreCount = 1;
