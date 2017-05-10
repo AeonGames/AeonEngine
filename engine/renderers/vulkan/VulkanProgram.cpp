@@ -161,7 +161,7 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         pipeline_rasterization_state_create_info.pNext = nullptr;
         pipeline_rasterization_state_create_info.flags = 0;
-        pipeline_rasterization_state_create_info.depthClampEnable = VK_TRUE;
+        pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.polygonMode = VK_POLYGON_MODE_FILL;
         pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
@@ -181,7 +181,7 @@ namespace AeonGames
         pipeline_multisample_state_create_info.minSampleShading = 0.0f;
         pipeline_multisample_state_create_info.pSampleMask = nullptr;
         pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_TRUE;
-        pipeline_multisample_state_create_info.alphaToOneEnable = VK_TRUE;
+        pipeline_multisample_state_create_info.alphaToOneEnable = VK_FALSE;
 
         VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info{};
         pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -192,8 +192,8 @@ namespace AeonGames
         pipeline_depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS;
         pipeline_depth_stencil_state_create_info.depthBoundsTestEnable = VK_FALSE;
         pipeline_depth_stencil_state_create_info.stencilTestEnable = VK_FALSE;
-        //pipeline_depth_stencil_state_create_info.front;
-        //pipeline_depth_stencil_state_create_info.back;
+        pipeline_depth_stencil_state_create_info.front = {};
+        pipeline_depth_stencil_state_create_info.back = {};
         pipeline_depth_stencil_state_create_info.minDepthBounds = 0.0f;
         pipeline_depth_stencil_state_create_info.maxDepthBounds = 1.0f;
 

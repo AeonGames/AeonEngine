@@ -286,8 +286,8 @@ namespace AeonGames
         {
             std::array<VkImageView, 2> attachments
             {
-                mVkDepthStencilImageView,
-                mVkSwapchainImageViews[i]
+                mVkSwapchainImageViews[i],
+                mVkDepthStencilImageView
             };
             VkFramebufferCreateInfo framebuffer_create_info{};
             framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
