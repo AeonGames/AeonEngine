@@ -1,5 +1,5 @@
 /*
-Copyright 2014-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ namespace AeonGames
 
     void Matrix4x4::Frustum ( float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar )
     {
-        // glFrustum, +Z up, +Y forward
+        // glFrustum, +X right, +Y forward, +Z up
         // X
         mMatrix[0] = ( 2 * aNear ) / ( aRight - aLeft );
         mMatrix[1] = 0.0f;

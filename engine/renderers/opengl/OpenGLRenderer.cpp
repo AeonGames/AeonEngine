@@ -451,6 +451,11 @@ namespace AeonGames
     void OpenGLRenderer::SetProjectionMatrix ( const float aMatrix[16] )
     {
         memcpy ( mProjectionMatrix, aMatrix,  sizeof ( float ) * 16 );
+        /* Flip Z axis to match Vulkan's right hand Normalized Device Coordinates (NDC).*/
+        mProjectionMatrix[8]  *= -1;
+        mProjectionMatrix[9]  *= -1;
+        mProjectionMatrix[10] *= -1;
+        mProjectionMatrix[11] *= -1;
         UpdateMatrices();
     }
 
