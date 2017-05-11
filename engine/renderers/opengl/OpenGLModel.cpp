@@ -18,7 +18,7 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/ResourceCache.h"
 #include "OpenGLModel.h"
-#include "OpenGLProgram.h"
+#include "OpenGLPipeline.h"
 #include "OpenGLMesh.h"
 
 namespace AeonGames
@@ -55,7 +55,7 @@ namespace AeonGames
 
     void OpenGLModel::Initialize()
     {
-        mProgram = Get<OpenGLProgram> ( mModel->GetProgram() );
+        mProgram = Get<OpenGLPipeline> ( mModel->GetProgram() );
         mMesh = Get<OpenGLMesh> ( mModel->GetMesh() );
     }
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include "aeongames/ResourceCache.h"
-#include "aeongames/Program.h"
+#include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Renderer.h"
@@ -55,7 +55,7 @@ namespace AeonGames
         return mFilename;
     }
 
-    const std::shared_ptr<Program> Model::GetProgram() const
+    const std::shared_ptr<Pipeline> Model::GetProgram() const
     {
         return mProgram;
     }
@@ -78,7 +78,7 @@ namespace AeonGames
         {
             if ( !model_buffer.program().has_buffer() )
             {
-                mProgram = Get<Program> ( model_buffer.program().file() );
+                mProgram = Get<Pipeline> ( model_buffer.program().file() );
             }
         }
         if ( model_buffer.has_material() )

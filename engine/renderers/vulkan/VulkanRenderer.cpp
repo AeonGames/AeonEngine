@@ -36,7 +36,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanUtilities.h"
-#include "VulkanProgram.h"
+#include "VulkanPipeline.h"
 #include "VulkanMesh.h"
 #include "VulkanModel.h"
 #include "math/3DMath.h"

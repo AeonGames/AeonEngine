@@ -20,7 +20,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Model;
-    class OpenGLProgram;
+    class OpenGLPipeline;
     class OpenGLMesh;
     class OpenGLModel
     {
@@ -32,7 +32,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         const std::shared_ptr<Model> mModel;
-        std::shared_ptr<OpenGLProgram> mProgram;
+        std::shared_ptr<OpenGLPipeline> mProgram;
         std::shared_ptr<OpenGLMesh> mMesh;
     };
 }

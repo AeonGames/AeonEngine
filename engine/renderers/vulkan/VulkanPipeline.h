@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANPROGRAM_H
-#define AEONGAMES_VULKANPROGRAM_H
+#ifndef AEONGAMES_VULKANPIPELINE_H
+#define AEONGAMES_VULKANPIPELINE_H
 #include <cstdint>
 #include <string>
 #include <array>
@@ -23,20 +23,20 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Program;
+    class Pipeline;
     class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
-    class VulkanProgram
+    class VulkanPipeline
     {
     public:
-        VulkanProgram ( const std::shared_ptr<Program> aProgram, const VulkanRenderer* aVulkanRenderer );
-        ~VulkanProgram();
+        VulkanPipeline ( const std::shared_ptr<Pipeline> aProgram, const VulkanRenderer* aVulkanRenderer );
+        ~VulkanPipeline();
         void Use ( const VulkanWindow& aWindow ) const;
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Program> mProgram;
+        const std::shared_ptr<Pipeline> mProgram;
         const VulkanRenderer* mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ {VK_NULL_HANDLE} };

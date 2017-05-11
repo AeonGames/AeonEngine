@@ -27,10 +27,10 @@ limitations under the License.
 namespace AeonGames
 {
     class Mesh;
-    class Program;
+    class Pipeline;
     class Material;
     class OpenGLMesh;
-    class OpenGLProgram;
+    class OpenGLPipeline;
     class OpenGLModel;
     class OpenGLMaterial;
     class OpenGLRenderer : public Renderer

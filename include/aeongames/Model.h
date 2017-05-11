@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Program;
+    class Pipeline;
     class Material;
     class Mesh;
     class Model
@@ -30,12 +30,12 @@ namespace AeonGames
         DLL Model ( std::string  aFilename );
         DLL ~Model();
         DLL const std::string& GetFilename() const;
-        DLL const std::shared_ptr<Program> GetProgram() const;
+        DLL const std::shared_ptr<Pipeline> GetProgram() const;
         DLL const std::shared_ptr<Material> GetMaterial() const;
         DLL const std::shared_ptr<Mesh> GetMesh() const;
     private:
         std::string mFilename;
-        std::shared_ptr<Program> mProgram;
+        std::shared_ptr<Pipeline> mProgram;
         std::shared_ptr<Material> mMaterial;
         std::shared_ptr<Mesh> mMesh;
         void Initialize();

@@ -22,13 +22,13 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #include "aeongames/Utilities.h"
-#include "aeongames/Program.h"
+#include "aeongames/Pipeline.h"
 
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
-#include "program.pb.h"
+#include "pipeline.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -47,7 +47,7 @@ namespace AeonGames
         "VertexWeights"
     };
 
-    Program::Program ( std::string  aFilename ) :
+    Pipeline::Pipeline ( std::string  aFilename ) :
         mFilename ( std::move ( aFilename ) ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
         try
@@ -61,35 +61,35 @@ namespace AeonGames
         }
     }
 
-    Program::~Program()
+    Pipeline::~Pipeline()
         = default;
 
-    const std::string & Program::GetVertexShaderSource() const
+    const std::string & Pipeline::GetVertexShaderSource() const
     {
         return mVertexShader;
     }
 
-    const std::string & Program::GetFragmentShaderSource() const
+    const std::string & Pipeline::GetFragmentShaderSource() const
     {
         return mFragmentShader;
     }
 
-    const std::vector<Uniform>& Program::GetUniformMetaData() const
+    const std::vector<Uniform>& Pipeline::GetUniformMetaData() const
     {
         return mUniformMetaData;
     }
 
-    uint32_t Program::GetAttributes() const
+    uint32_t Pipeline::GetAttributes() const
     {
         return mAttributes;
     }
 
-    uint32_t Program::GetLocation ( AttributeBits aAttributeBit ) const
+    uint32_t Pipeline::GetLocation ( AttributeBits aAttributeBit ) const
     {
         return ffs ( aAttributeBit );
     }
 
-    uint32_t Program::GetStride() const
+    uint32_t Pipeline::GetStride() const
     {
         uint32_t stride = 0;
         for ( uint32_t i = 0; i < ffs ( ~VertexAllBits ); ++i )
@@ -102,13 +102,13 @@ namespace AeonGames
         return stride;
     }
 
-    Program::AttributeFormat Program::GetFormat ( AttributeBits aAttributeBit ) const
+    Pipeline::AttributeFormat Pipeline::GetFormat ( AttributeBits aAttributeBit ) const
     {
         return ( aAttributeBit & VertexUVBit ) ? Vector2Float :
                ( aAttributeBit & ( VertexWeightIndicesBit | VertexWeightsBit ) ) ? Vector4Byte : Vector3Float;
     }
 
-    uint32_t Program::GetSize ( AttributeBits aAttributeBit ) const
+    uint32_t Pipeline::GetSize ( AttributeBits aAttributeBit ) const
     {
         switch ( GetFormat ( aAttributeBit ) )
         {
@@ -122,7 +122,7 @@ namespace AeonGames
         return 0;
     }
 
-    uint32_t Program::GetOffset ( AttributeBits aAttributeBit ) const
+    uint32_t Pipeline::GetOffset ( AttributeBits aAttributeBit ) const
     {
         uint32_t offset = 0;
         for ( uint32_t i = 1; i != aAttributeBit; i = i << 1 )
@@ -135,12 +135,12 @@ namespace AeonGames
         return offset;
     }
 
-    void Program::Initialize()
+    void Pipeline::Initialize()
     {
-        static ProgramBuffer program_buffer;
-        LoadProtoBufObject<ProgramBuffer> ( program_buffer, mFilename, "AEONPRG" );
+        static PipelineBuffer pipeline_buffer;
+        LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
         {
-            mVertexShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
+            mVertexShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mVertexShader.append (
                 "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
@@ -164,7 +164,7 @@ namespace AeonGames
                 "\\bVertexUV\\b|"
                 "\\bVertexWeightIndices\\b|"
                 "\\bVertexWeights\\b" );
-            std::string code = program_buffer.vertex_shader().code();
+            std::string code = pipeline_buffer.vertex_shader().code();
             while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
             {
                 std::cout << attribute_matches.str() << std::endl;
@@ -187,7 +187,7 @@ namespace AeonGames
                 code = attribute_matches.suffix();
             }
 
-            mFragmentShader.append ( "#version " + std::to_string ( program_buffer.glsl_version() ) + "\n" );
+            mFragmentShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mFragmentShader.append (
                 "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
@@ -199,12 +199,12 @@ namespace AeonGames
                 "mat3 NormalMatrix;\n"
                 "};\n" );
             mUniformMetaData.clear();
-            mUniformMetaData.reserve ( program_buffer.property().size() );
-            if ( program_buffer.property().size() > 0 )
+            mUniformMetaData.reserve ( pipeline_buffer.property().size() );
+            if ( pipeline_buffer.property().size() > 0 )
             {
                 std::string properties ( "layout(std140) uniform Properties{\n" );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
-                for ( auto& i : program_buffer.property() )
+                for ( auto& i : pipeline_buffer.property() )
                 {
                     switch ( i.type() )
                     {
@@ -243,26 +243,26 @@ namespace AeonGames
                 mFragmentShader.append ( properties );
                 mFragmentShader.append ( samplers );
             }
-            switch ( program_buffer.vertex_shader().source_case() )
+            switch ( pipeline_buffer.vertex_shader().source_case() )
             {
             case ShaderBuffer::SourceCase::kCode:
             {
-                mVertexShader.append ( program_buffer.vertex_shader().code() );
+                mVertexShader.append ( pipeline_buffer.vertex_shader().code() );
             }
             break;
             default:
                 throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
             }
-            switch ( program_buffer.fragment_shader().source_case() )
+            switch ( pipeline_buffer.fragment_shader().source_case() )
             {
             case ShaderBuffer::SourceCase::kCode:
-                mFragmentShader.append ( program_buffer.fragment_shader().code() );
+                mFragmentShader.append ( pipeline_buffer.fragment_shader().code() );
                 break;
             default:
                 throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
             }
         }
-        program_buffer.Clear();
+        pipeline_buffer.Clear();
 #if 0
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
@@ -273,7 +273,7 @@ namespace AeonGames
 #endif
     }
 
-    void Program::Finalize()
+    void Pipeline::Finalize()
     {
     }
 }

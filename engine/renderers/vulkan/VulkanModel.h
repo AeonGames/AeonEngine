@@ -20,7 +20,7 @@ namespace AeonGames
 {
     class Model;
     class VulkanRenderer;
-    class VulkanProgram;
+    class VulkanPipeline;
     class VulkanMesh;
     class VulkanWindow;
     class VulkanModel
@@ -34,7 +34,7 @@ namespace AeonGames
         void Finalize();
         const std::shared_ptr<Model> mModel;
         const VulkanRenderer* mVulkanRenderer;
-        std::shared_ptr<VulkanProgram> mProgram;
+        std::shared_ptr<VulkanPipeline> mProgram;
         std::shared_ptr<VulkanMesh> mMesh;
     };
 }

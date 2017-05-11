@@ -19,8 +19,8 @@ limitations under the License.
 #include <fstream>
 #include <vulkan/vulkan.h>
 #include "aeongames/ResourceCache.h"
-#include "aeongames/Program.h"
-#include "VulkanProgram.h"
+#include "aeongames/Pipeline.h"
+#include "VulkanPipeline.h"
 #include "VulkanTexture.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanProgram::VulkanProgram ( const std::shared_ptr<Program> aProgram, const VulkanRenderer* aVulkanRenderer ) :
+    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aProgram, const VulkanRenderer* aVulkanRenderer ) :
         mProgram ( aProgram ),
         mVulkanRenderer ( aVulkanRenderer )
     {
@@ -43,12 +43,12 @@ namespace AeonGames
         }
     }
 
-    VulkanProgram::~VulkanProgram()
+    VulkanPipeline::~VulkanPipeline()
     {
         Finalize();
     }
 
-    void VulkanProgram::Use ( const VulkanWindow& aWindow ) const
+    void VulkanPipeline::Use ( const VulkanWindow& aWindow ) const
     {
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
@@ -57,7 +57,7 @@ namespace AeonGames
         vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
     }
 
-    void VulkanProgram::Initialize()
+    void VulkanPipeline::Initialize()
     {
         if ( !mVulkanRenderer )
         {
@@ -125,10 +125,10 @@ namespace AeonGames
         for ( auto& i : vertex_input_attribute_descriptions )
         {
             uint32_t attribute_bit = ( 1 << ffs ( attributes ) );
-            i.location = mProgram->GetLocation ( static_cast<Program::AttributeBits> ( attribute_bit ) );
+            i.location = mProgram->GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             i.binding = 0;
-            i.format = GetVulkanFormat ( mProgram->GetFormat ( static_cast<Program::AttributeBits> ( attribute_bit ) ) );
-            i.offset = mProgram->GetOffset ( static_cast<Program::AttributeBits> ( attribute_bit ) );
+            i.format = GetVulkanFormat ( mProgram->GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
+            i.offset = mProgram->GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             attributes ^= attribute_bit;
         }
 
@@ -270,7 +270,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanProgram::Finalize()
+    void VulkanPipeline::Finalize()
     {
         if ( mVkPipeline != VK_NULL_HANDLE )
         {

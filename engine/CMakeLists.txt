@@ -30,7 +30,7 @@ PROTOBUF_GENERATE_EXPORT_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS "DLL_PROTOBUF"
     ${CMAKE_SOURCE_DIR}/proto/vector4.proto
     ${CMAKE_SOURCE_DIR}/proto/property.proto
     ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-    ${CMAKE_SOURCE_DIR}/proto/program.proto
+    ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
     ${CMAKE_SOURCE_DIR}/proto/material.proto
     ${CMAKE_SOURCE_DIR}/proto/model.proto
 )
@@ -41,7 +41,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Uniform.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Image.h
@@ -69,7 +69,7 @@ set(ENGINE_CORE_HEADERS
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Program.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
@@ -78,7 +78,7 @@ set(ENGINE_CORE_SOURCES
     core/Configuration.cpp
     core/Image.cpp
     core/Texture.cpp
-    core/Program.cpp
+    core/Pipeline.cpp
     core/Uniform.cpp
     core/Material.cpp
     core/Mesh.cpp
