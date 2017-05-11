@@ -93,7 +93,6 @@ namespace AeonGames
         VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
         VkQueue mVkQueue = VK_NULL_HANDLE;
         VkSemaphore mVkSignalSemaphore = VK_NULL_HANDLE;
-        VkSemaphore mVkWaitSemaphore = VK_NULL_HANDLE;
         VkFence mVkFence = VK_NULL_HANDLE;
         VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
         VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;

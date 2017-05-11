@@ -441,12 +441,6 @@ namespace AeonGames
             stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        if ( VkResult result = vkCreateSemaphore ( mVkDevice, &semaphore_create_info, nullptr, &mVkWaitSemaphore ) )
-        {
-            std::ostringstream stream;
-            stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
     }
 
     void VulkanRenderer::InitializeFence()
@@ -705,11 +699,6 @@ namespace AeonGames
             vkDestroySemaphore ( mVkDevice, mVkSignalSemaphore, nullptr );
             mVkSignalSemaphore = VK_NULL_HANDLE;
         }
-        if ( mVkWaitSemaphore != VK_NULL_HANDLE )
-        {
-            vkDestroySemaphore ( mVkDevice, mVkWaitSemaphore, nullptr );
-            mVkWaitSemaphore = VK_NULL_HANDLE;
-        }
     }
 
     void VulkanRenderer::FinalizeFence()
@@ -807,7 +796,6 @@ namespace AeonGames
                 std::cout << GetVulkanResultString ( result ) << std::endl;
             }
             VkSubmitInfo submit_info{};
-            VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             submit_info.waitSemaphoreCount = 0;
             submit_info.pWaitSemaphores = nullptr;
