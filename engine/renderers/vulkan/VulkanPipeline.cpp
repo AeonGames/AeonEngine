@@ -164,7 +164,7 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
         pipeline_rasterization_state_create_info.polygonMode = VK_POLYGON_MODE_FILL;
-        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
+        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_BACK_BIT;
         pipeline_rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         pipeline_rasterization_state_create_info.depthBiasEnable = VK_TRUE;
         pipeline_rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
