@@ -20,7 +20,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanModel.h"
-#include "VulkanProgram.h"
+#include "VulkanPipeline.h"
 #include "VulkanMesh.h"
 
 namespace AeonGames
@@ -56,7 +56,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        mProgram = Get<VulkanProgram> ( mModel->GetProgram(), mVulkanRenderer );
+        mProgram = Get<VulkanPipeline> ( mModel->GetProgram(), mVulkanRenderer );
         mMesh = Get<VulkanMesh> ( mModel->GetMesh(), mVulkanRenderer );
     }
 

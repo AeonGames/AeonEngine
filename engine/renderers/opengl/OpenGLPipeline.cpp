@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@ limitations under the License.
 #include <cassert>
 #include <vector>
 #include "aeongames/ResourceCache.h"
-#include "aeongames/Program.h"
-#include "OpenGLProgram.h"
+#include "aeongames/Pipeline.h"
+#include "OpenGLPipeline.h"
 #include "OpenGLTexture.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
-    OpenGLProgram::OpenGLProgram ( const std::shared_ptr<Program> aProgram ) :
+    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram ) :
         mProgram ( aProgram ),
         mProgramId ( 0 )
     {
@@ -38,12 +38,12 @@ namespace AeonGames
         }
     }
 
-    OpenGLProgram::~OpenGLProgram()
+    OpenGLPipeline::~OpenGLPipeline()
     {
         Finalize();
     }
 
-    void OpenGLProgram::Use() const
+    void OpenGLPipeline::Use() const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -56,7 +56,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLProgram::Initialize()
+    void OpenGLPipeline::Initialize()
     {
         //--------------------------------------------------
         // Begin OpenGL Specific code
@@ -250,7 +250,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLProgram::Finalize()
+    void OpenGLPipeline::Finalize()
     {
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsProgram ( mProgramId ) )

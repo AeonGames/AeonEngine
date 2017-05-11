@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ limitations under the License.
 #endif
 #include "aeongames/ProtoBufClasses.h"
 #include <google/protobuf/text_format.h>
-#include "program.pb.h"
+#include "pipeline.pb.h"
 #include "material.pb.h"
 #include "mesh.pb.h"
 #ifdef _MSC_VER
@@ -114,7 +114,7 @@ namespace AeonGames
         = default;
     int Convert::Run()
     {
-        ProgramBuffer shader_program_buffer;
+        PipelineBuffer pipeline_buffer;
         MaterialBuffer material_buffer;
         MeshBuffer mesh_buffer;
         ::google::protobuf::Message* message = nullptr;
@@ -143,7 +143,7 @@ namespace AeonGames
                 binary_input = true;
             /* coverity[fallthrough] */
             case FileType::AEONPRGT:
-                message = &shader_program_buffer;
+                message = &pipeline_buffer;
                 break;
             /* coverity[unterminated_case] */
             case FileType::AEONMTLB:
@@ -197,8 +197,8 @@ namespace AeonGames
 
 
                 // Try to print shader code in a more human readable format.
-                if ( ( message == &shader_program_buffer ) && ( !printer.RegisterFieldValuePrinter (
-                            shader_program_buffer.vertex_shader().GetDescriptor()->FindFieldByName ( "code" ),
+                if ( ( message == &pipeline_buffer ) && ( !printer.RegisterFieldValuePrinter (
+                            pipeline_buffer.vertex_shader().GetDescriptor()->FindFieldByName ( "code" ),
                             new CodeFieldValuePrinter ) ) )
                 {
                     std::cout << "Failed to register field value printer." << std::endl;

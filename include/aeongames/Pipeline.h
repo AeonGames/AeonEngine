@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_PROGRAM_H
-#define AEONGAMES_PROGRAM_H
+#ifndef AEONGAMES_PIPELINE_H
+#define AEONGAMES_PIPELINE_H
 
 #include <cstdint>
 #include <string>
@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Program
+    class Pipeline
     {
     public:
         enum AttributeBits
@@ -50,8 +50,8 @@ namespace AeonGames
             Vector3Float,
             Vector4Byte,
         };
-        Program ( std::string  aFilename );
-        ~Program();
+        Pipeline ( std::string  aFilename );
+        ~Pipeline();
         DLL const std::string& GetVertexShaderSource() const;
         DLL const std::string& GetFragmentShaderSource() const;
         DLL const std::vector<Uniform>& GetUniformMetaData() const;

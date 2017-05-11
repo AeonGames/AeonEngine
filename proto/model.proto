@@ -1,4 +1,4 @@
-// Copyright 2016 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
 syntax = "proto3";
 package AeonGames;
 
-import "program.proto";
+import "pipeline.proto";
 import "material.proto";
 import "mesh.proto";
 
-message ProgramReferenceBuffer
+message PipelineReferenceBuffer
 {
 	oneof program
     {
-        string        file              = 1;
-        ProgramBuffer buffer            = 2;
+        string         file             = 1;
+        PipelineBuffer buffer           = 2;
     }
 }
 message MaterialReferenceBuffer
@@ -45,7 +45,7 @@ message MeshReferenceBuffer
 }
 
 message ModelBuffer {
-	ProgramReferenceBuffer  program    = 1;
+	PipelineReferenceBuffer  program    = 1;
 	MaterialReferenceBuffer material   = 2;
     MeshReferenceBuffer     mesh       = 3;
 }

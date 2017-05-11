@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2016 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLPROGRAM_H
-#define AEONGAMES_OPENGLPROGRAM_H
+#ifndef AEONGAMES_OPENGLPIPELINE_H
+#define AEONGAMES_OPENGLPIPELINE_H
 #include <cstdint>
 #include <string>
 #include "OpenGLFunctions.h"
@@ -23,18 +23,18 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Program;
+    class Pipeline;
     class OpenGLTexture;
-    class OpenGLProgram
+    class OpenGLPipeline
     {
     public:
-        OpenGLProgram ( const std::shared_ptr<Program> aProgram );
-        ~OpenGLProgram();
+        OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram );
+        ~OpenGLPipeline();
         void Use() const;
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Program> mProgram;
+        const std::shared_ptr<Pipeline> mProgram;
         uint32_t mProgramId;
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;
