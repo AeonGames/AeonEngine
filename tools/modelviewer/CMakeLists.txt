@@ -19,6 +19,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${Qt5Widgets_INCLUDE_DIRS})
 
 set(MODELVIEWER_QT_HEADERS
+    RendererSelectDialog.h
     MainWindow.h
     EngineWindow.h
     )
@@ -32,12 +33,14 @@ set(MODELVIEWER_SOURCES
     Main.cpp
     ModelViewer.cpp
     MainWindow.cpp
+    RendererSelectDialog.cpp
     EngineWindow.cpp
     Debug.cpp
     )
 
 set(MODELVIEWER_UI
     ui/MainWindow.ui
+    ui/RendererSelectDialog.ui
     )
 
 

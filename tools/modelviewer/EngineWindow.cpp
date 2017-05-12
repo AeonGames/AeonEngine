@@ -15,10 +15,15 @@ limitations under the License.
 */
 #define _USE_MATH_DEFINES
 #include <QResizeEvent>
+#include <QString>
+#include <QStringList>
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <exception>
+#include <stdexcept>
 #include "EngineWindow.h"
+#include "RendererSelectDialog.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
@@ -44,6 +49,38 @@ namespace AeonGames
         surface_format.setDepthBufferSize ( 24 );
         surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
         setFormat ( surface_format );
+
+        /* Add a nice renderer selection window.*/
+        QStringList renderer_list;
+        EnumerateRendererLoaders ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
+        {
+            renderer_list.append ( QString::fromStdString ( aIdentifier ) );
+            return true;
+        } );
+
+        if ( !renderer_list.size() )
+        {
+            throw std::runtime_error ( "No renderer available, cannot continue." );
+        }
+        if ( renderer_list.size() == 1 )
+        {
+            this->mRenderer = GetRenderer ( renderer_list.at ( 0 ).toStdString() );
+        }
+        else
+        {
+            RendererSelectDialog select_renderer;
+            select_renderer.SetRenderers ( renderer_list );
+            if ( select_renderer.exec() == QDialog::Accepted )
+            {
+                this->mRenderer = GetRenderer ( select_renderer.GetSelected().toStdString() );
+            }
+        }
+
+        if ( mRenderer == nullptr )
+        {
+            throw std::runtime_error ( "No renderer selected, cannot continue." );
+        }
+
         /* On Windows we want the window to own its device context.
         This code works on Qt 5.6.0, but if it does not
         or a new non Qt application needs to set it,
@@ -62,16 +99,6 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-
-        EnumerateRendererLoaders ( [this] ( const std::string & aIdentifier )->bool
-        {
-            /* For now just grab the first renderer found,
-                later we can add a nice renderer selection window.*/
-            this->mRenderer = GetRenderer ( aIdentifier );
-            return false;
-        } );
-
-        assert ( ( mRenderer != nullptr ) && "Failed to retrieve a valid renderer." );
 
         if ( !mRenderer->AddRenderingWindow ( winId() ) )
         {
