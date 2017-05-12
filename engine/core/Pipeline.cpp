@@ -47,6 +47,17 @@ namespace AeonGames
         "VertexWeights"
     };
 
+    static const std::array<const char*, 7> AttributeTypes
+    {
+        "vec3",
+        "vec3",
+        "vec3",
+        "vec3",
+        "vec2",
+        "vec4",
+        "vec4"
+    };
+
     Pipeline::Pipeline ( std::string  aFilename ) :
         mFilename ( std::move ( aFilename ) ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
@@ -177,7 +188,9 @@ namespace AeonGames
                             mAttributes |= ( 1 << i );
                             mVertexShader.append ( "layout(location = " );
                             mVertexShader.append ( std::to_string ( i ) );
-                            mVertexShader.append ( ") in vec3 " );
+                            mVertexShader.append ( ") in " );
+                            mVertexShader.append ( AttributeTypes[i] );
+                            mVertexShader.append ( " " );
                             mVertexShader.append ( AttributeStrings[i] );
                             mVertexShader.append ( ";\n" );
                         }

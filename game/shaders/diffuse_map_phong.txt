@@ -1,5 +1,5 @@
 AEONPRG
-glsl_version: 330
+glsl_version: 420
 property {
   uniform_name: "LightPosition"
   display_name: "Light position in eye coords"
