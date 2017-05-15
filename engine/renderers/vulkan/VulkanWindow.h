@@ -41,16 +41,16 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        void CreateSurface();
-        void CreateSwapchain();
-        void CreateImageViews();
-        void CreateDepthStencil();
-        void CreateFrameBuffers();
-        void DestroySurface();
-        void DestroySwapchain();
-        void DestroyImageViews();
-        void DestroyDepthStencil();
-        void DestroyFrameBuffers();
+        void InitializeSurface();
+        void InitializeSwapchain();
+        void InitializeImageViews();
+        void InitializeDepthStencil();
+        void InitializeFrameBuffers();
+        void FinalizeSurface();
+        void FinalizeSwapchain();
+        void FinalizeImageViews();
+        void FinalizeDepthStencil();
+        void FinalizeFrameBuffers();
 
         uintptr_t mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
