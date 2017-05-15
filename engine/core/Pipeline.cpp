@@ -153,7 +153,7 @@ namespace AeonGames
         {
             mVertexShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mVertexShader.append (
-                "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
+                "layout(binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -202,7 +202,7 @@ namespace AeonGames
 
             mFragmentShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mFragmentShader.append (
-                "layout(set = 0,binding = 0,std140) uniform Matrices{\n"
+                "layout(binding = 0,std140) uniform Matrices{\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"

@@ -454,7 +454,6 @@ namespace AeonGames
     {
         mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
         mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-
         std::array<VkFormat, 5> try_formats
         {
             VK_FORMAT_D32_SFLOAT_S8_UINT,

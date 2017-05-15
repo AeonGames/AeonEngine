@@ -47,7 +47,7 @@ namespace AeonGames
         return mWindowId;
     }
 
-    void VulkanWindow::CreateSurface()
+    void VulkanWindow::InitializeSurface()
     {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
         RECT rect;
@@ -96,7 +96,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::CreateSwapchain()
+    void VulkanWindow::InitializeSwapchain()
     {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer->GetPhysicalDevice(), mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
         uint32_t surface_format_count = 0;
@@ -173,7 +173,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::CreateImageViews()
+    void VulkanWindow::InitializeImageViews()
     {
         vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
         mVkSwapchainImages.resize ( mSwapchainImageCount );
@@ -202,7 +202,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::CreateDepthStencil()
+    void VulkanWindow::InitializeDepthStencil()
     {
         mHasStencil =
             ( mVulkanRenderer->GetDepthStencilFormat() == VK_FORMAT_D32_SFLOAT_S8_UINT ||
@@ -279,7 +279,7 @@ namespace AeonGames
         vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkDepthStencilImageView );
     }
 
-    void VulkanWindow::CreateFrameBuffers()
+    void VulkanWindow::InitializeFrameBuffers()
     {
         mVkFramebuffers.resize ( mSwapchainImageCount );
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
@@ -340,11 +340,11 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        CreateSurface();
-        CreateSwapchain();
-        CreateImageViews();
-        CreateDepthStencil();
-        CreateFrameBuffers();
+        InitializeSurface();
+        InitializeSwapchain();
+        InitializeImageViews();
+        InitializeDepthStencil();
+        InitializeFrameBuffers();
     }
 
     void VulkanWindow::Finalize()
@@ -357,11 +357,11 @@ namespace AeonGames
         {
             std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
-        DestroyFrameBuffers();
-        DestroyDepthStencil();
-        DestroyImageViews();
-        DestroySwapchain();
-        DestroySurface();
+        FinalizeFrameBuffers();
+        FinalizeDepthStencil();
+        FinalizeImageViews();
+        FinalizeSwapchain();
+        FinalizeSurface();
     }
 
     void VulkanWindow::Resize ( uint32_t aWidth, uint32_t aHeight )
@@ -390,13 +390,13 @@ namespace AeonGames
             mVkScissor.extent.width = aWidth;
             mVkScissor.extent.height = aHeight;
 
-            DestroyFrameBuffers();
-            DestroyDepthStencil();
-            DestroyImageViews();
-            CreateSwapchain();
-            CreateImageViews();
-            CreateDepthStencil();
-            CreateFrameBuffers();
+            FinalizeFrameBuffers();
+            FinalizeDepthStencil();
+            FinalizeImageViews();
+            InitializeSwapchain();
+            InitializeImageViews();
+            InitializeDepthStencil();
+            InitializeFrameBuffers();
         }
     }
 
@@ -415,7 +415,7 @@ namespace AeonGames
         return mVkSurfaceCapabilitiesKHR.currentExtent.height;
     }
 
-    void VulkanWindow::DestroySurface()
+    void VulkanWindow::FinalizeSurface()
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {
@@ -423,7 +423,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::DestroySwapchain()
+    void VulkanWindow::FinalizeSwapchain()
     {
         if ( mVkSwapchainKHR != VK_NULL_HANDLE )
         {
@@ -431,7 +431,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::DestroyImageViews()
+    void VulkanWindow::FinalizeImageViews()
     {
         for ( auto& i : mVkSwapchainImageViews )
         {
@@ -442,7 +442,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::DestroyDepthStencil()
+    void VulkanWindow::FinalizeDepthStencil()
     {
         if ( mVkDepthStencilImageView != VK_NULL_HANDLE )
         {
@@ -459,7 +459,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::DestroyFrameBuffers()
+    void VulkanWindow::FinalizeFrameBuffers()
     {
         for ( auto& i : mVkFramebuffers )
         {

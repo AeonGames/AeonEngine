@@ -67,23 +67,23 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         return -1;
     }
     int retval = 0;
-    AeonGames::ModelViewer application ( argc, argv );
-    application.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
-    application.setOrganizationName ( "AeonGames" );
-    application.setOrganizationDomain ( "aeongames.com" );
-    application.setApplicationName ( "AeonGames Model Viewer" );
+    AeonGames::ModelViewer modelviewer ( argc, argv );
+    modelviewer.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
+    modelviewer.setOrganizationName ( "AeonGames" );
+    modelviewer.setOrganizationDomain ( "aeongames.com" );
+    modelviewer.setApplicationName ( "AeonGames Model Viewer" );
     AeonGames::MainWindow* mainWindow;
     try
     {
         mainWindow = new AeonGames::MainWindow();
         mainWindow->showNormal();
-        retval = application.exec();
+        retval = modelviewer.exec();
         delete mainWindow;
     }
     catch ( std::runtime_error& e )
     {
         std::cout << e.what() << std::endl;
-        QMessageBox::critical ( nullptr, application.applicationName(),
+        QMessageBox::critical ( nullptr, modelviewer.applicationName(),
                                 e.what(),
                                 QMessageBox::Ok,
                                 QMessageBox::Ok );
