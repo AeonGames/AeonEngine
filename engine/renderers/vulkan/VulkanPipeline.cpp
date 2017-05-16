@@ -134,6 +134,8 @@ namespace AeonGames
                     * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetW();
                     offset += sizeof ( float );
                     break;
+                default:
+                    break;
                 }
             }
             vkUnmapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory );
