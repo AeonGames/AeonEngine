@@ -113,6 +113,8 @@ namespace AeonGames
         case Uniform::Type::SAMPLER_2D:
             declaration = "uniform sampler2D " + mName + ";\n";
             break;
+        default:
+            break;
         }
         return declaration;
     }
