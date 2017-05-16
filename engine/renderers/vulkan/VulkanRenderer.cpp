@@ -150,11 +150,6 @@ namespace AeonGames
         return mVkSurfaceFormatKHR;
     }
 
-    const VkBuffer & VulkanRenderer::GetMatricesUniformBuffer() const
-    {
-        return mMatricesUniformBuffer;
-    }
-
     const VkCommandBuffer & VulkanRenderer::GetCommandBuffer() const
     {
         return mVkCommandBuffer;
@@ -173,6 +168,19 @@ namespace AeonGames
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
     {
         return mQueueFamilyIndex;
+    }
+
+    uint32_t VulkanRenderer::GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const
+    {
+        for ( uint32_t i = 0; i < mVkPhysicalDeviceMemoryProperties.memoryTypeCount; ++i )
+        {
+            if ( ( mVkPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags &
+                   ( aVkMemoryPropertyFlags ) ) == ( aVkMemoryPropertyFlags ) )
+            {
+                return i;
+            }
+        }
+        return std::numeric_limits<uint32_t>::max();
     }
 
     void VulkanRenderer::LoadFunctions()
@@ -247,18 +255,9 @@ namespace AeonGames
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memory_allocate_info.pNext = nullptr;
         memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = UINT32_MAX;
-        for ( uint32_t i = 0; i < mVkPhysicalDeviceMemoryProperties.memoryTypeCount; ++i )
-        {
-            if ( ( mVkPhysicalDeviceMemoryProperties.memoryTypes[i].propertyFlags &
-                   ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
-                 == ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
-            {
-                memory_allocate_info.memoryTypeIndex = i;
-                break;
-            }
-        }
-        if ( memory_allocate_info.memoryTypeIndex == UINT32_MAX )
+        memory_allocate_info.memoryTypeIndex = GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+        if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
             throw std::runtime_error ( "No suitable memory type found for mesh buffers" );
         }

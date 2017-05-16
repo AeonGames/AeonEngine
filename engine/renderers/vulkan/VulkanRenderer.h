@@ -54,11 +54,11 @@ namespace AeonGames
         const VkRenderPass& GetRenderPass() const;
         const VkFormat& GetDepthStencilFormat() const;
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
-        const VkBuffer& GetMatricesUniformBuffer() const;
         const VkCommandBuffer& GetCommandBuffer() const;
         const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
         const VkDescriptorSet& GetDescriptorSet() const;
         uint32_t GetQueueFamilyIndex() const;
+        uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
     private:
         void InitializeInstance();
         void InitializeDevice();

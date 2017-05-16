@@ -3,7 +3,6 @@ glsl_version: 420
 property {
   uniform_name: "LightPosition"
   display_name: "Light position in eye coords"
-  type: FLOAT_VEC3
   vector3 {
     x: 0
     y: 0
@@ -13,7 +12,6 @@ property {
 property {
   uniform_name: "Kd"
   display_name: "Diffuse reflectivity"
-  type: FLOAT_VEC3
   vector3 {
     x: 1
     y: 1
@@ -23,7 +21,6 @@ property {
 property {
   uniform_name: "DiffuseMap"
   display_name: "Diffuse Map"
-  type: SAMPLER_2D
   texture: "game/images/orange.png"
 }
 vertex_shader {

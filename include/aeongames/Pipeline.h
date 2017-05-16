@@ -61,6 +61,7 @@ namespace AeonGames
         DLL AttributeFormat GetFormat ( AttributeBits aAttributeBit ) const;
         DLL uint32_t GetSize ( AttributeBits aAttributeBit ) const;
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
+        DLL uint32_t GetUniformBlockSize() const;
     private:
         void Initialize();
         void Finalize();
