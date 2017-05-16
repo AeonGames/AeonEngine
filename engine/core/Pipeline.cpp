@@ -169,6 +169,8 @@ namespace AeonGames
                 break;
             case Uniform::SAMPLER_CUBE:
                 break;
+            default:
+                break;
             }
         }
         return size;
