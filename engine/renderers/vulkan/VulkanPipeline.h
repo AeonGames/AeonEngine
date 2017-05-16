@@ -30,18 +30,22 @@ namespace AeonGames
     class VulkanPipeline
     {
     public:
-        VulkanPipeline ( const std::shared_ptr<Pipeline> aProgram, const VulkanRenderer* aVulkanRenderer );
+        VulkanPipeline ( const std::shared_ptr<Pipeline> aPipeline, const VulkanRenderer* aVulkanRenderer );
         ~VulkanPipeline();
         void Use ( const VulkanWindow& aWindow ) const;
     private:
+        void InitializePropertiesUniform();
+        void FinalizePropertiesUniform();
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Pipeline> mProgram;
+        const std::shared_ptr<Pipeline> mPipeline;
         const VulkanRenderer* mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ {VK_NULL_HANDLE} };
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
+        VkBuffer mPropertiesUniformBuffer = VK_NULL_HANDLE;
+        VkDeviceMemory mPropertiesUniformMemory = VK_NULL_HANDLE;
     };
 }
 #endif

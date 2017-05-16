@@ -1,0 +1,7 @@
+AEONMDL
+program {
+    file: "game/shaders/diffuse_map_phong.txt"
+}
+mesh {
+    file: "game/meshes/cube.txt"
+}

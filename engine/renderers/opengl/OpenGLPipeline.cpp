@@ -213,19 +213,19 @@ namespace AeonGames
                 {
                     switch ( mProgram->GetUniformMetaData() [i].GetType() )
                     {
-                    case GL_FLOAT_VEC4:
+                    case Uniform::FLOAT_VEC4:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mProgram->GetUniformMetaData() [i].GetW();
                     /* Intentional Pass-Thru */
-                    case GL_FLOAT_VEC3:
+                    case Uniform::FLOAT_VEC3:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mProgram->GetUniformMetaData() [i].GetZ();
                     /* Intentional Pass-Thru */
-                    case GL_FLOAT_VEC2:
+                    case Uniform::FLOAT_VEC2:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mProgram->GetUniformMetaData() [i].GetY();
                     /* Intentional Pass-Thru */
-                    case GL_FLOAT:
+                    case Uniform::FLOAT:
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
                         break;
-                    case GL_SAMPLER_2D:
+                    case Uniform::SAMPLER_2D:
                         if ( image_unit >= ( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - GL_TEXTURE0 ) )
                         {
                             throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );

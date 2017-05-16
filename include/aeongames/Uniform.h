@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,6 +27,16 @@ namespace AeonGames
     class Uniform
     {
     public:
+        enum Type
+        {
+            UNKNOWN = 0,
+            FLOAT,
+            FLOAT_VEC2,
+            FLOAT_VEC3,
+            FLOAT_VEC4,
+            SAMPLER_2D,
+            SAMPLER_CUBE,
+        };
         Uniform ( std::string  aName, float aX );
         Uniform ( std::string  aName, float aX, float aY );
         Uniform ( std::string  aName, float aX, float aY, float aZ );
@@ -35,7 +45,7 @@ namespace AeonGames
         ~Uniform();
         ///@name Getters
         ///@{
-        DLL uint32_t GetType() const;
+        DLL Type GetType() const;
         DLL const std::string GetDeclaration() const;
         DLL const std::string& GetName() const;
         DLL float GetX() const;
@@ -46,7 +56,7 @@ namespace AeonGames
         ///@}
     private:
         std::string mName;
-        uint32_t mType = 0;
+        Type mType = UNKNOWN;
         uint8_t mData[sizeof ( float ) * 4];
     };
 }

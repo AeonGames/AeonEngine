@@ -26,10 +26,14 @@ limitations under the License.
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
 
+#ifdef max
+#undef max
+#endif
+
 namespace AeonGames
 {
     VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aProgram, const VulkanRenderer* aVulkanRenderer ) :
-        mProgram ( aProgram ),
+        mPipeline ( aProgram ),
         mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -57,6 +61,100 @@ namespace AeonGames
         vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
     }
 
+    void VulkanPipeline::InitializePropertiesUniform()
+    {
+        auto& properties = mPipeline->GetUniformMetaData();
+        if ( properties.size() )
+        {
+            VkBufferCreateInfo buffer_create_info{};
+            buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            buffer_create_info.pNext = nullptr;
+            buffer_create_info.flags = 0;
+            buffer_create_info.size = mPipeline->GetUniformBlockSize();
+            buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            buffer_create_info.queueFamilyIndexCount = 0;
+            buffer_create_info.pQueueFamilyIndices = nullptr;
+
+            if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(),
+                                                    &buffer_create_info, nullptr, &mPropertiesUniformBuffer ) )
+            {
+                std::ostringstream stream;
+                stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            VkMemoryRequirements memory_requirements;
+            vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(),
+                                            mPropertiesUniformBuffer, &memory_requirements );
+
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.pNext = nullptr;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+            if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
+            {
+                throw std::runtime_error ( "No suitable memory type found for property buffers" );
+            }
+
+            if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mPropertiesUniformMemory ) )
+            {
+                std::ostringstream stream;
+                stream << "vkAllocateMemory failed for property buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformBuffer, mPropertiesUniformMemory, 0 );
+
+            // Set Default Values
+            uint8_t* data = nullptr;
+            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &data ) ) )
+            {
+                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            }
+            uint32_t offset = 0;
+            for ( auto& i : properties )
+            {
+                switch ( i.GetType() )
+                {
+                case Uniform::FLOAT:
+                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetX();
+                    offset += sizeof ( float );
+                /* Intentional Pass-Thru */
+                case Uniform::FLOAT_VEC2:
+                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetY();
+                    offset += sizeof ( float );
+                /* Intentional Pass-Thru */
+                case Uniform::FLOAT_VEC3:
+                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetZ();
+                    offset += sizeof ( float );
+                /* Intentional Pass-Thru */
+                case Uniform::FLOAT_VEC4:
+                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetW();
+                    offset += sizeof ( float );
+                    break;
+                }
+            }
+            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory );
+            // END - Set Default Values
+        }
+    }
+
+    void VulkanPipeline::FinalizePropertiesUniform()
+    {
+        if ( mPropertiesUniformMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory, nullptr );
+            mPropertiesUniformMemory = VK_NULL_HANDLE;
+        }
+        if ( mPropertiesUniformBuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mPropertiesUniformBuffer, nullptr );
+            mPropertiesUniformBuffer = VK_NULL_HANDLE;
+        }
+    }
+
     void VulkanPipeline::Initialize()
     {
         if ( !mVulkanRenderer )
@@ -64,8 +162,8 @@ namespace AeonGames
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
         CompilerLinker compiler_linker;
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mProgram->GetVertexShaderSource().c_str() );
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mProgram->GetFragmentShaderSource().c_str() );
+        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline->GetVertexShaderSource().c_str() );
+        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline->GetFragmentShaderSource().c_str() );
         if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
         {
             std::ostringstream stream;
@@ -120,15 +218,15 @@ namespace AeonGames
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        uint32_t attributes = mProgram->GetAttributes();
+        uint32_t attributes = mPipeline->GetAttributes();
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
         for ( auto& i : vertex_input_attribute_descriptions )
         {
             uint32_t attribute_bit = ( 1 << ffs ( attributes ) );
-            i.location = mProgram->GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
+            i.location = mPipeline->GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             i.binding = 0;
-            i.format = GetVulkanFormat ( mProgram->GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
-            i.offset = mProgram->GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
+            i.format = GetVulkanFormat ( mPipeline->GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
+            i.offset = mPipeline->GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             attributes ^= attribute_bit;
         }
 
@@ -268,10 +366,12 @@ namespace AeonGames
             stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+        InitializePropertiesUniform();
     }
 
     void VulkanPipeline::Finalize()
     {
+        FinalizePropertiesUniform();
         if ( mVkPipeline != VK_NULL_HANDLE )
         {
             vkDestroyPipeline ( mVulkanRenderer->GetDevice(), mVkPipeline, nullptr );

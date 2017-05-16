@@ -29,10 +29,10 @@ limitations under the License.
 #pragma warning( disable : 4251 )
 #endif
 #include "pipeline.pb.h"
+#include "property.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
 
 namespace AeonGames
 {
@@ -146,6 +146,34 @@ namespace AeonGames
         return offset;
     }
 
+    uint32_t Pipeline::GetUniformBlockSize() const
+    {
+        uint32_t size = 0;
+        for ( auto& i : mUniformMetaData )
+        {
+            switch ( i.GetType() )
+            {
+            case Uniform::FLOAT:
+                size += sizeof ( float );
+                break;
+            case Uniform::FLOAT_VEC2:
+                size += sizeof ( float ) * 2;
+                break;
+            case Uniform::FLOAT_VEC3:
+                size += sizeof ( float ) * 3;
+                break;
+            case Uniform::FLOAT_VEC4:
+                size += sizeof ( float ) * 4;
+                break;
+            case Uniform::SAMPLER_2D:
+                break;
+            case Uniform::SAMPLER_CUBE:
+                break;
+            }
+        }
+        return size;
+    }
+
     void Pipeline::Initialize()
     {
         static PipelineBuffer pipeline_buffer;
@@ -219,32 +247,34 @@ namespace AeonGames
                 std::string samplers ( "//----SAMPLERS-START----\n" );
                 for ( auto& i : pipeline_buffer.property() )
                 {
-                    switch ( i.type() )
+                    switch ( i.default_value_case() )
                     {
-                    case PropertyBuffer_Type_FLOAT:
+                    case PropertyBuffer::DefaultValueCase::kScalarFloat:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
                         properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
-                    case PropertyBuffer_Type_FLOAT_VEC2:
+                    case PropertyBuffer::DefaultValueCase::kVector2:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );
                         properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
-                    case PropertyBuffer_Type_FLOAT_VEC3:
+                    case PropertyBuffer::DefaultValueCase::kVector3:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z() );
                         properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
-                    case PropertyBuffer_Type_FLOAT_VEC4:
+                    case PropertyBuffer::DefaultValueCase::kVector4:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
                         properties.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
-                    case PropertyBuffer_Type_SAMPLER_2D:
+                    case PropertyBuffer::DefaultValueCase::kTexture:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
                         samplers.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
+#if 0
                     case PropertyBuffer_Type_SAMPLER_CUBE:
                         //type_name = "samplerCube ";
                         /* To be continued ... */
                         break;
+#endif
                     default:
                         throw std::runtime_error ( "Unknown Type." );
                     }
