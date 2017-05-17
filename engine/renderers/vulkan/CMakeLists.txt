@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -65,13 +65,13 @@ target_link_libraries(  VulkanRenderer
 
 if(MSVC)
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DVK_USE_PLATFORM_WIN32_KHR -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-WX -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -DVK_USE_PLATFORM_WIN32_KHR -DPROTOBUF_USE_DLLS")
 elseif(MINGW OR MSYS)
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_WIN32_KHR -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-Wall -DNOMINMAX -Werror -Wfatal-errors -DVK_USE_PLATFORM_WIN32_KHR -DPROTOBUF_USE_DLLS")
 elseif(UNIX)
     set_target_properties(VulkanRenderer PROPERTIES
-        COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
+        COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
 endif()
 if(USE_CLANG_TIDY)
     set_target_properties(VulkanRenderer PROPERTIES

@@ -160,7 +160,7 @@ namespace AeonGames
                 size += sizeof ( float ) * 2;
                 break;
             case Uniform::FLOAT_VEC3:
-                size += sizeof ( float ) * 3;
+                size += sizeof ( float ) * 4; /* VEC3 requires padding in std140 */
                 break;
             case Uniform::FLOAT_VEC4:
                 size += sizeof ( float ) * 4;
