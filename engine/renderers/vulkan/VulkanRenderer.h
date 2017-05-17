@@ -55,10 +55,21 @@ namespace AeonGames
         const VkFormat& GetDepthStencilFormat() const;
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
         const VkCommandBuffer& GetCommandBuffer() const;
-        const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
-        const VkDescriptorSet& GetDescriptorSet() const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
+        /* Not sure the Matrices uniform buffer belongs here, push constants may be a better idea.*/
+        const VkBuffer& GetMatricesUniformBuffer() const;
+        struct Matrices
+        {
+            float mViewMatrix[16];
+            float mProjectionMatrix[16];
+            float mModelMatrix[16];
+            // Cache Matrices
+            float mViewProjectionMatrix[16];
+            float mModelViewMatrix[16];
+            float mModelViewProjectionMatrix[16];
+            float mNormalMatrix[12];
+        };
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -66,7 +77,6 @@ namespace AeonGames
         void InitializeFence();
         void InitializeRenderPass();
         void InitializeCommandPool();
-        void InitializeDescriptorPool();
         void InitializeDebug();
         void InitializeMatricesUniform();
         void SetupLayersAndExtensions();
@@ -78,7 +88,6 @@ namespace AeonGames
         void FinalizeFence();
         void FinalizeRenderPass();
         void FinalizeCommandPool();
-        void FinalizeDescriptorPool();
         void FinalizeDebug();
         void FinalizeMatricesUniform();
 
@@ -99,9 +108,6 @@ namespace AeonGames
         VkBuffer mMatricesUniformBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mMatricesUniformMemory = VK_NULL_HANDLE;
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
-        VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
-        VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
-        VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
         std::vector<const char*> mInstanceLayerNames;
@@ -121,17 +127,6 @@ namespace AeonGames
         /** @todo From here on, these members are the same as the OpenGL renderer...
             shall we create a common class? */
         void UpdateMatrices();
-        struct Matrices
-        {
-            float mViewMatrix[16];
-            float mProjectionMatrix[16];
-            float mModelMatrix[16];
-            // Cache Matrices
-            float mViewProjectionMatrix[16];
-            float mModelViewMatrix[16];
-            float mModelViewProjectionMatrix[16];
-            float mNormalMatrix[12];
-        };
         Matrices mMatrices =
         {
             {

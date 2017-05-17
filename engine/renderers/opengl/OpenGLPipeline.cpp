@@ -226,6 +226,7 @@ namespace AeonGames
                         * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
                         break;
                     case Uniform::SAMPLER_2D:
+                    {
                         if ( image_unit >= ( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - GL_TEXTURE0 ) )
                         {
                             throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
@@ -235,6 +236,9 @@ namespace AeonGames
                         OPENGL_CHECK_ERROR_THROW;
                         glUniform1i ( location, image_unit++ );
                         OPENGL_CHECK_ERROR_THROW;
+                    }
+                    break;
+                    default:
                         break;
                     }
                 }
