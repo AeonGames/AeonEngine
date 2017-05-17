@@ -26,10 +26,6 @@ limitations under the License.
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
 
-#ifdef max
-#undef max
-#endif
-
 namespace AeonGames
 {
     VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aProgram, const VulkanRenderer* aVulkanRenderer ) :
@@ -113,6 +109,7 @@ namespace AeonGames
             {
                 std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
             }
+
             uint32_t offset = 0;
             for ( auto& i : properties )
             {
@@ -121,11 +118,11 @@ namespace AeonGames
                 {
                 case Uniform::FLOAT_VEC4:
                     * ( reinterpret_cast<float*> ( data + offset ) + 3 ) = i.GetW();
-                    advance += sizeof ( float );
+                //advance += sizeof ( float );
                 /* Intentional Pass-Thru */
                 case Uniform::FLOAT_VEC3:
                     * ( reinterpret_cast<float*> ( data + offset ) + 2 ) = i.GetZ();
-                    advance += sizeof ( float );
+                    advance += sizeof ( float ) * 2; /* Both VEC3 and VEC4 have a 4 float stride due to std140 padding. */
                 /* Intentional Pass-Thru */
                 case Uniform::FLOAT_VEC2:
                     * ( reinterpret_cast<float*> ( data + offset ) + 1 ) = i.GetY();
@@ -259,7 +256,7 @@ namespace AeonGames
         if ( mPipeline->GetUniformMetaData().size() )
         {
             descriptor_count += 1;
-            descriptor_buffer_infos[1].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
+            descriptor_buffer_infos[1].buffer = mPropertiesUniformBuffer;
             descriptor_buffer_infos[1].offset = 0;
             descriptor_buffer_infos[1].range = mPipeline->GetUniformBlockSize();
         }
@@ -289,6 +286,7 @@ namespace AeonGames
         }
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
+        InitializePropertiesUniform();
         InitializeDescriptorSet();
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline->GetVertexShaderSource().c_str() );
@@ -495,12 +493,10 @@ namespace AeonGames
             stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        InitializePropertiesUniform();
     }
 
     void VulkanPipeline::Finalize()
     {
-        FinalizePropertiesUniform();
         if ( mVkPipeline != VK_NULL_HANDLE )
         {
             vkDestroyPipeline ( mVulkanRenderer->GetDevice(), mVkPipeline, nullptr );
@@ -520,6 +516,7 @@ namespace AeonGames
             }
         }
         FinalizeDescriptorSet();
+        FinalizePropertiesUniform();
         FinalizeDescriptorPool();
         FinalizeDescriptorSetLayout();
     }
