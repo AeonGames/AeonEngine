@@ -36,6 +36,12 @@ namespace AeonGames
     private:
         void InitializePropertiesUniform();
         void FinalizePropertiesUniform();
+        void InitializeDescriptorSetLayout();
+        void FinalizeDescriptorSetLayout();
+        void InitializeDescriptorPool();
+        void FinalizeDescriptorPool();
+        void InitializeDescriptorSet();
+        void FinalizeDescriptorSet();
         void Initialize();
         void Finalize();
         const std::shared_ptr<Pipeline> mPipeline;
@@ -46,6 +52,9 @@ namespace AeonGames
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
         VkBuffer mPropertiesUniformBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mPropertiesUniformMemory = VK_NULL_HANDLE;
+        VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
+        VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
+        VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
     };
 }
 #endif

@@ -245,7 +245,7 @@ namespace AeonGames
             mUniformMetaData.reserve ( pipeline_buffer.property().size() );
             if ( pipeline_buffer.property().size() > 0 )
             {
-                std::string properties ( "layout(std140) uniform Properties{\n" );
+                std::string properties ( "layout(binding = 1,std140) uniform Properties{\n" );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
                 for ( auto& i : pipeline_buffer.property() )
                 {

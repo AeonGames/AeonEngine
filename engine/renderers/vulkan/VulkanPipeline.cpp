@@ -56,7 +56,7 @@ namespace AeonGames
     {
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, 1, &mVulkanRenderer->GetDescriptorSet(), 0, nullptr );
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, 1, &mVkDescriptorSet, 0, nullptr );
         vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetViewport() );
         vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
     }
@@ -116,27 +116,29 @@ namespace AeonGames
             uint32_t offset = 0;
             for ( auto& i : properties )
             {
+                uint32_t advance = 0;
                 switch ( i.GetType() )
                 {
-                case Uniform::FLOAT:
-                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetX();
-                    offset += sizeof ( float );
-                /* Intentional Pass-Thru */
-                case Uniform::FLOAT_VEC2:
-                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetY();
-                    offset += sizeof ( float );
+                case Uniform::FLOAT_VEC4:
+                    * ( reinterpret_cast<float*> ( data + offset ) + 3 ) = i.GetW();
+                    advance += sizeof ( float );
                 /* Intentional Pass-Thru */
                 case Uniform::FLOAT_VEC3:
-                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetZ();
-                    offset += sizeof ( float );
+                    * ( reinterpret_cast<float*> ( data + offset ) + 2 ) = i.GetZ();
+                    advance += sizeof ( float );
                 /* Intentional Pass-Thru */
-                case Uniform::FLOAT_VEC4:
-                    * ( reinterpret_cast<float*> ( data + offset ) ) = i.GetW();
-                    offset += sizeof ( float );
+                case Uniform::FLOAT_VEC2:
+                    * ( reinterpret_cast<float*> ( data + offset ) + 1 ) = i.GetY();
+                    advance += sizeof ( float );
+                /* Intentional Pass-Thru */
+                case Uniform::FLOAT:
+                    * ( reinterpret_cast<float*> ( data + offset ) + 0 ) = i.GetX();
+                    advance += sizeof ( float );
                     break;
                 default:
                     break;
                 }
+                offset += advance;
             }
             vkUnmapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory );
             // END - Set Default Values
@@ -157,12 +159,137 @@ namespace AeonGames
         }
     }
 
+    void VulkanPipeline::InitializeDescriptorSetLayout()
+    {
+        uint32_t binding_count = 1; // Matrices are always bound
+        std::array<VkDescriptorSetLayoutBinding, 2> descriptor_set_layout_bindings;
+        // Matrices binding
+        descriptor_set_layout_bindings[0].binding = 0;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        /* Will we bind 1 UBO? The Spec at 13.2.1. only mentions "number of descriptors" without much info of what objects are considered descriptors. */
+        descriptor_set_layout_bindings[0].descriptorCount = 1;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
+        // Properties binding
+        if ( mPipeline->GetUniformMetaData().size() )
+        {
+            ++binding_count;
+            descriptor_set_layout_bindings[1].binding = 1;
+            descriptor_set_layout_bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_set_layout_bindings[1].descriptorCount = 1; // See above
+            descriptor_set_layout_bindings[1].stageFlags = VK_SHADER_STAGE_ALL;
+            descriptor_set_layout_bindings[1].pImmutableSamplers = nullptr;
+        }
+
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.pNext = nullptr;
+        descriptor_set_layout_create_info.flags = 0;
+        descriptor_set_layout_create_info.bindingCount = binding_count;
+        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
+    void VulkanPipeline::FinalizeDescriptorSetLayout()
+    {
+        if ( mVkDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkDescriptorSetLayout, nullptr );
+            mVkDescriptorSetLayout = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanPipeline::InitializeDescriptorPool()
+    {
+        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{ {} };
+        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_pool_sizes[0].descriptorCount = 2;
+
+        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptor_pool_create_info.pNext = nullptr;
+        descriptor_pool_create_info.flags = 0;
+        descriptor_pool_create_info.maxSets = 1;
+        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
+        descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+
+        if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer->GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
+        {
+            std::ostringstream stream;
+            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
+    void VulkanPipeline::FinalizeDescriptorPool()
+    {
+        if ( mVkDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVulkanRenderer->GetDevice(), mVkDescriptorPool, nullptr );
+            mVkDescriptorPool = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanPipeline::InitializeDescriptorSet()
+    {
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkDescriptorSetLayout } };
+        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer->GetDevice(), &descriptor_set_allocate_info, &mVkDescriptorSet ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        uint32_t descriptor_count = 1; // Matrices is always bound
+        std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
+        descriptor_buffer_infos[0].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
+        descriptor_buffer_infos[0].offset = 0;
+        descriptor_buffer_infos[0].range = sizeof ( VulkanRenderer::Matrices );
+
+        if ( mPipeline->GetUniformMetaData().size() )
+        {
+            descriptor_count += 1;
+            descriptor_buffer_infos[1].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
+            descriptor_buffer_infos[1].offset = 0;
+            descriptor_buffer_infos[1].range = mPipeline->GetUniformBlockSize();
+        }
+
+        VkWriteDescriptorSet write_descriptor_set = {};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.dstSet = mVkDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = descriptor_count;
+        write_descriptor_set.pBufferInfo = descriptor_buffer_infos.data();
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+    }
+
+    void VulkanPipeline::FinalizeDescriptorSet()
+    {
+    }
+
     void VulkanPipeline::Initialize()
     {
         if ( !mVulkanRenderer )
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
+        InitializeDescriptorSetLayout();
+        InitializeDescriptorPool();
+        InitializeDescriptorSet();
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline->GetVertexShaderSource().c_str() );
         compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline->GetFragmentShaderSource().c_str() );
@@ -329,7 +456,7 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ mVulkanRenderer->GetDescriptorSetLayout() };
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ mVkDescriptorSetLayout };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
@@ -392,5 +519,8 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
+        FinalizeDescriptorSet();
+        FinalizeDescriptorPool();
+        FinalizeDescriptorSetLayout();
     }
 }
