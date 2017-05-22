@@ -3,6 +3,7 @@ layout: post
 title:  "Sidetracked by memory leaks"
 date:   2017-03-03 17:45:18 -0600
 categories: debugging
+comments: true
 ---
 
 The Vulkan renderer finaly blanks the window, so I started to clean up before moving on to actually render something to it. While tidying up however I noticed that Visual Studio CrtDbg was reporting some leaks on the model viewer. I expected those to be related to Vulkan but they also appear with the OpenGL renderer.

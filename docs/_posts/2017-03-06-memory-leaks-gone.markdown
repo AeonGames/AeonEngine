@@ -3,6 +3,7 @@ layout: post
 title:  "Memory leaks are gone"
 date:   2017-03-06 12:56:18 -0600
 categories: debugging
+comments: true
 ---
 
 The memory leak issues I was seeing have magickally banished.

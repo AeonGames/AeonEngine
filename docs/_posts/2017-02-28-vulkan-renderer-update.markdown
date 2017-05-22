@@ -3,6 +3,7 @@ layout: post
 title:  "Vulkan Renderer Update"
 date:   2017-02-28 14:24:18 -0600
 categories: implementation
+comments: true
 ---
 
 I've been working on the Vulkan Renderer, which can use some refactoring since I've been mostly just pouring code into it.

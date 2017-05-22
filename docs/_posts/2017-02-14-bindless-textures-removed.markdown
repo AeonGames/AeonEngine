@@ -3,6 +3,7 @@ layout: post
 title:  "Bindless Textures functionality removed"
 date:   2017-02-14 17:17:16 -0600
 categories: implementation
+comments: true
 ---
 
 I've removed the use of BTs from the engine. I am not sure wether or not they actually were an improvement on performance. TBH originaly I just used them because they allowed me to stick sampler variables into uniform blocks and not having to use a second code path specific to samplers.
