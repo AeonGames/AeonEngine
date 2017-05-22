@@ -3,6 +3,7 @@ layout: post
 title:  "It's been a while, blame Vulkan's lack of support of 'dynamic strides'."
 date:   2017-05-02 11:41:18 -0600
 categories: development, vulkan
+comments: true
 ---
 
 It's... been a while. You historian from the future (_NO ONE_ is reading this right now) may be wondering why its been such a long time with no new commits, and I am here to tell you why. Vulkan is meant as an OpenGL replacement, it is sometimes refered to as OpenGL 5.0, but its API is nothing like OpenGL... well, except maybe for using the 'vk' prefix on function names the way OpenGL used 'gl'. Needless to say, a lot of kruft was dropped, and I though that even though the API is completelly diferent, the inherent nature would be fairly similar, new stuff was expected, but I never though some things taken for granted would be gone. And in general that's true, you get vertex buffers, index buffers, programs are now pipelines and you have to compile your shaders by hand, but it really gets you in the minute things.

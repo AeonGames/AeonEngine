@@ -3,6 +3,7 @@ layout: post
 title:  "Added clang-tidy checks."
 date:   2017-03-13 17:49:18 -0600
 categories: development
+comments: true
 ---
 
 I've just added optional support for clang-tidy checks. clang-tidy is sort of a static analisys tool which is part of [clang](https://clang.llvm.org/), itself part of [LLVM](https://llvm.org/).

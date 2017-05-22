@@ -3,6 +3,7 @@ layout: post
 title:  "Visual Studio 2017 released, Qt broken."
 date:   2017-03-13 12:30:18 -0600
 categories: development
+comments: true
 ---
 
 Last week Visual Studio 2017 was released and I upgraded to it. I build Qt from source and I expected the build from VS 2015 to work on 2017, but it didn't work because of some constexpr issue. There is a fix, it apparently was merged back in November last year, but it didn't make it to the Qt 5.8.0 release.

@@ -28,9 +28,12 @@ github_username:  kwizatz
 # Build settings
 markdown: kramdown
 theme: minima
-#theme: jekyll-theme-midnight
+
 gems:
   - jekyll-feed
 exclude:
   - Gemfile
   - Gemfile.lock
+
+disqus:
+    shortname: aeonengine
