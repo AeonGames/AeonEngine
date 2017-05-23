@@ -17,10 +17,10 @@ title: AeonEngine Development Blog
 email: kwizatz@aeongames.com
 description: > # this means to ignore newlines until "baseurl:"
   A page to gather thoughs regarding game engine development.
-#baseurl: "/AeonEngine"
-baseurl: ""
-#url: "http://www.aeongames.com"
-url: ""
+baseurl: "/AeonEngine"
+#baseurl: ""
+url: "http://www.aeongames.com"
+#url: ""
 
 twitter_username: AeonKwizatz
 github_username:  kwizatz
