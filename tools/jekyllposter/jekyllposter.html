@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Jekyll Post</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script src="https://cdn.rawgit.com/eligrey/FileSaver.js/master/FileSaver.min.js"></script>
+    <script>
+
+    if(typeof String.prototype.trim !== 'function') {
+      String.prototype.trim = function() {
+        return this.replace(/^\s+|\s+$/g, ''); 
+      }
+    }
+
+    function getTimeZone(dateobject)
+    {
+        var offset = (dateobject.getTimezoneOffset()/60)*100;
+        if(offset>0)
+        {
+            return "-"+("0" + offset).slice (-4);
+        }
+        offset = -offset;
+        return "+"+("0" + offset).slice (-4);
+    }
+
+    function onsave()
+    {
+        var title = document.getElementById("title").value.trim();
+        var categories = document.getElementById("categories").value.trim();
+        var comments = (document.getElementById("comments").checked) ? "true" : "false";
+        var content = simplemde.value().trim();
+        simplemde.value("");
+        var today = new Date();
+        var shortdate = today.getFullYear()+"-"+  ("0" + (today.getMonth()+1)).slice (-2) +"-"+ ("0" + today.getDate()).slice (-2);
+        var longdate = shortdate + " " + ("0" + today.getHours()).slice (-2) + ":" + ("0" + today.getMinutes()).slice (-2) + ":" + ("0" + today.getSeconds()).slice (-2) + " " + getTimeZone(today);
+        var filename = shortdate + "-" + title.toLowerCase();
+        filename = filename.replace(/\s+/g, '-'); 
+        filename = filename.replace(/['"+!?.]+/g, '');
+        filename += ".markdown";
+        var postfile = "---\nlayout: post\ntitle: \"" + title + "\"\ndate: " + longdate + "\ncategories: " + categories + "\ncomments: " + comments + "\n---\n\n" + content;
+        var blob = new Blob([postfile], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, filename);
+    }
+    </script>
+  </head>
+  <body>
+    <form>
+    <input type="hidden" name="layout" value="post"></input>
+    Title: <input type="text" id="title" name="title"></input>
+    Categories: <input type="text" id="categories" name="categories"></input>
+    Comments: <input type="checkbox" id="comments" name="comments" checked="checked"></input>
+    <textarea name="content"></textarea>
+    <input type="button" onclick="onsave();" value="Save"></input>
+    </form>
+    <script>
+        var simplemde = new SimpleMDE({
+                autosave: {
+                    enabled: true,
+                    uniqueId: "JekyllPost",
+                    delay: 1000,
+                }
+        });
+    </script>    
+  </body>
+</html>
