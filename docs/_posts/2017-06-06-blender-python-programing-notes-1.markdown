@@ -2,7 +2,7 @@
 layout: post
 title:  "Blender's Python API Programming Notes Part 1"
 date:   2017-06-06 11:21:18 -0600
-categories: programming, blender, python, import, 3d
+categories: programming blender python import 3d
 comments: true
 ---
 

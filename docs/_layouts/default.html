@@ -1,20 +1,16 @@
 <!DOCTYPE html>
-<html lang="{{ page.lang | default: site.lang | default: "en" }}">
+<html>
+  <head>
+    {% include meta.html %}
+      <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">
+      <script type="text/javascript">window.baseurl = '{{ site.url }}';</script>
+      {% include css.html %}
+  </head>
 
-  {% include head.html %}
-
-  <body>
-
+  <body class="home overflow-hidden">
     {% include header.html %}
-
-    <main class="page-content" aria-label="Content">
-      <div class="wrapper">
-        {{ content }}
-      </div>
-    </main>
-
-    {% include footer.html %}
-
+    {% include main.html %}
+    {% include js.html %}
+    {% include analytics.html %}
   </body>
-
 </html>

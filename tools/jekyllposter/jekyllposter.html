@@ -40,7 +40,7 @@
         filename = filename.replace(/['"+!?.]+/g, '');
         filename += ".markdown";
         var postfile = "---\nlayout: post\ntitle: \"" + title + "\"\ndate: " + longdate + "\ncategories: " + categories + "\ncomments: " + comments + "\n---\n\n" + content;
-        var blob = new Blob([postfile], {type: "text/plain;charset=utf-8"});
+        var blob = new Blob([postfile], {type: "text/plain;charset=utf-8"}, true);
         saveAs(blob, filename);
     }
     </script>

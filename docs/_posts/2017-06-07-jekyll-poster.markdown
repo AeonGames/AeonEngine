@@ -1,4 +1,4 @@
-﻿---
+---
 layout: post
 title: "Jekyll Poster"
 date: 2017-06-07 14:32:10 -0600

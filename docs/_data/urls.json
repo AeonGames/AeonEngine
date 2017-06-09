@@ -1,0 +1,29 @@
+[
+  {
+    "text": "Home",
+    "url": "/",
+    "icon": "fa-home",
+    "layout": "post"
+  },
+  {
+    "text": "About",
+    "url": "/about/",
+    "icon": "fa-comments"
+  },
+  {
+    "text": "Screenshots",
+    "url": "/screenshots",
+    "icon": "fa-desktop"
+  },
+  {
+    "text": "Github",
+    "url": "https://www.github.com/AeonGames",
+    "icon": "fa-github"
+  },
+  {
+    "text": "XML Feed",
+    "url": "/feed.xml",
+    "icon": "fa-feed",
+    "target": _blank
+  }
+]
