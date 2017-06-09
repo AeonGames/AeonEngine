@@ -23,6 +23,8 @@ limitations under the License.
 #include <algorithm>
 #ifdef _MSC_VER
 
+#pragma comment(lib, "Dbghelp.lib")
+
 static std::vector<MODULEENTRY32> ModuleTable;
 
 void InitializeModuleTable()
