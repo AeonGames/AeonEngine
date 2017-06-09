@@ -2,7 +2,7 @@
 layout: post
 title:  "You can now comment on these!"
 date:   2017-05-22 18:23:18 -0600
-categories: meta, assets
+categories: meta assets
 comments: true
 ---
 

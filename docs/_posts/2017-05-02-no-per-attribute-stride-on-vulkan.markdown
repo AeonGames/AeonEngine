@@ -2,7 +2,7 @@
 layout: post
 title:  "It's been a while, blame Vulkan's lack of support of 'dynamic strides'."
 date:   2017-05-02 11:41:18 -0600
-categories: development, vulkan
+categories: development vulkan
 comments: true
 ---
 

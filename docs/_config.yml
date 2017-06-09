@@ -17,23 +17,39 @@ title: AeonEngine Development Blog
 email: kwizatz@aeongames.com
 description: > # this means to ignore newlines until "baseurl:"
   A page to gather thoughs regarding game engine development.
+author: Rodrigo Hernandez
+companyname: Aeon Games
+about: AeonEngine Development Blog
+logo: /AeonEngine/static/img/avatar.png
 baseurl: "/AeonEngine"
-#baseurl: ""
 url: "http://www.aeongames.com"
-#url: ""
-
 twitter_username: AeonKwizatz
 github_username:  kwizatz
+github: https://github.com/AeonGames/AeonEngine
 
-# Build settings
 markdown: kramdown
-theme: minima
 
 gems:
-  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-gist
 exclude:
   - Gemfile
   - Gemfile.lock
 
 disqus:
-    shortname: aeonengine
+  shortname: aeonengine
+    
+allowsearch: true
+
+# google_analytics: UA-72862926-1
+
+share:
+  twitter_username: AeonKwizatz
+#  fb_appid: 000000000000
+
+enableTags: true
+tagarray: []
+
+paginate: 20
+per_page: 20
+paginate_path: "/page:num/"
