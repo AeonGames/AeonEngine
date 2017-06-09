@@ -34,9 +34,15 @@ int AllocHook ( int allocType, void *userData, size_t size, int
     {
         return TRUE;
     }
-    std::lock_guard<std::mutex> hold ( m );
-    if ( gAllocationLog )
+    if ( gAllocationLog && allocType != _HOOK_FREE )
     {
+        std::lock_guard<std::mutex> hold ( m );
+#if 0
+        if ( requestNumber == 3236 )
+        {
+            PrintCallStack ( gAllocationLog );
+        }
+#endif
         fprintf ( gAllocationLog, "%s %ld Size %llu\n",
                   ( allocType == _HOOK_ALLOC ) ? "ALLOCATION" :
                   ( allocType == _HOOK_REALLOC ) ? "REALLOCATION" : "DEALLOCATION",
@@ -51,16 +57,16 @@ int ENTRYPOINT main ( int argc, char *argv[] )
 {
 #ifdef _MSC_VER
 #if 0
+    SymInitialize ( GetCurrentProcess(), nullptr, TRUE );
     gAllocationLog = fopen ( "allocation.log", "wt" );
+    InitializeModuleTable();
+    _CrtSetAllocHook ( AllocHook );
 #endif
     /*  Call _CrtDumpMemoryLeaks on exit, required because Qt does a lot of static allocations,
     which are detected as false positives.
     http://msdn.microsoft.com/en-us/library/5at7yxcs%28v=vs.71%29.aspx */
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
-#if 0
-    _CrtSetAllocHook ( AllocHook );
-#endif
 #endif
     if ( !AeonGames::Initialize() )
     {
@@ -94,6 +100,8 @@ int ENTRYPOINT main ( int argc, char *argv[] )
 #if 0
     if ( gAllocationLog )
     {
+        _CrtSetAllocHook ( nullptr );
+        FinalizeModuleTable();
         fclose ( gAllocationLog );
         gAllocationLog = NULL;
     };
