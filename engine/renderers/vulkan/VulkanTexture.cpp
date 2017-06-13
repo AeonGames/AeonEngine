@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 #include <sstream>
+#include <limits>
+#include <cstring>
 #include "VulkanTexture.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
