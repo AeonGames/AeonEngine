@@ -18,25 +18,31 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 #include "aeongames/Uniform.h"
 #include "aeongames/Memory.h"
 
 namespace AeonGames
 {
     class Image;
+    class VulkanRenderer;
     class VulkanTexture
     {
     public:
-        VulkanTexture ( const std::shared_ptr<Image> aImage );
+        VulkanTexture ( const std::shared_ptr<Image> aImage, const VulkanRenderer* aVulkanRenderer );
         ~VulkanTexture();
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/
-        const uint32_t GetTexture() const;
+        const VkSampler& GetSampler() const;
     private:
         void Initialize();
         void Finalize();
+        const VulkanRenderer* mVulkanRenderer;
         const std::shared_ptr<Image> mImage;
-        uint32_t mTexture;
+        VkImage mVkImage;
+        VkDeviceMemory mImageMemory;
+        VkImageView mVkImageView;
+        VkSampler mVkSampler;
     };
 }
 #endif

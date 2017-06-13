@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -157,5 +157,9 @@ namespace AeonGames
     const uint8_t* PngImage::Data() const
     {
         return mData.data();
+    }
+    const size_t PngImage::DataSize() const
+    {
+        return mData.size();
     }
 }

@@ -34,7 +34,7 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Pipeline> mProgram;
+        const std::shared_ptr<Pipeline> mPipeline;
         uint32_t mProgramId;
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;

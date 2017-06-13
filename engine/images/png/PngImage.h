@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ namespace AeonGames
         ImageFormat Format() const final;
         ImageType Type() const final;
         const uint8_t* Data() const final;
+        const size_t DataSize() const final;
     private:
         uint32_t mWidth = 0;
         uint32_t mHeight = 0;
