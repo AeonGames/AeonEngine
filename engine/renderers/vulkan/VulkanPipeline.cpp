@@ -28,8 +28,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aProgram, const VulkanRenderer* aVulkanRenderer ) :
-        mPipeline ( aProgram ),
+    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aPipeline, const VulkanRenderer* aVulkanRenderer ) :
+        mPipeline ( aPipeline ),
         mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -132,6 +132,8 @@ namespace AeonGames
                     * ( reinterpret_cast<float*> ( data + offset ) + 0 ) = i.GetX();
                     advance += sizeof ( float );
                     break;
+                case Uniform::SAMPLER_2D:
+                    mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage(), mVulkanRenderer ) );
                 default:
                     break;
                 }

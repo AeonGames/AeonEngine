@@ -24,7 +24,7 @@ limitations under the License.
 namespace AeonGames
 {
     OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram ) :
-        mProgram ( aProgram ),
+        mPipeline ( aProgram ),
         mProgramId ( 0 )
     {
         try
@@ -69,8 +69,8 @@ namespace AeonGames
         uint32_t vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const GLchar* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( mProgram->GetVertexShaderSource().c_str() );
-        GLint vertex_shader_len = static_cast<GLint> ( mProgram->GetVertexShaderSource().length() );
+        const GLchar* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline->GetVertexShaderSource().c_str() );
+        GLint vertex_shader_len = static_cast<GLint> ( mPipeline->GetVertexShaderSource().length() );
 
         glShaderSource (
             vertex_shader,
@@ -94,7 +94,7 @@ namespace AeonGames
             {
                 glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
                 OPENGL_CHECK_ERROR_THROW;
-                std::cout << mProgram->GetVertexShaderSource() << std::endl;
+                std::cout << mPipeline->GetVertexShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
                 throw std::runtime_error ( log_string.c_str() );
             }
@@ -107,8 +107,8 @@ namespace AeonGames
         uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const GLchar* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( mProgram->GetFragmentShaderSource().c_str() );
-        GLint fragment_shader_len = static_cast<GLint> ( mProgram->GetFragmentShaderSource().length() );
+        const GLchar* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline->GetFragmentShaderSource().c_str() );
+        GLint fragment_shader_len = static_cast<GLint> ( mPipeline->GetFragmentShaderSource().length() );
 
         glShaderSource ( fragment_shader, 1, &fragment_shader_source_ptr, &fragment_shader_len );
         OPENGL_CHECK_ERROR_THROW;
@@ -126,7 +126,7 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << mProgram->GetFragmentShaderSource() << std::endl;
+                std::cout << mPipeline->GetFragmentShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
@@ -149,8 +149,8 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetProgramInfoLog ( mProgramId, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << mProgram->GetVertexShaderSource() << std::endl;
-                std::cout << mProgram->GetFragmentShaderSource() << std::endl;
+                std::cout << mPipeline->GetVertexShaderSource() << std::endl;
+                std::cout << mPipeline->GetFragmentShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
@@ -180,22 +180,22 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mProgram->GetUniformMetaData().size() )
+        if ( mPipeline->GetUniformMetaData().size() )
         {
             {
                 // Get offsets (initialize mUniformMetaData)
-                std::vector<const GLchar *> uniform_names ( mProgram->GetUniformMetaData().size() );
-                for ( std::size_t i = 0; i < mProgram->GetUniformMetaData().size(); ++i )
+                std::vector<const GLchar *> uniform_names ( mPipeline->GetUniformMetaData().size() );
+                for ( std::size_t i = 0; i < mPipeline->GetUniformMetaData().size(); ++i )
                 {
-                    uniform_names[i] = mProgram->GetUniformMetaData() [i].GetName().c_str();
+                    uniform_names[i] = mPipeline->GetUniformMetaData() [i].GetName().c_str();
                 }
-                std::vector<GLuint> uniform_indices ( mProgram->GetUniformMetaData().size() );
-                glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mProgram->GetUniformMetaData().size() ),
+                std::vector<GLuint> uniform_indices ( mPipeline->GetUniformMetaData().size() );
+                glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mPipeline->GetUniformMetaData().size() ),
                                       uniform_names.data(), uniform_indices.data() );
                 OPENGL_CHECK_ERROR_THROW;
 
-                std::vector<GLint> uniform_offset ( mProgram->GetUniformMetaData().size() );
-                glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mProgram->GetUniformMetaData().size() ),
+                std::vector<GLint> uniform_offset ( mPipeline->GetUniformMetaData().size() );
+                glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mPipeline->GetUniformMetaData().size() ),
                                         uniform_indices.data(),
                                         GL_UNIFORM_OFFSET, uniform_offset.data() );
                 OPENGL_CHECK_ERROR_THROW;
@@ -209,21 +209,21 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_THROW;
                 mUniformData.resize ( block_size );
                 GLint image_unit = 0;
-                for ( std::size_t i = 0; i < mProgram->GetUniformMetaData().size(); ++i )
+                for ( std::size_t i = 0; i < mPipeline->GetUniformMetaData().size(); ++i )
                 {
-                    switch ( mProgram->GetUniformMetaData() [i].GetType() )
+                    switch ( mPipeline->GetUniformMetaData() [i].GetType() )
                     {
                     case Uniform::FLOAT_VEC4:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mProgram->GetUniformMetaData() [i].GetW();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mPipeline->GetUniformMetaData() [i].GetW();
                     /* Intentional Pass-Thru */
                     case Uniform::FLOAT_VEC3:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mProgram->GetUniformMetaData() [i].GetZ();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mPipeline->GetUniformMetaData() [i].GetZ();
                     /* Intentional Pass-Thru */
                     case Uniform::FLOAT_VEC2:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mProgram->GetUniformMetaData() [i].GetY();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mPipeline->GetUniformMetaData() [i].GetY();
                     /* Intentional Pass-Thru */
                     case Uniform::FLOAT:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mProgram->GetUniformMetaData() [i].GetX();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mPipeline->GetUniformMetaData() [i].GetX();
                         break;
                     case Uniform::SAMPLER_2D:
                     {
@@ -231,8 +231,8 @@ namespace AeonGames
                         {
                             throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
                         }
-                        mTextures.emplace_back ( Get<OpenGLTexture> ( mProgram->GetUniformMetaData() [i].GetImage() ), image_unit );
-                        auto location = glGetUniformLocation ( mProgramId, mProgram->GetUniformMetaData() [i].GetName().c_str() );
+                        mTextures.emplace_back ( Get<OpenGLTexture> ( mPipeline->GetUniformMetaData() [i].GetImage() ), image_unit );
+                        auto location = glGetUniformLocation ( mProgramId, mPipeline->GetUniformMetaData() [i].GetName().c_str() );
                         OPENGL_CHECK_ERROR_THROW;
                         glUniform1i ( location, image_unit++ );
                         OPENGL_CHECK_ERROR_THROW;
