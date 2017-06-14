@@ -57,6 +57,7 @@ namespace AeonGames
         const VkCommandBuffer& GetCommandBuffer() const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
+        uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         /* Not sure the Matrices uniform buffer belongs here, push constants may be a better idea.*/
         const VkBuffer& GetMatricesUniformBuffer() const;
         struct Matrices
