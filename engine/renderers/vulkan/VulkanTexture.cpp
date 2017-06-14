@@ -56,7 +56,7 @@ namespace AeonGames
         image_create_info.flags = 0;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
         //image_create_info.format = ( mImage->Format() == Image::ImageFormat::RGB ) ? VK_FORMAT_R8G8B8_UINT : VK_FORMAT_R8G8B8A8_UINT;
-        image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+        image_create_info.format = VK_FORMAT_R8G8B8A8_UINT;
         VkFormatProperties format_properties{};
         vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer->GetPhysicalDevice(), image_create_info.format, &format_properties );
         image_create_info.extent.width = mImage->Width();
@@ -84,7 +84,7 @@ namespace AeonGames
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memory_allocate_info.pNext = nullptr;
         memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( memory_requirements.memoryTypeBits | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+        memory_allocate_info.memoryTypeIndex = mVulkanRenderer->FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
         if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
             throw std::runtime_error ( "Unable to find a suitable memory type index" );
@@ -109,7 +109,23 @@ namespace AeonGames
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        memcpy ( image_memory, mImage->Data(), mImage->DataSize() );
+        if ( mImage->Format() == Image::ImageFormat::RGBA )
+        {
+            memcpy ( image_memory, mImage->Data(), mImage->DataSize() );
+        }
+        else
+        {
+            const uint8_t* read_pointer = mImage->Data();
+            uint8_t* write_pointer = static_cast<uint8_t*> ( image_memory );
+            for ( uint32_t i = 0; i < mImage->DataSize(); i += 3 )
+            {
+                write_pointer[0] = read_pointer[i];
+                write_pointer[1] = read_pointer[i + 1];
+                write_pointer[2] = read_pointer[i + 2];
+                write_pointer[3] = 255;
+                write_pointer += 4;
+            }
+        }
         vkUnmapMemory ( mVulkanRenderer->GetDevice(), mImageMemory );
 
         VkSamplerCreateInfo sampler_create_info{};
@@ -124,7 +140,7 @@ namespace AeonGames
         sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         sampler_create_info.mipLodBias = 0.0f;
         sampler_create_info.anisotropyEnable = VK_FALSE;
-        sampler_create_info.maxAnisotropy = 0.0f;
+        sampler_create_info.maxAnisotropy = 1.0f;
         sampler_create_info.compareEnable = VK_FALSE;
         sampler_create_info.compareOp = VK_COMPARE_OP_NEVER;
         sampler_create_info.minLod = 0.0f;
