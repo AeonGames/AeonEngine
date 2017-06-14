@@ -768,6 +768,34 @@ namespace AeonGames
         }
     }
 
+    VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
+    {
+        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+        VkCommandBuffer command_buffer{};
+        VkCommandBufferBeginInfo beginInfo{};
+        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        command_buffer_allocate_info.commandPool = mVkCommandPool;
+        command_buffer_allocate_info.commandBufferCount = 1;
+        vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &command_buffer );
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer ( command_buffer, &beginInfo );
+        return command_buffer;
+    }
+
+    void VulkanRenderer::EndSingleTimeCommands ( VkCommandBuffer aVkCommandBuffer ) const
+    {
+        vkEndCommandBuffer ( aVkCommandBuffer );
+        VkSubmitInfo submit_info = {};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &aVkCommandBuffer;
+        vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE );
+        vkQueueWaitIdle ( mVkQueue );
+        vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
+    }
+
     bool VulkanRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
     {
         if ( mModelMap.find ( aModel ) == mModelMap.end() )
