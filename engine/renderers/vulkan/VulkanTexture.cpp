@@ -55,8 +55,10 @@ namespace AeonGames
         image_create_info.pNext = nullptr;
         image_create_info.flags = 0;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
-
-        image_create_info.format = ( mImage->Format() == Image::ImageFormat::RGB ) ? VK_FORMAT_R8G8B8_UNORM : VK_FORMAT_R8G8B8A8_UNORM;
+        //image_create_info.format = ( mImage->Format() == Image::ImageFormat::RGB ) ? VK_FORMAT_R8G8B8_UINT : VK_FORMAT_R8G8B8A8_UINT;
+        image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+        VkFormatProperties format_properties{};
+        vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer->GetPhysicalDevice(), image_create_info.format, &format_properties );
         image_create_info.extent.width = mImage->Width();
         image_create_info.extent.height = mImage->Height();
         image_create_info.extent.depth = 1;
