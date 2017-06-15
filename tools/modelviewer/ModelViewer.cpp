@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include "ModelViewer.h"
 #include <QMessageBox>
+#include <iostream>
 
 namespace AeonGames
 {
@@ -30,6 +31,7 @@ namespace AeonGames
         }
         catch ( std::runtime_error& e )
         {
+            std::cout << e.what();
             QMessageBox::critical ( nullptr, applicationName(),
                                     e.what(),
                                     QMessageBox::Ok,

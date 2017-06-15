@@ -48,7 +48,6 @@ namespace AeonGames
         const VulkanRenderer* mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ {VK_NULL_HANDLE} };
-        //std::vector<std::pair<std::shared_ptr<VulkanTexture>, int32_t>> mTextures;
         std::vector<std::shared_ptr<VulkanTexture>> mTextures;
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
