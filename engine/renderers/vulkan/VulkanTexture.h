@@ -31,9 +31,7 @@ namespace AeonGames
     public:
         VulkanTexture ( const std::shared_ptr<Image> aImage, const VulkanRenderer* aVulkanRenderer );
         ~VulkanTexture();
-        /**@todo Determine if we want to keep the texture id exposed like this.
-            Maybe all we need is a Bind function.*/
-        const VkSampler& GetSampler() const;
+        const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
         void Initialize();
         void Finalize();
@@ -45,8 +43,7 @@ namespace AeonGames
         const std::shared_ptr<Image> mImage;
         VkImage mVkImage;
         VkDeviceMemory mImageMemory;
-        VkImageView mVkImageView;
-        VkSampler mVkSampler;
+        VkDescriptorImageInfo mVkDescriptorImageInfo;
     };
 }
 #endif

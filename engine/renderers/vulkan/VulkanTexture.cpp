@@ -28,10 +28,11 @@ namespace AeonGames
     VulkanTexture::VulkanTexture ( const std::shared_ptr<Image> aImage, const VulkanRenderer* aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ), mImage ( aImage ),
         mVkImage ( VK_NULL_HANDLE ),
-        mImageMemory ( VK_NULL_HANDLE ),
-        mVkImageView ( VK_NULL_HANDLE ),
-        mVkSampler ( VK_NULL_HANDLE )
+        mImageMemory ( VK_NULL_HANDLE )
     {
+        mVkDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        mVkDescriptorImageInfo.imageView = VK_NULL_HANDLE;
+        mVkDescriptorImageInfo.sampler = VK_NULL_HANDLE;
         try
         {
             Initialize();
@@ -71,7 +72,7 @@ namespace AeonGames
         sampler_create_info.maxLod = 1.0f;
         sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
         sampler_create_info.unnormalizedCoordinates = VK_FALSE;
-        if ( VkResult result = vkCreateSampler ( mVulkanRenderer->GetDevice(), &sampler_create_info, nullptr, &mVkSampler ) )
+        if ( VkResult result = vkCreateSampler ( mVulkanRenderer->GetDevice(), &sampler_create_info, nullptr, &mVkDescriptorImageInfo.sampler ) )
         {
             std::ostringstream stream;
             stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -81,10 +82,10 @@ namespace AeonGames
 
     void VulkanTexture::Finalize()
     {
-        if ( mVkSampler != VK_NULL_HANDLE )
+        if ( mVkDescriptorImageInfo.sampler != VK_NULL_HANDLE )
         {
-            vkDestroySampler ( mVulkanRenderer->GetDevice(), mVkSampler, nullptr );
-            mVkSampler = VK_NULL_HANDLE;
+            vkDestroySampler ( mVulkanRenderer->GetDevice(), mVkDescriptorImageInfo.sampler, nullptr );
+            mVkDescriptorImageInfo.sampler = VK_NULL_HANDLE;
         }
         FinalizeImageView();
         FinalizeImage();
@@ -97,7 +98,7 @@ namespace AeonGames
         image_create_info.pNext = nullptr;
         image_create_info.flags = 0;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        image_create_info.format = VK_FORMAT_R8G8B8A8_UINT;
+        image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
         VkFormatProperties format_properties{};
         vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer->GetPhysicalDevice(), image_create_info.format, &format_properties );
         image_create_info.extent.width = mImage->Width();
@@ -175,7 +176,12 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        vkBindBufferMemory ( mVulkanRenderer->GetDevice(), image_buffer, image_buffer_memory, 0 );
+        if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer->GetDevice(), image_buffer, image_buffer_memory, 0 ) )
+        {
+            std::ostringstream stream;
+            stream << "Bind Buffer Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
 
         void* image_memory = nullptr;
         if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), image_buffer_memory, 0, VK_WHOLE_SIZE, 0, &image_memory ) )
@@ -282,6 +288,7 @@ namespace AeonGames
         buffer_image_copy.imageOffset = { 0, 0, 0 };
         buffer_image_copy.imageExtent = { mImage->Width(), mImage->Height(), 1 };
         vkCmdCopyBufferToImage ( command_buffer, image_buffer, mVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy );
+
         image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -319,13 +326,13 @@ namespace AeonGames
         image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         image_view_create_info.image = mVkImage;
         image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        image_view_create_info.format = VK_FORMAT_R8G8B8A8_UINT;
+        image_view_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
         image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         image_view_create_info.subresourceRange.baseMipLevel = 0;
         image_view_create_info.subresourceRange.levelCount = 1;
         image_view_create_info.subresourceRange.baseArrayLayer = 0;
         image_view_create_info.subresourceRange.layerCount = 1;
-        if ( VkResult result = vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkImageView ) )
+        if ( VkResult result = vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkDescriptorImageInfo.imageView ) )
         {
             std::ostringstream stream;
             stream << "Create Image View failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -335,15 +342,15 @@ namespace AeonGames
 
     void VulkanTexture::FinalizeImageView()
     {
-        if ( mVkImageView != VK_NULL_HANDLE )
+        if ( mVkDescriptorImageInfo.imageView != VK_NULL_HANDLE )
         {
-            vkDestroyImageView ( mVulkanRenderer->GetDevice(), mVkImageView, nullptr );
-            mVkImageView = VK_NULL_HANDLE;
+            vkDestroyImageView ( mVulkanRenderer->GetDevice(), mVkDescriptorImageInfo.imageView, nullptr );
+            mVkDescriptorImageInfo.imageView = VK_NULL_HANDLE;
         }
     }
 
-    const VkSampler& VulkanTexture::GetSampler() const
+    const VkDescriptorImageInfo& VulkanTexture::GetDescriptorImageInfo() const
     {
-        return mVkSampler;
+        return mVkDescriptorImageInfo;
     }
 }

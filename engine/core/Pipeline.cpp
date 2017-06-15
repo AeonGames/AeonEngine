@@ -165,10 +165,6 @@ namespace AeonGames
             case Uniform::FLOAT_VEC4:
                 size += sizeof ( float ) * 4;
                 break;
-            case Uniform::SAMPLER_2D:
-                break;
-            case Uniform::SAMPLER_CUBE:
-                break;
             default:
                 break;
             }
@@ -245,6 +241,7 @@ namespace AeonGames
             mUniformMetaData.reserve ( pipeline_buffer.property().size() );
             if ( pipeline_buffer.property().size() > 0 )
             {
+                uint32_t sampler_binding = 2;
                 std::string properties ( "layout(binding = 1,std140) uniform Properties{\n" );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
                 for ( auto& i : pipeline_buffer.property() )
@@ -269,6 +266,7 @@ namespace AeonGames
                         break;
                     case PropertyBuffer::DefaultValueCase::kTexture:
                         mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
+                        samplers.append ( "layout(binding = " + std::to_string ( sampler_binding++ ) + ") " );
                         samplers.append ( mUniformMetaData.back().GetDeclaration() );
                         break;
 #if 0

@@ -160,8 +160,11 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
-        uint32_t binding_count = 1; // Matrices are always bound
-        std::array<VkDescriptorSetLayoutBinding, 2> descriptor_set_layout_bindings;
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
+        /*  Reserve enough slots as if all uniforms where shaders,
+            better safe than sorry. the + 1 is for the matrix uniform.*/
+        descriptor_set_layout_bindings.reserve ( mPipeline->GetUniformMetaData().size() + 1 );
+        descriptor_set_layout_bindings.emplace_back();
         // Matrices binding
         descriptor_set_layout_bindings[0].binding = 0;
         descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -170,9 +173,9 @@ namespace AeonGames
         descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         // Properties binding
-        if ( mPipeline->GetUniformMetaData().size() )
+        if ( mPipeline->GetUniformBlockSize() )
         {
-            ++binding_count;
+            descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings[1].binding = 1;
             descriptor_set_layout_bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptor_set_layout_bindings[1].descriptorCount = 1; // See above
@@ -180,11 +183,25 @@ namespace AeonGames
             descriptor_set_layout_bindings[1].pImmutableSamplers = nullptr;
         }
 
+        for ( auto& i : mPipeline->GetUniformMetaData() )
+        {
+            if ( i.GetType() == Uniform::Type::SAMPLER_2D )
+            {
+                descriptor_set_layout_bindings.emplace_back();
+                auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
+                descriptor_set_layout_binding.binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 );
+                descriptor_set_layout_binding.descriptorCount = 1;
+                descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+                descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            }
+        }
+
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
         descriptor_set_layout_create_info.flags = 0;
-        descriptor_set_layout_create_info.bindingCount = binding_count;
+        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
         if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout ) )
         {
@@ -205,9 +222,11 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorPool()
     {
-        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{ {} };
+        std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{ {} };
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_pool_sizes[0].descriptorCount = 2;
+        descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptor_pool_sizes[1].descriptorCount = 1;
 
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -255,7 +274,7 @@ namespace AeonGames
         descriptor_buffer_infos[0].offset = 0;
         descriptor_buffer_infos[0].range = sizeof ( VulkanRenderer::Matrices );
 
-        if ( mPipeline->GetUniformMetaData().size() )
+        if ( mPipeline->GetUniformBlockSize() )
         {
             descriptor_count += 1;
             descriptor_buffer_infos[1].buffer = mPropertiesUniformBuffer;
@@ -263,17 +282,38 @@ namespace AeonGames
             descriptor_buffer_infos[1].range = mPipeline->GetUniformBlockSize();
         }
 
-        VkWriteDescriptorSet write_descriptor_set = {};
-        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.dstSet = mVkDescriptorSet;
-        write_descriptor_set.dstBinding = 0;
-        write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_set.descriptorCount = descriptor_count;
-        write_descriptor_set.pBufferInfo = descriptor_buffer_infos.data();
-        write_descriptor_set.pImageInfo = nullptr;
-        write_descriptor_set.pTexelBufferView = nullptr;
-        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        std::vector<VkWriteDescriptorSet> write_descriptor_sets;
+        write_descriptor_sets.reserve ( mPipeline->GetUniformMetaData().size() + 1 );
+        write_descriptor_sets.emplace_back();
+        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_sets[0].dstSet = mVkDescriptorSet;
+        write_descriptor_sets[0].dstBinding = 0;
+        write_descriptor_sets[0].dstArrayElement = 0;
+        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_sets[0].descriptorCount = descriptor_count;
+        write_descriptor_sets[0].pBufferInfo = descriptor_buffer_infos.data();
+        write_descriptor_sets[0].pImageInfo = nullptr;
+        write_descriptor_sets[0].pTexelBufferView = nullptr;
+
+        /* Not TOO happy about this texture_index hack. */
+        size_t texture_index = 0;
+        uint32_t destination_binding = 2;
+        for ( auto& i : mPipeline->GetUniformMetaData() )
+        {
+            if ( i.GetType() == Uniform::Type::SAMPLER_2D )
+            {
+                write_descriptor_sets.emplace_back();
+                auto& write_descriptor_set = write_descriptor_sets.back();
+                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set.dstSet = mVkDescriptorSet;
+                write_descriptor_set.dstBinding = destination_binding++;
+                write_descriptor_set.dstArrayElement = 0;
+                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write_descriptor_set.descriptorCount = 1;
+                write_descriptor_set.pImageInfo = &mTextures[texture_index++]->GetDescriptorImageInfo();
+            }
+        }
+        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
     void VulkanPipeline::FinalizeDescriptorSet()
@@ -296,6 +336,8 @@ namespace AeonGames
         if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
         {
             std::ostringstream stream;
+            stream << mPipeline->GetVertexShaderSource() << std::endl;
+            stream << mPipeline->GetFragmentShaderSource() << std::endl;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
                    " Error:" << std::endl << compiler_linker.GetLog();
             throw std::runtime_error ( stream.str().c_str() );
