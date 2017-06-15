@@ -39,6 +39,8 @@ namespace AeonGames
         void Finalize();
         void InitializeImage();
         void FinalizeImage();
+        void InitializeImageView();
+        void FinalizeImageView();
         const VulkanRenderer* mVulkanRenderer;
         const std::shared_ptr<Image> mImage;
         VkImage mVkImage;

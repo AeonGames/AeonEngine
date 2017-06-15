@@ -51,6 +51,7 @@ namespace AeonGames
     void VulkanTexture::Initialize()
     {
         InitializeImage();
+        InitializeImageView();
         VkSamplerCreateInfo sampler_create_info{};
         sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         sampler_create_info.pNext = nullptr;
@@ -85,6 +86,7 @@ namespace AeonGames
             vkDestroySampler ( mVulkanRenderer->GetDevice(), mVkSampler, nullptr );
             mVkSampler = VK_NULL_HANDLE;
         }
+        FinalizeImageView();
         FinalizeImage();
     }
 
@@ -308,6 +310,35 @@ namespace AeonGames
         {
             vkFreeMemory ( mVulkanRenderer->GetDevice(), mImageMemory, nullptr );
             mImageMemory = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanTexture::InitializeImageView()
+    {
+        VkImageViewCreateInfo image_view_create_info = {};
+        image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        image_view_create_info.image = mVkImage;
+        image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        image_view_create_info.format = VK_FORMAT_R8G8B8A8_UINT;
+        image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_view_create_info.subresourceRange.baseMipLevel = 0;
+        image_view_create_info.subresourceRange.levelCount = 1;
+        image_view_create_info.subresourceRange.baseArrayLayer = 0;
+        image_view_create_info.subresourceRange.layerCount = 1;
+        if ( VkResult result = vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkImageView ) )
+        {
+            std::ostringstream stream;
+            stream << "Create Image View failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
+    void VulkanTexture::FinalizeImageView()
+    {
+        if ( mVkImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( mVulkanRenderer->GetDevice(), mVkImageView, nullptr );
+            mVkImageView = VK_NULL_HANDLE;
         }
     }
 
