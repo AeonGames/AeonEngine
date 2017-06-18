@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,6 +40,8 @@ namespace AeonGames
     public:
         EngineWindow ( QWindow *parent = nullptr );
         ~EngineWindow();
+        void stop();
+        void start();
         void setMesh ( const QString& filename );
     private:
         const QVector3D right

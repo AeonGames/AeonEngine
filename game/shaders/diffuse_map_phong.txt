@@ -25,8 +25,8 @@ property {
 }
 vertex_shader {
   code: 
-  "out vec3 LightIntensity;\n"
-  "out vec2 CoordUV;\n"
+  "layout(location = 0) out vec3 LightIntensity;\n"
+  "layout(location = 1) out vec2 CoordUV;\n"
   "void main()\n"
   "{\n"
   "if ( length ( VertexNormal ) != 0 )\n"
@@ -46,8 +46,8 @@ vertex_shader {
 }
 fragment_shader {
   code: 
-  "in vec3 LightIntensity;\n"
-  "in vec2 CoordUV;\n"
+  "layout(location = 0) in vec3 LightIntensity;\n"
+  "layout(location = 1) in vec2 CoordUV;\n"
   "layout ( location = 0 ) out vec4 FragColor;\n"
   "\n"
   "void main()\n"

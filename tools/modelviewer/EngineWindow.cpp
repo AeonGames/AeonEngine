@@ -113,27 +113,45 @@ namespace AeonGames
         mRenderer->RemoveRenderingWindow ( winId() );
     }
 
+    void EngineWindow::stop()
+    {
+        if ( mStopWatch.isValid() && mTimer.isActive() )
+        {
+            mTimer.stop();
+            mStopWatch.invalidate();
+        }
+    }
+
+    void EngineWindow::start()
+    {
+        if ( !mStopWatch.isValid() && !mTimer.isActive() )
+        {
+            mTimer.start ( 0 );
+            mStopWatch.start();
+        }
+    }
+
     void EngineWindow::setMesh ( const QString & filename )
     {
-        if ( !mModel )
+        auto model = Get<Model> ( filename.toUtf8().constData() );
+        assert ( model && "Model is nullptr" );
+        if ( mRenderer->AllocateModelRenderData ( model ) )
         {
-            mModel = Get<Model> ( filename.toUtf8().constData() );
+            mModel = model;
+            // Adjust camera position so model fits the frustum tightly.
+            const float* const center_radius = mModel->GetMesh()->GetCenterRadii();
+            float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
+                                   ( center_radius[4] * center_radius[4] ) +
+                                   ( center_radius[5] * center_radius[5] ) );
+            std::cout << "Radius: " << radius << std::endl;
+            // Add the near value to the radius just in case the actual object contains the eye position.
+            float eye_length = ( radius + 1.0f ) / std::tan ( mFrustumVerticalHalfAngle );
+            mCameraLocation = QVector4D (
+                                  QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
+                                  ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
+            updateViewMatrix();
+            mStep = eye_length / 100.0f;
         }
-        assert ( mModel && "Model is nullptr" );
-        mRenderer->AllocateModelRenderData ( mModel );
-        // Adjust camera position so model fits the frustum tightly.
-        const float* const center_radius = mModel->GetMesh()->GetCenterRadii();
-        float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
-                               ( center_radius[4] * center_radius[4] ) +
-                               ( center_radius[5] * center_radius[5] ) );
-        std::cout << "Radius: " << radius << std::endl;
-        // Add the near value to the radius just in case the actual object contains the eye position.
-        float eye_length = ( radius + 1.0f ) / std::tan ( mFrustumVerticalHalfAngle );
-        mCameraLocation = QVector4D (
-                              QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
-                              ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
-        updateViewMatrix();
-        mStep = eye_length / 100.0f;
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
@@ -163,13 +181,11 @@ namespace AeonGames
         Q_UNUSED ( aExposeEvent );
         if ( isExposed() )
         {
-            mTimer.start ( 0 );
-            mStopWatch.start();
+            start();
         }
         else
         {
-            mTimer.stop();
-            mStopWatch.invalidate();
+            stop();
         }
     }
 
