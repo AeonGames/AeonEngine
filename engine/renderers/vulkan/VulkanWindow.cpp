@@ -175,17 +175,29 @@ namespace AeonGames
 
     void VulkanWindow::InitializeImageViews()
     {
-        vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, &mSwapchainImageCount, nullptr );
+        if ( VkResult result = vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(), mVkSwapchainKHR, &mSwapchainImageCount, nullptr ) )
+        {
+            std::ostringstream stream;
+            stream << "Get swapchain image count failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
         mVkSwapchainImages.resize ( mSwapchainImageCount );
         mVkSwapchainImageViews.resize ( mSwapchainImageCount );
-        vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(),
-                                  mVkSwapchainKHR,
-                                  &mSwapchainImageCount,
-                                  mVkSwapchainImages.data() );
+        if ( VkResult result = vkGetSwapchainImagesKHR ( mVulkanRenderer->GetDevice(),
+                               mVkSwapchainKHR,
+                               &mSwapchainImageCount,
+                               mVkSwapchainImages.data() ) )
+        {
+            std::ostringstream stream;
+            stream << "Get swapchain images failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
         {
             VkImageViewCreateInfo image_view_create_info{};
             image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            image_view_create_info.pNext = nullptr;
+            image_view_create_info.flags = 0;
             image_view_create_info.image = mVkSwapchainImages[i];
             image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
             image_view_create_info.format = mVulkanRenderer->GetSurfaceFormatKHR().format;

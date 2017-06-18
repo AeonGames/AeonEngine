@@ -214,18 +214,11 @@ namespace AeonGames
         // Program-level processing...
         //
         // Link
-        if ( ! ( mOptions & EOptionOutputPreprocessed ) && !program.link ( messages ) )
+        // Map IO
+        if ( ( ! ( mOptions & EOptionOutputPreprocessed ) && !program.link ( messages ) ) ||
+             ( ( mOptions & EOptionSpv ) && ( !program.mapIO() ) ) )
         {
             link_failed = true;
-        }
-
-        // Map IO
-        if ( mOptions & EOptionSpv )
-        {
-            if ( !program.mapIO() )
-            {
-                link_failed = true;
-            }
         }
 
         // Reflect
@@ -240,6 +233,11 @@ namespace AeonGames
         {
             if ( compile_failed || link_failed )
             {
+                for ( auto& i : shaders )
+                {
+                    mLog.append ( i.getInfoLog() );
+                    mLog.append ( i.getInfoDebugLog() );
+                }
                 mLog.append ( program.getInfoLog() );
                 mLog.append ( program.getInfoDebugLog() );
             }
