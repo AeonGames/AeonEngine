@@ -242,13 +242,13 @@ namespace AeonGames
                 "mat3 NormalMatrix;\n"
                 "};\n" );
             mUniformMetaData.clear();
-            mUniformMetaData.reserve ( pipeline_buffer.property().size() );
-            if ( pipeline_buffer.property().size() > 0 )
+            mUniformMetaData.reserve ( pipeline_buffer.default_material().property().size() );
+            if ( pipeline_buffer.default_material().property().size() > 0 )
             {
                 uint32_t sampler_binding = 2;
                 std::string properties ( "layout(binding = 1,std140) uniform Properties{\n" );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
-                for ( auto& i : pipeline_buffer.property() )
+                for ( auto& i : pipeline_buffer.default_material().property() )
                 {
                     switch ( i.default_value_case() )
                     {

@@ -1,31 +1,33 @@
 AEONPRG
 glsl_version: 420
-property {
-  uniform_name: "LightPosition"
-  display_name: "Light position in eye coords"
-  vector3 {
-    x: 0
-    y: 0
-    z: 0
-  }
-}
-property {
-  uniform_name: "Kd"
-  display_name: "Diffuse reflectivity"
-  vector3 {
-    x: 1
-    y: 1
-    z: 1
-  }
-}
-property {
-  uniform_name: "Ld"
-  display_name: "Diffuse light intensity"
-  vector3 {
-    x: 0.5
-    y: 0.5
-    z: 1
-  }
+default_material {
+    property {
+      uniform_name: "LightPosition"
+      display_name: "Light position in eye coords"
+      vector3 {
+        x: 0
+        y: 0
+        z: 0
+      }
+    }
+    property {
+      uniform_name: "Kd"
+      display_name: "Diffuse reflectivity"
+      vector3 {
+        x: 1
+        y: 1
+        z: 1
+      }
+    }
+    property {
+      uniform_name: "Ld"
+      display_name: "Diffuse light intensity"
+      vector3 {
+        x: 0.5
+        y: 0.5
+        z: 1
+      }
+    }
 }
 vertex_shader {
   code: "out vec3 LightIntensity;\n"
