@@ -168,7 +168,7 @@ namespace AeonGames
         // Matrices binding
         descriptor_set_layout_bindings[0].binding = 0;
         descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        /* Will we bind 1 UBO? The Spec at 13.2.1. only mentions "number of descriptors" without much info of what objects are considered descriptors. */
+        /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
         descriptor_set_layout_bindings[0].descriptorCount = 1;
         descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
@@ -190,6 +190,7 @@ namespace AeonGames
                 descriptor_set_layout_bindings.emplace_back();
                 auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
                 descriptor_set_layout_binding.binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 );
+                // Descriptor Count is the count of elements in an array.
                 descriptor_set_layout_binding.descriptorCount = 1;
                 descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_set_layout_binding.pImmutableSamplers = nullptr;
@@ -222,11 +223,28 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorPool()
     {
-        std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{ {} };
+        std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
+        /*  Reserve enough slots as if all uniforms where shaders,
+        better safe than sorry. the + 1 is for the matrix uniform.*/
+        descriptor_pool_sizes.reserve ( mPipeline->GetUniformMetaData().size() + 1 );
+        descriptor_pool_sizes.emplace_back();
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = 2;
-        descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptor_pool_sizes[1].descriptorCount = 1;
+        descriptor_pool_sizes[0].descriptorCount = ( mPipeline->GetUniformBlockSize() == 0 ) ? 1 : 2;
+        uint32_t sampler_descriptor_count = 0;
+        for ( auto&i : mPipeline->GetUniformMetaData() )
+        {
+            if ( i.GetType() == Uniform::Type::SAMPLER_2D )
+            {
+                ++sampler_descriptor_count;
+            }
+        }
+        if ( sampler_descriptor_count )
+        {
+            descriptor_pool_sizes.emplace_back();
+            auto& descriptor_pool_size = descriptor_pool_sizes.back();
+            descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptor_pool_size.descriptorCount = sampler_descriptor_count;
+        }
 
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
