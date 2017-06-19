@@ -19,6 +19,5 @@ import "property.proto";
 
 message MaterialBuffer
 {
-	string program = 1;
-	repeated PropertyBuffer property = 2;
+	repeated PropertyBuffer property = 1;
 }

@@ -1,27 +1,29 @@
 AEONPRG
 glsl_version: 420
-property {
-  uniform_name: "LightPosition"
-  display_name: "Light position in eye coords"
-  vector3 {
-    x: 0
-    y: 0
-    z: 0
-  }
-}
-property {
-  uniform_name: "Kd"
-  display_name: "Diffuse reflectivity"
-  vector3 {
-    x: 1
-    y: 1
-    z: 1
-  }
-}
-property {
-  uniform_name: "DiffuseMap"
-  display_name: "Diffuse Map"
-  texture: "game/images/orange.png"
+default_material {
+    property {
+      uniform_name: "LightPosition"
+      display_name: "Light position in eye coords"
+      vector3 {
+        x: 0
+        y: 0
+        z: 0
+      }
+    }
+    property {
+      uniform_name: "Kd"
+      display_name: "Diffuse reflectivity"
+      vector3 {
+        x: 1
+        y: 1
+        z: 1
+      }
+    }
+    property {
+      uniform_name: "DiffuseMap"
+      display_name: "Diffuse Map"
+      texture: "game/images/orange.png"
+    }
 }
 vertex_shader {
   code: 

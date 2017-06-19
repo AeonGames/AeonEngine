@@ -15,7 +15,7 @@
 syntax = "proto3";
 package AeonGames;
 
-import "property.proto";
+import "material.proto";
 
 message ShaderBuffer {
     oneof source {
@@ -26,7 +26,7 @@ message ShaderBuffer {
 
 message PipelineBuffer {
 	uint32 glsl_version                = 1;
-	repeated PropertyBuffer property   = 2;
+	MaterialBuffer default_material    = 2;
 	ShaderBuffer vertex_shader         = 3;
 	ShaderBuffer fragment_shader       = 4;
 }
