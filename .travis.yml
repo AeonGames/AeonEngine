@@ -2,6 +2,7 @@ sudo: required
 dist: trusty
 os: linux
 language: cpp
+group: edge
 env:
   global:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
