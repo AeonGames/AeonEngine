@@ -61,7 +61,9 @@ namespace AeonGames
     {
         //--------------------------------------------------------
         // File loading code
-        std::ifstream file ( aFileName, std::ios::binary );
+        std::ifstream file;
+        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+        file.open ( aFileName, std::ios::binary );
         std::vector<uint8_t> buffer ( (
                                           std::istreambuf_iterator<char> ( file ) ),
                                       ( std::istreambuf_iterator<char>() ) );
