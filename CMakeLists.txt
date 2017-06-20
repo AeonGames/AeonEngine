@@ -125,6 +125,8 @@ if(MSVC)
             ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/[ \\t]*$$//' {} $<SEMICOLON>"
         COMMAND
             ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\""
+        COMMAND
+            ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\""
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting Code.")
 else()
@@ -149,16 +151,22 @@ add_custom_target(generate-python-protobuf-source
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/mesh.proto
     COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
+    COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector3.proto
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+    COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
     SOURCES
         ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+        ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
         ${CMAKE_SOURCE_DIR}/proto/vector2.proto
         ${CMAKE_SOURCE_DIR}/proto/vector3.proto
         ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+        ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
     COMMENT "Generating Protocol Buffers Python Code")
 
 ###########################################

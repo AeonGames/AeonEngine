@@ -23,6 +23,7 @@ limitations under the License.
 #include "pipeline.pb.h"
 #include "material.pb.h"
 #include "mesh.pb.h"
+#include "skeleton.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -117,6 +118,7 @@ namespace AeonGames
         PipelineBuffer pipeline_buffer;
         MaterialBuffer material_buffer;
         MeshBuffer mesh_buffer;
+        SkeletonBuffer skeleton_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };
         bool binary_input = false;
@@ -157,7 +159,14 @@ namespace AeonGames
                 binary_input = true;
             /* coverity[fallthrough] */
             case FileType::AEONMSHT:
-                message = &mesh_buffer;
+                message = &skeleton_buffer;
+                break;
+            /* coverity[unterminated_case] */
+            case FileType::AEONSKLB:
+                binary_input = true;
+            /* coverity[fallthrough] */
+            case FileType::AEONSKLT:
+                message = &skeleton_buffer;
                 break;
             default:
                 file.close();
