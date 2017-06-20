@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
 # limitations under the License.
 
 bl_info = {
-    "name": "AeonGames Mesh Format (.msh)",
+    "name": "AeonGames Skeleton Format (.skl)",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
     "blender": (2, 7, 0),
-    "location": "File > Export > Export AeonGames Mesh",
-    "description": "Exports a mesh to an AeonGames Mesh (MSH) file",
+    "location": "File > Export > Export AeonGames Skeleton",
+    "description": "Exports an armature mesh to an AeonGames Skeleton (SKL) file",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -28,16 +28,15 @@ import bpy
 from . import export
 
 
-def msh_menu_func(self, context):
+def skl_menu_func(self, context):
     self.layout.operator(
-        export.MSHExporter.bl_idname,
-        text="AeonGames Mesh (.msh)")
-    # bpy.types.INFO_MT_file_export.remove(msh_menu_func)
+        export.SKLExporter.bl_idname,
+        text="AeonGames Skeleton (.skl)")
 
 
 def register():
-    bpy.utils.register_class(export.MSHExporter)
-    bpy.types.INFO_MT_file_export.append(msh_menu_func)
+    bpy.utils.register_class(export.SKLExporter)
+    bpy.types.INFO_MT_file_export.append(skl_menu_func)
 
 
 if __name__ == "__main__":
