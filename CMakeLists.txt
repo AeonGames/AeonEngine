@@ -127,6 +127,8 @@ if(MSVC)
             ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\""
         COMMAND
             ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\""
+        COMMAND
+            ${PYTHON_EXECUTABLE} "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm\""
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting Code.")
 else()
@@ -139,6 +141,10 @@ else()
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/[ \\t]*$$//' {} \\$<SEMICOLON>
         COMMAND
             ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\"
+        COMMAND
+            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\"
+        COMMAND
+            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm\"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting Code.")
 endif()
@@ -153,6 +159,8 @@ add_custom_target(generate-python-protobuf-source
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
     COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/animation.proto        
+    COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector3.proto
@@ -163,6 +171,7 @@ add_custom_target(generate-python-protobuf-source
     SOURCES
         ${CMAKE_SOURCE_DIR}/proto/mesh.proto
         ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
+        ${CMAKE_SOURCE_DIR}/proto/animation.proto
         ${CMAKE_SOURCE_DIR}/proto/vector2.proto
         ${CMAKE_SOURCE_DIR}/proto/vector3.proto
         ${CMAKE_SOURCE_DIR}/proto/vector4.proto
