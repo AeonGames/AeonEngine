@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 bl_info = {
-    "name": "AeonGames Skeleton Format (.skl)",
-    "author": "Rodrigo Hernandez",
+    "name": "AeonGames Animation Format (.anm)",
+    "author": "Rodrigo Hernandez (Kwizatz)",
     "version": (1, 0, 0),
     "blender": (2, 7, 0),
-    "location": "File > Export > Export AeonGames Skeleton",
-    "description": "Exports an armature to an AeonGames Skeleton (SKL) file",
+    "location": "File > Export > Export AeonGames Animations",
+    "description": "Exports armature actions as AeonGames Animation (ANM) files",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -28,15 +29,15 @@ import bpy
 from . import export
 
 
-def skl_menu_func(self, context):
+def anm_menu_func(self, context):
     self.layout.operator(
-        export.SKLExporter.bl_idname,
-        text="AeonGames Skeleton (.skl)")
+        export.ANMExporter.bl_idname,
+        text="AeonGames Animations (.anm)")
 
 
 def register():
-    bpy.utils.register_class(export.SKLExporter)
-    bpy.types.INFO_MT_file_export.append(skl_menu_func)
+    bpy.utils.register_class(export.ANMExporter)
+    bpy.types.INFO_MT_file_export.append(anm_menu_func)
 
 
 if __name__ == "__main__":
