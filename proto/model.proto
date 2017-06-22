@@ -23,7 +23,7 @@ import "animation.proto";
 
 message PipelineReferenceBuffer
 {
-	oneof program
+	oneof pipeline
     {
         string         file             = 1;
         PipelineBuffer buffer           = 2;
@@ -61,10 +61,16 @@ message AnimationReferenceBuffer
         AnimationBuffer buffer          = 2;
     }
 }
-message ModelBuffer {
-	PipelineReferenceBuffer  program     = 1;
+message MeshGroupBuffer
+{
+	PipelineReferenceBuffer  pipeline    = 1;
 	MaterialReferenceBuffer  material    = 2;
     MeshReferenceBuffer      mesh        = 3;
-    SkeletonReferenceBuffer  skeleton    = 4;
-    repeated AnimationBuffer animation   = 5;
+}
+message ModelBuffer {
+	PipelineReferenceBuffer  default_pipeline                  = 1;
+	MaterialReferenceBuffer  default_material                  = 2;
+    SkeletonReferenceBuffer  skeleton                          = 3;
+    repeated MeshGroupBuffer mesh                              = 4;
+    repeated AnimationBuffer animation                         = 5;
 }

@@ -46,8 +46,11 @@ namespace AeonGames
 
     void VulkanModel::Render ( const VulkanWindow& aWindow ) const
     {
-        mProgram->Use ( aWindow );
-        mMesh->Render();
+        for ( auto& i : mMeshes )
+        {
+            std::get<0> ( i )->Use ( aWindow );
+            std::get<2> ( i )->Render();
+        }
     }
 
     void VulkanModel::Initialize()
@@ -56,8 +59,12 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        mProgram = Get<VulkanPipeline> ( mModel->GetProgram(), mVulkanRenderer );
-        mMesh = Get<VulkanMesh> ( mModel->GetMesh(), mVulkanRenderer );
+        auto& meshes = mModel->GetMeshes();
+        mMeshes.reserve ( meshes.size() );
+        for ( auto& i : meshes )
+        {
+            mMeshes.emplace_back ( Get<VulkanPipeline> ( std::get<0> ( i ), mVulkanRenderer ), nullptr, Get<VulkanMesh> ( std::get<2> ( i ), mVulkanRenderer ) );
+        }
     }
 
     void VulkanModel::Finalize()
