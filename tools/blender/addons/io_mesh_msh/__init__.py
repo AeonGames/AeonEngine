@@ -32,13 +32,19 @@ def msh_menu_func(self, context):
     self.layout.operator(
         export.MSHExporter.bl_idname,
         text="AeonGames Mesh (.msh)")
-    # bpy.types.INFO_MT_file_export.remove(msh_menu_func)
+
+
+def msh_all_menu_func(self, context):
+    self.layout.operator(
+        export.MSHExportAll.bl_idname,
+        text="AeonGames Meshes (.msh)")
 
 
 def register():
     bpy.utils.register_class(export.MSHExporter)
     bpy.types.INFO_MT_file_export.append(msh_menu_func)
-
+    bpy.utils.register_class(export.MSHExportAll)
+    bpy.types.INFO_MT_file_export.append(msh_all_menu_func)
 
 if __name__ == "__main__":
     register()

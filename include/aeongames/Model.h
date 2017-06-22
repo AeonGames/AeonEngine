@@ -30,14 +30,19 @@ namespace AeonGames
         DLL Model ( std::string  aFilename );
         DLL ~Model();
         DLL const std::string& GetFilename() const;
-        DLL const std::shared_ptr<Pipeline> GetProgram() const;
-        DLL const std::shared_ptr<Material> GetMaterial() const;
-        DLL const std::shared_ptr<Mesh> GetMesh() const;
+        DLL const std::vector<std::tuple<
+        std::shared_ptr<Pipeline>,
+            std::shared_ptr<Material>,
+            std::shared_ptr<Mesh>>>& GetMeshes() const;
+        DLL const float * const GetCenterRadii() const;
     private:
+        float mCenterRadii[6];
         std::string mFilename;
-        std::shared_ptr<Pipeline> mProgram;
-        std::shared_ptr<Material> mMaterial;
-        std::shared_ptr<Mesh> mMesh;
+        std::vector<std::tuple<
+        std::shared_ptr<Pipeline>,
+            std::shared_ptr<Material>,
+            std::shared_ptr<Mesh>>
+            > mMeshes;
         void Initialize();
         void Finalize();
     };

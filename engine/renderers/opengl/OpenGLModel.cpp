@@ -47,16 +47,23 @@ namespace AeonGames
         /**@todo Revisit, may be a better idea
         to keep a back reference to the renderer
         instead of taking a parameter. */
-        mProgram->Use();
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, aMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        mMesh->Render();
+        for ( auto& i : mMeshes )
+        {
+            std::get<0> ( i )->Use();
+            glBindBufferBase ( GL_UNIFORM_BUFFER, 0, aMatricesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            std::get<2> ( i )->Render();
+        }
     }
 
     void OpenGLModel::Initialize()
     {
-        mProgram = Get<OpenGLPipeline> ( mModel->GetProgram() );
-        mMesh = Get<OpenGLMesh> ( mModel->GetMesh() );
+        auto& meshes = mModel->GetMeshes();
+        mMeshes.reserve ( meshes.size() );
+        for ( auto& i : meshes )
+        {
+            mMeshes.emplace_back ( Get<OpenGLPipeline> ( std::get<0> ( i ) ), nullptr, Get<OpenGLMesh> ( std::get<2> ( i ) ) );
+        }
     }
 
     void OpenGLModel::Finalize()

@@ -21,6 +21,7 @@ namespace AeonGames
     class Model;
     class VulkanRenderer;
     class VulkanPipeline;
+    class VulkanMaterial;
     class VulkanMesh;
     class VulkanWindow;
     class VulkanModel
@@ -34,8 +35,10 @@ namespace AeonGames
         void Finalize();
         const std::shared_ptr<Model> mModel;
         const VulkanRenderer* mVulkanRenderer;
-        std::shared_ptr<VulkanPipeline> mProgram;
-        std::shared_ptr<VulkanMesh> mMesh;
+        std::vector<std::tuple<
+        std::shared_ptr<VulkanPipeline>,
+            std::shared_ptr<VulkanMaterial>,
+            std::shared_ptr<VulkanMesh>>> mMeshes;
     };
 }
 #endif

@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,26 +47,16 @@ FOUR_BYTES = 0x09
 DOUBLE = 0x0A
 
 
-class MSHExporter(bpy.types.Operator):
+class MSHExporterCommon():
 
-    '''Exports a mesh to an AeonGames Mesh (MSH) file'''
-    bl_idname = "export_mesh.msh"
-    bl_label = "Export AeonGames Mesh"
-
-    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def __init__(self):
+    def __init__(self, filepath):
         self.mesh = None
         self.object = None
         self.armature = None
         self.flags = None
         self.vertices = []
         self.indices = []
-        self.lock = ThreadLock()
+        self.filepath = filepath
 
     def get_vertex(self, loop):
         mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
@@ -339,9 +329,7 @@ class MSHExporter(bpy.types.Operator):
         pool.close()
         pool.join()
 
-    def execute(self, context):
-        bpy.ops.object.mode_set()
-        self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
+    def run(self, mesh_object):
         # Create Protocol Buffer
         mesh_buffer = mesh_pb2.MeshBuffer()
         # Initialize Protocol Buffer Message
@@ -352,35 +340,34 @@ class MSHExporter(bpy.types.Operator):
         global_max_x = float('-inf')
         global_max_y = float('-inf')
         global_max_z = float('-inf')
-        for object in context.scene.objects:
-            if (object.type == 'MESH'):
-                triangle_group = mesh_buffer.TriangleGroup.add()
-                self.fill_triangle_group(triangle_group, object)
-                # cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
-                # print(
-                # timeit.timeit(
-                # lambda: self.fill_triangle_group(
-                # triangle_group,
-                # object),
-                # number=1))
-                global_min_x = min(
-                    global_min_x,
-                    (triangle_group.Center.x - triangle_group.Radii.x))
-                global_min_y = min(
-                    global_min_y,
-                    (triangle_group.Center.y - triangle_group.Radii.y))
-                global_min_z = min(
-                    global_min_z,
-                    (triangle_group.Center.z - triangle_group.Radii.z))
-                global_max_x = max(
-                    global_max_x,
-                    (triangle_group.Center.x + triangle_group.Radii.x))
-                global_max_y = max(
-                    global_max_y,
-                    (triangle_group.Center.y + triangle_group.Radii.y))
-                global_max_z = max(
-                    global_max_z,
-                    (triangle_group.Center.z + triangle_group.Radii.z))
+
+        triangle_group = mesh_buffer.TriangleGroup.add()
+        self.fill_triangle_group(triangle_group, mesh_object)
+        # cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
+        # print(
+        # timeit.timeit(
+        # lambda: self.fill_triangle_group(
+        # triangle_group,
+        # object),
+        # number=1))
+        global_min_x = min(
+            global_min_x,
+            (triangle_group.Center.x - triangle_group.Radii.x))
+        global_min_y = min(
+            global_min_y,
+            (triangle_group.Center.y - triangle_group.Radii.y))
+        global_min_z = min(
+            global_min_z,
+            (triangle_group.Center.z - triangle_group.Radii.z))
+        global_max_x = max(
+            global_max_x,
+            (triangle_group.Center.x + triangle_group.Radii.x))
+        global_max_y = max(
+            global_max_y,
+            (triangle_group.Center.y + triangle_group.Radii.y))
+        global_max_z = max(
+            global_max_z,
+            (triangle_group.Center.z + triangle_group.Radii.z))
 
         # Set Global Center and Radii
         mesh_buffer.Center.x = (global_min_x + global_max_x) / 2
@@ -404,6 +391,29 @@ class MSHExporter(bpy.types.Operator):
         out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
         out.close()
         print("Done.")
+
+
+class MSHExporter(bpy.types.Operator):
+
+    '''Exports a mesh to an AeonGames Mesh (MSH) file'''
+    bl_idname = "export_mesh.msh"
+    bl_label = "Export AeonGames Mesh"
+
+    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
+
+    @classmethod
+    def poll(cls, context):
+        if (context.active_object.type == 'MESH'):
+            return True
+        return False
+
+    def execute(self, context):
+        if (context.active_object.type != 'MESH'):
+            return {'CANCELLED'}
+        bpy.ops.object.mode_set()
+        self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
+        exporter = MSHExporterCommon(self.filepath)
+        exporter.run(context.active_object)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -412,9 +422,33 @@ class MSHExporter(bpy.types.Operator):
                 os.path.dirname(
                     bpy.data.filepath) +
                 os.sep +
-                context.scene.name,
+                context.active_object.name,
                 ".msh")
         else:
             self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
+
+
+class MSHExportAll(bpy.types.Operator):
+    '''Exports a Scene's meshes to a collection of AeonGames Mesh (MSH) files'''
+    bl_idname = "export_mesh.all_msh"
+    bl_label = "Export AeonGames Meshes"
+
+    directory = bpy.props.StringProperty(subtype='DIR_PATH')
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        for object in context.scene.objects:
+            if (object.type == 'MESH'):
+                exporter = MSHExporterCommon(
+                    self.directory + "/" + object.name + ".msh")
+                exporter.run(object)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}

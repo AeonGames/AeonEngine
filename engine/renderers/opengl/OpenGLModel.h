@@ -21,6 +21,7 @@ namespace AeonGames
 {
     class Model;
     class OpenGLPipeline;
+    class OpenGLMaterial;
     class OpenGLMesh;
     class OpenGLModel
     {
@@ -32,8 +33,10 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         const std::shared_ptr<Model> mModel;
-        std::shared_ptr<OpenGLPipeline> mProgram;
-        std::shared_ptr<OpenGLMesh> mMesh;
+        std::vector<std::tuple<
+        std::shared_ptr<OpenGLPipeline>,
+            std::shared_ptr<OpenGLMaterial>,
+            std::shared_ptr<OpenGLMesh>>> mMeshes;
     };
 }
 #endif

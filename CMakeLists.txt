@@ -223,6 +223,8 @@ add_custom_target(run-blender
         generate-python-protobuf-source
     SOURCES
         ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh/export.py
+        ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl/export.py
+        ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm/export.py
     COMMENT "Running Blender")
 endif()
 
