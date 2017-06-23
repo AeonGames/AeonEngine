@@ -159,7 +159,7 @@ add_custom_target(generate-python-protobuf-source
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
     COMMAND
-        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/animation.proto        
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/animation.proto
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     COMMAND

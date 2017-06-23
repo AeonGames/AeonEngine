@@ -23,6 +23,7 @@ from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 
 class SKLExporter(bpy.types.Operator):
+
     '''Exports an armature to an AeonGames Skeleton (SKL) file'''
     bl_idname = "export_skeleton.skl"
     bl_label = "Export AeonGames Skeleton"
@@ -54,12 +55,13 @@ class SKLExporter(bpy.types.Operator):
             # If the following assert is hit, the order of bones should be
             # changed.
             assert armature.bones.find(bone.name) > joint.ParentIndex
-            #print(bone.name,"index:",armature.bones.find(bone.name),"parent index:", parent_index)
+            # print(bone.name,"index:",armature.bones.find(bone.name),"parent index:", parent_index)
             # What is refered as the matrix_local is really the bone matrix in the armature model space.
             # Note: skeleton bones are relative to the armature origin, not
             # their parents, unlike animation bones.
             translation, rotation, scale = bone.matrix_local.decompose()
-            inv_translation, inv_rotation, inv_scale = bone.matrix_local.inverted().decompose()
+            inv_translation, inv_rotation, inv_scale = bone.matrix_local.inverted(
+            ).decompose()
             print("Translation", translation)
             print("Rotation", rotation)
             print("Scale", scale)

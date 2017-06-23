@@ -431,6 +431,7 @@ class MSHExporter(bpy.types.Operator):
 
 
 class MSHExportAll(bpy.types.Operator):
+
     '''Exports a Scene's meshes to a collection of AeonGames Mesh (MSH) files'''
     bl_idname = "export_mesh.all_msh"
     bl_label = "Export AeonGames Meshes"
