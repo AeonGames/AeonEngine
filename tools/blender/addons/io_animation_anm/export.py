@@ -59,9 +59,12 @@ class Bone():
         # Sadly, mathutils.Matrix.Scale does not work the way we're forced to
         # do it here.
         scale = mathutils.Matrix((
-            (1.0 if self.scale[0] is None else self.scale[0].evaluate(float(frame)), 0, 0, 0),
-            (0, 1.0 if self.scale[1] is None else self.scale[1].evaluate(float(frame)), 0, 0),
-            (0, 0, 1.0 if self.scale[2] is None else self.scale[2].evaluate(float(frame)), 0),
+            (1.0 if self.scale[0] is None else self.scale[
+             0].evaluate(float(frame)), 0, 0, 0),
+            (0, 1.0 if self.scale[1] is None else self.scale[
+             1].evaluate(float(frame)), 0, 0),
+            (0, 0, 1.0 if self.scale[2] is None else self.scale[
+             2].evaluate(float(frame)), 0),
             (0, 0, 0, 1.0)))
         rotation = mathutils.Quaternion(
             (1.0 if self.rotation[0] is None else self.rotation[0].evaluate(
@@ -87,6 +90,7 @@ class Bone():
 
 
 class ANMExporter(bpy.types.Operator):
+
     '''Exports an armature's actions to AeonGames animation (ANM) file'''
     bl_idname = "export_armature.anm"
     bl_label = "Export AeonGames Animations"
