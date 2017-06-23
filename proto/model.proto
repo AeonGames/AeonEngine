@@ -61,7 +61,7 @@ message AnimationReferenceBuffer
         AnimationBuffer buffer          = 2;
     }
 }
-message MeshGroupBuffer
+message AssemblyBuffer
 {
 	PipelineReferenceBuffer  pipeline    = 1;
 	MaterialReferenceBuffer  material    = 2;
@@ -71,6 +71,6 @@ message ModelBuffer {
 	PipelineReferenceBuffer  default_pipeline                  = 1;
 	MaterialReferenceBuffer  default_material                  = 2;
     SkeletonReferenceBuffer  skeleton                          = 3;
-    repeated MeshGroupBuffer mesh                              = 4;
+    repeated AssemblyBuffer  assembly                          = 4;
     repeated AnimationBuffer animation                         = 5;
 }
