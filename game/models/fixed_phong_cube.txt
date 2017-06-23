@@ -2,7 +2,7 @@ AEONMDL
 default_pipeline {
     file: "game/shaders/fixed_phong.txt"
 }
-mesh {
+assembly {
     mesh {
         file: "game/meshes/cube.txt"
     }
