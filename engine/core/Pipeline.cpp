@@ -85,11 +85,6 @@ namespace AeonGames
         return mFragmentShader;
     }
 
-    const std::vector<Uniform>& Pipeline::GetUniformMetaData() const
-    {
-        return mUniformMetaData;
-    }
-
     uint32_t Pipeline::GetAttributes() const
     {
         return mAttributes;
@@ -150,30 +145,9 @@ namespace AeonGames
         return offset;
     }
 
-    uint32_t Pipeline::GetUniformBlockSize() const
+    const Material & Pipeline::GetDefaultMaterial() const
     {
-        uint32_t size = 0;
-        for ( auto& i : mUniformMetaData )
-        {
-            switch ( i.GetType() )
-            {
-            case Uniform::FLOAT:
-                size += sizeof ( float );
-                break;
-            case Uniform::FLOAT_VEC2:
-                size += sizeof ( float ) * 2;
-                break;
-            case Uniform::FLOAT_VEC3:
-                size += sizeof ( float ) * 4; /* VEC3 requires padding in std140 */
-                break;
-            case Uniform::FLOAT_VEC4:
-                size += sizeof ( float ) * 4;
-                break;
-            default:
-                break;
-            }
-        }
-        return size;
+        return mDefaultMaterial;
     }
 
     void Pipeline::Initialize()
@@ -229,7 +203,6 @@ namespace AeonGames
                 }
                 code = attribute_matches.suffix();
             }
-
             mFragmentShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mFragmentShader.append (
                 "layout(binding = 0,std140) uniform Matrices{\n"
@@ -241,46 +214,23 @@ namespace AeonGames
                 "mat4 ModelViewProjectionMatrix;\n"
                 "mat3 NormalMatrix;\n"
                 "};\n" );
-            mUniformMetaData.clear();
-            mUniformMetaData.reserve ( pipeline_buffer.default_material().property().size() );
-            if ( pipeline_buffer.default_material().property().size() > 0 )
+            mDefaultMaterial = Material ( pipeline_buffer.default_material() );
+            if ( mDefaultMaterial.GetUniformMetaData().size() > 0 )
             {
                 uint32_t sampler_binding = 2;
                 std::string properties ( "layout(binding = 1,std140) uniform Properties{\n" );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
-                for ( auto& i : pipeline_buffer.default_material().property() )
+                for ( auto& i : mDefaultMaterial.GetUniformMetaData() )
                 {
-                    switch ( i.default_value_case() )
+                    switch ( i.GetType() )
                     {
-                    case PropertyBuffer::DefaultValueCase::kScalarFloat:
-                        mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
-                        properties.append ( mUniformMetaData.back().GetDeclaration() );
-                        break;
-                    case PropertyBuffer::DefaultValueCase::kVector2:
-                        mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );
-                        properties.append ( mUniformMetaData.back().GetDeclaration() );
-                        break;
-                    case PropertyBuffer::DefaultValueCase::kVector3:
-                        mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z() );
-                        properties.append ( mUniformMetaData.back().GetDeclaration() );
-                        break;
-                    case PropertyBuffer::DefaultValueCase::kVector4:
-                        mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
-                        properties.append ( mUniformMetaData.back().GetDeclaration() );
-                        break;
-                    case PropertyBuffer::DefaultValueCase::kTexture:
-                        mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
+                    case Uniform::Type::SAMPLER_2D:
                         samplers.append ( "layout(binding = " + std::to_string ( sampler_binding++ ) + ") " );
-                        samplers.append ( mUniformMetaData.back().GetDeclaration() );
+                        samplers.append ( i.GetDeclaration() );
                         break;
-#if 0
-                    case PropertyBuffer_Type_SAMPLER_CUBE:
-                        //type_name = "samplerCube ";
-                        /* To be continued ... */
-                        break;
-#endif
                     default:
-                        throw std::runtime_error ( "Unknown Type." );
+                        properties.append ( i.GetDeclaration() );
+                        break;
                     }
                 }
                 properties.append ( "};\n" );
