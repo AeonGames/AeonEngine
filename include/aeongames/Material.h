@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,18 +16,28 @@ limitations under the License.
 #ifndef AEONGAMES_MATERIAL_H
 #define AEONGAMES_MATERIAL_H
 #include <string>
+#include <vector>
+#include "Uniform.h"
 
 namespace AeonGames
 {
+    class MaterialBuffer;
     class Material
     {
     public:
+        Material() = default;
         Material ( std::string  aFilename );
+        Material ( const MaterialBuffer& aMaterialBuffer );
+        Material ( Material&& aMaterial );
         ~Material();
+        Material& operator= ( Material&& aMaterial );
+        DLL const std::vector<Uniform>& GetUniformMetaData() const;
+        DLL uint32_t GetUniformBlockSize() const;
     private:
-        void Initialize();
+        void Initialize ( const MaterialBuffer& aMaterialBuffer );
         void Finalize();
         std::string mFilename;
+        std::vector<Uniform> mUniformMetaData;
     };
 }
 #endif

@@ -180,22 +180,22 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mPipeline->GetUniformMetaData().size() )
+        if ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() )
         {
             {
                 // Get offsets (initialize mUniformMetaData)
-                std::vector<const GLchar *> uniform_names ( mPipeline->GetUniformMetaData().size() );
-                for ( std::size_t i = 0; i < mPipeline->GetUniformMetaData().size(); ++i )
+                std::vector<const GLchar *> uniform_names ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() );
+                for ( std::size_t i = 0; i < mPipeline->GetDefaultMaterial().GetUniformMetaData().size(); ++i )
                 {
-                    uniform_names[i] = mPipeline->GetUniformMetaData() [i].GetName().c_str();
+                    uniform_names[i] = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetName().c_str();
                 }
-                std::vector<GLuint> uniform_indices ( mPipeline->GetUniformMetaData().size() );
-                glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mPipeline->GetUniformMetaData().size() ),
+                std::vector<GLuint> uniform_indices ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() );
+                glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() ),
                                       uniform_names.data(), uniform_indices.data() );
                 OPENGL_CHECK_ERROR_THROW;
 
-                std::vector<GLint> uniform_offset ( mPipeline->GetUniformMetaData().size() );
-                glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mPipeline->GetUniformMetaData().size() ),
+                std::vector<GLint> uniform_offset ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() );
+                glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() ),
                                         uniform_indices.data(),
                                         GL_UNIFORM_OFFSET, uniform_offset.data() );
                 OPENGL_CHECK_ERROR_THROW;
@@ -209,21 +209,22 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_THROW;
                 mUniformData.resize ( block_size );
                 GLint image_unit = 0;
-                for ( std::size_t i = 0; i < mPipeline->GetUniformMetaData().size(); ++i )
+                // Set default uniform values
+                for ( std::size_t i = 0; i < mPipeline->GetDefaultMaterial().GetUniformMetaData().size(); ++i )
                 {
-                    switch ( mPipeline->GetUniformMetaData() [i].GetType() )
+                    switch ( mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetType() )
                     {
                     case Uniform::FLOAT_VEC4:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mPipeline->GetUniformMetaData() [i].GetW();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetW();
                     /* Intentional Pass-Thru */
                     case Uniform::FLOAT_VEC3:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mPipeline->GetUniformMetaData() [i].GetZ();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetZ();
                     /* Intentional Pass-Thru */
                     case Uniform::FLOAT_VEC2:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mPipeline->GetUniformMetaData() [i].GetY();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetY();
                     /* Intentional Pass-Thru */
                     case Uniform::FLOAT:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mPipeline->GetUniformMetaData() [i].GetX();
+                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetX();
                         break;
                     case Uniform::SAMPLER_2D:
                     {
@@ -231,8 +232,8 @@ namespace AeonGames
                         {
                             throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
                         }
-                        mTextures.emplace_back ( Get<OpenGLTexture> ( mPipeline->GetUniformMetaData() [i].GetImage() ), image_unit );
-                        auto location = glGetUniformLocation ( mProgramId, mPipeline->GetUniformMetaData() [i].GetName().c_str() );
+                        mTextures.emplace_back ( Get<OpenGLTexture> ( mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetImage() ), image_unit );
+                        auto location = glGetUniformLocation ( mProgramId, mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetName().c_str() );
                         OPENGL_CHECK_ERROR_THROW;
                         glUniform1i ( location, image_unit++ );
                         OPENGL_CHECK_ERROR_THROW;
