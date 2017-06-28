@@ -62,21 +62,9 @@ namespace AeonGames
         }
     }
 
-    Material::Material ( Material && aMaterial ) :
-        mFilename ( std::move ( aMaterial.mFilename ) ),
-        mUniformMetaData ( std::move ( aMaterial.mUniformMetaData ) )
-    {
-    }
 
     Material::~Material()
         = default;
-
-    Material & Material::operator= ( Material && aMaterial )
-    {
-        mFilename = std::move ( aMaterial.mFilename );
-        mUniformMetaData = std::move ( aMaterial.mUniformMetaData );
-        return *this;
-    }
 
     const std::vector<Uniform>& Material::GetUniformMetaData() const
     {
