@@ -20,11 +20,11 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include "Uniform.h"
-#include "Material.h"
 #include "aeongames/Platform.h"
 
 namespace AeonGames
 {
+    class Material;
     class Pipeline
     {
     public:
@@ -61,11 +61,7 @@ namespace AeonGames
         DLL AttributeFormat GetFormat ( AttributeBits aAttributeBit ) const;
         DLL uint32_t GetSize ( AttributeBits aAttributeBit ) const;
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
-#if 0
-        DLL const std::vector<Uniform>& GetUniformMetaData() const;
-        DLL uint32_t GetUniformBlockSize() const;
-#endif
-        DLL const Material& GetDefaultMaterial() const;
+        DLL const std::shared_ptr<Material> GetDefaultMaterial() const;
     private:
         void Initialize();
         void Finalize();
@@ -73,7 +69,7 @@ namespace AeonGames
         uint32_t mAttributes;
         std::string mVertexShader;
         std::string mFragmentShader;
-        Material mDefaultMaterial;
+        std::shared_ptr<Material> mDefaultMaterial;
     };
 }
 #endif

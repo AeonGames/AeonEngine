@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
 #include "OpenGLPipeline.h"
+#include "OpenGLMaterial.h"
 #include "OpenGLTexture.h"
 #include "OpenGLFunctions.h"
 
@@ -25,7 +26,8 @@ namespace AeonGames
 {
     OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram ) :
         mPipeline ( aProgram ),
-        mProgramId ( 0 )
+        mProgramId ( 0 ),
+        mDefaultMaterial ( std::make_shared<OpenGLMaterial> ( mPipeline->GetDefaultMaterial() ) )
     {
         try
         {
@@ -47,13 +49,19 @@ namespace AeonGames
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
-        for ( auto& i : mTextures )
+        for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
         {
-            glActiveTexture ( GL_TEXTURE0 + i.second );
+            glActiveTexture ( GL_TEXTURE0 + i );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, i.first->GetTexture() );
+            glBindTexture ( GL_TEXTURE_2D, mDefaultMaterial->GetTextures() [i]->GetTexture() );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
+        glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glBufferData ( GL_UNIFORM_BUFFER, mDefaultMaterial->GetUniformData().size(), mDefaultMaterial->GetUniformData().data(), GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLPipeline::Initialize()
@@ -180,78 +188,49 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() )
+        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
         {
+            // Get offsets (initialize mUniformMetaData)
+            std::vector<const GLchar *> uniform_names ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() );
+            for ( std::size_t i = 0; i < mPipeline->GetDefaultMaterial()->GetUniformMetaData().size(); ++i )
             {
-                // Get offsets (initialize mUniformMetaData)
-                std::vector<const GLchar *> uniform_names ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() );
-                for ( std::size_t i = 0; i < mPipeline->GetDefaultMaterial().GetUniformMetaData().size(); ++i )
-                {
-                    uniform_names[i] = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetName().c_str();
-                }
-                std::vector<GLuint> uniform_indices ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() );
-                glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() ),
-                                      uniform_names.data(), uniform_indices.data() );
-                OPENGL_CHECK_ERROR_THROW;
-
-                std::vector<GLint> uniform_offset ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() );
-                glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() ),
-                                        uniform_indices.data(),
-                                        GL_UNIFORM_OFFSET, uniform_offset.data() );
-                OPENGL_CHECK_ERROR_THROW;
-
-                // Get and initialize data block (initialize mUniformData)
-                mPropertiesBlockIndex = glGetUniformBlockIndex ( mProgramId, "Properties" );
-                OPENGL_CHECK_ERROR_THROW;
-                glGetActiveUniformBlockiv ( mProgramId, mPropertiesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
-                OPENGL_CHECK_ERROR_THROW;
-                glUniformBlockBinding ( mProgramId, mPropertiesBlockIndex, 1 );
-                OPENGL_CHECK_ERROR_THROW;
-                mUniformData.resize ( block_size );
-                GLint image_unit = 0;
-                // Set default uniform values
-                for ( std::size_t i = 0; i < mPipeline->GetDefaultMaterial().GetUniformMetaData().size(); ++i )
-                {
-                    switch ( mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetType() )
-                    {
-                    case Uniform::FLOAT_VEC4:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 3 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetW();
-                    /* Intentional Pass-Thru */
-                    case Uniform::FLOAT_VEC3:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 2 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetZ();
-                    /* Intentional Pass-Thru */
-                    case Uniform::FLOAT_VEC2:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 1 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetY();
-                    /* Intentional Pass-Thru */
-                    case Uniform::FLOAT:
-                        * ( reinterpret_cast<float*> ( mUniformData.data() + uniform_offset[i] ) + 0 ) = mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetX();
-                        break;
-                    case Uniform::SAMPLER_2D:
-                    {
-                        if ( image_unit >= ( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - GL_TEXTURE0 ) )
-                        {
-                            throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
-                        }
-                        mTextures.emplace_back ( Get<OpenGLTexture> ( mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetImage() ), image_unit );
-                        auto location = glGetUniformLocation ( mProgramId, mPipeline->GetDefaultMaterial().GetUniformMetaData() [i].GetName().c_str() );
-                        OPENGL_CHECK_ERROR_THROW;
-                        glUniform1i ( location, image_unit++ );
-                        OPENGL_CHECK_ERROR_THROW;
-                    }
-                    break;
-                    default:
-                        break;
-                    }
-                }
+                uniform_names[i] = mPipeline->GetDefaultMaterial()->GetUniformMetaData() [i].GetName().c_str();
             }
+            std::vector<GLuint> uniform_indices ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() );
+            glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() ),
+                                  uniform_names.data(), uniform_indices.data() );
+            OPENGL_CHECK_ERROR_THROW;
+
+            std::vector<GLint> uniform_offset ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() );
+            glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() ),
+                                    uniform_indices.data(),
+                                    GL_UNIFORM_OFFSET, uniform_offset.data() );
+            OPENGL_CHECK_ERROR_THROW;
+
+            // Get and initialize data block (initialize mUniformData)
+            mPropertiesBlockIndex = glGetUniformBlockIndex ( mProgramId, "Properties" );
+            OPENGL_CHECK_ERROR_THROW;
+            glUniformBlockBinding ( mProgramId, mPropertiesBlockIndex, 1 );
+            OPENGL_CHECK_ERROR_THROW;
+
+            // Set default uniform values
+            for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
+            {
+                glUniform1i ( i, i );
+                OPENGL_CHECK_ERROR_THROW;
+            }
+
+            /** @todo Keep a buffer per material? */
             glGenBuffers ( 1, &mPropertiesBuffer );
             OPENGL_CHECK_ERROR_THROW;
+#if 0
             glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
             OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_UNIFORM_BUFFER, mUniformData.size(), mUniformData.data(), GL_DYNAMIC_DRAW );
+            glBufferData ( GL_UNIFORM_BUFFER, mDefaultMaterial->GetUniformData().size(), mDefaultMaterial->GetUniformData().data(), GL_DYNAMIC_DRAW );
             OPENGL_CHECK_ERROR_THROW;
             glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
             OPENGL_CHECK_ERROR_THROW;
+#endif
         }
     }
 

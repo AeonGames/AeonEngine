@@ -23,6 +23,7 @@ limitations under the License.
 #include "ProtoBufHelpers.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -145,7 +146,7 @@ namespace AeonGames
         return offset;
     }
 
-    const Material & Pipeline::GetDefaultMaterial() const
+    const std::shared_ptr<Material> Pipeline::GetDefaultMaterial() const
     {
         return mDefaultMaterial;
     }
@@ -214,19 +215,20 @@ namespace AeonGames
                 "mat4 ModelViewProjectionMatrix;\n"
                 "mat3 NormalMatrix;\n"
                 "};\n" );
-            mDefaultMaterial = Material ( pipeline_buffer.default_material() );
-            if ( mDefaultMaterial.GetUniformMetaData().size() > 0 )
+            mDefaultMaterial = std::make_shared<Material> ( pipeline_buffer.default_material() );
+            if ( mDefaultMaterial->GetUniformMetaData().size() > 0 )
             {
                 uint32_t sampler_binding = 2;
                 std::string properties ( "layout(binding = 1,std140) uniform Properties{\n" );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
-                for ( auto& i : mDefaultMaterial.GetUniformMetaData() )
+                for ( auto& i : mDefaultMaterial->GetUniformMetaData() )
                 {
                     switch ( i.GetType() )
                     {
                     case Uniform::Type::SAMPLER_2D:
-                        samplers.append ( "layout(binding = " + std::to_string ( sampler_binding++ ) + ") " );
+                        samplers.append ( "layout(binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding - 2 ) + ") " );
                         samplers.append ( i.GetDeclaration() );
+                        ++sampler_binding;
                         break;
                     default:
                         properties.append ( i.GetDeclaration() );

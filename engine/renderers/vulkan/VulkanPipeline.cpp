@@ -20,6 +20,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
 #include "VulkanPipeline.h"
 #include "VulkanTexture.h"
 #include "VulkanRenderer.h"
@@ -59,14 +60,14 @@ namespace AeonGames
 
     void VulkanPipeline::InitializePropertiesUniform()
     {
-        auto& properties = mPipeline->GetDefaultMaterial().GetUniformMetaData();
+        auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
         if ( properties.size() )
         {
             VkBufferCreateInfo buffer_create_info{};
             buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             buffer_create_info.pNext = nullptr;
             buffer_create_info.flags = 0;
-            buffer_create_info.size = mPipeline->GetDefaultMaterial().GetUniformBlockSize();
+            buffer_create_info.size = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
             buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             buffer_create_info.queueFamilyIndexCount = 0;
@@ -163,7 +164,7 @@ namespace AeonGames
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         /*  Reserve enough slots as if all uniforms where shaders,
             better safe than sorry. the + 1 is for the matrix uniform.*/
-        descriptor_set_layout_bindings.reserve ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() + 1 );
+        descriptor_set_layout_bindings.reserve ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() + 1 );
         descriptor_set_layout_bindings.emplace_back();
         // Matrices binding
         descriptor_set_layout_bindings[0].binding = 0;
@@ -173,7 +174,7 @@ namespace AeonGames
         descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         // Properties binding
-        if ( mPipeline->GetDefaultMaterial().GetUniformBlockSize() )
+        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings[1].binding = 1;
@@ -183,7 +184,7 @@ namespace AeonGames
             descriptor_set_layout_bindings[1].pImmutableSamplers = nullptr;
         }
 
-        for ( auto& i : mPipeline->GetDefaultMaterial().GetUniformMetaData() )
+        for ( auto& i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {
@@ -226,12 +227,12 @@ namespace AeonGames
         std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
         /*  Reserve enough slots as if all uniforms where shaders,
         better safe than sorry. the + 1 is for the matrix uniform.*/
-        descriptor_pool_sizes.reserve ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() + 1 );
+        descriptor_pool_sizes.reserve ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() + 1 );
         descriptor_pool_sizes.emplace_back();
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = ( mPipeline->GetDefaultMaterial().GetUniformBlockSize() == 0 ) ? 1 : 2;
+        descriptor_pool_sizes[0].descriptorCount = ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() == 0 ) ? 1 : 2;
         uint32_t sampler_descriptor_count = 0;
-        for ( auto&i : mPipeline->GetDefaultMaterial().GetUniformMetaData() )
+        for ( auto&i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {
@@ -292,16 +293,16 @@ namespace AeonGames
         descriptor_buffer_infos[0].offset = 0;
         descriptor_buffer_infos[0].range = sizeof ( VulkanRenderer::Matrices );
 
-        if ( mPipeline->GetDefaultMaterial().GetUniformBlockSize() )
+        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
         {
             descriptor_count += 1;
             descriptor_buffer_infos[1].buffer = mPropertiesUniformBuffer;
             descriptor_buffer_infos[1].offset = 0;
-            descriptor_buffer_infos[1].range = mPipeline->GetDefaultMaterial().GetUniformBlockSize();
+            descriptor_buffer_infos[1].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
         }
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets;
-        write_descriptor_sets.reserve ( mPipeline->GetDefaultMaterial().GetUniformMetaData().size() + 1 );
+        write_descriptor_sets.reserve ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() + 1 );
         write_descriptor_sets.emplace_back();
         write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write_descriptor_sets[0].dstSet = mVkDescriptorSet;
@@ -316,7 +317,7 @@ namespace AeonGames
         /* Not TOO happy about this texture_index hack. */
         size_t texture_index = 0;
         uint32_t destination_binding = 2;
-        for ( auto& i : mPipeline->GetDefaultMaterial().GetUniformMetaData() )
+        for ( auto& i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {

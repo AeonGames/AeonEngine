@@ -25,12 +25,9 @@ namespace AeonGames
     class Material
     {
     public:
-        Material() = default;
         Material ( std::string  aFilename );
         Material ( const MaterialBuffer& aMaterialBuffer );
-        Material ( Material&& aMaterial );
         ~Material();
-        Material& operator= ( Material&& aMaterial );
         DLL const std::vector<Uniform>& GetUniformMetaData() const;
         DLL uint32_t GetUniformBlockSize() const;
     private:

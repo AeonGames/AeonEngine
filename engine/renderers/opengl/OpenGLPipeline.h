@@ -18,12 +18,12 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include "OpenGLFunctions.h"
-#include "OpenGLMaterial.h"
 #include "aeongames/Uniform.h"
 
 namespace AeonGames
 {
     class Pipeline;
+    class OpenGLMaterial;
     class OpenGLTexture;
     class OpenGLPipeline
     {
@@ -39,8 +39,11 @@ namespace AeonGames
         uint32_t mMatricesBlockIndex = 0;
         uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
+        std::shared_ptr<OpenGLMaterial> mDefaultMaterial;
+#if 0
         std::vector<uint8_t> mUniformData;
         std::vector<std::pair<std::shared_ptr<OpenGLTexture>, GLint>> mTextures;
+#endif
     };
 }
 #endif
