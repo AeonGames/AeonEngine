@@ -194,7 +194,7 @@ add_custom_target(generate-binary-assets
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin ${GRAPHICSMAGICK_EXECUTABLE} convert ${CMAKE_SOURCE_DIR}/game/images/orange.svg ${CMAKE_SOURCE_DIR}/game/images/orange.png
+        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin ${SED_EXECUTABLE} s/\#FILLCOLOR\#/\#ffa500/g ${CMAKE_SOURCE_DIR}/game/images/development.svg | ${GRAPHICSMAGICK_EXECUTABLE} convert SVG:- ${CMAKE_SOURCE_DIR}/game/images/orange.png
     DEPENDS aeontool ProtoBufClasses
     SOURCES
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
