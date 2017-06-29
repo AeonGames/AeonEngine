@@ -159,7 +159,7 @@ namespace AeonGames
                 binary_input = true;
             /* coverity[fallthrough] */
             case FileType::AEONMSHT:
-                message = &skeleton_buffer;
+                message = &mesh_buffer;
                 break;
             /* coverity[unterminated_case] */
             case FileType::AEONSKLB:
