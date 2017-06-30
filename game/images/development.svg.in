@@ -33,7 +33,7 @@
        height="512"
        width="512"
        id="rect4136"
-       style="fill:#FILLCOLOR#;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:${SVG_FILL_COLOR};fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" />
     <path
        id="path3696"
        d="m 255.5,-0.5 v 512"
