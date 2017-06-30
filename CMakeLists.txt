@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ find_package(Vulkan)
 find_package(OpenGL)
 find_package(GLslang)
 find_package(Protobuf)
+include(AeonEngineFunctions)
 include(FindProtobufExp)
 find_package(PythonInterp)
 include(FindPythonModule)
@@ -70,7 +71,6 @@ if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
     set(CLANG_TIDY_CHECKS "-checks=modernize-*")
-    include(AeonEngineFunctions)
 endif()
 
 if(CMAKE_HOST_UNIX)
@@ -181,7 +181,6 @@ add_custom_target(generate-python-protobuf-source
 ###########################################
 # Binary asset generation target.
 ###########################################
-find_program (GRAPHICSMAGICK_EXECUTABLE gm HINTS ENV ProgramFiles PATH_SUFFIXES "GraphicsMagick-1.3.25-Q16")
 add_custom_target(generate-binary-assets
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
@@ -194,10 +193,9 @@ add_custom_target(generate-binary-assets
     COMMAND
         ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin${PATH_SEPARATOR}$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin ${SED_EXECUTABLE} s/\#FILLCOLOR\#/\#ffa500/g ${CMAKE_SOURCE_DIR}/game/images/development.svg | ${GRAPHICSMAGICK_EXECUTABLE} convert SVG:- ${CMAKE_SOURCE_DIR}/game/images/orange.png
-    COMMAND
-        ${CMAKE_COMMAND} -E env PATH=${RUNTIME_INSTALL_PREFIX}/bin ${SED_EXECUTABLE} s/\#FILLCOLOR\#/\#708090/g ${CMAKE_SOURCE_DIR}/game/images/development.svg | ${GRAPHICSMAGICK_EXECUTABLE} convert SVG:- ${CMAKE_SOURCE_DIR}/game/images/slategray.png
+        ${CMAKE_COMMAND} -DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/GenerateDevelopmentTextures.cmake
     DEPENDS aeontool ProtoBufClasses
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     SOURCES
         ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
         ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt

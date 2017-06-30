@@ -51,4 +51,6 @@ tags
 *.msh
 *.mtl
 *.png
-
+*.tga
+# Not Binary, but currently all generated:
+*.svg
