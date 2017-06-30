@@ -34,5 +34,13 @@
        width="512"
        id="rect4136"
        style="fill:#FILLCOLOR#;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none" />
+    <path
+       id="path3696"
+       d="m 255.5,-0.5 v 512"
+       style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5" />
+    <path
+       id="path3696-0"
+       d="M 511.5,255.5 H -0.5"
+       style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5" />
   </g>
 </svg>
