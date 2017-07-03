@@ -57,8 +57,7 @@ set(ENGINE_SDK_HEADERS
 
 set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h)
 
 set(ENGINE_MATH_HEADERS
     math/Vector4.h

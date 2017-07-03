@@ -30,7 +30,7 @@ namespace AeonGames
     public:
         OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram );
         ~OpenGLPipeline();
-        void Use() const;
+        void Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial = nullptr ) const;
     private:
         void Initialize();
         void Finalize();
@@ -40,10 +40,6 @@ namespace AeonGames
         uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
         std::shared_ptr<OpenGLMaterial> mDefaultMaterial;
-#if 0
-        std::vector<uint8_t> mUniformData;
-        std::vector<std::pair<std::shared_ptr<OpenGLTexture>, GLint>> mTextures;
-#endif
     };
 }
 #endif

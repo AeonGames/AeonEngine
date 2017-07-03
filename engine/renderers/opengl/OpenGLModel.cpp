@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/ResourceCache.h"
 #include "OpenGLModel.h"
 #include "OpenGLPipeline.h"
+#include "OpenGLMaterial.h"
 #include "OpenGLMesh.h"
 
 namespace AeonGames
@@ -49,7 +50,7 @@ namespace AeonGames
         instead of taking a parameter. */
         for ( auto& i : mMeshes )
         {
-            std::get<0> ( i )->Use();
+            std::get<0> ( i )->Use ( std::get<1> ( i ) );
             glBindBufferBase ( GL_UNIFORM_BUFFER, 0, aMatricesBuffer );
             OPENGL_CHECK_ERROR_NO_THROW;
             std::get<2> ( i )->Render();
@@ -62,7 +63,10 @@ namespace AeonGames
         mMeshes.reserve ( meshes.size() );
         for ( auto& i : meshes )
         {
-            mMeshes.emplace_back ( Get<OpenGLPipeline> ( std::get<0> ( i ) ), nullptr, Get<OpenGLMesh> ( std::get<2> ( i ) ) );
+            mMeshes.emplace_back (
+                Get<OpenGLPipeline> ( std::get<0> ( i ) ),
+                Get<OpenGLMaterial> ( std::get<1> ( i ) ),
+                Get<OpenGLMesh> ( std::get<2> ( i ) ) );
         }
     }
 

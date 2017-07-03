@@ -45,20 +45,21 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLPipeline::Use() const
+    void OpenGLPipeline::Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial ) const
     {
+        const std::shared_ptr<OpenGLMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
-        for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
+        for ( GLenum i = 0; i < material->GetTextures().size(); ++i )
         {
             glActiveTexture ( GL_TEXTURE0 + i );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, mDefaultMaterial->GetTextures() [i]->GetTexture() );
+            glBindTexture ( GL_TEXTURE_2D, material->GetTextures() [i]->GetTexture() );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, mDefaultMaterial->GetUniformData().size(), mDefaultMaterial->GetUniformData().data(), GL_DYNAMIC_DRAW );
+        glBufferData ( GL_UNIFORM_BUFFER, material->GetUniformData().size(), material->GetUniformData().data(), GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
         OPENGL_CHECK_ERROR_THROW;
