@@ -28,11 +28,16 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include "aeongames/Material.h"
+#include "aeongames/ResourceCache.h"
 #include "VulkanMaterial.h"
+#include "VulkanTexture.h"
+#include "VulkanRenderer.h"
+#include "VulkanUtilities.h"
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<Material> aMaterial ) :
+    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<Material> aMaterial, const VulkanRenderer* aVulkanRenderer ) :
+        mVulkanRenderer(),
         mMaterial ( aMaterial )
     {
         try
@@ -49,10 +54,49 @@ namespace AeonGames
     VulkanMaterial::~VulkanMaterial()
         = default;
 
-    void VulkanMaterial::Initialize()
+    const std::vector<uint8_t>& VulkanMaterial::GetUniformData() const
     {
+        return mUniformData;
     }
 
+    const std::vector<std::shared_ptr<VulkanTexture>>& VulkanMaterial::GetTextures() const
+    {
+        return mTextures;
+    }
+
+    void VulkanMaterial::Initialize()
+    {
+        mUniformData.resize ( mMaterial->GetUniformBlockSize() );
+        uint32_t offset = 0;
+        for ( auto& i : mMaterial->GetUniformMetaData() )
+        {
+            uint32_t advance = 0;
+            switch ( i.GetType() )
+            {
+            case Uniform::FLOAT_VEC4:
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 3 ) = i.GetW();
+            /* Intentional Pass-Thru */
+            case Uniform::FLOAT_VEC3:
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 2 ) = i.GetZ();
+                advance += sizeof ( float ) * 2; /* Both VEC3 and VEC4 have a 4 float stride due to std140 padding. */
+            /* Intentional Pass-Thru */
+            case Uniform::FLOAT_VEC2:
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 1 ) = i.GetY();
+                advance += sizeof ( float );
+            /* Intentional Pass-Thru */
+            case Uniform::FLOAT:
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 0 ) = i.GetX();
+                advance += sizeof ( float );
+                break;
+            case Uniform::SAMPLER_2D:
+                mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage(), mVulkanRenderer ) );
+                break;
+            default:
+                break;
+            }
+            offset += advance;
+        }
+    }
     void VulkanMaterial::Finalize()
     {
     }

@@ -20,19 +20,27 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Material.h"
 #include "aeongames/Memory.h"
+#include <vulkan/vulkan.h>
 
 namespace AeonGames
 {
     class Material;
+    class VulkanRenderer;
+    class VulkanTexture;
     class VulkanMaterial
     {
     public:
-        VulkanMaterial ( const std::shared_ptr<Material> aMaterial );
+        VulkanMaterial ( const std::shared_ptr<Material> aMaterial, const VulkanRenderer* aVulkanRenderer );
         ~VulkanMaterial();
+        const std::vector<uint8_t>& GetUniformData() const;
+        const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
     private:
         void Initialize();
         void Finalize();
+        const VulkanRenderer* mVulkanRenderer;
         std::shared_ptr<Material> mMaterial;
+        std::vector<uint8_t> mUniformData;
+        std::vector<std::shared_ptr<VulkanTexture>> mTextures;
     };
 }
 #endif

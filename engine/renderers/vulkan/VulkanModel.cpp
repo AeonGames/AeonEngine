@@ -21,6 +21,7 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanModel.h"
 #include "VulkanPipeline.h"
+#include "VulkanMaterial.h"
 #include "VulkanMesh.h"
 
 namespace AeonGames
@@ -63,7 +64,10 @@ namespace AeonGames
         mMeshes.reserve ( meshes.size() );
         for ( auto& i : meshes )
         {
-            mMeshes.emplace_back ( Get<VulkanPipeline> ( std::get<0> ( i ), mVulkanRenderer ), nullptr, Get<VulkanMesh> ( std::get<2> ( i ), mVulkanRenderer ) );
+            mMeshes.emplace_back (
+                Get<VulkanPipeline> ( std::get<0> ( i ), mVulkanRenderer ),
+                nullptr,
+                Get<VulkanMesh> ( std::get<2> ( i ), mVulkanRenderer ) );
         }
     }
 
