@@ -74,7 +74,6 @@ namespace AeonGames
             {
             case Uniform::FLOAT_VEC4:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 3 ) = i.GetW();
-            //advance += sizeof ( float );
             /* Intentional Pass-Thru */
             case Uniform::FLOAT_VEC3:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 2 ) = i.GetZ();
