@@ -24,6 +24,7 @@ limitations under the License.
 #include "VulkanPipeline.h"
 #include "VulkanTexture.h"
 #include "VulkanRenderer.h"
+#include "VulkanMaterial.h"
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
 
@@ -31,7 +32,8 @@ namespace AeonGames
 {
     VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aPipeline, const VulkanRenderer* aVulkanRenderer ) :
         mPipeline ( aPipeline ),
-        mVulkanRenderer ( aVulkanRenderer )
+        mVulkanRenderer ( aVulkanRenderer ),
+        mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) )
     {
         try
         {
@@ -49,8 +51,62 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanPipeline::Use ( const VulkanWindow& aWindow ) const
+    void VulkanPipeline::Use ( const VulkanWindow& aWindow, const std::shared_ptr<VulkanMaterial>& aMaterial ) const
     {
+        const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
+        uint8_t* data = nullptr;
+        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &data ) ) )
+        {
+            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+        }
+        memcpy ( data, material->GetUniformData().data(), material->GetUniformData().size() );
+        vkUnmapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory );
+
+        /**@todo Consider cacheing all this preamble data.*/
+        uint32_t descriptor_count = 1; // Matrices is always bound
+        std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
+        descriptor_buffer_infos[0].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
+        descriptor_buffer_infos[0].offset = 0;
+        descriptor_buffer_infos[0].range = sizeof ( VulkanRenderer::Matrices );
+
+        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
+        {
+            descriptor_count += 1;
+            descriptor_buffer_infos[1].buffer = mPropertiesUniformBuffer;
+            descriptor_buffer_infos[1].offset = 0;
+            descriptor_buffer_infos[1].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
+        }
+
+        std::vector<VkWriteDescriptorSet> write_descriptor_sets;
+        write_descriptor_sets.reserve ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() + 1 );
+        write_descriptor_sets.emplace_back();
+        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_sets[0].dstSet = mVkDescriptorSet;
+        write_descriptor_sets[0].dstBinding = 0;
+        write_descriptor_sets[0].dstArrayElement = 0;
+        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_sets[0].descriptorCount = descriptor_count;
+        write_descriptor_sets[0].pBufferInfo = descriptor_buffer_infos.data();
+        write_descriptor_sets[0].pImageInfo = nullptr;
+        write_descriptor_sets[0].pTexelBufferView = nullptr;
+
+        uint32_t destination_binding = 2;
+        for ( uint32_t i = 0, j = 2; i < material->GetTextures().size(); ++i, ++j )
+        {
+            write_descriptor_sets.emplace_back();
+            auto& write_descriptor_set = write_descriptor_sets.back();
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.dstSet = mVkDescriptorSet;
+            write_descriptor_set.dstBinding = static_cast<uint32_t> ( j );
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pImageInfo = &material->GetTextures() [i]->GetDescriptorImageInfo();
+        }
+
+        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
+        // Done updating uniforms and samplers.
+
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, 1, &mVkDescriptorSet, 0, nullptr );
@@ -103,45 +159,6 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
             vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformBuffer, mPropertiesUniformMemory, 0 );
-
-            // Set Default Values
-            uint8_t* data = nullptr;
-            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &data ) ) )
-            {
-                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            }
-
-            uint32_t offset = 0;
-            for ( auto& i : properties )
-            {
-                uint32_t advance = 0;
-                switch ( i.GetType() )
-                {
-                case Uniform::FLOAT_VEC4:
-                    * ( reinterpret_cast<float*> ( data + offset ) + 3 ) = i.GetW();
-                //advance += sizeof ( float );
-                /* Intentional Pass-Thru */
-                case Uniform::FLOAT_VEC3:
-                    * ( reinterpret_cast<float*> ( data + offset ) + 2 ) = i.GetZ();
-                    advance += sizeof ( float ) * 2; /* Both VEC3 and VEC4 have a 4 float stride due to std140 padding. */
-                /* Intentional Pass-Thru */
-                case Uniform::FLOAT_VEC2:
-                    * ( reinterpret_cast<float*> ( data + offset ) + 1 ) = i.GetY();
-                    advance += sizeof ( float );
-                /* Intentional Pass-Thru */
-                case Uniform::FLOAT:
-                    * ( reinterpret_cast<float*> ( data + offset ) + 0 ) = i.GetX();
-                    advance += sizeof ( float );
-                    break;
-                case Uniform::SAMPLER_2D:
-                    mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage(), mVulkanRenderer ) );
-                default:
-                    break;
-                }
-                offset += advance;
-            }
-            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory );
-            // END - Set Default Values
         }
     }
 
@@ -286,53 +303,6 @@ namespace AeonGames
             stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-
-        uint32_t descriptor_count = 1; // Matrices is always bound
-        std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
-        descriptor_buffer_infos[0].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
-        descriptor_buffer_infos[0].offset = 0;
-        descriptor_buffer_infos[0].range = sizeof ( VulkanRenderer::Matrices );
-
-        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
-        {
-            descriptor_count += 1;
-            descriptor_buffer_infos[1].buffer = mPropertiesUniformBuffer;
-            descriptor_buffer_infos[1].offset = 0;
-            descriptor_buffer_infos[1].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
-        }
-
-        std::vector<VkWriteDescriptorSet> write_descriptor_sets;
-        write_descriptor_sets.reserve ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() + 1 );
-        write_descriptor_sets.emplace_back();
-        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_sets[0].dstSet = mVkDescriptorSet;
-        write_descriptor_sets[0].dstBinding = 0;
-        write_descriptor_sets[0].dstArrayElement = 0;
-        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_sets[0].descriptorCount = descriptor_count;
-        write_descriptor_sets[0].pBufferInfo = descriptor_buffer_infos.data();
-        write_descriptor_sets[0].pImageInfo = nullptr;
-        write_descriptor_sets[0].pTexelBufferView = nullptr;
-
-        /* Not TOO happy about this texture_index hack. */
-        size_t texture_index = 0;
-        uint32_t destination_binding = 2;
-        for ( auto& i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
-        {
-            if ( i.GetType() == Uniform::Type::SAMPLER_2D )
-            {
-                write_descriptor_sets.emplace_back();
-                auto& write_descriptor_set = write_descriptor_sets.back();
-                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                write_descriptor_set.dstSet = mVkDescriptorSet;
-                write_descriptor_set.dstBinding = destination_binding++;
-                write_descriptor_set.dstArrayElement = 0;
-                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                write_descriptor_set.descriptorCount = 1;
-                write_descriptor_set.pImageInfo = &mTextures[texture_index++]->GetDescriptorImageInfo();
-            }
-        }
-        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
     void VulkanPipeline::FinalizeDescriptorSet()

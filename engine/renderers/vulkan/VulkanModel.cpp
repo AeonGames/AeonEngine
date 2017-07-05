@@ -49,7 +49,7 @@ namespace AeonGames
     {
         for ( auto& i : mMeshes )
         {
-            std::get<0> ( i )->Use ( aWindow );
+            std::get<0> ( i )->Use ( aWindow, std::get<1> ( i ) );
             std::get<2> ( i )->Render();
         }
     }
@@ -66,7 +66,7 @@ namespace AeonGames
         {
             mMeshes.emplace_back (
                 Get<VulkanPipeline> ( std::get<0> ( i ), mVulkanRenderer ),
-                nullptr,
+                Get<VulkanMaterial> ( std::get<1> ( i ), mVulkanRenderer ),
                 Get<VulkanMesh> ( std::get<2> ( i ), mVulkanRenderer ) );
         }
     }

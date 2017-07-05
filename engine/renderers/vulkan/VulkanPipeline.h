@@ -27,12 +27,13 @@ namespace AeonGames
     class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
+    class VulkanMaterial;
     class VulkanPipeline
     {
     public:
         VulkanPipeline ( const std::shared_ptr<Pipeline> aPipeline, const VulkanRenderer* aVulkanRenderer );
         ~VulkanPipeline();
-        void Use ( const VulkanWindow& aWindow ) const;
+        void Use ( const VulkanWindow& aWindow, const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
     private:
         void InitializePropertiesUniform();
         void FinalizePropertiesUniform();
@@ -48,7 +49,7 @@ namespace AeonGames
         const VulkanRenderer* mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ {VK_NULL_HANDLE} };
-        std::vector<std::shared_ptr<VulkanTexture>> mTextures;
+        const std::shared_ptr<VulkanMaterial> mDefaultMaterial;
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
         VkBuffer mPropertiesUniformBuffer = VK_NULL_HANDLE;
