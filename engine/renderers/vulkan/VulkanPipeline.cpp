@@ -90,7 +90,6 @@ namespace AeonGames
         write_descriptor_sets[0].pImageInfo = nullptr;
         write_descriptor_sets[0].pTexelBufferView = nullptr;
 
-        uint32_t destination_binding = 2;
         for ( uint32_t i = 0, j = 2; i < material->GetTextures().size(); ++i, ++j )
         {
             write_descriptor_sets.emplace_back();
