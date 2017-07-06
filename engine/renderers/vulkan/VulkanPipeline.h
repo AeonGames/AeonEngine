@@ -52,8 +52,8 @@ namespace AeonGames
         const std::shared_ptr<VulkanMaterial> mDefaultMaterial;
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
-        VkBuffer mPropertiesUniformBuffer = VK_NULL_HANDLE;
-        VkDeviceMemory mPropertiesUniformMemory = VK_NULL_HANDLE;
+        VkBuffer mVkPropertiesUniformBuffer = VK_NULL_HANDLE;
+        VkDeviceMemory mVkPropertiesUniformMemory = VK_NULL_HANDLE;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
         VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
