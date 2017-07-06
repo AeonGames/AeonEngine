@@ -54,14 +54,6 @@ namespace AeonGames
     void VulkanPipeline::Use ( const VulkanWindow& aWindow, const std::shared_ptr<VulkanMaterial>& aMaterial ) const
     {
         const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
-        uint8_t* data = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &data ) ) )
-        {
-            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-        }
-        memcpy ( data, material->GetUniformData().data(), material->GetUniformData().size() );
-        vkUnmapMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory );
-
         /**@todo Consider cacheing all this preamble data.*/
         uint32_t descriptor_count = 1; // Matrices is always bound
         std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
@@ -72,7 +64,7 @@ namespace AeonGames
         if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
         {
             descriptor_count += 1;
-            descriptor_buffer_infos[1].buffer = mPropertiesUniformBuffer;
+            descriptor_buffer_infos[1].buffer = mVkPropertiesUniformBuffer;
             descriptor_buffer_infos[1].offset = 0;
             descriptor_buffer_infos[1].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
         }
@@ -107,6 +99,7 @@ namespace AeonGames
         // Done updating uniforms and samplers.
 
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+        vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0, material->GetUniformData().size(), material->GetUniformData().data() );
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, 1, &mVkDescriptorSet, 0, nullptr );
         vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetViewport() );
@@ -129,7 +122,7 @@ namespace AeonGames
             buffer_create_info.pQueueFamilyIndices = nullptr;
 
             if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(),
-                                                    &buffer_create_info, nullptr, &mPropertiesUniformBuffer ) )
+                                                    &buffer_create_info, nullptr, &mVkPropertiesUniformBuffer ) )
             {
                 std::ostringstream stream;
                 stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
@@ -138,7 +131,7 @@ namespace AeonGames
 
             VkMemoryRequirements memory_requirements;
             vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(),
-                                            mPropertiesUniformBuffer, &memory_requirements );
+                                            mVkPropertiesUniformBuffer, &memory_requirements );
 
             VkMemoryAllocateInfo memory_allocate_info{};
             memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -151,27 +144,27 @@ namespace AeonGames
                 throw std::runtime_error ( "No suitable memory type found for property buffers" );
             }
 
-            if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mPropertiesUniformMemory ) )
+            if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mVkPropertiesUniformMemory ) )
             {
                 std::ostringstream stream;
                 stream << "vkAllocateMemory failed for property buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
                 throw std::runtime_error ( stream.str().c_str() );
             }
-            vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformBuffer, mPropertiesUniformMemory, 0 );
+            vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformBuffer, mVkPropertiesUniformMemory, 0 );
         }
     }
 
     void VulkanPipeline::FinalizePropertiesUniform()
     {
-        if ( mPropertiesUniformMemory != VK_NULL_HANDLE )
+        if ( mVkPropertiesUniformMemory != VK_NULL_HANDLE )
         {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mPropertiesUniformMemory, nullptr );
-            mPropertiesUniformMemory = VK_NULL_HANDLE;
+            vkFreeMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformMemory, nullptr );
+            mVkPropertiesUniformMemory = VK_NULL_HANDLE;
         }
-        if ( mPropertiesUniformBuffer != VK_NULL_HANDLE )
+        if ( mVkPropertiesUniformBuffer != VK_NULL_HANDLE )
         {
-            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mPropertiesUniformBuffer, nullptr );
-            mPropertiesUniformBuffer = VK_NULL_HANDLE;
+            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformBuffer, nullptr );
+            mVkPropertiesUniformBuffer = VK_NULL_HANDLE;
         }
     }
 
