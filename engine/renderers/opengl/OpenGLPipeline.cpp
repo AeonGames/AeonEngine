@@ -215,23 +215,28 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
 
             // Set default uniform values
+#if 0
+            // This seems to work only for NVidia cards
             for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
             {
                 glUniform1i ( i, i );
                 OPENGL_CHECK_ERROR_THROW;
             }
+#endif
+            GLuint uniform = 0;
+            for ( auto& i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
+            {
+                if ( i.GetType() == Uniform::SAMPLER_2D )
+                {
+                    auto location = glGetUniformLocation ( mProgramId, i.GetName().c_str() );
+                    glUniform1i ( location, uniform++ );
+                    OPENGL_CHECK_ERROR_THROW;
+                }
+            }
 
             /** @todo Keep a buffer per material? */
             glGenBuffers ( 1, &mPropertiesBuffer );
             OPENGL_CHECK_ERROR_THROW;
-#if 0
-            glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_UNIFORM_BUFFER, mDefaultMaterial->GetUniformData().size(), mDefaultMaterial->GetUniformData().data(), GL_DYNAMIC_DRAW );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-#endif
         }
     }
 
