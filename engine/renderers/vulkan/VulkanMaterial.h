@@ -34,12 +34,23 @@ namespace AeonGames
         ~VulkanMaterial();
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
+        const VkDescriptorSet& GetDescriptorSet() const;
+        const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
     private:
         void Initialize();
         void Finalize();
+        void InitializeDescriptorSetLayout();
+        void FinalizeDescriptorSetLayout();
+        void InitializeDescriptorPool();
+        void FinalizeDescriptorPool();
+        void InitializeDescriptorSet();
+        void FinalizeDescriptorSet();
         const VulkanRenderer* mVulkanRenderer;
         std::shared_ptr<Material> mMaterial;
         std::vector<uint8_t> mUniformData;
+        VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
+        VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
+        VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
         std::vector<std::shared_ptr<VulkanTexture>> mTextures;
     };
 }
