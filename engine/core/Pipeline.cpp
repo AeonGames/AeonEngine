@@ -158,7 +158,11 @@ namespace AeonGames
         {
             mVertexShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mVertexShader.append (
-                "layout(binding = 0,std140) uniform Matrices{\n"
+                "#ifdef VULKAN\n"
+                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+                "#else\n"
+                "layout(binding = 0, std140) uniform Matrices{\n"
+                "#endif\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -206,7 +210,11 @@ namespace AeonGames
             }
             mFragmentShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mFragmentShader.append (
-                "layout(binding = 0,std140) uniform Matrices{\n"
+                "#ifdef VULKAN\n"
+                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+                "#else\n"
+                "layout(binding = 0, std140) uniform Matrices{\n"
+                "#endif\n"
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
@@ -218,16 +226,31 @@ namespace AeonGames
             mDefaultMaterial = std::make_shared<Material> ( pipeline_buffer.default_material() );
             if ( mDefaultMaterial->GetUniformMetaData().size() > 0 )
             {
-                uint32_t sampler_binding = 2;
-                std::string properties ( "layout(binding = 1,std140) uniform Properties{\n" );
+                uint32_t sampler_binding = 0;
+                std::string properties (
+                    "#ifdef VULKAN\n"
+                    "layout(set = 0, binding = 1,std140) uniform Properties{\n"
+                    "#else\n"
+                    "layout(binding = 1,std140) uniform Properties{\n"
+                    "#endif\n"
+                );
                 std::string samplers ( "//----SAMPLERS-START----\n" );
                 for ( auto& i : mDefaultMaterial->GetUniformMetaData() )
                 {
                     switch ( i.GetType() )
                     {
                     case Uniform::Type::SAMPLER_2D:
-                        samplers.append ( "layout(binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding - 2 ) + ") " );
+                        samplers.append ( "#ifdef VULKAN\n" );
+                        samplers.append ( "layout(set = 1, binding = " +
+                                          std::to_string ( sampler_binding ) +
+                                          ", location =" + std::to_string ( sampler_binding ) + ") " );
                         samplers.append ( i.GetDeclaration() );
+                        samplers.append ( "#else\n" );
+                        samplers.append ( "layout(binding = " +
+                                          std::to_string ( sampler_binding ) +
+                                          ", location =" + std::to_string ( sampler_binding + 2 ) + ") " );
+                        samplers.append ( i.GetDeclaration() );
+                        samplers.append ( "#endif\n" );
                         ++sampler_binding;
                         break;
                     default:
