@@ -42,5 +42,15 @@
        id="path3696-0"
        d="M 511.5,255.5 H -0.5"
        style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5" />
+  <text
+     transform="matrix(0.70340563,-0.71078866,0.71078866,0.70340563,0,0)"
+     id="text4145"
+     y="596.26135"
+     x="-116.63414"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:35px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1"
+     xml:space="preserve"><tspan
+       y="596.26135"
+       x="-116.63414"
+       id="tspan4147">Aeon Games</tspan></text>       
   </g>
 </svg>
