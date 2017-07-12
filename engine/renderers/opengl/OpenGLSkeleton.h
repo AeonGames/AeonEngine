@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,32 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLMODEL_H
-#define AEONGAMES_OPENGLMODEL_H
+#ifndef AEONGAMES_OPENGLSKELETON_H
+#define AEONGAMES_OPENGLSKELETON_H
 #include "OpenGLFunctions.h"
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
-    class Model;
-    class OpenGLPipeline;
-    class OpenGLMaterial;
-    class OpenGLMesh;
-    class OpenGLSkeleton;
-    class OpenGLModel
+    class Skeleton;
+    class OpenGLSkeleton
     {
     public:
-        OpenGLModel ( const std::shared_ptr<Model> aModel );
-        ~OpenGLModel();
-        void Render ( GLuint aMatricesBuffer ) const;
+        OpenGLSkeleton ( const std::shared_ptr<Skeleton> aSkeleton );
+        ~OpenGLSkeleton();
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Model> mModel;
-        std::shared_ptr<OpenGLSkeleton> mSkeleton;
-        std::vector<std::tuple<
-        std::shared_ptr<OpenGLPipeline>,
-            std::shared_ptr<OpenGLMaterial>,
-            std::shared_ptr<OpenGLMesh>>> mMeshes;
+        const std::shared_ptr<Skeleton> mSkeleton;
+        GLuint mSkeletonBuffer = 0;
     };
 }
 #endif

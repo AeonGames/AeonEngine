@@ -83,6 +83,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLMaterial.h
     OpenGLTexture.h
     OpenGLModel.h
+    OpenGLSkeleton.h
     OpenGLMesh.h)
 
 set(OPENGL_RENDERER_SOURCES
@@ -91,6 +92,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLMaterial.cpp
     OpenGLTexture.cpp
     OpenGLModel.cpp
+    OpenGLSkeleton.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
     Plugin.cpp)

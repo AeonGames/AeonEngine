@@ -41,6 +41,11 @@ namespace AeonGames
     {
     }
 
+    const Transform & Skeleton::Joint::GetTransform() const
+    {
+        return mTransform;
+    }
+
     Skeleton::Skeleton ( std::string  aFilename )
         :
         mFilename ( std::move ( aFilename ) )
@@ -58,6 +63,11 @@ namespace AeonGames
     Skeleton::~Skeleton()
     {
         Finalize();
+    }
+
+    const std::vector<Skeleton::Joint>& Skeleton::GetJoints() const
+    {
+        return mJoints;
     }
 
     void Skeleton::Initialize()

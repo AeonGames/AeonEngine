@@ -37,6 +37,7 @@ namespace AeonGames
             std::shared_ptr<Material>,
             std::shared_ptr<Mesh>>>& GetMeshes() const;
         DLL const float * const GetCenterRadii() const;
+        DLL const std::shared_ptr<Skeleton>& GetSkeleton() const;
     private:
         float mCenterRadii[6];
         std::string mFilename;

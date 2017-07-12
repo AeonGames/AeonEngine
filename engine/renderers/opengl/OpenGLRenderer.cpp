@@ -497,5 +497,11 @@ namespace AeonGames
 
     void OpenGLRenderer::Finalize()
     {
+        if ( mMatricesBuffer != 0 )
+        {
+            glDeleteBuffers ( 1, &mMatricesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mMatricesBuffer = 0;
+        }
     }
 }
