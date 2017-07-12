@@ -68,9 +68,9 @@ message AssemblyBuffer
     MeshReferenceBuffer      mesh        = 3;
 }
 message ModelBuffer {
-	PipelineReferenceBuffer  default_pipeline                  = 1;
-	MaterialReferenceBuffer  default_material                  = 2;
-    SkeletonReferenceBuffer  skeleton                          = 3;
-    repeated AssemblyBuffer  assembly                          = 4;
-    repeated AnimationBuffer animation                         = 5;
+	PipelineReferenceBuffer           default_pipeline         = 1;
+	MaterialReferenceBuffer           default_material         = 2;
+    SkeletonReferenceBuffer           skeleton                 = 3;
+    repeated AssemblyBuffer           assembly                 = 4;
+    repeated AnimationReferenceBuffer animation                = 5;
 }

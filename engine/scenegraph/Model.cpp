@@ -30,6 +30,8 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/Skeleton.h"
+#include "aeongames/Animation.h"
 #include "aeongames/Renderer.h"
 
 namespace AeonGames
@@ -88,6 +90,13 @@ namespace AeonGames
                 default_material = Get<Material> ( model_buffer.default_material().file() );
             }
         }
+        if ( model_buffer.has_skeleton() )
+        {
+            if ( !model_buffer.skeleton().has_buffer() )
+            {
+                mSkeleton = Get<Skeleton> ( model_buffer.skeleton().file() );
+            }
+        }
         mMeshes.reserve ( model_buffer.assembly_size() );
         float min[3] {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
         float max[3] { std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min() };
@@ -114,6 +123,23 @@ namespace AeonGames
         mCenterRadii[3] = max[0] - mCenterRadii[0];
         mCenterRadii[4] = max[1] - mCenterRadii[1];
         mCenterRadii[5] = max[2] - mCenterRadii[1];
+
+        if ( model_buffer.animation_size() )
+        {
+            mAnimations.reserve ( model_buffer.animation_size() );
+            for ( auto& animation : model_buffer.animation() )
+            {
+                if ( !animation.has_buffer() )
+                {
+                    mAnimations.emplace_back ( Get<Animation> ( animation.file() ) );
+                }
+                else
+                {
+                    throw std::runtime_error ( "Embeded animation buffers in model files not implemented yet." );
+                }
+            }
+        }
+
         model_buffer.Clear();
     }
 

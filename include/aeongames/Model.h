@@ -24,6 +24,8 @@ namespace AeonGames
     class Pipeline;
     class Material;
     class Mesh;
+    class Skeleton;
+    class Animation;
     class Model
     {
     public:
@@ -38,11 +40,13 @@ namespace AeonGames
     private:
         float mCenterRadii[6];
         std::string mFilename;
+        std::shared_ptr<Skeleton> mSkeleton;
         std::vector<std::tuple<
         std::shared_ptr<Pipeline>,
             std::shared_ptr<Material>,
             std::shared_ptr<Mesh>>
             > mMeshes;
+        std::vector<std::shared_ptr<Animation>> mAnimations;
         void Initialize();
         void Finalize();
     };
