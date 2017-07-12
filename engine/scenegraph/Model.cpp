@@ -1,3 +1,4 @@
+#include "..\..\include\aeongames\Model.h"
 /*
 Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
@@ -68,6 +69,11 @@ namespace AeonGames
     const float * const Model::GetCenterRadii() const
     {
         return mCenterRadii;
+    }
+
+    const std::shared_ptr<Skeleton>& Model::GetSkeleton() const
+    {
+        return mSkeleton;
     }
 
     void Model::Initialize()

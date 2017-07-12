@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -86,6 +86,8 @@ namespace AeonGames
         std::cout << "GLSL Max Fragment Uniform Components " << glInteger << std::endl;
         glGetIntegerv ( GL_MAX_VERTEX_ATTRIBS, &glInteger );
         std::cout << "GLSL Max Vertex Attributes " << glInteger << std::endl;
+        glGetIntegerv ( GL_MAX_UNIFORM_BLOCK_SIZE, &glInteger );
+        std::cout << "GLSL Max Uniform Block Size " << glInteger << std::endl;
         GLint extension_count;
         glGetIntegerv ( GL_NUM_EXTENSIONS, &extension_count );
         for ( GLint i = 0; i < extension_count; ++i )

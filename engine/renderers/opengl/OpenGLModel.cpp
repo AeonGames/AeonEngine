@@ -21,6 +21,7 @@ limitations under the License.
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLMesh.h"
+#include "OpenGLSkeleton.h"
 
 namespace AeonGames
 {
@@ -67,6 +68,10 @@ namespace AeonGames
                 Get<OpenGLPipeline> ( std::get<0> ( i ) ),
                 Get<OpenGLMaterial> ( std::get<1> ( i ) ),
                 Get<OpenGLMesh> ( std::get<2> ( i ) ) );
+        }
+        if ( mModel->GetSkeleton() != nullptr )
+        {
+            mSkeleton = Get<OpenGLSkeleton> ( mModel->GetSkeleton() );
         }
     }
 
