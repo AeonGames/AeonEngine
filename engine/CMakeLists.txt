@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,6 +46,8 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Uniform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Animation.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Image.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Texture.h
@@ -84,6 +86,8 @@ set(ENGINE_CORE_SOURCES
     core/Uniform.cpp
     core/Material.cpp
     core/Mesh.cpp
+    core/Skeleton.cpp
+    core/Animation.cpp
     core/Renderer.cpp
     core/Utilities.cpp
     core/AeonEngine.cpp
