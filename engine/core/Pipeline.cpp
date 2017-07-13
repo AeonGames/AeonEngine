@@ -260,6 +260,19 @@ namespace AeonGames
                 }
                 properties.append ( "};\n" );
                 samplers.append ( "//----SAMPLERS-END----\n" );
+                if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+                {
+                    std::string skeleton (
+                        "#ifdef VULKAN\n"
+                        "layout(set = 2, binding = 1,std140) uniform Skeleton{\n"
+                        "#else\n"
+                        "layout(binding = 1,std140) uniform Skeleton{\n"
+                        "#endif\n"
+                        "mat4 skeleton[128];\n" // Lets try with 128 bones to keep it conservative.
+                        "};\n"
+                    );
+                    mVertexShader.append ( skeleton );
+                }
                 mVertexShader.append ( properties );
                 mVertexShader.append ( samplers );
                 mFragmentShader.append ( properties );

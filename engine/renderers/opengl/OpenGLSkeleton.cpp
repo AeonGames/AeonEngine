@@ -44,7 +44,7 @@ namespace AeonGames
     {
         GLint max_uniform_block_size = 0;
         glGetIntegerv ( GL_MAX_UNIFORM_BLOCK_SIZE, &max_uniform_block_size );
-        auto skeleton_size = mSkeleton->GetJoints().size() * sizeof ( float ) * 4 * 4;
+        auto skeleton_size = mSkeleton->GetJoints().size() * sizeof ( float ) * 16;
         if ( skeleton_size > max_uniform_block_size )
         {
             std::ostringstream stream;
@@ -63,11 +63,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
         {
-            memcpy ( joint_array + ( i * 12 ) + 0, mSkeleton->GetJoints() [i].GetTransform().GetScale(), sizeof ( float ) * 3 );
-            joint_array[ ( i * 12 ) + 3] = 0;
-            memcpy ( joint_array + ( i * 12 ) + 4, mSkeleton->GetJoints() [i].GetTransform().GetRotation(), sizeof ( float ) * 4 );
-            memcpy ( joint_array + ( i * 12 ) + 8, mSkeleton->GetJoints() [i].GetTransform().GetTranslation(), sizeof ( float ) * 3 );
-            joint_array[ ( i * 12 ) + 11] = 0;
+            mSkeleton->GetJoints() [i].GetTransform().GetMatrix ( joint_array + ( i * 16 ) );
         }
         glUnmapBuffer ( GL_UNIFORM_BUFFER );
         OPENGL_CHECK_ERROR_THROW;
