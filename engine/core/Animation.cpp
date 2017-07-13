@@ -26,7 +26,7 @@ limitations under the License.
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
-#include "Animation.pb.h"
+#include "animation.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif

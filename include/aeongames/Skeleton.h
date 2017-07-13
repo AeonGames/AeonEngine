@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_SKELETON_H
 #include <cstdint>
 #include <vector>
+#include <string>
 #include "aeongames/Transform.h"
 namespace AeonGames
 {
