@@ -44,7 +44,7 @@ namespace AeonGames
     {
         GLint max_uniform_block_size = 0;
         glGetIntegerv ( GL_MAX_UNIFORM_BLOCK_SIZE, &max_uniform_block_size );
-        auto skeleton_size = mSkeleton->GetJoints().size() * sizeof ( float ) * 16;
+        GLint skeleton_size = mSkeleton->GetJoints().size() * sizeof ( float ) * 16;
         if ( skeleton_size > max_uniform_block_size )
         {
             std::ostringstream stream;
