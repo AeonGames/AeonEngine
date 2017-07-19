@@ -176,53 +176,17 @@ namespace AeonGames
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_THROW;
 
-        GLint block_size;
-
-        // Matrices
-        mMatricesBlockIndex = glGetUniformBlockIndex ( mProgramId, "Matrices" );
-        OPENGL_CHECK_ERROR_THROW;
-
-        glGetActiveUniformBlockiv ( mProgramId, mMatricesBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size );
-        OPENGL_CHECK_ERROR_THROW;
-        assert ( static_cast<uint32_t> ( block_size ) >= ( sizeof ( float ) * 16 * 6 ) + ( sizeof ( float ) * 12 * 1 ) );
-        glUniformBlockBinding ( mProgramId, mMatricesBlockIndex, 0 );
-        OPENGL_CHECK_ERROR_THROW;
-
         // Properties
         if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
         {
-            // Get offsets (initialize mUniformMetaData)
-            std::vector<const GLchar *> uniform_names ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() );
-            for ( std::size_t i = 0; i < mPipeline->GetDefaultMaterial()->GetUniformMetaData().size(); ++i )
-            {
-                uniform_names[i] = mPipeline->GetDefaultMaterial()->GetUniformMetaData() [i].GetName().c_str();
-            }
-            std::vector<GLuint> uniform_indices ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() );
-            glGetUniformIndices ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() ),
-                                  uniform_names.data(), uniform_indices.data() );
-            OPENGL_CHECK_ERROR_THROW;
-
-            std::vector<GLint> uniform_offset ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() );
-            glGetActiveUniformsiv ( mProgramId, static_cast<GLsizei> ( mPipeline->GetDefaultMaterial()->GetUniformMetaData().size() ),
-                                    uniform_indices.data(),
-                                    GL_UNIFORM_OFFSET, uniform_offset.data() );
-            OPENGL_CHECK_ERROR_THROW;
-
-            // Get and initialize data block (initialize mUniformData)
-            mPropertiesBlockIndex = glGetUniformBlockIndex ( mProgramId, "Properties" );
-            OPENGL_CHECK_ERROR_THROW;
-            glUniformBlockBinding ( mProgramId, mPropertiesBlockIndex, 1 );
-            OPENGL_CHECK_ERROR_THROW;
-
-            // Set default uniform values
 #if 0
-            // This seems to work only for NVidia cards
+            ///@todo See if changing location on the pipeline This gets to work on AMD cards.
             for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
             {
                 glUniform1i ( i, i );
                 OPENGL_CHECK_ERROR_THROW;
             }
-#endif
+#else
             GLuint uniform = 0;
             for ( auto& i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
             {
@@ -233,7 +197,7 @@ namespace AeonGames
                     OPENGL_CHECK_ERROR_THROW;
                 }
             }
-
+#endif
             /** @todo Keep a buffer per material? */
             glGenBuffers ( 1, &mPropertiesBuffer );
             OPENGL_CHECK_ERROR_THROW;
