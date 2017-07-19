@@ -36,8 +36,8 @@ namespace AeonGames
         void Finalize();
         const std::shared_ptr<Pipeline> mPipeline;
         uint32_t mProgramId;
-        uint32_t mMatricesBlockIndex = 0;
-        uint32_t mPropertiesBlockIndex = 0;
+        //uint32_t mMatricesBlockIndex = 0;
+        //uint32_t mPropertiesBlockIndex = 0;
         uint32_t mPropertiesBuffer = 0;
         const std::shared_ptr<OpenGLMaterial> mDefaultMaterial;
     };
