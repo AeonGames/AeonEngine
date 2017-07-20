@@ -11,13 +11,11 @@ before_build:
     
     7z x msvc64-runtime.zip
     
-    dir
-    
-    dir msvc64-runtime
-    
     curl -LfsS -o VulkanSDK-1.0.54.0-Installer.exe https://vulkan.lunarg.com/sdk/download/1.0.54.0/windows/VulkanSDK-1.0.54.0-Installer.exe
     
-    start "" /WAIT VulkanSDK-1.0.54.0-Installer.exe /S /DC:\projects\aeonengine\msvc64-runtime
+    start "" /WAIT VulkanSDK-1.0.54.0-Installer.exe /S
+    
+    set VULKAN_SDK=C:\VulkanSDK\1.0.54.0
     
     mkdir build
 
