@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,31 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLPIPELINE_H
-#define AEONGAMES_OPENGLPIPELINE_H
+#ifndef AEONGAMES_OPENGLWINDOW_H
+#define AEONGAMES_OPENGLWINDOW_H
+
 #include <cstdint>
-#include <string>
-#include "OpenGLFunctions.h"
-#include "aeongames/Uniform.h"
+#include <vector>
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
-    class Pipeline;
-    class OpenGLMaterial;
-    class OpenGLTexture;
-    class OpenGLPipeline
+    class OpenGLRenderer;
+    class OpenGLWindow
     {
     public:
-        OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram );
-        ~OpenGLPipeline();
-        void Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial = nullptr ) const;
+        OpenGLWindow ( uintptr_t aWindowId, const std::shared_ptr<OpenGLRenderer> aOpenGLRenderer );
+        ~OpenGLWindow();
+        uintptr_t GetWindowId() const;
+        void Resize ( uint32_t aWidth, uint32_t aHeight );
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Pipeline> mPipeline;
-        uint32_t mProgramId;
-        uint32_t mPropertiesBuffer = 0;
-        const std::shared_ptr<OpenGLMaterial> mDefaultMaterial;
+        uintptr_t mWindowId;
+        std::shared_ptr<OpenGLRenderer> mOpenGLRenderer;
     };
 }
 #endif
