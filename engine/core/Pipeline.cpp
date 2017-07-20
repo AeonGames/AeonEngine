@@ -157,22 +157,6 @@ namespace AeonGames
         LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
         {
             mVertexShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
-            mVertexShader.append (
-                "#ifdef VULKAN\n"
-                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
-                "#else\n"
-                "layout(binding = 0, std140) uniform Matrices{\n"
-                "#endif\n"
-                "mat4 ViewMatrix;\n"
-                "mat4 ProjectionMatrix;\n"
-                "mat4 ModelMatrix;\n"
-                "mat4 ViewProjectionMatrix;\n"
-                "mat4 ModelViewMatrix;\n"
-                "mat4 ModelViewProjectionMatrix;\n"
-                "mat3 NormalMatrix;\n"
-                "};\n"
-            );
-
             /* Find out which attributes are being used and add them to the shader source */
             std::smatch attribute_matches;
             /**@note static const regex: construct once, use for ever.*/
@@ -208,6 +192,21 @@ namespace AeonGames
                 }
                 code = attribute_matches.suffix();
             }
+            mVertexShader.append (
+                "#ifdef VULKAN\n"
+                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+                "#else\n"
+                "layout(binding = 0, std140) uniform Matrices{\n"
+                "#endif\n"
+                "mat4 ViewMatrix;\n"
+                "mat4 ProjectionMatrix;\n"
+                "mat4 ModelMatrix;\n"
+                "mat4 ViewProjectionMatrix;\n"
+                "mat4 ModelViewMatrix;\n"
+                "mat4 ModelViewProjectionMatrix;\n"
+                "mat3 NormalMatrix;\n"
+                "};\n"
+            );
             mFragmentShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
             mFragmentShader.append (
                 "#ifdef VULKAN\n"
@@ -224,7 +223,7 @@ namespace AeonGames
                 "mat3 NormalMatrix;\n"
                 "};\n" );
             mDefaultMaterial = std::make_shared<Material> ( pipeline_buffer.default_material() );
-            if ( mDefaultMaterial->GetUniformMetaData().size() > 0 )
+            if ( mDefaultMaterial->GetUniformMetaData().size() )
             {
                 uint32_t sampler_binding = 0;
                 std::string properties (
@@ -246,9 +245,7 @@ namespace AeonGames
                                           ", location =" + std::to_string ( sampler_binding ) + ") " );
                         samplers.append ( i.GetDeclaration() );
                         samplers.append ( "#else\n" );
-                        samplers.append ( "layout(binding = " +
-                                          std::to_string ( sampler_binding ) +
-                                          ", location =" + std::to_string ( sampler_binding + 2 ) + ") " );
+                        samplers.append ( "layout(location = " + std::to_string ( sampler_binding ) + ") " );
                         samplers.append ( i.GetDeclaration() );
                         samplers.append ( "#endif\n" );
                         ++sampler_binding;
@@ -260,24 +257,26 @@ namespace AeonGames
                 }
                 properties.append ( "};\n" );
                 samplers.append ( "//----SAMPLERS-END----\n" );
-                if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
-                {
-                    std::string skeleton (
-                        "#ifdef VULKAN\n"
-                        "layout(set = 2, binding = 1,std140) uniform Skeleton{\n"
-                        "#else\n"
-                        "layout(binding = 1,std140) uniform Skeleton{\n"
-                        "#endif\n"
-                        "mat4 skeleton[128];\n" // Lets try with 128 bones to keep it conservative.
-                        "};\n"
-                    );
-                    mVertexShader.append ( skeleton );
-                }
                 mVertexShader.append ( properties );
                 mVertexShader.append ( samplers );
                 mFragmentShader.append ( properties );
                 mFragmentShader.append ( samplers );
             }
+
+            if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+            {
+                std::string skeleton (
+                    "#ifdef VULKAN\n"
+                    "layout(std140, set = 2, binding = 1) uniform Skeleton{\n"
+                    "#else\n"
+                    "layout(std140, binding = 2) uniform Skeleton{\n"
+                    "#endif\n"
+                    "mat4 skeleton[];\n"
+                    "};\n"
+                );
+                mVertexShader.append ( skeleton );
+            }
+
             switch ( pipeline_buffer.vertex_shader().source_case() )
             {
             case ShaderBuffer::SourceCase::kCode:
@@ -298,7 +297,7 @@ namespace AeonGames
             }
         }
         pipeline_buffer.Clear();
-#if 0
+#if 1
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
         shader_vert << mVertexShader;

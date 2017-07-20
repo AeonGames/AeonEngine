@@ -36,7 +36,7 @@ namespace AeonGames
             VertexBitangentBit = 0x8,
             VertexUVBit = 0x10,
             VertexWeightIndicesBit = 0x20,
-            VertexWeightsBit = 0x30,
+            VertexWeightsBit = 0x40,
             VertexAllBits = VertexPositionBit |
                             VertexNormalBit |
                             VertexTangentBit |
