@@ -297,7 +297,7 @@ namespace AeonGames
             }
         }
         pipeline_buffer.Clear();
-#if 1
+#if 0
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
         shader_vert << mVertexShader;

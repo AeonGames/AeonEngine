@@ -50,7 +50,9 @@ namespace AeonGames
     }
 
     OpenGLMaterial::~OpenGLMaterial()
-        = default;
+    {
+        Finalize();
+    }
 
     const std::vector<uint8_t>& OpenGLMaterial::GetUniformData() const
     {

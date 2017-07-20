@@ -110,6 +110,9 @@ namespace AeonGames
 
     EngineWindow::~EngineWindow()
     {
+        // Force model deletion
+        stop();
+        mModel.reset();
         mRenderer->RemoveRenderingWindow ( winId() );
     }
 
