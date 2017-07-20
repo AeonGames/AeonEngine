@@ -26,6 +26,7 @@ namespace AeonGames
     public:
         OpenGLSkeleton ( const std::shared_ptr<Skeleton> aSkeleton );
         ~OpenGLSkeleton();
+        GLuint GetBuffer() const;
     private:
         void Initialize();
         void Finalize();
