@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cassert>
+#include <cstring>
 #include <vector>
 #include "aeongames/Skeleton.h"
 #include "aeongames/ResourceCache.h"
