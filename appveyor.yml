@@ -11,11 +11,19 @@ before_build:
     
     7z x msvc64-runtime.zip
     
+    dir
+    
+    dir msvc64-runtime
+    
+    curl -LfsS -o VulkanSDK-1.0.54.0-Installer.exe https://vulkan.lunarg.com/sdk/download/1.0.54.0/windows/VulkanSDK-1.0.54.0-Installer.exe
+    
+    start "" /WAIT VulkanSDK-1.0.54.0-Installer.exe /S /DC:\projects\aeonengine\msvc64-runtime
+    
     mkdir build
 
     cd build
 
-    cmake -G"Visual Studio 15 2017 Win64" -DRUNTIME_INSTALL_PREFIX:path=../msvc64-runtime -DQt5_DIR:path=C:/Qt/5.9.1/msvc2017_64/lib/cmake/Qt5 ..
+    cmake -G"Visual Studio 15 2017 Win64" -DRUNTIME_INSTALL_PREFIX:path=C:/projects/aeonengine/msvc64-runtime -DQt5_DIR:path=C:/Qt/5.9.1/msvc2017_64/lib/cmake/Qt5 ..
 build:
   project: build/AeonEngine.sln
   verbosity: minimal
