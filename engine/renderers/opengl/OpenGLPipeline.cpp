@@ -179,20 +179,21 @@ namespace AeonGames
         // Properties
         if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
         {
-#if 0
-            ///@todo See if changing location on the pipeline This gets to work on AMD cards.
+#if 1
             for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
             {
                 glUniform1i ( i, i );
                 OPENGL_CHECK_ERROR_THROW;
             }
 #else
+            // Keeping this code for reference
             GLuint uniform = 0;
             for ( auto& i : mPipeline->GetDefaultMaterial()->GetUniformMetaData() )
             {
                 if ( i.GetType() == Uniform::SAMPLER_2D )
                 {
                     auto location = glGetUniformLocation ( mProgramId, i.GetName().c_str() );
+                    OPENGL_CHECK_ERROR_THROW;
                     glUniform1i ( location, uniform++ );
                     OPENGL_CHECK_ERROR_THROW;
                 }
