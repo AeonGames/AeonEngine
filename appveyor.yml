@@ -1,0 +1,21 @@
+version: 'aeonengine-{branch}-build-{build}'
+branches:
+  only:
+  - master
+image: Visual Studio 2017
+configuration: Release
+platform: x64
+before_build:
+- cmd: >-
+    curl -fsS -o msvc64-runtime.zip https://github.com/AeonGames/runtime/releases/download/runtime-master-build-8/msvc64-runtime.zip
+    
+    7z x msvc64-runtime.zip
+    
+    mkdir build
+
+    cd build
+
+    cmake -G"Visual Studio 15 2017 Win64" -DRUNTIME_INSTALL_PREFIX:path=../msvc64-runtime -DQt5_DIR:path=C:/Qt/5.9.1/msvc2017_64/lib/cmake/Qt5 ..
+build:
+  project: build/AeonEngine.sln
+  verbosity: minimal
