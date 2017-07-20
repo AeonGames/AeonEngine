@@ -54,6 +54,11 @@ namespace AeonGames
             std::get<0> ( i )->Use ( std::get<1> ( i ) );
             glBindBufferBase ( GL_UNIFORM_BUFFER, 0, aMatricesBuffer );
             OPENGL_CHECK_ERROR_NO_THROW;
+            if ( mSkeleton )
+            {
+                glBindBufferBase ( GL_UNIFORM_BUFFER, 2, mSkeleton->GetBuffer() );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
             std::get<2> ( i )->Render();
         }
     }

@@ -1,5 +1,5 @@
 ﻿/*
-Copyright 2009-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2009-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -1416,7 +1416,7 @@ inline float* GetMatrixFromSRT ( float* s, float* r, float* t, float* M )
 \param M [out] Transformation matrix.
 \return Pointer to transformation matrix, same as M.
 */
-inline float* GetInvertedMatrixFromSRT ( float* srt, float* M )
+inline float* GetInvertedMatrixFromSRT ( const float* srt, float* M )
 {
 #if 0
     // This works

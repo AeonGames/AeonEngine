@@ -1,5 +1,5 @@
 /*
-Copyright 2014-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -236,7 +236,7 @@ namespace AeonGames
         return GetMatrixFromSRT ( srt, M );
     }
 
-    float* Transform::GetInvertedMatrix ( float* M )
+    float* Transform::GetInvertedMatrix ( float* M ) const
     {
         ///\todo This could be cached.
         return GetInvertedMatrixFromSRT ( srt, M );
@@ -257,7 +257,7 @@ namespace AeonGames
         return *this;
     }
 
-    const Transform Transform::GetInverted()
+    const Transform Transform::GetInverted() const
     {
         return Transform ( *this ).Invert();
     }

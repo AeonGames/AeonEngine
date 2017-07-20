@@ -1,5 +1,5 @@
 /*
-Copyright 2013-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -198,9 +198,9 @@ namespace AeonGames
         \return Pointer to transformation matrix, same as M.
         \note This matrix is useful as a view matrix.
         */
-        DLL float* GetInvertedMatrix ( float* M );
+        DLL float* GetInvertedMatrix ( float* M ) const;
         DLL Transform& Invert();
-        DLL const Transform GetInverted();
+        DLL const Transform GetInverted() const;
 
         /*! \name Operators */
         //@{
