@@ -103,15 +103,19 @@ namespace AeonGames
         float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
         float* mNormalMatrix = mMatrices + ( 16 * 6 );
 
+        /// Internal Window Id, required to create initial shared context
+        void* mWindowId = nullptr;
+        /// Internal OpenGL context, shared with all other contexts
+        void* mOpenGLContext = nullptr;
         struct WindowData
         {
             uintptr_t mWindowId = 0;
+            //void* mOpenGLContext = nullptr;
 #ifdef _WIN32
             HDC mDeviceContext = nullptr;
-            uintptr_t mOpenGLContext = 0;
 #else
             Display* mDisplay = nullptr;
-            GLXContext mOpenGLContext = nullptr;
+            //GLXContext mOpenGLContext = nullptr;
 #endif
         };
         std::vector<WindowData> mWindowRegistry;
