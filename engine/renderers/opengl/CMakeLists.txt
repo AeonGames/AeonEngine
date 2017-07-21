@@ -86,7 +86,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLModel.h
     OpenGLSkeleton.h
     OpenGLMesh.h)
-    
+
 if(UNIX)
     set(PLATFORM_DEPENDENT_SOURCES OpenGLRendererX.cpp)
 elseif(WIN32)

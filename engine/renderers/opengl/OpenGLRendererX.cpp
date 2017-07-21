@@ -174,40 +174,6 @@ namespace AeonGames
         return true;
     }
 
-    void OpenGLRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
-    {
-        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                [&aWindowId] ( const WindowData & aWindowData )
-        {
-            return aWindowData.mWindowId == aWindowId;
-        } );
-        if ( i != mWindowRegistry.end() )
-        {
-#if 0
-            if ( i->mWindowId && ( i->mWindowId == aWindowId ) )
-            {
-                if ( i->mOpenGLContext )
-                {
-                    glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
-                    glXDestroyContext ( i->mDisplay, i->mOpenGLContext );
-                    i->mOpenGLContext = nullptr;
-                }
-                if ( i->mDisplay )
-                {
-                    XCloseDisplay ( i->mDisplay );
-                    i->mDisplay = nullptr;
-                }
-            }
-#endif
-            mWindowRegistry.erase ( std::remove_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                    [&aWindowId] ( const WindowData & aWindowData )
-            {
-                return aWindowData.mWindowId == aWindowId;
-            } )
-            , mWindowRegistry.end() );
-        }
-    }
-
     void OpenGLRenderer::Initialize()
     {
         // Retrieve Display
@@ -299,6 +265,23 @@ namespace AeonGames
                 glXDestroyContext ( display, static_cast<GLXContext> ( mOpenGLContext ) );
                 mOpenGLContext = nullptr;
             }
+#if 0
+            if ( i->mWindowId && ( i->mWindowId == aWindowId ) )
+            {
+                if ( i->mOpenGLContext )
+                {
+                    glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
+                    glXDestroyContext ( i->mDisplay, i->mOpenGLContext );
+                    i->mOpenGLContext = nullptr;
+                }
+                if ( i->mDisplay )
+                {
+                    XCloseDisplay ( i->mDisplay );
+                    i->mDisplay = nullptr;
+                }
+            }
+#endif
+
         }
     }
 }
