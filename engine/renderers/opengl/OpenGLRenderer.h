@@ -52,7 +52,6 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
-        uintptr_t CreateOpenGLContext ( uintptr_t aWindowId );
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
