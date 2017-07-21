@@ -53,6 +53,18 @@ namespace AeonGames
         return out;
     }
 #endif
+#ifdef _WIN32
+    static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsString = nullptr;
+    static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribs = nullptr;
+    const int ContextAttribs[] =
+    {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+        WGL_CONTEXT_PROFILE_MASK_ARB,
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0
+    };
+#endif
 
     OpenGLRenderer::OpenGLRenderer()
     {
@@ -88,7 +100,7 @@ namespace AeonGames
 #ifdef _WIN32
             if ( ( *i ).mDeviceContext != nullptr )
             {
-                wglMakeCurrent ( ( *i ).mDeviceContext, reinterpret_cast<HGLRC> ( ( *i ).mOpenGLContext ) );
+                wglMakeCurrent ( ( *i ).mDeviceContext, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
                 glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             }
 #else
@@ -135,7 +147,7 @@ namespace AeonGames
 #if _WIN32
             if ( ( *i ).mDeviceContext != nullptr )
             {
-                wglMakeCurrent ( ( *i ).mDeviceContext, reinterpret_cast<HGLRC> ( ( *i ).mOpenGLContext ) );
+                wglMakeCurrent ( ( *i ).mDeviceContext, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
                 SwapBuffers ( ( *i ).mDeviceContext );
             }
 #else
@@ -156,50 +168,28 @@ namespace AeonGames
         mWindowRegistry.emplace_back();
         mWindowRegistry.back().mWindowId = aWindowId;
         mWindowRegistry.back().mDeviceContext = ( HDC ) GetDC ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ) );
-        if ( ! ( mWindowRegistry.back().mOpenGLContext = CreateOpenGLContext ( mWindowRegistry.back().mWindowId ) ) )
-        {
-            return false;
-        }
-        if ( !wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, reinterpret_cast<HGLRC> ( mWindowRegistry.back().mOpenGLContext ) ) )
-        {
-            std::cout << "wglMakeCurrent Failed. Error: " << GetLastError() << std::endl;
-            return false;
-        }
-        if ( !LoadOpenGLAPI() )
-        {
-            std::cout << "Unable to Load OpenGL functions." << std::endl;
-            return false;
-        }
-
-        glGenBuffers ( 1, &mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
-                       mMatrices, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_NO_THROW;
-
+        PIXELFORMATDESCRIPTOR pfd{};
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 32;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        int pf = ChoosePixelFormat ( mWindowRegistry.back().mDeviceContext, &pfd );
+        SetPixelFormat ( mWindowRegistry.back().mDeviceContext, pf, &pfd );
+        wglMakeCurrent ( mWindowRegistry.back().mDeviceContext, static_cast<HGLRC> ( mOpenGLContext ) );
         RECT rect;
         GetClientRect ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ), &rect );
         glViewport ( 0, 0, rect.right, rect.bottom );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_BLEND );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glDepthFunc ( GL_LESS );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_DEPTH_TEST );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glCullFace ( GL_BACK );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_CULL_FACE );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        OPENGL_CHECK_ERROR_NO_THROW;
         return true;
+#if 0
+        if ( ! ( mWindowRegistry.back().mOpenGLContext = wglCreateContextAttribs ( mWindowRegistry.back().mDeviceContext, static_cast<HGLRC> ( mOpenGLContext ), ContextAttribs ) ) )
+        {
+            return false;
+        }
+#endif
 #else
         mWindowRegistry.emplace_back();
         mWindowRegistry.back().mDisplay = XOpenDisplay ( nullptr );
@@ -335,14 +325,6 @@ namespace AeonGames
 
     void OpenGLRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
     {
-        if ( glIsBuffer ( mMatricesBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteBuffers ( 1, &mMatricesBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mMatricesBuffer = 0;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [&aWindowId] ( const WindowData & aWindowData )
         {
@@ -350,6 +332,8 @@ namespace AeonGames
         } );
         if ( i != mWindowRegistry.end() )
         {
+            ReleaseDC ( reinterpret_cast<HWND> ( i->mWindowId ), i->mDeviceContext );
+#if 0
 #ifdef WIN32
             if ( i->mDeviceContext != nullptr )
             {
@@ -383,6 +367,7 @@ namespace AeonGames
                 }
             }
 #endif
+#endif
             mWindowRegistry.erase ( std::remove_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                     [&aWindowId] ( const WindowData & aWindowData )
             {
@@ -404,7 +389,7 @@ namespace AeonGames
             if ( aWidth && aHeight )
             {
 #ifdef WIN32
-                wglMakeCurrent ( i->mDeviceContext, reinterpret_cast<HGLRC> ( i->mOpenGLContext ) );
+                wglMakeCurrent ( i->mDeviceContext, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
                 OPENGL_CHECK_ERROR_NO_THROW;
 #else
                 glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
@@ -468,9 +453,9 @@ namespace AeonGames
 #ifdef WIN32
     uintptr_t OpenGLRenderer::CreateOpenGLContext ( uintptr_t aWindowId )
     {
-        PIXELFORMATDESCRIPTOR pfd{};
         PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = nullptr;
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
+        PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -618,15 +603,172 @@ namespace AeonGames
 
     void OpenGLRenderer::Initialize()
     {
+        // Initialize Internal Window
+        PIXELFORMATDESCRIPTOR pfd;
+        RECT rect = { 0, 0, 10, 10 };
+        WNDCLASSEX wcex;
+        wcex.cbSize = sizeof ( WNDCLASSEX );
+        wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wcex.lpfnWndProc = ( WNDPROC ) DefWindowProc;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
+        wcex.hInstance = GetModuleHandle ( NULL );
+        wcex.hIcon = LoadIcon ( NULL, IDI_WINLOGO );
+        wcex.hCursor = LoadCursor ( NULL, IDC_ARROW );
+        wcex.hbrBackground = NULL;
+        wcex.lpszMenuName = NULL;
+        wcex.lpszClassName = "glUnitTest";
+        wcex.hIconSm = NULL;
+        ATOM atom = RegisterClassEx ( &wcex );
+        mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+                                     MAKEINTATOM ( atom ), "OpenGL Unit Testing Window",
+                                     WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                     0, 0, // Location
+                                     rect.right - rect.left, rect.bottom - rect.top, // dimensions
+                                     NULL,
+                                     NULL,
+                                     GetModuleHandle ( NULL ),
+                                     NULL );
+        HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cRedBits = 0;
+        pfd.cRedShift = 0;
+        pfd.cGreenBits = 0;
+        pfd.cGreenShift = 0;
+        pfd.cBlueBits = 0;
+        pfd.cBlueShift = 0;
+        pfd.cAlphaBits = 0;
+        pfd.cAlphaShift = 0;
+        pfd.cAccumBits = 0;
+        pfd.cAccumRedBits = 0;
+        pfd.cAccumGreenBits = 0;
+        pfd.cAccumBlueBits = 0;
+        pfd.cAccumAlphaBits = 0;
+        pfd.cDepthBits = 32;
+        pfd.cStencilBits = 0;
+        pfd.cAuxBuffers = 0;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        pfd.bReserved = 0;
+        pfd.dwLayerMask = 0;
+        pfd.dwVisibleMask = 0;
+        pfd.dwDamageMask = 0;
+        int pf = ChoosePixelFormat ( hdc, &pfd );
+        SetPixelFormat ( hdc, pf, &pfd );
+
+        // Create OpenGL Context
+        mOpenGLContext = wglCreateContext ( hdc );
+        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
+
+        // Get newer functions if needed
+        if ( !wglGetExtensionsString )
+        {
+            if ( ! ( wglGetExtensionsString = ( PFNWGLGETEXTENSIONSSTRINGARBPROC ) wglGetProcAddress ( "wglGetExtensionsStringARB" ) ) )
+            {
+                wglMakeCurrent ( hdc, nullptr );
+                wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+                mOpenGLContext = nullptr;
+                ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+                DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+                throw std::runtime_error ( "Failed retrieving a pointer to wglGetExtensionsString" );
+            }
+        }
+        if ( !wglCreateContextAttribs )
+        {
+            if ( ! ( wglCreateContextAttribs = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" ) ) )
+            {
+                wglMakeCurrent ( hdc, nullptr );
+                wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+                mOpenGLContext = nullptr;
+                ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+                DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+                throw std::runtime_error ( "Failed retrieving a pointer to wglCreateContextAttribsARB" );
+            }
+        }
+        if ( strstr ( wglGetExtensionsString ( hdc ), "WGL_ARB_create_context" ) != nullptr )
+        {
+            wglMakeCurrent ( hdc, nullptr );
+            wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+            if ( ! ( mOpenGLContext = wglCreateContextAttribs ( hdc, nullptr /* change to use local context */, ContextAttribs ) ) )
+            {
+                ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+                DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+                throw std::runtime_error ( "wglCreateContextAttribs Failed" );
+            }
+        }
+        else
+        {
+            wglMakeCurrent ( hdc, nullptr );
+            wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+            mOpenGLContext = nullptr;
+            ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+            DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+            throw std::runtime_error ( "WGL_ARB_create_context is not available" );
+        }
+
+        // Get New OpenGL API
+        if ( !wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLContext ) ) )
+        {
+            std::cout << "wglMakeCurrent Failed. Error: " << GetLastError() << std::endl;
+        }
+        if ( !LoadOpenGLAPI() )
+        {
+            std::cout << "Unable to Load OpenGL functions." << std::endl;
+        }
+
+        // Initialize OpenGL Objects
+        glGenBuffers ( 1, &mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
+                       mMatrices, GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_BLEND );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDepthFunc ( GL_LESS );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glCullFace ( GL_BACK );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_CULL_FACE );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLRenderer::Finalize()
     {
-        if ( mMatricesBuffer != 0 )
+        HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( glIsBuffer ( mMatricesBuffer ) )
         {
+            OPENGL_CHECK_ERROR_NO_THROW;
             glDeleteBuffers ( 1, &mMatricesBuffer );
             OPENGL_CHECK_ERROR_NO_THROW;
             mMatricesBuffer = 0;
         }
+        OPENGL_CHECK_ERROR_NO_THROW;
+        ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
+        wglMakeCurrent ( hdc, nullptr );
+        wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+        mOpenGLContext = nullptr;
+        ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+        DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+        UnregisterClass ( reinterpret_cast<LPCSTR> (
+#if defined(_M_X64) || defined(__amd64__)
+                              0x0ULL +
+#endif
+                              MAKELONG ( atom, 0 ) ), NULL );
     }
 }
