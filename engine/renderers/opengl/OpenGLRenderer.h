@@ -52,11 +52,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
-#ifdef _WIN32
-        HGLRC CreateOpenGLContext ( uintptr_t aWindowId );
-#else
-        GLXContext CreateOpenGLContext ( uintptr_t aWindowId );
-#endif
+        uintptr_t CreateOpenGLContext ( uintptr_t aWindowId );
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
@@ -112,7 +108,7 @@ namespace AeonGames
             uintptr_t mWindowId = 0;
 #ifdef _WIN32
             HDC mDeviceContext = nullptr;
-            HGLRC mOpenGLContext = nullptr;
+            uintptr_t mOpenGLContext = 0;
 #else
             Display* mDisplay = nullptr;
             GLXContext mOpenGLContext = nullptr;
