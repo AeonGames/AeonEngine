@@ -86,6 +86,12 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLModel.h
     OpenGLSkeleton.h
     OpenGLMesh.h)
+    
+if(UNIX)
+    set(PLATFORM_DEPENDENT_SOURCES OpenGLRendererX.cpp)
+elseif(WIN32)
+    set(PLATFORM_DEPENDENT_SOURCES OpenGLRendererWindows.cpp)
+endif()
 
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
@@ -97,6 +103,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLSkeleton.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
+    ${PLATFORM_DEPENDENT_SOURCES}
     Plugin.cpp)
 
 #set_source_files_properties(OpenGLFunctions.cpp PROPERTIES COMPILE_FLAGS "-E")

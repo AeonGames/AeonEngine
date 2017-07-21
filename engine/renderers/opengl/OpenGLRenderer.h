@@ -109,12 +109,8 @@ namespace AeonGames
         struct WindowData
         {
             uintptr_t mWindowId = 0;
-            //void* mOpenGLContext = nullptr;
-#ifdef _WIN32
-            HDC mDeviceContext = nullptr;
-#else
+#ifdef __unix__
             Display* mDisplay = nullptr;
-            //GLXContext mOpenGLContext = nullptr;
 #endif
         };
         std::vector<WindowData> mWindowRegistry;
