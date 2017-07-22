@@ -74,7 +74,8 @@ namespace AeonGames
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             ReleaseDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ), hdc );
 #else
-            glXMakeCurrent ( ( *i ).mDisplay, reinterpret_cast<Window> ( ( *i ).mWindowId ),
+            glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
+                             reinterpret_cast<Window> ( ( *i ).mWindowId ),
                              static_cast<GLXContext> ( mOpenGLContext ) );
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
@@ -118,9 +119,11 @@ namespace AeonGames
             SwapBuffers ( hdc );
             ReleaseDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ), hdc );
 #else
-            glXMakeCurrent ( ( *i ).mDisplay, reinterpret_cast<Window> ( ( *i ).mWindowId ),
+            glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
+                             reinterpret_cast<Window> ( ( *i ).mWindowId ),
                              static_cast<GLXContext> ( mOpenGLContext ) );
-            glXSwapBuffers ( ( *i ).mDisplay, reinterpret_cast<Window> ( ( *i ).mWindowId ) );
+            glXSwapBuffers ( static_cast<Display*> ( mWindowId ),
+                             reinterpret_cast<Window> ( ( *i ).mWindowId ) );
 #endif
         }
     }
@@ -160,7 +163,9 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_NO_THROW;
                 ReleaseDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ), hdc );
 #else
-                glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
+                glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
+                                 reinterpret_cast<Window> ( i->mWindowId ),
+                                 static_cast<GLXContext> ( mOpenGLContext ) );
                 OPENGL_CHECK_ERROR_NO_THROW;
 #endif
                 glViewport ( 0, 0, aWidth, aHeight );

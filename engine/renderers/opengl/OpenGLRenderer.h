@@ -109,9 +109,6 @@ namespace AeonGames
         struct WindowData
         {
             uintptr_t mWindowId = 0;
-#ifdef __unix__
-            Display* mDisplay = nullptr;
-#endif
         };
         std::vector<WindowData> mWindowRegistry;
         std::unordered_map <

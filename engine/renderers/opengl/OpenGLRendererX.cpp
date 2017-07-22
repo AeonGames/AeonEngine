@@ -55,8 +55,8 @@ namespace AeonGames
     PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
     const int context_attribs[] =
     {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 2,
         GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
         None
     };
@@ -83,12 +83,14 @@ namespace AeonGames
         /**@todo Should a window wrapper be created? */
         /**@todo Should each window own a renderer instead of the renderer managing the windows? */
         mWindowRegistry.emplace_back();
-        mWindowRegistry.back().mDisplay = XOpenDisplay ( nullptr );
-        if ( !mWindowRegistry.back().mDisplay )
+        mWindowRegistry.back().mWindowId = aWindowId;
+        if ( !glXMakeCurrent (  static_cast<Display*> ( mWindowId ),
+                                mWindowRegistry.back().mWindowId,
+                                static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
+            std::cout << "Failed to make OpenGL current to XWindow." << std::endl;
             return false;
         }
-        mWindowRegistry.back().mWindowId = aWindowId;
 #if 0
         if ( glXCreateContextAttribsARB )
         {
@@ -145,14 +147,6 @@ namespace AeonGames
             return false;
         }
 #endif
-        glGenBuffers ( 1, &mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
-                       mMatrices, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_NO_THROW;
-
         glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
         OPENGL_CHECK_ERROR_NO_THROW;
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -177,8 +171,8 @@ namespace AeonGames
     void OpenGLRenderer::Initialize()
     {
         // Retrieve Display
-        Display* display = XOpenDisplay ( nullptr );
-        if ( !display )
+        mWindowId = XOpenDisplay ( nullptr );
+        if ( !mWindowId )
         {
             throw std::runtime_error ( "Failed retrieving X Display." );
         }
@@ -194,8 +188,10 @@ namespace AeonGames
         }
         // Get best frame buffer configuration.
         int frame_buffer_config_count;
-        GLXFBConfig *frame_buffer_configs = glXChooseFBConfig ( display, DefaultScreen ( display ),
-                                            visual_attribs, &frame_buffer_config_count );
+        GLXFBConfig *frame_buffer_configs =
+            glXChooseFBConfig ( static_cast<Display*> ( mWindowId ),
+                                DefaultScreen ( static_cast<Display*> ( mWindowId )  ),
+                                visual_attribs, &frame_buffer_config_count );
         if ( !frame_buffer_configs )
         {
             throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
@@ -207,12 +203,12 @@ namespace AeonGames
         int i;
         for ( i = 0; i < frame_buffer_config_count; ++i )
         {
-            XVisualInfo *vi = glXGetVisualFromFBConfig ( display, frame_buffer_configs[i] );
+            XVisualInfo *vi = glXGetVisualFromFBConfig ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i] );
             if ( vi )
             {
                 int samp_buf, samples;
-                glXGetFBConfigAttrib ( display, frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-                glXGetFBConfigAttrib ( display, frame_buffer_configs[i], GLX_SAMPLES       , &samples  );
+                glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+                glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLES       , &samples  );
 
                 if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
                 {
@@ -228,14 +224,14 @@ namespace AeonGames
 
         GLXFBConfig bestFbc = frame_buffer_configs[ best_fbc ];
         XFree ( frame_buffer_configs );
-        if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( display, bestFbc, 0,
+        if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( static_cast<Display*> ( mWindowId ), bestFbc, 0,
                                   True, context_attribs ) ) )
         {
             throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
         }
 
         // Verifying that context is a direct context
-        if ( ! glXIsDirect (  display,  static_cast<GLXContext> ( mOpenGLContext ) ) )
+        if ( ! glXIsDirect (  static_cast<Display*> ( mWindowId ),  static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Indirect GLX rendering context obtained" << std::endl;
@@ -245,43 +241,40 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-#if 0
-        // do we need this call here?
-        glXMakeCurrent (  mWindowRegistry.back().mDisplay, reinterpret_cast<Window> (  mWindowRegistry.back().mWindowId ),  mWindowRegistry.back().mOpenGLContext );
+#if 1
+        if ( !glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, static_cast<GLXContext> ( mOpenGLContext ) ) )
+        {
+
+            std::cout << LogLevel ( LogLevel::Level::Warning ) <<
+                      "glxMakeCurrent Failed." << std::endl;
+        }
 #endif
         if ( !LoadOpenGLAPI() )
         {
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
+        glGenBuffers ( 1, &mMatricesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
+                       mMatrices, GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLRenderer::Finalize()
     {
-        if ( Display* display = XOpenDisplay ( nullptr ) )
+        if ( mWindowId )
         {
-            glXMakeCurrent ( display, 0, 0 );
+            glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, 0 );
             if ( mOpenGLContext != nullptr )
             {
-                glXDestroyContext ( display, static_cast<GLXContext> ( mOpenGLContext ) );
+                glXDestroyContext ( static_cast<Display*> ( mWindowId ), static_cast<GLXContext> ( mOpenGLContext ) );
                 mOpenGLContext = nullptr;
             }
-#if 0
-            if ( i->mWindowId && ( i->mWindowId == aWindowId ) )
-            {
-                if ( i->mOpenGLContext )
-                {
-                    glXMakeCurrent ( i->mDisplay, reinterpret_cast<Window> ( i->mWindowId ), nullptr );
-                    glXDestroyContext ( i->mDisplay, i->mOpenGLContext );
-                    i->mOpenGLContext = nullptr;
-                }
-                if ( i->mDisplay )
-                {
-                    XCloseDisplay ( i->mDisplay );
-                    i->mDisplay = nullptr;
-                }
-            }
-#endif
-
+            XCloseDisplay ( static_cast<Display*> ( mWindowId ) );
+            mWindowId = nullptr;
         }
     }
 }
+
