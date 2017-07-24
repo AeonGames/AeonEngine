@@ -66,6 +66,10 @@ namespace AeonGames
 
     void OpenGLMaterial::Initialize()
     {
+        if ( !mMaterial )
+        {
+            throw std::runtime_error ( "Material cannot be null." );
+        }
         mUniformData.resize ( mMaterial->GetUniformBlockSize() );
         uint32_t offset = 0;
         GLint image_unit = 0;
