@@ -55,34 +55,26 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLRenderer::BeginRender ( uintptr_t aWindowId ) const
+    void OpenGLRenderer::BeginRender ( void* aWindowId ) const
     {
-        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                [this, &aWindowId] ( const WindowData & window ) -> bool
-        {
-            if ( window.mWindowId == aWindowId )
-            {
-                return true;
-            }
-            return false;
-        } );
+        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
         if ( i != mWindowRegistry.end() )
         {
 #ifdef _WIN32
-            HDC hdc = GetDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ) );
+            HDC hdc = GetDC ( reinterpret_cast<HWND> ( *i ) );
             wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-            ReleaseDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ), hdc );
+            ReleaseDC ( reinterpret_cast<HWND> ( *i  ), hdc );
 #else
             glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( ( *i ).mWindowId ),
+                             reinterpret_cast<Window> ( *i ),
                              static_cast<GLXContext> ( mOpenGLContext ) );
             glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
         }
     }
 
-    void OpenGLRenderer::Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const
+    void OpenGLRenderer::Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const
     {
         auto& model = mModelMap.at ( aModel );
         model->Render ( mMatricesBuffer );
@@ -100,68 +92,48 @@ namespace AeonGames
         return true;
     }
 
-    void OpenGLRenderer::EndRender ( uintptr_t aWindowId ) const
+    void OpenGLRenderer::EndRender ( void* aWindowId ) const
     {
-        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                [this, &aWindowId] ( const WindowData & window ) -> bool
-        {
-            if ( window.mWindowId == aWindowId )
-            {
-                return true;
-            }
-            return false;
-        } );
+        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
         if ( i != mWindowRegistry.end() )
         {
 #if _WIN32
-            HDC hdc = GetDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ) );
+            HDC hdc = GetDC ( reinterpret_cast<HWND> ( *i ) );
             wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
             SwapBuffers ( hdc );
-            ReleaseDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ), hdc );
+            ReleaseDC ( reinterpret_cast<HWND> ( *i ), hdc );
 #else
             glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( ( *i ).mWindowId ),
+                             reinterpret_cast<Window> ( *i ),
                              static_cast<GLXContext> ( mOpenGLContext ) );
             glXSwapBuffers ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( ( *i ).mWindowId ) );
+                             reinterpret_cast<Window> ( *i ) );
 #endif
         }
     }
 
-    void OpenGLRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
+    void OpenGLRenderer::RemoveRenderingWindow ( void* aWindowId )
     {
-        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                [&aWindowId] ( const WindowData & aWindowData )
-        {
-            return aWindowData.mWindowId == aWindowId;
-        } );
+        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
         if ( i != mWindowRegistry.end() )
         {
-            mWindowRegistry.erase ( std::remove_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                    [&aWindowId] ( const WindowData & aWindowData )
-            {
-                return aWindowData.mWindowId == aWindowId;
-            } )
-            , mWindowRegistry.end() );
+            mWindowRegistry.erase ( std::remove ( mWindowRegistry.begin(), mWindowRegistry.end(),
+                                                  aWindowId ) );
         }
     }
 
-    void OpenGLRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight )
+    void OpenGLRenderer::Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight )
     {
-        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                [&aWindowId] ( const WindowData & aWindowData )
-        {
-            return aWindowId == aWindowData.mWindowId;
-        } );
+        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
         if ( i != mWindowRegistry.end() )
         {
             if ( aWidth && aHeight )
             {
 #ifdef WIN32
-                HDC hdc = GetDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ) );
+                HDC hdc = GetDC ( reinterpret_cast<HWND> ( *i ) );
                 wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                ReleaseDC ( reinterpret_cast<HWND> ( ( *i ).mWindowId ), hdc );
+                ReleaseDC ( reinterpret_cast<HWND> ( *i ), hdc );
 #else
                 glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
                                  reinterpret_cast<Window> ( i->mWindowId ),

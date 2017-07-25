@@ -33,9 +33,9 @@ namespace AeonGames
     public:
         ///@name Rendering Functions
         ///@{
-        virtual void BeginRender ( uintptr_t aWindowId ) const = 0;
-        virtual void Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const = 0;
-        virtual void EndRender ( uintptr_t aWindowId ) const = 0;
+        virtual void BeginRender ( void* aWindowId ) const = 0;
+        virtual void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const = 0;
+        virtual void EndRender ( void* aWindowId ) const = 0;
         ///@}
         ///@name Resource Allocation Functions
         ///@{
@@ -44,9 +44,9 @@ namespace AeonGames
         ///@}
         ///@name Window Functions
         ///@{
-        virtual bool AddRenderingWindow ( uintptr_t aWindowId ) = 0;
-        virtual void RemoveRenderingWindow ( uintptr_t aWindowId ) = 0;
-        virtual void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual bool AddRenderingWindow ( void* aWindowId ) = 0;
+        virtual void RemoveRenderingWindow ( void* aWindowId ) = 0;
+        virtual void Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight ) = 0;
         ///@}
         ///@name Matrix Functions
         ///@{

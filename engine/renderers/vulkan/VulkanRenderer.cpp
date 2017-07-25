@@ -635,7 +635,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::BeginRender ( uintptr_t aWindowId ) const
+    void VulkanRenderer::BeginRender ( void* aWindowId ) const
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
@@ -694,7 +694,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::EndRender ( uintptr_t aWindowId ) const
+    void VulkanRenderer::EndRender ( void* aWindowId ) const
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
@@ -742,7 +742,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const
+    void VulkanRenderer::Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
@@ -807,7 +807,7 @@ namespace AeonGames
         return true;
     }
 
-    bool VulkanRenderer::AddRenderingWindow ( uintptr_t aWindowId )
+    bool VulkanRenderer::AddRenderingWindow ( void* aWindowId )
     {
         try
         {
@@ -821,7 +821,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::RemoveRenderingWindow ( uintptr_t aWindowId )
+    void VulkanRenderer::RemoveRenderingWindow ( void* aWindowId )
     {
         vkQueueWaitIdle ( mVkQueue );
         mWindowRegistry.erase (
@@ -838,7 +838,7 @@ namespace AeonGames
         } ), mWindowRegistry.end() );
     }
 
-    void VulkanRenderer::Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight )
+    void VulkanRenderer::Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight )
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
                                 [&aWindowId] ( const std::unique_ptr<VulkanWindow>& aWindow ) -> bool

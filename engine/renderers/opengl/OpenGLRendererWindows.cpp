@@ -48,13 +48,12 @@ namespace AeonGames
         0
     };
 
-    bool OpenGLRenderer::AddRenderingWindow ( uintptr_t aWindowId )
+    bool OpenGLRenderer::AddRenderingWindow ( void* aWindowId )
     {
         /**@todo Should a window wrapper be created? */
         /**@todo Should each window own a renderer instead of the renderer managing the windows? */
-        mWindowRegistry.emplace_back();
-        mWindowRegistry.back().mWindowId = aWindowId;
-        HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ) );
+        mWindowRegistry.emplace_back ( aWindowId );
+        HDC hdc = GetDC ( static_cast<HWND> ( mWindowRegistry.back() ) );
         PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
@@ -66,9 +65,9 @@ namespace AeonGames
         int pf = ChoosePixelFormat ( hdc, &pfd );
         SetPixelFormat ( hdc, pf, &pfd );
         wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
-        ReleaseDC ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ), hdc );
+        ReleaseDC ( static_cast<HWND> ( mWindowRegistry.back() ), hdc );
         RECT rect;
-        GetClientRect ( reinterpret_cast<HWND> ( mWindowRegistry.back().mWindowId ), &rect );
+        GetClientRect ( static_cast<HWND> ( mWindowRegistry.back() ), &rect );
         glViewport ( 0, 0, rect.right, rect.bottom );
         OPENGL_CHECK_ERROR_NO_THROW;
         return true;

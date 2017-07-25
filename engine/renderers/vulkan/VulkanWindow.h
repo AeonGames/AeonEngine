@@ -26,9 +26,9 @@ namespace AeonGames
     class VulkanWindow
     {
     public:
-        VulkanWindow ( uintptr_t aWindowId, const VulkanRenderer* aVulkanRenderer );
+        VulkanWindow ( void* aWindowId, const VulkanRenderer* aVulkanRenderer );
         ~VulkanWindow();
-        uintptr_t GetWindowId() const;
+        const void* GetWindowId() const;
         void Resize ( uint32_t aWidth, uint32_t aHeight );
         const VkSwapchainKHR& GetSwapchain() const;
         uint32_t GetWidth() const;
@@ -52,7 +52,7 @@ namespace AeonGames
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
 
-        uintptr_t mWindowId;
+        void* mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         const VulkanRenderer* mVulkanRenderer;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
