@@ -78,14 +78,13 @@ namespace AeonGames
         None
     };
 
-    bool OpenGLRenderer::AddRenderingWindow ( uintptr_t aWindowId )
+    bool OpenGLRenderer::AddRenderingWindow ( void* aWindowId )
     {
         /**@todo Should a window wrapper be created? */
         /**@todo Should each window own a renderer instead of the renderer managing the windows? */
-        mWindowRegistry.emplace_back();
-        mWindowRegistry.back().mWindowId = aWindowId;
+        mWindowRegistry.emplace_back ( aWindowId );
         if ( !glXMakeCurrent (  static_cast<Display*> ( mWindowId ),
-                                mWindowRegistry.back().mWindowId,
+                                reinterpret_cast<Window> ( mWindowRegistry.back() ),
                                 static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
             std::cout << "Failed to make OpenGL current to XWindow." << std::endl;

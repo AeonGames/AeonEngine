@@ -136,7 +136,7 @@ namespace AeonGames
                 ReleaseDC ( reinterpret_cast<HWND> ( *i ), hdc );
 #else
                 glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                                 reinterpret_cast<Window> ( i->mWindowId ),
+                                 reinterpret_cast<Window> ( *i ),
                                  static_cast<GLXContext> ( mOpenGLContext ) );
                 OPENGL_CHECK_ERROR_NO_THROW;
 #endif
