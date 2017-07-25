@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanWindow::VulkanWindow ( uintptr_t aWindowId, const VulkanRenderer* aVulkanRenderer ) :
+    VulkanWindow::VulkanWindow ( void* aWindowId, const VulkanRenderer* aVulkanRenderer ) :
         mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -42,7 +42,7 @@ namespace AeonGames
         Finalize();
     }
 
-    uintptr_t VulkanWindow::GetWindowId() const
+    const void* VulkanWindow::GetWindowId() const
     {
         return mWindowId;
     }

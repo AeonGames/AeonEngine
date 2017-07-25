@@ -100,7 +100,7 @@ namespace AeonGames
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
 
-        if ( !mRenderer->AddRenderingWindow ( winId() ) )
+        if ( !mRenderer->AddRenderingWindow ( reinterpret_cast<void*> ( winId() ) ) )
         {
             throw std::runtime_error ( "Window registration failed." );
         }
@@ -112,7 +112,7 @@ namespace AeonGames
     {
         // Force model deletion
         stop();
-        mRenderer->RemoveRenderingWindow ( winId() );
+        mRenderer->RemoveRenderingWindow ( reinterpret_cast<void*> ( winId() ) );
         mModel.reset();
     }
 
@@ -159,7 +159,7 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        mRenderer->Resize ( winId(), aResizeEvent->size().width(), aResizeEvent->size().height() );
+        mRenderer->Resize ( reinterpret_cast<void*> ( winId() ), aResizeEvent->size().width(), aResizeEvent->size().height() );
         static const QMatrix4x4 flipMatrix (
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -197,12 +197,12 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            mRenderer->BeginRender ( winId() );
+            mRenderer->BeginRender ( reinterpret_cast<void*> ( winId() ) );
             if ( mModel )
             {
-                mRenderer->Render ( winId(), mModel );
+                mRenderer->Render ( reinterpret_cast<void*> ( winId() ), mModel );
             }
-            mRenderer->EndRender ( winId() );
+            mRenderer->EndRender ( reinterpret_cast<void*> ( winId() ) );
             return true;
         default:
             return QWindow::event ( aEvent );

@@ -38,13 +38,13 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void BeginRender ( uintptr_t aWindowId ) const final;
-        void Render ( uintptr_t aWindowId, const std::shared_ptr<Model> aModel ) const final;
-        void EndRender ( uintptr_t aWindowId ) const final;
+        void BeginRender ( void* aWindowId ) const final;
+        void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const final;
+        void EndRender ( void* aWindowId ) const final;
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
-        bool AddRenderingWindow ( uintptr_t aWindowId ) final;
-        void RemoveRenderingWindow ( uintptr_t aWindowId ) final;
-        void Resize ( uintptr_t aWindowId, uint32_t aWidth, uint32_t aHeight ) final;
+        bool AddRenderingWindow ( void* aWindowId ) final;
+        void RemoveRenderingWindow ( void* aWindowId ) final;
+        void Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight ) final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
@@ -106,11 +106,7 @@ namespace AeonGames
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
-        struct WindowData
-        {
-            uintptr_t mWindowId = 0;
-        };
-        std::vector<WindowData> mWindowRegistry;
+        std::vector<void*> mWindowRegistry;
         std::unordered_map <
         std::shared_ptr<Model>,
             std::shared_ptr<OpenGLModel >>
