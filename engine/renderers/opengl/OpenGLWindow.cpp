@@ -57,8 +57,8 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
-            glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( mWindowId ),
+            glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                             reinterpret_cast<::Window> ( mWindowId ),
                              static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
 #endif
@@ -76,8 +76,8 @@ namespace AeonGames
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
-                         reinterpret_cast<Window> ( mWindowId ),
-                         static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) ) );
+                         reinterpret_cast<::Window> ( mWindowId ),
+                         static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
     }
@@ -96,10 +96,10 @@ namespace AeonGames
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
-                         reinterpret_cast<Window> ( mWindowId ),
+                         reinterpret_cast<::Window> ( mWindowId ),
                          static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
-                         reinterpret_cast<Window> ( mWindowId ) );
+                         reinterpret_cast<::Window> ( mWindowId ) );
 #endif
     }
 
@@ -109,6 +109,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to OpenGL Renderer is nullptr." );
         }
+#if _WIN32
         HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
         PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
@@ -126,6 +127,32 @@ namespace AeonGames
         GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
         glViewport ( 0, 0, rect.right, rect.bottom );
         OPENGL_CHECK_ERROR_THROW;
+#else
+        if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                                reinterpret_cast<::Window> ( mWindowId ),
+                                static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) ) )
+        {
+            throw std::runtime_error ( "Failed to make OpenGL current to XWindow." );
+        }
+#endif
+        glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_BLEND );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDepthFunc ( GL_LESS );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glCullFace ( GL_BACK );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_CULL_FACE );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLWindow::Finalize()

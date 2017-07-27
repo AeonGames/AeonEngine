@@ -45,6 +45,7 @@ namespace AeonGames
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
         void* GetOpenGLContext() const;
+        void* GetWindowId() const;
     private:
         void Initialize();
         void Finalize();
