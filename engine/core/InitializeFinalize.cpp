@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ namespace AeonGames
         HMODULE plugin = LoadLibraryEx ( aFilename.c_str(), nullptr, 0 );
         if ( nullptr == plugin )
         {
-            std::cout << "Failed to load " << aFilename << std::endl;
+            std::cout << "Failed to load " << aFilename << " Error " << GetLastError() << std::endl;
             return;
         }
         PluginModuleInterface* pmi = ( PluginModuleInterface* ) GetProcAddress ( ( HINSTANCE ) plugin, "PMI" );

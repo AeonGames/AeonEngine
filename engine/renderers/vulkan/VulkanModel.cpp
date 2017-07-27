@@ -66,7 +66,7 @@ namespace AeonGames
         {
             mMeshes.emplace_back (
                 Get<VulkanPipeline> ( std::get<0> ( i ), mVulkanRenderer ),
-                Get<VulkanMaterial> ( std::get<1> ( i ), mVulkanRenderer ),
+                std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ), mVulkanRenderer ) : nullptr,
                 Get<VulkanMesh> ( std::get<2> ( i ), mVulkanRenderer ) );
         }
     }

@@ -747,32 +747,24 @@ namespace AeonGames
             }
         }
     }
-
-    void VulkanRenderer::Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const
-    {
-        auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                [this, &aWindowId] ( const std::unique_ptr<VulkanWindow>& window ) -> bool
-        {
-            if ( window->GetWindowId() == aWindowId )
-            {
-                return true;
-            }
-            return false;
-        } );
-        if ( i != mWindowRegistry.end() )
-        {
-            void* data = nullptr;
-            if ( VkResult result = vkMapMemory ( mVkDevice, mMatricesUniformMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
-            {
-                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            }
-            memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
-            vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
-            auto& model = mModelMap.at ( aModel );
-            model->Render ( *i->get() );
-        }
-    }
 #endif
+
+    void VulkanRenderer::Render ( const VulkanWindow* aWindow, const std::shared_ptr<Model> aModel ) const
+    {
+        /**@todo I Do NOT like this, Window shouldn't be a param,
+        and I think a vkCmd function should be used to set the matrices,
+        as it is it will blow up when we have multiple models in different locations.*/
+        assert ( aWindow && "NULL Window Pointer" );
+        void* data = nullptr;
+        if ( VkResult result = vkMapMemory ( mVkDevice, mMatricesUniformMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
+        {
+            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+        }
+        memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
+        vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
+        auto& model = mModelMap.at ( aModel );
+        model->Render ( *aWindow );
+    }
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
     {

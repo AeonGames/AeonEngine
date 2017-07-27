@@ -470,7 +470,7 @@ namespace AeonGames
 
     void VulkanWindow::Render ( const std::shared_ptr<Model> aModel ) const
     {
-        /* This one is tricky. */
+        mVulkanRenderer->Render ( this, aModel );
     }
 
     void VulkanWindow::EndRender() const
