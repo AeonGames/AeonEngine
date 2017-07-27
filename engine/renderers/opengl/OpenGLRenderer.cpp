@@ -57,6 +57,11 @@ namespace AeonGames
         Finalize();
     }
 
+    void* OpenGLRenderer::GetWindowId() const
+    {
+        return mWindowId;
+    }
+
     void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
         auto& model = mModelMap.at ( aModel );
