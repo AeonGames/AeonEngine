@@ -48,31 +48,6 @@ namespace AeonGames
         0
     };
 
-    bool OpenGLRenderer::AddRenderingWindow ( void* aWindowId )
-    {
-        /**@todo Should a window wrapper be created? */
-        /**@todo Should each window own a renderer instead of the renderer managing the windows? */
-        mWindowRegistry.emplace_back ( aWindowId );
-        HDC hdc = GetDC ( static_cast<HWND> ( mWindowRegistry.back() ) );
-        PIXELFORMATDESCRIPTOR pfd{};
-        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
-        pfd.nVersion = 1;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.cColorBits = 32;
-        pfd.cDepthBits = 32;
-        pfd.iLayerType = PFD_MAIN_PLANE;
-        int pf = ChoosePixelFormat ( hdc, &pfd );
-        SetPixelFormat ( hdc, pf, &pfd );
-        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
-        ReleaseDC ( static_cast<HWND> ( mWindowRegistry.back() ), hdc );
-        RECT rect;
-        GetClientRect ( static_cast<HWND> ( mWindowRegistry.back() ), &rect );
-        glViewport ( 0, 0, rect.right, rect.bottom );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        return true;
-    }
-
     void OpenGLRenderer::Initialize()
     {
         // Initialize Internal Window

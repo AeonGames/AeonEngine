@@ -24,11 +24,13 @@ limitations under the License.
 #include "math/3DMath.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLRenderer.h"
+#include "OpenGLWindow.h"
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLTexture.h"
 #include "OpenGLModel.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/Window.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
@@ -54,7 +56,7 @@ namespace AeonGames
     {
         Finalize();
     }
-
+#if 0
     void OpenGLRenderer::BeginRender ( void* aWindowId ) const
     {
         auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
@@ -79,19 +81,6 @@ namespace AeonGames
         auto& model = mModelMap.at ( aModel );
         model->Render ( mMatricesBuffer );
     }
-
-    bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
-    {
-        if ( mModelMap.find ( aModel ) == mModelMap.end() )
-        {
-            /* We dont really need to cache OpenGL Models,
-            since mModelMap IS our model cache.
-            We DO need a deallocation function.*/
-            mModelMap[aModel] = std::make_unique<OpenGLModel> ( aModel );
-        }
-        return true;
-    }
-
     void OpenGLRenderer::EndRender ( void* aWindowId ) const
     {
         auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
@@ -111,39 +100,22 @@ namespace AeonGames
 #endif
         }
     }
-
-    void OpenGLRenderer::RemoveRenderingWindow ( void* aWindowId )
+#endif
+    bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
     {
-        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
-        if ( i != mWindowRegistry.end() )
+        if ( mModelMap.find ( aModel ) == mModelMap.end() )
         {
-            mWindowRegistry.erase ( std::remove ( mWindowRegistry.begin(), mWindowRegistry.end(),
-                                                  aWindowId ) );
+            /* We dont really need to cache OpenGL Models,
+            since mModelMap IS our model cache.
+            We DO need a deallocation function.*/
+            mModelMap[aModel] = std::make_unique<OpenGLModel> ( aModel );
         }
+        return true;
     }
 
-    void OpenGLRenderer::Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight )
+    std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId )
     {
-        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
-        if ( i != mWindowRegistry.end() )
-        {
-            if ( aWidth && aHeight )
-            {
-#ifdef WIN32
-                HDC hdc = GetDC ( reinterpret_cast<HWND> ( *i ) );
-                wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
-                OPENGL_CHECK_ERROR_NO_THROW;
-                ReleaseDC ( reinterpret_cast<HWND> ( *i ), hdc );
-#else
-                glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                                 reinterpret_cast<Window> ( *i ),
-                                 static_cast<GLXContext> ( mOpenGLContext ) );
-                OPENGL_CHECK_ERROR_NO_THROW;
-#endif
-                glViewport ( 0, 0, aWidth, aHeight );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-        }
+        return std::make_unique<OpenGLWindow> ( shared_from_this(), aWindowId );
     }
 
     void OpenGLRenderer::SetViewMatrix ( const float aMatrix[16] )
@@ -167,6 +139,11 @@ namespace AeonGames
     {
         memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
+    }
+
+    void* OpenGLRenderer::GetOpenGLContext() const
+    {
+        return mOpenGLContext;
     }
 
     void OpenGLRenderer::UpdateMatrices()

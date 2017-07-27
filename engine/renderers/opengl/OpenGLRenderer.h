@@ -33,21 +33,26 @@ namespace AeonGames
     class OpenGLPipeline;
     class OpenGLModel;
     class OpenGLMaterial;
-    class OpenGLRenderer : public Renderer
+    class OpenGLRenderer : public Renderer, public std::enable_shared_from_this<OpenGLRenderer>
     {
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
+#if 0
         void BeginRender ( void* aWindowId ) const final;
         void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const final;
         void EndRender ( void* aWindowId ) const final;
+#endif
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
+        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) final;
+#if 0
         bool AddRenderingWindow ( void* aWindowId ) final;
         void RemoveRenderingWindow ( void* aWindowId ) final;
-        void Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight ) final;
+#endif
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
+        void* GetOpenGLContext() const;
     private:
         void Initialize();
         void Finalize();
@@ -106,7 +111,7 @@ namespace AeonGames
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
-        std::vector<void*> mWindowRegistry;
+        //std::vector<void*> mWindowRegistry;
         std::unordered_map <
         std::shared_ptr<Model>,
             std::shared_ptr<OpenGLModel >>

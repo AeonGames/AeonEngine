@@ -24,6 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Window;
     class Mesh;
     class Pipeline;
     class Texture;
@@ -31,22 +32,45 @@ namespace AeonGames
     class Renderer
     {
     public:
+#if 0
         ///@name Rendering Functions
         ///@{
         virtual void BeginRender ( void* aWindowId ) const = 0;
         virtual void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const = 0;
         virtual void EndRender ( void* aWindowId ) const = 0;
         ///@}
+#endif
         ///@name Resource Allocation Functions
         ///@{
         ///@todo This should take a const std::shared_ptr
         virtual bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) = 0;
         ///@}
-        ///@name Window Functions
+        ///@name Window Factory
         ///@{
+        /** Creates a Window object that acts as a wrapper for the Window Id provided.
+            This factory function is used when rendering is to be done in a previously
+            constructed window.
+            @param aWindowId Implementation depended window handle.
+            On Windows, a HWND, On X11 a Window handle.
+            @return A unique pointer to a Window object referencing the specific renderer implementation.
+        */
+        virtual std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) = 0;
+#if 0
+        /*
+        NOTE: The idea here is not having to deal with manual window creation and management if
+        all you want to do is a single window/fullscreen game or application, but since
+        I am not doing that just yet, I'll KISS and comment this out for future reference,
+        after all, it may YAGNI.
+        */
+        /** Creates a standalone Window object based on the system the engine is running on.
+            @return A unique pointer to a Window object referencing the specific renderer implementation.
+        */
+        virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
+#endif
+#if 0
         virtual bool AddRenderingWindow ( void* aWindowId ) = 0;
         virtual void RemoveRenderingWindow ( void* aWindowId ) = 0;
-        virtual void Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight ) = 0;
+#endif
         ///@}
         ///@name Matrix Functions
         ///@{
@@ -59,7 +83,7 @@ namespace AeonGames
 
     /**@name Factory Functions */
     /*@{*/
-    DLL std::unique_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
+    DLL std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
     /** Registers a renderer loader for a specific identifier.*/
     DLL bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::unique_ptr<Renderer>() > aLoader );
     /** Unregisters a renderer loader for a specific identifier.*/

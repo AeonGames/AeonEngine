@@ -32,6 +32,7 @@ limitations under the License.
 #include <algorithm>
 #include "aeongames/LogLevel.h"
 #include "aeongames/Memory.h"
+#include "aeongames/Window.h"
 #include "aeongames/Model.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
@@ -150,6 +151,11 @@ namespace AeonGames
     const VkCommandBuffer & VulkanRenderer::GetCommandBuffer() const
     {
         return mVkCommandBuffer;
+    }
+
+    const VkSemaphore & VulkanRenderer::GetSignalSemaphore() const
+    {
+        return mVkSignalSemaphore;
     }
 
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
@@ -634,7 +640,7 @@ namespace AeonGames
             vkDestroyRenderPass ( mVkDevice, mVkRenderPass, nullptr );
         }
     }
-
+#if 0
     void VulkanRenderer::BeginRender ( void* aWindowId ) const
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
@@ -766,6 +772,7 @@ namespace AeonGames
             model->Render ( *i->get() );
         }
     }
+#endif
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
     {
@@ -807,6 +814,12 @@ namespace AeonGames
         return true;
     }
 
+    std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId )
+    {
+        return std::make_unique<VulkanWindow> ( aWindowId, this );
+    }
+
+#if 0
     bool VulkanRenderer::AddRenderingWindow ( void* aWindowId )
     {
         try
@@ -820,7 +833,6 @@ namespace AeonGames
             return false;
         }
     }
-
     void VulkanRenderer::RemoveRenderingWindow ( void* aWindowId )
     {
         vkQueueWaitIdle ( mVkQueue );
@@ -837,7 +849,6 @@ namespace AeonGames
             return false;
         } ), mWindowRegistry.end() );
     }
-
     void VulkanRenderer::Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight )
     {
         auto i = std::find_if ( mWindowRegistry.begin(), mWindowRegistry.end(),
@@ -853,7 +864,7 @@ namespace AeonGames
             }
         }
     }
-
+#endif
     void VulkanRenderer::UpdateMatrices()
     {
         /** @todo Either publish this function or

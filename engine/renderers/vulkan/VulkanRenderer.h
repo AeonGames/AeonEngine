@@ -35,13 +35,17 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
+#if 0
         void BeginRender ( void* aWindowId ) const final;
         void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const final;
         void EndRender ( void* aWindowId ) const final;
+#endif
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
+        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) final;
+#if 0
         bool AddRenderingWindow ( void* aWindowId ) final;
         void RemoveRenderingWindow ( void* aWindowId ) final;
-        void Resize ( void* aWindowId, uint32_t aWidth, uint32_t aHeight ) final;
+#endif
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
         void SetModelMatrix ( const float aMatrix[16] ) final;
@@ -55,6 +59,7 @@ namespace AeonGames
         const VkFormat& GetDepthStencilFormat() const;
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
         const VkCommandBuffer& GetCommandBuffer() const;
+        const VkSemaphore& GetSignalSemaphore() const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
