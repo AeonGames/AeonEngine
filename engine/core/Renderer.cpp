@@ -23,7 +23,7 @@ namespace AeonGames
     {
         return Factory<Renderer>::Get ( aIdentifier );
     }
-    bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::unique_ptr<Renderer>() > aLoader )
+    bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Renderer>() > aLoader )
     {
         return Factory<Renderer>::RegisterLoader ( aIdentifier, aLoader );
     }

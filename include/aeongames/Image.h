@@ -46,9 +46,9 @@ namespace AeonGames
         virtual ~Image() = default;
     };
     /** Factory Function */
-    DLL std::unique_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename );
+    DLL std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename );
     /** Registers an image loader for a filename extension.*/
-    DLL bool RegisterImageLoader ( const std::string& aIdentifier, std::function<std::unique_ptr<Image> ( const std::string& ) > aLoader );
+    DLL bool RegisterImageLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader );
     /** Unregisters an image loader for a filename extension.*/
     DLL bool UnregisterImageLoader ( const std::string& aIdentifier );
 }

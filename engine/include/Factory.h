@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ namespace AeonGames
     class Factory
     {
     public:
-        static std::unique_ptr<T> Get ( const std::string& aIdentifier, Args&&... args )
+        static std::shared_ptr<T> Get ( const std::string& aIdentifier, Args&&... args )
         {
             auto it = Loaders.find ( aIdentifier );
             if ( it != Loaders.end() )
@@ -33,7 +33,7 @@ namespace AeonGames
             }
             return nullptr;
         }
-        static bool RegisterLoader ( const std::string& aIdentifier, std::function < std::unique_ptr<T> ( Args&&... args ) > aLoader )
+        static bool RegisterLoader ( const std::string& aIdentifier, std::function < std::shared_ptr<T> ( Args&&... args ) > aLoader )
         {
             if ( Loaders.find ( aIdentifier ) == Loaders.end() )
             {
@@ -63,8 +63,8 @@ namespace AeonGames
             }
         }
     private:
-        static std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Loaders;
+        static std::unordered_map < std::string, std::function < std::shared_ptr<T> ( Args&&... args ) >> Loaders;
     };
     template<class T, typename... Args>
-    std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Factory<T, Args...>::Loaders;
+    std::unordered_map < std::string, std::function < std::shared_ptr<T> ( Args&&... args ) >> Factory<T, Args...>::Loaders;
 }

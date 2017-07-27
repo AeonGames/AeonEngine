@@ -101,7 +101,6 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-
         mWindow = mRenderer->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
         if ( !mWindow )
         {

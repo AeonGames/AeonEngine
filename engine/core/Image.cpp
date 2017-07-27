@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ limitations under the License.
 
 namespace AeonGames
 {
-    std::unique_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename )
+    std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename )
     {
         return Factory<Image, const std::string&>::Get ( aIdentifier, aFilename );
     }
-    bool RegisterImageLoader ( const std::string& aExt, std::function<std::unique_ptr<Image> ( const std::string& ) > aLoader )
+    bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader )
     {
         return Factory<Image, const std::string&>::RegisterLoader ( aExt, aLoader );
     }

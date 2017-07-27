@@ -28,7 +28,7 @@ extern "C"
         return AeonGames::RegisterRendererLoader ( "Vulkan",
                 [] ()
         {
-            return std::make_unique<AeonGames::VulkanRenderer>();
+            return std::make_shared<AeonGames::VulkanRenderer>();
         } );
     }
 
