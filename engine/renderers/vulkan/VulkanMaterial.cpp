@@ -81,6 +81,10 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
+        if ( !mMaterial )
+        {
+            throw std::runtime_error ( "Material cannot be null." );
+        }
         mUniformData.resize ( mMaterial->GetUniformBlockSize() );
         uint32_t offset = 0;
         for ( auto& i : mMaterial->GetUniformMetaData() )
@@ -222,7 +226,7 @@ namespace AeonGames
 
     void VulkanMaterial::InitializeDescriptorSet()
     {
-        if ( !mMaterial->GetUniformMetaData().size() )
+        if ( mVkDescriptorPool == VK_NULL_HANDLE )
         {
             return;
         }

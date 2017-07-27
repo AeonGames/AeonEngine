@@ -35,9 +35,10 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
+
+        void Render ( const VulkanWindow* aWindow, const std::shared_ptr<Model> aModel ) const;
 #if 0
         void BeginRender ( void* aWindowId ) const final;
-        void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const final;
         void EndRender ( void* aWindowId ) const final;
 #endif
         bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) final;
@@ -188,7 +189,6 @@ namespace AeonGames
                 0, 0, 1, 0
             }
         };
-        std::vector<std::unique_ptr<VulkanWindow>> mWindowRegistry;
         std::unordered_map <
         std::shared_ptr<Model>,
             std::shared_ptr<VulkanModel >>
