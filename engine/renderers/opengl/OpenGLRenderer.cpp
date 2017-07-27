@@ -56,51 +56,13 @@ namespace AeonGames
     {
         Finalize();
     }
-#if 0
-    void OpenGLRenderer::BeginRender ( void* aWindowId ) const
-    {
-        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
-        if ( i != mWindowRegistry.end() )
-        {
-#ifdef _WIN32
-            HDC hdc = GetDC ( reinterpret_cast<HWND> ( *i ) );
-            wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
-            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-            ReleaseDC ( reinterpret_cast<HWND> ( *i  ), hdc );
-#else
-            glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( *i ),
-                             static_cast<GLXContext> ( mOpenGLContext ) );
-            glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-#endif
-        }
-    }
 
-    void OpenGLRenderer::Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
     {
         auto& model = mModelMap.at ( aModel );
         model->Render ( mMatricesBuffer );
     }
-    void OpenGLRenderer::EndRender ( void* aWindowId ) const
-    {
-        auto i = std::find ( mWindowRegistry.begin(), mWindowRegistry.end(), aWindowId );
-        if ( i != mWindowRegistry.end() )
-        {
-#if _WIN32
-            HDC hdc = GetDC ( reinterpret_cast<HWND> ( *i ) );
-            wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLContext ) );
-            SwapBuffers ( hdc );
-            ReleaseDC ( reinterpret_cast<HWND> ( *i ), hdc );
-#else
-            glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( *i ),
-                             static_cast<GLXContext> ( mOpenGLContext ) );
-            glXSwapBuffers ( static_cast<Display*> ( mWindowId ),
-                             reinterpret_cast<Window> ( *i ) );
-#endif
-        }
-    }
-#endif
+
     bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
     {
         if ( mModelMap.find ( aModel ) == mModelMap.end() )
