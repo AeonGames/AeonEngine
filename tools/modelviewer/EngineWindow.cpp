@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/Window.h"
 
 namespace AeonGames
 {
@@ -36,6 +37,7 @@ namespace AeonGames
         mTimer(),
         mStopWatch(),
         mRenderer(),
+        mWindow(),
         mModel ( nullptr ),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
@@ -100,9 +102,10 @@ namespace AeonGames
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
 
-        if ( !mRenderer->AddRenderingWindow ( reinterpret_cast<void*> ( winId() ) ) )
+        mWindow = mRenderer->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
+        if ( !mWindow )
         {
-            throw std::runtime_error ( "Window registration failed." );
+            throw std::runtime_error ( "Window creation failed." );
         }
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
         updateViewMatrix();
@@ -112,7 +115,8 @@ namespace AeonGames
     {
         // Force model deletion
         stop();
-        mRenderer->RemoveRenderingWindow ( reinterpret_cast<void*> ( winId() ) );
+        //mRenderer->RemoveRenderingWindow ( reinterpret_cast<void*> ( winId() ) );
+        mWindow.reset(); // see if this is necesary later
         mModel.reset();
     }
 
@@ -159,7 +163,7 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        mRenderer->Resize ( reinterpret_cast<void*> ( winId() ), aResizeEvent->size().width(), aResizeEvent->size().height() );
+        mWindow->ResizeViewport ( aResizeEvent->size().width(), aResizeEvent->size().height() );
         static const QMatrix4x4 flipMatrix (
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -197,12 +201,12 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            mRenderer->BeginRender ( reinterpret_cast<void*> ( winId() ) );
+            mWindow->BeginRender();
             if ( mModel )
             {
-                mRenderer->Render ( reinterpret_cast<void*> ( winId() ), mModel );
+                mWindow->Render ( mModel );
             }
-            mRenderer->EndRender ( reinterpret_cast<void*> ( winId() ) );
+            mWindow->EndRender();
             return true;
         default:
             return QWindow::event ( aEvent );

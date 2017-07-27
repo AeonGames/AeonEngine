@@ -55,6 +55,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h)
 
 set(ENGINE_SCENEGRAPH_HEADERS

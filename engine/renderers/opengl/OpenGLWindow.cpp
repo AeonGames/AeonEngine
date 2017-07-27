@@ -23,8 +23,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLWindow::OpenGLWindow ( uintptr_t aWindowId, const std::shared_ptr<OpenGLRenderer> aOpenGLRenderer ) :
-        mWindowId ( aWindowId ), mOpenGLRenderer ( aOpenGLRenderer )
+    OpenGLWindow::OpenGLWindow ( const std::shared_ptr<OpenGLRenderer> aOpenGLRenderer, void* aWindowId ) :
+        mOpenGLRenderer ( aOpenGLRenderer ), mWindowId ( aWindowId )
     {
         try
         {
@@ -42,9 +42,65 @@ namespace AeonGames
         Finalize();
     }
 
-    uintptr_t OpenGLWindow::GetWindowId() const
+    void* OpenGLWindow::GetWindowId() const
     {
         return mWindowId;
+    }
+
+    void OpenGLWindow::ResizeViewport ( uint32_t aWidth, uint32_t aHeight )
+    {
+        if ( aWidth && aHeight )
+        {
+#ifdef WIN32
+            HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
+            wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
+#else
+            glXMakeCurrent ( static_cast<Display*> ( mWindowId ),
+                             reinterpret_cast<Window> ( mWindowId ),
+                             static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+#endif
+            glViewport ( 0, 0, aWidth, aHeight );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLWindow::BeginRender() const
+    {
+#ifdef _WIN32
+        HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
+        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
+#else
+        glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                         reinterpret_cast<Window> ( mWindowId ),
+                         static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) ) );
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+#endif
+    }
+
+    void OpenGLWindow::Render ( const std::shared_ptr<Model> aModel ) const
+    {
+        /* This one is tricky. */
+    }
+
+    void OpenGLWindow::EndRender() const
+    {
+#if _WIN32
+        HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
+        wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        SwapBuffers ( hdc );
+        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
+#else
+        glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                         reinterpret_cast<Window> ( mWindowId ),
+                         static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                         reinterpret_cast<Window> ( mWindowId ) );
+#endif
     }
 
     void OpenGLWindow::Initialize()
@@ -53,13 +109,26 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to OpenGL Renderer is nullptr." );
         }
+        HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+        PIXELFORMATDESCRIPTOR pfd{};
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 32;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        int pf = ChoosePixelFormat ( hdc, &pfd );
+        SetPixelFormat ( hdc, pf, &pfd );
+        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+        RECT rect;
+        GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
+        glViewport ( 0, 0, rect.right, rect.bottom );
+        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLWindow::Finalize()
-    {
-    }
-
-    void OpenGLWindow::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
     }
 }

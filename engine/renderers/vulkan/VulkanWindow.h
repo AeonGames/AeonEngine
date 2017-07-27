@@ -19,17 +19,21 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "aeongames/Window.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanWindow
+    class VulkanWindow : public Window
     {
     public:
         VulkanWindow ( void* aWindowId, const VulkanRenderer* aVulkanRenderer );
         ~VulkanWindow();
         const void* GetWindowId() const;
-        void Resize ( uint32_t aWidth, uint32_t aHeight );
+        void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
+        void BeginRender() const final;
+        void Render ( const std::shared_ptr<Model> aModel ) const final;
+        void EndRender() const final;
         const VkSwapchainKHR& GetSwapchain() const;
         uint32_t GetWidth() const;
         uint32_t GetHeight() const;

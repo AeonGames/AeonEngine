@@ -19,22 +19,26 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include "aeongames/Memory.h"
+#include "aeongames/Window.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLWindow
+    class OpenGLWindow : public Window
     {
     public:
-        OpenGLWindow ( uintptr_t aWindowId, const std::shared_ptr<OpenGLRenderer> aOpenGLRenderer );
+        OpenGLWindow ( const std::shared_ptr<OpenGLRenderer> aOpenGLRenderer, void* aWindowId );
         ~OpenGLWindow();
-        uintptr_t GetWindowId() const;
-        void Resize ( uint32_t aWidth, uint32_t aHeight );
+        void* GetWindowId() const;
+        void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
+        void BeginRender() const final;
+        void Render ( const std::shared_ptr<Model> aModel ) const final;
+        void EndRender() const final;
     private:
         void Initialize();
         void Finalize();
-        uintptr_t mWindowId;
         std::shared_ptr<OpenGLRenderer> mOpenGLRenderer;
+        void* mWindowId;
     };
 }
 #endif
