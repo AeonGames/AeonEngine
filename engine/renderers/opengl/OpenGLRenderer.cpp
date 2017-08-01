@@ -62,22 +62,14 @@ namespace AeonGames
         return mWindowId;
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<RenderModel> aModel ) const
     {
-        auto& model = mModelMap.at ( aModel );
-        model->Render ( mMatricesBuffer );
+        static_cast<OpenGLModel*> ( aModel.get() )->Render ( mMatricesBuffer );
     }
 
-    bool OpenGLRenderer::AllocateModelRenderData ( const std::shared_ptr<Model> aModel )
+    const std::shared_ptr<RenderModel> OpenGLRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
     {
-        if ( mModelMap.find ( aModel ) == mModelMap.end() )
-        {
-            /* We dont really need to cache OpenGL Models,
-            since mModelMap IS our model cache.
-            We DO need a deallocation function.*/
-            mModelMap[aModel] = std::make_unique<OpenGLModel> ( aModel );
-        }
-        return true;
+        return std::make_shared<OpenGLModel> ( aModel );
     }
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId )

@@ -18,9 +18,6 @@ limitations under the License.
 #define AEONGAMES_VULKANRENDERER_H
 
 #include <vulkan/vulkan.h>
-#include <exception>
-#include <vector>
-#include <unordered_map>
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Memory.h"
@@ -36,8 +33,8 @@ namespace AeonGames
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
 
-        void Render ( const VulkanWindow* aWindow, const std::shared_ptr<Model> aModel ) const;
-        bool AllocateModelRenderData ( const std::shared_ptr<Model> aModel ) final;
+        void Render ( const VulkanWindow* aWindow, const std::shared_ptr<RenderModel> aModel ) const;
+        const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
@@ -181,10 +178,6 @@ namespace AeonGames
                 0, 0, 1, 0
             }
         };
-        std::unordered_map <
-        std::shared_ptr<Model>,
-            std::shared_ptr<VulkanModel >>
-            mModelMap;
     };
 }
 #endif

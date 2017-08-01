@@ -18,13 +18,13 @@ limitations under the License.
 #include "Memory.h"
 namespace AeonGames
 {
-    class Model;
+    class RenderModel;
     class Window
     {
     public:
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void BeginRender() const = 0;
-        virtual void Render ( const std::shared_ptr<Model> aModel ) const = 0;
+        virtual void Render ( const std::shared_ptr<RenderModel> aModel ) const = 0;
         virtual void EndRender() const = 0;
     };
 }

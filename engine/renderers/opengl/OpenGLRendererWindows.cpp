@@ -207,10 +207,6 @@ namespace AeonGames
         }
         OPENGL_CHECK_ERROR_NO_THROW;
 
-        // Force model shared pointers to drop their references.
-        /// @todo Re-evaluate the need for a ModelMap.
-        mModelMap.clear();
-
         ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
         wglMakeCurrent ( hdc, nullptr );
         wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );

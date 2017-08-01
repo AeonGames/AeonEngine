@@ -25,12 +25,13 @@ namespace AeonGames
     class OpenGLMaterial;
     class OpenGLMesh;
     class OpenGLSkeleton;
-    class OpenGLModel
+    class OpenGLModel : public RenderModel
     {
     public:
         OpenGLModel ( const std::shared_ptr<Model> aModel );
         ~OpenGLModel();
         void Render ( GLuint aMatricesBuffer ) const;
+        const std::shared_ptr<Model>& GetModel() const final;
     private:
         void Initialize();
         void Finalize();
