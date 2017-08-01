@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLMODEL_H
 #define AEONGAMES_OPENGLMODEL_H
 #include "OpenGLFunctions.h"
+#include "aeongames/RenderModel.h"
 
 namespace AeonGames
 {

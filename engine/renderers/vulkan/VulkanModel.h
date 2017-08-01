@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_VULKANMODEL_H
 #define AEONGAMES_VULKANMODEL_H
+#include "aeongames/RenderModel.h"
 
 namespace AeonGames
 {

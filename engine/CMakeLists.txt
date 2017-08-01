@@ -77,6 +77,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/RenderModel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
 set(ENGINE_CORE_SOURCES
