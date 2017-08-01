@@ -32,18 +32,9 @@ namespace AeonGames
     class Renderer
     {
     public:
-#if 0
-        ///@name Rendering Functions
-        ///@{
-        virtual void BeginRender ( void* aWindowId ) const = 0;
-        virtual void Render ( void* aWindowId, const std::shared_ptr<Model> aModel ) const = 0;
-        virtual void EndRender ( void* aWindowId ) const = 0;
-        ///@}
-#endif
         ///@name Resource Allocation Functions
         ///@{
-        ///@todo This should take a const std::shared_ptr
-        virtual bool AllocateModelRenderData ( std::shared_ptr<Model> aModel ) = 0;
+        virtual bool AllocateModelRenderData ( const std::shared_ptr<Model> aModel ) = 0;
         ///@}
         ///@name Window Factory
         ///@{
@@ -66,10 +57,6 @@ namespace AeonGames
             @return A unique pointer to a Window object referencing the specific renderer implementation.
         */
         virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
-#endif
-#if 0
-        virtual bool AddRenderingWindow ( void* aWindowId ) = 0;
-        virtual void RemoveRenderingWindow ( void* aWindowId ) = 0;
 #endif
         ///@}
         ///@name Matrix Functions
