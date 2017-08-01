@@ -68,7 +68,7 @@ namespace AeonGames
         model->Render ( mMatricesBuffer );
     }
 
-    bool OpenGLRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
+    bool OpenGLRenderer::AllocateModelRenderData ( const std::shared_ptr<Model> aModel )
     {
         if ( mModelMap.find ( aModel ) == mModelMap.end() )
         {

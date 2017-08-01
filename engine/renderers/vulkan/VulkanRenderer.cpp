@@ -794,7 +794,7 @@ namespace AeonGames
         vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
     }
 
-    bool VulkanRenderer::AllocateModelRenderData ( std::shared_ptr<Model> aModel )
+    bool VulkanRenderer::AllocateModelRenderData ( const std::shared_ptr<Model> aModel )
     {
         if ( mModelMap.find ( aModel ) == mModelMap.end() )
         {
