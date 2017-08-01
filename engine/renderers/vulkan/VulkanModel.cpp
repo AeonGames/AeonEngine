@@ -54,6 +54,11 @@ namespace AeonGames
         }
     }
 
+    const std::shared_ptr<Model>& VulkanModel::GetModel() const
+    {
+        return mModel;
+    }
+
     void VulkanModel::Initialize()
     {
         if ( !mVulkanRenderer )

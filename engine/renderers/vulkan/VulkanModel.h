@@ -25,12 +25,13 @@ namespace AeonGames
     class VulkanMaterial;
     class VulkanMesh;
     class VulkanWindow;
-    class VulkanModel
+    class VulkanModel : public RenderModel
     {
     public:
         VulkanModel ( const std::shared_ptr<Model> aModel, const VulkanRenderer* aVulkanRenderer );
         ~VulkanModel();
         void Render ( const VulkanWindow& aWindow ) const;
+        const std::shared_ptr<Model>& GetModel() const final;
     private:
         void Initialize();
         void Finalize();

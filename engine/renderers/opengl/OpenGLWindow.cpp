@@ -82,7 +82,7 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const std::shared_ptr<Model> aModel ) const
+    void OpenGLWindow::Render ( const std::shared_ptr<RenderModel> aModel ) const
     {
         mOpenGLRenderer->Render ( aModel );
     }

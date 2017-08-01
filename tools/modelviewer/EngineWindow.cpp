@@ -26,6 +26,7 @@ limitations under the License.
 #include "RendererSelectDialog.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
+#include "aeongames/RenderModel.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Window.h"
@@ -139,13 +140,13 @@ namespace AeonGames
 
     void EngineWindow::setMesh ( const QString & filename )
     {
-        auto model = Get<Model> ( filename.toUtf8().constData() );
+        auto model = mRenderer->GetRenderModel ( Get<Model> ( filename.toUtf8().constData() ) );
         assert ( model && "Model is nullptr" );
-        if ( mRenderer->AllocateModelRenderData ( model ) )
+        if ( model )
         {
             mModel = model;
             // Adjust camera position so model fits the frustum tightly.
-            const float* const center_radius = mModel->GetCenterRadii();
+            const float* const center_radius = mModel->GetModel()->GetCenterRadii();
             float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
                                    ( center_radius[4] * center_radius[4] ) +
                                    ( center_radius[5] * center_radius[5] ) );

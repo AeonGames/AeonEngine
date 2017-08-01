@@ -29,12 +29,13 @@ namespace AeonGames
     class Pipeline;
     class Texture;
     class Model;
+    class RenderModel;
     class Renderer
     {
     public:
         ///@name Resource Allocation Functions
         ///@{
-        virtual bool AllocateModelRenderData ( const std::shared_ptr<Model> aModel ) = 0;
+        virtual const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const = 0;
         ///@}
         ///@name Window Factory
         ///@{

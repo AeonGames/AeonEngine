@@ -16,10 +16,6 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLRENDERER_H
 #define AEONGAMES_OPENGLRENDERER_H
 
-#include <exception>
-#include <vector>
-#include <unordered_map>
-#include <utility>
 #include "aeongames/Memory.h"
 #include "aeongames/Renderer.h"
 #include "OpenGLFunctions.h"
@@ -38,8 +34,8 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void Render ( const std::shared_ptr<Model> aModel ) const;
-        bool AllocateModelRenderData ( const std::shared_ptr<Model> aModel ) final;
+        void Render ( const std::shared_ptr<RenderModel> aModel ) const;
+        const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
@@ -104,11 +100,6 @@ namespace AeonGames
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
-        //std::vector<void*> mWindowRegistry;
-        std::unordered_map <
-        std::shared_ptr<Model>,
-            std::shared_ptr<OpenGLModel >>
-            mModelMap;
     };
 }
 #endif

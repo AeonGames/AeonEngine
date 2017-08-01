@@ -85,14 +85,6 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
-        for ( auto& i : mModelMap )
-        {
-            /** @note This is here
-            because we need any allocated
-            models to be destroyed before
-            the device is.*/
-            i.second.reset();
-        }
         FinalizeCommandPool();
         FinalizeMatricesUniform();
         FinalizeRenderPass();
@@ -749,7 +741,7 @@ namespace AeonGames
     }
 #endif
 
-    void VulkanRenderer::Render ( const VulkanWindow* aWindow, const std::shared_ptr<Model> aModel ) const
+    void VulkanRenderer::Render ( const VulkanWindow* aWindow, const std::shared_ptr<RenderModel> aModel ) const
     {
         /**@todo I Do NOT like this, Window shouldn't be a param,
         and I think a vkCmd function should be used to set the matrices,
@@ -762,8 +754,12 @@ namespace AeonGames
         }
         memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
         vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
-        auto& model = mModelMap.at ( aModel );
-        model->Render ( *aWindow );
+        static_cast<VulkanModel*> ( aModel.get() )->Render ( *aWindow );
+    }
+
+    const std::shared_ptr<RenderModel> VulkanRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
+    {
+        return std::make_shared<VulkanModel> ( aModel, this );
     }
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
@@ -792,18 +788,6 @@ namespace AeonGames
         vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE );
         vkQueueWaitIdle ( mVkQueue );
         vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
-    }
-
-    bool VulkanRenderer::AllocateModelRenderData ( const std::shared_ptr<Model> aModel )
-    {
-        if ( mModelMap.find ( aModel ) == mModelMap.end() )
-        {
-            /* We dont really need to cache Vulkan Models,
-            since mModelMap IS our model cache.
-            We DO need a deallocation function.*/
-            mModelMap[aModel] = std::make_unique<VulkanModel> ( aModel, this );
-        }
-        return true;
     }
 
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId )
