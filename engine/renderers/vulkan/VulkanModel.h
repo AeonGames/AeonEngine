@@ -29,7 +29,7 @@ namespace AeonGames
     {
     public:
         VulkanModel ( const std::shared_ptr<Model> aModel, const VulkanRenderer* aVulkanRenderer );
-        ~VulkanModel();
+        virtual ~VulkanModel();
         void Render ( const VulkanWindow& aWindow ) const;
         const std::shared_ptr<Model>& GetModel() const final;
     private:

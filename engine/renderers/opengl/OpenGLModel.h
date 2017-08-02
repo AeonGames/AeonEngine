@@ -29,7 +29,7 @@ namespace AeonGames
     {
     public:
         OpenGLModel ( const std::shared_ptr<Model> aModel );
-        ~OpenGLModel();
+        virtual ~OpenGLModel();
         void Render ( GLuint aMatricesBuffer ) const;
         const std::shared_ptr<Model>& GetModel() const final;
     private:
