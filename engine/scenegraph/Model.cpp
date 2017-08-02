@@ -85,21 +85,24 @@ namespace AeonGames
         {
             if ( !model_buffer.default_pipeline().has_buffer() )
             {
-                default_pipeline = Get<Pipeline> ( model_buffer.default_pipeline().file() );
+                default_pipeline = Get<Pipeline> ( model_buffer.default_pipeline().file(),
+                                                   model_buffer.default_pipeline().file() );
             }
         }
         if ( model_buffer.has_default_material() )
         {
             if ( !model_buffer.default_material().has_buffer() )
             {
-                default_material = Get<Material> ( model_buffer.default_material().file() );
+                default_material = Get<Material> ( model_buffer.default_pipeline().file(),
+                                                   model_buffer.default_material().file() );
             }
         }
         if ( model_buffer.has_skeleton() )
         {
             if ( !model_buffer.skeleton().has_buffer() )
             {
-                mSkeleton = Get<Skeleton> ( model_buffer.skeleton().file() );
+                mSkeleton = Get<Skeleton> ( model_buffer.skeleton().file(),
+                                            model_buffer.skeleton().file() );
             }
         }
         mMeshes.reserve ( model_buffer.assembly_size() );
@@ -107,12 +110,17 @@ namespace AeonGames
         float max[3] { std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min() };
         for ( int i = 0; i < model_buffer.assembly_size(); ++i )
         {
-            std::shared_ptr<Pipeline> pipeline = ( model_buffer.assembly ( i ).has_pipeline() ) ? Get<Pipeline> ( model_buffer.assembly ( i ).pipeline().file() ) : default_pipeline;
-            std::shared_ptr<Material> material = ( model_buffer.assembly ( i ).has_material() ) ? Get<Material> ( model_buffer.assembly ( i ).material().file() ) : default_material;
+            std::shared_ptr<Pipeline> pipeline = ( model_buffer.assembly ( i ).has_pipeline() ) ?
+                                                 Get<Pipeline> ( model_buffer.assembly ( i ).pipeline().file(),
+                                                         model_buffer.assembly ( i ).pipeline().file() ) : default_pipeline;
+            std::shared_ptr<Material> material = ( model_buffer.assembly ( i ).has_material() ) ?
+                                                 Get<Material> ( model_buffer.assembly ( i ).material().file(),
+                                                         model_buffer.assembly ( i ).material().file() ) : default_material;
 
             if ( !model_buffer.assembly ( i ).mesh().has_buffer() )
             {
-                mMeshes.emplace_back ( pipeline, material, Get<Mesh> ( model_buffer.assembly ( i ).mesh().file() ) );
+                mMeshes.emplace_back ( pipeline, material, Get<Mesh> ( model_buffer.assembly ( i ).mesh().file(),
+                                       model_buffer.assembly ( i ).mesh().file() ) );
             }
             const float *const center_radii = std::get<2> ( mMeshes.back() )->GetCenterRadii();
             min[0] = std::min ( min[0], center_radii[0] - center_radii[3] );
@@ -136,7 +144,7 @@ namespace AeonGames
             {
                 if ( !animation.has_buffer() )
                 {
-                    mAnimations.emplace_back ( Get<Animation> ( animation.file() ) );
+                    mAnimations.emplace_back ( Get<Animation> ( animation.file(), animation.file() ) );
                 }
                 else
                 {

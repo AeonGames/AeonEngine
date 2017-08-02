@@ -34,6 +34,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/Window.h"
 #include "aeongames/Model.h"
+#include "aeongames/ResourceCache.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanUtilities.h"
@@ -759,7 +760,7 @@ namespace AeonGames
 
     const std::shared_ptr<RenderModel> VulkanRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
     {
-        return std::make_shared<VulkanModel> ( aModel, this );
+        return Get<VulkanModel> ( aModel.get(), aModel, this );
     }
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const

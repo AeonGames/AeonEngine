@@ -108,7 +108,7 @@ namespace AeonGames
                 advance += sizeof ( float );
                 break;
             case Uniform::SAMPLER_2D:
-                mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage(), mVulkanRenderer ) );
+                mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage().get(), i.GetImage(), mVulkanRenderer ) );
                 break;
             default:
                 break;

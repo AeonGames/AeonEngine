@@ -140,7 +140,8 @@ namespace AeonGames
 
     void EngineWindow::setMesh ( const QString & filename )
     {
-        auto model = mRenderer->GetRenderModel ( Get<Model> ( filename.toUtf8().constData() ) );
+        /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
+        auto model = mRenderer->GetRenderModel ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) );
         assert ( model && "Model is nullptr" );
         if ( model )
         {
