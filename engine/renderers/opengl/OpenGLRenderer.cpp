@@ -69,7 +69,7 @@ namespace AeonGames
 
     const std::shared_ptr<RenderModel> OpenGLRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
     {
-        return std::make_shared<OpenGLModel> ( aModel );
+        return Get<OpenGLModel> ( aModel.get(), aModel );
     }
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId )

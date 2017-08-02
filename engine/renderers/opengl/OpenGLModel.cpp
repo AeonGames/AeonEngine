@@ -75,13 +75,13 @@ namespace AeonGames
         for ( auto& i : meshes )
         {
             mMeshes.emplace_back (
-                Get<OpenGLPipeline> ( std::get<0> ( i ) ),
-                std::get<1> ( i ) ? Get<OpenGLMaterial> ( std::get<1> ( i ) ) : nullptr,
-                Get<OpenGLMesh> ( std::get<2> ( i ) ) );
+                Get<OpenGLPipeline> ( std::get<0> ( i ), std::get<0> ( i ) ),
+                std::get<1> ( i ) ? Get<OpenGLMaterial> ( std::get<1> ( i ), std::get<1> ( i ) ) : nullptr,
+                Get<OpenGLMesh> ( std::get<2> ( i ), std::get<2> ( i ) ) );
         }
         if ( mModel->GetSkeleton() != nullptr )
         {
-            mSkeleton = Get<OpenGLSkeleton> ( mModel->GetSkeleton() );
+            mSkeleton = Get<OpenGLSkeleton> ( mModel.get(), mModel->GetSkeleton() );
         }
     }
 

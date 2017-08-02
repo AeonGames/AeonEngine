@@ -98,7 +98,7 @@ namespace AeonGames
                 {
                     throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
                 }
-                mTextures.emplace_back ( Get<OpenGLTexture> ( i.GetImage() ) );
+                mTextures.emplace_back ( Get<OpenGLTexture> ( i.GetImage().get(), i.GetImage() ) );
                 break;
             default:
                 break;

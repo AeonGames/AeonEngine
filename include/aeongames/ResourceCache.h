@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace AeonGames
     * @return Shared pointer to the only instance of the resource in memory.
     * */
     template<class B, class K, class D = B, typename... Args>
-    std::shared_ptr<B> Get ( const K& key, Args... args )
+    const std::shared_ptr<B> Get ( const K& key, Args... args )
     {
         ///@todo Maybe replace unordered_map with a vector.
         static std::unordered_map<K, std::weak_ptr<B>> cache;
@@ -45,7 +45,7 @@ namespace AeonGames
         auto iter = cache.find ( key );
         if ( iter == cache.end() )
         {
-            auto retval = std::shared_ptr<B> ( std::make_unique<D> ( key, args... ).release(), [key] ( B * t )
+            auto retval = std::shared_ptr<B> ( std::make_unique<D> ( args... ).release(), [key] ( B * t )
             {
                 delete ( t );
                 cache.erase ( cache.find ( key ) );
