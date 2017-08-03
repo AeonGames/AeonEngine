@@ -28,14 +28,14 @@ namespace AeonGames
     class VulkanMesh
     {
     public:
-        VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
+        VulkanMesh ( const std::shared_ptr<const Mesh> aMesh, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         ~VulkanMesh();
         void Render() const;
     private:
         void Initialize();
         void Finalize();
         VkIndexType GetIndexType ( Mesh::IndexType aIndexType ) const;
-        const std::shared_ptr<Mesh> mMesh;
+        std::shared_ptr<const Mesh> mMesh;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         struct Buffers
         {

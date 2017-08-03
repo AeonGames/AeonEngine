@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mPipeline ( aPipeline ),
         mOpenGLRenderer ( aOpenGLRenderer ),
         mProgramId ( 0 ),

@@ -792,7 +792,7 @@ namespace AeonGames
         vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
     }
 
-    std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId )
+    std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }

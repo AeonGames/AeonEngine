@@ -21,7 +21,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<const Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mImage ( aImage )
     {
         try

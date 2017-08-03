@@ -29,13 +29,13 @@ namespace AeonGames
     class OpenGLPipeline
     {
     public:
-        OpenGLPipeline ( const std::shared_ptr<Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLPipeline();
         void Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial = nullptr ) const;
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Pipeline> mPipeline;
+        std::shared_ptr<const Pipeline> mPipeline;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         uint32_t mProgramId;
         uint32_t mPropertiesBuffer = 0;

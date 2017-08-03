@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMesh::VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanMesh::VulkanMesh ( const std::shared_ptr<const Mesh> aMesh, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer )
     {
         try

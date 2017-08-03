@@ -46,7 +46,7 @@ namespace AeonGames
             On Windows, a HWND, On X11 a Window handle.
             @return A unique pointer to a Window object referencing the specific renderer implementation.
         */
-        virtual std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) = 0;
+        virtual std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const = 0;
 #if 0
         /*
         NOTE: The idea here is not having to deal with manual window creation and management if

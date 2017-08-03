@@ -72,9 +72,9 @@ namespace AeonGames
         return Get<OpenGLModel> ( aModel.get(), aModel, shared_from_this() );
     }
 
-    std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId )
+    std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<OpenGLWindow> ( shared_from_this(), aWindowId );
+        return std::make_unique<OpenGLWindow> ( aWindowId, shared_from_this() );
     }
 
     void OpenGLRenderer::SetViewMatrix ( const float aMatrix[16] )

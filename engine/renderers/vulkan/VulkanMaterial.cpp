@@ -37,7 +37,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<Material> aMaterial, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ),
         mMaterial ( aMaterial )
     {
