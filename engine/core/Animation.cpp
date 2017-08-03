@@ -60,6 +60,7 @@ namespace AeonGames
     {
         static AnimationBuffer animation_buffer;
         LoadProtoBufObject<AnimationBuffer> ( animation_buffer, mFilename, "AEONANM" );
+        mVersion = animation_buffer.version();
         mFrameRate = animation_buffer.framerate();
         mDuration = animation_buffer.duration();
         mFrames.reserve ( animation_buffer.frame_size() );

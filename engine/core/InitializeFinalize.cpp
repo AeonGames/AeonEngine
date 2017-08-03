@@ -61,9 +61,10 @@ namespace AeonGames
 #else
         struct stat buffer;
         void* plugin;
-        if ( stat ( aFilename.c_str(), &buffer ) == 0 )
+        auto filename = aFilename.c_str();
+        if ( stat ( filename, &buffer ) == 0 )
         {
-            plugin = dlopen ( aFilename.c_str(), RTLD_NOW | RTLD_GLOBAL );
+            plugin = dlopen ( filename, RTLD_NOW | RTLD_GLOBAL );
         }
         else
         {
