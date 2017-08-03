@@ -28,19 +28,19 @@ namespace AeonGames
     class VulkanModel : public RenderModel
     {
     public:
-        VulkanModel ( const std::shared_ptr<Model> aModel, const VulkanRenderer* aVulkanRenderer );
+        VulkanModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanModel();
         void Render ( const VulkanWindow& aWindow ) const;
         const std::shared_ptr<Model>& GetModel() const final;
     private:
-        void Initialize();
-        void Finalize();
         const std::shared_ptr<Model> mModel;
-        const VulkanRenderer* mVulkanRenderer;
+        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::vector<std::tuple<
         std::shared_ptr<VulkanPipeline>,
             std::shared_ptr<VulkanMaterial>,
             std::shared_ptr<VulkanMesh>>> mMeshes;
+        void Initialize();
+        void Finalize();
     };
 }
 #endif

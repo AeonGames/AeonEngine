@@ -27,12 +27,11 @@ namespace AeonGames
 {
     class VulkanWindow;
     class VulkanModel;
-    class VulkanRenderer : public Renderer
+    class VulkanRenderer : public Renderer, public std::enable_shared_from_this<VulkanRenderer>
     {
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-
         void Render ( const VulkanWindow* aWindow, const std::shared_ptr<RenderModel> aModel ) const;
         const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) final;

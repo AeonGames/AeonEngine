@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanModel::VulkanModel ( const std::shared_ptr<Model> aModel, const VulkanRenderer* aVulkanRenderer ) :
+    VulkanModel::VulkanModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mModel ( aModel ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -70,9 +70,9 @@ namespace AeonGames
         for ( auto& i : meshes )
         {
             mMeshes.emplace_back (
-                Get<VulkanPipeline> ( std::get<0> ( i ), std::get<0> ( i ), mVulkanRenderer ),
-                std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ), std::get<1> ( i ), mVulkanRenderer ) : nullptr,
-                Get<VulkanMesh> ( std::get<2> ( i ), std::get<2> ( i ), mVulkanRenderer ) );
+                Get<VulkanPipeline> ( std::get<0> ( i ).get(), std::get<0> ( i ), mVulkanRenderer ),
+                std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mVulkanRenderer ) : nullptr,
+                Get<VulkanMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mVulkanRenderer ) );
         }
     }
 

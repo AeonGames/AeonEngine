@@ -760,7 +760,8 @@ namespace AeonGames
 
     const std::shared_ptr<RenderModel> VulkanRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
     {
-        return Get<VulkanModel> ( aModel.get(), aModel, this );
+        /**@note Do not keep any reference to the returned object to avoid circular references. */
+        return Get<VulkanModel> ( aModel.get(), aModel, shared_from_this() );
     }
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
@@ -793,7 +794,7 @@ namespace AeonGames
 
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId )
     {
-        return std::make_unique<VulkanWindow> ( aWindowId, this );
+        return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }
 
 #if 0
