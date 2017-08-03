@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,16 +23,18 @@ limitations under the License.
 namespace AeonGames
 {
     class Mesh;
+    class OpenGLRenderer;
     class OpenGLMesh
     {
     public:
-        OpenGLMesh ( const std::shared_ptr<Mesh> aMesh );
+        OpenGLMesh ( const std::shared_ptr<Mesh> aMesh, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLMesh();
         void Render() const;
     private:
         void Initialize();
         void Finalize();
         const std::shared_ptr<Mesh> mMesh;
+        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         struct Buffers
         {
             uint32_t mArray = 0;

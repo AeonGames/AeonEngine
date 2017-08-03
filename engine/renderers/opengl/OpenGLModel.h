@@ -21,6 +21,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Model;
+    class OpenGLRenderer;
     class OpenGLPipeline;
     class OpenGLMaterial;
     class OpenGLMesh;
@@ -28,7 +29,7 @@ namespace AeonGames
     class OpenGLModel : public RenderModel
     {
     public:
-        OpenGLModel ( const std::shared_ptr<Model> aModel );
+        OpenGLModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         virtual ~OpenGLModel();
         void Render ( GLuint aMatricesBuffer ) const;
         const std::shared_ptr<Model>& GetModel() const final;
@@ -36,6 +37,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         const std::shared_ptr<Model> mModel;
+        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         std::shared_ptr<OpenGLSkeleton> mSkeleton;
         std::vector<std::tuple<
         std::shared_ptr<OpenGLPipeline>,

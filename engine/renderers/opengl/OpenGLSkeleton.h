@@ -21,16 +21,18 @@ limitations under the License.
 namespace AeonGames
 {
     class Skeleton;
+    class OpenGLRenderer;
     class OpenGLSkeleton
     {
     public:
-        OpenGLSkeleton ( const std::shared_ptr<Skeleton> aSkeleton );
+        OpenGLSkeleton ( const std::shared_ptr<Skeleton> aSkeleton, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLSkeleton();
         GLuint GetBuffer() const;
     private:
         void Initialize();
         void Finalize();
         const std::shared_ptr<Skeleton> mSkeleton;
+        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         GLuint mSkeletonBuffer = 0;
     };
 }

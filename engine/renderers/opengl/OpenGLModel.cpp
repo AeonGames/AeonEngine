@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLModel::OpenGLModel ( const std::shared_ptr<Model> aModel ) :
+    OpenGLModel::OpenGLModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mModel ( aModel )
     {
         try
@@ -75,13 +75,13 @@ namespace AeonGames
         for ( auto& i : meshes )
         {
             mMeshes.emplace_back (
-                Get<OpenGLPipeline> ( std::get<0> ( i ), std::get<0> ( i ) ),
-                std::get<1> ( i ) ? Get<OpenGLMaterial> ( std::get<1> ( i ), std::get<1> ( i ) ) : nullptr,
-                Get<OpenGLMesh> ( std::get<2> ( i ), std::get<2> ( i ) ) );
+                Get<OpenGLPipeline> ( std::get<0> ( i ).get(), std::get<0> ( i ), mOpenGLRenderer ),
+                std::get<1> ( i ) ? Get<OpenGLMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mOpenGLRenderer ) : nullptr,
+                Get<OpenGLMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mOpenGLRenderer ) );
         }
         if ( mModel->GetSkeleton() != nullptr )
         {
-            mSkeleton = Get<OpenGLSkeleton> ( mModel.get(), mModel->GetSkeleton() );
+            mSkeleton = Get<OpenGLSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mOpenGLRenderer );
         }
     }
 
