@@ -27,13 +27,13 @@ namespace AeonGames
     class OpenGLMesh
     {
     public:
-        OpenGLMesh ( const std::shared_ptr<Mesh> aMesh, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLMesh ( const std::shared_ptr<const Mesh> aMesh, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLMesh();
         void Render() const;
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Mesh> mMesh;
+        std::shared_ptr<const Mesh> mMesh;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         struct Buffers
         {

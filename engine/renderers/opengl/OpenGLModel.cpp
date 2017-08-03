@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLModel::OpenGLModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLModel::OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mModel ( aModel )
     {
         try
@@ -63,7 +63,7 @@ namespace AeonGames
         }
     }
 
-    const std::shared_ptr<Model>& OpenGLModel::GetModel() const
+    const std::shared_ptr<const Model>& OpenGLModel::GetModel() const
     {
         return mModel;
     }

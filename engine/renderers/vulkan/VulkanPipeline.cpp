@@ -30,7 +30,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mPipeline ( aPipeline ),
         mVulkanRenderer ( aVulkanRenderer ),
         mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) )

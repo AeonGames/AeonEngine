@@ -28,7 +28,7 @@ namespace AeonGames
     class OpenGLTexture
     {
     public:
-        OpenGLTexture ( const std::shared_ptr<Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLTexture ( const std::shared_ptr<const Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLTexture();
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/
@@ -36,7 +36,7 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Image> mImage;
+        std::shared_ptr<const Image> mImage;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         uint32_t mTexture;
     };

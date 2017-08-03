@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanModel::VulkanModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanModel::VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mModel ( aModel ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -54,7 +54,7 @@ namespace AeonGames
         }
     }
 
-    const std::shared_ptr<Model>& VulkanModel::GetModel() const
+    const std::shared_ptr<const Model>& VulkanModel::GetModel() const
     {
         return mModel;
     }

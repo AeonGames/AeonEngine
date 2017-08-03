@@ -29,14 +29,14 @@ namespace AeonGames
     class OpenGLModel : public RenderModel
     {
     public:
-        OpenGLModel ( const std::shared_ptr<Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         virtual ~OpenGLModel();
         void Render ( GLuint aMatricesBuffer ) const;
-        const std::shared_ptr<Model>& GetModel() const final;
+        const std::shared_ptr<const Model>& GetModel() const final;
     private:
         void Initialize();
         void Finalize();
-        const std::shared_ptr<Model> mModel;
+        std::shared_ptr<const Model> mModel;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         std::shared_ptr<OpenGLSkeleton> mSkeleton;
         std::vector<std::tuple<

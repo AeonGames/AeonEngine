@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLWindow::OpenGLWindow ( const std::shared_ptr<OpenGLRenderer> aOpenGLRenderer, void* aWindowId ) :
+    OpenGLWindow::OpenGLWindow ( void* aWindowId, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mOpenGLRenderer ( aOpenGLRenderer ), mWindowId ( aWindowId )
     {
         try
