@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<Image> aImage ) :
+    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mImage ( aImage )
     {
         try

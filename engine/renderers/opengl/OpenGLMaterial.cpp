@@ -35,7 +35,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial ( const std::shared_ptr<Material> aMaterial ) :
+    OpenGLMaterial::OpenGLMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mMaterial ( aMaterial )
     {
         try
@@ -98,7 +98,7 @@ namespace AeonGames
                 {
                     throw std::runtime_error ( "OpenGL texture image unit values exausted (Too many samplers in shader)." );
                 }
-                mTextures.emplace_back ( Get<OpenGLTexture> ( i.GetImage().get(), i.GetImage() ) );
+                mTextures.emplace_back ( Get<OpenGLTexture> ( i.GetImage().get(), i.GetImage(), mOpenGLRenderer ) );
                 break;
             default:
                 break;

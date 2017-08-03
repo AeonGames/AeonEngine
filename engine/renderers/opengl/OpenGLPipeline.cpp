@@ -24,10 +24,12 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<Pipeline> aProgram ) :
-        mPipeline ( aProgram ),
+    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+        mPipeline ( aPipeline ),
+        mOpenGLRenderer ( aOpenGLRenderer ),
         mProgramId ( 0 ),
-        mDefaultMaterial ( std::make_shared<OpenGLMaterial> ( mPipeline->GetDefaultMaterial() ) )
+        /**@todo Should use the resource cache to assign the default material. */
+        mDefaultMaterial ( std::make_shared<OpenGLMaterial> ( mPipeline->GetDefaultMaterial(), mOpenGLRenderer ) )
     {
         try
         {

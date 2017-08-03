@@ -24,18 +24,20 @@ limitations under the License.
 namespace AeonGames
 {
     class Material;
+    class OpenGLRenderer;
     class OpenGLTexture;
     class OpenGLMaterial
     {
     public:
-        OpenGLMaterial ( const std::shared_ptr<Material> aMaterial );
+        OpenGLMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLMaterial();
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<OpenGLTexture>>& GetTextures() const;
     private:
         void Initialize();
         void Finalize();
-        std::shared_ptr<Material> mMaterial;
+        std::shared_ptr<const Material> mMaterial;
+        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         std::vector<uint8_t> mUniformData;
         std::vector<std::shared_ptr<OpenGLTexture>> mTextures;
     };

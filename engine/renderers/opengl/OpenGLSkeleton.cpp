@@ -22,7 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLSkeleton::OpenGLSkeleton ( const std::shared_ptr<Skeleton> aSkeleton ) :
+    OpenGLSkeleton::OpenGLSkeleton ( const std::shared_ptr<Skeleton> aSkeleton, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mSkeleton ( aSkeleton )
     {
         try
