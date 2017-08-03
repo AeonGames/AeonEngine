@@ -28,7 +28,7 @@ namespace AeonGames
     class VulkanMesh
     {
     public:
-        VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const VulkanRenderer* aVulkanRenderer );
+        VulkanMesh ( const std::shared_ptr<Mesh> aMesh, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         ~VulkanMesh();
         void Render() const;
     private:
@@ -36,7 +36,7 @@ namespace AeonGames
         void Finalize();
         VkIndexType GetIndexType ( Mesh::IndexType aIndexType ) const;
         const std::shared_ptr<Mesh> mMesh;
-        const VulkanRenderer* mVulkanRenderer;
+        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         struct Buffers
         {
             VkBuffer mVertexBuffer = VK_NULL_HANDLE;

@@ -27,7 +27,7 @@ namespace AeonGames
     class VulkanWindow : public Window
     {
     public:
-        VulkanWindow ( void* aWindowId, const VulkanRenderer* aVulkanRenderer );
+        VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanWindow();
         const void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
@@ -58,7 +58,7 @@ namespace AeonGames
 
         void* mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
-        const VulkanRenderer* mVulkanRenderer;
+        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount = 2;
         VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;

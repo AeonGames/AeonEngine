@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanTexture::VulkanTexture ( const std::shared_ptr<Image> aImage, const VulkanRenderer* aVulkanRenderer ) :
+    VulkanTexture::VulkanTexture ( const std::shared_ptr<Image> aImage, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ), mImage ( aImage ),
         mVkImage ( VK_NULL_HANDLE ),
         mImageMemory ( VK_NULL_HANDLE )

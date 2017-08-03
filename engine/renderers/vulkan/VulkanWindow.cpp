@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanWindow::VulkanWindow ( void* aWindowId, const VulkanRenderer* aVulkanRenderer ) :
+    VulkanWindow::VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer )
     {
         try

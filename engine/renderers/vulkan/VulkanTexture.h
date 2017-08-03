@@ -29,7 +29,7 @@ namespace AeonGames
     class VulkanTexture
     {
     public:
-        VulkanTexture ( const std::shared_ptr<Image> aImage, const VulkanRenderer* aVulkanRenderer );
+        VulkanTexture ( const std::shared_ptr<Image> aImage, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         ~VulkanTexture();
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
@@ -39,7 +39,7 @@ namespace AeonGames
         void FinalizeImage();
         void InitializeImageView();
         void FinalizeImageView();
-        const VulkanRenderer* mVulkanRenderer;
+        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         const std::shared_ptr<Image> mImage;
         VkImage mVkImage;
         VkDeviceMemory mImageMemory;
