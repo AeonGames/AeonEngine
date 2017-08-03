@@ -85,3 +85,9 @@ Unasked Questions Nevertheless Answered (UQNA)
     directly to binary protocol buffers or use a proprietary format.
     That takes time and Google already solved the problem.
     Do feel free to write your own convertion tool though.
+## Why are there so many "Linux Build Fix" commits?
+	I develop on Windows first and then make sure things work properly on Linux. Things sometimes break.
+    While I do not hold a particular preference towards Windows, there are some things that keep me working on it:
+    - Visual Studio's Debugger is the best there is. I do know how to use gdb, but I am not as proficient with it as with VS, and I am yet to find a graphical frontend I like for it.
+    - Most PC gamers are on Windows, that's probably not going to change anytime soon.
+    - Windows is the OS I spend most time on, I tend to use a lot of open source code that was born on Linux, but most of them have native Windows ports.
