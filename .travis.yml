@@ -42,7 +42,6 @@ install:
   - cd ..
 before_script:
   - source /opt/qt57/bin/qt57-env.sh
-  - /opt/qt55/bin/qmake 
   - cmake -G "Unix Makefiles" .
 script:
   - make -j4 VERBOSE=1
