@@ -10,9 +10,9 @@ env:
     - secure: "A8eKoO929vALzUzirYk7VP1znIKyGHiM53sD5863AqZy7Ww6TGY1VYpZCf+ai+5JbQPt/QENJ03qYuCpIuPlsoEqHmsy5V7kgPpHQ1/5nWI9dWlyZlkMLBV+D2dFIELoa0gTeXpPf/j8nHSnSvWTStaGFKIKskMPgBdWDO21cOhldW9pO6bDBnxnfS4UwL+p35UgaxX7ANQd/yiitJqJ2Zk+NwabAb3wU5OYb8iN47W9H28OkLOb4jz/GChRpCfFSUKKmZtxUopdmuDT7HyjrRe65NZPo/9BghG1xrLMUur4Sa/YfNtRWW4v+l88CyYoHZbPMg+z8TCq+C8F5tUmaAMMDU0Mih/WAYT3Ank04IzA3bMCz7e+ZhIT9+h7ahwmg9LykJTTuSJPPXJJxvQgABrvIsn/b0EoQIB+jk+faChZuq4zt/2tFLmTF4DMzXPGPKBBv9CHkPtD+0myBu9kjUKddnYgFzqMPH+a8mxRzoFycZrUxV6QWqj3DdKVe4WBGP9xJr18uMJsRFeDf4MV6jNlKGygfxXHB5FSLzBkOzeW4QVFPpbXKmxdQe6kjpYe5z2ee55zApHx3KVRxDDDxWMj0NMQHN9wJ17FTrbXNXAtItEv1Ja37xgwpAWQVNnGmdwVTseCoa+Xyz+e+Ia9TJ2tcJZZs7KhResefMMowkg="
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
-  - sudo add-apt-repository --yes ppa:beineri/opt-qt551-trusty
+  - sudo add-apt-repository --yes ppa:beineri/opt-qt571-trusty
   - sudo apt-get -qq update
-  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase55-dev git
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase57-full git
 install:
   - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
   - tar -xzvf v3.2.0.tar.gz
@@ -41,7 +41,7 @@ install:
   - sudo ldconfig
   - cd ..
 before_script:
-  - source /opt/qt55/bin/qt55-env.sh
+  - source /opt/qt57/bin/qt57-env.sh
   - /opt/qt55/bin/qmake 
   - cmake -G "Unix Makefiles" .
 script:
