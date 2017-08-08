@@ -30,6 +30,9 @@
     <property name="bottomMargin">
      <number>0</number>
     </property>
+    <item>
+     <widget class="QMdiArea" name="mdiArea"/>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -65,7 +68,7 @@
   </widget>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>Open Model</string>
    </property>
    <property name="toolTip">
     <string>Open Model</string>

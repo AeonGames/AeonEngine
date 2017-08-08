@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ limitations under the License.
 #include <exception>
 #include <stdexcept>
 #include "EngineWindow.h"
-#include "RendererSelectDialog.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
 #include "aeongames/RenderModel.h"
@@ -33,11 +32,11 @@ limitations under the License.
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( QWindow *parent ) :
+    EngineWindow::EngineWindow ( const std::shared_ptr<Renderer> aRenderer, QWindow *parent ) :
         QWindow ( parent ),
         mTimer(),
         mStopWatch(),
-        mRenderer(),
+        mRenderer ( aRenderer ),
         mWindow(),
         mModel ( nullptr ),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
@@ -48,41 +47,6 @@ namespace AeonGames
     {
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );
-        QSurfaceFormat surface_format = format();
-        surface_format.setDepthBufferSize ( 24 );
-        surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
-        setFormat ( surface_format );
-
-        /* Add a nice renderer selection window.*/
-        QStringList renderer_list;
-        EnumerateRendererLoaders ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
-        {
-            renderer_list.append ( QString::fromStdString ( aIdentifier ) );
-            return true;
-        } );
-
-        if ( !renderer_list.size() )
-        {
-            throw std::runtime_error ( "No renderer available, cannot continue." );
-        }
-        if ( renderer_list.size() == 1 )
-        {
-            this->mRenderer = GetRenderer ( renderer_list.at ( 0 ).toStdString() );
-        }
-        else
-        {
-            RendererSelectDialog select_renderer;
-            select_renderer.SetRenderers ( renderer_list );
-            if ( select_renderer.exec() == QDialog::Accepted )
-            {
-                this->mRenderer = GetRenderer ( select_renderer.GetSelected().toStdString() );
-            }
-        }
-
-        if ( mRenderer == nullptr )
-        {
-            throw std::runtime_error ( "No renderer selected, cannot continue." );
-        }
 
         /* On Windows we want the window to own its device context.
         This code works on Qt 5.6.0, but if it does not
@@ -153,6 +117,7 @@ namespace AeonGames
                                    ( center_radius[5] * center_radius[5] ) );
             std::cout << "Radius: " << radius << std::endl;
             // Add the near value to the radius just in case the actual object contains the eye position.
+            assert ( mFrustumVerticalHalfAngle != 0.0f );
             float eye_length = ( radius + 1.0f ) / std::tan ( mFrustumVerticalHalfAngle );
             mCameraLocation = QVector4D (
                                   QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
@@ -162,26 +127,35 @@ namespace AeonGames
         }
     }
 
+    void EngineWindow::showEvent ( QShowEvent * aShowEvent )
+    {
+        QResizeEvent resize ( geometry().size(), geometry().size() );
+        resizeEvent ( &resize );
+    }
+
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        mWindow->ResizeViewport ( aResizeEvent->size().width(), aResizeEvent->size().height() );
-        static const QMatrix4x4 flipMatrix (
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f );
-        mProjectionMatrix.setToIdentity();
-        float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
-        mProjectionMatrix.frustum ( -half_radius, half_radius, 0.5, -0.5, 1, 1600 );
-        mProjectionMatrix = mProjectionMatrix * flipMatrix;
-        mRenderer->SetProjectionMatrix ( mProjectionMatrix.constData() );
-        // Calculate frustum half vertical angle (for fitting models into frustum)
-        float v1[2] = { 1, 0 };
-        float v2[2] = { 1, half_radius };
-        float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );
-        v2[0] /= length;
-        v2[1] /= length;
-        mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
+        if ( aResizeEvent->size().width() && aResizeEvent->size().height() )
+        {
+            mWindow->ResizeViewport ( aResizeEvent->size().width(), aResizeEvent->size().height() );
+            static const QMatrix4x4 flipMatrix (
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f );
+            mProjectionMatrix.setToIdentity();
+            float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
+            mProjectionMatrix.frustum ( -half_radius, half_radius, 0.5, -0.5, 1, 1600 );
+            mProjectionMatrix = mProjectionMatrix * flipMatrix;
+            mRenderer->SetProjectionMatrix ( mProjectionMatrix.constData() );
+            // Calculate frustum half vertical angle (for fitting models into frustum)
+            float v1[2] = { 1, 0 };
+            float v2[2] = { 1, half_radius };
+            float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );
+            v2[0] /= length;
+            v2[1] /= length;
+            mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
+        }
     }
 
     void EngineWindow::exposeEvent ( QExposeEvent * aExposeEvent )
