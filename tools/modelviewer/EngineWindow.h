@@ -26,20 +26,20 @@ limitations under the License.
 #include <QCloseEvent>
 
 #include "aeongames/AeonEngine.h"
-#include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 #include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
 {
+    class Renderer;
     class RenderModel;
     class Window;
     class EngineWindow : public QWindow
     {
         Q_OBJECT
     public:
-        EngineWindow ( QWindow *parent = nullptr );
+        EngineWindow ( const std::shared_ptr<Renderer> aRenderer, QWindow *parent = nullptr );
         ~EngineWindow();
         void stop();
         void start();
@@ -50,6 +50,7 @@ namespace AeonGames
             1.0f, 0.0f, 0.0f
         };
         const QVector3D forward{ 0.0f, 1.0f, 0.0f };
+        void showEvent ( QShowEvent *aShowEvent ) override final;
         void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
         void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
         void keyPressEvent ( QKeyEvent * event ) override final;

@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,10 +28,12 @@ limitations under the License.
 
 //#include <QGui>
 
+#include <memory>
 #include "ui_MainWindow.h"
 
 namespace AeonGames
 {
+    class Renderer;
     class EngineWindow;
     class MainWindow : public QMainWindow, public Ui::MainWindow
     {
@@ -43,8 +45,7 @@ namespace AeonGames
         void on_actionOpen_triggered();
         void on_actionExit_triggered();
     private:
-        EngineWindow* engineWindow = nullptr;
-        QWidget* engineWindowContainer = nullptr;
+        std::shared_ptr<Renderer> mRenderer;
     };
 }
 #endif

@@ -53,6 +53,11 @@ QT5_WRAP_CPP(MODELVIEWER_MOCS ${MODELVIEWER_QT_HEADERS})
 QT5_WRAP_UI(MODELVIEWER_UI_HEADERS ${MODELVIEWER_UI})
 qt5_add_resources(MODELVIEWER_RESOURCES modelviewer.qrc)
 
+# Find Qt Node library
+# find_library (NODES_LIBRARY NAMES nodes)
+# find_path(NODES_INCLUDE_DIR nodes/NODE)
+# include_directories(${NODES_INCLUDE_DIR})
+
 add_executable(modelviewer
     ${MODELVIEWER_SOURCES}
     ${MODELVIEWER_MOCS}
@@ -74,6 +79,7 @@ target_link_libraries(modelviewer
     ${Qt5Gui_LIBRARIES}
     ${Qt5Widgets_LIBRARIES}
     ${Qt5WinExtras_LIBRARIES}
+#    ${NODES_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
