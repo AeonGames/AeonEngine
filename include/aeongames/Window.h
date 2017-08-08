@@ -22,6 +22,7 @@ namespace AeonGames
     class Window
     {
     public:
+        virtual ~Window() {}
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void BeginRender() const = 0;
         virtual void Render ( const std::shared_ptr<RenderModel> aModel ) const = 0;
