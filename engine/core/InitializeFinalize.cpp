@@ -60,21 +60,20 @@ namespace AeonGames
         }
 #else
         void* plugin;
-        if ( ! ( plugin = dlopen ( aFilename.c_str(), RTLD_NOW | RTLD_GLOBAL ) )
-    {
-        plugin = dlopen ( ( "lib" + aFilename + ".so" ).c_str(), RTLD_NOW | RTLD_GLOBAL );
-        }
-        if ( !plugin )
-    {
-        std::cout << "Failed to load " << aFilename << std::endl;
-        std::cout << "Error " << dlerror() << std::endl;
-            return;
+        if ( ! ( plugin = dlopen ( aFilename.c_str(), RTLD_NOW | RTLD_GLOBAL ) ) )
+        {
+            if ( ! ( plugin = dlopen ( ( "lib" + aFilename + ".so" ).c_str(), RTLD_NOW | RTLD_GLOBAL ) ) )
+            {
+                std::cout << "Failed to load " << aFilename << std::endl;
+                std::cout << "Error " << dlerror() << std::endl;
+                return;
+            }
         }
         PluginModuleInterface* pmi = ( PluginModuleInterface* ) dlsym ( plugin, "PMI" );
-                                     if ( nullptr == pmi )
-    {
-        std::cout << aFilename << " is not an AeonEngine Plugin." << std::endl;
-        dlclose ( plugin );
+        if ( nullptr == pmi )
+        {
+            std::cout << aFilename << " is not an AeonEngine Plugin." << std::endl;
+            dlclose ( plugin );
             return;
         }
 #endif
