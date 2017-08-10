@@ -1,5 +1,4 @@
 AEONPRG
-glsl_version: 430
 vertex_shader {
   code: "out vec3 LightIntensity;\n"
   "void main()\n"
