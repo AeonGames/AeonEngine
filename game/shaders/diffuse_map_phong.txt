@@ -1,5 +1,4 @@
 AEONPRG
-glsl_version: 430
 default_material {
     property {
       uniform_name: "LightPosition"

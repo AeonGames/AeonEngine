@@ -1,6 +1,4 @@
 AEONPRG
-glsl_version: 430
-
 vertex_shader {
   code: "void main()\n"
   "{\n"

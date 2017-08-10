@@ -25,8 +25,7 @@ message ShaderBuffer {
 }
 
 message PipelineBuffer {
-	uint32 glsl_version                = 1;
-	MaterialBuffer default_material    = 2;
-	ShaderBuffer vertex_shader         = 3;
-	ShaderBuffer fragment_shader       = 4;
+	MaterialBuffer default_material    = 1;
+	ShaderBuffer vertex_shader         = 2;
+	ShaderBuffer fragment_shader       = 3;
 }

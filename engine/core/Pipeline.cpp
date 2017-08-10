@@ -156,7 +156,7 @@ namespace AeonGames
         static PipelineBuffer pipeline_buffer;
         LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
         {
-            mVertexShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
+            mVertexShader.append ( "#version 430\n" );
             /* Find out which attributes are being used and add them to the shader source */
             std::smatch attribute_matches;
             /**@note static const regex: construct once, use for ever.*/
@@ -207,7 +207,7 @@ namespace AeonGames
                 "mat3 NormalMatrix;\n"
                 "};\n"
             );
-            mFragmentShader.append ( "#version " + std::to_string ( pipeline_buffer.glsl_version() ) + "\n" );
+            mFragmentShader.append ( "#version 430\n" );
             mFragmentShader.append (
                 "#ifdef VULKAN\n"
                 "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
