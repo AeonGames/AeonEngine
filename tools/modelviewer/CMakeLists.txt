@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ set(MODELVIEWER_QT_HEADERS
     RendererSelectDialog.h
     MainWindow.h
     EngineWindow.h
+    nodeeditor/PipelineModel.h
     )
 
 set(MODELVIEWER_HEADERS
@@ -35,6 +36,7 @@ set(MODELVIEWER_SOURCES
     MainWindow.cpp
     RendererSelectDialog.cpp
     EngineWindow.cpp
+    nodeeditor/PipelineModel.cpp
     Debug.cpp
     )
 
@@ -54,9 +56,9 @@ QT5_WRAP_UI(MODELVIEWER_UI_HEADERS ${MODELVIEWER_UI})
 qt5_add_resources(MODELVIEWER_RESOURCES modelviewer.qrc)
 
 # Find Qt Node library
-# find_library (NODES_LIBRARY NAMES nodes)
-# find_path(NODES_INCLUDE_DIR nodes/NODE)
-# include_directories(${NODES_INCLUDE_DIR})
+find_library (NODES_LIBRARY NAMES nodes)
+find_path(NODES_INCLUDE_DIR nodes/NODE)
+include_directories(${NODES_INCLUDE_DIR})
 
 add_executable(modelviewer
     ${MODELVIEWER_SOURCES}
@@ -70,7 +72,7 @@ if(UNIX)
 endif()
 
 if(MSVC)
-    set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
+    set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-DNODE_EDITOR_SHARED -D_CRT_SECURE_NO_WARNINGS")
 endif()
 
 target_link_libraries(modelviewer
@@ -79,7 +81,7 @@ target_link_libraries(modelviewer
     ${Qt5Gui_LIBRARIES}
     ${Qt5Widgets_LIBRARIES}
     ${Qt5WinExtras_LIBRARIES}
-#    ${NODES_LIBRARY}
+    ${NODES_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}

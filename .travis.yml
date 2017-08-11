@@ -40,7 +40,17 @@ install:
   - sudo make -j4 install
   - sudo ldconfig
   - cd ..
-before_script:
+  - git clone https://github.com/paceholder/nodeeditor.git
+  - echo "install(TARGETS nodes RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)" >> nodeeditor/CMakeLists.txt
+  - echo "install(DIRECTORY src/ DESTINATION include/nodes FILES_MATCHING PATTERN \"*.hpp\")\n" >> nodeeditor/CMakeLists.txt
+  - cd nodeeditor
+  - git checkout b2aa9bc166c2b06d543049d74e6c70b696f97c42
+  - cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local .
+  - make -j4
+  - sudo make -j4 install
+  - sudo ldconfig
+  - cd ..
+ before_script:
   - source /opt/qt57/bin/qt57-env.sh
   - cmake -G "Unix Makefiles" .
 script:

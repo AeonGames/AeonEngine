@@ -79,8 +79,7 @@ namespace AeonGames
     {
         // Force model deletion
         stop();
-        //mRenderer->RemoveRenderingWindow ( reinterpret_cast<void*> ( winId() ) );
-        mWindow.reset(); // see if this is necesary later
+        mWindow.reset();
         mModel.reset();
     }
 

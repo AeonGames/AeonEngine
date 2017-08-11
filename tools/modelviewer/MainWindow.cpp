@@ -20,6 +20,9 @@ limitations under the License.
 #include "RendererSelectDialog.h"
 #include "MainWindow.h"
 #include "EngineWindow.h"
+#include "nodes/FlowScene.hpp"
+#include "nodes/FlowView.hpp"
+#include "PipelineModel.h"
 
 namespace AeonGames
 {
@@ -69,6 +72,18 @@ namespace AeonGames
     void MainWindow::on_actionExit_triggered()
     {
         close();
+    }
+
+    void MainWindow::on_actionNew_triggered()
+    {
+        std::shared_ptr<QtNodes::DataModelRegistry> ret = std::make_shared<QtNodes::DataModelRegistry>();
+        ret->registerModel<PipelineModel>();
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->addSubWindow ( new QtNodes::FlowView ( new QtNodes::FlowScene ( ret ) ) );
+        mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
+        mdiSubWindow->setWindowTitle ( "New" );
+        mdiSubWindow->showMaximized();
+        mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
     }
 
     void MainWindow::on_actionOpen_triggered()
