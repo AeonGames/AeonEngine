@@ -7,7 +7,7 @@ configuration: Release
 platform: x64
 before_build:
 - cmd: >-
-    curl -LfsS -o msvc64-runtime.zip https://github.com/AeonGames/runtime/releases/download/runtime-master-build-19/msvc64-runtime.zip
+    curl -LfsS -o msvc64-runtime.zip https://github.com/AeonGames/runtime/releases/download/runtime-master-build-21/msvc64-runtime.zip
     
     7z x msvc64-runtime.zip
     
