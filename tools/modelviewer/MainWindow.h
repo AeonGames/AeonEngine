@@ -42,6 +42,7 @@ namespace AeonGames
         MainWindow();
         ~MainWindow();
     private slots:
+        void on_actionNew_triggered();
         void on_actionOpen_triggered();
         void on_actionExit_triggered();
     private:

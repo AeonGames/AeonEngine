@@ -48,6 +48,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -68,15 +69,20 @@
   </widget>
   <action name="actionOpen">
    <property name="text">
-    <string>Open Model</string>
+    <string>Open</string>
    </property>
    <property name="toolTip">
-    <string>Open Model</string>
+    <string>Open</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
    </property>
   </action>
  </widget>
