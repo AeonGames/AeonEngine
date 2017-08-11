@@ -40,6 +40,7 @@ install:
   - sudo make -j4 install
   - sudo ldconfig
   - cd ..
+  - source /opt/qt57/bin/qt57-env.sh
   - git clone https://github.com/paceholder/nodeeditor.git
   - cd nodeeditor
   - git checkout b2aa9bc166c2b06d543049d74e6c70b696f97c42
