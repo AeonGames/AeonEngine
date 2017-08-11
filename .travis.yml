@@ -50,7 +50,7 @@ install:
   - sudo make -j4 install
   - sudo ldconfig
   - cd ..
- before_script:
+before_script:
   - source /opt/qt57/bin/qt57-env.sh
   - cmake -G "Unix Makefiles" .
 script:
