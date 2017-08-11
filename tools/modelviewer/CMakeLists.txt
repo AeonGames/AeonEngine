@@ -68,7 +68,7 @@ add_executable(modelviewer
     ${MODELVIEWER_RESOURCES})
 
 if(UNIX)
-    set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-Wall -Werror -O0 -g")
+    set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-DNODE_EDITOR_SHARED -Wall -Werror -O0 -g")
 endif()
 
 if(MSVC)
