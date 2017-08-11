@@ -22,7 +22,7 @@ limitations under the License.
 #include "EngineWindow.h"
 #include "nodes/FlowScene.hpp"
 #include "nodes/FlowView.hpp"
-#include "PipelineModel.h"
+#include "nodeeditor/PipelineModel.h"
 
 namespace AeonGames
 {
