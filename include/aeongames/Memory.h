@@ -23,9 +23,9 @@ namespace AeonGames
     namespace std
     {
         template<typename T, typename... Ts>
-        std::unique_ptr<T> make_unique ( Ts&&... params )
+        ::std::unique_ptr<T> make_unique ( Ts&&... params )
         {
-            return std::unique_ptr<T> ( new T ( std::forward<Ts> ( params )... ) );
+            return ::std::unique_ptr<T> ( new T ( ::std::forward<Ts> ( params )... ) );
         }
     }
 }
