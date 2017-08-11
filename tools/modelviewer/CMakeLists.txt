@@ -57,7 +57,7 @@ qt5_add_resources(MODELVIEWER_RESOURCES modelviewer.qrc)
 
 # Find Qt Node library
 find_library (NODES_LIBRARY NAMES nodes)
-find_path(NODES_INCLUDE_DIR nodes/NODE)
+find_path(NODES_INCLUDE_DIR nodes/Node.hpp)
 include_directories(${NODES_INCLUDE_DIR})
 
 add_executable(modelviewer
