@@ -18,15 +18,12 @@ limitations under the License.
 #include <memory>
 #if __cplusplus < 201300L && __cplusplus >= 201103L
 // Taken from EMC++ Item 21
-namespace AeonGames
+namespace std
 {
-    namespace std
+    template<typename T, typename... Ts>
+    ::std::unique_ptr<T> make_unique ( Ts&&... params )
     {
-        template<typename T, typename... Ts>
-        ::std::unique_ptr<T> make_unique ( Ts&&... params )
-        {
-            return ::std::unique_ptr<T> ( new T ( ::std::forward<Ts> ( params )... ) );
-        }
+        return ::std::unique_ptr<T> ( new T ( ::std::forward<Ts> ( params )... ) );
     }
 }
 #endif
