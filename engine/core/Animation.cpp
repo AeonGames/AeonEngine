@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <cmath>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
