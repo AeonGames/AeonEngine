@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include "aeongames/Transform.h"
+#include "aeongames/Platform.h"
 
 namespace AeonGames
 {
@@ -26,6 +27,9 @@ namespace AeonGames
     public:
         Animation ( std::string  aFilename );
         ~Animation();
+        DLL uint32_t GetFrameRate() const;
+        DLL float GetDuration() const;
+        DLL const Transform GetTransform ( size_t aBoneIndex, float aTime ) const;
     private:
         void Initialize();
         void Finalize();

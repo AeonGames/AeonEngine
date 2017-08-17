@@ -27,7 +27,7 @@ limitations under the License.
 namespace AeonGames
 {
     OpenGLModel::OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
-        mModel ( aModel )
+        mModel ( aModel ), mOpenGLRenderer ( aOpenGLRenderer )
     {
         try
         {
@@ -54,6 +54,10 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             if ( mSkeleton )
             {
+                if ( aAnimationIndex < mModel->GetAnimations().size() )
+                {
+                    mSkeleton->SetPose ( mModel->GetAnimations() [aAnimationIndex], aTime );
+                }
                 glBindBufferBase ( GL_UNIFORM_BUFFER, 2, mSkeleton->GetBuffer() );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
