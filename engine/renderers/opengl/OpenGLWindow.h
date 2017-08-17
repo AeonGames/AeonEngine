@@ -32,7 +32,7 @@ namespace AeonGames
         void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() const final;
-        void Render ( const std::shared_ptr<RenderModel> aModel ) const final;
+        void Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex, float aTime ) const final;
         void EndRender() const final;
     private:
         void Initialize();

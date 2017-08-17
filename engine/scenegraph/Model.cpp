@@ -1,3 +1,4 @@
+#include "..\..\include\aeongames\Model.h"
 /*
 Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
@@ -73,6 +74,11 @@ namespace AeonGames
     const std::shared_ptr<Skeleton>& Model::GetSkeleton() const
     {
         return mSkeleton;
+    }
+
+    const std::vector<std::shared_ptr<const Animation>>& Model::GetAnimations() const
+    {
+        return mAnimations;
     }
 
     void Model::Initialize()

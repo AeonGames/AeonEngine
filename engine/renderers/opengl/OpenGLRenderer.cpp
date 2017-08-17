@@ -62,9 +62,9 @@ namespace AeonGames
         return mWindowId;
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<RenderModel> aModel ) const
+    GLuint OpenGLRenderer::GetMatricesBuffer() const
     {
-        static_cast<OpenGLModel*> ( aModel.get() )->Render ( mMatricesBuffer );
+        return mMatricesBuffer;
     }
 
     const std::shared_ptr<RenderModel> OpenGLRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
