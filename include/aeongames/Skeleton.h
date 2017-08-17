@@ -29,6 +29,8 @@ namespace AeonGames
         public:
             Joint ( Joint* aParent, const Transform& aTransform, const Transform& aInvertedTransform, const std::string& aName );
             DLL const Transform& GetTransform() const;
+            DLL const Transform& GetInvertedTransform() const;
+            DLL const Joint* GetParent() const;
         private:
             Joint* mParent = nullptr;
             Transform mTransform;

@@ -56,6 +56,27 @@ namespace AeonGames
         Finalize();
     }
 
+    uint32_t Animation::GetFrameRate() const
+    {
+        return mFrameRate;
+    }
+
+    float Animation::GetDuration() const
+    {
+        return mDuration;
+    }
+
+    const Transform Animation::GetTransform ( size_t aBoneIndex, float aTime ) const
+    {
+        /* no interpolation yet */
+        size_t start_frame = static_cast<size_t> ( floorf ( aTime / static_cast<float> ( mFrameRate ) ) ) % mFrames.size();
+        if ( aBoneIndex < mFrames[start_frame].size() )
+        {
+            return mFrames[start_frame][aBoneIndex];
+        }
+        return Transform();
+    }
+
     void Animation::Initialize()
     {
         static AnimationBuffer animation_buffer;

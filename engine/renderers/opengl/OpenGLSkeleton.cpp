@@ -17,6 +17,7 @@ limitations under the License.
 #include <cstring>
 #include <vector>
 #include "aeongames/Skeleton.h"
+#include "aeongames/Animation.h"
 #include "aeongames/ResourceCache.h"
 #include "OpenGLSkeleton.h"
 
@@ -52,10 +53,33 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         float* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
         OPENGL_CHECK_ERROR_NO_THROW;
+#if 1
+        // Temporary code, does really nothing
+        const float identity[16] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
         for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
         {
-            mSkeleton->GetJoints() [i].GetTransform().GetInvertedMatrix ( joint_array + ( i * 16 ) );
+            memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
         }
+#else
+        for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
+        {
+            /*
+            This code does not work,
+            to get the matrix each ANIMATION child joint
+            should be premultiplied with its ANIMATION parent
+            which in turn should have already been multiplied,
+            the information required to do this is not currently being stored in
+            the animation format. So I will get back to that.
+            */
+            ( aAnimation->GetTransform ( i, aTime ) * mSkeleton->GetJoints() [i].GetInvertedTransform() ).GetMatrix ( joint_array + ( i * 16 ) );
+        }
+#endif
         glUnmapBuffer ( GL_UNIFORM_BUFFER );
         OPENGL_CHECK_ERROR_NO_THROW;
     }

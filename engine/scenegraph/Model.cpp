@@ -1,4 +1,3 @@
-#include "..\..\include\aeongames\Model.h"
 /*
 Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
 
@@ -14,11 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <cassert>
 #include "aeongames/Model.h"
 #include "aeongames/Utilities.h"
 #include "ProtoBufHelpers.h"
 #include "aeongames/ProtoBufClasses.h"
+#include <cassert>
+
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )

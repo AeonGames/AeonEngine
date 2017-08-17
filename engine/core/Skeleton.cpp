@@ -46,6 +46,16 @@ namespace AeonGames
         return mTransform;
     }
 
+    const Transform & Skeleton::Joint::GetInvertedTransform() const
+    {
+        return mInvertedTransform;
+    }
+
+    const Skeleton::Joint * Skeleton::Joint::GetParent() const
+    {
+        return mParent;
+    }
+
     Skeleton::Skeleton ( std::string  aFilename )
         :
         mFilename ( std::move ( aFilename ) )
