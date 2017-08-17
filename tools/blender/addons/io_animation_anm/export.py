@@ -77,10 +77,14 @@ class Bone():
                 float(frame)), 0.0 if self.translation[1] is None else self.translation[1].evaluate(
                 float(frame)), 0.0 if self.translation[2] is None else self.translation[2].evaluate(
                 float(frame))))
-        if(self.bone.parent):
-            return self.bone.parent.matrix_local.inverted() * self.bone.matrix_local * \
-                translation * rotation * scale
-        return self.bone.matrix_local * translation * rotation * scale
+        # if(self.bone.parent):
+        # return self.bone.parent.matrix_local.inverted() * self.bone.matrix_local * \
+        # translation * rotation * scale
+        return (
+            self.bone.matrix_local *
+            translation *
+            rotation *
+            scale).inverted()
 
     def __str__(self):
         return "Bone: " + self.bone.name + "\n" + \

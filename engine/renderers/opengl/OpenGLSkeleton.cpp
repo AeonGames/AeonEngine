@@ -77,7 +77,11 @@ namespace AeonGames
             the information required to do this is not currently being stored in
             the animation format. So I will get back to that.
             */
-            ( aAnimation->GetTransform ( i, aTime ) * mSkeleton->GetJoints() [i].GetInvertedTransform() ).GetMatrix ( joint_array + ( i * 16 ) );
+            Transform skeleton ( mSkeleton->GetJoints() [i].GetTransform() );
+            Transform animation ( aAnimation->GetTransform ( i, aTime ) );
+            Transform transform ( animation * skeleton );
+            transform.GetMatrix ( joint_array + ( i * 16 ) );
+            //(mSkeleton->GetJoints()[i].GetTransform() * aAnimation->GetTransform(i, aTime)).GetMatrix(joint_array + (i * 16));
         }
 #endif
         glUnmapBuffer ( GL_UNIFORM_BUFFER );
