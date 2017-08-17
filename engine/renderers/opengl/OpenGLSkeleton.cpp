@@ -46,6 +46,20 @@ namespace AeonGames
         return mSkeletonBuffer;
     }
 
+    void OpenGLSkeleton::SetPose ( const std::shared_ptr<const Animation> aAnimation, float aTime ) const
+    {
+        glBindBuffer ( GL_UNIFORM_BUFFER, mSkeletonBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        float* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
+        {
+            mSkeleton->GetJoints() [i].GetTransform().GetInvertedMatrix ( joint_array + ( i * 16 ) );
+        }
+        glUnmapBuffer ( GL_UNIFORM_BUFFER );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLSkeleton::Initialize()
     {
         GLint max_uniform_block_size = 0;
@@ -76,7 +90,6 @@ namespace AeonGames
         };
         for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
         {
-            //mSkeleton->GetJoints() [i].GetTransform().GetInvertedMatrix ( joint_array + ( i * 16 ) );
             memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
         }
         glUnmapBuffer ( GL_UNIFORM_BUFFER );

@@ -25,13 +25,13 @@ namespace AeonGames
     class Image
     {
     public:
-        enum class ImageFormat : std::uint32_t
+        enum class ImageFormat : uint32_t
         {
             Unknown,
             RGB,
             RGBA
         };
-        enum class ImageType : std::uint32_t
+        enum class ImageType : uint32_t
         {
             Unknown,
             UNSIGNED_BYTE,

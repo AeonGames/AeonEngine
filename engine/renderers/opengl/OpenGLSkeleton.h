@@ -21,6 +21,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Skeleton;
+    class Animation;
     class OpenGLRenderer;
     class OpenGLSkeleton
     {
@@ -28,6 +29,7 @@ namespace AeonGames
         OpenGLSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         ~OpenGLSkeleton();
         GLuint GetBuffer() const;
+        void SetPose ( const std::shared_ptr<const Animation> aAnimation, float aTime ) const;
     private:
         void Initialize();
         void Finalize();

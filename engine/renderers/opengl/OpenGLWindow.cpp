@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
+#include "OpenGLModel.h"
 #include "OpenGLFunctions.h"
 #include <sstream>
 #include <iostream>
@@ -82,9 +83,9 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const std::shared_ptr<RenderModel> aModel ) const
+    void OpenGLWindow::Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex, float aTime ) const
     {
-        mOpenGLRenderer->Render ( aModel );
+        static_cast<OpenGLModel*> ( aModel.get() )->Render ( aAnimationIndex, aTime );
     }
 
     void OpenGLWindow::EndRender() const

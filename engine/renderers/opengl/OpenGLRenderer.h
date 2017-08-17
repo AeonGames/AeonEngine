@@ -34,7 +34,6 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void Render ( const std::shared_ptr<RenderModel> aModel ) const;
         const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
@@ -42,6 +41,7 @@ namespace AeonGames
         void SetModelMatrix ( const float aMatrix[16] ) final;
         void* GetOpenGLContext() const;
         void* GetWindowId() const;
+        GLuint GetMatricesBuffer() const;
     private:
         void Initialize();
         void Finalize();

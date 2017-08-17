@@ -17,6 +17,7 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Model.h"
 #include "aeongames/ResourceCache.h"
+#include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
@@ -44,15 +45,12 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLModel::Render ( GLuint aMatricesBuffer ) const
+    void OpenGLModel::Render ( size_t aAnimationIndex, float aTime ) const
     {
-        /**@todo Revisit, may be a better idea
-        to keep a back reference to the renderer
-        instead of taking a parameter. */
         for ( auto& i : mMeshes )
         {
             std::get<0> ( i )->Use ( std::get<1> ( i ) );
-            glBindBufferBase ( GL_UNIFORM_BUFFER, 0, aMatricesBuffer );
+            glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mOpenGLRenderer->GetMatricesBuffer() );
             OPENGL_CHECK_ERROR_NO_THROW;
             if ( mSkeleton )
             {

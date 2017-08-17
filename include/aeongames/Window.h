@@ -25,7 +25,7 @@ namespace AeonGames
         virtual ~Window() {}
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void BeginRender() const = 0;
-        virtual void Render ( const std::shared_ptr<RenderModel> aModel ) const = 0;
+        virtual void Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex = 0, float aTime = 0.0f ) const = 0;
         virtual void EndRender() const = 0;
     };
 }
