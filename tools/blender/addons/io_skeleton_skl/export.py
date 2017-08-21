@@ -62,6 +62,9 @@ class SKLExporter(bpy.types.Operator):
             translation, rotation, scale = bone.matrix_local.decompose()
             inv_translation, inv_rotation, inv_scale = bone.matrix_local.inverted(
             ).decompose()
+            rotation.normalize()
+            inv_rotation.normalize()
+            print("Index", armature.bones.find(bone.name))
             print("Translation", translation)
             print("Rotation", rotation)
             print("Scale", scale)
@@ -72,7 +75,7 @@ class SKLExporter(bpy.types.Operator):
             joint.Rotation.w, joint.Rotation.x, joint.Rotation.y, joint.Rotation.z = rotation
             joint.Translation.x, joint.Translation.y, joint.Translation.z = translation
             joint.InvertedScale.x, joint.InvertedScale.y, joint.InvertedScale.z = inv_scale
-            joint.InvertedRotation.w, joint.InvertedRotation.x, joint.InvertedRotation.y, joint.Rotation.z = inv_rotation
+            joint.InvertedRotation.w, joint.InvertedRotation.x, joint.InvertedRotation.y, joint.InvertedRotation.z = inv_rotation
             joint.InvertedTranslation.x, joint.InvertedTranslation.y, joint.InvertedTranslation.z = inv_translation
             joint.Name = bone.name
 

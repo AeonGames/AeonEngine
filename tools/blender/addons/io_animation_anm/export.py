@@ -77,14 +77,7 @@ class Bone():
                 float(frame)), 0.0 if self.translation[1] is None else self.translation[1].evaluate(
                 float(frame)), 0.0 if self.translation[2] is None else self.translation[2].evaluate(
                 float(frame))))
-        # if(self.bone.parent):
-        # return self.bone.parent.matrix_local.inverted() * self.bone.matrix_local * \
-        # translation * rotation * scale
-        return (
-            self.bone.matrix_local *
-            translation *
-            rotation *
-            scale).inverted()
+        return translation * rotation * scale
 
     def __str__(self):
         return "Bone: " + self.bone.name + "\n" + \
@@ -133,14 +126,25 @@ class ANMExporter(bpy.types.Operator):
 
             for frame in range(int(action.frame_range[0]), int(
                     action.frame_range[1]) + 1):
-                frame_buffer = animation_buffer.Frame.add()
+                # We have to reconstruct the matrix skeleton
+                frame_matrices = []
                 for bone in bones:
-                    translation, rotation, scale = bone.get_matrix(
-                        frame).decompose()
+                    if not bone.bone.parent:
+                        frame_matrices.append(
+                            bone.bone.matrix_local * bone.get_matrix(frame))
+                    else:
+                        frame_matrices.append(
+                            frame_matrices[
+                                context.active_object.data.bones.find(
+                                    bone.bone.parent.name)] *
+                            bone.bone.parent.matrix_local.inverted() *
+                            bone.bone.matrix_local *
+                            bone.get_matrix(frame))
+                frame_buffer = animation_buffer.Frame.add()
+                for frame_matrix in frame_matrices:
+                    translation, rotation, scale = frame_matrix.decompose()
                     rotation.normalize()
                     bone_buffer = frame_buffer.Bone.add()
-                    bone_buffer.Index = context.active_object.data.bones.find(
-                        bone.bone.name)
                     bone_buffer.Scale.x, bone_buffer.Scale.y, bone_buffer.Scale.z = scale
                     bone_buffer.Rotation.w, bone_buffer.Rotation.x, bone_buffer.Rotation.y, bone_buffer.Rotation.z = rotation
                     bone_buffer.Translation.x, bone_buffer.Translation.y, bone_buffer.Translation.z = translation

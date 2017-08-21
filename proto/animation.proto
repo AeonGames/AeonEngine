@@ -19,7 +19,7 @@ import "vector3.proto";
 import "quaternion.proto";
 
 message BoneBuffer {
-    uint32               Index          = 1;
+    uint32               Parent         = 1;
     Vector3Buffer        Scale          = 2;
     QuaternionBuffer     Rotation       = 3;
     Vector3Buffer        Translation    = 4;
