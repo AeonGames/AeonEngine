@@ -271,7 +271,7 @@ namespace AeonGames
                     "#else\n"
                     "layout(std140, binding = 2) uniform Skeleton{\n"
                     "#endif\n"
-                    "mat4 skeleton[128];\n"
+                    "mat4 skeleton[255];\n"
                     "};\n"
                 );
                 mVertexShader.append ( skeleton );

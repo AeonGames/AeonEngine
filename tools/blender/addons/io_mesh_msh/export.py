@@ -99,8 +99,18 @@ class MSHExporterCommon():
             for group in self.mesh.vertices[
                     loop.vertex_index].groups:
                 if group.weight > 0:
-                    weights.append([group.weight, self.armature.bones.find(
-                        self.object.vertex_groups[group.group].name)])
+                    bone_index = self.armature.bones.find(
+                        self.object.vertex_groups[group.group].name)
+                    if bone_index < 0 or bone_index > 255:
+                        # If the vertex references a bone not in the armature
+                        # bone index will be -1
+                        print(
+                            "Bone index for group",
+                            self.object.vertex_groups[
+                                group.group].name,
+                            "out of range:",
+                            str(bone_index))
+                    weights.append([group.weight, bone_index])
 
             weights.sort()
             weights.reverse()
@@ -261,7 +271,7 @@ class MSHExporterCommon():
         self.flags = triangle_group.VertexFlags
         self.vertices = list(pool.map(self.get_vertex, mesh.loops))
         self.vertices.sort(key=operator.itemgetter(1))
-        # The next line of code it's so dense;
+        # The next line of code is so dense;
         # every single statement has so many things going on...
         self.vertices = sorted(map(self.get_indices_per_vertex, itertools.groupby(
             self.vertices, key=operator.itemgetter(1))), key=operator.itemgetter(0))
