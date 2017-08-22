@@ -456,7 +456,7 @@ class MSHExportAll(bpy.types.Operator):
         for object in context.scene.objects:
             if (object.type == 'MESH'):
                 exporter = MSHExporterCommon(
-                    self.directory + "/" + object.name + ".msh")
+                    self.directory + os.sep + object.name + ".msh")
                 exporter.run(object)
         return {'FINISHED'}
 

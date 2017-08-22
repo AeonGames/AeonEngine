@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import bpy
+import os
 import struct
 import mathutils
 import math
@@ -163,7 +164,12 @@ class ANMExporter(bpy.types.Operator):
                 action.name +
                 ".anm.txt",
                 ".")
-            out = open(self.directory + "/" + action.name + ".anm.txt", "wt")
+            out = open(
+                self.directory +
+                os.sep +
+                action.name +
+                ".anm.txt",
+                "wt")
             out.write("AEONANM\n")
             out.write(
                 google.protobuf.text_format.MessageToString(animation_buffer))

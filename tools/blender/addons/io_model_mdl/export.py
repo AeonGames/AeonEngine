@@ -39,16 +39,17 @@ class MDLExporter(bpy.types.Operator):
         bpy.ops.export_mesh.all_msh(
             'EXEC_DEFAULT',
             directory=self.directory +
-            "/meshes")
+            os.sep +
+            "meshes")
         model_buffer = model_pb2.ModelBuffer()
         print(
             "Writting",
             self.directory +
-            "/" +
+            os.sep +
             context.scene.name +
             ".mdl",
             ".")
-        out = open(self.directory + "/" + context.scene.name + ".mdl", "wb")
+        out = open(self.directory + os.sep + context.scene.name + ".mdl", "wb")
         magick_struct = struct.Struct('8s')
         out.write(magick_struct.pack(b'AEONMDL\x00'))
         out.write(model_buffer.SerializeToString())
@@ -57,13 +58,13 @@ class MDLExporter(bpy.types.Operator):
         print(
             "Writting",
             self.directory +
-            "/" +
+            os.sep +
             context.scene.name +
             ".anm.txt",
             ".")
         out = open(
             self.directory +
-            "/" +
+            os.sep +
             context.scene.name +
             ".mdl.txt",
             "wt")
