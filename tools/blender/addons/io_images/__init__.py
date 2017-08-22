@@ -13,13 +13,12 @@
 # limitations under the License.
 
 bl_info = {
-    "name": "AeonGames Animation Format (.anm)",
-    "author": "Rodrigo Hernandez (Kwizatz)",
+    "name": "Export All Images",
+    "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
     "blender": (2, 7, 0),
-    "location": "File > Export > Export AeonGames Animations",
-    "description":
-        "Exports armature actions as AeonGames Animation (ANM) files",
+    "location": "File > Export > All Images",
+    "description": "Saves all images to a directory",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -29,16 +28,14 @@ import bpy
 from . import export
 
 
-def anm_menu_func(self, context):
+def img_menu_func(self, context):
     self.layout.operator(
-        export.ANMExporter.bl_idname,
-        text="AeonGames Animations (.anm)")
-
+        export.IMGExporter.bl_idname,
+        text="All Images")
 
 def register():
-    bpy.utils.register_class(export.ANMExporter)
-    bpy.types.INFO_MT_file_export.append(anm_menu_func)
-
+    bpy.utils.register_class(export.IMGExporter)
+    bpy.types.INFO_MT_file_export.append(img_menu_func)
 
 if __name__ == "__main__":
     register()
