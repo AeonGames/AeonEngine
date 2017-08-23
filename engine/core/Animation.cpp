@@ -69,11 +69,24 @@ namespace AeonGames
 
     const Transform Animation::GetTransform ( size_t aBoneIndex, float aTime ) const
     {
-        /* no interpolation yet */
-        size_t start_frame = static_cast<size_t> ( floorf ( aTime / static_cast<float> ( mFrameRate ) ) ) % mFrames.size();
-        if ( aBoneIndex < mFrames[start_frame].size() )
+        float sample = mFrameRate * fmodf ( aTime, mDuration );
+        float frame;
+        float interpolation = modff ( sample, &frame );
+        size_t frame1 = static_cast<size_t> ( frame );
+        size_t frame2 = ( ( frame1 + 1 ) % mFrames.size() );
+        size_t frame0 = frame1 == 0 ? mFrames.size() - 1 : ( ( frame1 - 1 ) % mFrames.size() );
+        size_t frame3 = ( ( frame1 + 2 ) % mFrames.size() );
+        if ( interpolation <= 0.0f )
         {
-            return mFrames[start_frame][aBoneIndex];
+            return mFrames[frame1][aBoneIndex];
+        }
+        else if ( interpolation >= 1.0f )
+        {
+            return mFrames[frame2][aBoneIndex];
+        }
+        else
+        {
+            return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
         }
         return Transform();
     }

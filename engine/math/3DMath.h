@@ -1467,7 +1467,7 @@ inline float* GetInvertedMatrixFromSRT ( const float* srt, float* M )
 }
 
 /// Catmull-Rom spline interpolation
-inline float* Spline ( float* p0, float* p1, float* p2, float* p3, float interpolation, float* out )
+inline float* Spline ( const float* p0, const float* p1, const float* p2, const float* p3, float interpolation, float* out )
 {
     float i2 = interpolation  * interpolation;
     float i3 = i2 * interpolation;
@@ -1804,7 +1804,7 @@ inline void MultQuats4 ( float* q1, float* q2, float* out )
     \param interp [in] Interpolation factor.
     \param out [out] Resulting quaternion.
 */
-inline float* LerpQuats ( float* q1, float* q2, float interpolation, float* out )
+inline float* LerpQuats ( const float* q1, const float* q2, float interpolation, float* out )
 {
 #if 0
     float sign = 1.0;
@@ -1853,7 +1853,7 @@ inline float* LerpQuats ( float* q1, float* q2, float interpolation, float* out 
     \param interp [in] Interpolation factor.
     \param out [out] Resulting quaternion.
 */
-inline float* NlerpQuats ( float* q1, float* q2, float interp, float* out )
+inline float* NlerpQuats ( const float* q1, const float* q2, float interp, float* out )
 {
     return Normalize4 ( LerpQuats ( q1, q2, interp, out ) );
 }
