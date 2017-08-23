@@ -213,5 +213,7 @@ namespace AeonGames
     };
     DLL const Transform operator* ( const Transform& lhs, const Transform& rhs );
     DLL const bool operator== ( const Transform& lhs, const Transform& rhs );
+    /** Interpolate transforms using spline and mlerp methods.*/
+    DLL const Transform Interpolate ( const Transform& aTransform0, const Transform& aTransform1, const Transform& aTransform2, const Transform& aTransform3, float aInterpolation );
 }
 #endif

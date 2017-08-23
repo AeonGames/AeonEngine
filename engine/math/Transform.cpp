@@ -281,4 +281,12 @@ namespace AeonGames
     {
         return memcmp ( lhs.GetTransform(), rhs.GetTransform(), sizeof ( float ) * 10 ) == 0;
     }
+    const Transform Interpolate ( const Transform & aTransform0, const Transform & aTransform1, const Transform & aTransform2, const Transform & aTransform3, float aInterpolation )
+    {
+        float srt[10];
+        Spline ( aTransform0.GetScale(), aTransform1.GetScale(), aTransform2.GetScale(), aTransform3.GetScale(), aInterpolation, srt );
+        NlerpQuats ( aTransform1.GetRotation(), aTransform1.GetRotation(), aInterpolation, srt + 3 );
+        Spline ( aTransform0.GetTranslation(), aTransform1.GetTranslation(), aTransform2.GetTranslation(), aTransform3.GetTranslation(), aInterpolation, srt + 7 );
+        return Transform ( srt );
+    }
 }
