@@ -69,6 +69,7 @@ namespace AeonGames
         std::shared_ptr<RenderModel> mModel;
         float mFrustumVerticalHalfAngle;
         float mStep;
+        float mAnimationTime;
         /* We're using QT classes for now... */
         QQuaternion mCameraRotation;
         QVector4D mCameraLocation;
