@@ -1,5 +1,5 @@
 /*
-Copyright 2014-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -121,7 +121,9 @@ namespace AeonGames
         DLL size_t GetIndex() const;
     protected:
         virtual void Update ( const double delta ) = 0;
+#if 0
         virtual void Render ( Renderer* aRenderer ) = 0;
+#endif
     private:
         friend class Scene;
         std::string mName;

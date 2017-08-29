@@ -234,6 +234,8 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeMatricesUniform()
     {
+        /**@todo we're repeating this code in many places, perhaps a buffer class would be better
+        to keep code replication down? */
         VkBufferCreateInfo buffer_create_info{};
         buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_create_info.pNext = nullptr;
@@ -647,7 +649,7 @@ namespace AeonGames
         }
         memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
         vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
-        static_cast<VulkanModel*> ( aModel.get() )->Render ( *aWindow );
+        static_cast<VulkanModel*> ( aModel.get() )->Render ( *aWindow, 0, 0.0f );
     }
 
     const std::shared_ptr<RenderModel> VulkanRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const

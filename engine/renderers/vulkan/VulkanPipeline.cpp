@@ -64,6 +64,11 @@ namespace AeonGames
         vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
     }
 
+    VkBuffer VulkanPipeline::GetSkeletonBuffer() const
+    {
+        return mVkSkeletonBuffer;
+    }
+
     void VulkanPipeline::InitializePropertiesUniform()
     {
         auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
@@ -126,10 +131,72 @@ namespace AeonGames
         }
     }
 
+    void VulkanPipeline::InitializeSkeletonUniform()
+    {
+        auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
+        if ( mPipeline->GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
+        {
+            VkBufferCreateInfo buffer_create_info{};
+            buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            buffer_create_info.pNext = nullptr;
+            buffer_create_info.flags = 0;
+            buffer_create_info.size = 256 * 16 * sizeof ( float );
+            buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            buffer_create_info.queueFamilyIndexCount = 0;
+            buffer_create_info.pQueueFamilyIndices = nullptr;
+
+            if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(),
+                                                    &buffer_create_info, nullptr, &mVkSkeletonBuffer ) )
+            {
+                std::ostringstream stream;
+                stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            VkMemoryRequirements memory_requirements;
+            vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(),
+                                            mVkSkeletonBuffer, &memory_requirements );
+
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.pNext = nullptr;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+            if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
+            {
+                throw std::runtime_error ( "No suitable memory type found for property buffers" );
+            }
+
+            if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mVkSkeletonMemory ) )
+            {
+                std::ostringstream stream;
+                stream << "vkAllocateMemory failed for property buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonBuffer, mVkSkeletonMemory, 0 );
+        }
+    }
+
+    void VulkanPipeline::FinalizeSkeletonUniform()
+    {
+        if ( mVkSkeletonMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonMemory, nullptr );
+            mVkSkeletonMemory = VK_NULL_HANDLE;
+        }
+        if ( mVkSkeletonBuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mVkSkeletonBuffer, nullptr );
+            mVkSkeletonBuffer = VK_NULL_HANDLE;
+        }
+    }
+
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 2 );
+        descriptor_set_layout_bindings.reserve ( 3 );
         descriptor_set_layout_bindings.emplace_back();
         // Matrices binding
         descriptor_set_layout_bindings[0].binding = 0;
@@ -139,14 +206,24 @@ namespace AeonGames
         descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         // Properties binding
-        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
+        if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
         {
             descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings[1].binding = 1;
-            descriptor_set_layout_bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptor_set_layout_bindings[1].descriptorCount = 1; // See above
-            descriptor_set_layout_bindings[1].stageFlags = VK_SHADER_STAGE_ALL;
-            descriptor_set_layout_bindings[1].pImmutableSamplers = nullptr;
+            descriptor_set_layout_bindings.back().binding = 1;
+            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_set_layout_bindings.back().descriptorCount = 1; // See above
+            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
+            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
+        }
+        // Skeleton binding
+        if ( mVkSkeletonBuffer && mVkSkeletonMemory )
+        {
+            descriptor_set_layout_bindings.emplace_back();
+            descriptor_set_layout_bindings.back().binding = 2;
+            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_set_layout_bindings.back().descriptorCount = 1; // See above
+            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
+            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
 
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
@@ -218,19 +295,27 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        uint32_t descriptor_count = 1; // Matrices is always bound
-        std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
-        descriptor_buffer_infos[0].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
-        descriptor_buffer_infos[0].offset = 0;
-        descriptor_buffer_infos[0].range = sizeof ( VulkanRenderer::Matrices );
+        uint32_t descriptor_count = 0;
+        std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos = { {} };
+        descriptor_buffer_infos[descriptor_count].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
+        descriptor_buffer_infos[descriptor_count].offset = 0;
+        descriptor_buffer_infos[descriptor_count].range = sizeof ( VulkanRenderer::Matrices );
 
-        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
+        if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
         {
             descriptor_count += 1;
-            descriptor_buffer_infos[1].buffer = mVkPropertiesUniformBuffer;
-            descriptor_buffer_infos[1].offset = 0;
-            descriptor_buffer_infos[1].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
+            descriptor_buffer_infos[descriptor_count].buffer = mVkPropertiesUniformBuffer;
+            descriptor_buffer_infos[descriptor_count].offset = 0;
+            descriptor_buffer_infos[descriptor_count].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
         }
+        if ( mVkSkeletonBuffer && mVkSkeletonMemory )
+        {
+            descriptor_count += 1;
+            descriptor_buffer_infos[descriptor_count].buffer = mVkSkeletonBuffer;
+            descriptor_buffer_infos[descriptor_count].offset = 0;
+            descriptor_buffer_infos[descriptor_count].range = 256 * 16 * sizeof ( float );
+        }
+        descriptor_count += 1;
 
         std::array<VkWriteDescriptorSet, 1> write_descriptor_sets;
         write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -255,9 +340,10 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
+        InitializePropertiesUniform();
+        InitializeSkeletonUniform();
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
-        InitializePropertiesUniform();
         InitializeDescriptorSet();
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline->GetVertexShaderSource().c_str() );
@@ -489,8 +575,9 @@ namespace AeonGames
             }
         }
         FinalizeDescriptorSet();
-        FinalizePropertiesUniform();
         FinalizeDescriptorPool();
         FinalizeDescriptorSetLayout();
+        FinalizeSkeletonUniform();
+        FinalizePropertiesUniform();
     }
 }
