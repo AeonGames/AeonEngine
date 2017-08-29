@@ -133,7 +133,6 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeSkeletonUniform()
     {
-        auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
         if ( mPipeline->GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
             VkBufferCreateInfo buffer_create_info{};

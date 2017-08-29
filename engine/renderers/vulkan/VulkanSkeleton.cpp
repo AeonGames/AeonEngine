@@ -53,7 +53,7 @@ namespace AeonGames
     void VulkanSkeleton::SetPose ( const std::shared_ptr<const Animation> aAnimation, float aTime ) const
     {
         float* joint_array = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, &static_cast<void*> ( joint_array ) ) )
+        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &joint_array ) ) )
         {
             std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
         }
@@ -106,7 +106,7 @@ namespace AeonGames
         vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mSkeletonBuffer, mSkeletonMemory, 0 );
 
         float* joint_array = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, &static_cast<void*> ( joint_array ) ) )
+        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &joint_array ) ) )
         {
             std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
         }
