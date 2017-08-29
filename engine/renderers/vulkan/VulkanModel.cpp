@@ -23,6 +23,7 @@ limitations under the License.
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
 #include "VulkanMesh.h"
+#include "VulkanSkeleton.h"
 
 namespace AeonGames
 {
@@ -45,11 +46,19 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render ( const VulkanWindow& aWindow ) const
+    void VulkanModel::Render ( const VulkanWindow& aWindow, size_t aAnimationIndex, float aTime ) const
     {
         for ( auto& i : mMeshes )
         {
             std::get<0> ( i )->Use ( aWindow, std::get<1> ( i ) );
+            if ( mSkeleton )
+            {
+                if ( aAnimationIndex < mModel->GetAnimations().size() )
+                {
+                    mSkeleton->SetPose ( mModel->GetAnimations() [aAnimationIndex], aTime );
+                }
+                //vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( i )->GetSkeletonBuffer(), 0, nullptr );
+            }
             std::get<2> ( i )->Render();
         }
     }
@@ -73,6 +82,10 @@ namespace AeonGames
                 Get<VulkanPipeline> ( std::get<0> ( i ).get(), std::get<0> ( i ), mVulkanRenderer ),
                 std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mVulkanRenderer ) : nullptr,
                 Get<VulkanMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mVulkanRenderer ) );
+        }
+        if ( mModel->GetSkeleton() != nullptr )
+        {
+            mSkeleton = Get<VulkanSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mVulkanRenderer );
         }
     }
 

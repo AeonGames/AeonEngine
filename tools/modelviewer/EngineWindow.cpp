@@ -188,7 +188,8 @@ namespace AeonGames
                         delta = 1.0f / 30.0f;
                     }
                 }
-                mAnimationTime = fmodf ( mAnimationTime + delta, mModel->GetModel()->GetAnimations() [0]->GetDuration() );
+                mAnimationTime = ( mModel->GetModel()->GetAnimations().size() ) ?
+                                 fmodf ( mAnimationTime + delta, mModel->GetModel()->GetAnimations() [0]->GetDuration() ) : 0.0f;
                 mWindow->Render ( mModel, 0, mAnimationTime );
             }
             mWindow->EndRender();

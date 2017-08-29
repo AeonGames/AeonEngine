@@ -1,5 +1,5 @@
 /*
-Copyright 2014-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ namespace AeonGames
             } );
         }
     }
-
+#if 0
     void Scene::Render ( Renderer* aRenderer )
     {
         if ( aRenderer )
@@ -102,7 +102,7 @@ namespace AeonGames
             }
         }
     }
-
+#endif
     void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )

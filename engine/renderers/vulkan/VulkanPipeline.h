@@ -34,9 +34,12 @@ namespace AeonGames
         VulkanPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         ~VulkanPipeline();
         void Use ( const VulkanWindow& aWindow, const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
+        VkBuffer GetSkeletonBuffer() const;
     private:
         void InitializePropertiesUniform();
         void FinalizePropertiesUniform();
+        void InitializeSkeletonUniform();
+        void FinalizeSkeletonUniform();
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
         void InitializeDescriptorPool();
@@ -54,6 +57,8 @@ namespace AeonGames
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
         VkBuffer mVkPropertiesUniformBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mVkPropertiesUniformMemory = VK_NULL_HANDLE;
+        VkBuffer mVkSkeletonBuffer = VK_NULL_HANDLE;
+        VkDeviceMemory mVkSkeletonMemory = VK_NULL_HANDLE;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
         VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
