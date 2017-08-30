@@ -195,7 +195,7 @@ namespace AeonGames
             }
             mVertexShader.append (
                 "#ifdef VULKAN\n"
-                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+                "layout(push_constant) uniform Matrices{\n"
                 "#else\n"
                 "layout(binding = 0, std140) uniform Matrices{\n"
                 "#endif\n"
@@ -211,7 +211,7 @@ namespace AeonGames
             mFragmentShader.append ( "#version 430\n" );
             mFragmentShader.append (
                 "#ifdef VULKAN\n"
-                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+                "layout(push_constant) uniform Matrices{\n"
                 "#else\n"
                 "layout(binding = 0, std140) uniform Matrices{\n"
                 "#endif\n"

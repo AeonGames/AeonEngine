@@ -66,13 +66,13 @@ namespace AeonGames
             InitializeSemaphores();
             InitializeFence();
             InitializeRenderPass();
-            InitializeMatricesUniform();
+            //InitializeMatricesUniform();
             InitializeCommandPool();
         }
         catch ( ... )
         {
             FinalizeCommandPool();
-            FinalizeMatricesUniform();
+            //FinalizeMatricesUniform();
             FinalizeRenderPass();
             FinalizeFence();
             FinalizeSemaphores();
@@ -87,7 +87,7 @@ namespace AeonGames
     {
         vkQueueWaitIdle ( mVkQueue );
         FinalizeCommandPool();
-        FinalizeMatricesUniform();
+        //FinalizeMatricesUniform();
         FinalizeRenderPass();
         FinalizeFence();
         FinalizeSemaphores();
@@ -181,11 +181,6 @@ namespace AeonGames
         return std::numeric_limits<uint32_t>::max();
     }
 
-    const VkBuffer & VulkanRenderer::GetMatricesUniformBuffer() const
-    {
-        return mMatricesUniformBuffer;
-    }
-
     void VulkanRenderer::LoadFunctions()
     {
         assert ( mVkInstance && "mVkInstance is a nullptr." );
@@ -232,50 +227,6 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::InitializeMatricesUniform()
-    {
-        /**@todo we're repeating this code in many places, perhaps a buffer class would be better
-        to keep code replication down? */
-        VkBufferCreateInfo buffer_create_info{};
-        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.pNext = nullptr;
-        buffer_create_info.flags = 0;
-        buffer_create_info.size = sizeof ( Matrices );
-        buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        buffer_create_info.queueFamilyIndexCount = 0;
-        buffer_create_info.pQueueFamilyIndices = nullptr;
-
-        if ( VkResult result = vkCreateBuffer ( mVkDevice, &buffer_create_info, nullptr, &mMatricesUniformBuffer ) )
-        {
-            std::ostringstream stream;
-            stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        VkMemoryRequirements memory_requirements;
-        vkGetBufferMemoryRequirements ( mVkDevice, mMatricesUniformBuffer, &memory_requirements );
-
-        VkMemoryAllocateInfo memory_allocate_info{};
-        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memory_allocate_info.pNext = nullptr;
-        memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-        if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
-        {
-            throw std::runtime_error ( "No suitable memory type found for mesh buffers" );
-        }
-
-        if ( VkResult result = vkAllocateMemory ( mVkDevice, &memory_allocate_info, nullptr, &mMatricesUniformMemory ) )
-        {
-            std::ostringstream stream;
-            stream << "vkAllocateMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        vkBindBufferMemory ( mVkDevice, mMatricesUniformBuffer, mMatricesUniformMemory, 0 );
-    }
-
     void VulkanRenderer::SetupLayersAndExtensions()
     {
         mInstanceExtensionNames.push_back ( VK_KHR_SURFACE_EXTENSION_NAME );
@@ -285,6 +236,11 @@ namespace AeonGames
         mInstanceExtensionNames.push_back ( VK_KHR_XLIB_SURFACE_EXTENSION_NAME );
 #endif
         mDeviceExtensionNames.push_back ( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
+    }
+
+    const VulkanRenderer::Matrices & VulkanRenderer::GetMatrices() const
+    {
+        return mMatrices;
     }
 
     void VulkanRenderer::InitializeInstance()
@@ -578,20 +534,6 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::FinalizeMatricesUniform()
-    {
-        if ( mMatricesUniformMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVkDevice, mMatricesUniformMemory, nullptr );
-            mMatricesUniformMemory = VK_NULL_HANDLE;
-        }
-        if ( mMatricesUniformBuffer != VK_NULL_HANDLE )
-        {
-            vkDestroyBuffer ( mVkDevice, mMatricesUniformBuffer, nullptr );
-            mMatricesUniformBuffer = VK_NULL_HANDLE;
-        }
-    }
-
     void VulkanRenderer::FinalizeInstance()
     {
         if ( mVkInstance != VK_NULL_HANDLE )
@@ -634,22 +576,6 @@ namespace AeonGames
         {
             vkDestroyRenderPass ( mVkDevice, mVkRenderPass, nullptr );
         }
-    }
-
-    void VulkanRenderer::Render ( const VulkanWindow* aWindow, const std::shared_ptr<RenderModel> aModel ) const
-    {
-        /**@todo I Do NOT like this, Window shouldn't be a param,
-        and I think a vkCmd function should be used to set the matrices,
-        as it is it will blow up when we have multiple models in different locations.*/
-        assert ( aWindow && "NULL Window Pointer" );
-        void* data = nullptr;
-        if ( VkResult result = vkMapMemory ( mVkDevice, mMatricesUniformMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
-        {
-            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-        }
-        memcpy ( data, &mMatrices, sizeof ( mMatrices ) );
-        vkUnmapMemory ( mVkDevice, mMatricesUniformMemory );
-        static_cast<VulkanModel*> ( aModel.get() )->Render ( *aWindow, 0, 0.0f );
     }
 
     const std::shared_ptr<RenderModel> VulkanRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const

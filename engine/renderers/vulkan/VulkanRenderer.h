@@ -32,7 +32,6 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        void Render ( const VulkanWindow* aWindow, const std::shared_ptr<RenderModel> aModel ) const;
         const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
@@ -54,8 +53,6 @@ namespace AeonGames
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
-        /* Not sure the Matrices uniform buffer belongs here, push constants may be a better idea.*/
-        const VkBuffer& GetMatricesUniformBuffer() const;
         struct Matrices
         {
             float mViewMatrix[16];
@@ -67,6 +64,7 @@ namespace AeonGames
             float mModelViewProjectionMatrix[16];
             float mNormalMatrix[12];
         };
+        const Matrices& GetMatrices() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -75,7 +73,6 @@ namespace AeonGames
         void InitializeRenderPass();
         void InitializeCommandPool();
         void InitializeDebug();
-        void InitializeMatricesUniform();
         void SetupLayersAndExtensions();
         void SetupDebug();
         void LoadFunctions();
@@ -86,7 +83,6 @@ namespace AeonGames
         void FinalizeRenderPass();
         void FinalizeCommandPool();
         void FinalizeDebug();
-        void FinalizeMatricesUniform();
 
         bool mValidate = true;
         VkInstance mVkInstance = VK_NULL_HANDLE;
@@ -102,8 +98,6 @@ namespace AeonGames
         VkFence mVkFence = VK_NULL_HANDLE;
         VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
         VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
-        VkBuffer mMatricesUniformBuffer = VK_NULL_HANDLE;
-        VkDeviceMemory mMatricesUniformMemory = VK_NULL_HANDLE;
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
         uint32_t mQueueFamilyIndex = 0;
