@@ -125,6 +125,7 @@ namespace AeonGames
         case Vector3Float:
             return sizeof ( float ) * 3;
         case Vector4Byte:
+        case Vector4ByteNormalized:
             return sizeof ( uint8_t ) * 4;
         }
         return 0;
