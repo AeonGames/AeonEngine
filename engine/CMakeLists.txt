@@ -77,6 +77,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ModelInstance.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/RenderModel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
@@ -95,7 +96,9 @@ set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
     core/InitializeFinalize.cpp
     core/LogLevel.cpp
-    scenegraph/Model.cpp)
+    core/Model.cpp
+    core/ModelInstance.cpp
+    )
 
 set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Scene.cpp

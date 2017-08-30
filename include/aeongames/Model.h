@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_MODEL_H
 #include "aeongames/Memory.h"
 #include <vector>
+#include <tuple>
 #include "aeongames/Platform.h"
 
 namespace AeonGames

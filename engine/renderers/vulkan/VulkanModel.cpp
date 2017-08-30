@@ -57,7 +57,14 @@ namespace AeonGames
                 {
                     mSkeleton->SetPose ( mModel->GetAnimations() [aAnimationIndex], aTime );
                 }
-                //vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( i )->GetSkeletonBuffer(), 0, nullptr );
+#if 0
+                /* This has to be called outside of a render pass, which currently it is not. */
+                VkBufferCopy buffer_copy {};
+                buffer_copy.dstOffset = 0;
+                buffer_copy.srcOffset = 0;
+                buffer_copy.size = mSkeleton->GetBufferSize();
+                vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( i )->GetSkeletonBuffer(), 1, &buffer_copy );
+#endif
             }
             std::get<2> ( i )->Render();
         }

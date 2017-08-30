@@ -378,8 +378,7 @@ namespace AeonGames
 
     void VulkanWindow::ResizeViewport ( uint32_t aWidth, uint32_t aHeight )
     {
-        if ( ( mVkSurfaceCapabilitiesKHR.currentExtent.width &&
-               mVkSurfaceCapabilitiesKHR.currentExtent.height ) &&
+        if ( ( aWidth && aHeight ) &&
              ( mVkSurfaceCapabilitiesKHR.currentExtent.width != aWidth ||
                mVkSurfaceCapabilitiesKHR.currentExtent.height != aHeight ) )
         {
@@ -502,7 +501,6 @@ namespace AeonGames
         present_info.pSwapchains = &GetSwapchain();
         present_info.pImageIndices = &GetActiveImageIndex();
         present_info.pResults = result_array.data();
-        //present_info.pResults = nullptr;
         if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info ) )
         {
             std::cout << GetVulkanResultString ( result ) << std::endl;

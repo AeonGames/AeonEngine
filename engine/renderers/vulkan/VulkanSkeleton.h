@@ -30,6 +30,7 @@ namespace AeonGames
         ~VulkanSkeleton();
         VkBuffer GetBuffer() const;
         void SetPose ( const std::shared_ptr<const Animation> aAnimation, float aTime ) const;
+        size_t GetBufferSize() const;
     private:
         void Initialize();
         void Finalize();

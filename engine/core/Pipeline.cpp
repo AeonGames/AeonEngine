@@ -112,7 +112,8 @@ namespace AeonGames
     Pipeline::AttributeFormat Pipeline::GetFormat ( AttributeBits aAttributeBit ) const
     {
         return ( aAttributeBit & VertexUVBit ) ? Vector2Float :
-               ( aAttributeBit & ( VertexWeightIndicesBit | VertexWeightsBit ) ) ? Vector4Byte : Vector3Float;
+               ( aAttributeBit & VertexWeightIndicesBit ) ? Vector4Byte :
+               ( aAttributeBit & VertexWeightsBit ) ? Vector4ByteNormalized : Vector3Float;
     }
 
     uint32_t Pipeline::GetSize ( AttributeBits aAttributeBit ) const
@@ -222,19 +223,6 @@ namespace AeonGames
                 "mat4 ModelViewProjectionMatrix;\n"
                 "mat3 NormalMatrix;\n"
                 "};\n" );
-            if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
-            {
-                std::string skeleton (
-                    "#ifdef VULKAN\n"
-                    "layout(std140, set = 0, binding = 2) uniform Skeleton{\n"
-                    "#else\n"
-                    "layout(std140, binding = 2) uniform Skeleton{\n"
-                    "#endif\n"
-                    "mat4 skeleton[256];\n"
-                    "};\n"
-                );
-                mVertexShader.append ( skeleton );
-            }
 
             mDefaultMaterial = std::make_shared<Material> ( pipeline_buffer.default_material() );
             if ( mDefaultMaterial->GetUniformMetaData().size() )
@@ -276,7 +264,20 @@ namespace AeonGames
                 mFragmentShader.append ( properties );
                 mFragmentShader.append ( samplers );
             }
-
+            if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+            {
+                std::string skeleton (
+                    "#ifdef VULKAN\n"
+                    "layout(set = 0, binding = 2, std140) uniform Skeleton{\n"
+                    "#else\n"
+                    "layout(std140, binding = 2) uniform Skeleton{\n"
+                    "#endif\n"
+                    "mat4 skeleton[256];\n"
+                    "};\n"
+                );
+                mVertexShader.append ( skeleton );
+                mFragmentShader.append ( skeleton );
+            }
             switch ( pipeline_buffer.vertex_shader().source_case() )
             {
             case ShaderBuffer::SourceCase::kCode:
@@ -297,7 +298,7 @@ namespace AeonGames
             }
         }
         pipeline_buffer.Clear();
-#if 0
+#if 1
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
         shader_vert << mVertexShader;
