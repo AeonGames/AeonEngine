@@ -56,6 +56,10 @@ namespace AeonGames
         const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
         std::array<VkDescriptorSet, 2> descriptor_sets{ mVkDescriptorSet, material->GetDescriptorSet() };
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+        vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
+                             mVkPipelineLayout,
+                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                             0, sizeof ( VulkanRenderer::Matrices ), &mVulkanRenderer->GetMatrices() );
         vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetViewport() );
         vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
 #if 0
@@ -225,15 +229,8 @@ namespace AeonGames
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 3 );
+        descriptor_set_layout_bindings.reserve ( 2 );
         descriptor_set_layout_bindings.emplace_back();
-        // Matrices binding
-        descriptor_set_layout_bindings[0].binding = 0;
-        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-        descriptor_set_layout_bindings[0].descriptorCount = 1;
-        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
         // Properties binding
         if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
         {
@@ -325,26 +322,22 @@ namespace AeonGames
         }
 
         uint32_t descriptor_count = 0;
-        std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos = { {} };
-        descriptor_buffer_infos[descriptor_count].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
-        descriptor_buffer_infos[descriptor_count].offset = 0;
-        descriptor_buffer_infos[descriptor_count].range = sizeof ( VulkanRenderer::Matrices );
+        std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
 
         if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
         {
-            descriptor_count += 1;
             descriptor_buffer_infos[descriptor_count].buffer = mVkPropertiesUniformBuffer;
             descriptor_buffer_infos[descriptor_count].offset = 0;
             descriptor_buffer_infos[descriptor_count].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
+            descriptor_count += 1;
         }
         if ( mVkSkeletonBuffer && mVkSkeletonMemory )
         {
-            descriptor_count += 1;
             descriptor_buffer_infos[descriptor_count].buffer = mVkSkeletonBuffer;
             descriptor_buffer_infos[descriptor_count].offset = 0;
             descriptor_buffer_infos[descriptor_count].range = 256 * 16 * sizeof ( float );
+            descriptor_count += 1;
         }
-        descriptor_count += 1;
 
         std::array<VkWriteDescriptorSet, 1> write_descriptor_sets;
         write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

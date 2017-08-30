@@ -16,6 +16,7 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
+#include "VulkanModel.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -469,7 +470,7 @@ namespace AeonGames
 
     void VulkanWindow::Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex, float aTime ) const
     {
-        mVulkanRenderer->Render ( this, aModel );
+        reinterpret_cast<VulkanModel*> ( aModel.get() )->Render ( *this, aAnimationIndex, aTime );
     }
 
     void VulkanWindow::EndRender() const
