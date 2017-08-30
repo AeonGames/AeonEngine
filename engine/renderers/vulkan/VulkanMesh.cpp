@@ -240,7 +240,7 @@ namespace AeonGames
                 }
                 else
                 {
-                    /**@note upcast 8 bit indices.*/
+                    /**@note upcast 16 bit indices.*/
                     for ( size_t j = 0; j < triangle_groups[i].mIndexBuffer.size(); ++j )
                     {
                         reinterpret_cast<uint16_t*> ( data ) [j] = triangle_groups[i].mIndexBuffer[j];

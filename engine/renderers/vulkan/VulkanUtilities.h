@@ -58,6 +58,8 @@ namespace AeonGames
             return VK_FORMAT_R32G32B32_SFLOAT;
         case Pipeline::Vector4Byte:
             return VK_FORMAT_R8G8B8A8_UINT;
+        case Pipeline::Vector4ByteNormalized:
+            return VK_FORMAT_R8G8B8A8_UNORM;
         }
         return VK_FORMAT_UNDEFINED;
     }

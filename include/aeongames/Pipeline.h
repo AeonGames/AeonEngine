@@ -50,6 +50,7 @@ namespace AeonGames
             Vector2Float,
             Vector3Float,
             Vector4Byte,
+            Vector4ByteNormalized,
         };
         Pipeline ( std::string  aFilename );
         ~Pipeline();

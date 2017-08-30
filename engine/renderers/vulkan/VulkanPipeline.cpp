@@ -56,12 +56,15 @@ namespace AeonGames
         const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
         std::array<VkDescriptorSet, 2> descriptor_sets{ mVkDescriptorSet, material->GetDescriptorSet() };
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
-        vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,
-                            material->GetUniformData().size(), material->GetUniformData().data() );
-        vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, ( descriptor_sets[1] == VK_NULL_HANDLE ) ? 1 : 2, descriptor_sets.data(), 0, nullptr );
         vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetViewport() );
         vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
+#if 0
+        /** @todo vkCmdUpdateBuffer is not supposed to be called inside a render pass... but it works here.*/
+        vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,
+                            material->GetUniformData().size(), material->GetUniformData().data() );
+#endif
+        vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, ( descriptor_sets[1] == VK_NULL_HANDLE ) ? 1 : 2, descriptor_sets.data(), 0, nullptr );
     }
 
     VkBuffer VulkanPipeline::GetSkeletonBuffer() const
@@ -114,6 +117,14 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
             vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformBuffer, mVkPropertiesUniformMemory, 0 );
+
+            void* properties = nullptr;
+            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformMemory, 0, VK_WHOLE_SIZE, 0, &properties ) )
+            {
+                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            }
+            memcpy ( properties, mDefaultMaterial->GetUniformData().data(), mDefaultMaterial->GetUniformData().size() );
+            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformMemory );
         }
     }
 
@@ -140,7 +151,7 @@ namespace AeonGames
             buffer_create_info.pNext = nullptr;
             buffer_create_info.flags = 0;
             buffer_create_info.size = 256 * 16 * sizeof ( float );
-            buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             buffer_create_info.queueFamilyIndexCount = 0;
             buffer_create_info.pQueueFamilyIndices = nullptr;
@@ -175,6 +186,25 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
             vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonBuffer, mVkSkeletonMemory, 0 );
+
+            float* joint_array = nullptr;
+            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &joint_array ) ) )
+            {
+                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            }
+
+            const float identity[16] =
+            {
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            };
+            for ( size_t i = 0; i < 256; ++i )
+            {
+                memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
+            }
+            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonMemory );
         }
     }
 

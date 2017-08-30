@@ -64,14 +64,19 @@ namespace AeonGames
         vkUnmapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory );
     }
 
+    size_t VulkanSkeleton::GetBufferSize() const
+    {
+        return mSkeleton->GetJoints().size() * sizeof ( float ) * 16;
+    }
+
     void VulkanSkeleton::Initialize()
     {
         VkBufferCreateInfo buffer_create_info{};
         buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_create_info.pNext = nullptr;
         buffer_create_info.flags = 0;
-        buffer_create_info.size = mSkeleton->GetJoints().size() * sizeof ( float ) * 16;
-        buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        buffer_create_info.size = GetBufferSize();
+        buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         buffer_create_info.queueFamilyIndexCount = 0;
         buffer_create_info.pQueueFamilyIndices = nullptr;
