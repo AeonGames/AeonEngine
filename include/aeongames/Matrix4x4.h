@@ -1,5 +1,5 @@
 /*
-Copyright 2015-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ namespace AeonGames
         DLL Matrix4x4& operator*= ( const Matrix4x4& lhs );
         //@}
     protected:
-        /// Scale rotation and translation vectors
+        /// Lineal row mayor matrix.
         float mMatrix[16];
     };
     DLL const Matrix4x4 operator* ( const Matrix4x4& lhs, const Matrix4x4& rhs );

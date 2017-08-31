@@ -136,14 +136,7 @@ namespace AeonGames
         uint32_t offset = 0;
         for ( uint32_t i = 1; i != aAttributeBit; i = i << 1 )
         {
-#if 0
-            if ( i & mAttributes )
-            {
-#endif
-                offset += GetSize ( static_cast<AttributeBits> ( i ) );
-#if 0
-            }
-#endif
+            offset += GetSize ( static_cast<AttributeBits> ( i ) );
         }
         return offset;
     }
