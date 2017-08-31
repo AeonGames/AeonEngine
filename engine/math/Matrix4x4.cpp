@@ -19,6 +19,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static_assert ( sizeof ( Matrix4x4 ) == sizeof ( float ) * 16, "Size of Matrix4x4 is not the same as float[16]." );
     Matrix4x4::Matrix4x4()
     {
         SetIdentityMatrix4x4 ( mMatrix );

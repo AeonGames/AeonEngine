@@ -20,14 +20,18 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ModelInstance.h"
+#include "aeongames/Animation.h"
+#include "aeongames/Skeleton.h"
+#include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
 {
     ModelInstance::ModelInstance ( const std::shared_ptr<const Model> aModel ) :
         mModel ( aModel ),
         mEnabledAssemblies ( mModel->GetMeshes().size(), true ),
-        mCurrentAnimation ( 0 ),
-        mAnimationTime ( 0.0f )
+        mAnimationIndex ( 0 ),
+        mAnimationTime ( 0.0f ),
+        mSkeletonAnimation ( mModel->GetSkeleton() ? mModel->GetSkeleton()->GetJoints().size() * 16 : 0 )
     {
         try
         {
@@ -39,14 +43,95 @@ namespace AeonGames
             throw;
         }
     }
+
     ModelInstance::~ModelInstance()
     {
         Finalize();
     }
+
+    void ModelInstance::EnableAssembly ( size_t aAssemblyIndex, bool aEnabled )
+    {
+        if ( mEnabledAssemblies.size() < aAssemblyIndex )
+        {
+            mEnabledAssemblies[aAssemblyIndex] = aEnabled;
+        }
+    }
+
+    void ModelInstance::EnableAllAssemblies ( bool aEnabled )
+    {
+        mEnabledAssemblies.assign ( mEnabledAssemblies.size(), aEnabled );
+    }
+
+    size_t ModelInstance::GetAnimationIndex ( size_t aAnimationIndex ) const
+    {
+        return mAnimationIndex;
+    }
+
+    void ModelInstance::SetAnimationIndex ( size_t aAnimationIndex )
+    {
+        mAnimationIndex = aAnimationIndex;
+        // Reset Animation Time
+        mAnimationTime = 0.0f;
+    }
+
+    float ModelInstance::GetAnimationTime() const
+    {
+        return mAnimationTime;
+    }
+
+    void ModelInstance::SetAnimationTime ( float aTime )
+    {
+        if ( mModel->GetAnimations().size() > mAnimationIndex )
+        {
+            float duration = mModel->GetAnimations() [mAnimationIndex]->GetDuration();
+            if ( ( aTime <= duration ) && ( aTime >= 0.0f ) )
+            {
+                mAnimationTime = aTime;
+            }
+            else if ( duration > aTime )
+            {
+                mAnimationTime = duration;
+            }
+            else // if (aTime < 0.0f)
+            {
+                mAnimationTime = 0.0f;
+            }
+            UpdateSkeletonAnimation();
+        }
+    }
+
+    void ModelInstance::StepAnimation ( float aDelta )
+    {
+        if ( mModel->GetAnimations().size() > mAnimationIndex )
+        {
+            mAnimationTime = fmodf ( mAnimationTime + aDelta, mModel->GetAnimations() [mAnimationIndex]->GetDuration() );
+            UpdateSkeletonAnimation();
+        }
+    }
+
+    const std::vector<Matrix4x4>& ModelInstance::GetSkeletonAnimation() const
+    {
+        return mSkeletonAnimation;
+    }
+
     void ModelInstance::Initialize()
     {
     }
+
     void ModelInstance::Finalize()
     {
+    }
+
+    void ModelInstance::UpdateSkeletonAnimation()
+    {
+        if ( mModel->GetSkeleton() && ( mModel->GetAnimations().size() > mAnimationIndex ) )
+        {
+            for ( size_t i = 0; i < mModel->GetSkeleton()->GetJoints().size(); ++i )
+            {
+                mSkeletonAnimation[i] =
+                    ( mModel->GetAnimations() [mAnimationIndex]->GetTransform ( i, mAnimationTime ) *
+                      mModel->GetSkeleton()->GetJoints() [i].GetInvertedTransform() );
+            }
+        }
     }
 }
