@@ -1,4 +1,4 @@
-﻿---
+---
 layout: post
 title: "Vulkan shaders now support 2D samplers"
 date: 2017-06-19 14:41:19 -0600

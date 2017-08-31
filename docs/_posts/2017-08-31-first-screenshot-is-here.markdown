@@ -1,4 +1,4 @@
-﻿---
+---
 layout: post
 title: "First Screenshot is Here!"
 date: 2017-08-31 14:05:47 -0600
