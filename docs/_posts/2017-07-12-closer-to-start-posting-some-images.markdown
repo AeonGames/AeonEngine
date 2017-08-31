@@ -1,4 +1,4 @@
-﻿---
+---
 layout: post
 title: "Closer to start posting some images"
 date: 2017-07-12 17:19:51 -0600
