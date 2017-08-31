@@ -12,8 +12,8 @@ layout: default
     <div class="screenshot-item col-md-4 col-sm-6 col-xs-12" data-tags='{{ i.tags | jsonify | downcase }}'>
     	<div class="well screenshot-outer">
     		<div class="screenshot-inner">
-    			<a href="/static/screenshots/{{ i.image }}" class="thickbox">
-    			<div class="screenshot-img bordered" style="background-image: url('/static/screenshots/{{ i.image }}');"></div>
+    			<a href="https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/screenshots/{{ i.image }}" class="thickbox">
+    			<div class="screenshot-img bordered" style="background-image: url('https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/screenshots/{{ i.image }}');"></div>
                 </a>
                 {% if i.url %} <a href="{{ i.url }}"> {% endif %}
     			<h3 class="screenshot-headlines">{{ i.name }}</h3>
