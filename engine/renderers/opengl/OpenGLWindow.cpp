@@ -83,9 +83,9 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex, float aTime ) const
+    void OpenGLWindow::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
     {
-        static_cast<OpenGLModel*> ( aModel.get() )->Render ( aAnimationIndex, aTime );
+        mOpenGLRenderer->Render ( aModel, aAnimationIndex, aTime );
     }
 
     void OpenGLWindow::EndRender() const

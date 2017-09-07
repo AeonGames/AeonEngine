@@ -51,7 +51,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanPipeline::Use ( const VulkanWindow& aWindow, const std::shared_ptr<VulkanMaterial>& aMaterial ) const
+    void VulkanPipeline::Use ( const std::shared_ptr<VulkanMaterial>& aMaterial ) const
     {
         const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
         std::array<VkDescriptorSet, 2> descriptor_sets{ mVkDescriptorSet, material->GetDescriptorSet() };
@@ -60,8 +60,6 @@ namespace AeonGames
                              mVkPipelineLayout,
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                              0, sizeof ( VulkanRenderer::Matrices ), &mVulkanRenderer->GetMatrices() );
-        vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetViewport() );
-        vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &aWindow.GetScissor() );
 #if 0
         /** @todo vkCmdUpdateBuffer is not supposed to be called inside a render pass... but it works here.*/
         vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,

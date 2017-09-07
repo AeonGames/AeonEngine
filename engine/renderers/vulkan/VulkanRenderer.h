@@ -18,6 +18,7 @@ limitations under the License.
 #define AEONGAMES_VULKANRENDERER_H
 
 #include <vulkan/vulkan.h>
+#include <unordered_map>
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Memory.h"
@@ -32,7 +33,9 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
+        void Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex = 0, float aTime = 0.0f ) const final;
+        void LoadModel ( const std::shared_ptr<Model> aModel ) final;
+        void UnloadModel ( const std::shared_ptr<Model> aModel ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
@@ -105,6 +108,7 @@ namespace AeonGames
         std::vector<const char*> mInstanceExtensionNames;
         std::vector<const char*> mDeviceLayerNames;
         std::vector<const char*> mDeviceExtensionNames;
+        std::unordered_map<std::string, std::unique_ptr<VulkanModel>> mModelLibrary;
         // Instance Functions
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;

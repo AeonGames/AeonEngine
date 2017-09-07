@@ -15,7 +15,6 @@ limitations under the License.
 */
 #ifndef AEONGAMES_VULKANMODEL_H
 #define AEONGAMES_VULKANMODEL_H
-#include "aeongames/RenderModel.h"
 
 namespace AeonGames
 {
@@ -26,13 +25,13 @@ namespace AeonGames
     class VulkanMesh;
     class VulkanSkeleton;
     class VulkanWindow;
-    class VulkanModel : public RenderModel
+    class VulkanModel
     {
     public:
         VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanModel();
-        void Render ( const VulkanWindow& aWindow, size_t aAnimationIndex, float aTime ) const;
-        const std::shared_ptr<const Model>& GetModel() const final;
+        void Render ( size_t aAnimationIndex, float aTime ) const;
+        const std::shared_ptr<const Model>& GetModel() const;
     private:
         std::shared_ptr<const Model> mModel;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;

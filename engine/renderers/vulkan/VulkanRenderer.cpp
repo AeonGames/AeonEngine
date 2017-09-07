@@ -96,6 +96,28 @@ namespace AeonGames
         FinalizeInstance();
     }
 
+    void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
+    {
+        try
+        {
+            mModelLibrary.at ( aModel->GetFilename() )->Render ( aAnimationIndex, aTime );
+        }
+        catch ( std::out_of_range& e )
+        {
+            std::cout << "Model " << aModel->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+        }
+    }
+
+    void VulkanRenderer::LoadModel ( const std::shared_ptr<Model> aModel )
+    {
+        mModelLibrary[aModel->GetFilename()] = std::make_unique<VulkanModel> ( aModel, shared_from_this() );
+    }
+
+    void VulkanRenderer::UnloadModel ( const std::shared_ptr<Model> aModel )
+    {
+        mModelLibrary.erase ( aModel->GetFilename() );
+    }
+
     const VkDevice & VulkanRenderer::GetDevice() const
     {
         return mVkDevice;
@@ -576,12 +598,6 @@ namespace AeonGames
         {
             vkDestroyRenderPass ( mVkDevice, mVkRenderPass, nullptr );
         }
-    }
-
-    const std::shared_ptr<RenderModel> VulkanRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
-    {
-        /**@note Do not keep any reference to the returned object to avoid circular references. */
-        return Get<VulkanModel> ( aModel.get(), aModel, shared_from_this() );
     }
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const

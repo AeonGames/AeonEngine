@@ -57,6 +57,28 @@ namespace AeonGames
         Finalize();
     }
 
+    void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
+    {
+        try
+        {
+            mModelLibrary.at ( aModel->GetFilename() )->Render ( aAnimationIndex, aTime );
+        }
+        catch ( std::out_of_range& e )
+        {
+            std::cout << "Model " << aModel->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+        }
+    }
+
+    void OpenGLRenderer::LoadModel ( const std::shared_ptr<Model> aModel )
+    {
+        mModelLibrary[aModel->GetFilename()] = std::make_unique<OpenGLModel> ( aModel, shared_from_this() );
+    }
+
+    void OpenGLRenderer::UnloadModel ( const std::shared_ptr<Model> aModel )
+    {
+        mModelLibrary.erase ( aModel->GetFilename() );
+    }
+
     void* OpenGLRenderer::GetWindowId() const
     {
         return mWindowId;
@@ -65,11 +87,6 @@ namespace AeonGames
     GLuint OpenGLRenderer::GetMatricesBuffer() const
     {
         return mMatricesBuffer;
-    }
-
-    const std::shared_ptr<RenderModel> OpenGLRenderer::GetRenderModel ( const std::shared_ptr<Model> aModel ) const
-    {
-        return Get<OpenGLModel> ( aModel.get(), aModel, shared_from_this() );
     }
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const

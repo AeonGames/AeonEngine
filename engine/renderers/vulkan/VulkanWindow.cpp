@@ -448,6 +448,9 @@ namespace AeonGames
             std::cout << GetVulkanResultString ( result ) << std::endl;
         }
 
+        vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &GetViewport() );
+        vkCmdSetScissor ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &GetScissor() );
+
         VkRect2D render_area{ { 0, 0 }, { GetWidth(), GetHeight() } };
         /* [1] is depth/stencil [0] is color.*/
         std::array<VkClearValue, 2> clear_values{ { { 0 }, { 0 } } };
@@ -468,9 +471,9 @@ namespace AeonGames
         vkCmdBeginRenderPass ( mVulkanRenderer->GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
     }
 
-    void VulkanWindow::Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex, float aTime ) const
+    void VulkanWindow::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
     {
-        reinterpret_cast<VulkanModel*> ( aModel.get() )->Render ( *this, aAnimationIndex, aTime );
+        mVulkanRenderer->Render ( aModel, aAnimationIndex, aTime );
     }
 
     void VulkanWindow::EndRender() const

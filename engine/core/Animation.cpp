@@ -84,11 +84,7 @@ namespace AeonGames
         {
             return mFrames[frame2][aBoneIndex];
         }
-        else
-        {
-            return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
-        }
-        return Transform();
+        return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
     }
 
     void Animation::Initialize()
