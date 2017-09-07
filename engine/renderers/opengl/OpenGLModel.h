@@ -16,7 +16,6 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLMODEL_H
 #define AEONGAMES_OPENGLMODEL_H
 #include "OpenGLFunctions.h"
-#include "aeongames/RenderModel.h"
 
 namespace AeonGames
 {
@@ -26,13 +25,13 @@ namespace AeonGames
     class OpenGLMaterial;
     class OpenGLMesh;
     class OpenGLSkeleton;
-    class OpenGLModel : public RenderModel
+    class OpenGLModel
     {
     public:
         OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         virtual ~OpenGLModel();
         void Render ( size_t aAnimationIndex, float aTime ) const;
-        const std::shared_ptr<const Model>& GetModel() const final;
+        const std::shared_ptr<const Model>& GetModel() const;
     private:
         void Initialize();
         void Finalize();

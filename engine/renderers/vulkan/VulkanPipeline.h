@@ -33,7 +33,7 @@ namespace AeonGames
     public:
         VulkanPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         ~VulkanPipeline();
-        void Use ( const VulkanWindow& aWindow, const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
+        void Use ( const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
         VkBuffer GetSkeletonBuffer() const;
     private:
         void InitializePropertiesUniform();

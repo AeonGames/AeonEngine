@@ -25,7 +25,6 @@ limitations under the License.
 #include "EngineWindow.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
-#include "aeongames/RenderModel.h"
 #include "aeongames/Animation.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
@@ -80,6 +79,10 @@ namespace AeonGames
     {
         // Force model deletion
         stop();
+        if ( mModel )
+        {
+            mRenderer->UnloadModel ( mModel );
+        }
         mWindow.reset();
         mModel.reset();
     }
@@ -102,16 +105,20 @@ namespace AeonGames
         }
     }
 
-    void EngineWindow::setMesh ( const QString & filename )
+    void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        auto model = mRenderer->GetRenderModel ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) );
-        assert ( model && "Model is nullptr" );
-        if ( model )
+        if ( mModel )
         {
-            mModel = model;
+            mRenderer->UnloadModel ( mModel );
+        }
+        mModel = Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() );
+        assert ( mModel && "Model is nullptr" );
+        if ( mModel )
+        {
+            mRenderer->LoadModel ( mModel );
             // Adjust camera position so model fits the frustum tightly.
-            const float* const center_radius = mModel->GetModel()->GetCenterRadii();
+            const float* const center_radius = mModel->GetCenterRadii();
             float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
                                    ( center_radius[4] * center_radius[4] ) +
                                    ( center_radius[5] * center_radius[5] ) );
@@ -188,8 +195,8 @@ namespace AeonGames
                         delta = 1.0f / 30.0f;
                     }
                 }
-                mAnimationTime = ( mModel->GetModel()->GetAnimations().size() ) ?
-                                 fmodf ( mAnimationTime + delta, mModel->GetModel()->GetAnimations() [0]->GetDuration() ) : 0.0f;
+                mAnimationTime = ( mModel->GetAnimations().size() ) ?
+                                 fmodf ( mAnimationTime + delta, mModel->GetAnimations() [0]->GetDuration() ) : 0.0f;
                 mWindow->Render ( mModel, 0, mAnimationTime );
             }
             mWindow->EndRender();

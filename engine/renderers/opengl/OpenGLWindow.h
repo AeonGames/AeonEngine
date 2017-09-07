@@ -23,6 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Model;
     class OpenGLRenderer;
     class OpenGLWindow : public Window
     {
@@ -32,7 +33,7 @@ namespace AeonGames
         void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() const final;
-        void Render ( const std::shared_ptr<RenderModel> aModel, size_t aAnimationIndex, float aTime ) const final;
+        void Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const final;
         void EndRender() const final;
     private:
         void Initialize();

@@ -46,11 +46,11 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render ( const VulkanWindow& aWindow, size_t aAnimationIndex, float aTime ) const
+    void VulkanModel::Render ( size_t aAnimationIndex, float aTime ) const
     {
         for ( auto& i : mMeshes )
         {
-            std::get<0> ( i )->Use ( aWindow, std::get<1> ( i ) );
+            std::get<0> ( i )->Use ( std::get<1> ( i ) );
             if ( mSkeleton )
             {
                 if ( aAnimationIndex < mModel->GetAnimations().size() )

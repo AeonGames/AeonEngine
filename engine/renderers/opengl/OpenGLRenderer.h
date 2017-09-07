@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLRENDERER_H
 #define AEONGAMES_OPENGLRENDERER_H
 
+#include <unordered_map>
 #include "aeongames/Memory.h"
 #include "aeongames/Renderer.h"
 #include "OpenGLFunctions.h"
@@ -34,7 +35,9 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        const std::shared_ptr<RenderModel> GetRenderModel ( const std::shared_ptr<Model> aModel ) const final;
+        void Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex = 0, float aTime = 0.0f ) const final;
+        void LoadModel ( const std::shared_ptr<Model> aModel ) final;
+        void UnloadModel ( const std::shared_ptr<Model> aModel ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;
@@ -46,6 +49,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         void UpdateMatrices();
+        std::unordered_map<std::string, std::unique_ptr<OpenGLModel>> mModelLibrary;
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
@@ -95,7 +99,6 @@ namespace AeonGames
         float* mModelViewMatrix = mMatrices + ( 16 * 4 );
         float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
         float* mNormalMatrix = mMatrices + ( 16 * 6 );
-
         /// Internal Window Id, required to create initial shared context
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
