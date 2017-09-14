@@ -30,12 +30,13 @@ namespace AeonGames
         DLL ~ModelInstance();
         DLL void EnableAssembly ( size_t aAssemblyIndex, bool aEnabled = true );
         DLL void EnableAllAssemblies ( bool aEnabled = true );
-        DLL size_t GetAnimationIndex ( size_t aAnimationIndex ) const;
+        DLL size_t GetAnimationIndex() const;
         DLL void SetAnimationIndex ( size_t aAnimationIndex );
         DLL float GetAnimationTime() const;
         DLL void  SetAnimationTime ( float aTime = 0.0f );
         DLL void StepAnimation ( float aDelta );
         DLL const std::vector<Matrix4x4>& GetSkeletonAnimation() const;
+        DLL const std::shared_ptr<const Model>& GetModel() const;
     private:
         void Initialize();
         void Finalize();

@@ -195,6 +195,7 @@ namespace AeonGames
 
     void OpenGLRenderer::Finalize()
     {
+        mModelLibrary.clear();
         HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
         wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
         OPENGL_CHECK_ERROR_NO_THROW;

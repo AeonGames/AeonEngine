@@ -29,15 +29,15 @@ namespace AeonGames
     class Pipeline;
     class Texture;
     class Model;
-    class RenderModel;
+    class ModelInstance;
     class Renderer
     {
     public:
-        virtual void Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex = 0, float aTime = 0.0f ) const = 0;
+        virtual void Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const = 0;
         ///@name Resource Allocation Functions
         ///@{
-        virtual void LoadModel ( const std::shared_ptr<Model> aModel ) = 0;
-        virtual void UnloadModel ( const std::shared_ptr<Model> aModel ) = 0;
+        virtual void LoadModel ( const std::shared_ptr<const Model>& aModel ) = 0;
+        virtual void UnloadModel ( const std::shared_ptr<const Model>& aModel ) = 0;
         ///@}
         ///@name Window Factory
         ///@{

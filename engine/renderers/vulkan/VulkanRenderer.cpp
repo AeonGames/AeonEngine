@@ -34,6 +34,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/Window.h"
 #include "aeongames/Model.h"
+#include "aeongames/ModelInstance.h"
 #include "aeongames/ResourceCache.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
@@ -66,13 +67,11 @@ namespace AeonGames
             InitializeSemaphores();
             InitializeFence();
             InitializeRenderPass();
-            //InitializeMatricesUniform();
             InitializeCommandPool();
         }
         catch ( ... )
         {
             FinalizeCommandPool();
-            //FinalizeMatricesUniform();
             FinalizeRenderPass();
             FinalizeFence();
             FinalizeSemaphores();
@@ -87,7 +86,6 @@ namespace AeonGames
     {
         vkQueueWaitIdle ( mVkQueue );
         FinalizeCommandPool();
-        //FinalizeMatricesUniform();
         FinalizeRenderPass();
         FinalizeFence();
         FinalizeSemaphores();
@@ -96,24 +94,24 @@ namespace AeonGames
         FinalizeInstance();
     }
 
-    void VulkanRenderer::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
+    void VulkanRenderer::Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const
     {
         try
         {
-            mModelLibrary.at ( aModel->GetFilename() )->Render ( aAnimationIndex, aTime );
+            mModelLibrary.at ( aModelInstance->GetModel()->GetFilename() )->Render ( aModelInstance->GetAnimationIndex(), aModelInstance->GetAnimationTime() );
         }
         catch ( std::out_of_range& e )
         {
-            std::cout << "Model " << aModel->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+            std::cout << "Model " << aModelInstance->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
         }
     }
 
-    void VulkanRenderer::LoadModel ( const std::shared_ptr<Model> aModel )
+    void VulkanRenderer::LoadModel ( const std::shared_ptr<const Model>& aModel )
     {
         mModelLibrary[aModel->GetFilename()] = std::make_unique<VulkanModel> ( aModel, shared_from_this() );
     }
 
-    void VulkanRenderer::UnloadModel ( const std::shared_ptr<Model> aModel )
+    void VulkanRenderer::UnloadModel ( const std::shared_ptr<const Model>& aModel )
     {
         mModelLibrary.erase ( aModel->GetFilename() );
     }

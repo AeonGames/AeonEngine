@@ -471,9 +471,9 @@ namespace AeonGames
         vkCmdBeginRenderPass ( mVulkanRenderer->GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
     }
 
-    void VulkanWindow::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
+    void VulkanWindow::Render ( const std::shared_ptr<ModelInstance> aModelInstance ) const
     {
-        mVulkanRenderer->Render ( aModel, aAnimationIndex, aTime );
+        mVulkanRenderer->Render ( aModelInstance );
     }
 
     void VulkanWindow::EndRender() const

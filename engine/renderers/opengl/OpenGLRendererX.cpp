@@ -174,6 +174,7 @@ namespace AeonGames
 
     void OpenGLRenderer::Finalize()
     {
+        mModelLibrary.clear();
         if ( mWindowId )
         {
             glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, 0 );

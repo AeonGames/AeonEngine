@@ -63,7 +63,7 @@ namespace AeonGames
         mEnabledAssemblies.assign ( mEnabledAssemblies.size(), aEnabled );
     }
 
-    size_t ModelInstance::GetAnimationIndex ( size_t aAnimationIndex ) const
+    size_t ModelInstance::GetAnimationIndex () const
     {
         return mAnimationIndex;
     }
@@ -113,6 +113,11 @@ namespace AeonGames
     const std::vector<Matrix4x4>& ModelInstance::GetSkeletonAnimation() const
     {
         return mSkeletonAnimation;
+    }
+
+    const std::shared_ptr<const Model>& ModelInstance::GetModel() const
+    {
+        return mModel;
     }
 
     void ModelInstance::Initialize()

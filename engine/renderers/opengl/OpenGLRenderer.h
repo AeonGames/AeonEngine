@@ -35,9 +35,9 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex = 0, float aTime = 0.0f ) const final;
-        void LoadModel ( const std::shared_ptr<Model> aModel ) final;
-        void UnloadModel ( const std::shared_ptr<Model> aModel ) final;
+        void Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const final;
+        void LoadModel ( const std::shared_ptr<const Model>& aModel ) final;
+        void UnloadModel ( const std::shared_ptr<const Model>& aModel ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewMatrix ( const float aMatrix[16] ) final;
         void SetProjectionMatrix ( const float aMatrix[16] ) final;

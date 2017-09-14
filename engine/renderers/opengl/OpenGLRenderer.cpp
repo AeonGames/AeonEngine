@@ -36,6 +36,7 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Model.h"
+#include "aeongames/ModelInstance.h"
 
 namespace AeonGames
 {
@@ -57,24 +58,24 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const
     {
         try
         {
-            mModelLibrary.at ( aModel->GetFilename() )->Render ( aAnimationIndex, aTime );
+            mModelLibrary.at ( aModelInstance->GetModel()->GetFilename() )->Render ( aModelInstance->GetAnimationIndex(), aModelInstance->GetAnimationTime() );
         }
         catch ( std::out_of_range& e )
         {
-            std::cout << "Model " << aModel->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+            std::cout << "Model " << aModelInstance->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
         }
     }
 
-    void OpenGLRenderer::LoadModel ( const std::shared_ptr<Model> aModel )
+    void OpenGLRenderer::LoadModel ( const std::shared_ptr<const Model>& aModel )
     {
         mModelLibrary[aModel->GetFilename()] = std::make_unique<OpenGLModel> ( aModel, shared_from_this() );
     }
 
-    void OpenGLRenderer::UnloadModel ( const std::shared_ptr<Model> aModel )
+    void OpenGLRenderer::UnloadModel ( const std::shared_ptr<const Model>& aModel )
     {
         mModelLibrary.erase ( aModel->GetFilename() );
     }

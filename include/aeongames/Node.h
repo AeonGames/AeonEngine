@@ -121,9 +121,6 @@ namespace AeonGames
         DLL size_t GetIndex() const;
     protected:
         virtual void Update ( const double delta ) = 0;
-#if 0
-        virtual void Render ( Renderer* aRenderer ) = 0;
-#endif
     private:
         friend class Scene;
         std::string mName;

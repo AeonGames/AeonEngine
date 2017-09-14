@@ -31,7 +31,6 @@ namespace AeonGames
         OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         virtual ~OpenGLModel();
         void Render ( size_t aAnimationIndex, float aTime ) const;
-        const std::shared_ptr<const Model>& GetModel() const;
     private:
         void Initialize();
         void Finalize();
