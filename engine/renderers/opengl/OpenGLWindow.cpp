@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include "aeongames/ModelInstance.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
@@ -83,9 +84,9 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const std::shared_ptr<Model> aModel, size_t aAnimationIndex, float aTime ) const
+    void OpenGLWindow::Render ( const std::shared_ptr<ModelInstance> aModelInstance ) const
     {
-        mOpenGLRenderer->Render ( aModel, aAnimationIndex, aTime );
+        mOpenGLRenderer->Render ( aModelInstance );
     }
 
     void OpenGLWindow::EndRender() const

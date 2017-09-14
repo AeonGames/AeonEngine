@@ -25,6 +25,7 @@ limitations under the License.
 #include "EngineWindow.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
+#include "aeongames/ModelInstance.h"
 #include "aeongames/Animation.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
@@ -38,8 +39,8 @@ namespace AeonGames
         mStopWatch(),
         mRenderer ( aRenderer ),
         mWindow(),
-        mModel ( nullptr ),
-        mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ), mAnimationTime ( 0 ),
+        mModelInstance ( nullptr ),
+        mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
         mProjectionMatrix(),
@@ -79,12 +80,12 @@ namespace AeonGames
     {
         // Force model deletion
         stop();
-        if ( mModel )
+        if ( mModelInstance )
         {
-            mRenderer->UnloadModel ( mModel );
+            mRenderer->UnloadModel ( mModelInstance->GetModel() );
+            mModelInstance.reset();
         }
         mWindow.reset();
-        mModel.reset();
     }
 
     void EngineWindow::stop()
@@ -108,17 +109,17 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        if ( mModel )
+        if ( mModelInstance )
         {
-            mRenderer->UnloadModel ( mModel );
+            mRenderer->UnloadModel ( mModelInstance->GetModel() );
         }
-        mModel = Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() );
-        assert ( mModel && "Model is nullptr" );
-        if ( mModel )
+        mModelInstance = std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) );
+        assert ( mModelInstance && "ModelInstance is a nullptr" );
+        if ( mModelInstance )
         {
-            mRenderer->LoadModel ( mModel );
+            mRenderer->LoadModel ( mModelInstance->GetModel() );
             // Adjust camera position so model fits the frustum tightly.
-            const float* const center_radius = mModel->GetCenterRadii();
+            const float* const center_radius = mModelInstance->GetModel()->GetCenterRadii();
             float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
                                    ( center_radius[4] * center_radius[4] ) +
                                    ( center_radius[5] * center_radius[5] ) );
@@ -184,7 +185,7 @@ namespace AeonGames
         {
         case QEvent::UpdateRequest:
             mWindow->BeginRender();
-            if ( mModel )
+            if ( mModelInstance )
             {
                 float delta = 0.0f;
                 if ( mStopWatch.isValid() )
@@ -195,9 +196,8 @@ namespace AeonGames
                         delta = 1.0f / 30.0f;
                     }
                 }
-                mAnimationTime = ( mModel->GetAnimations().size() ) ?
-                                 fmodf ( mAnimationTime + delta, mModel->GetAnimations() [0]->GetDuration() ) : 0.0f;
-                mWindow->Render ( mModel, 0, mAnimationTime );
+                mModelInstance->StepAnimation ( delta );
+                mWindow->Render ( mModelInstance );
             }
             mWindow->EndRender();
             return true;

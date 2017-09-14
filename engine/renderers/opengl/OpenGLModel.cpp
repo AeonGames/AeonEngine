@@ -65,11 +65,6 @@ namespace AeonGames
         }
     }
 
-    const std::shared_ptr<const Model>& OpenGLModel::GetModel() const
-    {
-        return mModel;
-    }
-
     void OpenGLModel::Initialize()
     {
         auto& meshes = mModel->GetMeshes();

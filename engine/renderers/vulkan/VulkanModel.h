@@ -31,9 +31,12 @@ namespace AeonGames
         VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanModel();
         void Render ( size_t aAnimationIndex, float aTime ) const;
-        const std::shared_ptr<const Model>& GetModel() const;
     private:
+        /// @todo Determine whether mModel should remain a shared_ptr, change to a weak_ptr or something else.
         std::shared_ptr<const Model> mModel;
+        /** @todo Since models belong to the renderer and the renderer deletes them,
+            it may not make sence to keep the back reference as shared_ptr,
+            but this implies all renderer resources should use a standard pointer as well*/
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::shared_ptr<VulkanSkeleton> mSkeleton;
         std::vector<std::tuple<
