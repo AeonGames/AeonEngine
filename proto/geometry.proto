@@ -1,0 +1,57 @@
+// Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+package AeonGames;
+
+import "vector3.proto";
+import "vector4.proto";
+
+message BrushBuffer {
+    float SixDOPPX = 1;
+    float SixDOPPY = 2;
+    float SixDOPPZ = 3;
+    float SixDOPNX = 4;
+    float SixDOPNY = 5;
+    float SixDOPNZ = 6;
+    uint32 PlaneIndexStart = 8;
+    uint32 PlaneIndexCount = 7;
+}
+
+message KdNodeBuffer {
+    enum AxisEnum {
+        AxisX=0;
+        AxisY=1;
+        AxisZ=2;
+    }
+    AxisEnum Axis = 1;
+    float Distance = 2;
+    int32 NearIndex = 3;
+    int32 FarIndex = 4;
+}
+
+message KdLeafBuffer {
+    repeated uint32 BrushIndex=1;
+}
+
+message GeometryBuffer {
+	uint32 Version         = 1;
+    Vector3Buffer Center   = 2;
+    Vector3Buffer Radii    = 3;
+	repeated Vector4Buffer Plane = 4;
+	repeated uint32 Index = 5;
+	repeated BrushBuffer Brush = 6;
+	repeated KdNodeBuffer KdNode = 7;
+	repeated KdLeafBuffer KdLeaf = 8;
+}
