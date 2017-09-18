@@ -19,6 +19,7 @@ limitations under the License.
 #include <sstream>
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
+#include "aeongames/Matrix4x4.h"
 #include "aeongames/ResourceCache.h"
 #include "VulkanRenderer.h"
 #include "VulkanSkeleton.h"
@@ -50,17 +51,14 @@ namespace AeonGames
         return mSkeletonBuffer;
     }
 
-    void VulkanSkeleton::SetPose ( const std::shared_ptr<const Animation> aAnimation, float aTime ) const
+    void VulkanSkeleton::SetPose ( const std::vector<Matrix4x4>& aSkeleton ) const
     {
-        float* joint_array = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &joint_array ) ) )
+        void* joint_array = nullptr;
+        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, &joint_array ) )
         {
             std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
         }
-        for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
-        {
-            ( aAnimation->GetTransform ( i, aTime ) * mSkeleton->GetJoints() [i].GetInvertedTransform() ).GetMatrix ( joint_array + ( i * 16 ) );
-        }
+        memcpy ( joint_array, aSkeleton.data(), aSkeleton.size() * sizeof ( Matrix4x4 ) );
         vkUnmapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory );
     }
 

@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/Matrix4x4.h"
 #include "OpenGLSkeleton.h"
 
 namespace AeonGames
@@ -47,16 +48,13 @@ namespace AeonGames
         return mSkeletonBuffer;
     }
 
-    void OpenGLSkeleton::SetPose ( const std::shared_ptr<const Animation> aAnimation, float aTime ) const
+    void OpenGLSkeleton::SetPose ( const std::vector<Matrix4x4>& aSkeleton ) const
     {
         glBindBuffer ( GL_UNIFORM_BUFFER, mSkeletonBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
         float* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
         OPENGL_CHECK_ERROR_NO_THROW;
-        for ( size_t i = 0; i < mSkeleton->GetJoints().size(); ++i )
-        {
-            ( aAnimation->GetTransform ( i, aTime ) * mSkeleton->GetJoints() [i].GetInvertedTransform() ).GetMatrix ( joint_array + ( i * 16 ) );
-        }
+        memcpy ( joint_array, aSkeleton.data(), aSkeleton.size() * sizeof ( Matrix4x4 ) );
         glUnmapBuffer ( GL_UNIFORM_BUFFER );
         OPENGL_CHECK_ERROR_NO_THROW;
     }

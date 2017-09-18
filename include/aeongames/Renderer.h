@@ -33,7 +33,7 @@ namespace AeonGames
     class Renderer
     {
     public:
-        virtual void Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const = 0;
+        virtual void Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const = 0;
         ///@name Resource Allocation Functions
         ///@{
         virtual void LoadModel ( const std::shared_ptr<const Model>& aModel ) = 0;

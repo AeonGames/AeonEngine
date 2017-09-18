@@ -32,7 +32,7 @@ namespace AeonGames
         mEnabledAssemblies ( mModel->GetMeshes().size(), true ),
         mAnimationIndex ( 0 ),
         mAnimationTime ( 0.0f ),
-        mSkeletonAnimation ( mModel->GetSkeleton() ? mModel->GetSkeleton()->GetJoints().size() * 16 : 0 )
+        mSkeletonAnimation ( mModel->GetSkeleton() ? mModel->GetSkeleton()->GetJoints().size() : 0 )
     {
         try
         {
@@ -118,6 +118,11 @@ namespace AeonGames
     const std::shared_ptr<const Model>& ModelInstance::GetModel() const
     {
         return mModel;
+    }
+
+    bool ModelInstance::IsAssemblyEnabled ( size_t aAssemblyIndex ) const
+    {
+        return mEnabledAssemblies[aAssemblyIndex];
     }
 
     void ModelInstance::Initialize()

@@ -33,7 +33,7 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        void Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const final;
+        void Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const final;
         void LoadModel ( const std::shared_ptr<const Model>& aModel ) final;
         void UnloadModel ( const std::shared_ptr<const Model>& aModel ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;

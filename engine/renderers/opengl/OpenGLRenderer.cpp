@@ -58,11 +58,11 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<ModelInstance>& aModelInstance ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const
     {
         try
         {
-            mModelLibrary.at ( aModelInstance->GetModel()->GetFilename() )->Render ( aModelInstance->GetAnimationIndex(), aModelInstance->GetAnimationTime() );
+            mModelLibrary.at ( aModelInstance->GetModel()->GetFilename() )->Render ( aModelInstance );
         }
         catch ( std::out_of_range& e )
         {

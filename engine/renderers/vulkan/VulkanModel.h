@@ -19,6 +19,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Model;
+    class ModelInstance;
     class VulkanRenderer;
     class VulkanPipeline;
     class VulkanMaterial;
@@ -30,7 +31,7 @@ namespace AeonGames
     public:
         VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanModel();
-        void Render ( size_t aAnimationIndex, float aTime ) const;
+        void Render ( const std::shared_ptr<const ModelInstance> aInstance ) const;
     private:
         /// @todo Determine whether mModel should remain a shared_ptr, change to a weak_ptr or something else.
         std::shared_ptr<const Model> mModel;
@@ -42,7 +43,7 @@ namespace AeonGames
         std::vector<std::tuple<
         std::shared_ptr<VulkanPipeline>,
             std::shared_ptr<VulkanMaterial>,
-            std::shared_ptr<VulkanMesh>>> mMeshes;
+            std::shared_ptr<VulkanMesh>>> mAssemblies;
         void Initialize();
         void Finalize();
     };
