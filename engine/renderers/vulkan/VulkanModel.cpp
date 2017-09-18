@@ -16,6 +16,7 @@ limitations under the License.
 #include <cassert>
 #include <vector>
 #include "aeongames/Model.h"
+#include "aeongames/ModelInstance.h"
 #include "aeongames/ResourceCache.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
@@ -46,27 +47,32 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render ( size_t aAnimationIndex, float aTime ) const
+    void VulkanModel::Render ( const std::shared_ptr<const ModelInstance> aInstance ) const
     {
-        for ( auto& i : mMeshes )
+        if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
         {
-            std::get<0> ( i )->Use ( std::get<1> ( i ) );
-            if ( mSkeleton )
+            mSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
+        }
+
+        for ( size_t i = 0; i < mAssemblies.size(); ++i )
+        {
+            if ( !aInstance->IsAssemblyEnabled ( i ) )
             {
-                if ( aAnimationIndex < mModel->GetAnimations().size() )
-                {
-                    mSkeleton->SetPose ( mModel->GetAnimations() [aAnimationIndex], aTime );
-                }
-#if 0
+                continue;
+            }
+#if 1
+            if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
+            {
                 /* This has to be called outside of a render pass, which currently it is not. */
-                VkBufferCopy buffer_copy {};
+                VkBufferCopy buffer_copy{};
                 buffer_copy.dstOffset = 0;
                 buffer_copy.srcOffset = 0;
                 buffer_copy.size = mSkeleton->GetBufferSize();
-                vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( i )->GetSkeletonBuffer(), 1, &buffer_copy );
-#endif
+                vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( mAssemblies[i] )->GetSkeletonBuffer(), 1, &buffer_copy );
             }
-            std::get<2> ( i )->Render();
+#endif
+            std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
+            std::get<2> ( mAssemblies[i] )->Render();
         }
     }
 
@@ -77,10 +83,10 @@ namespace AeonGames
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
         auto& meshes = mModel->GetMeshes();
-        mMeshes.reserve ( meshes.size() );
+        mAssemblies.reserve ( meshes.size() );
         for ( auto& i : meshes )
         {
-            mMeshes.emplace_back (
+            mAssemblies.emplace_back (
                 Get<VulkanPipeline> ( std::get<0> ( i ).get(), std::get<0> ( i ), mVulkanRenderer ),
                 std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mVulkanRenderer ) : nullptr,
                 Get<VulkanMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mVulkanRenderer ) );

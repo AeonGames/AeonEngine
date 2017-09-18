@@ -55,7 +55,7 @@ namespace AeonGames
         "vec3",
         "vec3",
         "vec2",
-        "vec4",
+        "ivec4",
         "vec4"
     };
 
@@ -224,7 +224,7 @@ namespace AeonGames
                 uint32_t sampler_binding = 0;
                 std::string properties (
                     "#ifdef VULKAN\n"
-                    "layout(set = 0, binding = 1,std140) uniform Properties{\n"
+                    "layout(set = 0, binding = 0,std140) uniform Properties{\n"
                     "#else\n"
                     "layout(binding = 1,std140) uniform Properties{\n"
                     "#endif\n"
@@ -262,7 +262,7 @@ namespace AeonGames
             {
                 std::string skeleton (
                     "#ifdef VULKAN\n"
-                    "layout(set = 0, binding = 2, std140) uniform Skeleton{\n"
+                    "layout(set = 0, binding = 1, std140) uniform Skeleton{\n"
                     "#else\n"
                     "layout(std140, binding = 2) uniform Skeleton{\n"
                     "#endif\n"

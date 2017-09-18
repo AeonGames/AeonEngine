@@ -64,5 +64,6 @@ namespace AeonGames
     };
     DLL const Matrix4x4 operator* ( const Matrix4x4& lhs, const Matrix4x4& rhs );
     DLL const bool operator== ( const Matrix4x4& lhs, const Matrix4x4& rhs );
+    static_assert ( sizeof ( Matrix4x4 ) == ( sizeof ( float ) * 16 ), "Matrix4x4 is not 16 floats wide." );
 }
 #endif

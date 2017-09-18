@@ -37,6 +37,7 @@ namespace AeonGames
         DLL void StepAnimation ( float aDelta );
         DLL const std::vector<Matrix4x4>& GetSkeletonAnimation() const;
         DLL const std::shared_ptr<const Model>& GetModel() const;
+        DLL bool IsAssemblyEnabled ( size_t aAssemblyIndex ) const;
     private:
         void Initialize();
         void Finalize();

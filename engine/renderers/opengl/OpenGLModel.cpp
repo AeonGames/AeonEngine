@@ -16,6 +16,7 @@ limitations under the License.
 #include <cassert>
 #include <vector>
 #include "aeongames/Model.h"
+#include "aeongames/ModelInstance.h"
 #include "aeongames/ResourceCache.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
@@ -45,33 +46,37 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLModel::Render ( size_t aAnimationIndex, float aTime ) const
+    void OpenGLModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance ) const
     {
-        for ( auto& i : mMeshes )
+        if ( mSkeleton && mModel.get() == aInstance->GetModel().get() )
         {
-            std::get<0> ( i )->Use ( std::get<1> ( i ) );
+            mSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
+        }
+        for ( size_t i = 0; i < mAssemblies.size(); ++i )
+        {
+            if ( !aInstance->IsAssemblyEnabled ( i ) )
+            {
+                continue;
+            }
+            std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
             glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mOpenGLRenderer->GetMatricesBuffer() );
             OPENGL_CHECK_ERROR_NO_THROW;
-            if ( mSkeleton )
+            if ( mSkeleton && mModel.get() == aInstance->GetModel().get() )
             {
-                if ( aAnimationIndex < mModel->GetAnimations().size() )
-                {
-                    mSkeleton->SetPose ( mModel->GetAnimations() [aAnimationIndex], aTime );
-                }
                 glBindBufferBase ( GL_UNIFORM_BUFFER, 2, mSkeleton->GetBuffer() );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
-            std::get<2> ( i )->Render();
+            std::get<2> ( mAssemblies[i] )->Render();
         }
     }
 
     void OpenGLModel::Initialize()
     {
         auto& meshes = mModel->GetMeshes();
-        mMeshes.reserve ( meshes.size() );
+        mAssemblies.reserve ( meshes.size() );
         for ( auto& i : meshes )
         {
-            mMeshes.emplace_back (
+            mAssemblies.emplace_back (
                 Get<OpenGLPipeline> ( std::get<0> ( i ).get(), std::get<0> ( i ), mOpenGLRenderer ),
                 std::get<1> ( i ) ? Get<OpenGLMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mOpenGLRenderer ) : nullptr,
                 Get<OpenGLMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mOpenGLRenderer ) );

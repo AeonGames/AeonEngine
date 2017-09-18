@@ -146,7 +146,7 @@ namespace AeonGames
             {
                 glEnableVertexAttribArray ( 5 );
                 OPENGL_CHECK_ERROR_THROW;
-                glVertexAttribPointer ( 5, 4, GL_UNSIGNED_BYTE, GL_FALSE, mMesh->GetStride ( triangle_groups[i].mVertexFlags ), offset );
+                glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, mMesh->GetStride ( triangle_groups[i].mVertexFlags ), offset );
                 OPENGL_CHECK_ERROR_THROW;
                 offset += sizeof ( uint8_t ) * 4;
                 glEnableVertexAttribArray ( 6 );

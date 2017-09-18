@@ -64,6 +64,7 @@ glUniformMatrix2fv
 glUniformMatrix3fv
 glUniformMatrix4fv
 glVertexAttribPointer
+glVertexAttribIPointer
 glGenBuffers
 glBindBuffer
 glBufferData
