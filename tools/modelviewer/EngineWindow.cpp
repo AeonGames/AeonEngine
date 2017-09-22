@@ -74,6 +74,13 @@ namespace AeonGames
         }
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
         updateViewMatrix();
+        float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;
+        float v1[2] = { 1, 0 };
+        float v2[2] = { 1, half_radius };
+        float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );
+        v2[0] /= length;
+        v2[1] /= length;
+        mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
     }
 
     EngineWindow::~EngineWindow()
@@ -125,6 +132,14 @@ namespace AeonGames
                                    ( center_radius[5] * center_radius[5] ) );
             std::cout << "Radius: " << radius << std::endl;
             // Add the near value to the radius just in case the actual object contains the eye position.
+            float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;
+            float v1[2] = { 1, 0 };
+            float v2[2] = { 1, half_radius };
+            float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );
+            v2[0] /= length;
+            v2[1] /= length;
+            mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
+
             assert ( mFrustumVerticalHalfAngle != 0.0f );
             float eye_length = ( radius + 1.0f ) / std::tan ( mFrustumVerticalHalfAngle );
             mCameraLocation = QVector4D (
@@ -133,12 +148,6 @@ namespace AeonGames
             updateViewMatrix();
             mStep = eye_length / 100.0f;
         }
-    }
-
-    void EngineWindow::showEvent ( QShowEvent * aShowEvent )
-    {
-        QResizeEvent resize ( geometry().size(), geometry().size() );
-        resizeEvent ( &resize );
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
