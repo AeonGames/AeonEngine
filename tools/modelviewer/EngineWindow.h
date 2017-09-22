@@ -50,7 +50,6 @@ namespace AeonGames
             1.0f, 0.0f, 0.0f
         };
         const QVector3D forward{ 0.0f, 1.0f, 0.0f };
-        void showEvent ( QShowEvent *aShowEvent ) override final;
         void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
         void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
         void keyPressEvent ( QKeyEvent * event ) override final;
