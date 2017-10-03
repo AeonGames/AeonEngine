@@ -34,6 +34,7 @@ set(VULKAN_RENDERER_HEADERS
     VulkanMaterial.h
     VulkanTexture.h
     VulkanSkeleton.h
+    VulkanBuffer.h
 )
 
 set(VULKAN_RENDERER_SOURCES
@@ -46,6 +47,7 @@ set(VULKAN_RENDERER_SOURCES
     VulkanMaterial.cpp
     VulkanTexture.cpp
     VulkanSkeleton.cpp
+    VulkanBuffer.cpp
     Plugin.cpp
 )
 
