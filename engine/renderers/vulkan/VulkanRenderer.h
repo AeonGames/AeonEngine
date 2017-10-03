@@ -124,6 +124,7 @@ namespace AeonGames
         void UpdateMatrices();
         Matrices mMatrices =
         {
+            // mViewMatrix
             {
                 1, 0, 0, 0,
                 0, 1, 0, 0,
