@@ -228,7 +228,6 @@ namespace AeonGames
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 2 );
-        descriptor_set_layout_bindings.emplace_back();
         // Properties binding
         if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
         {
@@ -339,6 +338,7 @@ namespace AeonGames
 
         std::array<VkWriteDescriptorSet, 1> write_descriptor_sets;
         write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_sets[0].pNext = nullptr;
         write_descriptor_sets[0].dstSet = mVkDescriptorSet;
         write_descriptor_sets[0].dstBinding = 0;
         write_descriptor_sets[0].dstArrayElement = 0;
@@ -533,12 +533,21 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
+        std::array<VkPushConstantRange, 1> push_constant_ranges;
+        push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
+        push_constant_ranges[0].offset = 0;
+        /** @todo We'll have to reduce our matrices to just two here,
+            the validation layers don't like size to be more than VkPhysicalLimits::maxPushConstantsSize
+            which at maximum must be 128 bytes to be safe. */
+        push_constant_ranges[0].size = sizeof ( VulkanRenderer::Matrices );
         std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts{ mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = ( descriptor_set_layouts[1] == VK_NULL_HANDLE ) ? 1 : 2;
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts.data();
+        pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
+        pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer->GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;

@@ -251,6 +251,7 @@ namespace AeonGames
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
             write_descriptor_set.dstSet = mVkDescriptorSet;
             write_descriptor_set.dstBinding = static_cast<uint32_t> ( i );
             write_descriptor_set.dstArrayElement = 0;

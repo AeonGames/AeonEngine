@@ -106,7 +106,11 @@ namespace AeonGames
         {
             stream << "ERROR ";
 #if _WIN32
+            stream << "] ";
+            stream << aLayerPrefix << ": " << aMsg << std::endl;
+            std::cout << stream.str();
             MessageBox ( nullptr, aMsg, aLayerPrefix, MB_ICONERROR | MB_OK );
+            return false;
 #endif
         }
         if ( aFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
