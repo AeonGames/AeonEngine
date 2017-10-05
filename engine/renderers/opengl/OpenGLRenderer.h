@@ -48,11 +48,11 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        void UpdateMatrices();
         std::unordered_map<std::string, std::unique_ptr<OpenGLModel>> mModelLibrary;
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
+            // mViewMatrix
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -67,28 +67,6 @@ namespace AeonGames
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
-            // mViewProjectionMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-            // mModelViewMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-            // mModelViewProjectionMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-            /*  mNormalMatrix With Padding,
-                this should really be a 3x3 matrix,
-                but std140 packing requires 16 byte alignment
-                and a mat3 is escentially a vec3[3]*/
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
         };
 
         float* mViewMatrix = mMatrices + ( 16 * 0 );

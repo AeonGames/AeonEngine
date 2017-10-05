@@ -630,54 +630,14 @@ namespace AeonGames
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }
 
-    void VulkanRenderer::UpdateMatrices()
-    {
-        /** @todo Either publish this function or
-        add arguments so just some matrices are
-        updated based on which one changed.*/
-        // Update mViewProjectionMatrix
-        Multiply4x4Matrix (
-            mMatrices.mProjectionMatrix,
-            mMatrices.mViewMatrix,
-            mMatrices.mViewProjectionMatrix );
-        // Update mModelViewMatrix
-        Multiply4x4Matrix (
-            mMatrices.mViewMatrix,
-            mMatrices.mModelMatrix,
-            mMatrices.mModelViewMatrix );
-        // Update mModelViewProjectionMatrix
-        Multiply4x4Matrix (
-            mMatrices.mViewProjectionMatrix,
-            mMatrices.mModelMatrix,
-            mMatrices.mModelViewProjectionMatrix );
-        /*  Calculate Normal Matrix
-        Inverting a 3x3 matrix is cheaper than inverting a 4x4 matrix,
-        so even if the shader alignment requires us to pad the 3x3 matrix into
-        a 4x3 matrix we do these operations on a 3x3 basis.*/
-        Extract3x3Matrix (
-            mMatrices.mModelViewMatrix,
-            mMatrices.mNormalMatrix );
-        Invert3x3Matrix (
-            mMatrices.mNormalMatrix,
-            mMatrices.mNormalMatrix );
-        Transpose3x3Matrix (
-            mMatrices.mNormalMatrix,
-            mMatrices.mNormalMatrix );
-        Convert3x3To4x3 (
-            mMatrices.mNormalMatrix,
-            mMatrices.mNormalMatrix );
-    }
-
     void VulkanRenderer::SetViewTransform ( const Transform aTransform )
     {
         aTransform.GetInvertedMatrix ( mMatrices.mViewMatrix );
-        UpdateMatrices();
     }
 
     void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
         memcpy ( mMatrices.mProjectionMatrix, aMatrix.GetMatrix4x4(), sizeof ( float ) * 16 );
-        UpdateMatrices();
     }
 #if 0
     void VulkanRenderer::SetModelMatrix ( const float aMatrix[16] )

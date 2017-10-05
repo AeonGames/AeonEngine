@@ -29,12 +29,12 @@ namespace AeonGames
     private:
         void Initialize ( void *aData );
         void Finalize();
+        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         VkBuffer mBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mDeviceMemory = VK_NULL_HANDLE;
         VkDeviceSize mSize;
         VkBufferUsageFlags mUsage;
         VkMemoryPropertyFlags mProperties;
-        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
     };
 }
 #endif
