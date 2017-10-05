@@ -37,6 +37,8 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Transform.h"
 
 namespace AeonGames
 {
@@ -95,15 +97,15 @@ namespace AeonGames
         return std::make_unique<OpenGLWindow> ( aWindowId, shared_from_this() );
     }
 
-    void OpenGLRenderer::SetViewMatrix ( const float aMatrix[16] )
+    void OpenGLRenderer::SetViewTransform ( const Transform aTransform )
     {
-        memcpy ( mViewMatrix, aMatrix, sizeof ( float ) * 16 );
+        aTransform.GetInvertedMatrix ( mViewMatrix );
         UpdateMatrices();
     }
 
-    void OpenGLRenderer::SetProjectionMatrix ( const float aMatrix[16] )
+    void OpenGLRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        memcpy ( mProjectionMatrix, aMatrix,  sizeof ( float ) * 16 );
+        memcpy ( mProjectionMatrix, aMatrix.GetMatrix4x4(),  sizeof ( float ) * 16 );
         /* Flip Z axis to match Vulkan's right hand Normalized Device Coordinates (NDC).*/
         mProjectionMatrix[8]  *= -1;
         mProjectionMatrix[9]  *= -1;
@@ -111,13 +113,13 @@ namespace AeonGames
         mProjectionMatrix[11] *= -1;
         UpdateMatrices();
     }
-
+#if 0
     void OpenGLRenderer::SetModelMatrix ( const float aMatrix[16] )
     {
         memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
     }
-
+#endif
     void* OpenGLRenderer::GetOpenGLContext() const
     {
         return mOpenGLContext;

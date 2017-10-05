@@ -217,11 +217,10 @@ namespace AeonGames
 
     void EngineWindow::updateViewMatrix()
     {
-        mViewMatrix.setToIdentity();
-        mViewMatrix.rotate ( mCameraRotation );
-        mViewMatrix.setColumn ( 3, mCameraLocation );
-        mViewMatrix = mViewMatrix.inverted();
-        mRenderer->SetViewMatrix ( mViewMatrix.constData() );
+        Transform view_transform;
+        view_transform.SetTranslation ( mCameraLocation.x(), mCameraLocation.y(), mCameraLocation.z() );
+        view_transform.SetRotation ( mCameraRotation.scalar(), mCameraRotation.x(), mCameraRotation.y(), mCameraRotation.z() );
+        mRenderer->SetViewTransform ( view_transform );
     }
 
     void EngineWindow::keyPressEvent ( QKeyEvent * event )

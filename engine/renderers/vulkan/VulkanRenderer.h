@@ -37,9 +37,9 @@ namespace AeonGames
         void LoadModel ( const std::shared_ptr<const Model>& aModel ) final;
         void UnloadModel ( const std::shared_ptr<const Model>& aModel ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-        void SetViewMatrix ( const float aMatrix[16] ) final;
-        void SetProjectionMatrix ( const float aMatrix[16] ) final;
-        void SetModelMatrix ( const float aMatrix[16] ) final;
+        void SetViewTransform ( const Transform aTransform ) final;
+        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
+        //void SetModelMatrix ( const float aMatrix[16] ) final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;

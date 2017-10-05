@@ -43,6 +43,8 @@ limitations under the License.
 #include "VulkanMesh.h"
 #include "VulkanModel.h"
 #include "math/3DMath.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Transform.h"
 
 namespace AeonGames
 {
@@ -666,21 +668,22 @@ namespace AeonGames
             mMatrices.mNormalMatrix );
     }
 
-    void VulkanRenderer::SetViewMatrix ( const float aMatrix[16] )
+    void VulkanRenderer::SetViewTransform ( const Transform aTransform )
     {
-        memcpy ( mMatrices.mViewMatrix, aMatrix, sizeof ( float ) * 16 );
+        aTransform.GetInvertedMatrix ( mMatrices.mViewMatrix );
         UpdateMatrices();
     }
 
-    void VulkanRenderer::SetProjectionMatrix ( const float aMatrix[16] )
+    void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        memcpy ( mMatrices.mProjectionMatrix, aMatrix, sizeof ( float ) * 16 );
+        memcpy ( mMatrices.mProjectionMatrix, aMatrix.GetMatrix4x4(), sizeof ( float ) * 16 );
         UpdateMatrices();
     }
-
+#if 0
     void VulkanRenderer::SetModelMatrix ( const float aMatrix[16] )
     {
         memcpy ( mMatrices.mModelMatrix, aMatrix, sizeof ( float ) * 16 );
         UpdateMatrices();
     }
+#endif
 }
