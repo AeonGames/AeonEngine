@@ -152,6 +152,7 @@ namespace AeonGames
         LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
         {
             mVertexShader.append ( "#version 430\n" );
+            mFragmentShader.append ( "#version 430\n" );
             /* Find out which attributes are being used and add them to the shader source */
             std::smatch attribute_matches;
             /**@note static const regex: construct once, use for ever.*/
@@ -187,7 +188,7 @@ namespace AeonGames
                 }
                 code = attribute_matches.suffix();
             }
-            mVertexShader.append (
+            std::string transforms (
                 "#ifdef VULKAN\n"
                 "layout(push_constant) uniform Matrices{\n"
                 "#else\n"
@@ -196,27 +197,10 @@ namespace AeonGames
                 "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
                 "mat4 ModelMatrix;\n"
-                "mat4 ViewProjectionMatrix;\n"
-                "mat4 ModelViewMatrix;\n"
-                "mat4 ModelViewProjectionMatrix;\n"
-                "mat3 NormalMatrix;\n"
                 "};\n"
             );
-            mFragmentShader.append ( "#version 430\n" );
-            mFragmentShader.append (
-                "#ifdef VULKAN\n"
-                "layout(push_constant) uniform Matrices{\n"
-                "#else\n"
-                "layout(binding = 0, std140) uniform Matrices{\n"
-                "#endif\n"
-                "mat4 ViewMatrix;\n"
-                "mat4 ProjectionMatrix;\n"
-                "mat4 ModelMatrix;\n"
-                "mat4 ViewProjectionMatrix;\n"
-                "mat4 ModelViewMatrix;\n"
-                "mat4 ModelViewProjectionMatrix;\n"
-                "mat3 NormalMatrix;\n"
-                "};\n" );
+            mVertexShader.append ( transforms );
+            mFragmentShader.append ( transforms );
 
             mDefaultMaterial = std::make_shared<Material> ( pipeline_buffer.default_material() );
             if ( mDefaultMaterial->GetUniformMetaData().size() )

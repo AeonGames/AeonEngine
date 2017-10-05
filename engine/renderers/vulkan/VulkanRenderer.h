@@ -61,11 +61,6 @@ namespace AeonGames
             float mViewMatrix[16];
             float mProjectionMatrix[16];
             float mModelMatrix[16];
-            // Cache Matrices
-            float mViewProjectionMatrix[16];
-            float mModelViewMatrix[16];
-            float mModelViewProjectionMatrix[16];
-            float mNormalMatrix[12];
         };
         const Matrices& GetMatrices() const;
     private:
@@ -119,9 +114,6 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT = VK_NULL_HANDLE;
-        /** @todo From here on, these members are the same as the OpenGL renderer...
-            shall we create a common class? */
-        void UpdateMatrices();
         Matrices mMatrices =
         {
             // mViewMatrix
@@ -145,36 +137,6 @@ namespace AeonGames
                 0, 0, 1, 0,
                 0, 0, 0, 1
             },
-            // mViewProjectionMatrix
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            },
-            // mModelViewMatrix
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            },
-            // mModelViewProjectionMatrix
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            },
-            /*  mNormalMatrix With Padding,
-            this should really be a 3x3 matrix,
-            but std140 packing requires 16 byte alignment
-            and a mat3 is escentially a vec3[3]*/
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0
-            }
         };
     };
 }

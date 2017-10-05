@@ -100,7 +100,10 @@ namespace AeonGames
     void OpenGLRenderer::SetViewTransform ( const Transform aTransform )
     {
         aTransform.GetInvertedMatrix ( mViewMatrix );
-        UpdateMatrices();
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( mMatrices ), mMatrices );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
@@ -111,7 +114,10 @@ namespace AeonGames
         mProjectionMatrix[9]  *= -1;
         mProjectionMatrix[10] *= -1;
         mProjectionMatrix[11] *= -1;
-        UpdateMatrices();
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( mMatrices ), mMatrices );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 #if 0
     void OpenGLRenderer::SetModelMatrix ( const float aMatrix[16] )
@@ -123,31 +129,5 @@ namespace AeonGames
     void* OpenGLRenderer::GetOpenGLContext() const
     {
         return mOpenGLContext;
-    }
-
-    void OpenGLRenderer::UpdateMatrices()
-    {
-        /** @todo Either publish this function or
-            add arguments so just some matrices are
-            updated based on which one changed.*/
-        // Update mViewProjectionMatrix
-        Multiply4x4Matrix ( mProjectionMatrix, mViewMatrix, mViewProjectionMatrix );
-        // Update mModelViewMatrix
-        Multiply4x4Matrix ( mViewMatrix, mModelMatrix, mModelViewMatrix );
-        // Update mModelViewProjectionMatrix
-        Multiply4x4Matrix ( mViewProjectionMatrix, mModelMatrix, mModelViewProjectionMatrix );
-        /*  Calculate Normal Matrix
-            Inverting a 3x3 matrix is cheaper than inverting a 4x4 matrix,
-            so even if the shader alignment requires us to pad the 3x3 matrix into
-            a 4x3 matrix we do these operations on a 3x3 basis.*/
-        Extract3x3Matrix ( mModelViewMatrix, mNormalMatrix );
-        Invert3x3Matrix ( mNormalMatrix, mNormalMatrix );
-        Transpose3x3Matrix ( mNormalMatrix, mNormalMatrix );
-        Convert3x3To4x3 ( mNormalMatrix, mNormalMatrix );
-
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( mMatrices ), mMatrices );
-        OPENGL_CHECK_ERROR_NO_THROW;
     }
 }
