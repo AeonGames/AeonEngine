@@ -52,31 +52,20 @@ namespace AeonGames
         GLuint mMatricesBuffer = 0;
         float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
         {
-            // mViewMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
             // mProjectionMatrix
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
-            // mModelMatrix
+            // mViewMatrix
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
         };
 
-        float* mViewMatrix = mMatrices + ( 16 * 0 );
-        float* mProjectionMatrix = mMatrices + ( 16 * 1 );
-        float* mModelMatrix = mMatrices + ( 16 * 2 );
-        // Cache Matrices
-        float* mViewProjectionMatrix = mMatrices + ( 16 * 3 );
-        float* mModelViewMatrix = mMatrices + ( 16 * 4 );
-        float* mModelViewProjectionMatrix = mMatrices + ( 16 * 5 );
-        float* mNormalMatrix = mMatrices + ( 16 * 6 );
+        float* mProjectionMatrix = mMatrices + ( 16 * 0 );
+        float* mViewMatrix = mMatrices + ( 16 * 1 );
         /// Internal Window Id, required to create initial shared context
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts

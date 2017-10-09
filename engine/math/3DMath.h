@@ -36,7 +36,7 @@ limitations under the License.
     m[3] & m[7] & m[11] & m[15] \end{array} \right)
     \f]
 
-    &copy; 2009-2016 Rodrigo Hernandez
+    &copy; 2009-2017 Rodrigo Hernandez
 */
 
 #include <cmath>

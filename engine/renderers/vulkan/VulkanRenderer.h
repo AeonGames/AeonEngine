@@ -56,13 +56,13 @@ namespace AeonGames
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
-        struct Matrices
+        struct Transforms
         {
-            float mViewMatrix[16];
             float mProjectionMatrix[16];
+            float mViewMatrix[16];
             float mModelMatrix[16];
         };
-        const Matrices& GetMatrices() const;
+        const Transforms& GetTransforms() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -114,15 +114,8 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT = VK_NULL_HANDLE;
-        Matrices mMatrices =
+        Transforms mTransforms =
         {
-            // mViewMatrix
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            },
             // mProjectionMatrix
             {
                 1, 0, 0, 0,
@@ -130,7 +123,7 @@ namespace AeonGames
                 0, 0, 1, 0,
                 0, 0, 0, 1
             },
-            // mModelMatrix
+            // mViewMatrix
             {
                 1, 0, 0, 0,
                 0, 1, 0, 0,
