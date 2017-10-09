@@ -257,9 +257,9 @@ namespace AeonGames
         mDeviceExtensionNames.push_back ( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
     }
 
-    const VulkanRenderer::Matrices & VulkanRenderer::GetMatrices() const
+    const VulkanRenderer::Transforms & VulkanRenderer::GetTransforms() const
     {
-        return mMatrices;
+        return mTransforms;
     }
 
     void VulkanRenderer::InitializeInstance()
@@ -632,12 +632,12 @@ namespace AeonGames
 
     void VulkanRenderer::SetViewTransform ( const Transform aTransform )
     {
-        aTransform.GetInvertedMatrix ( mMatrices.mViewMatrix );
+        aTransform.GetInvertedMatrix ( mTransforms.mViewMatrix );
     }
 
     void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        memcpy ( mMatrices.mProjectionMatrix, aMatrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+        memcpy ( mTransforms.mProjectionMatrix, aMatrix.GetMatrix4x4(), sizeof ( float ) * 16 );
     }
 #if 0
     void VulkanRenderer::SetModelMatrix ( const float aMatrix[16] )

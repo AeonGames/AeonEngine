@@ -59,7 +59,7 @@ namespace AeonGames
         vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
                              mVkPipelineLayout,
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( VulkanRenderer::Matrices ), &mVulkanRenderer->GetMatrices() );
+                             0, sizeof ( VulkanRenderer::Transforms ), &mVulkanRenderer->GetTransforms() );
 #if 0
         /** @todo vkCmdUpdateBuffer is not supposed to be called inside a render pass... but it works here.*/
         vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,
@@ -539,7 +539,7 @@ namespace AeonGames
         /** @todo We'll have to reduce our matrices to just two here,
             the validation layers don't like size to be more than VkPhysicalLimits::maxPushConstantsSize
             which at maximum must be 128 bytes to be safe. */
-        push_constant_ranges[0].size = sizeof ( VulkanRenderer::Matrices );
+        push_constant_ranges[0].size = sizeof ( VulkanRenderer::Transforms );
         std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts{ mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

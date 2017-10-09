@@ -194,9 +194,8 @@ namespace AeonGames
                 "#else\n"
                 "layout(binding = 0, std140) uniform Matrices{\n"
                 "#endif\n"
-                "mat4 ViewMatrix;\n"
                 "mat4 ProjectionMatrix;\n"
-                "mat4 ModelMatrix;\n"
+                "mat4 ViewMatrix;\n"
                 "};\n"
             );
             mVertexShader.append ( transforms );
@@ -256,6 +255,33 @@ namespace AeonGames
                 mVertexShader.append ( skeleton );
                 mFragmentShader.append ( skeleton );
             }
+#if 0
+            std::string mathlib (
+                "vec4 MultQuatVec4(vec4 q, vec4 v)\n"
+                "{\n"
+                "	vec4 t = vec4(\n"
+                "		(-q.y * v.x - q.z * v.y - q.w * v.z),\n"
+                "		( q.x * v.x + q.z * v.z - q.w * v.y),\n"
+                "		( q.x * v.y + q.w * v.x - q.y * v.z),\n"
+                "		( q.x * v.z + q.y * v.y - q.z * v.x));\n"
+                "	return vec4(\n"
+                "		t.x * -q.y + t.y * q.x + t.z * -q.w - t.w * -q.z,\n"
+                "		t.x * -q.z + t.z * q.x + t.w * -q.y - t.y * -q.w,\n"
+                "		t.x * -q.w + t.w * q.x + t.y * -q.z - t.z * -q.y,\n"
+                "		v.w);\n"
+                "}\n"
+                "vec4 MultQuats ( vec4 q1, vec4 q2 )\n"
+                "{\n"
+                "    return vec4(\n"
+                "        q1.x * q2.x - q1.y * q2.y - q1.z * q2.z - q1.w * q2.w,\n"
+                "        q1.x * q2.y + q1.y * q2.x + q1.z * q2.w - q1.w * q2.z,\n"
+                "        q1.x * q2.z - q1.y * q2.w + q1.z * q2.x + q1.w * q2.y,\n"
+                "        q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x);\n"
+                "}\n"
+            );
+            mVertexShader.append ( mathlib );
+            mFragmentShader.append ( mathlib );
+#endif
             switch ( pipeline_buffer.vertex_shader().source_case() )
             {
             case ShaderBuffer::SourceCase::kCode:
