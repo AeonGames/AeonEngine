@@ -38,6 +38,8 @@ namespace AeonGames
         void Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const final;
         void LoadModel ( const std::shared_ptr<const Model>& aModel ) final;
         void UnloadModel ( const std::shared_ptr<const Model>& aModel ) final;
+        void LoadScene ( const std::shared_ptr<const Scene>& aScene ) final;
+        void UnloadScene ( const std::shared_ptr<const Scene>& aScene ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewTransform ( const Transform aTransform ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;

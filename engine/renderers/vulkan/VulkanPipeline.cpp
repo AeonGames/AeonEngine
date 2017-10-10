@@ -234,7 +234,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 0;
             descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptor_set_layout_bindings.back().descriptorCount = 1; // See above
+            descriptor_set_layout_bindings.back().descriptorCount = 1;
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
@@ -244,7 +244,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 1;
             descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptor_set_layout_bindings.back().descriptorCount = 1; // See above
+            descriptor_set_layout_bindings.back().descriptorCount = 1;
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }

@@ -45,7 +45,7 @@ limitations under the License.
 #include "math/3DMath.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
-
+#include "aeongames/Scene.h"
 namespace AeonGames
 {
     VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
@@ -116,6 +116,14 @@ namespace AeonGames
     void VulkanRenderer::UnloadModel ( const std::shared_ptr<const Model>& aModel )
     {
         mModelLibrary.erase ( aModel->GetFilename() );
+    }
+
+    void VulkanRenderer::LoadScene ( const std::shared_ptr<const Scene>& aScene )
+    {
+    }
+
+    void VulkanRenderer::UnloadScene ( const std::shared_ptr<const Scene>& aScene )
+    {
     }
 
     const VkDevice & VulkanRenderer::GetDevice() const

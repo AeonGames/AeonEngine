@@ -82,6 +82,14 @@ namespace AeonGames
         mModelLibrary.erase ( aModel->GetFilename() );
     }
 
+    void OpenGLRenderer::LoadScene ( const std::shared_ptr<const Scene>& aScene )
+    {
+    }
+
+    void OpenGLRenderer::UnloadScene ( const std::shared_ptr<const Scene>& aScene )
+    {
+    }
+
     void* OpenGLRenderer::GetWindowId() const
     {
         return mWindowId;
