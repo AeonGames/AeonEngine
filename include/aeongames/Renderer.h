@@ -32,6 +32,7 @@ namespace AeonGames
     class ModelInstance;
     class Matrix4x4;
     class Transform;
+    class Scene;
     class Renderer
     {
     public:
@@ -40,6 +41,12 @@ namespace AeonGames
         ///@{
         virtual void LoadModel ( const std::shared_ptr<const Model>& aModel ) = 0;
         virtual void UnloadModel ( const std::shared_ptr<const Model>& aModel ) = 0;
+        /** Load all resources required to render a Scene.
+            @param aScene constant shared pointer reference to the Scene to load.*/
+        virtual void LoadScene ( const std::shared_ptr<const Scene>& aScene ) = 0;
+        /** Unload resources required to render a Scene.
+        @param aScene constant shared pointer reference to the Scene to load.*/
+        virtual void UnloadScene ( const std::shared_ptr<const Scene>& aScene ) = 0;
         ///@}
         ///@name Window Factory
         ///@{
