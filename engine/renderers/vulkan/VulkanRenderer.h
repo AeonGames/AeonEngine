@@ -62,7 +62,7 @@ namespace AeonGames
         {
             float mProjectionMatrix[16];
             float mViewMatrix[16];
-            float mModelMatrix[16];
+            /*float mModelMatrix[16];*/
         };
         const Transforms& GetTransforms() const;
     private:
@@ -84,23 +84,23 @@ namespace AeonGames
         void FinalizeCommandPool();
         void FinalizeDebug();
 
-        bool mValidate = true;
-        VkInstance mVkInstance = VK_NULL_HANDLE;
-        VkDevice mVkDevice = VK_NULL_HANDLE;
-        VkPhysicalDevice mVkPhysicalDevice = VK_NULL_HANDLE;
+        bool mValidate{ true };
+        VkInstance mVkInstance{ VK_NULL_HANDLE };
+        VkDevice mVkDevice { VK_NULL_HANDLE};
+        VkPhysicalDevice mVkPhysicalDevice{ VK_NULL_HANDLE };
         VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties{};
         VkPhysicalDeviceMemoryProperties  mVkPhysicalDeviceMemoryProperties{};
-        VkDebugReportCallbackEXT mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
-        VkCommandPool mVkCommandPool = VK_NULL_HANDLE;
-        VkCommandBuffer mVkCommandBuffer = VK_NULL_HANDLE;
-        VkQueue mVkQueue = VK_NULL_HANDLE;
-        VkSemaphore mVkSignalSemaphore = VK_NULL_HANDLE;
-        VkFence mVkFence = VK_NULL_HANDLE;
-        VkRenderPass mVkRenderPass = VK_NULL_HANDLE;
-        VkFormat mVkDepthStencilFormat = VK_FORMAT_UNDEFINED;
+        VkDebugReportCallbackEXT mVkDebugReportCallbackEXT{ VK_NULL_HANDLE };
+        VkCommandPool mVkCommandPool{ VK_NULL_HANDLE };
+        VkCommandBuffer mVkCommandBuffer{ VK_NULL_HANDLE };
+        VkQueue mVkQueue{ VK_NULL_HANDLE };
+        VkSemaphore mVkSignalSemaphore{ VK_NULL_HANDLE };
+        VkFence mVkFence{ VK_NULL_HANDLE };
+        VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
+        VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
-        VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo = {};
-        uint32_t mQueueFamilyIndex = 0;
+        VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
+        uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames;
         std::vector<const char*> mInstanceExtensionNames;
         std::vector<const char*> mDeviceLayerNames;

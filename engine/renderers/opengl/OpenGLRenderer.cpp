@@ -39,6 +39,7 @@ limitations under the License.
 #include "aeongames/ModelInstance.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
+#include "aeongames/Scene.h"
 
 namespace AeonGames
 {

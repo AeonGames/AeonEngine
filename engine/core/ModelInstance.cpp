@@ -75,17 +75,17 @@ namespace AeonGames
         mAnimationTime = 0.0f;
     }
 
-    float ModelInstance::GetAnimationTime() const
+    double ModelInstance::GetAnimationTime() const
     {
         return mAnimationTime;
     }
 
-    void ModelInstance::SetAnimationTime ( float aTime )
+    void ModelInstance::SetAnimationTime ( double aTime )
     {
         if ( mModel->GetAnimations().size() > mAnimationIndex )
         {
-            float duration = mModel->GetAnimations() [mAnimationIndex]->GetDuration();
-            if ( ( aTime <= duration ) && ( aTime >= 0.0f ) )
+            double duration = mModel->GetAnimations() [mAnimationIndex]->GetDuration();
+            if ( ( aTime <= duration ) && ( aTime >= 0.0 ) )
             {
                 mAnimationTime = aTime;
             }
@@ -101,11 +101,11 @@ namespace AeonGames
         }
     }
 
-    void ModelInstance::StepAnimation ( float aDelta )
+    void ModelInstance::StepAnimation ( double aDelta )
     {
         if ( mModel->GetAnimations().size() > mAnimationIndex )
         {
-            mAnimationTime = fmodf ( mAnimationTime + aDelta, mModel->GetAnimations() [mAnimationIndex]->GetDuration() );
+            mAnimationTime = fmod ( mAnimationTime + aDelta, mModel->GetAnimations() [mAnimationIndex]->GetDuration() );
             UpdateSkeletonAnimation();
         }
     }

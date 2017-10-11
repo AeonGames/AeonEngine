@@ -1467,26 +1467,26 @@ inline float* GetInvertedMatrixFromSRT ( const float* srt, float* M )
 }
 
 /// Catmull-Rom spline interpolation
-inline float* Spline ( const float* p0, const float* p1, const float* p2, const float* p3, float interpolation, float* out )
+inline float* Spline ( const float* p0, const float* p1, const float* p2, const float* p3, double interpolation, float* out )
 {
-    float i2 = interpolation  * interpolation;
-    float i3 = i2 * interpolation;
-    float t0[3] =
+    double i2 = interpolation * interpolation;
+    double i3 = i2 * interpolation;
+    double t0[3] =
     {
-        ( p2[0] - p0[0] ) / 2.0f,
-        ( p2[1] - p0[1] ) / 2.0f,
-        ( p2[2] - p0[2] ) / 2.0f
+        ( p2[0] - p0[0] ) / 2.0,
+        ( p2[1] - p0[1] ) / 2.0,
+        ( p2[2] - p0[2] ) / 2.0
     };
 
-    float t1[3] =
+    double t1[3] =
     {
-        ( p3[0] - p1[0] ) / 2.0f,
-        ( p3[1] - p1[1] ) / 2.0f,
-        ( p3[2] - p1[2] ) / 2.0f
+        ( p3[0] - p1[0] ) / 2.0,
+        ( p3[1] - p1[1] ) / 2.0,
+        ( p3[2] - p1[2] ) / 2.0
     };
-    out[0] = ( 2 * i3 - 3 * i2 + 1 ) * p1[0] + ( -2 * i3 + 3 * i2 ) * p2[0] + ( i3 - 2 * i2 + interpolation ) * t0[0] + ( i3 - i2 ) * t1[0];
-    out[1] = ( 2 * i3 - 3 * i2 + 1 ) * p1[1] + ( -2 * i3 + 3 * i2 ) * p2[1] + ( i3 - 2 * i2 + interpolation ) * t0[1] + ( i3 - i2 ) * t1[1];
-    out[2] = ( 2 * i3 - 3 * i2 + 1 ) * p1[2] + ( -2 * i3 + 3 * i2 ) * p2[2] + ( i3 - 2 * i2 + interpolation ) * t0[2] + ( i3 - i2 ) * t1[2];
+    out[0] = static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[0] + ( -2 * i3 + 3 * i2 ) * p2[0] + ( i3 - 2 * i2 + interpolation ) * t0[0] + ( i3 - i2 ) * t1[0] );
+    out[1] = static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[1] + ( -2 * i3 + 3 * i2 ) * p2[1] + ( i3 - 2 * i2 + interpolation ) * t0[1] + ( i3 - i2 ) * t1[1] );
+    out[2] = static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[2] + ( -2 * i3 + 3 * i2 ) * p2[2] + ( i3 - 2 * i2 + interpolation ) * t0[2] + ( i3 - i2 ) * t1[2] );
     return out;
 }
 // @}
@@ -1804,7 +1804,7 @@ inline void MultQuats4 ( float* q1, float* q2, float* out )
     \param interp [in] Interpolation factor.
     \param out [out] Resulting quaternion.
 */
-inline float* LerpQuats ( const float* q1, const float* q2, float interpolation, float* out )
+inline float* LerpQuats ( const float* q1, const float* q2, double interpolation, float* out )
 {
 #if 0
     float sign = 1.0;
@@ -1836,10 +1836,10 @@ inline float* LerpQuats ( const float* q1, const float* q2, float interpolation,
     out[2] = q1[2] + ( ( ( q2[2] * sign ) - q1[2] ) * interpolation );
     out[3] = q1[3] + ( ( ( q2[3] * sign ) - q1[3] ) * interpolation );
 #else
-    out[0] = ( q1[0] * ( 1.0f - interpolation ) ) + ( q2[0] * interpolation );
-    out[1] = ( q1[1] * ( 1.0f - interpolation ) ) + ( q2[1] * interpolation );
-    out[2] = ( q1[2] * ( 1.0f - interpolation ) ) + ( q2[2] * interpolation );
-    out[3] = ( q1[3] * ( 1.0f - interpolation ) ) + ( q2[3] * interpolation );
+    out[0] = static_cast<float> ( ( q1[0] * ( 1.0 - interpolation ) ) + ( q2[0] * interpolation ) );
+    out[1] = static_cast<float> ( ( q1[1] * ( 1.0 - interpolation ) ) + ( q2[1] * interpolation ) );
+    out[2] = static_cast<float> ( ( q1[2] * ( 1.0 - interpolation ) ) + ( q2[2] * interpolation ) );
+    out[3] = static_cast<float> ( ( q1[3] * ( 1.0 - interpolation ) ) + ( q2[3] * interpolation ) );
 #endif
     return out;
 }
@@ -1853,7 +1853,7 @@ inline float* LerpQuats ( const float* q1, const float* q2, float interpolation,
     \param interp [in] Interpolation factor.
     \param out [out] Resulting quaternion.
 */
-inline float* NlerpQuats ( const float* q1, const float* q2, float interp, float* out )
+inline float* NlerpQuats ( const float* q1, const float* q2, double interp, float* out )
 {
     return Normalize4 ( LerpQuats ( q1, q2, interp, out ) );
 }

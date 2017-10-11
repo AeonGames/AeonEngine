@@ -32,9 +32,9 @@ namespace AeonGames
         DLL void EnableAllAssemblies ( bool aEnabled = true );
         DLL size_t GetAnimationIndex() const;
         DLL void SetAnimationIndex ( size_t aAnimationIndex );
-        DLL float GetAnimationTime() const;
-        DLL void  SetAnimationTime ( float aTime = 0.0f );
-        DLL void StepAnimation ( float aDelta );
+        DLL double GetAnimationTime() const;
+        DLL void  SetAnimationTime ( double aTime = 0.0f );
+        DLL void StepAnimation ( double aDelta );
         DLL const std::vector<Matrix4x4>& GetSkeletonAnimation() const;
         DLL const std::shared_ptr<const Model>& GetModel() const;
         DLL bool IsAssemblyEnabled ( size_t aAssemblyIndex ) const;
@@ -45,7 +45,7 @@ namespace AeonGames
         const std::shared_ptr<const Model> mModel;
         std::vector<bool> mEnabledAssemblies;
         size_t mAnimationIndex;
-        float mAnimationTime;
+        double mAnimationTime;
         std::vector<Matrix4x4> mSkeletonAnimation;
     };
 }

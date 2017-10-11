@@ -29,8 +29,8 @@ namespace AeonGames
     class Node;
     Scene::Scene() :
         mName ( "Scene" ),
-        mRootNodes(),
-        mAllNodes()
+        mRootNodes{},
+        mAllNodes{}
     {
     }
 
@@ -85,24 +85,7 @@ namespace AeonGames
             } );
         }
     }
-#if 0
-    void Scene::Render ( Renderer* aRenderer )
-    {
-        if ( aRenderer )
-        {
-            for ( auto & mRootNode : mRootNodes )
-            {
-                mRootNode->LoopTraverseDFSPreOrder ( [aRenderer] ( Node * node )
-                {
-                    if ( node->mFlags[Node::Visible] )
-                    {
-                        node->Render ( aRenderer );
-                    }
-                } );
-            }
-        }
-    }
-#endif
+
     void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
