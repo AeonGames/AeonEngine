@@ -23,13 +23,14 @@ limitations under the License.
 #include <limits>
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
     class Renderer;
     class Scene;
     /// Scene Graph Node
-    class Node
+    class Node : public std::enable_shared_from_this<Node>
     {
     public:
         enum FlagBits
@@ -60,16 +61,16 @@ namespace AeonGames
         */
         DLL void SetFlag ( enum Flags aFlag, bool aEnabled = true );
         DLL bool IsFlagEnabled ( enum Flags aFlag ) const;
-        DLL bool AddNode ( Node* aNode );
-        DLL bool InsertNode ( size_t aIndex, Node* aNode );
-        DLL bool RemoveNode ( Node* aNode );
+        DLL bool AddNode ( const std::shared_ptr<Node>& aNode );
+        DLL bool InsertNode ( size_t aIndex, const std::shared_ptr<Node>& aNode );
+        DLL bool RemoveNode ( const std::shared_ptr<Node>& );
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in pre-order.
         This function guarrantees that parents are processed before their children.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPreOrder,Node::RecursiveTraverseDFSPostOrder
         */
-        DLL void LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction );
+        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in pre-order.
         This function guarrantees that parents are processed before their children.
@@ -81,58 +82,59 @@ namespace AeonGames
         @sa Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPreOrder,Node::RecursiveTraverseDFSPostOrder
         */
         DLL void LoopTraverseDFSPreOrder (
-            std::function<void ( Node* ) > aPreamble,
-            std::function<void ( Node* ) > aPostamble );
+            std::function<void ( const std::shared_ptr<Node>& ) > aPreamble,
+            std::function<void ( const std::shared_ptr<Node>& ) > aPostamble );
         /** Constant version of LoopTraverseDFSPreOrder. */
-        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const Node* ) > aAction ) const;
+        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const;
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in post-order.
         This function guarrantees that children are processed before their parent.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPreOrder,Node::RecursiveTraverseDFSPreOrder,Node::RecursiveTraverseDFSPostOrder
         */
-        DLL void LoopTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction );
+        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
         /** Constant version of LoopTraverseDFSPostOrder. */
-        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const Node* ) > aAction ) const;
+        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const;
         /** Recursive depth first search iteration.
         Iterates all descendants with recursion in pre-order.
         This function guarrantees that parents are processed before their children.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPreOrder,Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPostOrder
         */
-        DLL void RecursiveTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction );
+        DLL void RecursiveTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
         /** Recursive depth first search iteration.
         Iterates all descendants with recursion in post-order.
         This function guarrantees that children are processed before their parent.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPreOrder,Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPreOrder
         */
-        DLL void RecursiveTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction );
-        DLL void LoopTraverseAncestors ( std::function<void ( Node* ) > aAction );
-        DLL void LoopTraverseAncestors ( std::function<void ( const Node* ) > aAction ) const;
-        DLL void RecursiveTraverseAncestors ( std::function<void ( Node* ) > aAction );
+        DLL void RecursiveTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
+        DLL void LoopTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
+        DLL void LoopTraverseAncestors ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const;
+        DLL void RecursiveTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
         DLL const Transform& GetLocalTransform() const;
         DLL const Transform& GetGlobalTransform() const;
         DLL void SetLocalTransform ( const Transform& aTransform );
         DLL void SetGlobalTransform ( const Transform& aTransform );
         DLL size_t GetChildrenCount() const;
-        DLL Node* GetChild ( size_t aIndex ) const;
-        DLL Node* GetParent() const;
+        DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
+        DLL const std::shared_ptr<Node>& GetParent() const;
         DLL size_t GetIndex() const;
     protected:
         virtual void Update ( const double delta ) = 0;
     private:
+        static const std::shared_ptr<Node> mNullNode;
         friend class Scene;
         std::string mName;
-        Node* mParent;
-        Scene* mScene;
+        std::shared_ptr<Node> mParent;
+        std::shared_ptr<Scene> mScene;
         Transform mLocalTransform;
         Transform mGlobalTransform;
-        std::vector<Node*> mNodes;
+        std::vector<std::shared_ptr<Node>> mNodes;
         size_t mIndex;
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
-        mutable std::vector<Node*>::size_type mIterator;
+        mutable std::vector<std::shared_ptr<Node>>::size_type mIterator;
         std::bitset<8> mFlags;
     };
 }

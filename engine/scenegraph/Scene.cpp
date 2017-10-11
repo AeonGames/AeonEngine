@@ -26,9 +26,8 @@ namespace AeonGames
     /**@todo implement Linear Octrees:
     https://geidav.wordpress.com/2014/08/18/advanced-octrees-2-node-representations/
     */
-    class Node;
     Scene::Scene() :
-        mName ( "Scene" ),
+        mName{ "Scene" },
         mRootNodes{},
         mAllNodes{}
     {
@@ -38,8 +37,8 @@ namespace AeonGames
     {
         for ( auto & mRootNode : mRootNodes )
         {
-            mRootNode->mScene = nullptr;
-            delete mRootNode;
+            mRootNode->mScene.reset();
+            mRootNode.reset();
         }
     }
 
@@ -63,20 +62,20 @@ namespace AeonGames
         return mRootNodes.size();
     }
 
-    Node* Scene::GetChild ( size_t aIndex ) const
+    const std::shared_ptr<Node>& Scene::GetChild ( size_t aIndex ) const
     {
         if ( aIndex < mRootNodes.size() )
         {
             return mRootNodes[aIndex];
         }
-        return nullptr;
+        return Node::mNullNode;
     }
 
     void Scene::Update ( const double delta )
     {
         for ( auto & mRootNode : mRootNodes )
         {
-            mRootNode->LoopTraverseDFSPreOrder ( [delta] ( Node * node )
+            mRootNode->LoopTraverseDFSPreOrder ( [delta] ( const std::shared_ptr<Node>& node )
             {
                 if ( node->mFlags[Node::Enabled] )
                 {
@@ -86,7 +85,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
+    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -94,7 +93,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aPreamble, std::function<void ( Node* ) > aPostamble )
+    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aPreamble, std::function<void ( const std::shared_ptr<Node>& ) > aPostamble )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -102,15 +101,15 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const Node* ) > aAction ) const
+    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
     {
         for ( auto mRootNode : mRootNodes )
         {
-            static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPreOrder ( aAction );
+            static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPreOrder ( aAction );
         }
     }
 
-    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
+    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -118,15 +117,15 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const Node* ) > aAction ) const
+    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
     {
         for ( auto mRootNode : mRootNodes )
         {
-            static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPostOrder ( aAction );
+            static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPostOrder ( aAction );
         }
     }
 
-    void Scene::RecursiveTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
+    void Scene::RecursiveTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -134,7 +133,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::RecursiveTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
+    void Scene::RecursiveTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -142,7 +141,7 @@ namespace AeonGames
         }
     }
 
-    bool Scene::InsertNode ( size_t aIndex, Node* aNode )
+    bool Scene::InsertNode ( size_t aIndex, const std::shared_ptr<Node>& aNode )
     {
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mRootNodes.begin(), mRootNodes.end(), aNode ) == mRootNodes.end() ) )
@@ -166,17 +165,17 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node * node )
+                [this] ( const std::shared_ptr<Node>& node )
             {
                 this->mAllNodes.push_back ( node );
-                node->mScene = this;
+                node->mScene = shared_from_this();
             } );
             return true;
         }
         return false;
     }
 
-    bool Scene::AddNode ( Node* aNode )
+    bool Scene::AddNode ( const std::shared_ptr<Node>& aNode )
     {
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mRootNodes.begin(), mRootNodes.end(), aNode ) == mRootNodes.end() ) )
@@ -195,17 +194,17 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node * node )
+                [this] ( const std::shared_ptr<Node>& node )
             {
-                this->mAllNodes.push_back ( node );
-                node->mScene = this;
+                mAllNodes.push_back ( node );
+                node->mScene = shared_from_this();
             } );
             return true;
         }
         return false;
     }
 
-    bool Scene::RemoveNode ( Node* aNode )
+    bool Scene::RemoveNode ( const std::shared_ptr<Node>& aNode )
     {
         if ( aNode == nullptr )
         {
@@ -228,7 +227,7 @@ namespace AeonGames
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             auto it = mAllNodes.end();
-            aNode->LoopTraverseDFSPostOrder ( [&it, this] ( Node * node )
+            aNode->LoopTraverseDFSPostOrder ( [&it, this] ( const std::shared_ptr<Node>& node )
             {
                 node->mScene = nullptr;
                 it = std::remove ( this->mAllNodes.begin(), it, node );

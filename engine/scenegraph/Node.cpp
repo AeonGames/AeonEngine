@@ -1,5 +1,5 @@
 /*
-Copyright 2014-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ limitations under the License.
 namespace AeonGames
 {
 
+    const std::shared_ptr<Node> Node::mNullNode{};
     const size_t Node::kInvalidIndex = std::numeric_limits<size_t>::max(); // Use on VS2013
 
     Node::Node ( uint32_t aFlags ) :
@@ -51,23 +52,23 @@ namespace AeonGames
         /* Make sure tree is left in a valid state */
         if ( mParent != nullptr )
         {
-            if ( !mParent->RemoveNode ( this ) )
+            if ( !mParent->RemoveNode ( shared_from_this() ) )
             {
                 std::cerr << "Remove Node Failed" << std::endl;
             }
         }
         else if ( mScene != nullptr )
         {
-            if ( !mScene->RemoveNode ( this ) )
+            if ( !mScene->RemoveNode ( shared_from_this() ) )
             {
                 std::cerr << "Remove Node Failed" << std::endl;
             }
         }
         for ( auto & mNode : mNodes )
         {
-            mNode->mParent = nullptr;
-            mNode->mScene = nullptr;
-            delete mNode;
+            mNode->mParent.reset();
+            mNode->mScene.reset();
+            mNode.reset();
         }
     }
 
@@ -76,16 +77,16 @@ namespace AeonGames
         return mNodes.size();
     }
 
-    Node* Node::GetChild ( size_t aIndex ) const
+    const std::shared_ptr<Node>& Node::GetChild ( size_t aIndex ) const
     {
         if ( aIndex < mNodes.size() )
         {
             return mNodes[aIndex];
         }
-        return nullptr;
+        return mNullNode;
     }
 
-    Node* Node::GetParent() const
+    const std::shared_ptr<Node>& Node::GetParent() const
     {
         return mParent;
     }
@@ -124,7 +125,7 @@ namespace AeonGames
     {
         mLocalTransform = aTransform;
         LoopTraverseDFSPreOrder (
-            [] ( Node * node )
+            [] ( const std::shared_ptr<Node>& node )
         {
             if ( node->mParent != nullptr )
             {
@@ -151,13 +152,13 @@ namespace AeonGames
         }
         // Then Update the Global transform for all children
         LoopTraverseDFSPreOrder (
-            [this] ( Node * node )
+            [this] ( const std::shared_ptr<Node>& node )
         {
             /*! @todo Although this->mLocalTransform has already been computed
                       think about removing the check and let it be recomputed,
                       it may be faster than the branch that needs to run
                       for each node and is false only once.*/
-            if ( node != this )
+            if ( node.get() != this )
             {
                 node->mGlobalTransform = node->mParent->mGlobalTransform * node->mLocalTransform;
             }
@@ -174,11 +175,11 @@ namespace AeonGames
         return mName;
     }
 
-    bool Node::InsertNode ( size_t aIndex, Node* aNode )
+    bool Node::InsertNode ( size_t aIndex, const std::shared_ptr<Node>& aNode )
     {
         // Never append null or this pointers.
         ///@todo std::find might be slower than removing and reinserting an existing node
-        if ( ( aNode != nullptr ) && ( aNode != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
+        if ( ( aNode != nullptr ) && ( aNode.get() != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
             if ( aNode->mParent != nullptr )
             {
@@ -187,7 +188,7 @@ namespace AeonGames
                     std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                 }
             }
-            aNode->mParent = this;
+            aNode->mParent = shared_from_this();
             aNode->mIndex = aIndex;
             mNodes.insert ( mNodes.begin() + aIndex, aNode );
             for ( auto i = mNodes.begin() + aIndex + 1; i != mNodes.end(); ++i )
@@ -198,7 +199,7 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node * node )
+                [this] ( const std::shared_ptr<Node>& node )
             {
                 if ( this->mScene != nullptr )
                 {
@@ -211,10 +212,10 @@ namespace AeonGames
         return false;
     }
 
-    bool Node::AddNode ( Node* aNode )
+    bool Node::AddNode ( const std::shared_ptr<Node>& aNode )
     {
         // Never append null or this pointers.
-        if ( ( aNode != nullptr ) && ( aNode != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
+        if ( ( aNode != nullptr ) && ( aNode.get() != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
             if ( aNode->mParent != nullptr )
             {
@@ -223,14 +224,14 @@ namespace AeonGames
                     std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                 }
             }
-            aNode->mParent = this;
+            aNode->mParent = shared_from_this();
             aNode->mIndex = mNodes.size();
             mNodes.push_back ( aNode );
             // Force a recalculation of the LOCAL transform
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node * node )
+                [this] ( const std::shared_ptr<Node>& node )
             {
                 if ( this->mScene != nullptr )
                 {
@@ -243,10 +244,10 @@ namespace AeonGames
         return false;
     }
 
-    bool Node::RemoveNode ( Node* aNode )
+    bool Node::RemoveNode ( const std::shared_ptr<Node>& aNode )
     {
         assert ( aNode != nullptr );
-        assert ( aNode != this );
+        assert ( aNode.get() != this );
         // If passed a null or this pointer find SHOULD not find it on release builds.
         /*  While only a single instance should be found and erase does the element shifting
             we're using remove here to do the shifting in order to stablish
@@ -267,7 +268,7 @@ namespace AeonGames
             if ( mScene != nullptr )
             {
                 auto it = mScene->mAllNodes.end();
-                aNode->LoopTraverseDFSPostOrder ( [&it, this] ( Node * node )
+                aNode->LoopTraverseDFSPostOrder ( [&it, this] ( const std::shared_ptr<Node>& node )
                 {
                     node->mScene = nullptr;
                     it = std::remove ( this->mScene->mAllNodes.begin(), it, node );
@@ -282,19 +283,19 @@ namespace AeonGames
         return false;
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
+    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
         need to also be const.
         */
-        Node* node = this;
+        auto node = shared_from_this();
         aAction ( node );
         while ( node != this->mParent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
-                Node* prev = node;
+                auto prev = node;
                 node = node->mNodes[node->mIterator];
                 aAction ( node );
                 prev->mIterator++;
@@ -307,19 +308,19 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aPreamble, std::function<void ( Node* ) > aPostamble )
+    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aPreamble, std::function<void ( const std::shared_ptr<Node>& ) > aPostamble )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
         need to also be const.
         */
-        Node* node = this;
+        auto node = shared_from_this();
         aPreamble ( node );
         while ( node != this->mParent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
-                Node* prev = node;
+                auto prev = node;
                 node = node->mNodes[node->mIterator];
                 aPreamble ( node );
                 prev->mIterator++;
@@ -333,15 +334,15 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const Node* ) > aAction ) const
+    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
     {
-        const Node* node = this;
+        auto node = shared_from_this();
         aAction ( node );
         while ( node != this->mParent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
-                const Node* prev = node;
+                auto prev = node;
                 node = node->mNodes[node->mIterator];
                 aAction ( node );
                 prev->mIterator++;
@@ -354,18 +355,18 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
+    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
         http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
         */
-        Node* node = this;
+        auto node = shared_from_this();
         while ( node != this->mParent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
-                Node* prev = node;
+                auto prev = node;
                 node = node->mNodes[node->mIterator];
                 prev->mIterator++;
             }
@@ -378,18 +379,18 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const Node* ) > aAction ) const
+    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
         http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
         */
-        const Node* node = this;
+        auto node = shared_from_this();
         while ( node != this->mParent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
-                const Node* prev = node;
+                auto prev = node;
                 node = node->mNodes[node->mIterator];
                 prev->mIterator++;
             }
@@ -402,27 +403,27 @@ namespace AeonGames
         }
     }
 
-    void Node::RecursiveTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction )
+    void Node::RecursiveTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         for ( auto & mNode : mNodes )
         {
             mNode->RecursiveTraverseDFSPostOrder ( aAction );
         }
-        aAction ( this );
+        aAction ( shared_from_this() );
     }
 
-    void Node::RecursiveTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction )
+    void Node::RecursiveTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
-        aAction ( this );
+        aAction ( shared_from_this() );
         for ( auto & mNode : mNodes )
         {
             mNode->RecursiveTraverseDFSPreOrder ( aAction );
         }
     }
 
-    void Node::LoopTraverseAncestors ( std::function<void ( Node* ) > aAction )
+    void Node::LoopTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
-        Node* node = this;
+        auto node = shared_from_this();
         while ( node != nullptr )
         {
             aAction ( node );
@@ -430,9 +431,9 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseAncestors ( std::function<void ( const Node* ) > aAction ) const
+    void Node::LoopTraverseAncestors ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
     {
-        const Node* node = this;
+        auto node = shared_from_this();
         while ( node != nullptr )
         {
             aAction ( node );
@@ -440,9 +441,9 @@ namespace AeonGames
         }
     }
 
-    void Node::RecursiveTraverseAncestors ( std::function<void ( Node* ) > aAction )
+    void Node::RecursiveTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
-        aAction ( this );
+        aAction ( shared_from_this() );
         if ( mParent != nullptr )
         {
             mParent->RecursiveTraverseAncestors ( aAction );
