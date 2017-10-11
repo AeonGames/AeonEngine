@@ -1,5 +1,5 @@
 /*
-Copyright 2014-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_SCENE_H
 /*! \file
     \brief Header for the Scene class.
-    \copy 2014-2016
+    \copy 2014-2017
     \author Rodrigo Hernandez.
 */
 #include "aeongames/Platform.h"
@@ -47,7 +47,6 @@ namespace AeonGames
         DLL size_t GetChildrenCount() const;
         DLL Node* GetChild ( size_t aIndex ) const;
         DLL void Update ( const double delta );
-        DLL void Render ( Renderer* aRenderer );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node*) > aAction)*/
         DLL void LoopTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction );
         /** @copydoc Node::LoopTraverseDFSPreOrder(
@@ -66,7 +65,6 @@ namespace AeonGames
         DLL void RecursiveTraverseDFSPreOrder ( std::function<void ( Node* ) > aAction );
         /** @copydoc Node::RecursiveTraverseDFSPostOrder(std::function<void(Node*) > aAction)*/
         DLL void RecursiveTraverseDFSPostOrder ( std::function<void ( Node* ) > aAction );
-
         // Deleted Methods (avoid copy and copy construction)
         Scene& operator= ( const Scene& ) = delete;
         Scene ( const Scene& ) = delete;

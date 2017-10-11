@@ -28,15 +28,15 @@ namespace AeonGames
         Animation ( std::string  aFilename );
         ~Animation();
         DLL uint32_t GetFrameRate() const;
-        DLL float GetDuration() const;
-        DLL const Transform GetTransform ( size_t aBoneIndex, float aTime ) const;
+        DLL double GetDuration() const;
+        DLL const Transform GetTransform ( size_t aBoneIndex, double aTime ) const;
     private:
         void Initialize();
         void Finalize();
         std::string mFilename;
         uint32_t mVersion;
         uint32_t mFrameRate;
-        float mDuration;
+        double mDuration;
         std::vector<std::vector<Transform>> mFrames;
     };
 }

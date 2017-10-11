@@ -281,7 +281,7 @@ namespace AeonGames
     {
         return memcmp ( lhs.GetTransform(), rhs.GetTransform(), sizeof ( float ) * 10 ) == 0;
     }
-    const Transform Interpolate ( const Transform & aTransform0, const Transform & aTransform1, const Transform & aTransform2, const Transform & aTransform3, float aInterpolation )
+    const Transform Interpolate ( const Transform & aTransform0, const Transform & aTransform1, const Transform & aTransform2, const Transform & aTransform3, double aInterpolation )
     {
         float srt[10];
         Spline ( aTransform0.GetScale(), aTransform1.GetScale(), aTransform2.GetScale(), aTransform3.GetScale(), aInterpolation, srt );

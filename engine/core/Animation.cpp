@@ -62,25 +62,25 @@ namespace AeonGames
         return mFrameRate;
     }
 
-    float Animation::GetDuration() const
+    double Animation::GetDuration() const
     {
         return mDuration;
     }
 
-    const Transform Animation::GetTransform ( size_t aBoneIndex, float aTime ) const
+    const Transform Animation::GetTransform ( size_t aBoneIndex, double aTime ) const
     {
-        float sample = mFrameRate * fmodf ( aTime, mDuration );
-        float frame;
-        float interpolation = modff ( sample, &frame );
+        double sample = mFrameRate * fmod ( aTime, mDuration );
+        double frame;
+        double interpolation = modf ( sample, &frame );
         size_t frame1 = static_cast<size_t> ( frame );
         size_t frame2 = ( ( frame1 + 1 ) % mFrames.size() );
         size_t frame0 = frame1 == 0 ? mFrames.size() - 1 : ( ( frame1 - 1 ) % mFrames.size() );
         size_t frame3 = ( ( frame1 + 2 ) % mFrames.size() );
-        if ( interpolation <= 0.0f )
+        if ( interpolation <= 0.0 )
         {
             return mFrames[frame1][aBoneIndex];
         }
-        else if ( interpolation >= 1.0f )
+        else if ( interpolation >= 1.0 )
         {
             return mFrames[frame2][aBoneIndex];
         }
