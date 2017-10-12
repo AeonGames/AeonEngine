@@ -27,7 +27,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanBuffer::VulkanBuffer ( const std::shared_ptr<const VulkanRenderer> aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, void *aData ) :
+    VulkanBuffer::VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, void *aData ) :
         mVulkanRenderer ( aVulkanRenderer ), mSize ( aSize ), mUsage ( aUsage ), mProperties ( aProperties )
     {
         try
@@ -46,6 +46,36 @@ namespace AeonGames
         Finalize();
     }
 
+    const VkBuffer& VulkanBuffer::GetBuffer() const
+    {
+        return mBuffer;
+    }
+
+    void VulkanBuffer::WriteMemory ( const VkDeviceSize aOffset, const VkDeviceSize aSize, const void * aData ) const
+    {
+        if ( ( aData ) && ( mProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ) )
+        {
+            void* data = Map ( aOffset, aSize );
+            memcpy ( data, aData, mSize );
+            Unmap();
+        }
+    }
+
+    void * VulkanBuffer::Map ( const VkDeviceSize aOffset, const VkDeviceSize aSize ) const
+    {
+        void* data = nullptr;
+        if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, aOffset, aSize, 0, &data ) )
+        {
+            std::cout << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+        }
+        return data;
+    }
+
+    void VulkanBuffer::Unmap() const
+    {
+        vkUnmapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory );
+    }
+
     void VulkanBuffer::Initialize ( void* aData )
     {
         VkBufferCreateInfo buffer_create_info{};
@@ -58,7 +88,7 @@ namespace AeonGames
         buffer_create_info.queueFamilyIndexCount = 0;
         buffer_create_info.pQueueFamilyIndices = nullptr;
 
-        if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(), &buffer_create_info, nullptr, &mBuffer ) )
+        if ( VkResult result = vkCreateBuffer ( mVulkanRenderer.GetDevice(), &buffer_create_info, nullptr, &mBuffer ) )
         {
             std::ostringstream stream;
             stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
@@ -66,49 +96,40 @@ namespace AeonGames
         }
 
         VkMemoryRequirements memory_requirements;
-        vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), mBuffer, &memory_requirements );
+        vkGetBufferMemoryRequirements ( mVulkanRenderer.GetDevice(), mBuffer, &memory_requirements );
 
         VkMemoryAllocateInfo memory_allocate_info{};
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memory_allocate_info.pNext = nullptr;
         memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( mProperties );
+        memory_allocate_info.memoryTypeIndex = mVulkanRenderer.GetMemoryTypeIndex ( mProperties );
 
         if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
             throw std::runtime_error ( "No suitable memory type found for buffer." );
         }
 
-        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mDeviceMemory ) )
+        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mDeviceMemory ) )
         {
             std::ostringstream stream;
             stream << "vkAllocateMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mBuffer, mDeviceMemory, 0 );
+        vkBindBufferMemory ( mVulkanRenderer.GetDevice(), mBuffer, mDeviceMemory, 0 );
 
-        if ( ( aData ) && ( mProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ) )
-        {
-            void* data = nullptr;
-            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mDeviceMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
-            {
-                std::cout << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            }
-            memcpy ( data, aData, mSize );
-            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mDeviceMemory );
-        }
+        WriteMemory ( 0, mSize, aData );
     }
 
     void VulkanBuffer::Finalize()
     {
         if ( mDeviceMemory != VK_NULL_HANDLE )
         {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mDeviceMemory, nullptr );
+            vkFreeMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, nullptr );
             mDeviceMemory = VK_NULL_HANDLE;
         }
         if ( mBuffer != VK_NULL_HANDLE )
         {
-            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mBuffer, nullptr );
+            vkDestroyBuffer ( mVulkanRenderer.GetDevice(), mBuffer, nullptr );
             mBuffer = VK_NULL_HANDLE;
         }
     }
