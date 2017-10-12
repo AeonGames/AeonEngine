@@ -24,12 +24,16 @@ namespace AeonGames
     class VulkanBuffer
     {
     public:
-        VulkanBuffer ( const std::shared_ptr<const VulkanRenderer> aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, void *aData = nullptr );
+        VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, void *aData = nullptr );
         ~VulkanBuffer();
+        const VkBuffer& GetBuffer() const;
+        void WriteMemory ( const VkDeviceSize aOffset, const  VkDeviceSize aSize, const void *aData = nullptr ) const ;
+        void* Map ( const VkDeviceSize aOffset, const VkDeviceSize aSize ) const;
+        void Unmap() const;
     private:
         void Initialize ( void *aData );
         void Finalize();
-        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
+        const VulkanRenderer& mVulkanRenderer;
         VkBuffer mBuffer = VK_NULL_HANDLE;
         VkDeviceMemory mDeviceMemory = VK_NULL_HANDLE;
         VkDeviceSize mSize;

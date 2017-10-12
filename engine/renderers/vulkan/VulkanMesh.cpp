@@ -52,11 +52,11 @@ namespace AeonGames
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
             const VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &mBuffers[i].mVertexBuffer, &offset );
+            vkCmdBindVertexBuffers ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &mBuffers[i].GetBuffer(), &offset );
             if ( triangle_groups[i].mIndexCount )
             {
                 vkCmdBindIndexBuffer ( mVulkanRenderer->GetCommandBuffer(),
-                                       mBuffers[i].mIndexBuffer, 0,
+                                       mBuffers[i].GetBuffer(), ( sizeof ( Vertex ) * triangle_groups[i].mVertexCount ),
                                        GetIndexType ( static_cast<AeonGames::Mesh::IndexType> ( triangle_groups[i].mIndexType ) ) );
                 vkCmdDrawIndexed ( mVulkanRenderer->GetCommandBuffer(), triangle_groups[i].mIndexCount, 1, 0, 0, 1 );
             }
@@ -75,69 +75,21 @@ namespace AeonGames
         }
         auto& triangle_groups = mMesh->GetTriangleGroups();
         auto& physical_device_memory_properties = mVulkanRenderer->GetPhysicalDeviceMemoryProperties();
-        uint32_t memory_index = UINT32_MAX;
-        for ( uint32_t i = 0; i < physical_device_memory_properties.memoryTypeCount; ++i )
-        {
-            if ( ( physical_device_memory_properties.memoryTypes[i].propertyFlags &
-                   ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
-                 == ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) )
-            {
-                memory_index = i;
-                break;
-            }
-        }
-        if ( memory_index == UINT32_MAX )
-        {
-            throw std::runtime_error ( "No suitable memory type found for mesh buffers" );
-        }
-        mBuffers.resize ( triangle_groups.size() );
+        mBuffers.reserve ( triangle_groups.size() );
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
+            const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * triangle_groups[i].mVertexCount );
+            const VkDeviceSize index_buffer_size = ( triangle_groups[i].mIndexBuffer.length() *
+                                                   ( ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
+            VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
+            VkBufferUsageFlags buffer_usage = ( ( triangle_groups[i].mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( triangle_groups[i].mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
+
+            mBuffers.emplace_back ( *mVulkanRenderer.get(), buffer_size, buffer_usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
             if ( triangle_groups[i].mVertexCount )
             {
-                VkBufferCreateInfo buffer_create_info{};
-                buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-                buffer_create_info.pNext = nullptr;
-                buffer_create_info.flags = 0;
-                /* We need to inflate the vertex buffer because Vulkan doesn't take per attribute strides. */
-                buffer_create_info.size = sizeof ( Vertex ) * triangle_groups[i].mVertexCount;
-                buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-                buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-                buffer_create_info.queueFamilyIndexCount = 0;
-                buffer_create_info.pQueueFamilyIndices = nullptr;
-
-                if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(), &buffer_create_info, nullptr, &mBuffers[i].mVertexBuffer ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
-
-                VkMemoryRequirements memory_requirements{};
-                vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexBuffer, &memory_requirements );
-
-                VkMemoryAllocateInfo memory_allocate_info{};
-                memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-                memory_allocate_info.pNext = nullptr;
-                memory_allocate_info.allocationSize = memory_requirements.size;
-                memory_allocate_info.memoryTypeIndex = memory_index;
-
-                if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mBuffers[i].mVertexMemory ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkAllocateMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
-
-                Vertex* vertices = nullptr;
-                if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &vertices ) ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkMapMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
-
-                memset ( vertices, 0, buffer_create_info.size );
+                Vertex* vertices = static_cast<Vertex*> ( mBuffers.back().Map ( 0, vertex_buffer_size ) );
+                memset ( vertices, 0, vertex_buffer_size );
                 uintptr_t offset = 0;
                 for ( uint32_t j = 0; j < triangle_groups[i].mVertexCount; ++j )
                 {
@@ -179,61 +131,11 @@ namespace AeonGames
                         offset += sizeof ( Vertex::weight_influences );
                     }
                 }
-
-                vkUnmapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexMemory );
-
-                if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mVertexBuffer, mBuffers[i].mVertexMemory, 0 ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkBindBufferMemory failed. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
+                mBuffers.back().Unmap();
             }
             if ( triangle_groups[i].mIndexCount )
             {
-                VkBufferCreateInfo buffer_create_info{};
-                buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-                buffer_create_info.pNext = nullptr;
-                buffer_create_info.flags = 0;
-                /**@note Upcasting index buffer to 16 bits when index type is 8 bits.*/
-                buffer_create_info.size = triangle_groups[i].mIndexBuffer.length() *
-                                          ( ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) ? 2 : 1 );
-                buffer_create_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-                buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-                buffer_create_info.queueFamilyIndexCount = 0;
-                buffer_create_info.pQueueFamilyIndices = nullptr;
-
-                if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(), &buffer_create_info, nullptr, &mBuffers[i].mIndexBuffer ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkCreateBuffer failed for index buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
-
-                VkMemoryRequirements memory_requirements{};
-                vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexBuffer, &memory_requirements );
-
-                VkMemoryAllocateInfo memory_allocate_info{};
-                memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-                memory_allocate_info.pNext = nullptr;
-                memory_allocate_info.allocationSize = memory_requirements.size;
-                memory_allocate_info.memoryTypeIndex = memory_index;
-
-                if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mBuffers[i].mIndexMemory ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkAllocateMemory failed for index buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
-
-                void* data = nullptr;
-                if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexMemory, 0, VK_WHOLE_SIZE, 0, &data ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkMapMemory failed for index buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
-
+                void* data = mBuffers.back().Map ( triangle_groups[i].mVertexCount ? vertex_buffer_size : 0, index_buffer_size );
                 if ( ! ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) )
                 {
                     memcpy ( data, triangle_groups[i].mIndexBuffer.data(), triangle_groups[i].mIndexBuffer.size() );
@@ -246,43 +148,14 @@ namespace AeonGames
                         reinterpret_cast<uint16_t*> ( data ) [j] = triangle_groups[i].mIndexBuffer[j];
                     }
                 }
-                vkUnmapMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexMemory );
-
-                if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mBuffers[i].mIndexBuffer, mBuffers[i].mIndexMemory, 0 ) )
-                {
-                    std::ostringstream stream;
-                    stream << "vkBindBufferMemory failed. error code: ( " << GetVulkanResultString ( result ) << " )";
-                    throw std::runtime_error ( stream.str().c_str() );
-                }
+                mBuffers.back().Unmap();
             }
         }
     }
 
     void VulkanMesh::Finalize()
     {
-        for ( auto& i : mBuffers )
-        {
-            if ( i.mVertexMemory != VK_NULL_HANDLE )
-            {
-                vkFreeMemory ( mVulkanRenderer->GetDevice(), i.mVertexMemory, nullptr );
-                i.mVertexMemory = VK_NULL_HANDLE;
-            }
-            if ( i.mVertexBuffer != VK_NULL_HANDLE )
-            {
-                vkDestroyBuffer ( mVulkanRenderer->GetDevice(), i.mVertexBuffer, nullptr );
-                i.mVertexBuffer = VK_NULL_HANDLE;
-            }
-            if ( i.mIndexMemory != VK_NULL_HANDLE )
-            {
-                vkFreeMemory ( mVulkanRenderer->GetDevice(), i.mIndexMemory, nullptr );
-                i.mIndexMemory = VK_NULL_HANDLE;
-            }
-            if ( i.mIndexBuffer != VK_NULL_HANDLE )
-            {
-                vkDestroyBuffer ( mVulkanRenderer->GetDevice(), i.mIndexBuffer, nullptr );
-                i.mIndexBuffer = VK_NULL_HANDLE;
-            }
-        }
+        mBuffers.clear();
     }
 
     VkIndexType VulkanMesh::GetIndexType ( Mesh::IndexType aIndexType ) const

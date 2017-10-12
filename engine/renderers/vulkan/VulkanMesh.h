@@ -21,6 +21,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/Memory.h"
 #include "aeongames/Mesh.h"
+#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
@@ -37,14 +38,7 @@ namespace AeonGames
         VkIndexType GetIndexType ( Mesh::IndexType aIndexType ) const;
         std::shared_ptr<const Mesh> mMesh;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
-        struct Buffers
-        {
-            VkBuffer mVertexBuffer = VK_NULL_HANDLE;
-            VkDeviceMemory mVertexMemory = VK_NULL_HANDLE;
-            VkBuffer mIndexBuffer = VK_NULL_HANDLE;
-            VkDeviceMemory mIndexMemory = VK_NULL_HANDLE;
-        };
-        std::vector<Buffers> mBuffers;
+        std::vector<VulkanBuffer> mBuffers;
     };
 }
 #endif
