@@ -74,7 +74,6 @@ namespace AeonGames
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
         auto& triangle_groups = mMesh->GetTriangleGroups();
-        auto& physical_device_memory_properties = mVulkanRenderer->GetPhysicalDeviceMemoryProperties();
         mBuffers.reserve ( triangle_groups.size() );
         for ( size_t i = 0; i < triangle_groups.size(); ++i )
         {
