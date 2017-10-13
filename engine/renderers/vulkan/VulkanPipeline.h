@@ -55,9 +55,7 @@ namespace AeonGames
         mVkShaderModules{ { VK_NULL_HANDLE } };
         const std::shared_ptr<VulkanMaterial> mDefaultMaterial;
         VulkanBuffer mVkPropertiesUniformBuffer;
-        //VkDeviceMemory mVkPropertiesUniformMemory = VK_NULL_HANDLE;
         VulkanBuffer mVkSkeletonBuffer;
-        //VkDeviceMemory mVkSkeletonMemory = VK_NULL_HANDLE;
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;

@@ -28,7 +28,11 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanSkeleton::VulkanSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
-        mSkeleton ( aSkeleton ), mVulkanRenderer ( aVulkanRenderer )
+        mVulkanRenderer ( aVulkanRenderer ), mSkeleton ( aSkeleton ),
+        mSkeletonBuffer ( *aVulkanRenderer,
+                          mSkeleton->GetJoints().size() * sizeof ( float ) * 16,
+                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT )
     {
         try
         {
@@ -48,18 +52,12 @@ namespace AeonGames
 
     VkBuffer VulkanSkeleton::GetBuffer() const
     {
-        return mSkeletonBuffer;
+        return mSkeletonBuffer.GetBuffer();
     }
 
     void VulkanSkeleton::SetPose ( const std::vector<Matrix4x4>& aSkeleton ) const
     {
-        void* joint_array = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, &joint_array ) )
-        {
-            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-        }
-        memcpy ( joint_array, aSkeleton.data(), aSkeleton.size() * sizeof ( Matrix4x4 ) );
-        vkUnmapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory );
+        mSkeletonBuffer.WriteMemory ( 0, aSkeleton.size() * sizeof ( Matrix4x4 ), aSkeleton.data() );
     }
 
     size_t VulkanSkeleton::GetBufferSize() const
@@ -69,51 +67,7 @@ namespace AeonGames
 
     void VulkanSkeleton::Initialize()
     {
-        VkBufferCreateInfo buffer_create_info{};
-        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.pNext = nullptr;
-        buffer_create_info.flags = 0;
-        buffer_create_info.size = GetBufferSize();
-        buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        buffer_create_info.queueFamilyIndexCount = 0;
-        buffer_create_info.pQueueFamilyIndices = nullptr;
-
-        if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(), &buffer_create_info, nullptr, &mSkeletonBuffer ) )
-        {
-            std::ostringstream stream;
-            stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        VkMemoryRequirements memory_requirements;
-        vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), mSkeletonBuffer, &memory_requirements );
-
-        VkMemoryAllocateInfo memory_allocate_info{};
-        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memory_allocate_info.pNext = nullptr;
-        memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-        if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
-        {
-            throw std::runtime_error ( "No suitable memory type found for mesh buffers" );
-        }
-
-        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mSkeletonMemory ) )
-        {
-            std::ostringstream stream;
-            stream << "vkAllocateMemory failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mSkeletonBuffer, mSkeletonMemory, 0 );
-
-        float* joint_array = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &joint_array ) ) )
-        {
-            std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-        }
-
+        float* joint_array = static_cast<float*> ( mSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
         const float identity[16] =
         {
             1.0f, 0.0f, 0.0f, 0.0f,
@@ -125,20 +79,10 @@ namespace AeonGames
         {
             memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
         }
-        vkUnmapMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory );
+        mSkeletonBuffer.Unmap();
     }
 
     void VulkanSkeleton::Finalize()
     {
-        if ( mSkeletonMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mSkeletonMemory, nullptr );
-            mSkeletonMemory = VK_NULL_HANDLE;
-        }
-        if ( mSkeletonBuffer != VK_NULL_HANDLE )
-        {
-            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mSkeletonBuffer, nullptr );
-            mSkeletonBuffer = VK_NULL_HANDLE;
-        }
     }
 }

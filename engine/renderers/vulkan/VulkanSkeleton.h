@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_VULKANSKELETON_H
 #include "aeongames/Memory.h"
 #include <vulkan/vulkan.h>
-
+#include "VulkanBuffer.h"
 namespace AeonGames
 {
     class Skeleton;
@@ -26,7 +26,7 @@ namespace AeonGames
     class VulkanSkeleton
     {
     public:
-        VulkanSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const VulkanRenderer> aOpenGLRenderer );
+        VulkanSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         ~VulkanSkeleton();
         VkBuffer GetBuffer() const;
         void SetPose ( const std::vector<Matrix4x4>& aSkeleton ) const;
@@ -34,10 +34,9 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        VkBuffer mSkeletonBuffer = VK_NULL_HANDLE;
-        VkDeviceMemory mSkeletonMemory = VK_NULL_HANDLE;
-        std::shared_ptr<const Skeleton> mSkeleton;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
+        std::shared_ptr<const Skeleton> mSkeleton;
+        VulkanBuffer mSkeletonBuffer;
     };
 }
 #endif
