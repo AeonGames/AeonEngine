@@ -24,21 +24,24 @@ namespace AeonGames
     class VulkanBuffer
     {
     public:
-        VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, void *aData = nullptr );
+        VulkanBuffer ( const VulkanRenderer& aVulkanRenderer );
+        VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
         ~VulkanBuffer();
+        void Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
+        void Finalize();
         const VkBuffer& GetBuffer() const;
         void WriteMemory ( const VkDeviceSize aOffset, const  VkDeviceSize aSize, const void *aData = nullptr ) const ;
         void* Map ( const VkDeviceSize aOffset, const VkDeviceSize aSize ) const;
         void Unmap() const;
+        VkDeviceSize GetSize() const;
     private:
-        void Initialize ( void *aData );
-        void Finalize();
+        void Initialize ( const void *aData );
         const VulkanRenderer& mVulkanRenderer;
-        VkBuffer mBuffer = VK_NULL_HANDLE;
-        VkDeviceMemory mDeviceMemory = VK_NULL_HANDLE;
-        VkDeviceSize mSize;
-        VkBufferUsageFlags mUsage;
-        VkMemoryPropertyFlags mProperties;
+        VkBuffer mBuffer{ VK_NULL_HANDLE };
+        VkDeviceMemory mDeviceMemory{ VK_NULL_HANDLE };
+        VkDeviceSize mSize{};
+        VkBufferUsageFlags mUsage{};
+        VkMemoryPropertyFlags mProperties{};
     };
 }
 #endif

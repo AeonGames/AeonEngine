@@ -27,7 +27,10 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanBuffer::VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, void *aData ) :
+    VulkanBuffer::VulkanBuffer ( const VulkanRenderer & aVulkanRenderer ) : mVulkanRenderer ( aVulkanRenderer )
+    {
+    }
+    VulkanBuffer::VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData ) :
         mVulkanRenderer ( aVulkanRenderer ), mSize ( aSize ), mUsage ( aUsage ), mProperties ( aProperties )
     {
         try
@@ -44,6 +47,18 @@ namespace AeonGames
     VulkanBuffer::~VulkanBuffer()
     {
         Finalize();
+    }
+
+    void VulkanBuffer::Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void * aData )
+    {
+        if ( mDeviceMemory != VK_NULL_HANDLE || mBuffer != VK_NULL_HANDLE )
+        {
+            throw ( std::runtime_error ( "Buffer already initialized." ) );
+        }
+        mSize = aSize;
+        mUsage = aUsage;
+        mProperties = aProperties;
+        Initialize ( aData );
     }
 
     const VkBuffer& VulkanBuffer::GetBuffer() const
@@ -76,8 +91,17 @@ namespace AeonGames
         vkUnmapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory );
     }
 
-    void VulkanBuffer::Initialize ( void* aData )
+    VkDeviceSize VulkanBuffer::GetSize() const
     {
+        return mSize;
+    }
+
+    void VulkanBuffer::Initialize ( const void* aData )
+    {
+        if ( !mSize )
+        {
+            return;
+        }
         VkBufferCreateInfo buffer_create_info{};
         buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         buffer_create_info.pNext = nullptr;

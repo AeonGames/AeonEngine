@@ -20,6 +20,7 @@ limitations under the License.
 #include <array>
 #include <vulkan/vulkan.h>
 #include "aeongames/Utilities.h"
+#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
@@ -51,14 +52,14 @@ namespace AeonGames
         std::shared_ptr<const Pipeline> mPipeline;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
-        mVkShaderModules{ {VK_NULL_HANDLE} };
+        mVkShaderModules{ { VK_NULL_HANDLE } };
         const std::shared_ptr<VulkanMaterial> mDefaultMaterial;
+        VulkanBuffer mVkPropertiesUniformBuffer;
+        //VkDeviceMemory mVkPropertiesUniformMemory = VK_NULL_HANDLE;
+        VulkanBuffer mVkSkeletonBuffer;
+        //VkDeviceMemory mVkSkeletonMemory = VK_NULL_HANDLE;
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
-        VkBuffer mVkPropertiesUniformBuffer = VK_NULL_HANDLE;
-        VkDeviceMemory mVkPropertiesUniformMemory = VK_NULL_HANDLE;
-        VkBuffer mVkSkeletonBuffer = VK_NULL_HANDLE;
-        VkDeviceMemory mVkSkeletonMemory = VK_NULL_HANDLE;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
         VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;

@@ -26,6 +26,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanMaterial.h"
 #include "VulkanUtilities.h"
+#include "VulkanBuffer.h"
 #include "SPIR-V/CompilerLinker.h"
 
 namespace AeonGames
@@ -33,7 +34,9 @@ namespace AeonGames
     VulkanPipeline::VulkanPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mPipeline ( aPipeline ),
         mVulkanRenderer ( aVulkanRenderer ),
-        mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) )
+        mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) ),
+        mVkPropertiesUniformBuffer ( *aVulkanRenderer ),
+        mVkSkeletonBuffer ( *aVulkanRenderer )
     {
         try
         {
@@ -71,7 +74,7 @@ namespace AeonGames
 
     VkBuffer VulkanPipeline::GetSkeletonBuffer() const
     {
-        return mVkSkeletonBuffer;
+        return mVkSkeletonBuffer.GetBuffer();
     }
 
     void VulkanPipeline::InitializePropertiesUniform()
@@ -79,122 +82,20 @@ namespace AeonGames
         auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
         if ( properties.size() )
         {
-            VkBufferCreateInfo buffer_create_info{};
-            buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            buffer_create_info.pNext = nullptr;
-            buffer_create_info.flags = 0;
-            buffer_create_info.size = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
-            buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-            buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            buffer_create_info.queueFamilyIndexCount = 0;
-            buffer_create_info.pQueueFamilyIndices = nullptr;
-
-            if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(),
-                                                    &buffer_create_info, nullptr, &mVkPropertiesUniformBuffer ) )
-            {
-                std::ostringstream stream;
-                stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-
-            VkMemoryRequirements memory_requirements;
-            vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(),
-                                            mVkPropertiesUniformBuffer, &memory_requirements );
-
-            VkMemoryAllocateInfo memory_allocate_info{};
-            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            memory_allocate_info.pNext = nullptr;
-            memory_allocate_info.allocationSize = memory_requirements.size;
-            memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-            if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
-            {
-                throw std::runtime_error ( "No suitable memory type found for property buffers" );
-            }
-
-            if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mVkPropertiesUniformMemory ) )
-            {
-                std::ostringstream stream;
-                stream << "vkAllocateMemory failed for property buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformBuffer, mVkPropertiesUniformMemory, 0 );
-
-            void* properties = nullptr;
-            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformMemory, 0, VK_WHOLE_SIZE, 0, &properties ) )
-            {
-                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            }
-            memcpy ( properties, mDefaultMaterial->GetUniformData().data(), mDefaultMaterial->GetUniformData().size() );
-            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformMemory );
+            mVkPropertiesUniformBuffer.Initialize ( mDefaultMaterial->GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial->GetUniformData().data() ) );
         }
     }
 
     void VulkanPipeline::FinalizePropertiesUniform()
     {
-        if ( mVkPropertiesUniformMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformMemory, nullptr );
-            mVkPropertiesUniformMemory = VK_NULL_HANDLE;
-        }
-        if ( mVkPropertiesUniformBuffer != VK_NULL_HANDLE )
-        {
-            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mVkPropertiesUniformBuffer, nullptr );
-            mVkPropertiesUniformBuffer = VK_NULL_HANDLE;
-        }
     }
 
     void VulkanPipeline::InitializeSkeletonUniform()
     {
         if ( mPipeline->GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
-            VkBufferCreateInfo buffer_create_info{};
-            buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            buffer_create_info.pNext = nullptr;
-            buffer_create_info.flags = 0;
-            buffer_create_info.size = 256 * 16 * sizeof ( float );
-            buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-            buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            buffer_create_info.queueFamilyIndexCount = 0;
-            buffer_create_info.pQueueFamilyIndices = nullptr;
-
-            if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(),
-                                                    &buffer_create_info, nullptr, &mVkSkeletonBuffer ) )
-            {
-                std::ostringstream stream;
-                stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-
-            VkMemoryRequirements memory_requirements;
-            vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(),
-                                            mVkSkeletonBuffer, &memory_requirements );
-
-            VkMemoryAllocateInfo memory_allocate_info{};
-            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            memory_allocate_info.pNext = nullptr;
-            memory_allocate_info.allocationSize = memory_requirements.size;
-            memory_allocate_info.memoryTypeIndex = mVulkanRenderer->GetMemoryTypeIndex ( VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-            if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
-            {
-                throw std::runtime_error ( "No suitable memory type found for property buffers" );
-            }
-
-            if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mVkSkeletonMemory ) )
-            {
-                std::ostringstream stream;
-                stream << "vkAllocateMemory failed for property buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            vkBindBufferMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonBuffer, mVkSkeletonMemory, 0 );
-
-            float* joint_array = nullptr;
-            if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonMemory, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**> ( &joint_array ) ) )
-            {
-                std::cout << "vkMapMemory failed for uniform buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            }
-
+            mVkSkeletonBuffer.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            float* joint_array = static_cast<float*> ( mVkSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
             const float identity[16] =
             {
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -206,22 +107,12 @@ namespace AeonGames
             {
                 memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
             }
-            vkUnmapMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonMemory );
+            mVkSkeletonBuffer.Unmap();
         }
     }
 
     void VulkanPipeline::FinalizeSkeletonUniform()
     {
-        if ( mVkSkeletonMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mVkSkeletonMemory, nullptr );
-            mVkSkeletonMemory = VK_NULL_HANDLE;
-        }
-        if ( mVkSkeletonBuffer != VK_NULL_HANDLE )
-        {
-            vkDestroyBuffer ( mVulkanRenderer->GetDevice(), mVkSkeletonBuffer, nullptr );
-            mVkSkeletonBuffer = VK_NULL_HANDLE;
-        }
     }
 
     void VulkanPipeline::InitializeDescriptorSetLayout()
@@ -229,7 +120,7 @@ namespace AeonGames
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 2 );
         // Properties binding
-        if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
+        if ( mVkPropertiesUniformBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 0;
@@ -239,7 +130,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
         // Skeleton binding
-        if ( mVkSkeletonBuffer && mVkSkeletonMemory )
+        if ( mVkSkeletonBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 1;
@@ -321,16 +212,16 @@ namespace AeonGames
         uint32_t descriptor_count = 0;
         std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
 
-        if ( mVkPropertiesUniformBuffer && mVkPropertiesUniformMemory )
+        if ( mVkPropertiesUniformBuffer.GetSize() )
         {
-            descriptor_buffer_infos[descriptor_count].buffer = mVkPropertiesUniformBuffer;
+            descriptor_buffer_infos[descriptor_count].buffer = mVkPropertiesUniformBuffer.GetBuffer();
             descriptor_buffer_infos[descriptor_count].offset = 0;
             descriptor_buffer_infos[descriptor_count].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
             descriptor_count += 1;
         }
-        if ( mVkSkeletonBuffer && mVkSkeletonMemory )
+        if ( mVkSkeletonBuffer.GetSize() )
         {
-            descriptor_buffer_infos[descriptor_count].buffer = mVkSkeletonBuffer;
+            descriptor_buffer_infos[descriptor_count].buffer = mVkSkeletonBuffer.GetBuffer();
             descriptor_buffer_infos[descriptor_count].offset = 0;
             descriptor_buffer_infos[descriptor_count].range = 256 * 16 * sizeof ( float );
             descriptor_count += 1;
