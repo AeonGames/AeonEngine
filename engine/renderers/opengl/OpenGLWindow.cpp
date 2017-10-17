@@ -130,12 +130,26 @@ namespace AeonGames
         glViewport ( 0, 0, rect.right, rect.bottom );
         OPENGL_CHECK_ERROR_THROW;
 #else
+        XWindowAttributes x_window_attributes {};
+        XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                               reinterpret_cast<::Window> ( mWindowId ), &x_window_attributes );
+        std::cout << "Visual " << x_window_attributes.visual <<
+                  " Default " << DefaultVisual ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                          DefaultScreen ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ) ) ) << std::endl;
+        XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
+        {
+            std::cout << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+            return 0;
+        } );
         if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                                 reinterpret_cast<::Window> ( mWindowId ),
                                 static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) ) )
         {
-            throw std::runtime_error ( "Failed to make OpenGL current to XWindow." );
+            std::ostringstream stream;
+            stream << "Failed to make OpenGL current to XWindow. Error: ";
+            throw std::runtime_error ( stream.str().c_str() );
         }
+        XSetErrorHandler ( nullptr );
 #endif
         glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
         OPENGL_CHECK_ERROR_NO_THROW;

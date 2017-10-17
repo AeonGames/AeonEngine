@@ -123,6 +123,7 @@ namespace AeonGames
                 if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
                 {
                     best_fbc = i, best_num_samp = samples;
+                    std::cout << "Best Visual " << vi->visual << std::endl;
                 }
                 if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
                 {

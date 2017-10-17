@@ -239,9 +239,9 @@ namespace AeonGames
             VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
             VK_DEBUG_REPORT_ERROR_BIT_EXT |
             VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        //mInstanceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
+        mInstanceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
-        //mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
+        mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
     }
 
     void VulkanRenderer::InitializeDebug()
