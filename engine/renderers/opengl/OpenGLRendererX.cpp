@@ -55,8 +55,8 @@ namespace AeonGames
     PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
     const int context_attribs[] =
     {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
         GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
         None
     };
@@ -116,6 +116,7 @@ namespace AeonGames
             XVisualInfo *vi = glXGetVisualFromFBConfig ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i] );
             if ( vi )
             {
+                std::cout << "Visual: " << *vi << std::endl;
                 int samp_buf, samples;
                 glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
                 glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLES       , &samples  );
@@ -123,7 +124,7 @@ namespace AeonGames
                 if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
                 {
                     best_fbc = i, best_num_samp = samples;
-                    std::cout << "Best Visual " << vi->visual << std::endl;
+                    std::cout << "Best Visual " << *vi << std::endl;
                 }
                 if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
                 {
