@@ -40,6 +40,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
@@ -61,16 +62,19 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLRenderer::Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const
+    void OpenGLRenderer::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
-        try
+        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
         {
-            mModelLibrary.at ( aModelInstance->GetModel()->GetFilename() )->Render ( aModelInstance );
-        }
-        catch ( std::out_of_range& e )
-        {
-            std::cout << "Model " << aModelInstance->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
-        }
+            try
+            {
+                mModelLibrary.at ( aNode->GetModelInstance()->GetModel()->GetFilename() )->Render ( aNode->GetModelInstance() );
+            }
+            catch ( std::out_of_range& e )
+            {
+                std::cout << "Model " << aNode->GetModelInstance()->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+            }
+        } );
     }
 
     void OpenGLRenderer::LoadModel ( const std::shared_ptr<const Model>& aModel )

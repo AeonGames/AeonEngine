@@ -29,6 +29,7 @@ namespace AeonGames
 {
     class Renderer;
     class Scene;
+    class ModelInstance;
     /// Scene Graph Node
     class Node : public std::enable_shared_from_this<Node>
     {
@@ -118,16 +119,22 @@ namespace AeonGames
         DLL void SetGlobalTransform ( const Transform& aTransform );
         DLL size_t GetChildrenCount() const;
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
-        DLL const std::shared_ptr<Node>& GetParent() const;
+        DLL const std::shared_ptr<Node> GetParent() const;
         DLL size_t GetIndex() const;
+        // ModelInstance itself should probably BE a node and implement its own Update function.
+        DLL const std::shared_ptr<ModelInstance>& GetModelInstance() const;
+        DLL void SetModelInstance ( const std::shared_ptr<ModelInstance>& aModelInstance );
     protected:
-        virtual void Update ( const double delta ) = 0;
+        //virtual void Update(const double delta) = 0;
     private:
+        // This Update function should be temporary.
+        void Update ( const double delta );
         static const std::shared_ptr<Node> mNullNode;
         friend class Scene;
         std::string mName;
-        std::shared_ptr<Node> mParent;
-        std::shared_ptr<Scene> mScene;
+        std::weak_ptr<Node> mParent;
+        std::weak_ptr<Scene> mScene;
+        std::shared_ptr<ModelInstance> mModelInstance;
         Transform mLocalTransform;
         Transform mGlobalTransform;
         std::vector<std::shared_ptr<Node>> mNodes;

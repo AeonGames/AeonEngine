@@ -146,14 +146,14 @@ namespace AeonGames
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mRootNodes.begin(), mRootNodes.end(), aNode ) == mRootNodes.end() ) )
         {
-            if ( aNode->mParent != nullptr )
+            if ( auto parent = aNode->mParent.lock() )
             {
-                if ( !aNode->mParent->RemoveNode ( aNode ) )
+                if ( !parent->RemoveNode ( aNode ) )
                 {
                     std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                 }
             }
-            aNode->mParent = nullptr;
+            aNode->mParent.reset();
             aNode->mIndex = ( aIndex > mRootNodes.size() ) ? mRootNodes.size() : aIndex;
             mRootNodes.insert ( mRootNodes.begin() + aNode->mIndex, aNode );
             for ( auto i = mRootNodes.begin() + aNode->mIndex + 1; i != mRootNodes.end(); ++i )
@@ -180,14 +180,14 @@ namespace AeonGames
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mRootNodes.begin(), mRootNodes.end(), aNode ) == mRootNodes.end() ) )
         {
-            if ( aNode->mParent != nullptr )
+            if ( auto parent = aNode->mParent.lock() )
             {
-                if ( !aNode->mParent->RemoveNode ( aNode ) )
+                if ( !parent->RemoveNode ( aNode ) )
                 {
                     std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                 }
             }
-            aNode->mParent = nullptr;
+            aNode->mParent.reset();
             aNode->mIndex = mRootNodes.size();
             mRootNodes.push_back ( aNode );
             // Force a recalculation of the LOCAL transform
@@ -222,14 +222,14 @@ namespace AeonGames
             {
                 ( *i )->mIndex = i - mRootNodes.begin();
             }
-            aNode->mParent = nullptr;
+            aNode->mParent.reset();
             aNode->mIndex = Node::kInvalidIndex;
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             auto it = mAllNodes.end();
             aNode->LoopTraverseDFSPostOrder ( [&it, this] ( const std::shared_ptr<Node>& node )
             {
-                node->mScene = nullptr;
+                node->mScene.reset();
                 it = std::remove ( this->mAllNodes.begin(), it, node );
             } );
             if ( it != mAllNodes.end() )

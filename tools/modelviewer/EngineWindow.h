@@ -33,7 +33,8 @@ limitations under the License.
 namespace AeonGames
 {
     class Renderer;
-    class ModelInstance;
+    class Scene;
+    class Node;
     class Window;
     class EngineWindow : public QWindow
     {
@@ -65,7 +66,8 @@ namespace AeonGames
         QElapsedTimer mStopWatch;
         std::shared_ptr<Renderer> mRenderer;
         std::unique_ptr<AeonGames::Window> mWindow;
-        std::shared_ptr<ModelInstance> mModelInstance;
+        std::shared_ptr<Scene> mScene;
+        std::shared_ptr<Node> mNode;
         float mFrustumVerticalHalfAngle;
         float mStep;
         /* We're using QT classes for now... */
