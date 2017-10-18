@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/ModelInstance.h"
 
 namespace AeonGames
 {
@@ -36,8 +37,8 @@ namespace AeonGames
 
     Node::Node ( uint32_t aFlags ) :
         mName ( "Node" ),
-        mParent ( nullptr ),
-        mScene ( nullptr ),
+        mParent{},
+        mScene{},
         mLocalTransform(),
         mGlobalTransform(),
         mNodes(),
@@ -50,16 +51,16 @@ namespace AeonGames
     Node::~Node()
     {
         /* Make sure tree is left in a valid state */
-        if ( mParent != nullptr )
+        if ( auto parent = mParent.lock() )
         {
-            if ( !mParent->RemoveNode ( shared_from_this() ) )
+            if ( !parent->RemoveNode ( shared_from_this() ) )
             {
                 std::cerr << "Remove Node Failed" << std::endl;
             }
         }
-        else if ( mScene != nullptr )
+        else if ( auto scene = mScene.lock() )
         {
-            if ( !mScene->RemoveNode ( shared_from_this() ) )
+            if ( !scene->RemoveNode ( shared_from_this() ) )
             {
                 std::cerr << "Remove Node Failed" << std::endl;
             }
@@ -86,14 +87,24 @@ namespace AeonGames
         return mNullNode;
     }
 
-    const std::shared_ptr<Node>& Node::GetParent() const
+    const std::shared_ptr<Node> Node::GetParent() const
     {
-        return mParent;
+        return mParent.lock();
     }
 
     size_t Node::GetIndex() const
     {
         return mIndex;
+    }
+
+    const std::shared_ptr<ModelInstance>& Node::GetModelInstance() const
+    {
+        return mModelInstance;
+    }
+
+    void Node::SetModelInstance ( const std::shared_ptr<ModelInstance>& aModelInstance )
+    {
+        mModelInstance = aModelInstance;
     }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
@@ -127,9 +138,9 @@ namespace AeonGames
         LoopTraverseDFSPreOrder (
             [] ( const std::shared_ptr<Node>& node )
         {
-            if ( node->mParent != nullptr )
+            if ( auto parent = node->mParent.lock() )
             {
-                node->mGlobalTransform = node->mParent->mGlobalTransform * node->mLocalTransform;
+                parent->mGlobalTransform * node->mLocalTransform;
             }
             else
             {
@@ -142,9 +153,9 @@ namespace AeonGames
     {
         mGlobalTransform = aTransform;
         // Update the Local transform for this node only
-        if ( mParent != nullptr )
+        if ( auto parent = mParent.lock() )
         {
-            mLocalTransform = mGlobalTransform * mParent->mGlobalTransform.GetInverted();
+            mLocalTransform = mGlobalTransform * parent->mGlobalTransform.GetInverted();
         }
         else
         {
@@ -160,7 +171,10 @@ namespace AeonGames
                       for each node and is false only once.*/
             if ( node.get() != this )
             {
-                node->mGlobalTransform = node->mParent->mGlobalTransform * node->mLocalTransform;
+                if ( auto parent = node->mParent.lock() )
+                {
+                    node->mGlobalTransform = parent->mGlobalTransform * node->mLocalTransform;
+                }
             }
         } );
     }
@@ -181,9 +195,9 @@ namespace AeonGames
         ///@todo std::find might be slower than removing and reinserting an existing node
         if ( ( aNode != nullptr ) && ( aNode.get() != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-            if ( aNode->mParent != nullptr )
+            if ( auto parent = aNode->mParent.lock() )
             {
-                if ( !aNode->mParent->RemoveNode ( aNode ) )
+                if ( !parent->RemoveNode ( aNode ) )
                 {
                     std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                 }
@@ -201,9 +215,9 @@ namespace AeonGames
             aNode->LoopTraverseDFSPreOrder (
                 [this] ( const std::shared_ptr<Node>& node )
             {
-                if ( this->mScene != nullptr )
+                if ( auto scene = mScene.lock() )
                 {
-                    this->mScene->mAllNodes.push_back ( node );
+                    scene->mAllNodes.push_back ( node );
                 }
                 node->mScene = this->mScene;
             } );
@@ -217,9 +231,9 @@ namespace AeonGames
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( aNode.get() != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-            if ( aNode->mParent != nullptr )
+            if ( auto parent = aNode->mParent.lock() )
             {
-                if ( !aNode->mParent->RemoveNode ( aNode ) )
+                if ( !parent->RemoveNode ( aNode ) )
                 {
                     std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                 }
@@ -233,11 +247,11 @@ namespace AeonGames
             aNode->LoopTraverseDFSPreOrder (
                 [this] ( const std::shared_ptr<Node>& node )
             {
-                if ( this->mScene != nullptr )
+                if ( auto scene = mScene.lock() )
                 {
-                    this->mScene->mAllNodes.push_back ( node );
+                    scene->mAllNodes.push_back ( node );
                 }
-                node->mScene = this->mScene;
+                node->mScene = mScene;
             } );
             return true;
         }
@@ -260,22 +274,22 @@ namespace AeonGames
             {
                 ( *i )->mIndex = i - mNodes.begin();
             }
-            aNode->mParent = nullptr;
+            aNode->mParent.reset();
             aNode->mIndex = Node::kInvalidIndex;
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             // Remove node from Scene
-            if ( mScene != nullptr )
+            if ( auto scene = mScene.lock() )
             {
-                auto it = mScene->mAllNodes.end();
-                aNode->LoopTraverseDFSPostOrder ( [&it, this] ( const std::shared_ptr<Node>& node )
+                auto it = scene->mAllNodes.end();
+                aNode->LoopTraverseDFSPostOrder ( [&scene, &it, this] ( const std::shared_ptr<Node>& node )
                 {
-                    node->mScene = nullptr;
-                    it = std::remove ( this->mScene->mAllNodes.begin(), it, node );
+                    node->mScene.reset();
+                    it = std::remove ( scene->mAllNodes.begin(), it, node );
                 } );
-                if ( it != mScene->mAllNodes.end() )
+                if ( it != scene->mAllNodes.end() )
                 {
-                    mScene->mAllNodes.erase ( it, mScene->mAllNodes.end() );
+                    scene->mAllNodes.erase ( it, scene->mAllNodes.end() );
                 }
             }
             return true;
@@ -291,7 +305,8 @@ namespace AeonGames
         */
         auto node = shared_from_this();
         aAction ( node );
-        while ( node != this->mParent )
+        auto parent = mParent.lock();
+        while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
@@ -303,7 +318,7 @@ namespace AeonGames
             else
             {
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
+                node = node->mParent.lock();
             }
         }
     }
@@ -316,7 +331,8 @@ namespace AeonGames
         */
         auto node = shared_from_this();
         aPreamble ( node );
-        while ( node != this->mParent )
+        auto parent = mParent.lock();
+        while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
@@ -329,7 +345,7 @@ namespace AeonGames
             {
                 aPostamble ( node );
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
+                node = node->mParent.lock();
             }
         }
     }
@@ -338,7 +354,8 @@ namespace AeonGames
     {
         auto node = shared_from_this();
         aAction ( node );
-        while ( node != this->mParent )
+        auto parent = mParent.lock();
+        while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
@@ -350,7 +367,7 @@ namespace AeonGames
             else
             {
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
+                node = node->mParent.lock();
             }
         }
     }
@@ -362,7 +379,8 @@ namespace AeonGames
         http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
         */
         auto node = shared_from_this();
-        while ( node != this->mParent )
+        auto parent = mParent.lock();
+        while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
@@ -374,7 +392,7 @@ namespace AeonGames
             {
                 aAction ( node );
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
+                node = node->mParent.lock();
             }
         }
     }
@@ -386,7 +404,8 @@ namespace AeonGames
         http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
         */
         auto node = shared_from_this();
-        while ( node != this->mParent )
+        auto parent = mParent.lock();
+        while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
@@ -398,7 +417,7 @@ namespace AeonGames
             {
                 aAction ( node );
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
+                node = node->mParent.lock();
             }
         }
     }
@@ -427,7 +446,7 @@ namespace AeonGames
         while ( node != nullptr )
         {
             aAction ( node );
-            node = node->mParent;
+            node = node->mParent.lock();
         }
     }
 
@@ -437,16 +456,16 @@ namespace AeonGames
         while ( node != nullptr )
         {
             aAction ( node );
-            node = node->mParent;
+            node = node->mParent.lock();
         }
     }
 
     void Node::RecursiveTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
     {
         aAction ( shared_from_this() );
-        if ( mParent != nullptr )
+        if ( auto parent = mParent.lock() )
         {
-            mParent->RecursiveTraverseAncestors ( aAction );
+            parent->RecursiveTraverseAncestors ( aAction );
         }
     }
 

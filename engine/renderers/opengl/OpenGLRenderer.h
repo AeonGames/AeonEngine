@@ -19,6 +19,7 @@ limitations under the License.
 #include <unordered_map>
 #include "aeongames/Memory.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/Transform.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
@@ -35,7 +36,7 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const final;
+        void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
         void LoadModel ( const std::shared_ptr<const Model>& aModel ) final;
         void UnloadModel ( const std::shared_ptr<const Model>& aModel ) final;
         void LoadScene ( const std::shared_ptr<const Scene>& aScene ) final;
@@ -52,7 +53,7 @@ namespace AeonGames
         void Finalize();
         std::unordered_map<std::string, std::unique_ptr<OpenGLModel>> mModelLibrary;
         GLuint mMatricesBuffer = 0;
-        float mMatrices[ ( 16 * 6 ) + ( 12 * 1 )] =
+        float mMatrices[ ( 16 * 2 ) ] =
         {
             // mProjectionMatrix
             1, 0, 0, 0,
@@ -65,7 +66,6 @@ namespace AeonGames
             0, 0, 1, 0,
             0, 0, 0, 1,
         };
-
         float* mProjectionMatrix = mMatrices + ( 16 * 0 );
         float* mViewMatrix = mMatrices + ( 16 * 1 );
         /// Internal Window Id, required to create initial shared context

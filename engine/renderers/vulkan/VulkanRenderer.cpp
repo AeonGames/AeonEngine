@@ -46,6 +46,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 namespace AeonGames
 {
     VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
@@ -96,16 +97,19 @@ namespace AeonGames
         FinalizeInstance();
     }
 
-    void VulkanRenderer::Render ( const std::shared_ptr<const ModelInstance>& aModelInstance ) const
+    void VulkanRenderer::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
-        try
+        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
         {
-            mModelLibrary.at ( aModelInstance->GetModel()->GetFilename() )->Render ( aModelInstance );
-        }
-        catch ( std::out_of_range& e )
-        {
-            std::cout << "Model " << aModelInstance->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
-        }
+            try
+            {
+                mModelLibrary.at ( aNode->GetModelInstance()->GetModel()->GetFilename() )->Render ( aNode->GetModelInstance() );
+            }
+            catch ( std::out_of_range& e )
+            {
+                std::cout << "Model " << aNode->GetModelInstance()->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+            }
+        } );
     }
 
     void VulkanRenderer::LoadModel ( const std::shared_ptr<const Model>& aModel )
@@ -239,9 +243,9 @@ namespace AeonGames
             VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
             VK_DEBUG_REPORT_ERROR_BIT_EXT |
             VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        mInstanceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
+        //mInstanceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
-        mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
+        //mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
     }
 
     void VulkanRenderer::InitializeDebug()
