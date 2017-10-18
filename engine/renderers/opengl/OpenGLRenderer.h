@@ -53,21 +53,6 @@ namespace AeonGames
         void Finalize();
         std::unordered_map<std::string, std::unique_ptr<OpenGLModel>> mModelLibrary;
         GLuint mMatricesBuffer = 0;
-        float mMatrices[ ( 16 * 2 ) ] =
-        {
-            // mProjectionMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-            // mViewMatrix
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        };
-        float* mProjectionMatrix = mMatrices + ( 16 * 0 );
-        float* mViewMatrix = mMatrices + ( 16 * 1 );
         /// Internal Window Id, required to create initial shared context
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts

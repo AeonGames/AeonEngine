@@ -112,24 +112,26 @@ namespace AeonGames
 
     void OpenGLRenderer::SetViewTransform ( const Transform aTransform )
     {
-        aTransform.GetInvertedMatrix ( mViewMatrix );
+        float view_matrix[16];
+        aTransform.GetInvertedMatrix ( view_matrix );
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( mMatrices ), mMatrices );
+        glBufferSubData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        memcpy ( mProjectionMatrix, aMatrix.GetMatrix4x4(),  sizeof ( float ) * 16 );
-        /* Flip Z axis to match Vulkan's right hand Normalized Device Coordinates (NDC).*/
-        mProjectionMatrix[8]  *= -1;
-        mProjectionMatrix[9]  *= -1;
-        mProjectionMatrix[10] *= -1;
-        mProjectionMatrix[11] *= -1;
+        Matrix4x4 flip_matrix
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( mMatrices ), mMatrices );
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( float ) * 16, ( aMatrix * flip_matrix ).GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 #if 0

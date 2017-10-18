@@ -35,6 +35,26 @@ namespace AeonGames
         memcpy ( mMatrix, aMatrix4x4, sizeof ( float ) * 16 );
     }
 
+    Matrix4x4::Matrix4x4 ( const float m00, const float m01, const float m02, const float m03, const float m10, const float m11, const float m12, const float m13, const float m20, const float m21, const float m22, const float m23, const float m30, const float m31, const float m32, const float m33 )
+    {
+        mMatrix[ 0] = m00;
+        mMatrix[ 1] = m01;
+        mMatrix[ 2] = m02;
+        mMatrix[ 3] = m03;
+        mMatrix[ 4] = m10;
+        mMatrix[ 5] = m11;
+        mMatrix[ 6] = m12;
+        mMatrix[ 7] = m13;
+        mMatrix[ 8] = m20;
+        mMatrix[ 9] = m21;
+        mMatrix[10] = m22;
+        mMatrix[11] = m23;
+        mMatrix[12] = m30;
+        mMatrix[13] = m31;
+        mMatrix[14] = m32;
+        mMatrix[15] = m33;
+    }
+
     Matrix4x4::~Matrix4x4()
         = default;
 

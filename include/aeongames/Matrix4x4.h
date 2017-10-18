@@ -44,6 +44,11 @@ namespace AeonGames
         @note This is the same format as the values are internally stored and what Transform::GetTransform returns.
         */
         DLL Matrix4x4 ( const float* const aMatrix );
+        DLL Matrix4x4 (
+            const float m00, const float m01, const float m02, const float m03,
+            const float m10, const float m11, const float m12, const float m13,
+            const float m20, const float m21, const float m22, const float m23,
+            const float m30, const float m31, const float m32, const float m33 );
         /// destructor.
         DLL ~Matrix4x4();
         DLL const float* const GetMatrix4x4() const;
