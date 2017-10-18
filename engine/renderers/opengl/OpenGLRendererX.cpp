@@ -169,8 +169,19 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( mMatrices ),
-                       mMatrices, GL_DYNAMIC_DRAW );
+        float matrices[32] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 32,
+                       matrices, GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_THROW;
     }
 
