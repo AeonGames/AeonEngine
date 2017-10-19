@@ -82,12 +82,11 @@ namespace AeonGames
                                                    ( ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
             VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
             VkBufferUsageFlags buffer_usage = ( ( triangle_groups[i].mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( triangle_groups[i].mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
-
-            mBuffers.emplace_back ( *mVulkanRenderer.get(), buffer_size, buffer_usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
+            mBuffers.emplace_back ( *mVulkanRenderer.get(), buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+            std::vector<uint8_t> buffer ( buffer_size );
             if ( triangle_groups[i].mVertexCount )
             {
-                Vertex* vertices = static_cast<Vertex*> ( mBuffers.back().Map ( 0, vertex_buffer_size ) );
+                Vertex* vertices = reinterpret_cast<Vertex*> ( buffer.data() );
                 memset ( vertices, 0, vertex_buffer_size );
                 uintptr_t offset = 0;
                 for ( uint32_t j = 0; j < triangle_groups[i].mVertexCount; ++j )
@@ -130,11 +129,10 @@ namespace AeonGames
                         offset += sizeof ( Vertex::weight_influences );
                     }
                 }
-                mBuffers.back().Unmap();
             }
             if ( triangle_groups[i].mIndexCount )
             {
-                void* data = mBuffers.back().Map ( triangle_groups[i].mVertexCount ? vertex_buffer_size : 0, index_buffer_size );
+                void* data = buffer.data() + vertex_buffer_size;
                 if ( ! ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) )
                 {
                     memcpy ( data, triangle_groups[i].mIndexBuffer.data(), triangle_groups[i].mIndexBuffer.size() );
@@ -147,8 +145,8 @@ namespace AeonGames
                         reinterpret_cast<uint16_t*> ( data ) [j] = triangle_groups[i].mIndexBuffer[j];
                     }
                 }
-                mBuffers.back().Unmap();
             }
+            mBuffers.back().WriteMemory ( 0, buffer.size(), buffer.data() );
         }
     }
 
