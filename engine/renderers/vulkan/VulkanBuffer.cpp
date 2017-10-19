@@ -71,7 +71,7 @@ namespace AeonGames
         if ( ( aData ) && ( mProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ) )
         {
             void* data = Map ( aOffset, aSize );
-            memcpy ( data, aData, mSize );
+            memcpy ( data, aData, aSize );
             Unmap();
         }
     }
@@ -79,9 +79,16 @@ namespace AeonGames
     void * VulkanBuffer::Map ( const VkDeviceSize aOffset, const VkDeviceSize aSize ) const
     {
         void* data = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, aOffset, aSize, 0, &data ) )
+        if ( mProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT )
         {
-            std::cout << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, aOffset, aSize, 0, &data ) )
+            {
+                std::cout << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            }
+        }
+        else
+        {
+            throw std::runtime_error ( "The VkBuffer VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT property must be set to be able to map buffer memory." );
         }
         return data;
     }

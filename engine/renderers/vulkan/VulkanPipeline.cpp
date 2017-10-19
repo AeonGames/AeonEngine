@@ -59,10 +59,12 @@ namespace AeonGames
         const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
         std::array<VkDescriptorSet, 2> descriptor_sets{ mVkDescriptorSet, material->GetDescriptorSet() };
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+#if 0
         vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
                              mVkPipelineLayout,
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                              0, sizeof ( VulkanRenderer::Transforms ), &mVulkanRenderer->GetTransforms() );
+#endif
 #if 0
         /** @todo vkCmdUpdateBuffer is not supposed to be called inside a render pass... but it works here.*/
         vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,
@@ -118,12 +120,21 @@ namespace AeonGames
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 2 );
+        descriptor_set_layout_bindings.reserve ( 3 );
+        // Matrices binding
+        descriptor_set_layout_bindings.emplace_back();
+        descriptor_set_layout_bindings[0].binding = 0;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
+        descriptor_set_layout_bindings[0].descriptorCount = 1;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
+
         // Properties binding
         if ( mVkPropertiesUniformBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = 0;
+            descriptor_set_layout_bindings.back().binding = 1;
             descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptor_set_layout_bindings.back().descriptorCount = 1;
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
@@ -133,7 +144,7 @@ namespace AeonGames
         if ( mVkSkeletonBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = 1;
+            descriptor_set_layout_bindings.back().binding = 2;
             descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptor_set_layout_bindings.back().descriptorCount = 1;
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
@@ -168,7 +179,6 @@ namespace AeonGames
         std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{};
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_pool_sizes[0].descriptorCount = ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() == 0 ) ? 1 : 2;
-
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_create_info.pNext = nullptr;
@@ -210,24 +220,28 @@ namespace AeonGames
         }
 
         uint32_t descriptor_count = 0;
-        std::array<VkDescriptorBufferInfo, 2> descriptor_buffer_infos = { {} };
+        std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos = { {} };
+        descriptor_buffer_infos[descriptor_count].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
+        descriptor_buffer_infos[descriptor_count].offset = 0;
+        descriptor_buffer_infos[descriptor_count].range = sizeof ( float ) * 32;
+        ++descriptor_count;
 
         if ( mVkPropertiesUniformBuffer.GetSize() )
         {
             descriptor_buffer_infos[descriptor_count].buffer = mVkPropertiesUniformBuffer.GetBuffer();
             descriptor_buffer_infos[descriptor_count].offset = 0;
             descriptor_buffer_infos[descriptor_count].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
-            descriptor_count += 1;
+            ++descriptor_count;
         }
         if ( mVkSkeletonBuffer.GetSize() )
         {
             descriptor_buffer_infos[descriptor_count].buffer = mVkSkeletonBuffer.GetBuffer();
             descriptor_buffer_infos[descriptor_count].offset = 0;
             descriptor_buffer_infos[descriptor_count].range = 256 * 16 * sizeof ( float );
-            descriptor_count += 1;
+            ++descriptor_count;
         }
 
-        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets;
+        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets{};
         write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write_descriptor_sets[0].pNext = nullptr;
         write_descriptor_sets[0].dstSet = mVkDescriptorSet;
@@ -423,22 +437,25 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.flags = 0;
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
-
-        std::array<VkPushConstantRange, 1> push_constant_ranges;
+#if 0
+        std::array<VkPushConstantRange, 1> push_constant_ranges {};
         push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
         push_constant_ranges[0].offset = 0;
         /** @todo We'll have to reduce our matrices to just two here,
             the validation layers don't like size to be more than VkPhysicalLimits::maxPushConstantsSize
             which at maximum must be 128 bytes to be safe. */
-        push_constant_ranges[0].size = sizeof ( VulkanRenderer::Transforms );
-        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts{ mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() };
+        push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
+#endif
+        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts { mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = ( descriptor_set_layouts[1] == VK_NULL_HANDLE ) ? 1 : 2;
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts.data();
+#if 0
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
         pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
+#endif
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer->GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;

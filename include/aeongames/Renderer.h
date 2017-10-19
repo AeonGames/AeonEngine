@@ -75,7 +75,6 @@ namespace AeonGames
         ///@{
         virtual void SetViewTransform ( const Transform aTransform ) = 0;
         virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
-        //virtual void SetModelMatrix ( const float aMatrix[16] ) = 0;
         ///@}
         virtual ~Renderer() = default;
     };
