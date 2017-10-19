@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include "aeongames/Memory.h"
 #include "VulkanWindow.h"
+#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
@@ -41,7 +42,6 @@ namespace AeonGames
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewTransform ( const Transform aTransform ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
-        //void SetModelMatrix ( const float aMatrix[16] ) final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
@@ -58,13 +58,7 @@ namespace AeonGames
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
-        struct Transforms
-        {
-            float mProjectionMatrix[16];
-            float mViewMatrix[16];
-            /*float mModelMatrix[16];*/
-        };
-        const Transforms& GetTransforms() const;
+        const VkBuffer& GetMatricesUniformBuffer() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -83,7 +77,6 @@ namespace AeonGames
         void FinalizeRenderPass();
         void FinalizeCommandPool();
         void FinalizeDebug();
-
         bool mValidate{ true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
@@ -116,23 +109,7 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT = VK_NULL_HANDLE;
-        Transforms mTransforms =
-        {
-            // mProjectionMatrix
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            },
-            // mViewMatrix
-            {
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            },
-        };
+        VulkanBuffer mMatrices;
     };
 }
 #endif

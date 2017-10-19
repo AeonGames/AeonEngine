@@ -49,7 +49,7 @@ limitations under the License.
 #include "aeongames/Node.h"
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
+    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate ), mMatrices ( *this )
     {
         try
         {
@@ -71,9 +71,25 @@ namespace AeonGames
             InitializeFence();
             InitializeRenderPass();
             InitializeCommandPool();
+            /* We have to defer matrix buffer construction
+            because we need the renderer to be fully initialized
+            in order to allocate its resources.*/
+            const float matrices[32] =
+            {
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            };
+            mMatrices.Initialize ( sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, matrices );
         }
         catch ( ... )
         {
+            mMatrices.Finalize();
             FinalizeCommandPool();
             FinalizeRenderPass();
             FinalizeFence();
@@ -88,6 +104,7 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        mMatrices.Finalize();
         FinalizeCommandPool();
         FinalizeRenderPass();
         FinalizeFence();
@@ -269,11 +286,12 @@ namespace AeonGames
         mDeviceExtensionNames.push_back ( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
     }
 
+#if 0
     const VulkanRenderer::Transforms & VulkanRenderer::GetTransforms() const
     {
         return mTransforms;
     }
-
+#endif
     void VulkanRenderer::InitializeInstance()
     {
         VkInstanceCreateInfo instance_create_info {};
@@ -637,25 +655,24 @@ namespace AeonGames
         vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
     }
 
+    const VkBuffer & VulkanRenderer::GetMatricesUniformBuffer() const
+    {
+        return mMatrices.GetBuffer();
+    }
+
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }
 
-    void VulkanRenderer::SetViewTransform ( const Transform aTransform )
-    {
-        aTransform.GetInvertedMatrix ( mTransforms.mViewMatrix );
-    }
-
     void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        memcpy ( mTransforms.mProjectionMatrix, aMatrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
-#if 0
-    void VulkanRenderer::SetModelMatrix ( const float aMatrix[16] )
+    void VulkanRenderer::SetViewTransform ( const Transform aTransform )
     {
-        memcpy ( mMatrices.mModelMatrix, aMatrix, sizeof ( float ) * 16 );
-        UpdateMatrices();
+        float* view_matrix = static_cast<float*> ( mMatrices.Map ( sizeof ( float ) * 16, sizeof ( float ) * 16 ) );
+        aTransform.GetInvertedMatrix ( view_matrix );
+        mMatrices.Unmap();
     }
-#endif
 }
