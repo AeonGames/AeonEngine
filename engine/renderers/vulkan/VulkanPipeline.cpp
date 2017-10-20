@@ -70,8 +70,10 @@ namespace AeonGames
         vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,
                             material->GetUniformData().size(), material->GetUniformData().data() );
 #endif
+        /** @todo Add a Stack buffer for skeletons and properly set the offset. */
+        uint32_t offset = 0;
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, ( descriptor_sets[1] == VK_NULL_HANDLE ) ? 1 : 2, descriptor_sets.data(), 0, nullptr );
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, ( descriptor_sets[1] == VK_NULL_HANDLE ) ? 1 : 2, descriptor_sets.data(), 1, &offset );
     }
 
     VkBuffer VulkanPipeline::GetSkeletonBuffer() const
@@ -145,7 +147,7 @@ namespace AeonGames
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 2;
-            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
             descriptor_set_layout_bindings.back().descriptorCount = 1;
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
@@ -176,9 +178,11 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorPool()
     {
-        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{};
+        std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_pool_sizes[0].descriptorCount = ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() == 0 ) ? 1 : 2;
+        descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        descriptor_pool_sizes[1].descriptorCount = 1;
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_create_info.pNext = nullptr;
@@ -219,39 +223,55 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        uint32_t descriptor_count = 0;
-        std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos = { {} };
-        descriptor_buffer_infos[descriptor_count].buffer = mVulkanRenderer->GetMatricesUniformBuffer();
-        descriptor_buffer_infos[descriptor_count].offset = 0;
-        descriptor_buffer_infos[descriptor_count].range = sizeof ( float ) * 32;
-        ++descriptor_count;
-
-        if ( mVkPropertiesUniformBuffer.GetSize() )
+        std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos =
         {
-            descriptor_buffer_infos[descriptor_count].buffer = mVkPropertiesUniformBuffer.GetBuffer();
-            descriptor_buffer_infos[descriptor_count].offset = 0;
-            descriptor_buffer_infos[descriptor_count].range = mPipeline->GetDefaultMaterial()->GetUniformBlockSize();
-            ++descriptor_count;
+            VkDescriptorBufferInfo{mVulkanRenderer->GetMatricesUniformBuffer(), 0, sizeof ( float ) * 32},
+            VkDescriptorBufferInfo{mVkPropertiesUniformBuffer.GetBuffer(), 0, mPipeline->GetDefaultMaterial()->GetUniformBlockSize() },
+            VkDescriptorBufferInfo{mVkSkeletonBuffer.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
+        };
+
+        std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
+        write_descriptor_sets.reserve ( 3 );
+        // Matrices
+        write_descriptor_sets.emplace_back();
+        write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_sets.back().pNext = nullptr;
+        write_descriptor_sets.back().dstSet = mVkDescriptorSet;
+        write_descriptor_sets.back().dstBinding = 0;
+        write_descriptor_sets.back().dstArrayElement = 0;
+        write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_sets.back().descriptorCount = 1;
+        write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
+        write_descriptor_sets.back().pImageInfo = nullptr;
+        write_descriptor_sets.back().pTexelBufferView = nullptr;
+        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
+        {
+            write_descriptor_sets.emplace_back();
+            write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_sets.back().pNext = nullptr;
+            write_descriptor_sets.back().dstSet = mVkDescriptorSet;
+            write_descriptor_sets.back().dstBinding = 1;
+            write_descriptor_sets.back().dstArrayElement = 0;
+            write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_sets.back().descriptorCount = 1;
+            write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[1];
+            write_descriptor_sets.back().pImageInfo = nullptr;
+            write_descriptor_sets.back().pTexelBufferView = nullptr;
         }
         if ( mVkSkeletonBuffer.GetSize() )
         {
-            descriptor_buffer_infos[descriptor_count].buffer = mVkSkeletonBuffer.GetBuffer();
-            descriptor_buffer_infos[descriptor_count].offset = 0;
-            descriptor_buffer_infos[descriptor_count].range = 256 * 16 * sizeof ( float );
-            ++descriptor_count;
+            write_descriptor_sets.emplace_back();
+            write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_sets.back().pNext = nullptr;
+            write_descriptor_sets.back().dstSet = mVkDescriptorSet;
+            write_descriptor_sets.back().dstBinding = 2;
+            write_descriptor_sets.back().dstArrayElement = 0;
+            write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            write_descriptor_sets.back().descriptorCount = 1;
+            write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[2];
+            write_descriptor_sets.back().pImageInfo = nullptr;
+            write_descriptor_sets.back().pTexelBufferView = nullptr;
         }
-
-        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets{};
-        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_sets[0].pNext = nullptr;
-        write_descriptor_sets[0].dstSet = mVkDescriptorSet;
-        write_descriptor_sets[0].dstBinding = 0;
-        write_descriptor_sets[0].dstArrayElement = 0;
-        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_sets[0].descriptorCount = descriptor_count;
-        write_descriptor_sets[0].pBufferInfo = descriptor_buffer_infos.data();
-        write_descriptor_sets[0].pImageInfo = nullptr;
-        write_descriptor_sets[0].pTexelBufferView = nullptr;
         vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
