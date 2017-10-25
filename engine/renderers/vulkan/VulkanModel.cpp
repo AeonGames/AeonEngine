@@ -47,7 +47,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render ( const std::shared_ptr<const ModelInstance> aInstance ) const
+    void VulkanModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance ) const
     {
         if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
         {

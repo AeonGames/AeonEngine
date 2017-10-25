@@ -1,3 +1,4 @@
+#include "..\..\include\aeongames\Renderer.h"
 /*
 Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
@@ -15,6 +16,8 @@ limitations under the License.
 */
 
 #include "aeongames/Renderer.h"
+#include "aeongames/Model.h"
+#include "aeongames/RenderModel.h"
 #include "Factory.h"
 
 namespace AeonGames
@@ -34,5 +37,14 @@ namespace AeonGames
     void EnumerateRendererLoaders ( std::function<bool ( const std::string& ) > aEnumerator )
     {
         Factory<Renderer>::EnumerateLoaders ( aEnumerator );
+    }
+    void Renderer::SetRenderModel ( const std::shared_ptr<const Model>& aModel, std::unique_ptr<RenderModel> aRenderModel ) const
+    {
+        aModel->mRenderModel = std::move ( aRenderModel );
+    }
+
+    const std::unique_ptr<RenderModel>& Renderer::GetRenderModel ( const std::shared_ptr<const Model>& aModel ) const
+    {
+        return aModel->mRenderModel;
     }
 }

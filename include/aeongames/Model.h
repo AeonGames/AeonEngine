@@ -16,9 +16,10 @@ limitations under the License.
 #ifndef AEONGAMES_MODEL_H
 #define AEONGAMES_MODEL_H
 #include "aeongames/Memory.h"
+#include "aeongames/Platform.h"
+#include "aeongames/RenderModel.h"
 #include <vector>
 #include <tuple>
-#include "aeongames/Platform.h"
 
 namespace AeonGames
 {
@@ -52,6 +53,8 @@ namespace AeonGames
         std::vector<std::shared_ptr<const Animation>> mAnimations;
         void Initialize();
         void Finalize();
+        friend class Renderer;
+        mutable std::unique_ptr<RenderModel> mRenderModel;
     };
 }
 #endif

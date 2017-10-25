@@ -35,10 +35,6 @@ namespace AeonGames
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
         void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
-        void LoadModel ( const std::shared_ptr<const Model>& aModel ) final;
-        void UnloadModel ( const std::shared_ptr<const Model>& aModel ) final;
-        void LoadScene ( const std::shared_ptr<const Scene>& aScene ) final;
-        void UnloadScene ( const std::shared_ptr<const Scene>& aScene ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewTransform ( const Transform aTransform ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
@@ -99,7 +95,6 @@ namespace AeonGames
         std::vector<const char*> mInstanceExtensionNames;
         std::vector<const char*> mDeviceLayerNames;
         std::vector<const char*> mDeviceExtensionNames;
-        std::unordered_map<std::string, std::unique_ptr<VulkanModel>> mModelLibrary;
         // Instance Functions
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
