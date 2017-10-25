@@ -131,6 +131,17 @@ namespace AeonGames
         } );
     }
 
+    void VulkanRenderer::CacheScene ( const std::shared_ptr<const Scene>& aScene ) const
+    {
+        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
+        {
+            if ( !GetRenderModel ( aNode->GetModelInstance()->GetModel() ) )
+            {
+                SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<VulkanModel> ( aNode->GetModelInstance()->GetModel(), shared_from_this() ) );
+            }
+        } );
+    }
+
     const VkDevice & VulkanRenderer::GetDevice() const
     {
         return mVkDevice;
