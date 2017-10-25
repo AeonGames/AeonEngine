@@ -118,33 +118,17 @@ namespace AeonGames
     {
         aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
         {
-            try
+            const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( aNode->GetModelInstance()->GetModel() );
+            if ( render_model )
             {
-                mModelLibrary.at ( aNode->GetModelInstance()->GetModel()->GetFilename() )->Render ( aNode->GetModelInstance() );
+                render_model->Render ( aNode->GetModelInstance() );
             }
-            catch ( std::out_of_range& e )
+            else
             {
-                std::cout << "Model " << aNode->GetModelInstance()->GetModel()->GetFilename() << " Not loaded into renderer (" << e.what() << ")" << std::endl;
+                /* This is lazy loading */
+                SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<VulkanModel> ( aNode->GetModelInstance()->GetModel(), shared_from_this() ) );
             }
         } );
-    }
-
-    void VulkanRenderer::LoadModel ( const std::shared_ptr<const Model>& aModel )
-    {
-        mModelLibrary[aModel->GetFilename()] = std::make_unique<VulkanModel> ( aModel, shared_from_this() );
-    }
-
-    void VulkanRenderer::UnloadModel ( const std::shared_ptr<const Model>& aModel )
-    {
-        mModelLibrary.erase ( aModel->GetFilename() );
-    }
-
-    void VulkanRenderer::LoadScene ( const std::shared_ptr<const Scene>& aScene )
-    {
-    }
-
-    void VulkanRenderer::UnloadScene ( const std::shared_ptr<const Scene>& aScene )
-    {
     }
 
     const VkDevice & VulkanRenderer::GetDevice() const

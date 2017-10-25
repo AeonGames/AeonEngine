@@ -91,10 +91,6 @@ namespace AeonGames
     {
         // Force model deletion
         stop();
-        if ( mNode->GetModelInstance() )
-        {
-            mRenderer->UnloadModel ( mNode->GetModelInstance()->GetModel() );
-        }
         mWindow.reset();
     }
 
@@ -119,15 +115,10 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        if ( mNode->GetModelInstance() )
-        {
-            mRenderer->UnloadModel ( mNode->GetModelInstance()->GetModel() );
-        }
         mNode->SetModelInstance ( std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
         assert ( mNode->GetModelInstance() && "ModelInstance is a nullptr" );
         if ( mNode->GetModelInstance() )
         {
-            mRenderer->LoadModel ( mNode->GetModelInstance()->GetModel() );
             // Adjust camera position so model fits the frustum tightly.
             const float* const center_radius = mNode->GetModelInstance()->GetModel()->GetCenterRadii();
             float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +

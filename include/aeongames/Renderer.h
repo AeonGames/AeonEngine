@@ -29,6 +29,7 @@ namespace AeonGames
     class Pipeline;
     class Texture;
     class Model;
+    class RenderModel;
     class ModelInstance;
     class Matrix4x4;
     class Transform;
@@ -37,17 +38,6 @@ namespace AeonGames
     {
     public:
         virtual void Render ( const std::shared_ptr<const Scene>& aScene ) const = 0;
-        ///@name Resource Allocation Functions
-        ///@{
-        virtual void LoadModel ( const std::shared_ptr<const Model>& aModel ) = 0;
-        virtual void UnloadModel ( const std::shared_ptr<const Model>& aModel ) = 0;
-        /** Load all resources required to render a Scene.
-            @param aScene constant shared pointer reference to the Scene to load.*/
-        virtual void LoadScene ( const std::shared_ptr<const Scene>& aScene ) = 0;
-        /** Unload resources required to render a Scene.
-        @param aScene constant shared pointer reference to the Scene to load.*/
-        virtual void UnloadScene ( const std::shared_ptr<const Scene>& aScene ) = 0;
-        ///@}
         ///@name Window Factory
         ///@{
         /** Creates a Window object that acts as a wrapper for the Window Id provided.
@@ -77,6 +67,9 @@ namespace AeonGames
         virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
         ///@}
         virtual ~Renderer() = default;
+    protected:
+        DLL void SetRenderModel ( const std::shared_ptr<const Model>& aModel, std::unique_ptr<RenderModel> aRenderModel ) const;
+        DLL const std::unique_ptr<RenderModel>& GetRenderModel ( const std::shared_ptr<const Model>& aModel ) const;
     };
 
     /**@name Factory Functions */
