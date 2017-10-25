@@ -471,5 +471,9 @@ namespace AeonGames
 
     void Node::Update ( const double delta )
     {
+        if ( mModelInstance )
+        {
+            mModelInstance->StepAnimation ( delta );
+        }
     }
 }

@@ -196,23 +196,22 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            mWindow->BeginRender();
-            if ( mNode->GetModelInstance() )
+        {
+            double delta = 0.0;
+            if ( mStopWatch.isValid() )
             {
-                float delta = 0.0f;
-                if ( mStopWatch.isValid() )
+                delta = mStopWatch.restart() * 1e-3f;
+                if ( delta > 1e-1f )
                 {
-                    delta = mStopWatch.restart() * 1e-3f;
-                    if ( delta > 1e-1f )
-                    {
-                        delta = 1.0f / 30.0f;
-                    }
+                    delta = 1.0 / 30.0;
                 }
-                mNode->GetModelInstance()->StepAnimation ( delta );
-                mWindow->Render ( mScene );
             }
+            mScene->Update ( delta );
+            mWindow->BeginRender();
+            mWindow->Render ( mScene );
             mWindow->EndRender();
             return true;
+        }
         default:
             return QWindow::event ( aEvent );
         }
