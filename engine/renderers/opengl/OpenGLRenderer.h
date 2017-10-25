@@ -37,6 +37,7 @@ namespace AeonGames
         OpenGLRenderer();
         ~OpenGLRenderer() override;
         void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
+        void CacheScene ( const std::shared_ptr<const Scene>& aScene ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void SetViewTransform ( const Transform aTransform ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
