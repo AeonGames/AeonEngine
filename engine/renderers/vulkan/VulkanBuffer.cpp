@@ -13,14 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <cassert>
 #include <cstring>
-#include <vector>
 #include <sstream>
-#include "aeongames/Skeleton.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/ResourceCache.h"
 #include "VulkanRenderer.h"
 #include "VulkanBuffer.h"
 #include "VulkanUtilities.h"
@@ -119,7 +113,9 @@ namespace AeonGames
         {
             if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, aOffset, aSize, 0, &data ) )
             {
-                std::cout << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                std::ostringstream stream;
+                stream << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
             }
         }
         else
