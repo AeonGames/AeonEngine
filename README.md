@@ -62,12 +62,14 @@ Ubuntu 14.04 and up:
 ## Build
     make
 
-Visual Studio 2015:
+Visual Studio 2015 and up:
 -------------------
 
 Building with Visual Studio is somewhat more involved as all dependencies and tools need to be build first, for this I have created a separate project, the [AeonGames Runtime](https://github.com/AeonGames/runtime), you might want to build and install that first, then point the CMake variable RUNTIME_INSTALL_PREFIX to the path where it was installed when configuring.
 
 In the future, building should be possible using [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg), but as it is right now it is lacking support for binary tools such as astyle, sed, xxd and protoc which are required for building and contributing to this repo.
+
+UPDATE: protoc is now available in vcpkg and sed comes as part of git for Windows, this only leaves xxd and astyle as the biggest hurdles, so I am currently exploring the posibility of moving to vcpkg.
 
 In No Way Complete TODO List:
 =============================
