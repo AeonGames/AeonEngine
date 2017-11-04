@@ -14,16 +14,6 @@
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_custom_command( OUTPUT
-                        ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
-                        ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
-                    COMMAND ${XXD_EXECUTABLE} -i main.vert > ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
-                    COMMAND ${XXD_EXECUTABLE} -i main.frag > ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
-                    DEPENDS
-                        shaders/main.vert
-                        shaders/main.frag
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders
-                    COMMENT "Generating Shader Headers" VERBATIM)
 if(MSVC)
 add_custom_command(OUTPUT
                         ${CMAKE_CURRENT_BINARY_DIR}/glDeclarations.h

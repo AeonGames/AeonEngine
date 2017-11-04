@@ -59,7 +59,6 @@ include(FindPythonModule)
 if(PYTHONINTERP_FOUND)
     find_python_module(autopep8)
 endif()
-find_program(XXD_EXECUTABLE NAMES xxd xxd.exe)
 
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
