@@ -62,8 +62,6 @@ add_custom_command(OUTPUT
 endif()
 
 set(OPENGL_RENDERER_HEADERS
-    ${CMAKE_CURRENT_BINARY_DIR}/main.vert.h
-    ${CMAKE_CURRENT_BINARY_DIR}/main.frag.h
     ${CMAKE_CURRENT_BINARY_DIR}/glDeclarations.h
     ${CMAKE_CURRENT_BINARY_DIR}/glDefinitions.h
     ${CMAKE_CURRENT_BINARY_DIR}/glAssignments.h
