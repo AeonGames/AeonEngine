@@ -131,7 +131,6 @@ if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
-
 add_library(ProtoBufClasses SHARED ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
@@ -139,9 +138,9 @@ target_link_libraries(ProtoBufClasses ${PROTOBUF_LIBRARIES})
 
 if(MSVC)
     set_target_properties(ProtoBufClasses PROPERTIES
-        COMPILE_FLAGS "-FIaeongames/ProtoBufClasses.h -WX -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
+        COMPILE_FLAGS "-FIaeongames/ProtoBufClasses.h -WX -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(AeonEngine PROPERTIES
-        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
     target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(MINGW OR MSYS)
     set_target_properties(AeonEngine PROPERTIES

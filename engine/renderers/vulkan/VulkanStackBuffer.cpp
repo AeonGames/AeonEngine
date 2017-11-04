@@ -32,7 +32,6 @@ namespace AeonGames
         if ( mBuffer.GetSize() < mTopOfStack + aSize )
         {
             throw std::runtime_error ( "Not enough memory." );
-            return VulkanStackMemory{ 0, 0 };
         }
         VkDeviceSize offset = mTopOfStack;
         mTopOfStack += aSize;

@@ -26,10 +26,10 @@ add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
 target_link_libraries(aeontool ProtoBufClasses)
 if(MSVC)
     set_target_properties(aeontool PROPERTIES
-        COMPILE_FLAGS "-WX -DPROTOBUF_USE_DLLS -D_CRT_SECURE_NO_WARNINGS")
+        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW)
     set_target_properties(aeontool PROPERTIES
-        COMPILE_FLAGS "-Wall -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-Wall")
 elseif(UNIX)
     set_target_properties(aeontool PROPERTIES
         COMPILE_FLAGS "-Wall")
