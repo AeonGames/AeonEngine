@@ -116,10 +116,10 @@ target_link_libraries(OpenGLRenderer ${OPENGL_LIBRARIES} AeonEngine ProtoBufClas
 
 if(MSVC)
     set_target_properties(OpenGLRenderer PROPERTIES
-        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW OR MSYS)
     set_target_properties(OpenGLRenderer PROPERTIES
-        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors -DPROTOBUF_USE_DLLS")
+        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors")
 elseif(UNIX)
     set_target_properties(OpenGLRenderer PROPERTIES
         COMPILE_FLAGS "-fpic -Wall  -Werror -Wfatal-errors")
