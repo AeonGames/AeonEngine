@@ -65,7 +65,32 @@ Ubuntu 14.04 and up:
 Visual Studio 2015 and up:
 -------------------
 
-Building with Visual Studio is somewhat more involved as all dependencies and tools need to be build first, for this you can use [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg), mode detailed instructions to come.
+Building with Visual Studio is somewhat more involved as all dependencies and tools need to be build first. The official way of doing this is to use [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg), however if you are proficient at building software you can build each dependency individually or you could just find official Windows distributions and install them. You can also pick and chose on what to build and what to install from a previously build distribution, in fact it is recommended to install the Qt5 sdk rather than build it if you want to save about 4+ hours of your life.
+
+## Install VCPKG
+    See [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) README.md for instructions, you can clone the repo anywhere, but I suggest c:\vcpkg to keep it global.
+    
+## Install Engine dependencies
+    In a command prompt window move to the vcpkg root and run the following command:
+    .\vcpkg install protobuf zlib libpng glslang spirv-tools
+    IF and only IF you have time to space and want to debug Qt5 issues, add qt5 to the list:
+    .\vcpkg install protobuf zlib libpng glslang spirv-tools qt5
+
+## Install the Vulkan SDK
+    Download and install the Vulkan SDK from [the LunarG website](https://vulkan.lunarg.com/sdk/home).
+    The engine supports OpenGL rendering and use of one API or the other is optional, while you could eventually chose not to build either of the renderers, as it is right now, both must be build.
+    This is just an oversight rather than a strict policy, and support for disabling modules will be written in the future.
+
+## Install the Qt5 SDK (Only if you did not build Qt5 with VCPKG)
+    Download and install the [Qt5 SDK](https://www1.qt.io/download-open-source), you may install it anywhere you want, but in general it is a good idea to avoid paths with spaces in it.
+
+## Generate solution and project files with CMake
+    If you're using the GUI, make sure that you add the CMAKE_TOOLCHAIN_FILE variable to point to the vcpkg.cmake file. And if you did not build the Qt SDK,
+    set the variable Qt5_DIR to <Qt5 SDK root>/lib/cmake/Qt5 before pressing the configure and generate buttons.
+    If you're generating them from the CLI, add the paths to the cmake command:
+    cmake -DCMAKE_TOOLCHAIN_FILE:filepath=<VCPKG ROOT>/scripts/buildsystems/vcpkg.cmake -DQt5_DIR:path=<Qt SDK Root>/lib/cmake/Qt5 <PATH TO ENGINE SOURCE ROOT>
+    or
+    cmake -DCMAKE_TOOLCHAIN_FILE:filepath=<VCPKG ROOT>/scripts/buildsystems/vcpkg.cmake <PATH TO ENGINE SOURCE ROOT>
 
 In No Way Complete TODO List:
 =============================
@@ -77,16 +102,16 @@ Unasked Questions Nevertheless Answered (UQNA)
 ----------------------------------------------
 
 ## Why do you use protobuf for your data files?
-	Because I've always felt human readability is not worth the price you pay in performace.
+    Because I've always felt human readability is not worth the price you pay in performace.
 ## Why do you keep PB plain text files around then?
-	They're easier to modify. The idea is that you convert them to binary once you're ready to ship.
+    They're easier to modify. The idea is that you convert them to binary once you're ready to ship.
 ## You could do that with &lt;insert favorite human readable format&gt; which is nicer, so why don't you?
-	PB's text files are a build in feature, anything else would require a tool to either convert to it,
+    PB's text files are a build in feature, anything else would require a tool to either convert to it,
     directly to binary protocol buffers or use a proprietary format.
     That takes time and Google already solved the problem.
     Do feel free to write your own convertion tool though.
 ## Why are there so many "Linux Build Fix" commits?
-	I develop on Windows first and then make sure things work properly on Linux. Things sometimes break.
+    I develop on Windows first and then make sure things work properly on Linux. Things sometimes break.
     While I do not hold a particular preference towards Windows, there are some things that keep me working on it:
     - Visual Studio's Debugger is the best there is. I do know how to use gdb, but I am not as proficient with it as with VS, and I am yet to find a graphical frontend I like for it.
     - Most PC gamers are on Windows, that's probably not going to change anytime soon.
