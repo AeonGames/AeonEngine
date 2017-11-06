@@ -53,16 +53,30 @@ namespace AeonGames
         /* Make sure tree is left in a valid state */
         if ( auto parent = mParent.lock() )
         {
-            if ( !parent->RemoveNode ( shared_from_this() ) )
+            try
             {
-                std::cerr << "Remove Node Failed" << std::endl;
+                if ( !parent->RemoveNode ( shared_from_this() ) )
+                {
+                    std::cerr << "Remove Node Failed" << std::endl;
+                }
+            }
+            catch ( std::bad_weak_ptr e )
+            {
+                std::cerr << "Remove Node Failed " << e.what() << std::endl;
             }
         }
         else if ( auto scene = mScene.lock() )
         {
-            if ( !scene->RemoveNode ( shared_from_this() ) )
+            try
             {
-                std::cerr << "Remove Node Failed" << std::endl;
+                if ( !scene->RemoveNode ( shared_from_this() ) )
+                {
+                    std::cerr << "Remove Node Failed" << std::endl;
+                }
+            }
+            catch ( std::bad_weak_ptr e )
+            {
+                std::cerr << "Remove Node Failed " << e.what() << std::endl;
             }
         }
         for ( auto & mNode : mNodes )
