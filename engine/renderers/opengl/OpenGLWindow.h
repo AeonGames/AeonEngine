@@ -31,9 +31,7 @@ namespace AeonGames
         virtual ~OpenGLWindow();
         void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
-        void BeginRender() const final;
         void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
-        void EndRender() const final;
     private:
         void Initialize();
         void Finalize();
