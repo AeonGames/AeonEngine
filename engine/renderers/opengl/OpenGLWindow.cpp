@@ -69,7 +69,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLWindow::BeginRender() const
+    void OpenGLWindow::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
 #ifdef _WIN32
         HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
@@ -82,24 +82,11 @@ namespace AeonGames
                          static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
-    }
-
-    void OpenGLWindow::Render ( const std::shared_ptr<const Scene>& aScene ) const
-    {
         mOpenGLRenderer->Render ( aScene );
-    }
-
-    void OpenGLWindow::EndRender() const
-    {
 #if _WIN32
-        HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
-        wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
         SwapBuffers ( hdc );
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
-        glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
-                         reinterpret_cast<::Window> ( mWindowId ),
-                         static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ) );
 #endif

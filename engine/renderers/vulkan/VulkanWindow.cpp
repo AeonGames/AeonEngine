@@ -412,7 +412,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::BeginRender() const
+    void VulkanWindow::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer->GetDevice(),
@@ -469,15 +469,9 @@ namespace AeonGames
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVulkanRenderer->GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
-    }
 
-    void VulkanWindow::Render ( const std::shared_ptr<const Scene>& aScene ) const
-    {
         mVulkanRenderer->Render ( aScene );
-    }
 
-    void VulkanWindow::EndRender() const
-    {
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );
         if ( VkResult result = vkEndCommandBuffer ( mVulkanRenderer->GetCommandBuffer() ) )
         {

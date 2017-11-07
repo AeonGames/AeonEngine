@@ -198,9 +198,7 @@ namespace AeonGames
                 }
             }
             mScene->Update ( delta );
-            mWindow->BeginRender();
             mWindow->Render ( mScene );
-            mWindow->EndRender();
             return true;
         }
         default:
