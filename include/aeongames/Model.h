@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/Platform.h"
 #include "aeongames/RenderModel.h"
+#include "aeongames/AABB.h"
 #include <vector>
 #include <tuple>
 
@@ -38,11 +39,11 @@ namespace AeonGames
         std::shared_ptr<Pipeline>,
             std::shared_ptr<Material>,
             std::shared_ptr<Mesh>>>& GetMeshes() const;
-        DLL const float * const GetCenterRadii() const;
+        DLL const AABB& GetCenterRadii() const;
         DLL const std::shared_ptr<Skeleton>& GetSkeleton() const;
         DLL const std::vector<std::shared_ptr<const Animation>>& GetAnimations() const;
     private:
-        float mCenterRadii[6];
+        AABB mCenterRadii;
         std::string mFilename;
         std::shared_ptr<Skeleton> mSkeleton;
         std::vector<std::tuple<

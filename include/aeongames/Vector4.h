@@ -1,5 +1,5 @@
 /*
-Copyright 2015-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 /*! \file
     \brief Header for the 4D vector class.
     \author Rodrigo Hernandez.
-    \copy 2015-2016
+    \copy 2015-2017
 */
 
 #include "aeongames/Platform.h"
@@ -33,7 +33,7 @@ namespace AeonGames
         ///@brief Default constructor.
         DLL Vector4();
         /*! @brief Constructor
-        @param aVector3 a float pointer or array containing vector data.
+        @param aVector a float pointer or array containing vector data.
         @note This is the same format the values are internally stored and what Vector3::GetVector3 returns.
         */
         DLL Vector4 ( const float* const aVector );
@@ -45,7 +45,6 @@ namespace AeonGames
         DLL const float& GetZ() const;
         DLL const float& GetW() const;
     protected:
-        /// Scale rotation and translation vectors
         float mVector[4];
     };
 }

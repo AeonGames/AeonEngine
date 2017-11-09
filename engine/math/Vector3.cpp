@@ -1,5 +1,9 @@
+#include "..\..\include\aeongames\Vector3.h"
+#include "..\..\include\aeongames\Vector3.h"
+#include "..\..\include\aeongames\Vector3.h"
+#include "..\..\include\aeongames\Vector3.h"
 /*
-Copyright 2015-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,7 +17,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "Vector3.h"
+#include "aeongames/Vector3.h"
 #include "3DMath.h"
 
 namespace AeonGames
@@ -44,6 +48,42 @@ namespace AeonGames
         mVector[0] = * ( reinterpret_cast<const float*> ( aVector ) );
         mVector[1] = * ( reinterpret_cast<const float*> ( reinterpret_cast<const uint8_t*> ( aVector ) + ( aStride ) ) );
         mVector[2] = * ( reinterpret_cast<const float*> ( reinterpret_cast<const uint8_t*> ( aVector ) + ( aStride * 2 ) ) );
+    }
+
+    float Vector3::GetLenghtSquared() const
+    {
+        return Dot ( *this, *this );
+    }
+
+    float Vector3::GetLenght() const
+    {
+        return sqrtf ( GetLenghtSquared() );
+    }
+
+    size_t Vector3::GetMaxAxisIndex() const
+    {
+        return
+            ( mVector[0] > mVector[1] ) ?
+            ( ( mVector[0] > mVector[2] ) ? 0 : 2 ) :
+            ( ( mVector[2] > mVector[1] ) ? 2 : 1 );
+    }
+
+    size_t Vector3::GetMinAxisIndex() const
+    {
+        return
+            ( mVector[0] < mVector[1] ) ?
+            ( ( mVector[0] < mVector[2] ) ? 0 : 2 ) :
+            ( ( mVector[2] < mVector[1] ) ? 2 : 1 );
+    }
+
+    float Vector3::GetMaxAxisLenght() const
+    {
+        return mVector[GetMaxAxisIndex()];
+    }
+
+    float Vector3::GetMinAxisLenght() const
+    {
+        return mVector[GetMinAxisIndex()];
     }
 
     Vector3::Vector3 ( float aX, float aY, float aZ )
@@ -137,12 +177,28 @@ namespace AeonGames
         return *this;
     }
 
+    Vector3 & Vector3::operator/= ( const float aLhs )
+    {
+        mVector[0] /= aLhs;
+        mVector[1] /= aLhs;
+        mVector[2] /= aLhs;
+        return *this;
+    }
+
     const Vector3 operator* ( const Vector3& aLhs, const float aRhs )
     {
         /*  Here Matrix4x4(lhs) *MAY* mean cast away constness
         rather tan create a temporary object in some compilers,
         we want the temporary, NOT the cast.*/
         return Vector3 ( aLhs ) *= aRhs;
+    }
+
+    const Vector3 operator/ ( const Vector3 & aLhs, const float aRhs )
+    {
+        /*  Here Matrix4x4(lhs) *MAY* mean cast away constness
+        rather tan create a temporary object in some compilers,
+        we want the temporary, NOT the cast.*/
+        return Vector3 ( aLhs ) /= aRhs;
     }
 
     const Vector3 operator* ( const float aLhs, const Vector3& aRhs )

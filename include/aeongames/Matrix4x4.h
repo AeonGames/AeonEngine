@@ -62,6 +62,7 @@ namespace AeonGames
         /*! \name Operators */
         //@{
         DLL Matrix4x4& operator*= ( const Matrix4x4& lhs );
+        DLL const float operator[] ( size_t aIndex ) const;
         //@}
     protected:
         /// Lineal row mayor matrix.

@@ -60,7 +60,6 @@ namespace AeonGames
             {
                 continue;
             }
-#if 1
             if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
             {
                 /* This has to be called outside of a render pass, which currently it is not. */
@@ -70,7 +69,6 @@ namespace AeonGames
                 buffer_copy.size = mSkeleton->GetBufferSize();
                 vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( mAssemblies[i] )->GetSkeletonBuffer(), 1, &buffer_copy );
             }
-#endif
             std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
             std::get<2> ( mAssemblies[i] )->Render();
         }
