@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,28 +13,30 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_MAINWINDOW_H
-#define AEONGAMES_MAINWINDOW_H
 
-#include <memory>
-#include "ui_MainWindow.h"
+#ifndef AEONGAMES_FRUSTUM_H
+#define AEONGAMES_FRUSTUM_H
+/*! \file
+    \brief Header for the frustum class.
+    \author Rodrigo Hernandez.
+    \copy 2017
+*/
+#include <array>
+#include "aeongames/Platform.h"
+#include "aeongames/Plane.h"
 
 namespace AeonGames
 {
-    class Renderer;
-    class EngineWindow;
-    class MainWindow : public QMainWindow, public Ui::MainWindow
+    class Matrix4x4;
+    class Frustum
     {
-        Q_OBJECT
     public:
-        MainWindow();
-        ~MainWindow();
-    private slots:
-        void on_actionNew_triggered();
-        void on_actionOpen_triggered();
-        void on_actionExit_triggered();
+        ///@brief Default constructor.
+        DLL Frustum ( const Matrix4x4& aMatrix );
+        /// destructor.
+        DLL ~Frustum();
     private:
-        std::shared_ptr<Renderer> mRenderer;
+        std::array<Plane, 6> mPlanes;
     };
 }
 #endif

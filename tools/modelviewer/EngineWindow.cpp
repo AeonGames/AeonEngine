@@ -120,11 +120,8 @@ namespace AeonGames
         if ( mNode->GetModelInstance() )
         {
             // Adjust camera position so model fits the frustum tightly.
-            const float* const center_radius = mNode->GetModelInstance()->GetModel()->GetCenterRadii();
-            float radius = sqrtf ( ( center_radius[3] * center_radius[3] ) +
-                                   ( center_radius[4] * center_radius[4] ) +
-                                   ( center_radius[5] * center_radius[5] ) );
-            std::cout << "Radius: " << radius << std::endl;
+            float diameter = mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;
+            std::cout << "Diameter: " << diameter << std::endl;
             // Add the near value to the radius just in case the actual object contains the eye position.
             float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;
             float v1[2] = { 1, 0 };
@@ -135,9 +132,12 @@ namespace AeonGames
             mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
 
             assert ( mFrustumVerticalHalfAngle != 0.0f );
-            float eye_length = ( radius + 1.0f ) / std::tan ( mFrustumVerticalHalfAngle );
+            float eye_length = ( diameter ) / std::tan ( mFrustumVerticalHalfAngle );
             mCameraLocation = QVector4D (
-                                  QVector3D ( center_radius[0], center_radius[1], center_radius[2] ) +
+                                  QVector3D (
+                                      mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetCenter() [0],
+                                      mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetCenter() [1],
+                                      mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetCenter() [2] ) +
                                   ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
             updateViewMatrix();
             mStep = eye_length / 100.0f;

@@ -66,7 +66,7 @@ namespace AeonGames
         return mMeshes;
     }
 
-    const float * const Model::GetCenterRadii() const
+    const AABB& Model::GetCenterRadii() const
     {
         return mCenterRadii;
     }
@@ -136,12 +136,22 @@ namespace AeonGames
             max[1] = std::max ( max[1], center_radii[1] + center_radii[4] );
             max[2] = std::max ( max[2], center_radii[2] + center_radii[5] );
         }
-        mCenterRadii[0] = ( min[0] + max[0] ) / 2;
-        mCenterRadii[1] = ( min[1] + max[1] ) / 2;
-        mCenterRadii[2] = ( min[2] + max[2] ) / 2;
-        mCenterRadii[3] = max[0] - mCenterRadii[0];
-        mCenterRadii[4] = max[1] - mCenterRadii[1];
-        mCenterRadii[5] = max[2] - mCenterRadii[1];
+
+        mCenterRadii.SetCenter
+        (
+        {
+            ( ( min[0] + max[0] ) / 2 ),
+            ( ( min[1] + max[1] ) / 2 ),
+            ( ( min[2] + max[2] ) / 2 )
+        } );
+
+        mCenterRadii.SetRadii
+        (
+        {
+            ( max[0] - mCenterRadii.GetCenter() [0] ),
+            ( max[1] - mCenterRadii.GetCenter() [1] ),
+            ( max[2] - mCenterRadii.GetCenter() [2] )
+        } );
 
         if ( model_buffer.animation_size() )
         {

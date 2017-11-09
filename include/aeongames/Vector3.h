@@ -1,5 +1,5 @@
 /*
-Copyright 2015-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 /*! \file
     \brief Header for the 3D vector class.
     \author Rodrigo Hernandez.
-    \copy 2015
+    \copy 2015-2017
 */
 
 #include "aeongames/Platform.h"
@@ -47,21 +47,29 @@ namespace AeonGames
         DLL const float& GetZ() const;
         DLL void SetVector3 ( const float* const aVector );
         DLL void SetVector3 ( const void* const aVector, const uint32_t aStride );
+        DLL float GetLenghtSquared() const;
+        DLL float GetLenght() const;
+        DLL size_t GetMaxAxisIndex() const;
+        DLL size_t GetMinAxisIndex() const;
+        DLL float GetMaxAxisLenght() const;
+        DLL float GetMinAxisLenght() const;
         /*! \name Operators */
         //@{
         DLL Vector3& operator-= ( const Vector3& aLhs );
         DLL Vector3& operator+= ( const Vector3& aLhs );
         DLL Vector3& operator*= ( const float aLhs );
+        DLL Vector3& operator/= ( const float aLhs );
         DLL float operator[] ( const uint32_t aIndex ) const;
         DLL float& operator [] ( const uint32_t aIndex );
         //@}
     protected:
-        /// Scale rotation and translation vectors
+        /// X,Y,Z
         float mVector[3];
     };
     DLL const Vector3 operator- ( const Vector3& aLhs, const Vector3& aRhs );
     DLL const Vector3 operator+ ( const Vector3& aLhs, const Vector3& aRhs );
     DLL const Vector3 operator* ( const Vector3& aLhs, const float aRhs );
+    DLL const Vector3 operator/ ( const Vector3& aLhs, const float aRhs );
     DLL const Vector3 operator* ( const float aLhs, const Vector3& aRhs );
     DLL bool operator!= ( const Vector3& aLhs, const Vector3& aRhs );
     DLL const Vector3 Cross ( const Vector3& aLhs, const Vector3& aRhs );

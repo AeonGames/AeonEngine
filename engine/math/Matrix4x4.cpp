@@ -146,6 +146,12 @@ namespace AeonGames
         return *this;
     }
 
+    const float Matrix4x4::operator[] ( size_t aIndex ) const
+    {
+        assert ( aIndex < 16 );
+        return mMatrix[aIndex];
+    }
+
     const Matrix4x4 operator* ( const Matrix4x4& lhs, const Matrix4x4& rhs )
     {
         /*  Here Matrix4x4(lhs) *MAY* mean cast away constness

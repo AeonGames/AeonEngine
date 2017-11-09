@@ -64,8 +64,11 @@ set(ENGINE_SCENEGRAPH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h)
 
 set(ENGINE_MATH_HEADERS
-    math/Vector4.h
-    math/Vector3.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector3.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Plane.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/AABB.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Frustum.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
@@ -108,6 +111,9 @@ set(ENGINE_SCENEGRAPH_SOURCES
 set(ENGINE_MATH_SOURCES
     math/Vector4.cpp
     math/Vector3.cpp
+    math/Plane.cpp
+    math/AABB.cpp
+    math/Frustum.cpp
     math/Matrix4x4.cpp
     math/Transform.cpp)
 
