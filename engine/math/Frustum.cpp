@@ -16,6 +16,7 @@ limitations under the License.
 #include "3DMath.h"
 #include "aeongames/Plane.h"
 #include "aeongames/Frustum.h"
+#include "aeongames/AABB.h"
 #include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
@@ -65,4 +66,24 @@ namespace AeonGames
 
     Frustum::~Frustum()
         = default;
+    bool Frustum::TestAABB ( const Vector3& aLocation, const AABB & aAABB ) const
+    {
+        std::array<Vector3, 8> points = aAABB.GetPoints ( aLocation );
+        for ( auto& plane : mPlanes )
+        {
+            size_t i;
+            for ( i = 0; i < points.size(); ++i )
+            {
+                if ( plane.GetDistanceTo ( points[i] ) >= 0 )
+                {
+                    break;
+                }
+            }
+            if ( i == points.size() )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }

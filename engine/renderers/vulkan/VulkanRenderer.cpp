@@ -47,6 +47,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/Frustum.h"
 namespace AeonGames
 {
     VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate ), mMatrices ( *this )
@@ -116,6 +117,12 @@ namespace AeonGames
 
     void VulkanRenderer::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
+        Matrix4x4 view_matrix = mViewTransform.GetInverted();
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+
+        Frustum frustum ( mProjectionMatrix * view_matrix );
+
         aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
         {
             const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( aNode->GetModelInstance()->GetModel() );
@@ -286,12 +293,6 @@ namespace AeonGames
         mDeviceExtensionNames.push_back ( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
     }
 
-#if 0
-    const VulkanRenderer::Transforms & VulkanRenderer::GetTransforms() const
-    {
-        return mTransforms;
-    }
-#endif
     void VulkanRenderer::InitializeInstance()
     {
         VkInstanceCreateInfo instance_create_info {};
@@ -667,12 +668,10 @@ namespace AeonGames
 
     void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mProjectionMatrix = aMatrix;
     }
     void VulkanRenderer::SetViewTransform ( const Transform aTransform )
     {
-        float* view_matrix = static_cast<float*> ( mMatrices.Map ( sizeof ( float ) * 16, sizeof ( float ) * 16 ) );
-        aTransform.GetInvertedMatrix ( view_matrix );
-        mMatrices.Unmap();
+        mViewTransform = aTransform;
     }
 }

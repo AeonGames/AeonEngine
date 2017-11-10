@@ -36,6 +36,7 @@ namespace AeonGames
         DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
         /// destructor.
         DLL ~Plane();
+        DLL float GetDistanceTo ( const Vector3& aLocation ) const;
         DLL float GetDistanceTo ( const Vector3& aLocation, const AABB& aAABB ) const;
     private:
         Vector3 mNormal;

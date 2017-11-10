@@ -43,4 +43,19 @@ namespace AeonGames
     {
         mRadii = aRadii;
     }
+    std::array<Vector3, 8> AABB::GetPoints ( const Vector3 & aOffset ) const
+    {
+        return std::array<Vector3, 8>
+        {
+            aOffset + mCenter + mRadii,
+            aOffset + mCenter - mRadii,
+            aOffset + mCenter + Vector3 ( -mRadii[0], mRadii[1], mRadii[2] ),
+            aOffset + mCenter - Vector3 ( -mRadii[0], mRadii[1], mRadii[2] ),
+            aOffset + mCenter + Vector3 ( mRadii[0], -mRadii[1], mRadii[2] ),
+            aOffset + mCenter - Vector3 ( mRadii[0], -mRadii[1], mRadii[2] ),
+            aOffset + mCenter + Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
+            aOffset + mCenter - Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
+        };
+
+    }
 }
