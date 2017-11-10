@@ -22,6 +22,7 @@ limitations under the License.
     \copy 2017
 */
 
+#include <array>
 #include "aeongames/Platform.h"
 #include "aeongames/Vector3.h"
 
@@ -40,6 +41,7 @@ namespace AeonGames
         DLL const Vector3& GetRadii() const;
         DLL void SetCenter ( const Vector3& aCenter );
         DLL void SetRadii ( const Vector3& aRadii );
+        DLL std::array<Vector3, 8> GetPoints ( const Vector3& aOffset = { 0.0f, 0.0f, 0.0f, } ) const;
     private:
         Vector3 mCenter{};
         Vector3 mRadii{};

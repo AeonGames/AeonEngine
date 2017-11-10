@@ -27,7 +27,9 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class AABB;
     class Matrix4x4;
+    class Vector3;
     class Frustum
     {
     public:
@@ -35,6 +37,7 @@ namespace AeonGames
         DLL Frustum ( const Matrix4x4& aMatrix );
         /// destructor.
         DLL ~Frustum();
+        DLL bool TestAABB ( const Vector3& aLocation, const AABB& aAABB ) const;
     private:
         std::array<Plane, 6> mPlanes;
     };

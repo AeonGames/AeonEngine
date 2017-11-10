@@ -1,7 +1,3 @@
-#include "..\..\include\aeongames\Vector3.h"
-#include "..\..\include\aeongames\Vector3.h"
-#include "..\..\include\aeongames\Vector3.h"
-#include "..\..\include\aeongames\Vector3.h"
 /*
 Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
 

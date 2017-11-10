@@ -22,6 +22,8 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Memory.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Transform.h"
 #include "VulkanWindow.h"
 #include "VulkanBuffer.h"
 
@@ -106,7 +108,10 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT = VK_NULL_HANDLE;
+        ///@todo The member variables mMatrices,mProjectionMatrix,mViewTransform belong in the window class, move them.
         VulkanBuffer mMatrices;
+        Matrix4x4 mProjectionMatrix{};
+        Transform mViewTransform{};
     };
 }
 #endif

@@ -34,6 +34,11 @@ namespace AeonGames
     Plane::~Plane()
         = default;
 
+    float Plane::GetDistanceTo ( const Vector3 & aLocation ) const
+    {
+        return Dot ( mNormal, aLocation ) - mDistance;
+    }
+
     float Plane::GetDistanceTo ( const Vector3 & aLocation, const AABB & aAABB ) const
     {
         Vector3 offsets
