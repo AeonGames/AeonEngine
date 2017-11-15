@@ -17,6 +17,7 @@ limitations under the License.
 #include "3DMath.h"
 #include "aeongames/Plane.h"
 #include "aeongames/AABB.h"
+#include "aeongames/Transform.h"
 
 namespace AeonGames
 {
@@ -56,6 +57,16 @@ namespace AeonGames
             aOffset + mCenter + Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
             aOffset + mCenter - Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
         };
+    }
 
+    AABB & AABB::operator*= ( const Transform & lhs )
+    {
+        ///@todo implement this based on Real Time Collision Detection 4.2.6
+        return *this;
+    }
+
+    const AABB operator* ( const AABB & lhs, const Transform & rhs )
+    {
+        return AABB ( lhs ) *= rhs;
     }
 }

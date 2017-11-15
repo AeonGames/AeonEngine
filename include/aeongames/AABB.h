@@ -28,6 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Transform;
     /*! \brief Axis Aligned Bounding Box class. */
     class AABB
     {
@@ -42,9 +43,11 @@ namespace AeonGames
         DLL void SetCenter ( const Vector3& aCenter );
         DLL void SetRadii ( const Vector3& aRadii );
         DLL std::array<Vector3, 8> GetPoints ( const Vector3& aOffset = { 0.0f, 0.0f, 0.0f, } ) const;
+        DLL AABB& operator*= ( const Transform& lhs );
     private:
         Vector3 mCenter{};
         Vector3 mRadii{};
     };
+    DLL const AABB operator* ( const AABB& lhs, const Transform& rhs );
 }
 #endif

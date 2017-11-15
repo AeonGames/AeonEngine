@@ -30,6 +30,7 @@ namespace AeonGames
     class Renderer;
     class Scene;
     class ModelInstance;
+    class AABB;
     /// Scene Graph Node
     class Node : public std::enable_shared_from_this<Node>
     {
@@ -115,6 +116,8 @@ namespace AeonGames
         DLL void RecursiveTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
         DLL const Transform& GetLocalTransform() const;
         DLL const Transform& GetGlobalTransform() const;
+        DLL const AABB GetLocalAABB() const;
+        DLL const AABB GetGlobalAABB() const;
         DLL void SetLocalTransform ( const Transform& aTransform );
         DLL void SetGlobalTransform ( const Transform& aTransform );
         DLL size_t GetChildrenCount() const;

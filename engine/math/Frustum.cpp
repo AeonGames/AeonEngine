@@ -66,9 +66,9 @@ namespace AeonGames
 
     Frustum::~Frustum()
         = default;
-    bool Frustum::TestAABB ( const Vector3& aLocation, const AABB & aAABB ) const
+    bool Frustum::TestAABB ( const AABB & aAABB ) const
     {
-        std::array<Vector3, 8> points = aAABB.GetPoints ( aLocation );
+        std::array<Vector3, 8> points = aAABB.GetPoints();
         for ( auto& plane : mPlanes )
         {
             size_t i;
