@@ -139,10 +139,45 @@ namespace AeonGames
         Frustum ( -fW, fW, -fH, fH, aNear, aFar );
     }
 
+    Matrix4x4 & Matrix4x4::Rotate ( float angle, float x, float y, float z )
+    {
+        /*
+        This replicates how glRotatef works.
+        */
+        return *this *= GetRotationMatrix ( angle, x, y, z );
+    }
+
     Matrix4x4& Matrix4x4::operator *= ( const Matrix4x4& lhs )
     {
         // Item 22 from MEC++
-        Multiply4x4Matrix ( mMatrix, lhs.mMatrix, mMatrix );
+        float local[16]
+        {
+            mMatrix[0], mMatrix[1], mMatrix[2], mMatrix[3],
+            mMatrix[4], mMatrix[5], mMatrix[6], mMatrix[7],
+            mMatrix[8], mMatrix[9], mMatrix[10], mMatrix[11],
+            mMatrix[12], mMatrix[13], mMatrix[14], mMatrix[15]
+        };
+
+        mMatrix[0] = local[0] * lhs.mMatrix[0] + local[1] * lhs.mMatrix[4] + local[2] * lhs.mMatrix[8] + local[3] * lhs.mMatrix[12];
+        mMatrix[1] = local[0] * lhs.mMatrix[1] + local[1] * lhs.mMatrix[5] + local[2] * lhs.mMatrix[9] + local[3] * lhs.mMatrix[13];
+        mMatrix[2] = local[0] * lhs.mMatrix[2] + local[1] * lhs.mMatrix[6] + local[2] * lhs.mMatrix[10] + local[3] * lhs.mMatrix[14];
+        mMatrix[3] = local[0] * lhs.mMatrix[3] + local[1] * lhs.mMatrix[7] + local[2] * lhs.mMatrix[11] + local[3] * lhs.mMatrix[15];
+
+        mMatrix[4] = local[4] * lhs.mMatrix[0] + local[5] * lhs.mMatrix[4] + local[6] * lhs.mMatrix[8] + local[7] * lhs.mMatrix[12];
+        mMatrix[5] = local[4] * lhs.mMatrix[1] + local[5] * lhs.mMatrix[5] + local[6] * lhs.mMatrix[9] + local[7] * lhs.mMatrix[13];
+        mMatrix[6] = local[4] * lhs.mMatrix[2] + local[5] * lhs.mMatrix[6] + local[6] * lhs.mMatrix[10] + local[7] * lhs.mMatrix[14];
+        mMatrix[7] = local[4] * lhs.mMatrix[3] + local[5] * lhs.mMatrix[7] + local[6] * lhs.mMatrix[11] + local[7] * lhs.mMatrix[15];
+
+        mMatrix[8] = local[8] * lhs.mMatrix[0] + local[9] * lhs.mMatrix[4] + local[10] * lhs.mMatrix[8] + local[11] * lhs.mMatrix[12];
+        mMatrix[9] = local[8] * lhs.mMatrix[1] + local[9] * lhs.mMatrix[5] + local[10] * lhs.mMatrix[9] + local[11] * lhs.mMatrix[13];
+        mMatrix[10] = local[8] * lhs.mMatrix[2] + local[9] * lhs.mMatrix[6] + local[10] * lhs.mMatrix[10] + local[11] * lhs.mMatrix[14];
+        mMatrix[11] = local[8] * lhs.mMatrix[3] + local[9] * lhs.mMatrix[7] + local[10] * lhs.mMatrix[11] + local[11] * lhs.mMatrix[15];
+
+        mMatrix[12] = local[12] * lhs.mMatrix[0] + local[13] * lhs.mMatrix[4] + local[14] * lhs.mMatrix[8] + local[15] * lhs.mMatrix[12];
+        mMatrix[13] = local[12] * lhs.mMatrix[1] + local[13] * lhs.mMatrix[5] + local[14] * lhs.mMatrix[9] + local[15] * lhs.mMatrix[13];
+        mMatrix[14] = local[12] * lhs.mMatrix[2] + local[13] * lhs.mMatrix[6] + local[14] * lhs.mMatrix[10] + local[15] * lhs.mMatrix[14];
+        mMatrix[15] = local[12] * lhs.mMatrix[3] + local[13] * lhs.mMatrix[7] + local[14] * lhs.mMatrix[11] + local[15] * lhs.mMatrix[15];
+
         return *this;
     }
 
@@ -150,6 +185,32 @@ namespace AeonGames
     {
         assert ( aIndex < 16 );
         return mMatrix[aIndex];
+    }
+
+    const Matrix4x4 Matrix4x4::GetRotationMatrix ( float angle, float x, float y, float z )
+    {
+        float radians = float ( ( angle / 180.0f ) * PI );
+        float c = cosf ( radians );
+        float s = sinf ( radians );
+        return Matrix4x4
+        {
+            x * x * ( 1 - c ) + c,
+            x * y * ( 1 - c ) - z * s,
+            x * z * ( 1 - c ) + y * s,
+            0,
+            y * x * ( 1 - c ) + z * s,
+            y * y * ( 1 - c ) + c,
+            y * z * ( 1 - c ) - x * s,
+            0,
+            x * z * ( 1 - c ) - y * s,
+            y * z * ( 1 - c ) + x * s,
+            z * z * ( 1 - c ) + c,
+            0,
+            0,
+            0,
+            0,
+            1
+        };
     }
 
     const Matrix4x4 operator* ( const Matrix4x4& lhs, const Matrix4x4& rhs )
