@@ -707,6 +707,8 @@ inline float* InvertMatrix ( float *mat, float *dest )
     memcpy ( dest, dst, sizeof ( float ) * 16 );
     return dest;
 }
+#if 0
+/// Moved to Matrix4x4 Class
 /*! \brief Multiplies two 4x4 matrices.
 
 Multiplies two 4x4 matrices, returning a pointer to the resulting matrix,
@@ -955,8 +957,11 @@ inline float* Multiply4x4Matrix ( const float* A, const float* B, float* out )
     else
     {
 #endif
-#if 0
-        // Row mayor (DX way)
+#if 1
+        // Column mayor (OpenGL way)
+        /* In column mayor you must post multiply,
+           this means that the Model View Projection Matrix must be calculated as:
+           Projection * View * Model */
         result[ 0] = mx1[ 0] * mx2[ 0] + mx1[ 1] * mx2[ 4] + mx1[ 2] * mx2[ 8] + mx1[ 3] * mx2[12];
         result[ 1] = mx1[ 0] * mx2[ 1] + mx1[ 1] * mx2[ 5] + mx1[ 2] * mx2[ 9] + mx1[ 3] * mx2[13];
         result[ 2] = mx1[ 0] * mx2[ 2] + mx1[ 1] * mx2[ 6] + mx1[ 2] * mx2[10] + mx1[ 3] * mx2[14];
@@ -977,7 +982,10 @@ inline float* Multiply4x4Matrix ( const float* A, const float* B, float* out )
         result[14] = mx1[12] * mx2[ 2] + mx1[13] * mx2[ 6] + mx1[14] * mx2[10] + mx1[15] * mx2[14];
         result[15] = mx1[12] * mx2[ 3] + mx1[13] * mx2[ 7] + mx1[14] * mx2[11] + mx1[15] * mx2[15];
 #else
-        // Column mayor (OpenGL way)
+        // Row mayor (DX way)
+        /* In column mayor you must pre multiply
+           this means that the Model View Projection Matrix must be calculated as:
+           Model * View * Projection */
         result[ 0] = mx1[ 0] * mx2[ 0] + mx1[ 4] * mx2[ 1] + mx1[ 8] * mx2[ 2] + mx1[12] * mx2[ 3];
         result[ 1] = mx1[ 1] * mx2[ 0] + mx1[ 5] * mx2[ 1] + mx1[ 9] * mx2[ 2] + mx1[13] * mx2[ 3];
         result[ 2] = mx1[ 2] * mx2[ 0] + mx1[ 6] * mx2[ 1] + mx1[10] * mx2[ 2] + mx1[14] * mx2[ 3];
@@ -1004,6 +1012,7 @@ inline float* Multiply4x4Matrix ( const float* A, const float* B, float* out )
     memcpy ( out, result, sizeof ( float ) * 16 );
     return out;
 }
+#endif
 /*! \brief Multiplies only the 3x3 part of two 4x4 matrices.
 
 Multiplies two 4x4 matrices, returning a pointer to the resulting matrix,
@@ -1093,6 +1102,8 @@ inline void InterpolateMatrices ( float* m1, float* m2, float* o, float i )
     o[14] = m1[14] + ( ( m2[14] - m1[14] ) * i );
     o[15] = m1[15] + ( ( m2[15] - m1[15] ) * i );
 }
+#if 0
+/// Moved to Matrix4x4 class
 /*! \brief Constructs the rotation matrix defined by the axis-angle provided.
 
     The Matrix returned is a 4x4 matrix constructed using the same formula glRotate* uses.
@@ -1129,6 +1140,8 @@ inline float* GetRotationMatrix ( float* R, float angle, float x, float y, float
     R[15] = 1;
     return R;
 }
+#endif
+#if 0
 /*! \brief Rotates a matrix using axis angle notation.
 
 This function rotates a matrix using axis angle notaton where x,y,z represent the axis
@@ -1149,6 +1162,8 @@ inline float* RotateMatrix ( float* src, float* dst, float angle, float x, float
     GetRotationMatrix ( r, angle, x, y, z );
     return Multiply4x4Matrix ( src, r, dst );
 }
+#endif
+#if 0
 /*! \brief Rotates a matrix in object space using axis angle notation.
 
 This function rotates a matrix in object space using axis angle notaton where x,y,z represent the axis
@@ -1182,6 +1197,8 @@ inline float* RotateMatrixObjectSpace ( float* src, float* dst, float angle, flo
     GetRotationMatrix ( r, angle, v[0], v[1], v[2] );
     return Multiply3x3Matrix ( src, r, dst );
 }
+#endif
+#if 0
 /*! \brief Rotates a matrix in inertial space using axis angle notation.
 
 This function rotates a matrix in inertial space using axis angle notaton where x,y,z represent the axis
@@ -1213,6 +1230,7 @@ inline float* RotateMatrixInertialSpace ( float* src, float* dst, float angle, f
     GetRotationMatrix ( r, angle, x, y, z );
     return Multiply3x3Matrix ( src, r, dst );
 }
+#endif
 /*! \brief Translates a 4x4 matrix using a vector relative from its current position using the object axis.
 
     This is a simplified matrix multiplication \f$A \times B\f$:
@@ -1691,6 +1709,7 @@ inline void Matrix4x4ToQuat ( float *matrix, float *q )
         }
     }
 }
+#if 0
 /*! \brief Multiplies a matrix and a quaternion
 
     Converts the quaternion to a matrix and multiplies the provided matrix
@@ -1714,6 +1733,7 @@ inline void Quat4x4MatrixMult ( float* q, float* m, float* dst )
     QuatTo4x4Matrix ( q, qm );
     Multiply4x4Matrix ( qm, m, dst );
 }
+#endif
 //-------------------------------------------//
 /*! \brief Rotates a vector around the origin by a quaternion.
 

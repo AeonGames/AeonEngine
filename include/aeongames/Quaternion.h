@@ -26,14 +26,17 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Matrix4x4;
     /*! \brief Quaternion class. */
     class Quaternion
     {
     public:
         ///@brief Default constructor.
         DLL Quaternion();
+        DLL Quaternion ( float w, float x, float y, float z );
         /// destructor.
         DLL ~Quaternion();
+        DLL Matrix4x4 GetMatrix4x4() const;
     protected:
         float mQuaternion[4] {};
     };
