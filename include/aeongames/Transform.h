@@ -25,6 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Vector3;
     /*! \brief Component class for any object that requires space transformations.
         \ingroup placeables
     */

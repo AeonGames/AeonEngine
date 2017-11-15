@@ -14,32 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_FRUSTUM_H
-#define AEONGAMES_FRUSTUM_H
+#ifndef AEONGAMES_QUATERNION_H
+#define AEONGAMES_QUATERNION_H
 /*! \file
-    \brief Header for the frustum class.
+    \brief Header for the quaternion class.
     \author Rodrigo Hernandez.
     \copy 2017
 */
-#include <array>
+
 #include "aeongames/Platform.h"
-#include "aeongames/Plane.h"
 
 namespace AeonGames
 {
-    class AABB;
-    class Matrix4x4;
-    class Vector3;
-    class Frustum
+    /*! \brief Quaternion class. */
+    class Quaternion
     {
     public:
         ///@brief Default constructor.
-        DLL Frustum ( const Matrix4x4& aMatrix );
+        DLL Quaternion();
         /// destructor.
-        DLL ~Frustum();
-        DLL bool TestAABB ( const AABB& aAABB ) const;
-    private:
-        std::array<Plane, 6> mPlanes;
+        DLL ~Quaternion();
+    protected:
+        float mQuaternion[4] {};
     };
 }
 #endif

@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ModelInstance.h"
+#include "aeongames/AABB.h"
 
 namespace AeonGames
 {
@@ -144,6 +145,16 @@ namespace AeonGames
     const Transform& Node::GetGlobalTransform() const
     {
         return mGlobalTransform;
+    }
+
+    const AABB Node::GetLocalAABB() const
+    {
+        return AABB();
+    }
+
+    const AABB Node::GetGlobalAABB() const
+    {
+        return AABB();
     }
 
     void Node::SetLocalTransform ( const Transform& aTransform )

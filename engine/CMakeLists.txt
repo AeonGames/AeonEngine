@@ -65,6 +65,7 @@ set(ENGINE_SCENEGRAPH_HEADERS
 
 set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Vector3.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Plane.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AABB.h
@@ -109,6 +110,7 @@ set(ENGINE_SCENEGRAPH_SOURCES
     scenegraph/Node.cpp)
 
 set(ENGINE_MATH_SOURCES
+    math/Quaternion.cpp
     math/Vector4.cpp
     math/Vector3.cpp
     math/Plane.cpp

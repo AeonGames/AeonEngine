@@ -123,9 +123,11 @@ namespace AeonGames
 
         Frustum frustum ( mProjectionMatrix * view_matrix );
 
-        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const std::shared_ptr<const Node>& aNode )
         {
-            const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( aNode->GetModelInstance()->GetModel() );
+            const std::shared_ptr<const ModelInstance>& model_instance = aNode->GetModelInstance();
+            const std::shared_ptr<const Model>& model = model_instance->GetModel();
+            const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( model );
             if ( render_model )
             {
                 render_model->Render ( aNode->GetModelInstance() );
