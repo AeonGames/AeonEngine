@@ -58,6 +58,7 @@ namespace AeonGames
         DLL Vector3& operator-= ( const Vector3& aLhs );
         DLL Vector3& operator+= ( const Vector3& aLhs );
         DLL Vector3& operator*= ( const float aLhs );
+        DLL Vector3& operator*= ( const Vector3& aLhs );
         DLL Vector3& operator/= ( const float aLhs );
         DLL float operator[] ( const uint32_t aIndex ) const;
         DLL float& operator [] ( const uint32_t aIndex );
@@ -72,8 +73,10 @@ namespace AeonGames
     DLL const Vector3 operator/ ( const Vector3& aLhs, const float aRhs );
     DLL const Vector3 operator* ( const float aLhs, const Vector3& aRhs );
     DLL bool operator!= ( const Vector3& aLhs, const Vector3& aRhs );
+    DLL bool operator== ( const Vector3& aLhs, const Vector3& aRhs );
     DLL const Vector3 Cross ( const Vector3& aLhs, const Vector3& aRhs );
     DLL const float Dot ( const Vector3& aLhs, const Vector3& aRhs );
     DLL const Vector3 Normalize ( const Vector3& aVector );
+    DLL const Vector3 Spline ( const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, double interpolation );
 }
 #endif

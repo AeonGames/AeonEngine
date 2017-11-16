@@ -25,6 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Vector3;
     class Transform;
     /*! \brief 4 by 4 matrix in colum mayor order.
         \ingroup placeables
@@ -88,6 +89,7 @@ namespace AeonGames
     \note Since the matrices are stored in column mayor order, this is post multiplication.
     */
     DLL const Matrix4x4 operator* ( const Matrix4x4& lhs, const Matrix4x4& rhs );
+    DLL const Vector3 operator* ( const Matrix4x4& lhs, const Vector3& rhs );
     DLL const bool operator== ( const Matrix4x4& lhs, const Matrix4x4& rhs );
     static_assert ( sizeof ( Matrix4x4 ) == ( sizeof ( float ) * 16 ), "Matrix4x4 is not 16 floats wide." );
 }

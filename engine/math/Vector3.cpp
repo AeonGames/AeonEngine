@@ -173,6 +173,14 @@ namespace AeonGames
         return *this;
     }
 
+    Vector3 & Vector3::operator*= ( const Vector3 & aLhs )
+    {
+        mVector[0] *= aLhs[0];
+        mVector[1] *= aLhs[1];
+        mVector[2] *= aLhs[2];
+        return *this;
+    }
+
     Vector3 & Vector3::operator/= ( const float aLhs )
     {
         mVector[0] /= aLhs;
@@ -210,6 +218,11 @@ namespace AeonGames
         return memcmp ( aLhs.GetVector3(), aRhs.GetVector3(), sizeof ( float ) * 3 ) != 0;
     }
 
+    bool operator== ( const Vector3 & aLhs, const Vector3 & aRhs )
+    {
+        return memcmp ( aLhs.GetVector3(), aRhs.GetVector3(), sizeof ( float ) * 3 ) == 0;
+    }
+
     const float Dot ( const Vector3& aLhs, const Vector3& aRhs )
     {
         return
@@ -226,5 +239,29 @@ namespace AeonGames
                    aVector.GetX() / magnitude,
                    aVector.GetY() / magnitude,
                    aVector.GetZ() / magnitude );
+    }
+    const Vector3 Spline ( const Vector3 & p0, const Vector3 & p1, const Vector3 & p2, const Vector3 & p3, double interpolation )
+    {
+        double i2 = interpolation * interpolation;
+        double i3 = i2 * interpolation;
+        double t0[3] =
+        {
+            ( p2[0] - p0[0] ) / 2.0,
+            ( p2[1] - p0[1] ) / 2.0,
+            ( p2[2] - p0[2] ) / 2.0
+        };
+
+        double t1[3] =
+        {
+            ( p3[0] - p1[0] ) / 2.0,
+            ( p3[1] - p1[1] ) / 2.0,
+            ( p3[2] - p1[2] ) / 2.0
+        };
+        return Vector3
+        {
+            static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[0] + ( -2 * i3 + 3 * i2 ) * p2[0] + ( i3 - 2 * i2 + interpolation ) * t0[0] + ( i3 - i2 ) * t1[0] ),
+            static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[1] + ( -2 * i3 + 3 * i2 ) * p2[1] + ( i3 - 2 * i2 + interpolation ) * t0[1] + ( i3 - i2 ) * t1[1] ),
+            static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[2] + ( -2 * i3 + 3 * i2 ) * p2[2] + ( i3 - 2 * i2 + interpolation ) * t0[2] + ( i3 - i2 ) * t1[2] )
+        };
     }
 }

@@ -15,245 +15,214 @@ limitations under the License.
 */
 
 #include "aeongames/Transform.h"
+#include "aeongames/AABB.h"
+#include "aeongames/Matrix4x4.h"
 #include "3DMath.h"
 
 namespace AeonGames
 {
     Transform::Transform()
     {
-        // set all to identities.
-        srt[0] = srt[1] = srt[2] = srt[3] = 1.0f;
-        srt[4] = srt[5] = srt[6] = srt[7] = srt[8] = srt[9] = 0.0f;
     }
 
     Transform::Transform (
         float aTx, float aTy, float aTz,
         float aRw, float aRx, float aRy, float aRz,
-        float aSx, float aSy, float aSz )
+        float aSx, float aSy, float aSz ) :
+        mScale{ aSx, aSy, aSz },
+        mRotation{ aRw, aRx, aRy, aRz },
+        mTranslation{ aTx, aTy, aTz }
     {
-        srt[0] = aSx;
-        srt[1] = aSy;
-        srt[2] = aSz;
-        srt[3] = aRw;
-        srt[4] = aRx;
-        srt[5] = aRy;
-        srt[6] = aRz;
-        srt[7] = aTx;
-        srt[8] = aTy;
-        srt[9] = aTz;
     }
 
-    Transform::Transform ( const float* const aSRT )
+    Transform::Transform ( const float* const aSRT ) :
+        mScale{ aSRT[0], aSRT[1], aSRT[2] },
+        mRotation{ aSRT[3], aSRT[4], aSRT[5], aSRT[6] },
+        mTranslation{ aSRT[7], aSRT[8], aSRT[9] }
     {
-        memcpy ( srt, aSRT, sizeof ( float ) * 10 );
+    }
+
+    Transform::Transform ( const Vector3 & aScale, const Quaternion & aRotation, const Vector3 & aTranslation ) :
+        mScale{ aScale }, mRotation{ aRotation }, mTranslation{aTranslation}
+    {
     }
 
     Transform::~Transform()
         = default;
 
-    const float* const Transform::GetScale() const
+    const Vector3& Transform::GetScale() const
     {
-        return srt;
+        return mScale;
     }
-    const float* const Transform::GetRotation() const
+    const Quaternion& Transform::GetRotation() const
     {
-        return srt + 3;
+        return mRotation;
     }
-    const float* const Transform::GetTranslation() const
+    const Vector3& Transform::GetTranslation() const
     {
-        return srt + 7;
-    }
-    const float* const Transform::GetTransform() const
-    {
-        return srt;
-    }
-
-    float Transform::GetScaleX() const
-    {
-        return srt[0];
-    }
-    float Transform::GetScaleY() const
-    {
-        return srt[1];
-    }
-    float Transform::GetScaleZ() const
-    {
-        return srt[2];
-    }
-    float Transform::GetRotationW() const
-    {
-        return srt[3];
-    }
-    float Transform::GetRotationX() const
-    {
-        return srt[4];
-    }
-    float Transform::GetRotationY() const
-    {
-        return srt[5];
-    }
-    float Transform::GetRotationZ() const
-    {
-        return srt[6];
-    }
-    float Transform::GetTranslationX() const
-    {
-        return srt[7];
-    }
-    float Transform::GetTranslationY() const
-    {
-        return srt[8];
-    }
-    float Transform::GetTranslationZ() const
-    {
-        return srt[9];
-    }
-
-    void Transform::GetTranslation ( float& x, float& y, float& z ) const
-    {
-        x = srt[7];
-        y = srt[8];
-        z = srt[9];
-    }
-
-    void Transform::GetTranslation ( float* v ) const
-    {
-        memcpy ( v, srt + 7, sizeof ( float ) * 3 );
+        return mTranslation;
     }
 
     void Transform::SetScale ( float x, float y, float z )
     {
-        srt[0] = x;
-        srt[1] = y;
-        srt[2] = z;
+        mScale[0] = x;
+        mScale[1] = y;
+        mScale[2] = z;
     }
 
     void Transform::SetScaleX ( float v )
     {
-        srt[0] = v;
+        mScale[0] = v;
     }
     void Transform::SetScaleY ( float v )
     {
-        srt[1] = v;
+        mScale[1] = v;
     }
     void Transform::SetScaleZ ( float v )
     {
-        srt[2] = v;
+        mScale[2] = v;
     }
 
     void Transform::SetRotation ( float w, float x, float y, float z )
     {
-        srt[3] = w;
-        srt[4] = x;
-        srt[5] = y;
-        srt[6] = z;
+        mRotation[0] = w;
+        mRotation[1] = x;
+        mRotation[2] = y;
+        mRotation[3] = z;
     }
 
     void Transform::SetRotationW ( float v )
     {
-        srt[3] = v;
+        mRotation[0] = v;
     }
     void Transform::SetRotationX ( float v )
     {
-        srt[4] = v;
+        mRotation[1] = v;
     }
     void Transform::SetRotationY ( float v )
     {
-        srt[5] = v;
+        mRotation[2] = v;
     }
     void Transform::SetRotationZ ( float v )
     {
-        srt[6] = v;
+        mRotation[3] = v;
     }
 
     void Transform::SetTranslation ( float x, float y, float z )
     {
-        srt[7] = x;
-        srt[8] = y;
-        srt[9] = z;
+        mTranslation[0] = x;
+        mTranslation[1] = y;
+        mTranslation[2] = z;
     }
 
     void Transform::SetTranslationX ( float v )
     {
-        srt[7] = v;
+        mTranslation[0] = v;
     }
     void Transform::SetTranslationY ( float v )
     {
-        srt[8] = v;
+        mTranslation[1] = v;
     }
     void Transform::SetTranslationZ ( float v )
     {
-        srt[9] = v;
+        mTranslation[2] = v;
     }
 
 
     void Transform::SetScale ( float* v )
     {
-        memcpy ( srt, v, sizeof ( float ) * 3 );
+        mScale[0] = v[0];
+        mScale[1] = v[1];
+        mScale[2] = v[2];
     }
     void Transform::SetRotation ( float* v )
     {
-        memcpy ( srt + 2, v, sizeof ( float ) * 4 );
+        mRotation[0] = v[0];
+        mRotation[1] = v[1];
+        mRotation[2] = v[2];
+        mRotation[3] = v[3];
     }
     void Transform::SetTranslation ( float* v )
     {
-        memcpy ( srt + 7, v, sizeof ( float ) * 3 );
+        mTranslation[0] = v[0];
+        mTranslation[1] = v[1];
+        mTranslation[2] = v[2];
     }
-
 
     void Transform::RotateObjectSpace ( float angle, float x, float y, float z )
     {
-        float qp[4];
-        AngleAxisToQuat ( angle, x, y, z, qp );
-        MultQuats ( srt + 3, qp, srt + 3 );
+        mRotation *= Quaternion::GetFromAxisAngle ( angle, x, y, z );
     }
 
     void Transform::RotateInertialSpace ( float angle, float x, float y, float z )
     {
-        float qp[4];
-        AngleAxisToQuat ( angle, x, y, z, qp );
-        MultQuats ( qp, srt + 3, srt + 3 );
+        mRotation = Quaternion::GetFromAxisAngle ( angle, x, y, z ) * mRotation;
     }
 
     void Transform::Move ( float x, float y, float z )
     {
-        srt[7] += x;
-        srt[8] += y;
-        srt[9] += z;
+        mTranslation[0] += x;
+        mTranslation[1] += y;
+        mTranslation[2] += z;
     }
 
     void Transform::ResetRotation()
     {
-        srt[3] = 1.0f;
-        srt[4] = 0.0f;
-        srt[5] = 0.0f;
-        srt[6] = 0.0f;
+        mRotation[0] = 1.0f;
+        mRotation[1] = 0.0f;
+        mRotation[2] = 0.0f;
+        mRotation[3] = 0.0f;
     }
 
-    float* Transform::GetMatrix ( float* M ) const
+    const Matrix4x4 Transform::GetMatrix () const
     {
-        ///\todo This could be cached.
-        return GetMatrixFromSRT ( srt, M );
+        Matrix4x4 rotation = mRotation.GetMatrix4x4();
+        return Matrix4x4
+        {
+            // Simplified 3x3 scale matrix multiplication
+            rotation[0] * mScale[0],
+            rotation[1] * mScale[0],
+            rotation[2] * mScale[0],
+            0,
+
+            rotation[4] * mScale[1],
+            rotation[5] * mScale[1],
+            rotation[6] * mScale[1],
+            0,
+
+            rotation[8] * mScale[2],
+            rotation[9] * mScale[2],
+            rotation[10] * mScale[2],
+            0,
+            // Simplified translation multiplication
+            mTranslation[0],
+            mTranslation[1],
+            mTranslation[2],
+            1,
+        };
     }
 
-    float* Transform::GetInvertedMatrix ( float* M ) const
+    const Matrix4x4 Transform::GetInvertedMatrix () const
     {
-        ///\todo This could be cached.
-        return GetInvertedMatrixFromSRT ( srt, M );
+        return GetInverted().GetMatrix();
     }
 
     void Transform::MoveInObjectSpace ( float x, float y, float z )
     {
-        float v[4] = {x, y, z, 0.0f};
-        RotateVectorByQuat ( srt + 3, v, v );
-        srt[7] += v[0];
-        srt[8] += v[1];
-        srt[9] += v[2];
+        mTranslation += mRotation * Vector3 ( x, y, z );
     }
 
     Transform& Transform::Invert()
     {
-        InvertSRT ( srt, srt );
+        mScale[0] = 1.0f / mScale[0];
+        mScale[1] = 1.0f / mScale[1];
+        mScale[2] = 1.0f / mScale[2];
+        //mRotation[0] = mRotation[0]; // Stays the same
+        mRotation[1] = -mRotation[1];
+        mRotation[2] = -mRotation[2];
+        mRotation[3] = -mRotation[3];
+        mTranslation *= -1;
+        mTranslation = mRotation * mTranslation;
         return *this;
     }
 
@@ -265,7 +234,12 @@ namespace AeonGames
     Transform& Transform::operator *= ( const Transform& lhs )
     {
         // Item 22 from MEC++
-        MultSRTs ( srt, lhs.srt, srt );
+        // Scale
+        mScale *= lhs.GetScale();
+        // Rotation
+        mRotation *= lhs.GetRotation();
+        // Translation
+        mTranslation += mRotation * lhs.GetTranslation();
         return *this;
     }
 
@@ -277,16 +251,25 @@ namespace AeonGames
         return Transform ( lhs ) *= rhs;
     }
 
+    const AABB operator* ( const Transform & lhs, const AABB & rhs )
+    {
+        return AABB();
+    }
+
     const bool operator== ( const Transform& lhs, const Transform& rhs )
     {
-        return memcmp ( lhs.GetTransform(), rhs.GetTransform(), sizeof ( float ) * 10 ) == 0;
+        return
+            lhs.GetScale() == rhs.GetScale() &&
+            lhs.GetRotation() == rhs.GetRotation() &&
+            lhs.GetTranslation() == rhs.GetTranslation();
     }
     const Transform Interpolate ( const Transform & aTransform0, const Transform & aTransform1, const Transform & aTransform2, const Transform & aTransform3, double aInterpolation )
     {
-        float srt[10];
-        Spline ( aTransform0.GetScale(), aTransform1.GetScale(), aTransform2.GetScale(), aTransform3.GetScale(), aInterpolation, srt );
-        NlerpQuats ( aTransform1.GetRotation(), aTransform1.GetRotation(), aInterpolation, srt + 3 );
-        Spline ( aTransform0.GetTranslation(), aTransform1.GetTranslation(), aTransform2.GetTranslation(), aTransform3.GetTranslation(), aInterpolation, srt + 7 );
-        return Transform ( srt );
+        return Transform
+        {
+            Spline ( aTransform0.GetScale(), aTransform1.GetScale(), aTransform2.GetScale(), aTransform3.GetScale(), aInterpolation ),
+            NlerpQuats ( aTransform1.GetRotation(), aTransform1.GetRotation(), aInterpolation ),
+            Spline ( aTransform0.GetTranslation(), aTransform1.GetTranslation(), aTransform2.GetTranslation(), aTransform3.GetTranslation(), aInterpolation )
+        };
     }
 }

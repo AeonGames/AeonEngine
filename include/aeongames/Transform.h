@@ -22,10 +22,12 @@ limitations under the License.
 */
 
 #include "aeongames/Platform.h"
+#include "aeongames/Vector3.h"
+#include "aeongames/Quaternion.h"
 
 namespace AeonGames
 {
-    class Vector3;
+    class AABB;
     /*! \brief Component class for any object that requires space transformations.
         \ingroup placeables
     */
@@ -57,33 +59,13 @@ namespace AeonGames
         @note This is the same format as the values are internally stored and what Transform::GetTransform returns.
         */
         DLL explicit Transform ( const float* const aSRT );
+        DLL Transform ( const Vector3& aScale, const Quaternion& aRotation, const Vector3& aTranslation );
+
         /// destructor.
         DLL ~Transform();
-        DLL const float* const GetScale() const;
-        DLL float GetScaleX() const;
-        DLL float GetScaleY() const;
-        DLL float GetScaleZ() const;
-        DLL const float* const GetRotation() const;
-        DLL float GetRotationW() const;
-        DLL float GetRotationX() const;
-        DLL float GetRotationY() const;
-        DLL float GetRotationZ() const;
-        DLL const float* const GetTranslation() const;
-        DLL float GetTranslationX() const;
-        DLL float GetTranslationY() const;
-        DLL float GetTranslationZ() const;
-        ///@todo rename to GetSRT
-        DLL const float* const GetTransform() const;
-        /*! \brief Retrieve object position.
-            \param x [out] Reference to variable to receive X position value.
-            \param y [out] Reference to variable to receive Y position value.
-            \param z [out] Reference to variable to receive Z position value.
-        */
-        DLL void GetTranslation ( float& x, float& y, float& z ) const;
-        /*! \brief Retrieve object position.
-           \param v [out] Pointer to vector to receive values.
-        */
-        DLL void GetTranslation ( float* v ) const;
+        DLL const Vector3& GetScale() const;
+        DLL const Quaternion& GetRotation() const;
+        DLL const Vector3& GetTranslation() const;
 
         /*! \brief Set object scale.
            \param x [in] X scale value.
@@ -134,10 +116,10 @@ namespace AeonGames
         \param z [in] Z position value.
         */
         DLL void SetTranslation ( float x, float y, float z );
+
         /*! \brief Set object position.
         \param v [in] V position vector.*/
         DLL void SetTranslation ( float* v );
-
         /*! \brief Set object X position value.
         \param v [in] position value.*/
         DLL void SetTranslationX ( float v );
@@ -191,7 +173,7 @@ namespace AeonGames
         \param M [out] Transformation matrix.
         \return Pointer to transformation matrix, same as M.
         */
-        DLL float* GetMatrix ( float* M ) const;
+        DLL const Matrix4x4 GetMatrix() const;
 
         /*!
         \brief Constructs an inverted transformation matrix from the SRT variables.
@@ -199,7 +181,7 @@ namespace AeonGames
         \return Pointer to transformation matrix, same as M.
         \note This matrix is useful as a view matrix.
         */
-        DLL float* GetInvertedMatrix ( float* M ) const;
+        DLL const Matrix4x4 GetInvertedMatrix() const;
         DLL Transform& Invert();
         DLL const Transform GetInverted() const;
 
@@ -209,10 +191,14 @@ namespace AeonGames
         //@}
 
     protected:
-        /// Scale rotation and translation vectors
-        float srt[10];
+        /// Scale rotation and translation
+        //float srt[10];
+        Vector3 mScale{1, 1, 1};
+        Quaternion mRotation{1, 0, 0, 0};
+        Vector3 mTranslation{0, 0, 0};
     };
     DLL const Transform operator* ( const Transform& lhs, const Transform& rhs );
+    DLL const AABB operator* ( const Transform& lhs, const AABB& rhs );
     DLL const bool operator== ( const Transform& lhs, const Transform& rhs );
     /** Interpolate transforms using spline and mlerp methods.*/
     DLL const Transform Interpolate ( const Transform& aTransform0, const Transform& aTransform1, const Transform& aTransform2, const Transform& aTransform3, double aInterpolation );
