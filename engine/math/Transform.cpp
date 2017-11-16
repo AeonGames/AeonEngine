@@ -253,7 +253,12 @@ namespace AeonGames
 
     const AABB operator* ( const Transform & lhs, const AABB & rhs )
     {
-        return AABB();
+        ///@note Based on Real Time Collision Detection 4.2.6
+        return AABB
+        {
+            lhs.GetTranslation() + ( lhs.GetRotation() *rhs.GetCenter() ),
+            Abs ( lhs.GetRotation() * ( lhs.GetScale() * rhs.GetRadii() ) )
+        };
     }
 
     const bool operator== ( const Transform& lhs, const Transform& rhs )

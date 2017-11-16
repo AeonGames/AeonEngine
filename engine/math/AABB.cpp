@@ -58,15 +58,4 @@ namespace AeonGames
             aOffset + mCenter - Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
         };
     }
-
-    AABB & AABB::operator*= ( const Transform & lhs )
-    {
-        ///@todo implement this based on Real Time Collision Detection 4.2.6
-        return *this;
-    }
-
-    const AABB operator* ( const AABB & lhs, const Transform & rhs )
-    {
-        return AABB ( lhs ) *= rhs;
-    }
 }
