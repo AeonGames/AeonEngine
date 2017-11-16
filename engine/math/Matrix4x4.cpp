@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
+#include "aeongames/Vector3.h"
 #include "3DMath.h"
 
 namespace AeonGames
@@ -25,9 +26,8 @@ namespace AeonGames
         SetIdentityMatrix4x4 ( mMatrix );
     }
 
-    Matrix4x4::Matrix4x4 ( const Transform& aTransform )
+    Matrix4x4::Matrix4x4 ( const Transform& aTransform ) : Matrix4x4 ( aTransform.GetMatrix() )
     {
-        aTransform.GetMatrix ( mMatrix );
     }
 
     Matrix4x4::Matrix4x4 ( const float* const aMatrix4x4 )
@@ -206,10 +206,7 @@ namespace AeonGames
             y * z * ( 1 - c ) + x * s,
             z * z * ( 1 - c ) + c,
             0,
-            0,
-            0,
-            0,
-            1
+            0, 0, 0, 1
         };
     }
 
@@ -219,6 +216,16 @@ namespace AeonGames
             rather tan create a temporary object in some compilers,
             we want the temporary, NOT the cast.*/
         return Matrix4x4 ( lhs ) *= rhs;
+    }
+
+    const Vector3 operator* ( const Matrix4x4 & lhs, const Vector3 & rhs )
+    {
+        return Vector3
+        {
+            rhs[0] * lhs[0] + rhs[1] * lhs[4] + rhs[2] * lhs[8] + lhs[12],
+            rhs[0] * lhs[1] + rhs[1] * lhs[5] + rhs[2] * lhs[9] + lhs[13],
+            rhs[0] * lhs[2] + rhs[1] * lhs[6] + rhs[2] * lhs[10] + lhs[14]
+        };
     }
 
     const bool operator== ( const Matrix4x4& lhs, const Matrix4x4& rhs )

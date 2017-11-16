@@ -38,7 +38,6 @@ limitations under the License.
 
     &copy; 2009-2017 Rodrigo Hernandez
 */
-
 #include <cmath>
 #include <cassert>
 #include <cstring>

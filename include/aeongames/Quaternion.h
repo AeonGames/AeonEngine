@@ -27,6 +27,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Matrix4x4;
+    class Vector3;
     /*! \brief Quaternion class. */
     class Quaternion
     {
@@ -37,8 +38,51 @@ namespace AeonGames
         /// destructor.
         DLL ~Quaternion();
         DLL Matrix4x4 GetMatrix4x4() const;
-    protected:
+        /*! \name Operators */
+        //@{
+        DLL Quaternion& operator*= ( const Quaternion& lhs );
+        DLL float operator[] ( const size_t aIndex ) const;
+        DLL float& operator [] ( const size_t aIndex );
+        //@}
+        DLL static const Quaternion GetFromAxisAngle ( float angle, float x, float y, float z );
+        DLL Quaternion& Normalize();
+    private:
+        /// W,X,Y,Z
         float mQuaternion[4] {};
     };
+    DLL const Quaternion operator* ( const Quaternion& lhs, const Quaternion& rhs );
+    DLL const Vector3 operator* ( const Quaternion& lhs, const Vector3& rhs );
+    DLL bool operator== ( const Quaternion& lhs, const Quaternion& rhs );
+
+
+    /*! \brief Linearly interpolate between two quaternions.
+
+    Each element is interpolated as v' = v1+((v2-v1)*interpolation).
+    The out parameter may be the same as either q1 or q2 in which case the values are overwritten.
+    \param q1 [in] Origin quaternion.
+    \param q2 [in] Destination quaternion.
+    \param interp [in] Interpolation factor.
+    \param out [out] Resulting quaternion.
+    */
+    DLL const Quaternion LerpQuats ( const Quaternion& q1, const Quaternion& q2, double interpolation );
+
+    /*! \brief Linearly interpolate between two quaternions return the normalized result.
+
+    Each element is interpolated as v' = v1+((v2-v1)*interpolation).
+    The out parameter may be the same as either q1 or q2 in which case the values are overwritten.
+    \param q1 [in] Origin quaternion.
+    \param q2 [in] Destination quaternion.
+    \param interp [in] Interpolation factor.
+    \param out [out] Resulting quaternion.
+    */
+    DLL const Quaternion NlerpQuats ( const Quaternion& q1, const Quaternion& q2, double interpolation );
+
+    /*! \brief Spherical Linear interpolation between two quaternions.
+    \param q1 [in] Origin quaternion.
+    \param q2 [in] Destination quaternion.
+    \param interp [in] Interpolation factor.
+    \param out [out] Resulting quaternion.
+    */
+    DLL const Quaternion SlerpQuats ( const Quaternion& q1, const Quaternion& q2, float interpolation );
 }
 #endif

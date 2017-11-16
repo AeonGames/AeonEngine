@@ -107,11 +107,10 @@ namespace AeonGames
 
     void OpenGLRenderer::SetViewTransform ( const Transform aTransform )
     {
-        float view_matrix[16];
-        aTransform.GetInvertedMatrix ( view_matrix );
+        Matrix4x4 view_matrix{ aTransform.GetInvertedMatrix() };
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix );
+        glBufferSubData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
