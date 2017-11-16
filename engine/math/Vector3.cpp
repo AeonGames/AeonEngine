@@ -213,6 +213,11 @@ namespace AeonGames
         return Vector3 ( aRhs ) *= aLhs;
     }
 
+    const Vector3 operator* ( const Vector3 & aLhs, const Vector3 & aRhs )
+    {
+        return Vector3 ( aRhs ) *= aLhs;
+    }
+
     bool operator!= ( const Vector3& aLhs, const Vector3& aRhs )
     {
         return memcmp ( aLhs.GetVector3(), aRhs.GetVector3(), sizeof ( float ) * 3 ) != 0;
@@ -239,6 +244,15 @@ namespace AeonGames
                    aVector.GetX() / magnitude,
                    aVector.GetY() / magnitude,
                    aVector.GetZ() / magnitude );
+    }
+    const Vector3 Abs ( const Vector3 & aVector )
+    {
+        return Vector3
+        {
+            std::abs ( aVector[0] ),
+            std::abs ( aVector[1] ),
+            std::abs ( aVector[2] )
+        };
     }
     const Vector3 Spline ( const Vector3 & p0, const Vector3 & p1, const Vector3 & p2, const Vector3 & p3, double interpolation )
     {
