@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
 
@@ -154,7 +155,7 @@ namespace AeonGames
 
     const AABB Node::GetGlobalAABB() const
     {
-        return AABB();
+        return mGlobalTransform * mModelInstance->GetModel()->GetCenterRadii();
     }
 
     void Node::SetLocalTransform ( const Transform& aTransform )
@@ -352,7 +353,7 @@ namespace AeonGames
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
-        need to also be const.
+        needs to also be const.
         */
         auto node = shared_from_this();
         aPreamble ( node );

@@ -130,7 +130,10 @@ namespace AeonGames
             const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( model );
             if ( render_model )
             {
-                render_model->Render ( aNode->GetModelInstance() );
+                if ( frustum.TestAABB ( aNode->GetGlobalAABB() ) )
+                {
+                    render_model->Render ( aNode->GetModelInstance() );
+                }
             }
             else
             {
