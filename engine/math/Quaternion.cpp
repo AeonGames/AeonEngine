@@ -34,22 +34,38 @@ namespace AeonGames
         = default;
     Matrix4x4 Quaternion::GetMatrix4x4() const
     {
+        // Products
+        float p1 = mQuaternion[0] * mQuaternion[1];
+        float p2 = mQuaternion[0] * mQuaternion[2];
+        float p3 = mQuaternion[0] * mQuaternion[3];
+
+        float p4 = mQuaternion[1] * mQuaternion[1];
+        float p5 = mQuaternion[1] * mQuaternion[2];
+        float p6 = mQuaternion[1] * mQuaternion[3];
+
+        float p7 = mQuaternion[2] * mQuaternion[2];
+        float p8 = mQuaternion[2] * mQuaternion[3];
+
+        float p9 = mQuaternion[3] * mQuaternion[3];
+
         return Matrix4x4
         {
-            1.0f - 2.0f * ( mQuaternion[2] * mQuaternion[2] + mQuaternion[3] * mQuaternion[3] ),
-            2.0f * ( mQuaternion[1] * mQuaternion[2] + mQuaternion[3] * mQuaternion[0] ),
-            2.0f * ( mQuaternion[1] * mQuaternion[3] - mQuaternion[2] * mQuaternion[0] ),
+            // First row
+            1.0f - 2.0f * ( p7 + p9 ),
+            2.0f * ( p5 + p3 ),
+            2.0f * ( p6 - p2 ),
             0.0f,
             // Second row
-            2.0f * ( mQuaternion[1] * mQuaternion[2] - mQuaternion[3] * mQuaternion[0] ),
-            1.0f - 2.0f * ( mQuaternion[1] * mQuaternion[1] + mQuaternion[3] * mQuaternion[3] ),
-            2.0f * ( mQuaternion[3] * mQuaternion[2] + mQuaternion[1] * mQuaternion[0] ),
+            2.0f * ( p5 - p3 ),
+            1.0f - 2.0f * ( p4 + p9 ),
+            2.0f * ( p8 + p1 ),
             0.0f,
             // Third row
-            2.0f * ( mQuaternion[1] * mQuaternion[3] + mQuaternion[2] * mQuaternion[0] ),
-            2.0f * ( mQuaternion[2] * mQuaternion[3] - mQuaternion[1] * mQuaternion[0] ),
-            1.0f - 2.0f * ( mQuaternion[1] * mQuaternion[1] + mQuaternion[2] * mQuaternion[2] ),
+            2.0f * ( p6 + p2 ),
+            2.0f * ( p8 - p1 ),
+            1.0f - 2.0f * ( p4 + p7 ),
             0.0f,
+            // Fourth row
             0, 0, 0, 1};
     }
 
