@@ -25,23 +25,6 @@ namespace AeonGames
     {
     }
 
-    Transform::Transform (
-        float aTx, float aTy, float aTz,
-        float aRw, float aRx, float aRy, float aRz,
-        float aSx, float aSy, float aSz ) :
-        mScale{ aSx, aSy, aSz },
-        mRotation{ aRw, aRx, aRy, aRz },
-        mTranslation{ aTx, aTy, aTz }
-    {
-    }
-
-    Transform::Transform ( const float* const aSRT ) :
-        mScale{ aSRT[0], aSRT[1], aSRT[2] },
-        mRotation{ aSRT[3], aSRT[4], aSRT[5], aSRT[6] },
-        mTranslation{ aSRT[7], aSRT[8], aSRT[9] }
-    {
-    }
-
     Transform::Transform ( const Vector3 & aScale, const Quaternion & aRotation, const Vector3 & aTranslation ) :
         mScale{ aScale }, mRotation{ aRotation }, mTranslation{aTranslation}
     {
@@ -63,90 +46,19 @@ namespace AeonGames
         return mTranslation;
     }
 
-    void Transform::SetScale ( float x, float y, float z )
+    void Transform::SetScale ( const Vector3 aScale )
     {
-        mScale[0] = x;
-        mScale[1] = y;
-        mScale[2] = z;
+        mScale = aScale;
     }
 
-    void Transform::SetScaleX ( float v )
+    void Transform::SetRotation ( const Quaternion aRotation )
     {
-        mScale[0] = v;
-    }
-    void Transform::SetScaleY ( float v )
-    {
-        mScale[1] = v;
-    }
-    void Transform::SetScaleZ ( float v )
-    {
-        mScale[2] = v;
+        mRotation = aRotation;
     }
 
-    void Transform::SetRotation ( float w, float x, float y, float z )
+    void Transform::SetTranslation ( const Vector3 aTranslation )
     {
-        mRotation[0] = w;
-        mRotation[1] = x;
-        mRotation[2] = y;
-        mRotation[3] = z;
-    }
-
-    void Transform::SetRotationW ( float v )
-    {
-        mRotation[0] = v;
-    }
-    void Transform::SetRotationX ( float v )
-    {
-        mRotation[1] = v;
-    }
-    void Transform::SetRotationY ( float v )
-    {
-        mRotation[2] = v;
-    }
-    void Transform::SetRotationZ ( float v )
-    {
-        mRotation[3] = v;
-    }
-
-    void Transform::SetTranslation ( float x, float y, float z )
-    {
-        mTranslation[0] = x;
-        mTranslation[1] = y;
-        mTranslation[2] = z;
-    }
-
-    void Transform::SetTranslationX ( float v )
-    {
-        mTranslation[0] = v;
-    }
-    void Transform::SetTranslationY ( float v )
-    {
-        mTranslation[1] = v;
-    }
-    void Transform::SetTranslationZ ( float v )
-    {
-        mTranslation[2] = v;
-    }
-
-
-    void Transform::SetScale ( float* v )
-    {
-        mScale[0] = v[0];
-        mScale[1] = v[1];
-        mScale[2] = v[2];
-    }
-    void Transform::SetRotation ( float* v )
-    {
-        mRotation[0] = v[0];
-        mRotation[1] = v[1];
-        mRotation[2] = v[2];
-        mRotation[3] = v[3];
-    }
-    void Transform::SetTranslation ( float* v )
-    {
-        mTranslation[0] = v[0];
-        mTranslation[1] = v[1];
-        mTranslation[2] = v[2];
+        mTranslation = aTranslation;
     }
 
     void Transform::RotateObjectSpace ( float angle, float x, float y, float z )
@@ -221,8 +133,7 @@ namespace AeonGames
         mRotation[1] = -mRotation[1];
         mRotation[2] = -mRotation[2];
         mRotation[3] = -mRotation[3];
-        mTranslation *= -1;
-        mTranslation = mRotation * mTranslation;
+        mTranslation = mRotation * ( mTranslation * -1 );
         return *this;
     }
 
@@ -234,12 +145,12 @@ namespace AeonGames
     Transform& Transform::operator *= ( const Transform& lhs )
     {
         // Item 22 from MEC++
-        // Scale
-        mScale *= lhs.GetScale();
+        // Translation
+        mTranslation  = ( mRotation * lhs.GetTranslation() ) + mTranslation;
         // Rotation
         mRotation *= lhs.GetRotation();
-        // Translation
-        mTranslation += mRotation * lhs.GetTranslation();
+        // Scale
+        mScale *= lhs.GetScale();
         return *this;
     }
 

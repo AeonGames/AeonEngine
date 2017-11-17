@@ -102,18 +102,27 @@ namespace AeonGames
             for ( auto& joint : frame.bone() )
             {
                 mFrames.back().emplace_back (
-                    Transform (
-                        joint.translation().x(),
-                        joint.translation().y(),
-                        joint.translation().z(),
-                        joint.rotation().w(),
-                        joint.rotation().x(),
-                        joint.rotation().y(),
-                        joint.rotation().z(),
+                    Transform
+                {
+                    Vector3
+                    {
                         joint.scale().x(),
                         joint.scale().y(),
                         joint.scale().z()
-                    )
+                    },
+                    Quaternion
+                    {
+                        joint.rotation().w(),
+                        joint.rotation().x(),
+                        joint.rotation().y(),
+                        joint.rotation().z()
+                    },
+                    Vector3
+                    {
+                        joint.translation().x(),
+                        joint.translation().y(),
+                        joint.translation().z()
+                    }                   }
                 );
             }
         }

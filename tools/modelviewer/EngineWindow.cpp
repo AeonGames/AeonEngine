@@ -209,8 +209,8 @@ namespace AeonGames
     void EngineWindow::updateViewMatrix()
     {
         Transform view_transform;
-        view_transform.SetTranslation ( mCameraLocation.x(), mCameraLocation.y(), mCameraLocation.z() );
-        view_transform.SetRotation ( mCameraRotation.scalar(), mCameraRotation.x(), mCameraRotation.y(), mCameraRotation.z() );
+        view_transform.SetTranslation ( Vector3 ( mCameraLocation.x(), mCameraLocation.y(), mCameraLocation.z() ) );
+        view_transform.SetRotation ( Quaternion ( mCameraRotation.scalar(), mCameraRotation.x(), mCameraRotation.y(), mCameraRotation.z() ) );
         mRenderer->SetViewTransform ( view_transform );
     }
 

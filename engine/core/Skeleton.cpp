@@ -89,31 +89,51 @@ namespace AeonGames
         {
             mJoints.emplace_back (
                 ( joint.parentindex() < 0 ) ? nullptr : &mJoints[joint.parentindex()],
-                Transform (
-                    joint.translation().x(),
-                    joint.translation().y(),
-                    joint.translation().z(),
-                    joint.rotation().w(),
-                    joint.rotation().x(),
-                    joint.rotation().y(),
-                    joint.rotation().z(),
+                Transform
+            {
+                Vector3
+                {
                     joint.scale().x(),
                     joint.scale().y(),
                     joint.scale().z()
-                ),
-                Transform (
-                    joint.invertedtranslation().x(),
-                    joint.invertedtranslation().y(),
-                    joint.invertedtranslation().z(),
-                    joint.invertedrotation().w(),
-                    joint.invertedrotation().x(),
-                    joint.invertedrotation().y(),
-                    joint.invertedrotation().z(),
+                },
+                Quaternion
+                {
+                    joint.rotation().w(),
+                    joint.rotation().x(),
+                    joint.rotation().y(),
+                    joint.rotation().z()
+                },
+                Vector3
+                {
+                    joint.translation().x(),
+                    joint.translation().y(),
+                    joint.translation().z()
+                }
+            },
+            Transform
+            {
+                Vector3
+                {
                     joint.invertedscale().x(),
                     joint.invertedscale().y(),
                     joint.invertedscale().z()
-                ),
-                joint.name() );
+                },
+                Quaternion
+                {
+                    joint.invertedrotation().w(),
+                    joint.invertedrotation().x(),
+                    joint.invertedrotation().y(),
+                    joint.invertedrotation().z()
+                },
+                Vector3
+                {
+                    joint.invertedtranslation().x(),
+                    joint.invertedtranslation().y(),
+                    joint.invertedtranslation().z()
+                }
+            },
+            joint.name() );
         }
         skeleton_buffer.Clear();
     }
