@@ -22,6 +22,7 @@ limitations under the License.
 */
 
 #include "aeongames/Platform.h"
+#include <initializer_list>
 
 namespace AeonGames
 {
@@ -39,17 +40,8 @@ namespace AeonGames
             @param aTransform Transform from which to initialize the matrix.
         */
         DLL Matrix4x4 ( const Transform& aTransform );
-        /*! @brief Constructor
-        @param aSRT a float pointer or array containing scale rotation and translation information in that order
-        consisting of 3 values XYZ for scale, 4 values WXYZ quaternion for rotation and 3 values XYZ for translation.
-        @note This is the same format as the values are internally stored and what Transform::GetTransform returns.
-        */
         DLL Matrix4x4 ( const float* const aMatrix );
-        DLL Matrix4x4 (
-            const float m00, const float m01, const float m02, const float m03,
-            const float m10, const float m11, const float m12, const float m13,
-            const float m20, const float m21, const float m22, const float m23,
-            const float m30, const float m31, const float m32, const float m33 );
+        DLL Matrix4x4 ( const std::initializer_list<const float> aList );
         /// destructor.
         DLL ~Matrix4x4();
         DLL const float* const GetMatrix4x4() const;

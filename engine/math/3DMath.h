@@ -956,11 +956,11 @@ inline float* Multiply4x4Matrix ( const float* A, const float* B, float* out )
     else
     {
 #endif
-#if 1
-        // Column mayor (OpenGL way)
-        /* In column mayor you must post multiply,
-           this means that the Model View Projection Matrix must be calculated as:
-           Projection * View * Model */
+#if 0
+        // Row mayor (DX way)
+        /* In column mayor you must pre multiply
+        this means that the Model View Projection Matrix must be calculated as:
+        Model * View * Projection */
         result[ 0] = mx1[ 0] * mx2[ 0] + mx1[ 1] * mx2[ 4] + mx1[ 2] * mx2[ 8] + mx1[ 3] * mx2[12];
         result[ 1] = mx1[ 0] * mx2[ 1] + mx1[ 1] * mx2[ 5] + mx1[ 2] * mx2[ 9] + mx1[ 3] * mx2[13];
         result[ 2] = mx1[ 0] * mx2[ 2] + mx1[ 1] * mx2[ 6] + mx1[ 2] * mx2[10] + mx1[ 3] * mx2[14];
@@ -981,10 +981,10 @@ inline float* Multiply4x4Matrix ( const float* A, const float* B, float* out )
         result[14] = mx1[12] * mx2[ 2] + mx1[13] * mx2[ 6] + mx1[14] * mx2[10] + mx1[15] * mx2[14];
         result[15] = mx1[12] * mx2[ 3] + mx1[13] * mx2[ 7] + mx1[14] * mx2[11] + mx1[15] * mx2[15];
 #else
-        // Row mayor (DX way)
-        /* In column mayor you must pre multiply
-           this means that the Model View Projection Matrix must be calculated as:
-           Model * View * Projection */
+        // Column mayor (OpenGL way)
+        /* In column mayor you must post multiply,
+        this means that the Model View Projection Matrix must be calculated as:
+        Projection * View * Model */
         result[ 0] = mx1[ 0] * mx2[ 0] + mx1[ 4] * mx2[ 1] + mx1[ 8] * mx2[ 2] + mx1[12] * mx2[ 3];
         result[ 1] = mx1[ 1] * mx2[ 0] + mx1[ 5] * mx2[ 1] + mx1[ 9] * mx2[ 2] + mx1[13] * mx2[ 3];
         result[ 2] = mx1[ 2] * mx2[ 0] + mx1[ 6] * mx2[ 1] + mx1[10] * mx2[ 2] + mx1[14] * mx2[ 3];

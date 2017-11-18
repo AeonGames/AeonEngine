@@ -37,8 +37,9 @@ namespace AeonGames
         DLL Frustum ( const Matrix4x4& aMatrix );
         /// destructor.
         DLL ~Frustum();
-        DLL bool TestAABB ( const AABB& aAABB ) const;
+        DLL bool Intersects ( const AABB& aAABB ) const;
     private:
+        /** @note Frustum planes' normals all point outward */
         std::array<Plane, 6> mPlanes;
     };
 }
