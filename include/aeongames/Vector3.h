@@ -26,6 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Plane;
     /*! \brief 3D vector class. */
     class Vector3
     {
@@ -53,6 +54,7 @@ namespace AeonGames
         DLL size_t GetMinAxisIndex() const;
         DLL float GetMaxAxisLenght() const;
         DLL float GetMinAxisLenght() const;
+        DLL float GetDistanceToPlane ( const Plane& aPlane ) const;
         /*! \name Operators */
         //@{
         DLL Vector3& operator-= ( const Vector3& aLhs );

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/Vector3.h"
+#include "aeongames/Plane.h"
 #include "3DMath.h"
 
 namespace AeonGames
@@ -80,6 +81,11 @@ namespace AeonGames
     float Vector3::GetMinAxisLenght() const
     {
         return mVector[GetMinAxisIndex()];
+    }
+
+    float Vector3::GetDistanceToPlane ( const Plane & aPlane ) const
+    {
+        return Dot ( aPlane.GetNormal(), *this ) - aPlane.GetDistance();
     }
 
     Vector3::Vector3 ( float aX, float aY, float aZ )

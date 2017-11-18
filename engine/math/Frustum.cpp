@@ -18,68 +18,65 @@ limitations under the License.
 #include "aeongames/Frustum.h"
 #include "aeongames/AABB.h"
 #include "aeongames/Matrix4x4.h"
+#include <iostream>
 
 namespace AeonGames
 {
     Frustum::Frustum ( const Matrix4x4 & aMatrix ) :
         mPlanes
     {
-        Plane (
-            aMatrix[3] - aMatrix[0],
-            aMatrix[7] - aMatrix[4],
-            aMatrix[11] - aMatrix[8],
-            aMatrix[15] - aMatrix[12]
-        ),
-        Plane (
+        // Left clipping plane
+        Plane{
             aMatrix[3] + aMatrix[0],
             aMatrix[7] + aMatrix[4],
             aMatrix[11] + aMatrix[8],
-            aMatrix[15] + aMatrix[12]
-        ),
-        Plane (
-            aMatrix[3] - aMatrix[1],
-            aMatrix[7] - aMatrix[5],
-            aMatrix[11] - aMatrix[9],
-            aMatrix[15] - aMatrix[13]
-        ),
-        Plane (
+            aMatrix[15] + aMatrix[12],
+        },
+        // Right clipping plane
+        Plane{
+            aMatrix[3] - aMatrix[0],
+            aMatrix[7] - aMatrix[4],
+            aMatrix[11] - aMatrix[8],
+            aMatrix[15] - aMatrix[12],
+        },
+        // Top clipping plane
+        Plane{
             aMatrix[3] + aMatrix[1],
             aMatrix[7] + aMatrix[5],
             aMatrix[11] + aMatrix[9],
-            aMatrix[15] + aMatrix[13]
-        ),
-        Plane (
-            aMatrix[3] - aMatrix[2],
-            aMatrix[7] - aMatrix[6],
-            aMatrix[11] - aMatrix[10],
-            aMatrix[15] - aMatrix[14]
-        ),
-        Plane (
+            aMatrix[15] + aMatrix[13],
+        },
+        // Bottom clipping plane
+        Plane{
+            aMatrix[3] - aMatrix[1],
+            aMatrix[7] - aMatrix[5],
+            aMatrix[11] - aMatrix[9],
+            aMatrix[15] - aMatrix[13],
+        },
+        // Near clipping plane
+        Plane{
             aMatrix[3] + aMatrix[2],
             aMatrix[7] + aMatrix[6],
             aMatrix[11] + aMatrix[10],
-            aMatrix[15] + aMatrix[14]
-        )
+            aMatrix[15] + aMatrix[14],
+        },
+        // Far clipping plane
+        Plane{
+            aMatrix[3] - aMatrix[2],
+            aMatrix[7] - aMatrix[6],
+            aMatrix[11] - aMatrix[10],
+            aMatrix[15] - aMatrix[14],
+        }
     }
     {
     }
-
     Frustum::~Frustum()
         = default;
-    bool Frustum::TestAABB ( const AABB & aAABB ) const
+    bool Frustum::Intersects ( const AABB & aAABB ) const
     {
-        std::array<Vector3, 8> points = aAABB.GetPoints();
         for ( auto& plane : mPlanes )
         {
-            size_t i;
-            for ( i = 0; i < points.size(); ++i )
-            {
-                if ( plane.GetDistanceTo ( points[i] ) >= 0 )
-                {
-                    break;
-                }
-            }
-            if ( i == points.size() )
+            if ( aAABB.GetDistanceToPlane ( plane ) > 0.0f )
             {
                 return false;
             }

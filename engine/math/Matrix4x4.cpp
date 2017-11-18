@@ -26,7 +26,7 @@ namespace AeonGames
         SetIdentityMatrix4x4 ( mMatrix );
     }
 
-    Matrix4x4::Matrix4x4 ( const Transform& aTransform ) : Matrix4x4 ( aTransform.GetMatrix() )
+    Matrix4x4::Matrix4x4 ( const Transform& aTransform ) : Matrix4x4{ aTransform.GetMatrix() }
     {
     }
 
@@ -35,24 +35,13 @@ namespace AeonGames
         memcpy ( mMatrix, aMatrix4x4, sizeof ( float ) * 16 );
     }
 
-    Matrix4x4::Matrix4x4 ( const float m00, const float m01, const float m02, const float m03, const float m10, const float m11, const float m12, const float m13, const float m20, const float m21, const float m22, const float m23, const float m30, const float m31, const float m32, const float m33 )
+    Matrix4x4::Matrix4x4 ( const std::initializer_list<const float> aList )
     {
-        mMatrix[ 0] = m00;
-        mMatrix[ 1] = m01;
-        mMatrix[ 2] = m02;
-        mMatrix[ 3] = m03;
-        mMatrix[ 4] = m10;
-        mMatrix[ 5] = m11;
-        mMatrix[ 6] = m12;
-        mMatrix[ 7] = m13;
-        mMatrix[ 8] = m20;
-        mMatrix[ 9] = m21;
-        mMatrix[10] = m22;
-        mMatrix[11] = m23;
-        mMatrix[12] = m30;
-        mMatrix[13] = m31;
-        mMatrix[14] = m32;
-        mMatrix[15] = m33;
+        const float* scalar = aList.begin();
+        for ( size_t i = 0; i < 16; ++i )
+        {
+            mMatrix[i] = ( scalar != aList.end() ) ? *scalar++ : ( i % 5 ) ? 0.0f : 1.0f;
+        }
     }
 
     Matrix4x4::~Matrix4x4()
@@ -157,27 +146,25 @@ namespace AeonGames
             mMatrix[8], mMatrix[9], mMatrix[10], mMatrix[11],
             mMatrix[12], mMatrix[13], mMatrix[14], mMatrix[15]
         };
+        mMatrix[0] = local[0] * lhs.mMatrix[0] + local[4] * lhs.mMatrix[1] + local[8] * lhs.mMatrix[2] + local[12] * lhs.mMatrix[3];
+        mMatrix[1] = local[1] * lhs.mMatrix[0] + local[5] * lhs.mMatrix[1] + local[9] * lhs.mMatrix[2] + local[13] * lhs.mMatrix[3];
+        mMatrix[2] = local[2] * lhs.mMatrix[0] + local[6] * lhs.mMatrix[1] + local[10] * lhs.mMatrix[2] + local[14] * lhs.mMatrix[3];
+        mMatrix[3] = local[3] * lhs.mMatrix[0] + local[7] * lhs.mMatrix[1] + local[11] * lhs.mMatrix[2] + local[15] * lhs.mMatrix[3];
 
-        mMatrix[0] = local[0] * lhs.mMatrix[0] + local[1] * lhs.mMatrix[4] + local[2] * lhs.mMatrix[8] + local[3] * lhs.mMatrix[12];
-        mMatrix[1] = local[0] * lhs.mMatrix[1] + local[1] * lhs.mMatrix[5] + local[2] * lhs.mMatrix[9] + local[3] * lhs.mMatrix[13];
-        mMatrix[2] = local[0] * lhs.mMatrix[2] + local[1] * lhs.mMatrix[6] + local[2] * lhs.mMatrix[10] + local[3] * lhs.mMatrix[14];
-        mMatrix[3] = local[0] * lhs.mMatrix[3] + local[1] * lhs.mMatrix[7] + local[2] * lhs.mMatrix[11] + local[3] * lhs.mMatrix[15];
+        mMatrix[4] = local[0] * lhs.mMatrix[4] + local[4] * lhs.mMatrix[5] + local[8] * lhs.mMatrix[6] + local[12] * lhs.mMatrix[7];
+        mMatrix[5] = local[1] * lhs.mMatrix[4] + local[5] * lhs.mMatrix[5] + local[9] * lhs.mMatrix[6] + local[13] * lhs.mMatrix[7];
+        mMatrix[6] = local[2] * lhs.mMatrix[4] + local[6] * lhs.mMatrix[5] + local[10] * lhs.mMatrix[6] + local[14] * lhs.mMatrix[7];
+        mMatrix[7] = local[3] * lhs.mMatrix[4] + local[7] * lhs.mMatrix[5] + local[11] * lhs.mMatrix[6] + local[15] * lhs.mMatrix[7];
 
-        mMatrix[4] = local[4] * lhs.mMatrix[0] + local[5] * lhs.mMatrix[4] + local[6] * lhs.mMatrix[8] + local[7] * lhs.mMatrix[12];
-        mMatrix[5] = local[4] * lhs.mMatrix[1] + local[5] * lhs.mMatrix[5] + local[6] * lhs.mMatrix[9] + local[7] * lhs.mMatrix[13];
-        mMatrix[6] = local[4] * lhs.mMatrix[2] + local[5] * lhs.mMatrix[6] + local[6] * lhs.mMatrix[10] + local[7] * lhs.mMatrix[14];
-        mMatrix[7] = local[4] * lhs.mMatrix[3] + local[5] * lhs.mMatrix[7] + local[6] * lhs.mMatrix[11] + local[7] * lhs.mMatrix[15];
+        mMatrix[8] = local[0] * lhs.mMatrix[8] + local[4] * lhs.mMatrix[9] + local[8] * lhs.mMatrix[10] + local[12] * lhs.mMatrix[11];
+        mMatrix[9] = local[1] * lhs.mMatrix[8] + local[5] * lhs.mMatrix[9] + local[9] * lhs.mMatrix[10] + local[13] * lhs.mMatrix[11];
+        mMatrix[10] = local[2] * lhs.mMatrix[8] + local[6] * lhs.mMatrix[9] + local[10] * lhs.mMatrix[10] + local[14] * lhs.mMatrix[11];
+        mMatrix[11] = local[3] * lhs.mMatrix[8] + local[7] * lhs.mMatrix[9] + local[11] * lhs.mMatrix[10] + local[15] * lhs.mMatrix[11];
 
-        mMatrix[8] = local[8] * lhs.mMatrix[0] + local[9] * lhs.mMatrix[4] + local[10] * lhs.mMatrix[8] + local[11] * lhs.mMatrix[12];
-        mMatrix[9] = local[8] * lhs.mMatrix[1] + local[9] * lhs.mMatrix[5] + local[10] * lhs.mMatrix[9] + local[11] * lhs.mMatrix[13];
-        mMatrix[10] = local[8] * lhs.mMatrix[2] + local[9] * lhs.mMatrix[6] + local[10] * lhs.mMatrix[10] + local[11] * lhs.mMatrix[14];
-        mMatrix[11] = local[8] * lhs.mMatrix[3] + local[9] * lhs.mMatrix[7] + local[10] * lhs.mMatrix[11] + local[11] * lhs.mMatrix[15];
-
-        mMatrix[12] = local[12] * lhs.mMatrix[0] + local[13] * lhs.mMatrix[4] + local[14] * lhs.mMatrix[8] + local[15] * lhs.mMatrix[12];
-        mMatrix[13] = local[12] * lhs.mMatrix[1] + local[13] * lhs.mMatrix[5] + local[14] * lhs.mMatrix[9] + local[15] * lhs.mMatrix[13];
-        mMatrix[14] = local[12] * lhs.mMatrix[2] + local[13] * lhs.mMatrix[6] + local[14] * lhs.mMatrix[10] + local[15] * lhs.mMatrix[14];
-        mMatrix[15] = local[12] * lhs.mMatrix[3] + local[13] * lhs.mMatrix[7] + local[14] * lhs.mMatrix[11] + local[15] * lhs.mMatrix[15];
-
+        mMatrix[12] = local[0] * lhs.mMatrix[12] + local[4] * lhs.mMatrix[13] + local[8] * lhs.mMatrix[14] + local[12] * lhs.mMatrix[15];
+        mMatrix[13] = local[1] * lhs.mMatrix[12] + local[5] * lhs.mMatrix[13] + local[9] * lhs.mMatrix[14] + local[13] * lhs.mMatrix[15];
+        mMatrix[14] = local[2] * lhs.mMatrix[12] + local[6] * lhs.mMatrix[13] + local[10] * lhs.mMatrix[14] + local[14] * lhs.mMatrix[15];
+        mMatrix[15] = local[3] * lhs.mMatrix[12] + local[7] * lhs.mMatrix[13] + local[11] * lhs.mMatrix[14] + local[15] * lhs.mMatrix[15];
         return *this;
     }
 

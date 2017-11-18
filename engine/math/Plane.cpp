@@ -34,20 +34,13 @@ namespace AeonGames
     Plane::~Plane()
         = default;
 
-    float Plane::GetDistanceTo ( const Vector3 & aLocation ) const
+    const Vector3 & Plane::GetNormal() const
     {
-        return Dot ( mNormal, aLocation ) - mDistance;
+        return mNormal;
     }
 
-    float Plane::GetDistanceTo ( const Vector3 & aLocation, const AABB & aAABB ) const
+    const float & Plane::GetDistance() const
     {
-        Vector3 offsets
-        {
-            ( mNormal[0] < 0 ) ? aAABB.GetRadii() [0] : -aAABB.GetRadii() [0],
-            ( mNormal[1] < 0 ) ? aAABB.GetRadii() [1] : -aAABB.GetRadii() [1],
-            ( mNormal[2] < 0 ) ? aAABB.GetRadii() [2] : -aAABB.GetRadii() [2]
-        };
-        float dist = mDistance - Dot ( offsets, mNormal );
-        return Dot ( mNormal, ( aLocation + aAABB.GetCenter() ) ) - dist;
+        return mDistance;
     }
 }

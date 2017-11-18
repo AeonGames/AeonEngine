@@ -117,7 +117,7 @@ namespace AeonGames
 
     void VulkanRenderer::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
-        Matrix4x4 view_matrix = mViewTransform.GetInverted();
+        Matrix4x4 view_matrix{  mViewTransform.GetInverted().GetMatrix() };
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
         mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
 
@@ -130,7 +130,7 @@ namespace AeonGames
             const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( model );
             if ( render_model )
             {
-                if ( frustum.TestAABB ( aNode->GetGlobalAABB() ) )
+                if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
                 {
                     render_model->Render ( aNode->GetModelInstance() );
                 }
