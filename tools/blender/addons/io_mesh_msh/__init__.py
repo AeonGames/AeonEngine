@@ -46,5 +46,6 @@ def register():
     bpy.utils.register_class(export.MSHExportAll)
     bpy.types.INFO_MT_file_export.append(msh_all_menu_func)
 
+
 if __name__ == "__main__":
     register()
