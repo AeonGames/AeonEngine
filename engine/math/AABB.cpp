@@ -63,11 +63,10 @@ namespace AeonGames
         return Dot ( aPlane.GetNormal(),
                      mCenter +
                      Vector3
-                     (
-                         ( aPlane.GetNormal() [0] < 0 ) ? mRadii[0] : -mRadii[0],
-                         ( aPlane.GetNormal() [1] < 0 ) ? mRadii[1] : -mRadii[1],
-                         ( aPlane.GetNormal() [2] < 0 ) ? mRadii[2] : -mRadii[2]
-                     )
-                   ) - aPlane.GetDistance();
+        {
+            ( aPlane.GetNormal() [0] < 0 ) ? mRadii[0] : -mRadii[0],
+            ( aPlane.GetNormal() [1] < 0 ) ? mRadii[1] : -mRadii[1],
+            ( aPlane.GetNormal() [2] < 0 ) ? mRadii[2] : -mRadii[2]
+        } ) - aPlane.GetDistance();
     }
 }
