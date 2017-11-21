@@ -44,6 +44,10 @@ namespace AeonGames
         DLL void SetCenter ( const Vector3& aCenter );
         DLL void SetRadii ( const Vector3& aRadii );
         DLL std::array<Vector3, 8> GetPoints ( const Vector3& aOffset = { 0.0f, 0.0f, 0.0f, } ) const;
+        /** Returns the shortest distance from any point in the plane's surface
+        to the support point of the AABB in the plain normal inverted direction.
+        In other words returns the required displacement of the AABB along the normal direction
+        to leave the AABB just touching the plane from the positive side.*/
         DLL float GetDistanceToPlane ( const Plane& aPlane ) const;
     private:
         Vector3 mCenter{};
