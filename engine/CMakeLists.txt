@@ -151,8 +151,10 @@ if(MSVC)
         COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
     target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(MINGW OR MSYS)
+    set_target_properties(ProtoBufClasses PROPERTIES
+        COMPILE_FLAGS "-include aeongames/ProtoBufClasses.h -Wall -Werror -Wfatal-errors")
     set_target_properties(AeonEngine PROPERTIES
-        COMPILE_FLAGS "-Wall  -Werror -Wfatal-errors")
+        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors")
     target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(UNIX)
     set_target_properties(AeonEngine PROPERTIES

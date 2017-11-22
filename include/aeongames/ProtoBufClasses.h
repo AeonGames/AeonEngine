@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,11 @@ limitations under the License.
 #ifdef ProtoBufClasses_EXPORTS
 #define DLL_PROTOBUF __declspec( dllexport )
 #else
+#ifdef __MINGW32__
+#define DLL_PROTOBUF
+#else
 #define DLL_PROTOBUF __declspec( dllimport )
+#endif
 #endif
 #endif
 #elif defined(__unix__)

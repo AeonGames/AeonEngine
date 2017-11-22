@@ -23,6 +23,8 @@ find_path(GLSLANG_SPIRV_INCLUDE_DIR
     SPIRV/spirv.hpp
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(GLSLANG_LIB
@@ -31,6 +33,8 @@ find_library(GLSLANG_LIB
         glslangd
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(OGLCompiler_LIB
@@ -39,6 +43,8 @@ find_library(OGLCompiler_LIB
         OGLCompilerd
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(OSDependent_LIB
@@ -47,6 +53,8 @@ find_library(OSDependent_LIB
         OSDependentd
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(HLSL_LIB
@@ -55,6 +63,8 @@ find_library(HLSL_LIB
         HLSLd
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(SPIRV_LIB
@@ -63,6 +73,8 @@ find_library(SPIRV_LIB
         SPIRVd
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(SPIRV_REMAPPER_LIB
@@ -71,6 +83,8 @@ find_library(SPIRV_REMAPPER_LIB
         SPVRemapperd
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 # - Locate Debug Libraries if they exist -
@@ -81,6 +95,8 @@ find_library(GLSLANG_DEBUG_LIB
         glslang
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(OGLCompiler_DEBUG_LIB
@@ -89,6 +105,8 @@ find_library(OGLCompiler_DEBUG_LIB
         OGLCompiler
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(OSDependent_DEBUG_LIB
@@ -97,6 +115,8 @@ find_library(OSDependent_DEBUG_LIB
         OSDependent
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(HLSL_DEBUG_LIB
@@ -105,6 +125,8 @@ find_library(HLSL_DEBUG_LIB
         HLSL
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(SPIRV_DEBUG_LIB
@@ -113,6 +135,8 @@ find_library(SPIRV_DEBUG_LIB
         SPIRV
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 find_library(SPIRV_REMAPPER_DEBUG_LIB
@@ -121,6 +145,8 @@ find_library(SPIRV_REMAPPER_DEBUG_LIB
         SPVRemapper
     PATHS
         /usr/local
+        /mingw64
+        /mingw32
 )
 
 set(GLSLANG_LIBRARIES 
