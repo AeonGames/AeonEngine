@@ -23,8 +23,8 @@ about: AeonEngine Development Blog
 logo: /AeonEngine/static/img/avatar.png
 baseurl: "/AeonEngine"
 url: "http://www.aeongames.com"
-twitter_username: AeonKwizatz
-github_username:  kwizatz
+#twitter_username:
+github_username:  AeonGames
 github: https://github.com/AeonGames/AeonEngine
 
 markdown: kramdown
@@ -44,7 +44,7 @@ allowsearch: true
 # google_analytics: UA-72862926-1
 
 share:
-  twitter_username: AeonKwizatz
+#  twitter_username: 
 #  fb_appid: 000000000000
 
 enableTags: true
