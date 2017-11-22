@@ -3,6 +3,8 @@ Aeon Games Flagship Game Engine
 
 Check out the [development blog](http://www.aeongames.com/AeonEngine/) for the engine's latest news.
 
+[![Follow us on Facebook](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/img/FB-FindUsonFacebook-online-100.png)](https://www.facebook.com/RealAeonGames/)
+
 ![Aerin just chilling](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/screenshots/aerin_idle.png)
 
 This is the 3rd iteration of the engine, the first one was started circa 1996 and was lost on a hard drive crash, the second one was started circa 2001 and still exists, but is a mess and a patchwork of collected ideas of 15 years of trying to keep up.
