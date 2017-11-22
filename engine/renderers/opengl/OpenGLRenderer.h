@@ -20,6 +20,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Transform.h"
+#include "aeongames/Matrix4x4.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
@@ -53,6 +54,8 @@ namespace AeonGames
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
+        Matrix4x4 mProjectionMatrix{};
+        Transform mViewTransform{};
     };
 }
 #endif
