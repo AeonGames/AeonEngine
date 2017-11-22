@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,11 @@ limitations under the License.
 #define NOMINMAX
 #endif
 #include <Windows.h>
+#ifdef __MINGW32__
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #ifndef DLL
 #ifdef AeonEngine_EXPORTS
 #define DLL __declspec( dllexport )

@@ -33,7 +33,7 @@ limitations under the License.
 #include <ostream>
 #include <iostream>
 #include <regex>
-#ifdef __unix__
+#if defined(__unix__) || defined(__MINGW32__)
 #include "sys/stat.h"
 #endif
 #include "Convert.h"
