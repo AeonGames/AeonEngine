@@ -41,6 +41,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/Frustum.h"
 
 namespace AeonGames
 {
@@ -64,12 +65,17 @@ namespace AeonGames
 
     void OpenGLRenderer::Render ( const std::shared_ptr<const Scene>& aScene ) const
     {
-        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
+        Frustum frustum ( mProjectionMatrix * mViewTransform.GetInverted().GetMatrix() );
+
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const std::shared_ptr<const Node>& aNode )
         {
             const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( aNode->GetModelInstance()->GetModel() );
             if ( render_model )
             {
-                render_model->Render ( aNode->GetModelInstance() );
+                if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
+                {
+                    render_model->Render ( aNode->GetModelInstance() );
+                }
             }
             else
             {
@@ -107,6 +113,7 @@ namespace AeonGames
 
     void OpenGLRenderer::SetViewTransform ( const Transform aTransform )
     {
+        mViewTransform = aTransform;
         Matrix4x4 view_matrix{ aTransform.GetInvertedMatrix() };
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -116,8 +123,10 @@ namespace AeonGames
 
     void OpenGLRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        Matrix4x4 flip_matrix
+        mProjectionMatrix =
+            aMatrix * Matrix4x4
         {
+            // Flip Matrix
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
             0.0f, 0.0f, -1.0f, 0.0f,
@@ -125,16 +134,10 @@ namespace AeonGames
         };
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( float ) * 16, ( aMatrix * flip_matrix ).GetMatrix4x4() );
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( float ) * 16, ( mProjectionMatrix ).GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
-#if 0
-    void OpenGLRenderer::SetModelMatrix ( const float aMatrix[16] )
-    {
-        memcpy ( mModelMatrix, aMatrix, sizeof ( float ) * 16 );
-        UpdateMatrices();
-    }
-#endif
+
     void* OpenGLRenderer::GetOpenGLContext() const
     {
         return mOpenGLContext;
