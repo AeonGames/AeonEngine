@@ -81,7 +81,7 @@ if(Qt5_FOUND)
     add_subdirectory(tools/modelviewer)
 endif()
 
-find_program (SED_EXECUTABLE sed HINTS ENV ProgramFiles PATH_SUFFIXES usr/bin Git/usr/bin)
+find_program (SED_EXECUTABLE sed HINTS ENV ProgramFiles /usr/bin PATH_SUFFIXES Git/usr/bin)
 if(NOT SED_EXECUTABLE)
     message(FATAL_ERROR "Unable to find sed executable.")
 endif()
