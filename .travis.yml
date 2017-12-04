@@ -12,7 +12,7 @@ before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - sudo add-apt-repository --yes ppa:beineri/opt-qt571-trusty
   - sudo apt-get -qq update
-  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev
 install:
   - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
   - tar -xzvf v3.2.0.tar.gz
