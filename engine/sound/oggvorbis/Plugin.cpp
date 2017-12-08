@@ -17,34 +17,31 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/Memory.h"
+#include "aeongames/Sound.h"
+#include "OggSound.h"
 #include <iostream>
-#include <portaudio.h>
 
 extern "C"
 {
-    bool PortAudioStartUp()
+    bool OggStartUp()
     {
-        if ( PaError error_code = Pa_Initialize() != paNoError )
+        return AeonGames::RegisterSoundLoader ( ".ogg",
+                                                [] ( const std::string & aFilename )
         {
-            std::cerr << "Error initializing PortAudio: " << Pa_GetErrorText ( error_code ) << std::endl;
-            return false;
-        }
-        return true;
+            return std::make_shared<AeonGames::OggSound> ( aFilename );
+        } );
     }
 
-    void PortAudioShutdown()
+    void OggShutdown()
     {
-        if ( PaError error_code = Pa_Terminate() != paNoError )
-        {
-            std::cerr << "Error finalizing PortAudio: " << Pa_GetErrorText ( error_code ) << std::endl;
-        }
+        AeonGames::UnregisterSoundLoader ( ".ogg" );
     }
 
     PLUGIN PluginModuleInterface PMI =
     {
-        "PortAudio Sound System",
-        "Implements a Sound System using the PortAudio Library",
-        PortAudioStartUp,
-        PortAudioShutdown
+        "Ogg sound loader",
+        "Implements Ogg Vorbis sound support.",
+        OggStartUp,
+        OggShutdown
     };
 }
