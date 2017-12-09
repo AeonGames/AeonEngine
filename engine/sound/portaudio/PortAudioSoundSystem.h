@@ -17,8 +17,14 @@ limitations under the License.
 #define AEONGAMES_PORTAUDIOSOUNDSYSTEM_H
 #include <string>
 #include <vector>
+#include "aeongames/SoundSystem.h"
 
 namespace AeonGames
 {
+    class PortAudioSoundSystem : public SoundSystem
+    {
+    public:
+    private:
+    };
 }
 #endif
