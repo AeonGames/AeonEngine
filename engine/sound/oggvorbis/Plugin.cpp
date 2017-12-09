@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-/** \File Implements the interface for the PNG plugin.*/
+/** \File Implements the interface for the Ogg plugin.*/
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/Memory.h"

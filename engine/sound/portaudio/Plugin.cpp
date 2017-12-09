@@ -13,10 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-/** \File Implements the interface for the PNG plugin.*/
+/** \File Implements the interface for the Portaudio plugin.*/
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/Memory.h"
+#include "PortAudioSoundSystem.h"
 #include <iostream>
 #include <portaudio.h>
 
@@ -29,11 +30,16 @@ extern "C"
             std::cerr << "Error initializing PortAudio: " << Pa_GetErrorText ( error_code ) << std::endl;
             return false;
         }
-        return true;
+        return AeonGames::RegisterSoundSystemLoader ( "Portaudio",
+                []()
+        {
+            return std::make_shared<AeonGames::PortAudioSoundSystem>();
+        } );
     }
 
     void PortAudioShutdown()
     {
+        AeonGames::UnregisterSoundSystemLoader ( "Portaudio" );
         if ( PaError error_code = Pa_Terminate() != paNoError )
         {
             std::cerr << "Error finalizing PortAudio: " << Pa_GetErrorText ( error_code ) << std::endl;
