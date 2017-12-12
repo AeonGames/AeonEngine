@@ -5,26 +5,29 @@
                 "name": "Debug Modelviewer",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${CMAKE_BINARY_DIR}/bin/modelviewer.exe",
                 "args": [],
                 "stopAtEntry": false,
                 "cwd": "${CMAKE_SOURCE_DIR}",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"/usr/local/bin:/usr/bin:/bin:$ENV{MINGW_PREFIX}/bin:$PATH"
+                        "value":"$ENV{MINGW_PREFIX}/bin"
                     }                    
                 ],
                 "externalConsole": true,
-                "miDebuggerPath": "${GDB_EXECUTABLE}",
-                "MIMode": "gdb",
-                "setupCommands": [
+                "windows":
                     {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
+                        "program": "${CMAKE_BINARY_DIR}/bin/modelviewer.exe",
+                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
                     }
-                ]
             }
         ]
     }
