@@ -1,4 +1,5 @@
-# AeonEngine [![Build status](https://ci.appveyor.com/api/projects/status/github/AeonGames/AeonEngine?branch=master&svg=true)](https://ci.appveyor.com/project/Kwizatz/AeonEngine/branch/master) [![Build Status](https://travis-ci.org/AeonGames/AeonEngine.svg?branch=master)](https://travis-ci.org/AeonGames/AeonEngine) [![Coverity Scan Build Status](https://scan.coverity.com/projects/10765/badge.svg)](https://scan.coverity.com/projects/aeongames-aeonengine) [![Gratipay](http://img.shields.io/gratipay/user/AeonGames.svg)](https://gratipay.com/AeonEngine)
+# AeonEngine [![MS Visual C++ Build status](https://ci.appveyor.com/api/projects/status/mps3te4is4xuwnby?svg=true)](https://ci.appveyor.com/project/Kwizatz/aeonengine) [![MinGW64 Build status](https://ci.appveyor.com/api/projects/status/2r8j33fp5eej623u?svg=true)](https://ci.appveyor.com/project/Kwizatz/aeonengine-0t94t) [![Build Status](https://travis-ci.org/AeonGames/AeonEngine.svg?branch=master)](https://travis-ci.org/AeonGames/AeonEngine) [![Coverity Scan Build Status](https://scan.coverity.com/projects/10765/badge.svg)](https://scan.coverity.com/projects/aeongames-aeonengine) [![Gratipay](http://img.shields.io/gratipay/user/AeonGames.svg)](https://gratipay.com/AeonEngine)
+
 Aeon Games Flagship Game Engine
 
 Check out the [development blog](http://www.aeongames.com/AeonEngine/) for the engine's latest news.
