@@ -253,3 +253,14 @@ add_custom_target(clean-build
         ${FIND_EXECUTABLE} '${CMAKE_BINARY_DIR}' ! -name 'CMakeCache.txt' ! -wholename '${CMAKE_BINARY_DIR}' -exec rm -rf {} +
     COMMENT "Cleaning Build you will need to rerun cmake configure and generate")
 endif()
+
+###########################################
+# Generate VS Code Environment
+###########################################
+if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
+    find_program (BASH_EXECUTABLE bash HINTS ENV MSYS2_PATH)
+    find_program (GDB_EXECUTABLE gdb HINTS ENV MSYS2_PATH)
+    configure_file("${CMAKE_SOURCE_DIR}/cmake/tasks.json.in" "${CMAKE_SOURCE_DIR}/.vscode/tasks.json")
+    configure_file("${CMAKE_SOURCE_DIR}/cmake/settings.json.in" "${CMAKE_SOURCE_DIR}/.vscode/settings.json")
+    configure_file("${CMAKE_SOURCE_DIR}/cmake/launch.json.in" "${CMAKE_SOURCE_DIR}/.vscode/launch.json")
+endif()
