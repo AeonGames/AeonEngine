@@ -258,9 +258,44 @@ endif()
 # Generate VS Code Environment
 ###########################################
 if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
+    # TODO SOURCE_DIRECTORIES could be set and used to call add_subdirectory directly from this top level
+    set(SOURCE_DIRECTORIES
+    ${CMAKE_SOURCE_DIR}
+    application
+    application/windows
+    engine
+    engine/images
+    engine/images/png
+    engine/renderers/opengl
+    engine/renderers/vulkan
+    engine/sound/oggvorbis
+    engine/sound/portaudio
+    tools/aeontool
+    tools/modelviewer
+    )
+    set(INCLIST "")
+    foreach(sourcedir ${SOURCE_DIRECTORIES})
+        get_property(dirs DIRECTORY ${sourcedir} PROPERTY INCLUDE_DIRECTORIES)
+        foreach(dir ${dirs})
+            list(APPEND INCLIST ${dir})
+        endforeach()
+    endforeach()
+
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env MSYSTEM=MINGW64 ${BASH_EXECUTABLE} --login -i -lc 'g++ -E -x c++ - -v < /dev/null' ERROR_VARIABLE GXXINC OUTPUT_QUIET)
+    string(REPLACE "\n" "<newline>" GXXINC ${GXXINC})
+    string(REGEX REPLACE ".*#include <\.\.\.> search starts here:<newline>(.*)<newline>End of search list.*" "\"\\1\"" GXXINC ${GXXINC})
+    string(REGEX REPLACE "[\t ]+" "" GXXINC ${GXXINC})
+    string(REPLACE "<newline>" "\",\n\"" GXXINC ${GXXINC})
+
+    list(REMOVE_DUPLICATES INCLIST)
+    list(SORT INCLIST)
+    set(INCLIST "\"${INCLIST}\"")
+    string(REPLACE ";" "\",\n\"" INCLIST "${INCLIST}")
+
     find_program (BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
     find_program (GDB_EXECUTABLE gdb HINTS ENV MINGW_PREFIX MSYS2_PATH)
     configure_file("${CMAKE_SOURCE_DIR}/cmake/tasks.json.in" "${CMAKE_SOURCE_DIR}/.vscode/tasks.json")
     configure_file("${CMAKE_SOURCE_DIR}/cmake/settings.json.in" "${CMAKE_SOURCE_DIR}/.vscode/settings.json")
     configure_file("${CMAKE_SOURCE_DIR}/cmake/launch.json.in" "${CMAKE_SOURCE_DIR}/.vscode/launch.json")
+    configure_file("${CMAKE_SOURCE_DIR}/cmake/c_cpp_properties.json.in" "${CMAKE_SOURCE_DIR}/.vscode/c_cpp_properties.json")
 endif()
