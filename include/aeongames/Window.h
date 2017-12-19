@@ -18,16 +18,22 @@ limitations under the License.
 #include "Memory.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
-#include "aeongames/Platform.h"
 namespace AeonGames
 {
     class Scene;
     class Window
     {
     public:
-        DLL virtual ~Window();
+        DLL virtual ~Window() = 0;
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void Render ( const std::shared_ptr<const Scene>& aScene ) const = 0;
+        ///@name Matrix Functions
+        ///@{
+        DLL void SetProjectionMatrix ( const Matrix4x4& aMatrix );
+        DLL void SetViewTransform ( const Transform& aTransform );
+        DLL const Matrix4x4& GetProjectionMatrix() const;
+        DLL const Transform& GetViewTransform() const;
+        ///@}
     protected:
         Matrix4x4 mProjectionMatrix{};
         Transform mViewTransform{};

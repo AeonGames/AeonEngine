@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/Window.h"
+#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
@@ -53,7 +54,6 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
-
         void* mWindowId;
         VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;

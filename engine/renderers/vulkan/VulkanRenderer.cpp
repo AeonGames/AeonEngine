@@ -50,7 +50,7 @@ limitations under the License.
 #include "aeongames/Frustum.h"
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate ), mMatrices ( *this )
+    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
     {
         try
         {
@@ -72,25 +72,9 @@ namespace AeonGames
             InitializeFence();
             InitializeRenderPass();
             InitializeCommandPool();
-            /* We have to defer matrix buffer construction
-            because we need the renderer to be fully initialized
-            in order to allocate its resources.*/
-            const float matrices[32] =
-            {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f,
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f
-            };
-            mMatrices.Initialize ( sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, matrices );
         }
         catch ( ... )
         {
-            mMatrices.Finalize();
             FinalizeCommandPool();
             FinalizeRenderPass();
             FinalizeFence();
@@ -105,7 +89,6 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
-        mMatrices.Finalize();
         FinalizeCommandPool();
         FinalizeRenderPass();
         FinalizeFence();
@@ -113,34 +96,6 @@ namespace AeonGames
         FinalizeDevice();
         FinalizeDebug();
         FinalizeInstance();
-    }
-
-    void VulkanRenderer::Render ( const std::shared_ptr<const Scene>& aScene ) const
-    {
-        Matrix4x4 view_matrix{  mViewTransform.GetInverted().GetMatrix() };
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
-
-        Frustum frustum ( mProjectionMatrix * view_matrix );
-
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const std::shared_ptr<const Node>& aNode )
-        {
-            const std::shared_ptr<const ModelInstance>& model_instance = aNode->GetModelInstance();
-            const std::shared_ptr<const Model>& model = model_instance->GetModel();
-            const std::unique_ptr<RenderModel>& render_model = GetRenderModel ( model );
-            if ( render_model )
-            {
-                if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
-                {
-                    render_model->Render ( aNode->GetModelInstance() );
-                }
-            }
-            else
-            {
-                /* This is lazy loading */
-                SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<VulkanModel> ( aNode->GetModelInstance()->GetModel(), shared_from_this() ) );
-            }
-        } );
     }
 
     void VulkanRenderer::CacheScene ( const std::shared_ptr<const Scene>& aScene ) const
@@ -661,22 +616,8 @@ namespace AeonGames
         vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
     }
 
-    const VkBuffer & VulkanRenderer::GetMatricesUniformBuffer() const
-    {
-        return mMatrices.GetBuffer();
-    }
-
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
-    }
-
-    void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
-    {
-        mProjectionMatrix = aMatrix;
-    }
-    void VulkanRenderer::SetViewTransform ( const Transform aTransform )
-    {
-        mViewTransform = aTransform;
     }
 }

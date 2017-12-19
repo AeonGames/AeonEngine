@@ -25,6 +25,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Pipeline;
+    class Matrix4x4;
     class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
@@ -36,7 +37,11 @@ namespace AeonGames
         ~VulkanPipeline();
         void Use ( const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
         VkBuffer GetSkeletonBuffer() const;
+        void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix );
+        void SetViewMatrix ( const Matrix4x4& aViewMatrix );
     private:
+        void InitializeMatricesUniform();
+        void FinalizeMatricesUniform();
         void InitializePropertiesUniform();
         void FinalizePropertiesUniform();
         void InitializeSkeletonUniform();
@@ -54,8 +59,9 @@ namespace AeonGames
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };
         const std::shared_ptr<VulkanMaterial> mDefaultMaterial;
-        VulkanBuffer mVkPropertiesUniformBuffer;
-        VulkanBuffer mVkSkeletonBuffer;
+        VulkanBuffer mMatrices;
+        VulkanBuffer mProperties;
+        VulkanBuffer mSkeleton;
         VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
         VkPipeline mVkPipeline = VK_NULL_HANDLE;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;

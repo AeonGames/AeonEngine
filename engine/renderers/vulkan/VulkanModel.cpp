@@ -47,7 +47,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance ) const
+    void VulkanModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
         if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
         {
@@ -69,6 +69,8 @@ namespace AeonGames
                 buffer_copy.size = mSkeleton->GetBufferSize();
                 vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( mAssemblies[i] )->GetSkeletonBuffer(), 1, &buffer_copy );
             }
+            std::get<0> ( mAssemblies[i] )->SetProjectionMatrix ( aProjectionMatrix );
+            std::get<0> ( mAssemblies[i] )->SetViewMatrix ( aViewMatrix );
             std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
             std::get<2> ( mAssemblies[i] )->Render();
         }

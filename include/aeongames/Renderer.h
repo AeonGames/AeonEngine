@@ -37,7 +37,6 @@ namespace AeonGames
     class Renderer
     {
     public:
-        virtual void Render ( const std::shared_ptr<const Scene>& aScene ) const = 0;
         /** Preload render data for all nodes in the scene.
             @param aScene shared pointer to scene to cache.
             @node After a scene has been cached in order to remove render data from the cache,
@@ -66,15 +65,9 @@ namespace AeonGames
         virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
 #endif
         ///@}
-        ///@name Matrix Functions
-        ///@{
-        virtual void SetViewTransform ( const Transform aTransform ) = 0;
-        virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
-        ///@}
         virtual ~Renderer() = default;
-    protected:
-        DLL void SetRenderModel ( const std::shared_ptr<const Model>& aModel, std::unique_ptr<RenderModel> aRenderModel ) const;
         DLL const std::unique_ptr<RenderModel>& GetRenderModel ( const std::shared_ptr<const Model>& aModel ) const;
+        DLL void SetRenderModel ( const std::shared_ptr<const Model>& aModel, std::unique_ptr<RenderModel> aRenderModel ) const;
     };
 
     /**@name Factory Functions */
