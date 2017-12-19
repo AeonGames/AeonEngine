@@ -37,25 +37,17 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
         void CacheScene ( const std::shared_ptr<const Scene>& aScene ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-        void SetViewTransform ( const Transform aTransform ) final;
-        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
-        //void SetModelMatrix ( const float aMatrix[16] ) final;
         void* GetOpenGLContext() const;
         void* GetWindowId() const;
-        GLuint GetMatricesBuffer() const;
     private:
         void Initialize();
         void Finalize();
-        GLuint mMatricesBuffer{};
         /// Internal Window Id, required to create initial shared context
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
-        Matrix4x4 mProjectionMatrix{};
-        Transform mViewTransform{};
     };
 }
 #endif

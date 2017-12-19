@@ -18,11 +18,12 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Matrix4x4;
     class ModelInstance;
     class RenderModel
     {
     public:
-        virtual void Render ( const std::shared_ptr<const ModelInstance>& aInstance ) const = 0;
+        virtual void Render ( const std::shared_ptr<const ModelInstance>& aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const = 0;
         virtual ~RenderModel() = default;
     };
 }

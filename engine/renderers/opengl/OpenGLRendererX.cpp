@@ -153,36 +153,18 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Level::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-#if 1
+
         if ( !glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
 
             std::cout << LogLevel ( LogLevel::Level::Warning ) <<
                       "glxMakeCurrent Failed." << std::endl;
         }
-#endif
+
         if ( !LoadOpenGLAPI() )
         {
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
-        glGenBuffers ( 1, &mMatricesBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        float matrices[32] =
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 32,
-                       matrices, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLRenderer::Finalize()

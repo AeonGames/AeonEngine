@@ -35,8 +35,9 @@ namespace AeonGames
         mPipeline ( aPipeline ),
         mVulkanRenderer ( aVulkanRenderer ),
         mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) ),
-        mVkPropertiesUniformBuffer ( *aVulkanRenderer ),
-        mVkSkeletonBuffer ( *aVulkanRenderer )
+        mMatrices ( *aVulkanRenderer ),
+        mProperties ( *aVulkanRenderer ),
+        mSkeleton ( *aVulkanRenderer )
     {
         try
         {
@@ -78,7 +79,37 @@ namespace AeonGames
 
     VkBuffer VulkanPipeline::GetSkeletonBuffer() const
     {
-        return mVkSkeletonBuffer.GetBuffer();
+        return mSkeleton.GetBuffer();
+    }
+
+    void VulkanPipeline::SetProjectionMatrix ( const Matrix4x4 & aProjectionMatrix )
+    {
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aProjectionMatrix.GetMatrix4x4() );
+    }
+
+    void VulkanPipeline::SetViewMatrix ( const Matrix4x4 & aViewMatrix )
+    {
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aViewMatrix.GetMatrix4x4() );
+    }
+
+    void VulkanPipeline::InitializeMatricesUniform()
+    {
+        const float matrices[32] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        mMatrices.Initialize ( sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, matrices );
+    }
+
+    void VulkanPipeline::FinalizeMatricesUniform()
+    {
     }
 
     void VulkanPipeline::InitializePropertiesUniform()
@@ -86,7 +117,7 @@ namespace AeonGames
         auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
         if ( properties.size() )
         {
-            mVkPropertiesUniformBuffer.Initialize ( mDefaultMaterial->GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial->GetUniformData().data() ) );
+            mProperties.Initialize ( mDefaultMaterial->GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial->GetUniformData().data() ) );
         }
     }
 
@@ -98,8 +129,8 @@ namespace AeonGames
     {
         if ( mPipeline->GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
-            mVkSkeletonBuffer.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            float* joint_array = static_cast<float*> ( mVkSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
+            mSkeleton.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            float* joint_array = static_cast<float*> ( mSkeleton.Map ( 0, VK_WHOLE_SIZE ) );
             const float identity[16] =
             {
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -111,7 +142,7 @@ namespace AeonGames
             {
                 memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
             }
-            mVkSkeletonBuffer.Unmap();
+            mSkeleton.Unmap();
         }
     }
 
@@ -133,7 +164,7 @@ namespace AeonGames
         descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
 
         // Properties binding
-        if ( mVkPropertiesUniformBuffer.GetSize() )
+        if ( mProperties.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 1;
@@ -143,7 +174,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
         // Skeleton binding
-        if ( mVkSkeletonBuffer.GetSize() )
+        if ( mSkeleton.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = 2;
@@ -225,9 +256,9 @@ namespace AeonGames
 
         std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos =
         {
-            VkDescriptorBufferInfo{mVulkanRenderer->GetMatricesUniformBuffer(), 0, sizeof ( float ) * 32},
-            VkDescriptorBufferInfo{mVkPropertiesUniformBuffer.GetBuffer(), 0, mPipeline->GetDefaultMaterial()->GetUniformBlockSize() },
-            VkDescriptorBufferInfo{mVkSkeletonBuffer.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
+            VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
+            VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline->GetDefaultMaterial()->GetUniformBlockSize() },
+            VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
@@ -258,7 +289,7 @@ namespace AeonGames
             write_descriptor_sets.back().pImageInfo = nullptr;
             write_descriptor_sets.back().pTexelBufferView = nullptr;
         }
-        if ( mVkSkeletonBuffer.GetSize() )
+        if ( mSkeleton.GetSize() )
         {
             write_descriptor_sets.emplace_back();
             write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -285,6 +316,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
+        InitializeMatricesUniform();
         InitializePropertiesUniform();
         InitializeSkeletonUniform();
         InitializeDescriptorSetLayout();
@@ -536,5 +568,6 @@ namespace AeonGames
         FinalizeDescriptorSetLayout();
         FinalizeSkeletonUniform();
         FinalizePropertiesUniform();
+        FinalizeMatricesUniform();
     }
 }

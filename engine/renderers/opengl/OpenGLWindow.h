@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Memory.h"
 #include "aeongames/Window.h"
+#include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
@@ -28,15 +29,17 @@ namespace AeonGames
     {
     public:
         OpenGLWindow ( void* aWindowId, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
-        virtual ~OpenGLWindow();
+        ~OpenGLWindow() final;
         void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
         void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
+        const GLuint GetMatricesBuffer() const;
     private:
         void Initialize();
         void Finalize();
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         void* mWindowId;
+        GLuint mMatricesBuffer{};
     };
 }
 #endif

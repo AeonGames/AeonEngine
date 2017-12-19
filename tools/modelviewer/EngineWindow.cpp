@@ -158,7 +158,7 @@ namespace AeonGames
             float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
             mProjectionMatrix.frustum ( -half_radius, half_radius, 0.5, -0.5, 1, 1600 );
             mProjectionMatrix = mProjectionMatrix * flipMatrix;
-            mRenderer->SetProjectionMatrix ( mProjectionMatrix.constData() );
+            mWindow->SetProjectionMatrix ( mProjectionMatrix.constData() );
             // Calculate frustum half vertical angle (for fitting models into frustum)
             float v1[2] = { 1, 0 };
             float v2[2] = { 1, half_radius };
@@ -211,7 +211,7 @@ namespace AeonGames
         Transform view_transform;
         view_transform.SetTranslation ( Vector3 ( mCameraLocation.x(), mCameraLocation.y(), mCameraLocation.z() ) );
         view_transform.SetRotation ( Quaternion ( mCameraRotation.scalar(), mCameraRotation.x(), mCameraRotation.y(), mCameraRotation.z() ) );
-        mRenderer->SetViewTransform ( view_transform );
+        mWindow->SetViewTransform ( view_transform );
     }
 
     void EngineWindow::keyPressEvent ( QKeyEvent * event )

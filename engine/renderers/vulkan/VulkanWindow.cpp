@@ -21,6 +21,11 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include "aeongames/Frustum.h"
+#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
+#include "aeongames/ModelInstance.h"
+#include "aeongames/AABB.h"
 
 namespace AeonGames
 {
@@ -470,8 +475,26 @@ namespace AeonGames
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVulkanRenderer->GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
 
-        mVulkanRenderer->Render ( aScene );
-
+        Matrix4x4 view_matrix{ mViewTransform.GetInverted().GetMatrix() };
+        Frustum frustum ( mProjectionMatrix * view_matrix );
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const std::shared_ptr<const Node>& aNode )
+        {
+            const std::shared_ptr<const ModelInstance>& model_instance = aNode->GetModelInstance();
+            const std::shared_ptr<const Model>& model = model_instance->GetModel();
+            const std::unique_ptr<RenderModel>& render_model = mVulkanRenderer->GetRenderModel ( model );
+            if ( render_model )
+            {
+                if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
+                {
+                    render_model->Render ( aNode->GetModelInstance(), mProjectionMatrix, view_matrix );
+                }
+            }
+            else
+            {
+                /* This is lazy loading */
+                mVulkanRenderer->SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<VulkanModel> ( aNode->GetModelInstance()->GetModel(), mVulkanRenderer ) );
+            }
+        } );
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );
         if ( VkResult result = vkEndCommandBuffer ( mVulkanRenderer->GetCommandBuffer() ) )
         {

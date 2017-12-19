@@ -14,8 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/Window.h"
+#include "aeongames/Platform.h"
 namespace AeonGames
 {
-    Window::~Window() {}
+    DLL Window::~Window() {}
+    void Window::SetProjectionMatrix ( const Matrix4x4& aMatrix )
+    {
+        mProjectionMatrix = aMatrix;
+    }
+    void Window::SetViewTransform ( const Transform& aTransform )
+    {
+        mViewTransform = aTransform;
+    }
+    const Matrix4x4 & Window::GetProjectionMatrix() const
+    {
+        return mProjectionMatrix;
+    }
+    const Transform & Window::GetViewTransform() const
+    {
+        return mViewTransform;
+    }
 }
-

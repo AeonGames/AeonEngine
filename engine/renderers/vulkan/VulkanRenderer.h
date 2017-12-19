@@ -36,11 +36,8 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
         void CacheScene ( const std::shared_ptr<const Scene>& aScene ) const final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-        void SetViewTransform ( const Transform aTransform ) final;
-        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
@@ -58,7 +55,6 @@ namespace AeonGames
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
-        const VkBuffer& GetMatricesUniformBuffer() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -108,10 +104,6 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT = VK_NULL_HANDLE;
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT = VK_NULL_HANDLE;
-        ///@todo The member variables mMatrices,mProjectionMatrix,mViewTransform belong in the window class, move them.
-        VulkanBuffer mMatrices;
-        Matrix4x4 mProjectionMatrix{};
-        Transform mViewTransform{};
     };
 }
 #endif

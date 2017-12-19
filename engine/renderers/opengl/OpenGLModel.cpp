@@ -24,6 +24,7 @@ limitations under the License.
 #include "OpenGLMaterial.h"
 #include "OpenGLMesh.h"
 #include "OpenGLSkeleton.h"
+#include "OpenGLWindow.h"
 
 namespace AeonGames
 {
@@ -46,7 +47,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance ) const
+    void OpenGLModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
         if ( mSkeleton && mModel.get() == aInstance->GetModel().get() )
         {
@@ -59,7 +60,6 @@ namespace AeonGames
                 continue;
             }
             std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
-            glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mOpenGLRenderer->GetMatricesBuffer() );
             OPENGL_CHECK_ERROR_NO_THROW;
             if ( mSkeleton && mModel.get() == aInstance->GetModel().get() )
             {

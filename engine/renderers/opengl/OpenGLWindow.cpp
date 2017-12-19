@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/ModelInstance.h"
+#include "aeongames/Frustum.h"
+#include "aeongames/AABB.h"
+#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
@@ -82,7 +86,45 @@ namespace AeonGames
                          static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
-        mOpenGLRenderer->Render ( aScene );
+
+        Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
+        Matrix4x4 projection_matrix =
+            mProjectionMatrix * Matrix4x4
+        {
+            // Flip Matrix
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+
+        Frustum frustum ( projection_matrix * view_matrix );
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( const std::shared_ptr<const Node>& aNode )
+        {
+            const std::unique_ptr<RenderModel>& render_model = mOpenGLRenderer->GetRenderModel ( aNode->GetModelInstance()->GetModel() );
+            if ( render_model )
+            {
+                if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
+                {
+                    // We dont really need to pass the matrices here, but we already have them so why not.
+                    render_model->Render ( aNode->GetModelInstance(), projection_matrix, view_matrix );
+                }
+            }
+            else
+            {
+                /* This is lazy loading */
+                mOpenGLRenderer->SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<OpenGLModel> ( aNode->GetModelInstance()->GetModel(), mOpenGLRenderer ) );
+            }
+        } );
+
 #if _WIN32
         SwapBuffers ( hdc );
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
@@ -90,6 +132,11 @@ namespace AeonGames
         glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ) );
 #endif
+    }
+
+    const GLuint OpenGLWindow::GetMatricesBuffer() const
+    {
+        return mMatricesBuffer;
     }
 
     void OpenGLWindow::Initialize()
@@ -156,9 +203,37 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         OPENGL_CHECK_ERROR_NO_THROW;
+
+        // Initialize Matrix Buffer
+        glGenBuffers ( 1, &mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        float matrices[32] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 32,
+                       matrices, GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLWindow::Finalize()
     {
+        if ( glIsBuffer ( mMatricesBuffer ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteBuffers ( 1, &mMatricesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mMatricesBuffer = 0;
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 }

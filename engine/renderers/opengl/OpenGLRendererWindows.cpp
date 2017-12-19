@@ -167,26 +167,6 @@ namespace AeonGames
             std::cout << "Unable to Load OpenGL functions." << std::endl;
         }
 
-        // Initialize OpenGL Objects
-        glGenBuffers ( 1, &mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        float matrices[32] =
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 32,
-                       matrices, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_NO_THROW;
-
         glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -210,15 +190,6 @@ namespace AeonGames
         HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
         wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLContext ) );
         OPENGL_CHECK_ERROR_NO_THROW;
-        if ( glIsBuffer ( mMatricesBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteBuffers ( 1, &mMatricesBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mMatricesBuffer = 0;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
-
         ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
         wglMakeCurrent ( hdc, nullptr );
         wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
