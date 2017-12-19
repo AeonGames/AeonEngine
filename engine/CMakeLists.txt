@@ -107,6 +107,7 @@ set(ENGINE_CORE_SOURCES
     core/LogLevel.cpp
     core/Model.cpp
     core/ModelInstance.cpp
+    core/Window.cpp
     )
 
 set(ENGINE_SCENEGRAPH_SOURCES
