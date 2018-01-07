@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -102,9 +102,10 @@ namespace AeonGames
     {
         aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
         {
-            if ( !GetRenderModel ( aNode->GetModelInstance()->GetModel() ) )
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
+            if ( model_instance && !GetRenderModel ( model_instance->GetModel() ) )
             {
-                SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<VulkanModel> ( aNode->GetModelInstance()->GetModel(), shared_from_this() ) );
+                SetRenderModel ( model_instance->GetModel(), std::make_unique<VulkanModel> ( model_instance->GetModel(), shared_from_this() ) );
             }
         } );
     }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -109,19 +109,20 @@ namespace AeonGames
         Frustum frustum ( projection_matrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( const std::shared_ptr<const Node>& aNode )
         {
-            const std::unique_ptr<RenderModel>& render_model = mOpenGLRenderer->GetRenderModel ( aNode->GetModelInstance()->GetModel() );
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
+            const std::unique_ptr<RenderModel>& render_model = mOpenGLRenderer->GetRenderModel ( model_instance->GetModel() );
             if ( render_model )
             {
                 if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
                 {
                     // We dont really need to pass the matrices here, but we already have them so why not.
-                    render_model->Render ( aNode->GetModelInstance(), projection_matrix, view_matrix );
+                    render_model->Render ( model_instance, projection_matrix, view_matrix );
                 }
             }
             else
             {
                 /* This is lazy loading */
-                mOpenGLRenderer->SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<OpenGLModel> ( aNode->GetModelInstance()->GetModel(), mOpenGLRenderer ) );
+                mOpenGLRenderer->SetRenderModel ( model_instance->GetModel(), std::make_unique<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
             }
         } );
 

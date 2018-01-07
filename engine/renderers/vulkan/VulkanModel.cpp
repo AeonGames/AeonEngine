@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanModel::Render ( const std::shared_ptr<const ModelInstance>& aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
+    void VulkanModel::Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
         if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
         {

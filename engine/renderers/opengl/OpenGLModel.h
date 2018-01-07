@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ namespace AeonGames
     public:
         OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
         virtual ~OpenGLModel();
-        void Render ( const std::shared_ptr<const ModelInstance>& aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const final;
+        void Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const final;
     private:
         void Initialize();
         void Finalize();

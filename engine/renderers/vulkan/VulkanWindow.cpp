@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -479,20 +479,20 @@ namespace AeonGames
         Frustum frustum ( mProjectionMatrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const std::shared_ptr<const Node>& aNode )
         {
-            const std::shared_ptr<const ModelInstance>& model_instance = aNode->GetModelInstance();
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
             const std::shared_ptr<const Model>& model = model_instance->GetModel();
             const std::unique_ptr<RenderModel>& render_model = mVulkanRenderer->GetRenderModel ( model );
             if ( render_model )
             {
                 if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
                 {
-                    render_model->Render ( aNode->GetModelInstance(), mProjectionMatrix, view_matrix );
+                    render_model->Render ( model_instance, mProjectionMatrix, view_matrix );
                 }
             }
             else
             {
                 /* This is lazy loading */
-                mVulkanRenderer->SetRenderModel ( aNode->GetModelInstance()->GetModel(), std::make_unique<VulkanModel> ( aNode->GetModelInstance()->GetModel(), mVulkanRenderer ) );
+                mVulkanRenderer->SetRenderModel ( model_instance->GetModel(), std::make_unique<VulkanModel> ( model_instance->GetModel(), mVulkanRenderer ) );
             }
         } );
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );

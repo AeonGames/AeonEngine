@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@ limitations under the License.
 /*! \file
 \brief Implementation file for the Scene Node class.
 \author Rodrigo Hernandez.
-\copy 2014-2016 Rodrigo Hernandez
+\copy 2014-2018 Rodrigo Hernandez
 */
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+
 #include <cassert>
 #include <algorithm>
 #include "aeongames/Node.h"
@@ -113,14 +111,29 @@ namespace AeonGames
         return mIndex;
     }
 
-    const std::shared_ptr<ModelInstance>& Node::GetModelInstance() const
+    Property* Node::GetProperty ( std::size_t aPropertyId )
     {
-        return mModelInstance;
+        auto property = mProperties.find ( aPropertyId );
+        if ( property != mProperties.end() )
+        {
+            return property->second.get();
+        }
+        return nullptr;
     }
 
-    void Node::SetModelInstance ( const std::shared_ptr<ModelInstance>& aModelInstance )
+    const Property * Node::GetProperty ( std::size_t aPropertyId ) const
     {
-        mModelInstance = aModelInstance;
+        auto property = mProperties.find ( aPropertyId );
+        if ( property != mProperties.end() )
+        {
+            return property->second.get();
+        }
+        return nullptr;
+    }
+
+    void Node::SetProperty ( std::size_t aPropertyId, const std::shared_ptr<Property>& aProperty )
+    {
+        mProperties[aPropertyId] = aProperty;
     }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
@@ -155,7 +168,8 @@ namespace AeonGames
 
     const AABB Node::GetGlobalAABB() const
     {
-        return mGlobalTransform * mModelInstance->GetModel()->GetCenterRadii();
+        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetProperty ( 0 ) );
+        return ( model_instance ) ? mGlobalTransform * model_instance->GetModel()->GetCenterRadii() : AABB{};
     }
 
     void Node::SetLocalTransform ( const Transform& aTransform )
@@ -497,9 +511,14 @@ namespace AeonGames
 
     void Node::Update ( const double delta )
     {
-        if ( mModelInstance )
+        /* This is transitioning code.
+        Properties should probably provide an update function themselves,
+        and "0" is just being used as a stand-in property id while I figure
+        a better ID system.*/
+        ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( GetProperty ( 0 ) );
+        if ( model_instance )
         {
-            mModelInstance->StepAnimation ( delta );
+            model_instance->StepAnimation ( delta );
         }
     }
 }

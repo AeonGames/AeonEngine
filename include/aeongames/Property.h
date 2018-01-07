@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,18 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_RENDERMODEL_H
-#define AEONGAMES_RENDERMODEL_H
-
+#ifndef AEONGAMES_PROPERTY_H
+#define AEONGAMES_PROPERTY_H
+#include "aeongames/Platform.h"
 namespace AeonGames
 {
-    class Matrix4x4;
-    class ModelInstance;
-    class RenderModel
+    class Property
     {
     public:
-        virtual void Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const = 0;
-        virtual ~RenderModel() = default;
+        DLL virtual ~Property() = 0;
     };
 }
 #endif
