@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h)
 
 set(ENGINE_SCENEGRAPH_HEADERS
@@ -108,6 +109,7 @@ set(ENGINE_CORE_SOURCES
     core/Model.cpp
     core/ModelInstance.cpp
     core/Window.cpp
+    core/Property.cpp
     )
 
 set(ENGINE_SCENEGRAPH_SOURCES
@@ -153,17 +155,17 @@ if(MSVC)
     set_target_properties(ProtoBufClasses PROPERTIES
         COMPILE_FLAGS "-FIaeongames/ProtoBufClasses.h -WX -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(AeonEngine PROPERTIES
-        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
+        COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX")
     target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(MINGW OR MSYS)
     set_target_properties(ProtoBufClasses PROPERTIES
         COMPILE_FLAGS "-include aeongames/ProtoBufClasses.h -Wall -Werror -Wfatal-errors")
     set_target_properties(AeonEngine PROPERTIES
-        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors")
+        COMPILE_FLAGS "-Wall -Werror -Wfatal-errors -DNOMINMAX")
     target_link_libraries(AeonEngine ProtoBufClasses)
 elseif(UNIX)
     set_target_properties(AeonEngine PROPERTIES
-        COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors")
+        COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
     target_link_libraries(AeonEngine ProtoBufClasses dl)
 endif()
 

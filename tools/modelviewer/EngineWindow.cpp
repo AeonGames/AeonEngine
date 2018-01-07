@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -115,12 +115,12 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        mNode->SetModelInstance ( std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
-        assert ( mNode->GetModelInstance() && "ModelInstance is a nullptr" );
-        if ( mNode->GetModelInstance() )
+        mNode->SetProperty ( 0, std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
+        assert ( mNode->GetProperty ( 0 ) && "ModelInstance is a nullptr" );
+        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetProperty ( 0 ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.
-            float diameter = mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;
+            float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;
             std::cout << "Diameter: " << diameter << std::endl;
             // Add the near value to the radius just in case the actual object contains the eye position.
             float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;
@@ -135,9 +135,9 @@ namespace AeonGames
             float eye_length = ( diameter ) / std::tan ( mFrustumVerticalHalfAngle );
             mCameraLocation = QVector4D (
                                   QVector3D (
-                                      mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetCenter() [0],
-                                      mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetCenter() [1],
-                                      mNode->GetModelInstance()->GetModel()->GetCenterRadii().GetCenter() [2] ) +
+                                      model_instance->GetModel()->GetCenterRadii().GetCenter() [0],
+                                      model_instance->GetModel()->GetCenterRadii().GetCenter() [1],
+                                      model_instance->GetModel()->GetCenterRadii().GetCenter() [2] ) +
                                   ( mCameraRotation.rotatedVector ( -forward ) * eye_length ), 1 );
             updateViewMatrix();
             mStep = eye_length / 100.0f;

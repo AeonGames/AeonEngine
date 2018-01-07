@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@ limitations under the License.
 #define AEONGAMES_MODELINSTANCE_H
 #include <vector>
 #include "aeongames/Memory.h"
-#include "aeongames/Platform.h"
-
+//#include "aeongames/Platform.h"
+#include "aeongames/Property.h"
 namespace AeonGames
 {
     class Model;
     class Matrix4x4;
-    class ModelInstance
+    class ModelInstance : public Property
     {
     public:
         DLL ModelInstance ( const std::shared_ptr<const Model> aModel );
