@@ -15,7 +15,7 @@ before_install:
   - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev
 install:
   - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
-  - tar -xzvf v3.2.0.tar.gz
+  - tar -xzf v3.2.0.tar.gz
   - cd protobuf-3.2.0
   - ./autogen.sh
   - ./configure
