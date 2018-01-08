@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ limitations under the License.
 #define AEONGAMES_MODEL_H
 #include "aeongames/Memory.h"
 #include "aeongames/Platform.h"
-#include "aeongames/RenderModel.h"
 #include "aeongames/AABB.h"
 #include <vector>
 #include <tuple>
@@ -54,8 +53,6 @@ namespace AeonGames
         std::vector<std::shared_ptr<const Animation>> mAnimations;
         void Initialize();
         void Finalize();
-        friend class Renderer;
-        mutable std::unique_ptr<RenderModel> mRenderModel;
     };
 }
 #endif

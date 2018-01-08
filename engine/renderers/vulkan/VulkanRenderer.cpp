@@ -98,14 +98,15 @@ namespace AeonGames
         FinalizeInstance();
     }
 
-    void VulkanRenderer::CacheScene ( const std::shared_ptr<const Scene>& aScene ) const
+    void VulkanRenderer::CacheScene ( const std::shared_ptr<Scene>& aScene )
     {
-        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<const Node>& aNode )
+        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<Node>& aNode )
         {
             const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
-            if ( model_instance && !GetRenderModel ( model_instance->GetModel() ) )
+            const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode->GetProperty ( 1 ) );
+            if ( model_instance && !vulkan_model )
             {
-                SetRenderModel ( model_instance->GetModel(), std::make_unique<VulkanModel> ( model_instance->GetModel(), shared_from_this() ) );
+                aNode->SetProperty ( 1, std::make_shared<VulkanModel> ( model_instance->GetModel(), shared_from_this() ) );
             }
         } );
     }

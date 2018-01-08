@@ -73,7 +73,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLWindow::Render ( const std::shared_ptr<const Scene>& aScene ) const
+    void OpenGLWindow::Render ( const std::shared_ptr<Scene>& aScene ) const
     {
 #ifdef _WIN32
         HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
@@ -107,22 +107,22 @@ namespace AeonGames
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
 
         Frustum frustum ( projection_matrix * view_matrix );
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( const std::shared_ptr<const Node>& aNode )
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( const std::shared_ptr<Node>& aNode )
         {
             const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
-            const std::unique_ptr<RenderModel>& render_model = mOpenGLRenderer->GetRenderModel ( model_instance->GetModel() );
-            if ( render_model )
+            const OpenGLModel* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode->GetProperty ( 1 ) );
+            if ( opengl_model )
             {
                 if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
                 {
                     // We dont really need to pass the matrices here, but we already have them so why not.
-                    render_model->Render ( model_instance, projection_matrix, view_matrix );
+                    opengl_model->Render ( model_instance, projection_matrix, view_matrix );
                 }
             }
             else
             {
                 /* This is lazy loading */
-                mOpenGLRenderer->SetRenderModel ( model_instance->GetModel(), std::make_unique<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
+                aNode->SetProperty ( 1, std::make_shared<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
             }
         } );
 

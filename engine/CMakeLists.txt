@@ -86,8 +86,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ModelInstance.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/RenderModel.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h)
 
 set(ENGINE_CORE_SOURCES
     core/Configuration.cpp

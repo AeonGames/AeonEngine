@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ namespace AeonGames
             @param aScene shared pointer to scene to cache.
             @node After a scene has been cached in order to remove render data from the cache,
             the model object referenced by a model instance must be deleted.*/
-        virtual void CacheScene ( const std::shared_ptr<const Scene>& aScene ) const = 0;
+        virtual void CacheScene ( const std::shared_ptr<Scene>& aScene ) = 0;
         ///@name Window Factory
         ///@{
         /** Creates a Window object that acts as a wrapper for the Window Id provided.
@@ -66,8 +66,6 @@ namespace AeonGames
 #endif
         ///@}
         virtual ~Renderer() = default;
-        DLL const std::unique_ptr<RenderModel>& GetRenderModel ( const std::shared_ptr<const Model>& aModel ) const;
-        DLL void SetRenderModel ( const std::shared_ptr<const Model>& aModel, std::unique_ptr<RenderModel> aRenderModel ) const;
     };
 
     /**@name Factory Functions */

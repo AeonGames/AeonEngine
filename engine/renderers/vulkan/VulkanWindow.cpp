@@ -417,7 +417,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Render ( const std::shared_ptr<const Scene>& aScene ) const
+    void VulkanWindow::Render ( const std::shared_ptr<Scene>& aScene ) const
     {
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer->GetDevice(),
@@ -477,22 +477,21 @@ namespace AeonGames
 
         Matrix4x4 view_matrix{ mViewTransform.GetInverted().GetMatrix() };
         Frustum frustum ( mProjectionMatrix * view_matrix );
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const std::shared_ptr<const Node>& aNode )
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const std::shared_ptr<Node>& aNode )
         {
             const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
-            const std::shared_ptr<const Model>& model = model_instance->GetModel();
-            const std::unique_ptr<RenderModel>& render_model = mVulkanRenderer->GetRenderModel ( model );
-            if ( render_model )
+            const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode->GetProperty ( 1 ) );
+            if ( vulkan_model )
             {
                 if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
                 {
-                    render_model->Render ( model_instance, mProjectionMatrix, view_matrix );
+                    vulkan_model->Render ( model_instance, mProjectionMatrix, view_matrix );
                 }
             }
             else
             {
                 /* This is lazy loading */
-                mVulkanRenderer->SetRenderModel ( model_instance->GetModel(), std::make_unique<VulkanModel> ( model_instance->GetModel(), mVulkanRenderer ) );
+                aNode->SetProperty ( 1, std::make_shared<VulkanModel> ( model_instance->GetModel(), mVulkanRenderer ) );
             }
         } );
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );

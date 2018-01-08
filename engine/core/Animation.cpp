@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ namespace AeonGames
 
     const Transform Animation::GetTransform ( size_t aBoneIndex, double aTime ) const
     {
-        double sample = mFrameRate * fmod ( aTime, mDuration );
+        double sample = fmod ( mFrameRate * fmod ( aTime, mDuration ), mFrames.size() );
         double frame;
         double interpolation = modf ( sample, &frame );
         size_t frame1 = static_cast<size_t> ( frame );
