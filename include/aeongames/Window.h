@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace AeonGames
     public:
         DLL virtual ~Window() = 0;
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
-        virtual void Render ( const std::shared_ptr<const Scene>& aScene ) const = 0;
+        virtual void Render ( const std::shared_ptr<Scene>& aScene ) const = 0;
         ///@name Matrix Functions
         ///@{
         DLL void SetProjectionMatrix ( const Matrix4x4& aMatrix );

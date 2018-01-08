@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ namespace AeonGames
         ~OpenGLWindow() final;
         void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
-        void Render ( const std::shared_ptr<const Scene>& aScene ) const final;
+        void Render ( const std::shared_ptr<Scene>& aScene ) const final;
         const GLuint GetMatricesBuffer() const;
     private:
         void Initialize();
