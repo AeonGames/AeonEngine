@@ -28,6 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    const size_t OpenGLModel::TypeId = std::hash<std::string> {} ( "OpenGLModel" );
     OpenGLModel::OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mModel ( aModel ), mOpenGLRenderer ( aOpenGLRenderer )
     {
