@@ -31,6 +31,7 @@ namespace AeonGames
         VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanModel();
         void Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const;
+        static const size_t TypeId;
     private:
         /// @todo Determine whether mModel should remain a shared_ptr, change to a weak_ptr or something else.
         std::shared_ptr<const Model> mModel;

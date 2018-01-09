@@ -110,7 +110,7 @@ namespace AeonGames
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( const std::shared_ptr<Node>& aNode )
         {
             const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( ModelInstance::TypeId ) );
-            const OpenGLModel* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode->GetProperty ( 1 ) );
+            const OpenGLModel* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode->GetProperty ( OpenGLModel::TypeId ) );
             if ( opengl_model )
             {
                 if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
@@ -122,7 +122,7 @@ namespace AeonGames
             else
             {
                 /* This is lazy loading */
-                aNode->SetProperty ( 1, std::make_shared<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
+                aNode->SetProperty ( OpenGLModel::TypeId, std::make_shared<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
             }
         } );
 

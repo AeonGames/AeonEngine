@@ -97,6 +97,7 @@ namespace AeonGames
         FinalizeDebug();
         FinalizeInstance();
     }
+
     const VkDevice & VulkanRenderer::GetDevice() const
     {
         return mVkDevice;

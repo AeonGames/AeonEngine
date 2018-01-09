@@ -28,6 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    const size_t VulkanModel::TypeId = std::hash<std::string> {} ( "VulkanModel" );
     VulkanModel::VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mModel ( aModel ), mVulkanRenderer ( aVulkanRenderer )
     {

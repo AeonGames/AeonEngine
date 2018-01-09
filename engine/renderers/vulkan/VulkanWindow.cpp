@@ -480,7 +480,7 @@ namespace AeonGames
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const std::shared_ptr<Node>& aNode )
         {
             const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( ModelInstance::TypeId ) );
-            const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode->GetProperty ( 1 ) );
+            const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode->GetProperty ( VulkanModel::TypeId ) );
             if ( vulkan_model )
             {
                 if ( frustum.Intersects ( aNode->GetGlobalAABB() ) )
@@ -491,7 +491,7 @@ namespace AeonGames
             else
             {
                 /* This is lazy loading */
-                aNode->SetProperty ( 1, std::make_shared<VulkanModel> ( model_instance->GetModel(), mVulkanRenderer ) );
+                aNode->SetProperty ( VulkanModel::TypeId, std::make_shared<VulkanModel> ( model_instance->GetModel(), mVulkanRenderer ) );
             }
         } );
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );
