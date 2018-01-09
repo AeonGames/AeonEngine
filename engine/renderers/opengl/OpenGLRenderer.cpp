@@ -67,7 +67,7 @@ namespace AeonGames
     {
         aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<Node>& aNode )
         {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( ModelInstance::TypeId ) );
             const OpenGLModel* open_model = reinterpret_cast<const OpenGLModel*> ( aNode->GetProperty ( 1 ) );
             if ( model_instance && !open_model )
             {

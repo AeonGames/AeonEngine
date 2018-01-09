@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    const size_t ModelInstance::TypeId = std::hash<std::string> {} ( "ModelInstance" );
     ModelInstance::ModelInstance ( const std::shared_ptr<const Model> aModel ) :
         mModel ( aModel ),
         mEnabledAssemblies ( mModel->GetMeshes().size(), true ),

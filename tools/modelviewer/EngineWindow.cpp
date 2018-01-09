@@ -115,9 +115,9 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        mNode->SetProperty ( 0, std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
-        assert ( mNode->GetProperty ( 0 ) && "ModelInstance is a nullptr" );
-        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetProperty ( 0 ) ) )
+        mNode->SetProperty ( ModelInstance::TypeId, std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
+        assert ( mNode->GetProperty ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
+        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetProperty ( ModelInstance::TypeId ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.
             float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;

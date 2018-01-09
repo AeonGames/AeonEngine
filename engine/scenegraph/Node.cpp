@@ -168,7 +168,7 @@ namespace AeonGames
 
     const AABB Node::GetGlobalAABB() const
     {
-        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetProperty ( 0 ) );
+        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetProperty ( ModelInstance::TypeId ) );
         return ( model_instance ) ? mGlobalTransform * model_instance->GetModel()->GetCenterRadii() : AABB{};
     }
 
@@ -515,7 +515,7 @@ namespace AeonGames
         Properties should probably provide an update function themselves,
         and "0" is just being used as a stand-in property id while I figure
         a better ID system.*/
-        ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( GetProperty ( 0 ) );
+        ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( GetProperty ( ModelInstance::TypeId ) );
         if ( model_instance )
         {
             model_instance->StepAnimation ( delta );
