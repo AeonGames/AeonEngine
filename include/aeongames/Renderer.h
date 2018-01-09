@@ -37,11 +37,6 @@ namespace AeonGames
     class Renderer
     {
     public:
-        /** Preload render data for all nodes in the scene.
-            @param aScene shared pointer to scene to cache.
-            @node After a scene has been cached in order to remove render data from the cache,
-            the model object referenced by a model instance must be deleted.*/
-        virtual void CacheScene ( const std::shared_ptr<Scene>& aScene ) = 0;
         ///@name Window Factory
         ///@{
         /** Creates a Window object that acts as a wrapper for the Window Id provided.

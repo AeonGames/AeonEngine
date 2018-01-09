@@ -62,20 +62,6 @@ namespace AeonGames
     {
         Finalize();
     }
-
-    void OpenGLRenderer::CacheScene ( const std::shared_ptr<Scene>& aScene )
-    {
-        aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<Node>& aNode )
-        {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( ModelInstance::TypeId ) );
-            const OpenGLModel* open_model = reinterpret_cast<const OpenGLModel*> ( aNode->GetProperty ( 1 ) );
-            if ( model_instance && !open_model )
-            {
-                aNode->SetProperty ( 1, std::make_shared<OpenGLModel> ( model_instance->GetModel(), shared_from_this() ) );
-            }
-        } );
-    }
-
     void* OpenGLRenderer::GetWindowId() const
     {
         return mWindowId;

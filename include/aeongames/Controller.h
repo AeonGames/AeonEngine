@@ -13,9 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/Property.h"
-
+#ifndef AEONGAMES_CONTROLLER_H
+#define AEONGAMES_CONTROLLER_H
+#include "aeongames/Platform.h"
 namespace AeonGames
 {
-    Property::~Property() = default;
+    class Node;
+    class Controller
+    {
+    public:
+        DLL virtual ~Controller() = 0;
+        virtual void Update ( Node* aNode, const double delta ) = 0;
+    };
 }
+#endif

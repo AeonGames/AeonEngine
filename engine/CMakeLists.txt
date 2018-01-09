@@ -58,7 +58,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Controller.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h)
 
 set(ENGINE_SCENEGRAPH_HEADERS
@@ -108,7 +108,7 @@ set(ENGINE_CORE_SOURCES
     core/Model.cpp
     core/ModelInstance.cpp
     core/Window.cpp
-    core/Property.cpp
+    core/Controller.cpp
     )
 
 set(ENGINE_SCENEGRAPH_SOURCES

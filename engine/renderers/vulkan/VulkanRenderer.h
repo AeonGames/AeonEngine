@@ -36,7 +36,6 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        void CacheScene ( const std::shared_ptr<Scene>& aScene ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;

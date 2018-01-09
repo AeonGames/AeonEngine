@@ -15,7 +15,6 @@ limitations under the License.
 */
 #ifndef AEONGAMES_VULKANMODEL_H
 #define AEONGAMES_VULKANMODEL_H
-#include "aeongames/Property.h"
 namespace AeonGames
 {
     class Model;
@@ -26,7 +25,7 @@ namespace AeonGames
     class VulkanMesh;
     class VulkanSkeleton;
     class VulkanWindow;
-    class VulkanModel : public Property
+    class VulkanModel
     {
     public:
         VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );

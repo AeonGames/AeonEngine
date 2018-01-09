@@ -17,13 +17,12 @@ limitations under the License.
 #define AEONGAMES_MODELINSTANCE_H
 #include <vector>
 #include "aeongames/Memory.h"
-//#include "aeongames/Platform.h"
-#include "aeongames/Property.h"
+#include "aeongames/Controller.h"
 namespace AeonGames
 {
     class Model;
     class Matrix4x4;
-    class ModelInstance : public Property
+    class ModelInstance : public Controller
     {
     public:
         DLL ModelInstance ( const std::shared_ptr<const Model> aModel );
@@ -39,6 +38,7 @@ namespace AeonGames
         DLL const std::shared_ptr<const Model>& GetModel() const;
         DLL bool IsAssemblyEnabled ( size_t aAssemblyIndex ) const;
         DLL static const size_t TypeId;
+        void Update ( Node* aNode, const double delta ) final;
     private:
         void Initialize();
         void Finalize();
