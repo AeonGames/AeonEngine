@@ -25,7 +25,7 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Memory.h"
-#include "aeongames/Property.h"
+#include "aeongames/Controller.h"
 
 namespace AeonGames
 {
@@ -126,16 +126,17 @@ namespace AeonGames
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
         DLL const std::shared_ptr<Node> GetParent() const;
         DLL size_t GetIndex() const;
-        ///@name Matrix Functions
+        ///@name Property Functions
         ///@{
-        DLL Property* GetProperty ( std::size_t aPropertyId );
-        DLL const Property* GetProperty ( std::size_t aPropertyId ) const;
-        DLL void SetProperty ( std::size_t aPropertyId, const std::shared_ptr<Property>& aProperty );
+        DLL void* GetProperty ( std::size_t aPropertyId );
+        DLL const void* GetProperty ( std::size_t aPropertyId ) const;
+        DLL void SetProperty ( std::size_t aPropertyId, const std::shared_ptr<void>& aProperty );
         ///@}
-    protected:
-        //virtual void Update(const double delta) = 0;
+        ///@name Controller Functions
+        ///@{
+        DLL void AddController ( const std::shared_ptr<Controller>& aController );
+        ///@}
     private:
-        // This Update function should be temporary.
         void Update ( const double delta );
         static const std::shared_ptr<Node> mNullNode;
         friend class Scene;
@@ -150,7 +151,10 @@ namespace AeonGames
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<std::shared_ptr<Node>>::size_type mIterator;
         std::bitset<8> mFlags;
-        std::unordered_map<std::size_t, std::shared_ptr<Property>> mProperties;
+        /// @note Anything can be a property.
+        std::unordered_map<std::size_t, std::shared_ptr<void>> mProperties;
+        /// @todo Controllers should be prioritized.
+        std::vector<std::shared_ptr<Controller>> mControllers;
     };
 }
 #endif

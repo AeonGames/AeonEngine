@@ -37,7 +37,6 @@ namespace AeonGames
     public:
         OpenGLRenderer();
         ~OpenGLRenderer() override;
-        void CacheScene ( const std::shared_ptr<Scene>& aScene ) final;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         void* GetOpenGLContext() const;
         void* GetWindowId() const;

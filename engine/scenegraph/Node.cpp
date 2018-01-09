@@ -111,7 +111,7 @@ namespace AeonGames
         return mIndex;
     }
 
-    Property* Node::GetProperty ( std::size_t aPropertyId )
+    const void * Node::GetProperty ( std::size_t aPropertyId ) const
     {
         auto property = mProperties.find ( aPropertyId );
         if ( property != mProperties.end() )
@@ -121,17 +121,13 @@ namespace AeonGames
         return nullptr;
     }
 
-    const Property * Node::GetProperty ( std::size_t aPropertyId ) const
+    void* Node::GetProperty ( std::size_t aPropertyId )
     {
-        auto property = mProperties.find ( aPropertyId );
-        if ( property != mProperties.end() )
-        {
-            return property->second.get();
-        }
-        return nullptr;
+        // EC++ Item 3
+        return const_cast<void*> ( static_cast<const Node&> ( *this ).GetProperty ( aPropertyId ) );
     }
 
-    void Node::SetProperty ( std::size_t aPropertyId, const std::shared_ptr<Property>& aProperty )
+    void Node::SetProperty ( std::size_t aPropertyId, const std::shared_ptr<void>& aProperty )
     {
         mProperties[aPropertyId] = aProperty;
     }
@@ -509,8 +505,17 @@ namespace AeonGames
         }
     }
 
+    void Node::AddController ( const std::shared_ptr<Controller>& aController )
+    {
+        mControllers.emplace_back ( aController );
+    }
+
     void Node::Update ( const double delta )
     {
+        for ( auto& i : mControllers )
+        {
+            i->Update ( this, delta );
+        }
         /* This is transitioning code.
         Properties should probably provide an update function themselves,
         and "0" is just being used as a stand-in property id while I figure
