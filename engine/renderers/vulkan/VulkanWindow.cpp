@@ -479,7 +479,7 @@ namespace AeonGames
         Frustum frustum ( mProjectionMatrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const std::shared_ptr<Node>& aNode )
         {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( ModelInstance::TypeId ) );
             const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode->GetProperty ( 1 ) );
             if ( vulkan_model )
             {

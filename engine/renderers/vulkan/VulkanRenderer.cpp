@@ -102,7 +102,7 @@ namespace AeonGames
     {
         aScene->LoopTraverseDFSPreOrder ( [this] ( const std::shared_ptr<Node>& aNode )
         {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( 0 ) );
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode->GetProperty ( ModelInstance::TypeId ) );
             const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode->GetProperty ( 1 ) );
             if ( model_instance && !vulkan_model )
             {
