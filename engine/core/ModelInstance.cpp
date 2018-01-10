@@ -126,11 +126,6 @@ namespace AeonGames
         return mEnabledAssemblies[aAssemblyIndex];
     }
 
-    void ModelInstance::Update ( Node* aNode, const double delta )
-    {
-        StepAnimation ( delta );
-    }
-
     void ModelInstance::Initialize()
     {
     }
