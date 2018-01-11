@@ -49,6 +49,13 @@ namespace AeonGames
         mProjectionMatrix(),
         mViewMatrix()
     {
+        mNode->AttachUpdater ( 0, 0, [] ( Node & aNode, double aDelta )
+        {
+            if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( aNode.GetProperty ( ModelInstance::TypeId ) ) )
+            {
+                model_instance->StepAnimation ( aDelta );
+            }
+        } );
         mScene->AddNode ( mNode );
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );

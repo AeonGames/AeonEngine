@@ -505,25 +505,30 @@ namespace AeonGames
         }
     }
 
-    void Node::AddController ( const std::shared_ptr<Controller>& aController )
+    void Node::AttachUpdater ( std::size_t aId, std::size_t aPriority, const std::function<void ( Node&, double ) >& aUpdater )
     {
-        mControllers.emplace_back ( aController );
+        /// @todo Sort by priority and check for duplicates.
+        mUpdaters.emplace_back ( aId, aPriority, aUpdater );
     }
+    void Node::DettachUpdater ( std::size_t aId )
+    {
+        mUpdaters.erase (
+            std::remove_if ( mUpdaters.begin(), mUpdaters.end(),
+                             [aId] ( const std::tuple <
+                                     std::size_t,
+                                     std::size_t,
+                                     std::function<void ( Node&, double ) >> aTuple )
+        {
+            return std::get<1> ( aTuple ) == aId;
+        } ), mUpdaters.end() );
+    }
+
 
     void Node::Update ( const double delta )
     {
-        for ( auto& i : mControllers )
+        for ( auto& i : mUpdaters )
         {
-            i->Update ( this, delta );
-        }
-        /* This is transitioning code.
-        Properties should probably provide an update function themselves,
-        and "0" is just being used as a stand-in property id while I figure
-        a better ID system.*/
-        ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( GetProperty ( ModelInstance::TypeId ) );
-        if ( model_instance )
-        {
-            model_instance->StepAnimation ( delta );
+            ( std::get<2> ( i ) ) ( *this, delta );
         }
     }
 }
