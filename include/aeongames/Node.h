@@ -22,10 +22,10 @@ limitations under the License.
 #include <functional>
 #include <limits>
 #include <unordered_map>
+#include <tuple>
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Memory.h"
-#include "aeongames/Controller.h"
 
 namespace AeonGames
 {
@@ -132,9 +132,10 @@ namespace AeonGames
         DLL const void* GetProperty ( std::size_t aPropertyId ) const;
         DLL void SetProperty ( std::size_t aPropertyId, const std::shared_ptr<void>& aProperty );
         ///@}
-        ///@name Controller Functions
+        ///@name Updater Functions
         ///@{
-        DLL void AddController ( const std::shared_ptr<Controller>& aController );
+        DLL void AttachUpdater ( std::size_t aId, std::size_t aPriority, const std::function<void ( Node&, double ) >& aUpdater );
+        DLL void DettachUpdater ( std::size_t aId );
         ///@}
     private:
         void Update ( const double delta );
@@ -153,8 +154,11 @@ namespace AeonGames
         std::bitset<8> mFlags;
         /// @note Anything can be a property.
         std::unordered_map<std::size_t, std::shared_ptr<void>> mProperties;
-        /// @todo Controllers should be prioritized.
-        std::vector<std::shared_ptr<Controller>> mControllers;
+        std::vector <
+        std::tuple <
+        std::size_t,
+            std::size_t,
+            std::function<void ( Node&, double ) >>> mUpdaters;
     };
 }
 #endif
