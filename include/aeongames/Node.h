@@ -126,11 +126,11 @@ namespace AeonGames
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
         DLL const std::shared_ptr<Node> GetParent() const;
         DLL size_t GetIndex() const;
-        ///@name Property Functions
+        ///@name Attribute Functions
         ///@{
-        DLL void* GetProperty ( std::size_t aPropertyId );
-        DLL const void* GetProperty ( std::size_t aPropertyId ) const;
-        DLL void SetProperty ( std::size_t aPropertyId, const std::shared_ptr<void>& aProperty );
+        DLL void* GetAttribute ( std::size_t aAttributeId );
+        DLL const void* GetAttribute ( std::size_t aAttributeId ) const;
+        DLL void SetAttribute ( std::size_t aAttributeId, const std::shared_ptr<void>& aAttribute );
         ///@}
         ///@name Updater Functions
         ///@{
@@ -152,8 +152,8 @@ namespace AeonGames
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<std::shared_ptr<Node>>::size_type mIterator;
         std::bitset<8> mFlags;
-        /// @note Anything can be a property.
-        std::unordered_map<std::size_t, std::shared_ptr<void>> mProperties;
+        /// @note Anything can be an attribute.
+        std::unordered_map<std::size_t, std::shared_ptr<void>> mAttributes;
         std::vector <
         std::tuple <
         std::size_t,
