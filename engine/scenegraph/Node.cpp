@@ -111,25 +111,25 @@ namespace AeonGames
         return mIndex;
     }
 
-    const void * Node::GetProperty ( std::size_t aPropertyId ) const
+    const void * Node::GetAttribute ( std::size_t aAttributeId ) const
     {
-        auto property = mProperties.find ( aPropertyId );
-        if ( property != mProperties.end() )
+        auto attribute = mAttributes.find ( aAttributeId );
+        if ( attribute != mAttributes.end() )
         {
-            return property->second.get();
+            return attribute->second.get();
         }
         return nullptr;
     }
 
-    void* Node::GetProperty ( std::size_t aPropertyId )
+    void* Node::GetAttribute ( std::size_t aAttributeId )
     {
         // EC++ Item 3
-        return const_cast<void*> ( static_cast<const Node&> ( *this ).GetProperty ( aPropertyId ) );
+        return const_cast<void*> ( static_cast<const Node&> ( *this ).GetAttribute ( aAttributeId ) );
     }
 
-    void Node::SetProperty ( std::size_t aPropertyId, const std::shared_ptr<void>& aProperty )
+    void Node::SetAttribute ( std::size_t aAttributeId, const std::shared_ptr<void>& aAttribute )
     {
-        mProperties[aPropertyId] = aProperty;
+        mAttributes[aAttributeId] = aAttribute;
     }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
@@ -159,12 +159,13 @@ namespace AeonGames
 
     const AABB Node::GetLocalAABB() const
     {
-        return AABB();
+        return AABB{};
     }
 
     const AABB Node::GetGlobalAABB() const
     {
-        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetProperty ( ModelInstance::TypeId ) );
+        ///@todo Remove dependency on ModelInstance::TypeId
+        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetAttribute ( ModelInstance::TypeId ) );
         return ( model_instance ) ? mGlobalTransform * model_instance->GetModel()->GetCenterRadii() : AABB{};
     }
 

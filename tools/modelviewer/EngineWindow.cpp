@@ -51,7 +51,7 @@ namespace AeonGames
     {
         mNode->AttachUpdater ( 0, 0, [] ( Node & aNode, double aDelta )
         {
-            if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( aNode.GetProperty ( ModelInstance::TypeId ) ) )
+            if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( aNode.GetAttribute ( ModelInstance::TypeId ) ) )
             {
                 model_instance->StepAnimation ( aDelta );
             }
@@ -122,9 +122,9 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        mNode->SetProperty ( ModelInstance::TypeId, std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
-        assert ( mNode->GetProperty ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
-        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetProperty ( ModelInstance::TypeId ) ) )
+        mNode->SetAttribute ( ModelInstance::TypeId, std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
+        assert ( mNode->GetAttribute ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
+        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetAttribute ( ModelInstance::TypeId ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.
             float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;
