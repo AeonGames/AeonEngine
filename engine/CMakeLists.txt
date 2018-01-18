@@ -78,6 +78,7 @@ set(ENGINE_CORE_HEADERS
     include/Factory.h
     include/ProtoBufHelpers.h
     include/Configuration.h
+    include/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
