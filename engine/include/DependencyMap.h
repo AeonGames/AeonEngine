@@ -19,6 +19,7 @@ limitations under the License.
 #include <iostream>
 #include <tuple>
 #include <algorithm>
+#include <exception>
 namespace AeonGames
 {
     /**
@@ -39,9 +40,7 @@ namespace AeonGames
             }
             else if ( std::get<0> ( graph.at ( node ) ) == 1 )
             {
-                ///@todo Throw an exception.
-                std::cout << __func__ << " " << __LINE__ << " ERROR " << std::endl;
-                return;
+                throw std::runtime_error ( "New node would create a circular dependency." );
             }
             std::get<0> ( graph.at ( node ) ) = 1;
             for ( auto& i : std::get<1> ( graph.at ( node ) ) )
@@ -52,14 +51,56 @@ namespace AeonGames
             std::get<0> ( graph.at ( node ) ) = 2;
             sorted.emplace_back ( node );
         }
+
         void reserve ( size_t count )
         {
             graph.reserve ( count );
             sorted.reserve ( count );
         }
+
         /**@todo emplace should match std::unordered_map::emplace.*/
         void emplace ( const std::tuple<size_t, std::vector<size_t>>& item )
         {
+#if 1
+            if ( graph.empty() && sorted.empty() )
+            {
+                sorted.emplace_back ( std::get<0> ( item ) );
+                graph[std::get<0> ( item )] = {0, std::get<1> ( item ) };
+                std::cout << std::get<0> ( item ) << std::endl;
+                return;
+            }
+            size_t dependency_count = std::get<1> ( item ).size();
+            for ( auto i = sorted.begin(); i != sorted.end(); ++i )
+            {
+                if ( std::find ( std::get<1> ( item ).begin(), std::get<1> ( item ).end(), *i ) != std::get<1> ( item ).end() )
+                {
+                    // if the inserted node depends on the current node decrease the dependency count.
+                    --dependency_count;
+                }
+                if ( std::find ( std::get<1> ( graph[*i] ).begin(), std::get<1> ( graph[*i] ).end(), std::get<0> ( item ) ) != std::get<1> ( graph[*i] ).end() )
+                {
+                    // If the current node depends on the inserted node...
+                    if ( ( dependency_count ) && ( i + 1 != sorted.end() ) )
+                    {
+                        /**
+                         * @todo try some ideas from https://arxiv.org/pdf/0711.0251.pdf
+                        ...
+                        PROFIT!
+                        */
+                        std::cout << "Skiped " << std::get<0> ( item ) << std::endl;
+                        break;
+                    }
+                    else
+                    {
+                        // and all dependencies are behind or we're at the last node insert the item and return.
+                        sorted.insert ( i, std::get<0> ( item ) );
+                        graph[std::get<0> ( item )] = {0, std::get<1> ( item ) };
+                        std::cout << "Inserted " << std::get<0> ( item ) << std::endl;
+                        break;
+                    }
+                }
+            }
+#else
             for ( auto& i : graph )
             {
                 std::get<0> ( i.second ) = 0;
@@ -75,6 +116,7 @@ namespace AeonGames
                     Visit ( i.first, graph, sorted );
                 }
             }
+#endif
             for ( auto& i : sorted )
             {
                 std::cout << i << ", ";
@@ -93,6 +135,7 @@ namespace AeonGames
 int main ( int argc, char **argv )
 {
     AeonGames::DependencyVector dv;
+    dv.reserve ( 25 );
     dv.emplace ( {1, {2, 3}} );
     dv.emplace ( {3, {4, 5}} );
     dv.emplace ( {5, {4}} );
