@@ -20,6 +20,7 @@ limitations under the License.
 #include <tuple>
 #include <algorithm>
 #include <exception>
+#include <limits>
 namespace AeonGames
 {
     /**
@@ -29,26 +30,43 @@ namespace AeonGames
     */
     class DependencyMap
     {
+        /*
+        Node Data Contents:
+        std::tuple<
+            size_t,             //-> Parent Iterator
+            size_t,             //-> Child Iterator
+            size_t,             //-> Visit Mark
+            std::vector<size_t> //-> Dependencies
+            >
+        */
     public:
         DependencyMap() {}
         ~DependencyMap() {}
-        void Visit ( size_t node, std::unordered_map<size_t, std::tuple<size_t, std::vector<size_t>>>& graph, std::vector<size_t>& sorted )
+        void Visit (
+            size_t node,
+            std::unordered_map <
+            size_t,
+            std::tuple <
+            size_t,
+            size_t,
+            size_t,
+            std::vector<size_t >>>& graph,
+            std::vector<size_t>& sorted )
         {
-            if ( graph.find ( node ) == graph.end() || std::get<0> ( graph.at ( node ) ) == 2 )
+            if ( graph.find ( node ) == graph.end() || std::get<2> ( graph.at ( node ) ) == 2 )
             {
                 return;
             }
-            else if ( std::get<0> ( graph.at ( node ) ) == 1 )
+            else if ( std::get<2> ( graph.at ( node ) ) == 1 )
             {
                 throw std::runtime_error ( "New node would create a circular dependency." );
             }
-            std::get<0> ( graph.at ( node ) ) = 1;
-            for ( auto& i : std::get<1> ( graph.at ( node ) ) )
+            std::get<2> ( graph.at ( node ) ) = 1;
+            for ( auto& i : std::get<3> ( graph.at ( node ) ) )
             {
-                ///@todo find a way to remove recursion
                 Visit ( i, graph, sorted );
             }
-            std::get<0> ( graph.at ( node ) ) = 2;
+            std::get<2> ( graph.at ( node ) ) = 2;
             sorted.emplace_back ( node );
         }
 
@@ -62,17 +80,40 @@ namespace AeonGames
         {
             for ( auto& i : graph )
             {
-                std::get<0> ( i.second ) = 0;
+                std::get<0> ( i.second ) = std::get<1> ( i.second ) = std::get<2> ( i.second ) = 0;
             }
             ///@todo use std::unordered_map::emplace
-            graph[std::get<0> ( item )] = {0, std::get<1> ( item ) };
+            graph[std::get<0> ( item )] = {0, 0, 0, std::get<1> ( item ) };
             ///@todo find a way not to clear sorted but just insert the new item instead.
             sorted.clear();
             for ( auto& i : graph )
             {
-                if ( std::get<0> ( i.second ) == 0 )
+                if ( std::get<2> ( i.second ) == 0 )
                 {
-                    Visit ( i.first, graph, sorted );
+                    auto node = i.first;
+                    ///@todo find a better terminating condition.
+                    std::get<0> ( graph[node] ) = std::numeric_limits<size_t>::max();
+                    do
+                    {
+                        if ( std::get<1> ( graph[node] ) < std::get<3> ( graph[node] ).size() )
+                        {
+                            auto next = graph.find ( std::get<3> ( graph[node] ) [std::get<1> ( graph[node] )] );
+                            ++std::get<1> ( graph[node] );
+                            if ( next != graph.end() && std::get<2> ( ( *next ).second ) != 2 )
+                            {
+                                std::get<0> ( ( *next ).second ) = node;
+                                node = ( *next ).first;
+                            }
+                        }
+                        else
+                        {
+                            std::get<2> ( graph.at ( node ) ) = 2;
+                            sorted.emplace_back ( node );
+                            //std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
+                            node = std::get<0> ( graph[node] );
+                        }
+                    }
+                    while ( node != std::numeric_limits<size_t>::max() );
                 }
             }
             for ( auto& i : sorted )
@@ -86,7 +127,14 @@ namespace AeonGames
         @todo Remove marks from storage.
         @todo Add User Data field.
         */
-        std::unordered_map<size_t, std::tuple<size_t, std::vector<size_t>>> graph;
+        std::unordered_map <
+        size_t,
+        std::tuple <
+        size_t,                 //-> Parent Iterator
+        size_t,                 //-> Child Iterator
+        size_t,                 //-> Visit Mark
+        std::vector<size_t >>   //-> Dependencies
+        > graph;
         std::vector<size_t> sorted;
     };
 }
