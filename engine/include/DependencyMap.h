@@ -27,11 +27,11 @@ namespace AeonGames
     @todo Add iterators and begin and end functions.
     @todo Turn into a template.
     */
-    class DependencyVector
+    class DependencyMap
     {
     public:
-        DependencyVector() {}
-        ~DependencyVector() {}
+        DependencyMap() {}
+        ~DependencyMap() {}
         void Visit ( size_t node, std::unordered_map<size_t, std::tuple<size_t, std::vector<size_t>>>& graph, std::vector<size_t>& sorted )
         {
             if ( graph.find ( node ) == graph.end() || std::get<0> ( graph.at ( node ) ) == 2 )
@@ -58,49 +58,8 @@ namespace AeonGames
             sorted.reserve ( count );
         }
 
-        /**@todo emplace should match std::unordered_map::emplace.*/
-        void emplace ( const std::tuple<size_t, std::vector<size_t>>& item )
+        void insert ( const std::tuple<size_t, std::vector<size_t>>& item )
         {
-#if 1
-            if ( graph.empty() && sorted.empty() )
-            {
-                sorted.emplace_back ( std::get<0> ( item ) );
-                graph[std::get<0> ( item )] = {0, std::get<1> ( item ) };
-                std::cout << std::get<0> ( item ) << std::endl;
-                return;
-            }
-            size_t dependency_count = std::get<1> ( item ).size();
-            for ( auto i = sorted.begin(); i != sorted.end(); ++i )
-            {
-                if ( std::find ( std::get<1> ( item ).begin(), std::get<1> ( item ).end(), *i ) != std::get<1> ( item ).end() )
-                {
-                    // if the inserted node depends on the current node decrease the dependency count.
-                    --dependency_count;
-                }
-                if ( std::find ( std::get<1> ( graph[*i] ).begin(), std::get<1> ( graph[*i] ).end(), std::get<0> ( item ) ) != std::get<1> ( graph[*i] ).end() )
-                {
-                    // If the current node depends on the inserted node...
-                    if ( ( dependency_count ) && ( i + 1 != sorted.end() ) )
-                    {
-                        /**
-                         * @todo try some ideas from https://arxiv.org/pdf/0711.0251.pdf
-                        ...
-                        PROFIT!
-                        */
-                        std::cout << "Skiped " << std::get<0> ( item ) << std::endl;
-                        break;
-                    }
-                    else
-                    {
-                        // and all dependencies are behind or we're at the last node insert the item and return.
-                        sorted.insert ( i, std::get<0> ( item ) );
-                        graph[std::get<0> ( item )] = {0, std::get<1> ( item ) };
-                        std::cout << "Inserted " << std::get<0> ( item ) << std::endl;
-                        break;
-                    }
-                }
-            }
-#else
             for ( auto& i : graph )
             {
                 std::get<0> ( i.second ) = 0;
@@ -116,7 +75,6 @@ namespace AeonGames
                     Visit ( i.first, graph, sorted );
                 }
             }
-#endif
             for ( auto& i : sorted )
             {
                 std::cout << i << ", ";
@@ -134,12 +92,14 @@ namespace AeonGames
 }
 int main ( int argc, char **argv )
 {
-    AeonGames::DependencyVector dv;
+    AeonGames::DependencyMap dv;
     dv.reserve ( 25 );
-    dv.emplace ( {1, {2, 3}} );
-    dv.emplace ( {3, {4, 5}} );
-    dv.emplace ( {5, {4}} );
-    dv.emplace ( {2, {}} );
-    dv.emplace ( {4, {}} );
+    dv.insert ( {6, {7}} );
+    dv.insert ( {1, {2, 3}} );
+    dv.insert ( {3, {4, 5}} );
+    dv.insert ( {5, {4}} );
+    dv.insert ( {2, {}} );
+    dv.insert ( {4, {}} );
+    dv.insert ( {7, {1, 2, 3, 4, 5}} );
     return 0;
 }
