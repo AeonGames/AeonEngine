@@ -62,6 +62,8 @@ if(PYTHONINTERP_FOUND)
     find_python_module(autopep8)
 endif()
 
+find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
+
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")

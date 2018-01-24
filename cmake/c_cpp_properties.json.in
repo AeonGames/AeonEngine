@@ -73,7 +73,8 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "codegnuglobal.executable": "${GLOBAL_EXECUTABLE}"
         }
     ],
     "version": 3
