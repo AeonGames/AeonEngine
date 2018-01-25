@@ -58,8 +58,7 @@
         {
             "name": "Win32",
             "includePath": [
-                ${INCLIST},
-                ${GXXINC}
+                ${INCLIST}
             ],
             "defines": [
                 "_DEBUG",
@@ -68,8 +67,7 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    ${INCLIST},
-                    ${GXXINC}
+                    ${INCLIST}
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
