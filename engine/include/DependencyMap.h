@@ -42,33 +42,6 @@ namespace AeonGames
     public:
         DependencyMap() {}
         ~DependencyMap() {}
-        void Visit (
-            size_t node,
-            std::unordered_map <
-            size_t,
-            std::tuple <
-            size_t,
-            size_t,
-            size_t,
-            std::vector<size_t >>>& graph,
-            std::vector<size_t>& sorted )
-        {
-            if ( graph.find ( node ) == graph.end() || std::get<2> ( graph.at ( node ) ) == 2 )
-            {
-                return;
-            }
-            else if ( std::get<2> ( graph.at ( node ) ) == 1 )
-            {
-                throw std::runtime_error ( "New node would create a circular dependency." );
-            }
-            std::get<2> ( graph.at ( node ) ) = 1;
-            for ( auto& i : std::get<3> ( graph.at ( node ) ) )
-            {
-                Visit ( i, graph, sorted );
-            }
-            std::get<2> ( graph.at ( node ) ) = 2;
-            sorted.emplace_back ( node );
-        }
 
         void reserve ( size_t count )
         {
@@ -78,11 +51,12 @@ namespace AeonGames
 
         void insert ( const std::tuple<size_t, std::vector<size_t>>& item )
         {
+            ///@todo find a way not to reset marks.
             for ( auto& i : graph )
             {
-                std::get<0> ( i.second ) = std::get<1> ( i.second ) = std::get<2> ( i.second ) = 0;
+                std::get<2> ( i.second ) = 0;
             }
-            ///@todo use std::unordered_map::emplace
+            ///@todo find a way not to insert the item until it is found to be valid.
             graph[std::get<0> ( item )] = {0, 0, 0, std::get<1> ( item ) };
             ///@todo find a way not to clear sorted but just insert the new item instead.
             sorted.clear();
@@ -91,9 +65,7 @@ namespace AeonGames
                 if ( std::get<2> ( i.second ) == 0 )
                 {
                     auto node = i.first;
-                    ///@todo find a better terminating condition.
-                    std::get<0> ( graph[node] ) = std::numeric_limits<size_t>::max();
-                    do
+                    while ( true )
                     {
                         if ( std::get<1> ( graph[node] ) < std::get<3> ( graph[node] ).size() )
                         {
@@ -101,30 +73,35 @@ namespace AeonGames
                             ++std::get<1> ( graph[node] );
                             if ( next != graph.end() && std::get<2> ( ( *next ).second ) != 2 )
                             {
+                                std::get<2> ( graph.at ( node ) ) = 1;
                                 std::get<0> ( ( *next ).second ) = node;
                                 node = ( *next ).first;
+                                if ( std::get<2> ( graph.at ( node ) ) == 1 )
+                                {
+                                    throw std::runtime_error ( "New node would create a circular dependency." );
+                                }
                             }
                         }
                         else
                         {
                             std::get<2> ( graph.at ( node ) ) = 2;
                             sorted.emplace_back ( node );
-                            //std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
+                            std::cout << node << ", ";
+                            std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
+                            if ( node == i.first )
+                            {
+                                break;
+                            }
                             node = std::get<0> ( graph[node] );
                         }
                     }
-                    while ( node != std::numeric_limits<size_t>::max() );
                 }
-            }
-            for ( auto& i : sorted )
-            {
-                std::cout << i << ", ";
             }
             std::cout << std::endl;
         }
     private:
         /**
-        @todo Remove marks from storage.
+        @todo Find out if it is posible to remove marks from storage.
         @todo Add User Data field.
         */
         std::unordered_map <
@@ -141,13 +118,15 @@ namespace AeonGames
 int main ( int argc, char **argv )
 {
     AeonGames::DependencyMap dv;
-    dv.reserve ( 25 );
+    dv.reserve ( 10 );
     dv.insert ( {6, {7}} );
     dv.insert ( {1, {2, 3}} );
     dv.insert ( {3, {4, 5}} );
     dv.insert ( {5, {4}} );
+    dv.insert ( {9, {7}} );
     dv.insert ( {2, {}} );
     dv.insert ( {4, {}} );
     dv.insert ( {7, {1, 2, 3, 4, 5}} );
+    dv.insert ( {8, {9}} );
     return 0;
 }
