@@ -6,7 +6,7 @@ Check out the [development blog](http://www.aeongames.com/AeonEngine/) for the e
 
 [![Follow us on Facebook](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/img/FB-FindUsonFacebook-online-100.png)](https://www.facebook.com/RealAeonGames/)
 
-<a href="https://www.patreon.com/bePatron?u=3798744" data-patreon-widget-type="become-patron-button">Become a Patron!</a><script async src="https://c6.patreon.com/becomePatronButton.bundle.js"></script>
+[![Become a Patron!](https://c5.patreon.com/external/logo/become_a_patron_button.png)](https://www.patreon.com/user?u=3798744)
 
 ![Aerin just chilling](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/screenshots/aerin_idle.png)
 
