@@ -1,10 +1,12 @@
-# AeonEngine [![MS Visual C++ Build status](https://ci.appveyor.com/api/projects/status/mps3te4is4xuwnby?svg=true)](https://ci.appveyor.com/project/Kwizatz/aeonengine) [![MinGW64 Build status](https://ci.appveyor.com/api/projects/status/2r8j33fp5eej623u?svg=true)](https://ci.appveyor.com/project/Kwizatz/aeonengine-0t94t) [![Build Status](https://travis-ci.org/AeonGames/AeonEngine.svg?branch=master)](https://travis-ci.org/AeonGames/AeonEngine) [![Coverity Scan Build Status](https://scan.coverity.com/projects/10765/badge.svg)](https://scan.coverity.com/projects/aeongames-aeonengine) [![Gratipay](http://img.shields.io/gratipay/user/AeonGames.svg)](https://gratipay.com/AeonEngine)
+# AeonEngine [![MS Visual C++ Build status](https://ci.appveyor.com/api/projects/status/mps3te4is4xuwnby?svg=true)](https://ci.appveyor.com/project/Kwizatz/aeonengine) [![MinGW64 Build status](https://ci.appveyor.com/api/projects/status/2r8j33fp5eej623u?svg=true)](https://ci.appveyor.com/project/Kwizatz/aeonengine-0t94t) [![Build Status](https://travis-ci.org/AeonGames/AeonEngine.svg?branch=master)](https://travis-ci.org/AeonGames/AeonEngine) [![Coverity Scan Build Status](https://scan.coverity.com/projects/10765/badge.svg)](https://scan.coverity.com/projects/aeongames-aeonengine) [![Patreon](https://img.shields.io/badge/patreon-donate-orange.svg)](https://www.patreon.com/user?u=3798744)
 
 Aeon Games Flagship Game Engine
 
 Check out the [development blog](http://www.aeongames.com/AeonEngine/) for the engine's latest news.
 
 [![Follow us on Facebook](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/img/FB-FindUsonFacebook-online-100.png)](https://www.facebook.com/RealAeonGames/)
+
+<a href="https://www.patreon.com/bePatron?u=3798744" data-patreon-widget-type="become-patron-button">Become a Patron!</a><script async src="https://c6.patreon.com/becomePatronButton.bundle.js"></script>
 
 ![Aerin just chilling](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/screenshots/aerin_idle.png)
 
