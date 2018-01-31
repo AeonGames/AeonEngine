@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#ifndef AEONGAMES_DEPENDENCY_MAP_H
+#define AEONGAMES_DEPENDENCY_MAP_H
 #include <vector>
 #include <unordered_map>
 #include <memory>
@@ -27,6 +29,7 @@ namespace AeonGames
 {
     /**
     @todo Add iterators and begin and end functions.
+    @todo Add initializer list constructor.
     */
     template <
         class Key,
@@ -38,117 +41,118 @@ namespace AeonGames
         >
     class DependencyMap
     {
-        /*
-        Node Data Contents:
-        std::tuple<
-            Key,                 //-> Parent Iterator
-            size_t,              //-> Child Iterator
-            size_t,              //-> Visit Mark
-            std::vector<size_t>, //-> Dependencies
-            T                    //-> Payload
-            >
-        */
     public:
         DependencyMap() {}
         ~DependencyMap() {}
 
-        void reserve ( size_t count )
+        void Reserve ( size_t count )
         {
             graph.reserve ( count );
             sorted.reserve ( count );
         }
 
-        void insert ( const std::tuple<Key, std::vector<Key>, T>& item )
+        void Insert ( const std::tuple<Key, std::vector<Key>, T>& item )
         {
+            // If the map is empty just insert the new node.
             if ( sorted.empty() && graph.empty() )
             {
-                graph[std::get<0> ( item )] = {{}, 0, 0, std::get<1> ( item ), std::get<2> ( item ) };
+                graph[std::get<0> ( item )] = {{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
                 sorted.emplace_back ( std::get<0> ( item ) );
                 return;
             }
-            ///@todo find a way not to reset marks.
-            for ( auto& i : graph )
+            // We'll move all dependencies and the new node to the start of the sorted vector.
+            auto insertion_cursor = sorted.begin();
+            bool circular_dependency = false;
+            // Iterate the new node's children to bring all dependencies to the front of the sorted vector.
+            for ( auto& i : std::get<1> ( item ) )
             {
-                //std::get<0> ( i.second ) = {};
-                //std::get<1> ( i.second ) = 0;
-                std::get<2> ( i.second ) = 0;
-            }
-            sorted.clear();
-            ///@todo find a way not to insert the item until it is found to be valid.
-            graph[std::get<0> ( item )] = {{}, 0, 0, std::get<1> ( item ), std::get<2> ( item ) };
-            for ( auto& i : graph )
-            {
-                if ( std::get<2> ( i.second ) == 0 )
+                // Only process the current child if 1-it is already in the map and 2-is to the right of the insertion cursor
+                if ( graph.find ( i ) != graph.end() && std::find ( sorted.begin(), insertion_cursor, i ) == insertion_cursor )
                 {
-                    Key node = i.first;
-                    while ( true )
+                    // Set initial node to the current child.
+                    Key node = i;
+                    // Set Parent node
+                    std::get<0> ( graph[i] ) = std::get<0> ( item );
+                    // Non Recursive Depth First Search.
+                    while ( node != std::get<0> ( item ) )
                     {
-                        if ( std::get<1> ( graph[node] ) < std::get<3> ( graph[node] ).size() )
+                        if ( std::get<1> ( graph[node] ) < std::get<2> ( graph[node] ).size() )
                         {
-                            auto next = graph.find ( std::get<3> ( graph[node] ) [std::get<1> ( graph[node] )] );
-                            ++std::get<1> ( graph[node] );
-                            if ( next != graph.end() && std::get<2> ( ( *next ).second ) != 2 )
+                            if ( std::get<2> ( graph[node] ) [std::get<1> ( graph[node] )] == std::get<0> ( item ) )
                             {
-                                std::get<2> ( graph.at ( node ) ) = 1;
+                                /*
+                                If we get here, the new node would create a circular dependency,
+                                so we must NOT insert it, if we break here however,
+                                the instance would be left in an unstable state,
+                                so record the circular dependency and let the proccess finish.
+                                Later we'll just NOT insert the node but throw an exception.
+                                */
+                                circular_dependency = true;
+                            }
+                            // We get here if the current node still further children to process
+                            auto next = graph.find ( std::get<2> ( graph[node] ) [std::get<1> ( graph[node] )] );
+                            ++std::get<1> ( graph[node] );
+                            // Skip not (yet) existing nodes and nodes to the left of the insertion cursor.
+                            if ( next != graph.end() && std::find ( sorted.begin(), insertion_cursor, ( *next ).first ) == insertion_cursor )
+                            {
                                 std::get<0> ( ( *next ).second ) = node;
                                 node = ( *next ).first;
-                                if ( std::get<2> ( graph.at ( node ) ) == 1 )
-                                {
-                                    ///@todo If there is no way to insert the new node, leave the map in a usable state.
-                                    throw std::runtime_error ( "New node would create a circular dependency." );
-                                }
                             }
                         }
                         else
                         {
-                            std::cout << node << ", ";
-                            std::get<2> ( graph.at ( node ) ) = 2;
-                            sorted.emplace_back ( node );
+                            // We get here if the current node has no further children to process
+                            sorted.erase ( std::remove ( sorted.begin(), sorted.end(), node ), sorted.end() );
+                            sorted.insert ( insertion_cursor++, node );
                             std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
-                            if ( node == i.first )
-                            {
-                                break;
-                            }
                             // Go back to the parent
                             node = std::get<0> ( graph[node] );
                         }
                     }
                 }
             }
-            std::cout << std::endl;
+            if ( !circular_dependency )
+            {
+                // Insert NEW node
+                graph[std::get<0> ( item )] = {{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
+                sorted.insert ( insertion_cursor++, std::get<0> ( item ) );
+            }
+            else
+            {
+                throw std::runtime_error ( "New node would create a circular dependency." );
+            }
         }
-        void erase ( const Key& key )
+
+        void Erase ( const Key& key )
         {
             graph.erase ( key );
             sorted.erase ( std::remove ( sorted.begin(), sorted.end(), key ), sorted.end() );
         }
+
         const T& operator[] ( const std::size_t index ) const
         {
             if ( index >= sorted.size() )
             {
                 throw std::out_of_range ( "Index out of range." );
             }
-            return std::get<4> ( graph.at ( sorted[index] ) );
+            return std::get<3> ( graph.at ( sorted[index] ) );
         }
-        const std::size_t size() const
+
+        const std::size_t Size() const
         {
             return sorted.size();
         }
+
     private:
-        /**
-        @todo Find out if it is posible to remove marks from storage.
-        @todo Add User Data field.
-        */
         std::unordered_map
         <
         Key,
         std::tuple <
-        Key,                              //-> Parent Iterator
-        size_t,                           //-> Child Iterator
-        size_t,                           //-> Visit Mark
+        Key,                               //-> Parent Iterator
+        size_t,                            //-> Child Iterator
         std::vector<Key, VectorAllocator>, //-> Dependencies
-        T >,                              //-> Payload
-        Hash,                             //-> Hash function
+        T >,                               //-> Payload
+        Hash,                              //-> Hash function
         KeyEqual,
         MapAllocator
         > graph;
@@ -160,126 +164,133 @@ int main ( int argc, char **argv )
 {
 #if 1
     AeonGames::DependencyMap<size_t, std::function<void() >> dv;
-    dv.reserve ( 10 );
-    dv.insert ( {6, {7}, []()
+    dv.Reserve ( 10 );
+    dv.Insert ( {6, {7}, []()
     {
         std::cout << 6 << std::endl;
     }
                 } );
-    dv.insert ( {1, {2, 3}, []()
+    dv.Insert ( {1, {2, 3}, []()
     {
         std::cout << 1 << std::endl;
     }
                 } );
-    dv.insert ( {3, {4, 5}, []()
+    dv.Insert ( {3, {4, 5}, []()
     {
         std::cout << 3 << std::endl;
     }
                 } );
-    dv.insert ( {5, {4}, []()
+    dv.Insert ( {5, {4}, []()
     {
         std::cout << 5 << std::endl;
     }
                 } );
-    dv.insert ( {9, {7}, []()
+    dv.Insert ( {9, {7}, []()
     {
         std::cout << 9 << std::endl;
     }
                 } );
-    dv.insert ( {2, {}, []()
+    dv.Insert ( {2, {}, []()
     {
         std::cout << 2 << std::endl;
     }
                 } );
-    dv.insert ( {4, {}, []()
+    dv.Insert ( {4, {}, []()
     {
         std::cout << 4 << std::endl;
     }
                 } );
-    dv.insert ( {7, {1, 2, 3, 4, 5}, []()
+    dv.Insert ( {7, {1, 2, 3, 4, 5}, []()
     {
         std::cout << 7 << std::endl;
     }
                 } );
-    dv.insert ( {8, {9}, []()
+    dv.Insert ( {8, {9}, []()
     {
         std::cout << 8 << std::endl;
     }
                 } );
-    dv.insert ( {10, {13}, []()
+    dv.Insert ( {10, {13}, []()
     {
         std::cout << 10 << std::endl;
     }
                 } );
-    dv.insert ( {11, {}, []()
+    dv.Insert ( {11, {}, []()
     {
         std::cout << 11 << std::endl;
     }
                 } );
-    dv.insert ( {12, {11}, []()
+    dv.Insert ( {12, {11}, []()
     {
         std::cout << 12 << std::endl;
     }
                 } );
 
-    dv.insert ( {13, {12}, []()
+    try
     {
-        std::cout << 13 << std::endl;
+        dv.Insert ( {13, {12}, []()
+        {
+            std::cout << 13 << std::endl;
+        }
+                    } );
     }
-                } );
-
+    catch ( std::runtime_error& e )
+    {
+        std::cout << e.what() << std::endl;
+    }
 #else
     AeonGames::DependencyMap<std::string, std::function<void() >> dv;
-    dv.reserve ( 10 );
-    dv.insert ( {"six", {"seven"}, []()
+    dv.Reserve ( 10 );
+    dv.Insert ( {"six", {"seven"}, []()
     {
         std::cout << 6 << std::endl;
     }
                 } );
-    dv.insert ( {"one", {"two", "three"}, []()
+    dv.Insert ( {"one", {"two", "three"}, []()
     {
         std::cout << 1 << std::endl;
     }
                 } );
-    dv.insert ( {"three", {"four", "five"}, []()
+    dv.Insert ( {"three", {"four", "five"}, []()
     {
         std::cout << 3 << std::endl;
     }
                 } );
-    dv.insert ( {"five", {"four"}, []()
+    dv.Insert ( {"five", {"four"}, []()
     {
         std::cout << 5 << std::endl;
     }
                 } );
-    dv.insert ( {"nine", {"seven"}, []()
+    dv.Insert ( {"nine", {"seven"}, []()
     {
         std::cout << 9 << std::endl;
     }
                 } );
-    dv.insert ( {"two", {}, []()
+    dv.Insert ( {"two", {}, []()
     {
         std::cout << 2 << std::endl;
     }
                 } );
-    dv.insert ( {"four", {}, []()
+    dv.Insert ( {"four", {}, []()
     {
         std::cout << 4 << std::endl;
     }
                 } );
-    dv.insert ( {"seven", {"one", "two", "three", "four", "five"}, []()
+    dv.Insert ( {"seven", {"one", "two", "three", "four", "five"}, []()
     {
         std::cout << 7 << std::endl;
     }
                 } );
-    dv.insert ( {"eight", {"nine"}, []()
+    dv.Insert ( {"eight", {"nine"}, []()
     {
         std::cout << 8 << std::endl;
     }
                 } );
 #endif
-    for ( std::size_t i = 0; i < dv.size(); ++i )
+    for ( std::size_t i = 0; i < dv.Size(); ++i )
     {
         dv[i]();
     }
     return 0;
 }
+#endif
