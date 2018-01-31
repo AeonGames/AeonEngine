@@ -73,7 +73,7 @@ namespace AeonGames
                 //std::get<1> ( i.second ) = 0;
                 std::get<2> ( i.second ) = 0;
             }
-            std::size_t index = 0;
+            sorted.clear();
             ///@todo find a way not to insert the item until it is found to be valid.
             graph[std::get<0> ( item )] = {{}, 0, 0, std::get<1> ( item ), std::get<2> ( item ) };
             for ( auto& i : graph )
@@ -101,14 +101,9 @@ namespace AeonGames
                         }
                         else
                         {
-                            std::cout << node << "(" << ( ( sorted[index] == node ) ? "old" : "new" ) << ")" << ", ";
+                            std::cout << node << ", ";
                             std::get<2> ( graph.at ( node ) ) = 2;
-                            if ( sorted[index] != node )
-                            {
-                                sorted.insert ( sorted.begin() + index, node );
-                                //return;
-                            }
-                            ++index;
+                            sorted.emplace_back ( node );
                             std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
                             if ( node == i.first )
                             {
@@ -163,7 +158,7 @@ namespace AeonGames
 
 int main ( int argc, char **argv )
 {
-#if 0
+#if 1
     AeonGames::DependencyMap<size_t, std::function<void() >> dv;
     dv.reserve ( 10 );
     dv.insert ( {6, {7}, []()
@@ -211,6 +206,28 @@ int main ( int argc, char **argv )
         std::cout << 8 << std::endl;
     }
                 } );
+    dv.insert ( {10, {13}, []()
+    {
+        std::cout << 10 << std::endl;
+    }
+                } );
+    dv.insert ( {11, {}, []()
+    {
+        std::cout << 11 << std::endl;
+    }
+                } );
+    dv.insert ( {12, {11}, []()
+    {
+        std::cout << 12 << std::endl;
+    }
+                } );
+
+    dv.insert ( {13, {12}, []()
+    {
+        std::cout << 13 << std::endl;
+    }
+                } );
+
 #else
     AeonGames::DependencyMap<std::string, std::function<void() >> dv;
     dv.reserve ( 10 );
