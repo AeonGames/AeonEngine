@@ -56,7 +56,7 @@
             }
         },
         {
-            "name": "Win32",
+            "name": "Windows",
             "includePath": [
                 ${INCLIST}
             ],
