@@ -28,7 +28,6 @@ limitations under the License.
 namespace AeonGames
 {
     /**
-    @todo Add iterators and begin and end functions.
     @todo Add initializer list constructor.
     */
     template <
@@ -42,8 +41,88 @@ namespace AeonGames
     class DependencyMap
     {
     public:
-        DependencyMap() {}
-        ~DependencyMap() {}
+        DependencyMap() = default;
+        ~DependencyMap() = default;
+        class iterator
+        {
+            typename std::vector<Key, VectorAllocator>::iterator mIterator{};
+            typename std::unordered_map <
+            Key,
+            std::tuple <
+            Key,
+            size_t,
+            std::vector<Key, VectorAllocator>,
+            T >,
+            Hash,
+            KeyEqual,
+            MapAllocator
+            > * mGraph{};
+        public:
+            typedef typename std::vector<Key, VectorAllocator>::iterator::difference_type difference_type;
+            typedef typename std::vector<Key, VectorAllocator>::iterator::value_type value_type;
+            typedef T& reference;
+            typedef T* pointer;
+            typedef typename std::vector<Key, VectorAllocator>::iterator::iterator_category iterator_category;
+            iterator (
+                const typename std::vector<Key, VectorAllocator>::iterator& aIterator,
+                std::unordered_map <
+                Key,
+                std::tuple <
+                Key,
+                size_t,
+                std::vector<Key, VectorAllocator>,
+                T >,
+                Hash,
+                KeyEqual,
+                MapAllocator
+                > * aGraph ) :
+                mIterator ( aIterator ),
+                mGraph ( aGraph ) {}
+            iterator() = default;
+            iterator ( const iterator& ) = default;
+            ~iterator() = default;
+            iterator& operator= ( const iterator& ) = default;
+            bool operator== ( const iterator& i ) const
+            {
+                return mIterator == i.mIterator;
+            }
+            bool operator!= ( const iterator& i ) const
+            {
+                return mIterator != i.mIterator;
+            }
+            iterator& operator++()
+            {
+                mIterator++;
+                return *this;
+            }
+            reference operator*() const
+            {
+                return std::get<3> ( mGraph->at ( *mIterator ) );
+            }
+            pointer operator->() const
+            {
+                return &std::get<3> ( mGraph->at ( *mIterator ) );
+            };
+#if 0
+            ///@ todo see viability of these:
+            bool operator< ( const iterator& ) const; //optional
+            bool operator> ( const iterator& ) const; //optional
+            bool operator<= ( const iterator& ) const; //optional
+            bool operator>= ( const iterator& ) const; //optional
+
+            iterator operator++ ( int ); //optional
+            iterator& operator--(); //optional
+            iterator operator-- ( int ); //optional
+            iterator& operator+= ( size_type ); //optional
+            iterator operator+ ( size_type ) const; //optional
+            friend iterator operator+ ( size_type, const iterator& ); //optional
+            iterator& operator-= ( size_type ); //optional
+            iterator operator- ( size_type ) const; //optional
+            difference_type operator- ( iterator ) const; //optional
+
+            reference operator[] ( size_type ) const; //optional
+#endif
+        };
 
         void Reserve ( size_t count )
         {
@@ -83,13 +162,13 @@ namespace AeonGames
                                 /*
                                 If we get here, the new node would create a circular dependency,
                                 so we must NOT insert it, if we break here however,
-                                the instance would be left in an unstable state,
+                                the instance would be left in an unusable state,
                                 so record the circular dependency and let the proccess finish.
                                 Later we'll just NOT insert the node but throw an exception.
                                 */
                                 circular_dependency = true;
                             }
-                            // We get here if the current node still further children to process
+                            // We get here if the current node still has further children to process
                             auto next = graph.find ( std::get<2> ( graph[node] ) [std::get<1> ( graph[node] )] );
                             ++std::get<1> ( graph[node] );
                             // Skip not (yet) existing nodes and nodes to the left of the insertion cursor.
@@ -143,6 +222,14 @@ namespace AeonGames
             return sorted.size();
         }
 
+        iterator begin()
+        {
+            return iterator{sorted.begin(), &graph};
+        }
+        iterator end()
+        {
+            return iterator{sorted.end(), &graph};
+        }
     private:
         std::unordered_map
         <
@@ -287,9 +374,9 @@ int main ( int argc, char **argv )
     }
                 } );
 #endif
-    for ( std::size_t i = 0; i < dv.Size(); ++i )
+    for ( auto& i : dv )
     {
-        dv[i]();
+        i();
     }
     return 0;
 }
