@@ -27,9 +27,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    /**
-    @todo Add initializer list constructor.
-    */
     template <
         class Key,
         class T,
@@ -40,44 +37,42 @@ namespace AeonGames
         >
     class DependencyMap
     {
+        typedef typename std::tuple <
+        Key,                               //-> Parent Iterator
+        size_t,                            //-> Child Iterator
+        std::vector<Key, VectorAllocator>, //-> Dependencies
+        T                                  //-> Payload
+        > GraphNode;
+
     public:
-        DependencyMap() = default;
-        ~DependencyMap() = default;
         class iterator
         {
             typename std::vector<Key, VectorAllocator>::iterator mIterator{};
             typename std::unordered_map <
             Key,
-            std::tuple <
-            Key,
-            size_t,
-            std::vector<Key, VectorAllocator>,
-            T >,
+            GraphNode,
             Hash,
             KeyEqual,
             MapAllocator
             > * mGraph{};
-        public:
-            typedef typename std::vector<Key, VectorAllocator>::iterator::difference_type difference_type;
-            typedef typename std::vector<Key, VectorAllocator>::iterator::value_type value_type;
-            typedef T& reference;
-            typedef T* pointer;
-            typedef typename std::vector<Key, VectorAllocator>::iterator::iterator_category iterator_category;
+            friend class DependencyMap<Key, T, Hash, KeyEqual, MapAllocator, VectorAllocator>;
             iterator (
                 const typename std::vector<Key, VectorAllocator>::iterator& aIterator,
                 std::unordered_map <
                 Key,
-                std::tuple <
-                Key,
-                size_t,
-                std::vector<Key, VectorAllocator>,
-                T >,
+                GraphNode,
                 Hash,
                 KeyEqual,
                 MapAllocator
                 > * aGraph ) :
                 mIterator ( aIterator ),
                 mGraph ( aGraph ) {}
+        public:
+            typedef typename std::vector<Key, VectorAllocator>::iterator::difference_type difference_type;
+            typedef typename std::vector<Key, VectorAllocator>::iterator::value_type value_type;
+            typedef T& reference;
+            typedef T* pointer;
+            typedef typename std::vector<Key, VectorAllocator>::iterator::iterator_category iterator_category;
             iterator() = default;
             iterator ( const iterator& ) = default;
             ~iterator() = default;
@@ -104,7 +99,7 @@ namespace AeonGames
                 return &std::get<3> ( mGraph->at ( *mIterator ) );
             };
 #if 0
-            ///@ todo see viability of these:
+            ///@todo see viability of these:
             bool operator< ( const iterator& ) const; //optional
             bool operator> ( const iterator& ) const; //optional
             bool operator<= ( const iterator& ) const; //optional
@@ -123,6 +118,18 @@ namespace AeonGames
             reference operator[] ( size_type ) const; //optional
 #endif
         };
+
+        DependencyMap() = default;
+        ~DependencyMap() = default;
+        DependencyMap ( std::initializer_list<std::tuple<Key, std::vector<Key>, T>> aList )
+        {
+            Reserve ( aList.size() );
+            ///@todo Revisit old code to not insert each element one by one.
+            for ( auto& i : aList )
+            {
+                Insert ( i );
+            }
+        }
 
         void Reserve ( size_t count )
         {
@@ -234,12 +241,8 @@ namespace AeonGames
         std::unordered_map
         <
         Key,
-        std::tuple <
-        Key,                               //-> Parent Iterator
-        size_t,                            //-> Child Iterator
-        std::vector<Key, VectorAllocator>, //-> Dependencies
-        T >,                               //-> Payload
-        Hash,                              //-> Hash function
+        GraphNode,
+        Hash,
         KeyEqual,
         MapAllocator
         > graph;
@@ -249,7 +252,7 @@ namespace AeonGames
 
 int main ( int argc, char **argv )
 {
-#if 1
+#if 0
     AeonGames::DependencyMap<size_t, std::function<void() >> dv;
     dv.Reserve ( 10 );
     dv.Insert ( {6, {7}, []()
@@ -326,53 +329,64 @@ int main ( int argc, char **argv )
         std::cout << e.what() << std::endl;
     }
 #else
-    AeonGames::DependencyMap<std::string, std::function<void() >> dv;
-    dv.Reserve ( 10 );
-    dv.Insert ( {"six", {"seven"}, []()
+    AeonGames::DependencyMap<std::string, std::function<void() >> dv
     {
-        std::cout << 6 << std::endl;
-    }
-                } );
-    dv.Insert ( {"one", {"two", "three"}, []()
-    {
-        std::cout << 1 << std::endl;
-    }
-                } );
-    dv.Insert ( {"three", {"four", "five"}, []()
-    {
-        std::cout << 3 << std::endl;
-    }
-                } );
-    dv.Insert ( {"five", {"four"}, []()
-    {
-        std::cout << 5 << std::endl;
-    }
-                } );
-    dv.Insert ( {"nine", {"seven"}, []()
-    {
-        std::cout << 9 << std::endl;
-    }
-                } );
-    dv.Insert ( {"two", {}, []()
-    {
-        std::cout << 2 << std::endl;
-    }
-                } );
-    dv.Insert ( {"four", {}, []()
-    {
-        std::cout << 4 << std::endl;
-    }
-                } );
-    dv.Insert ( {"seven", {"one", "two", "three", "four", "five"}, []()
-    {
-        std::cout << 7 << std::endl;
-    }
-                } );
-    dv.Insert ( {"eight", {"nine"}, []()
-    {
-        std::cout << 8 << std::endl;
-    }
-                } );
+        {
+            "six", {"seven"}, []()
+            {
+                std::cout << "six" << std::endl;
+            }
+        },
+        {
+            "one", {"two", "three"}, []()
+            {
+                std::cout << "one" << std::endl;
+            }
+        },
+        {
+            "three", {"four", "five"}, []()
+            {
+                std::cout << "three" << std::endl;
+            }
+        },
+        {
+            "five", {"four"}, []()
+            {
+                std::cout << "five" << std::endl;
+            }
+        } ,
+        {
+            "nine", {"seven"}, []()
+            {
+                std::cout << "nine" << std::endl;
+            }
+        } ,
+        {
+            "two", {}, []()
+            {
+                std::cout << "two" << std::endl;
+            }
+        } ,
+        {
+            "four", {}, []()
+            {
+                std::cout << "four" << std::endl;
+            }
+        } ,
+        {
+            "seven", {"one", "two", "three", "four", "five"}, []()
+            {
+                std::cout << "seven" << std::endl;
+            }
+        } ,
+        {
+            "eight", {"nine"},
+            []()
+            {
+                std::cout << "eight" << std::endl;
+            }
+        }
+    };
 #endif
     for ( auto& i : dv )
     {
