@@ -24,6 +24,7 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 
 project(AeonEngine)
+enable_testing()
 enable_language(CXX)
 enable_language(C)
 
@@ -97,6 +98,10 @@ endif()
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
+find_package(GTest)
+if(GTest_FOUND)
+    add_subdirectory(tests)
+endif()
 
 #######################################
 # Code Formating target
