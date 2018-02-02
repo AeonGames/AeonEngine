@@ -124,10 +124,50 @@ namespace AeonGames
         DependencyMap ( std::initializer_list<std::tuple<Key, std::vector<Key>, T>> aList )
         {
             Reserve ( aList.size() );
-            ///@todo Revisit old code to not insert each element one by one.
             for ( auto& i : aList )
             {
-                Insert ( i );
+                graph[std::get<0> ( i )] = {{}, 0, std::get<1> ( i ), std::get<2> ( i ) };
+            }
+            for ( auto& i : graph )
+            {
+                // Only process the current child if it is not yet in the sorted vector.
+                if ( std::find ( sorted.begin(), sorted.end(), i.first ) == sorted.end() )
+                {
+                    // Set initial node to the first valid child.
+                    Key node = i.first;
+                    // Set Parent node to itself
+                    std::get<0> ( graph[i.first] ) = i.first;
+                    // Non Recursive Depth First Search.
+                    do
+                    {
+                        if ( std::get<1> ( graph[node] ) < std::get<2> ( graph[node] ).size() )
+                        {
+                            if ( std::get<2> ( graph[node] ) [std::get<1> ( graph[node] )] == i.first )
+                            {
+                                throw std::runtime_error ( "One of the provided nodes creates a circular dependency." );
+                            }
+                            // We get here if the current node still has further children to process
+                            auto next = graph.find ( std::get<2> ( graph[node] ) [std::get<1> ( graph[node] )] );
+                            ++std::get<1> ( graph[node] );
+                            // Skip not (yet) existing nodes and nodes already inserted.
+                            if ( next != graph.end() && std::find ( sorted.begin(), sorted.end(), ( *next ).first ) == sorted.end() )
+                            {
+                                std::get<0> ( ( *next ).second ) = node;
+                                node = ( *next ).first;
+                            }
+                        }
+                        else
+                        {
+                            // We get here if the current node has no further children to process
+                            sorted.push_back ( node );
+                            std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
+                            // Go back to the parent
+                            node = std::get<0> ( graph[node] );
+                        }
+                    }
+                    while ( node != std::get<0> ( graph[node] ) );
+                    sorted.push_back ( node );
+                }
             }
         }
 
@@ -201,7 +241,7 @@ namespace AeonGames
             {
                 // Insert NEW node
                 graph[std::get<0> ( item )] = {{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
-                sorted.insert ( insertion_cursor++, std::get<0> ( item ) );
+                sorted.insert ( insertion_cursor, std::get<0> ( item ) );
             }
             else
             {
