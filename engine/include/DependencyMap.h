@@ -67,7 +67,7 @@ namespace AeonGames
             typedef typename std::vector<Key, VectorAllocator>::iterator::value_type value_type;
             typedef T& reference;
             typedef T* pointer;
-            typedef typename std::vector<Key, VectorAllocator>::iterator::iterator_category iterator_category;
+            typedef typename std::bidirectional_iterator_tag iterator_category;
             iterator() = default;
             iterator ( const iterator& ) = default;
             ~iterator() = default;
@@ -93,26 +93,13 @@ namespace AeonGames
             {
                 return &std::get<3> ( mGraph->at ( *mIterator ) );
             };
-#if 0
-            ///@todo see viability of these:
-            bool operator< ( const iterator& ) const; //optional
-            bool operator> ( const iterator& ) const; //optional
-            bool operator<= ( const iterator& ) const; //optional
-            bool operator>= ( const iterator& ) const; //optional
-
-            iterator operator++ ( int ); //optional
-            iterator& operator--(); //optional
-            iterator operator-- ( int ); //optional
-            iterator& operator+= ( size_type ); //optional
-            iterator operator+ ( size_type ) const; //optional
-            friend iterator operator+ ( size_type, const iterator& ); //optional
-            iterator& operator-= ( size_type ); //optional
-            iterator operator- ( size_type ) const; //optional
-            difference_type operator- ( iterator ) const; //optional
-
-            reference operator[] ( size_type ) const; //optional
-#endif
         };
+
+        void Reserve ( size_t count )
+        {
+            graph.reserve ( count );
+            sorted.reserve ( count );
+        }
 
         DependencyMap() = default;
         ~DependencyMap() = default;
@@ -164,12 +151,6 @@ namespace AeonGames
                     sorted.push_back ( node );
                 }
             }
-        }
-
-        void Reserve ( size_t count )
-        {
-            graph.reserve ( count );
-            sorted.reserve ( count );
         }
 
         void Insert ( const std::tuple<Key, std::vector<Key>, T>& item )
