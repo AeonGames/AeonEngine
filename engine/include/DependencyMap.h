@@ -85,6 +85,11 @@ namespace AeonGames
                 mIterator++;
                 return *this;
             }
+            iterator& operator--()
+            {
+                mIterator--;
+                return *this;
+            }
             reference operator*() const
             {
                 return std::get<3> ( mGraph->at ( *mIterator ) );
