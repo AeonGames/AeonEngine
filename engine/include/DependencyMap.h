@@ -208,9 +208,8 @@ namespace AeonGames
                         }
                         else
                         {
-                            // We get here if the current node has no further children to process
-                            sorted.erase ( std::remove ( sorted.begin(), sorted.end(), node ), sorted.end() );
-                            sorted.insert ( insertion_cursor++, node );
+                            auto node_iterator = std::find ( sorted.begin(), sorted.end(), node );
+                            std::rotate ( insertion_cursor++, node_iterator, node_iterator + 1 );
                             std::get<1> ( graph[node] ) = 0; // Reset counter for next traversal.
                             // Go back to the parent
                             node = std::get<0> ( graph[node] );
