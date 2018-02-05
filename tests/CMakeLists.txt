@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_directories(${GTEST_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/engine/include)
+include_directories(${GTEST_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include)
 set(TESTED_SRCS
-    ${CMAKE_SOURCE_DIR}/engine/include/DependencyMap.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
 )
 set(TEST_SRCS
     Main.cpp
