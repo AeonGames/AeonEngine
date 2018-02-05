@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -75,17 +75,17 @@ namespace AeonGames
     {
         for ( auto & mRootNode : mRootNodes )
         {
-            mRootNode->LoopTraverseDFSPreOrder ( [delta] ( const std::shared_ptr<Node>& node )
+            mRootNode->LoopTraverseDFSPreOrder ( [delta] ( Node & node )
             {
-                if ( node->mFlags[Node::Enabled] )
+                if ( node.mFlags[Node::Enabled] )
                 {
-                    node->Update ( delta );
+                    node.Update ( delta );
                 }
             } );
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -93,7 +93,9 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aPreamble, std::function<void ( const std::shared_ptr<Node>& ) > aPostamble )
+    void Scene::LoopTraverseDFSPreOrder (
+        std::function<void ( Node& ) > aPreamble,
+        std::function<void ( Node& ) > aPostamble )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -101,7 +103,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
+    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const Node& ) > aAction ) const
     {
         for ( auto mRootNode : mRootNodes )
         {
@@ -109,7 +111,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -117,7 +119,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
+    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const Node& ) > aAction ) const
     {
         for ( auto mRootNode : mRootNodes )
         {
@@ -125,7 +127,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::RecursiveTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Scene::RecursiveTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -133,7 +135,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::RecursiveTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Scene::RecursiveTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -165,10 +167,11 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( const std::shared_ptr<Node>& node )
+                [this] ( Node & node )
             {
-                this->mAllNodes.push_back ( node );
-                node->mScene = shared_from_this();
+                ///@todo Evaluate wether we really need the mAllNodes vector.
+                mAllNodes.push_back ( node.shared_from_this() );
+                node.mScene = shared_from_this();
             } );
             return true;
         }
@@ -194,10 +197,10 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( const std::shared_ptr<Node>& node )
+                [this] ( Node & node )
             {
-                mAllNodes.push_back ( node );
-                node->mScene = shared_from_this();
+                mAllNodes.push_back ( node.shared_from_this() );
+                node.mScene = shared_from_this();
             } );
             return true;
         }
@@ -227,10 +230,10 @@ namespace AeonGames
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             auto it = mAllNodes.end();
-            aNode->LoopTraverseDFSPostOrder ( [&it, this] ( const std::shared_ptr<Node>& node )
+            aNode->LoopTraverseDFSPostOrder ( [&it, this] ( Node & node )
             {
-                node->mScene.reset();
-                it = std::remove ( this->mAllNodes.begin(), it, node );
+                node.mScene.reset();
+                it = std::remove ( this->mAllNodes.begin(), it, node.shared_from_this() );
             } );
             if ( it != mAllNodes.end() )
             {

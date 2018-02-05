@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,24 +48,24 @@ namespace AeonGames
         DLL size_t GetChildrenCount() const;
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
         DLL void Update ( const double delta );
-        /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node*) > aAction)*/
-        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
+        /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node&) > aAction)*/
+        DLL void LoopTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction );
         /** @copydoc Node::LoopTraverseDFSPreOrder(
             std::function<void(Node*) > aPreamble,
             std::function<void(Node*) > aPostamble)*/
         DLL void LoopTraverseDFSPreOrder (
-            std::function<void ( const std::shared_ptr<Node>& ) > aPreamble,
-            std::function<void ( const std::shared_ptr<Node>& ) > aPostamble );
+            std::function<void ( Node& ) > aPreamble,
+            std::function<void ( Node& ) > aPostamble );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(const std::shared_ptr<const Node>&) > aAction) const */
-        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const;
+        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const Node& ) > aAction ) const;
         /** @copydoc Node::LoopTraverseDFSPostOrder(std::function<void(const std::shared_ptr<Node>&) > aAction)*/
-        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
+        DLL void LoopTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction );
         /** @copydoc Node::LoopTraverseDFSPostOrder(std::function<void(const std::shared_ptr<const Node>&) > aAction) const */
-        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const;
+        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const Node& ) > aAction ) const;
         /** @copydoc Node::RecursiveTraverseDFSPreOrder(std::function<void(const std::shared_ptr<Node>&) > aAction)*/
-        DLL void RecursiveTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
+        DLL void RecursiveTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction );
         /** @copydoc Node::RecursiveTraverseDFSPostOrder(std::function<void(const std::shared_ptr<Node>&) > aAction)*/
-        DLL void RecursiveTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction );
+        DLL void RecursiveTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction );
         // Deleted Methods (avoid copy and copy construction)
         Scene& operator= ( const Scene& ) = delete;
         Scene ( const Scene& ) = delete;
