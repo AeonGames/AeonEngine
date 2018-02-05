@@ -49,7 +49,12 @@ namespace AeonGames
         mProjectionMatrix(),
         mViewMatrix()
     {
-        mNode->AttachUpdater ( 0, 0, [] ( Node & aNode, double aDelta )
+        /*
+        @todo The id argument should be set to something other than 0,
+        std::hash<std::string>()("Animation") is tempting
+        BUT we dont want to be calculating string hashes on runtime.
+        */
+        mNode->AttachUpdater ( 0, {}, [] ( Node & aNode, double aDelta )
         {
             if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( aNode.GetAttribute ( ModelInstance::TypeId ) ) )
             {
