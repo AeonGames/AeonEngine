@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Memory.h"
+#include "aeongames/DependencyMap.h"
 
 namespace AeonGames
 {
@@ -134,7 +135,7 @@ namespace AeonGames
         ///@}
         ///@name Updater Functions
         ///@{
-        DLL void AttachUpdater ( std::size_t aId, std::size_t aPriority, const std::function<void ( Node&, double ) >& aUpdater );
+        DLL void AttachUpdater ( std::size_t aId, const std::vector<std::size_t> aDependencies, const std::function<void ( Node&, double ) >& aUpdater );
         DLL void DettachUpdater ( std::size_t aId );
         ///@}
     private:
@@ -154,11 +155,16 @@ namespace AeonGames
         std::bitset<8> mFlags;
         /// @note Anything can be an attribute.
         std::unordered_map<std::size_t, std::shared_ptr<void>> mAttributes;
+#if 1
+        DependencyMap<std::size_t, std::function<void ( Node&, double ) >>
+#else
         std::vector <
         std::tuple <
         std::size_t,
             std::size_t,
-            std::function<void ( Node&, double ) >>> mUpdaters;
+            std::function<void ( Node&, double ) >>>
+#endif
+                mUpdaters;
     };
 }
 #endif

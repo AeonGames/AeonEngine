@@ -508,30 +508,24 @@ namespace AeonGames
         }
     }
 
-    void Node::AttachUpdater ( std::size_t aId, std::size_t aPriority, const std::function<void ( Node&, double ) >& aUpdater )
+    void Node::AttachUpdater (
+        std::size_t aId,
+        const std::vector<std::size_t> aDependencies,
+        const std::function<void ( Node&, double ) >& aUpdater )
     {
         /// @todo Sort by priority and check for duplicates.
-        mUpdaters.emplace_back ( aId, aPriority, aUpdater );
+        mUpdaters.Insert ( {aId, aDependencies, aUpdater} );
     }
     void Node::DettachUpdater ( std::size_t aId )
     {
-        mUpdaters.erase (
-            std::remove_if ( mUpdaters.begin(), mUpdaters.end(),
-                             [aId] ( const std::tuple <
-                                     std::size_t,
-                                     std::size_t,
-                                     std::function<void ( Node&, double ) >> aTuple )
-        {
-            return std::get<1> ( aTuple ) == aId;
-        } ), mUpdaters.end() );
+        mUpdaters.Erase ( aId );
     }
-
 
     void Node::Update ( const double delta )
     {
         for ( auto& i : mUpdaters )
         {
-            ( std::get<2> ( i ) ) ( *this, delta );
+            i ( *this, delta );
         }
     }
 }
