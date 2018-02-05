@@ -173,15 +173,15 @@ namespace AeonGames
     {
         mLocalTransform = aTransform;
         LoopTraverseDFSPreOrder (
-            [] ( const std::shared_ptr<Node>& node )
+            [] ( Node & node )
         {
-            if ( auto parent = node->mParent.lock() )
+            if ( auto parent = node.mParent.lock() )
             {
-                parent->mGlobalTransform * node->mLocalTransform;
+                parent->mGlobalTransform * node.mLocalTransform;
             }
             else
             {
-                node->mGlobalTransform = node->mLocalTransform;
+                node.mGlobalTransform = node.mLocalTransform;
             }
         } );
     }
@@ -200,17 +200,17 @@ namespace AeonGames
         }
         // Then Update the Global transform for all children
         LoopTraverseDFSPreOrder (
-            [this] ( const std::shared_ptr<Node>& node )
+            [this] ( Node & node )
         {
             /*! @todo Although this->mLocalTransform has already been computed
                       think about removing the check and let it be recomputed,
                       it may be faster than the branch that needs to run
                       for each node and is false only once.*/
-            if ( node.get() != this )
+            if ( &node != this )
             {
-                if ( auto parent = node->mParent.lock() )
+                if ( auto parent = node.mParent.lock() )
                 {
-                    node->mGlobalTransform = parent->mGlobalTransform * node->mLocalTransform;
+                    node.mGlobalTransform = parent->mGlobalTransform * node.mLocalTransform;
                 }
             }
         } );
@@ -250,13 +250,13 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( const std::shared_ptr<Node>& node )
+                [this] ( Node & node )
             {
                 if ( auto scene = mScene.lock() )
                 {
-                    scene->mAllNodes.push_back ( node );
+                    scene->mAllNodes.push_back ( node.shared_from_this() );
                 }
-                node->mScene = this->mScene;
+                node.mScene = this->mScene;
             } );
             return true;
         }
@@ -282,13 +282,13 @@ namespace AeonGames
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
             aNode->LoopTraverseDFSPreOrder (
-                [this] ( const std::shared_ptr<Node>& node )
+                [this] ( Node & node )
             {
                 if ( auto scene = mScene.lock() )
                 {
-                    scene->mAllNodes.push_back ( node );
+                    scene->mAllNodes.push_back ( node.shared_from_this() );
                 }
-                node->mScene = mScene;
+                node.mScene = mScene;
             } );
             return true;
         }
@@ -319,10 +319,10 @@ namespace AeonGames
             if ( auto scene = mScene.lock() )
             {
                 auto it = scene->mAllNodes.end();
-                aNode->LoopTraverseDFSPostOrder ( [&scene, &it, this] ( const std::shared_ptr<Node>& node )
+                aNode->LoopTraverseDFSPostOrder ( [&scene, &it, this] ( Node & node )
                 {
-                    node->mScene.reset();
-                    it = std::remove ( scene->mAllNodes.begin(), it, node );
+                    node.mScene.reset();
+                    it = std::remove ( scene->mAllNodes.begin(), it, node.shared_from_this() );
                 } );
                 if ( it != scene->mAllNodes.end() )
                 {
@@ -334,173 +334,175 @@ namespace AeonGames
         return false;
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Node::LoopTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
         need to also be const.
         */
-        auto node = shared_from_this();
-        aAction ( node );
-        auto parent = mParent.lock();
+        auto node = this;
+        aAction ( *node );
+        auto parent = mParent.lock().get();
         while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
                 auto prev = node;
-                node = node->mNodes[node->mIterator];
-                aAction ( node );
+                node = node->mNodes[node->mIterator].get();
+                aAction ( *node );
                 prev->mIterator++;
             }
             else
             {
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent.lock();
+                node = node->mParent.lock().get();
             }
         }
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aPreamble, std::function<void ( const std::shared_ptr<Node>& ) > aPostamble )
+    void Node::LoopTraverseDFSPreOrder (
+        std::function<void ( Node& ) > aPreamble,
+        std::function<void ( Node& ) > aPostamble )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
         needs to also be const.
         */
-        auto node = shared_from_this();
-        aPreamble ( node );
-        auto parent = mParent.lock();
+        auto node = this;
+        aPreamble ( *node );
+        auto parent = mParent.lock().get();
         while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
                 auto prev = node;
-                node = node->mNodes[node->mIterator];
-                aPreamble ( node );
+                node = node->mNodes[node->mIterator].get();
+                aPreamble ( *node );
                 prev->mIterator++;
             }
             else
             {
-                aPostamble ( node );
+                aPostamble ( *node );
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent.lock();
+                node = node->mParent.lock().get();
             }
         }
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
+    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const Node& ) > aAction ) const
     {
-        auto node = shared_from_this();
-        aAction ( node );
-        auto parent = mParent.lock();
+        auto node = this;
+        aAction ( *node );
+        auto parent = mParent.lock().get();
         while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
                 auto prev = node;
-                node = node->mNodes[node->mIterator];
-                aAction ( node );
-                prev->mIterator++;
+                node = node->mNodes[node->mIterator].get();
+                aAction ( *node );
+                ++prev->mIterator;
             }
             else
             {
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent.lock();
+                node = node->mParent.lock().get();
             }
         }
     }
 
-    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
-    {
-        /*
-        This code implements a similar solution to this stackoverflow answer:
-        http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
-        */
-        auto node = shared_from_this();
-        auto parent = mParent.lock();
-        while ( node != parent )
-        {
-            if ( node->mIterator < node->mNodes.size() )
-            {
-                auto prev = node;
-                node = node->mNodes[node->mIterator];
-                prev->mIterator++;
-            }
-            else
-            {
-                aAction ( node );
-                node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent.lock();
-            }
-        }
-    }
-
-    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
+    void Node::LoopTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
         http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
         */
-        auto node = shared_from_this();
-        auto parent = mParent.lock();
+        auto node = this;
+        auto parent = mParent.lock().get();
         while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
             {
                 auto prev = node;
-                node = node->mNodes[node->mIterator];
-                prev->mIterator++;
+                node = node->mNodes[node->mIterator].get();
+                ++prev->mIterator;
             }
             else
             {
-                aAction ( node );
+                aAction ( *node );
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent.lock();
+                node = node->mParent.lock().get();
             }
         }
     }
 
-    void Node::RecursiveTraverseDFSPostOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const Node& ) > aAction ) const
+    {
+        /*
+        This code implements a similar solution to this stackoverflow answer:
+        http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
+        */
+        auto node = this;
+        auto parent = mParent.lock().get();
+        while ( node != parent )
+        {
+            if ( node->mIterator < node->mNodes.size() )
+            {
+                auto prev = node;
+                node = node->mNodes[node->mIterator].get();
+                ++prev->mIterator;
+            }
+            else
+            {
+                aAction ( *node );
+                node->mIterator = 0; // Reset counter for next traversal.
+                node = node->mParent.lock().get();
+            }
+        }
+    }
+
+    void Node::RecursiveTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
     {
         for ( auto & mNode : mNodes )
         {
             mNode->RecursiveTraverseDFSPostOrder ( aAction );
         }
-        aAction ( shared_from_this() );
+        aAction ( *this );
     }
 
-    void Node::RecursiveTraverseDFSPreOrder ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Node::RecursiveTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
     {
-        aAction ( shared_from_this() );
+        aAction ( *this );
         for ( auto & mNode : mNodes )
         {
             mNode->RecursiveTraverseDFSPreOrder ( aAction );
         }
     }
 
-    void Node::LoopTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Node::LoopTraverseAncestors ( std::function<void ( Node& ) > aAction )
     {
-        auto node = shared_from_this();
+        auto node = this;
         while ( node != nullptr )
         {
-            aAction ( node );
-            node = node->mParent.lock();
+            aAction ( *node );
+            node = node->mParent.lock().get();
         }
     }
 
-    void Node::LoopTraverseAncestors ( std::function<void ( const std::shared_ptr<const Node>& ) > aAction ) const
+    void Node::LoopTraverseAncestors ( std::function<void ( const Node& ) > aAction ) const
     {
-        auto node = shared_from_this();
+        auto node = this;
         while ( node != nullptr )
         {
-            aAction ( node );
-            node = node->mParent.lock();
+            aAction ( *node );
+            node = node->mParent.lock().get();
         }
     }
 
-    void Node::RecursiveTraverseAncestors ( std::function<void ( const std::shared_ptr<Node>& ) > aAction )
+    void Node::RecursiveTraverseAncestors ( std::function<void ( Node& ) > aAction )
     {
-        aAction ( shared_from_this() );
-        if ( auto parent = mParent.lock() )
+        aAction ( *this );
+        if ( auto parent = mParent.lock().get() )
         {
             parent->RecursiveTraverseAncestors ( aAction );
         }
