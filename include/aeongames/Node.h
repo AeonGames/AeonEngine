@@ -135,7 +135,7 @@ namespace AeonGames
         ///@}
         ///@name Updater Functions
         ///@{
-        DLL void AttachUpdater ( std::size_t aId, const std::vector<std::size_t> aDependencies, const std::function<void ( Node&, double ) >& aUpdater );
+        DLL void AttachUpdater ( std::size_t aId, const std::vector<std::size_t>& aDependencies, const std::function<void ( Node&, double ) >& aUpdater );
         DLL void DettachUpdater ( std::size_t aId );
         ///@}
     private:
