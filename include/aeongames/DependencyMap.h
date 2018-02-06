@@ -40,6 +40,7 @@ namespace AeonGames
         > GraphNode;
 
     public:
+        typedef typename std::tuple<Key, std::vector<Key>, T> triple;
         class iterator
         {
             typename std::vector<Key, VectorAllocator>::iterator mIterator{};
@@ -108,12 +109,12 @@ namespace AeonGames
 
         DependencyMap() = default;
         ~DependencyMap() = default;
-        DependencyMap ( std::initializer_list<std::tuple<Key, std::vector<Key>, T>> aList )
+        DependencyMap ( std::initializer_list<triple> aList )
         {
             Reserve ( aList.size() );
             for ( auto& i : aList )
             {
-                graph[std::get<0> ( i )] = {{}, 0, std::get<1> ( i ), std::get<2> ( i ) };
+                graph[std::get<0> ( i )] = GraphNode{{}, 0, std::get<1> ( i ), std::get<2> ( i ) };
             }
             for ( auto& i : graph )
             {
@@ -158,12 +159,12 @@ namespace AeonGames
             }
         }
 
-        void Insert ( const std::tuple<Key, std::vector<Key>, T>& item )
+        void Insert ( const triple& item )
         {
             // If the map is empty just insert the new node.
             if ( sorted.empty() && graph.empty() )
             {
-                graph[std::get<0> ( item )] = {{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
+                graph[std::get<0> ( item )] = GraphNode{{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
                 sorted.emplace_back ( std::get<0> ( item ) );
                 return;
             }
@@ -220,7 +221,7 @@ namespace AeonGames
             if ( !circular_dependency )
             {
                 // Insert NEW node
-                graph[std::get<0> ( item )] = {{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
+                graph[std::get<0> ( item )] = GraphNode{{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
                 sorted.insert ( insertion_cursor, std::get<0> ( item ) );
             }
             else

@@ -510,11 +510,10 @@ namespace AeonGames
 
     void Node::AttachUpdater (
         std::size_t aId,
-        const std::vector<std::size_t> aDependencies,
+        const std::vector<std::size_t>& aDependencies,
         const std::function<void ( Node&, double ) >& aUpdater )
     {
-        /// @todo Sort by priority and check for duplicates.
-        mUpdaters.Insert ( {aId, aDependencies, aUpdater} );
+        mUpdaters.Insert ( DependencyMap<std::size_t, std::function<void ( Node&, double ) >>::triple {aId, aDependencies, aUpdater} );
     }
     void Node::DettachUpdater ( std::size_t aId )
     {
