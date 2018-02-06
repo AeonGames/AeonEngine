@@ -15,10 +15,13 @@
 include_directories(${GTEST_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
+    ${CMAKE_SOURCE_DIR}/engine/core/CRC.cpp
 )
 set(TEST_SRCS
     Main.cpp
     DependencyMapTests.cpp
+    CRCTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
