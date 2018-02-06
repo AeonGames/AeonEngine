@@ -177,7 +177,7 @@ namespace AeonGames
         {
             if ( auto parent = node.mParent.lock() )
             {
-                parent->mGlobalTransform * node.mLocalTransform;
+                node.mGlobalTransform = parent->mGlobalTransform * node.mLocalTransform;
             }
             else
             {

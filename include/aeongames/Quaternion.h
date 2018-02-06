@@ -48,7 +48,7 @@ namespace AeonGames
         DLL Quaternion& Normalize();
     private:
         /// W,X,Y,Z
-        float mQuaternion[4] {};
+        float mQuaternion[4] {1.0f, 0.0f, 0.0f, 0.0f};
     };
     DLL const Quaternion operator* ( const Quaternion& lhs, const Quaternion& rhs );
     DLL const Vector3 operator* ( const Quaternion& lhs, const Vector3& rhs );
