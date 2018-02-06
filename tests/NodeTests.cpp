@@ -245,11 +245,12 @@ namespace AeonGames
 
     TEST_F ( NodeTest, RemoveNodeSynchsLocalTransform )
     {
-        Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
+        Transform transform{Vector3{1, 1, 1}, Quaternion{}, Vector3{1, 2, 3}};
         root->SetLocalTransform ( transform );
         a->SetLocalTransform ( transform );
-        root->RemoveNode ( a );
         transform.SetTranslation ( {2, 4, 6} );
+        EXPECT_EQ ( transform, a->GetGlobalTransform() );
+        root->RemoveNode ( a );
         EXPECT_EQ ( transform, a->GetLocalTransform() );
     }
 
@@ -285,16 +286,16 @@ namespace AeonGames
 
     TEST_F ( NodeTest, DefaultIndexIsInvalid )
     {
-        std::unique_ptr<Node> node ( std::make_unique<Node>() );
+        std::shared_ptr<Node> node ( std::make_shared<Node>() );
         EXPECT_EQ ( node->GetIndex(), Node::kInvalidIndex );
     }
 
     TEST_F ( NodeTest, IndicesAreContiguous )
     {
-        std::unique_ptr<Node> node ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
+        std::shared_ptr<Node> node ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
         size_t count = node->GetChildrenCount();
         for ( size_t i = 0; i < count; ++i )
         {
@@ -304,10 +305,10 @@ namespace AeonGames
 
     TEST_F ( NodeTest, IndicesAreContiguousAfterRemovingFirstNode )
     {
-        std::unique_ptr<Node> node ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
+        std::shared_ptr<Node> node ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
         EXPECT_EQ ( node->GetChildrenCount(), 3u );
         std::shared_ptr<Node> removedNode = node->GetChild ( 0 );
         node->RemoveNode ( removedNode );
@@ -319,10 +320,10 @@ namespace AeonGames
 
     TEST_F ( NodeTest, IndicesAreContiguousAfterRemovingMiddleNode )
     {
-        std::unique_ptr<Node> node ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
+        std::shared_ptr<Node> node ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
         EXPECT_EQ ( node->GetChildrenCount(), 3u );
         std::shared_ptr<Node> removedNode = node->GetChild ( 1 );
         node->RemoveNode ( removedNode );
@@ -334,11 +335,11 @@ namespace AeonGames
 
     TEST_F ( NodeTest, IndicesAreContiguousAfterInsertingNodeOnFront )
     {
-        std::unique_ptr<Node> node ( std::make_unique<Node>() );
+        std::shared_ptr<Node> node ( std::make_shared<Node>() );
         std::shared_ptr<Node> inserted;
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->InsertNode ( 0, inserted = std::make_unique<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->InsertNode ( 0, inserted = std::make_shared<Node>() );
         EXPECT_EQ ( node->GetChildrenCount(), 3u );
         for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
         {
@@ -349,11 +350,11 @@ namespace AeonGames
 
     TEST_F ( NodeTest, IndicesAreContiguousAfterInsertingNodeAtMiddle )
     {
-        std::unique_ptr<Node> node ( std::make_unique<Node>() );
+        std::shared_ptr<Node> node ( std::make_shared<Node>() );
         std::shared_ptr<Node> inserted = nullptr;
-        node->AddNode ( std::make_unique<Node>() );
-        node->AddNode ( std::make_unique<Node>() );
-        node->InsertNode ( 1, inserted = std::make_unique<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->AddNode ( std::make_shared<Node>() );
+        node->InsertNode ( 1, inserted = std::make_shared<Node>() );
         EXPECT_EQ ( node->GetChildrenCount(), 3u );
         for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
         {
