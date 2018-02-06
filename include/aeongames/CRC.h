@@ -16,6 +16,7 @@ limitations under the License.
 
 #ifndef AEONGAMES_CRC_H
 #define AEONGAMES_CRC_H
+#include "aeongames/Platform.h"
 /** @copy 2016,2018 Rodrigo Hernandez.
     constexpr CRC32 and CRC64 implementation. */
 
@@ -32,7 +33,7 @@ extern "C"
 {
 #endif
 /** Iterative non-constexpr crc32 calculation.*/
-uint32_t crc32i ( const char* message, size_t size );
+DLL uint32_t crc32i ( const char* message, size_t size );
 #ifdef __cplusplus
 }
 #endif
@@ -222,7 +223,7 @@ extern "C"
 {
 #endif
 /** Iterative non-constexpr crc64 calculation.*/
-uint64_t crc64i ( const char* message, size_t size );
+DLL uint64_t crc64i ( const char* message, size_t size );
 #ifdef __cplusplus
 }
 #endif
@@ -423,6 +424,15 @@ Polynomial is 0x42F0E1EBA9EA3693 for CRC64-ECMA
 */
 static_assert ( "AeonGames"_crc64 == 0x187936cc3eca327f, "CRC64 Operator Failure." );
 static_assert ( crc64r ( "AeonGames", 9 ) == 0x187936cc3eca327f, "CRC64 Failure." );
+
+constexpr const std::size_t operator "" _id ( const char* message, const std::size_t size )
+{
+    return ( sizeof ( std::size_t ) == 4 ) ? crc32impl ( message, size, 0xFFFFFFFF ) :
+           ( sizeof ( std::size_t ) == 8 ) ? crc64impl ( message, size, 0xFFFFFFFFFFFFFFFF ) : 0;
+}
+
+static_assert ( "AeonGames"_id != 0, "size_t has uncommon size." );
+static_assert ( sizeof ( "AeonGames"_id ) == sizeof ( std::size_t ), "Size of _id operator is different than sizeof(std::size_t)" );
 
 #endif
 #endif

@@ -16,12 +16,13 @@ include_directories(${GTEST_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
-    ${CMAKE_SOURCE_DIR}/engine/core/CRC.cpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
 )
 set(TEST_SRCS
     Main.cpp
     DependencyMapTests.cpp
     CRCTests.cpp
+    NodeTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
@@ -29,7 +30,7 @@ source_group("Tests" FILES ${TEST_SRCS})
 
 add_executable(unit-tests ${TEST_SRCS} ${TESTED_SRCS})
 
-target_link_libraries(unit-tests ${GTEST_LIBRARY})
+target_link_libraries(unit-tests AeonEngine ${GTEST_LIBRARY})
 set_target_properties(unit-tests PROPERTIES
     COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
 add_test(NAME unit-tests COMMAND unit-tests)
