@@ -27,20 +27,20 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class AABB;
-    class Matrix4x4;
-    class Vector3;
-    class Frustum
-    {
-    public:
-        ///@brief Default constructor.
-        DLL Frustum ( const Matrix4x4& aMatrix );
-        /// destructor.
-        DLL ~Frustum();
-        DLL bool Intersects ( const AABB& aAABB ) const;
-    private:
-        /** @note Frustum planes' normals all point outward */
-        std::array<Plane, 6> mPlanes;
-    };
+class AABB;
+class Matrix4x4;
+class Vector3;
+class Frustum
+{
+public:
+    ///@brief Default constructor.
+    DLL Frustum ( const Matrix4x4& aMatrix );
+    /// destructor.
+    DLL ~Frustum();
+    DLL bool Intersects ( const AABB& aAABB ) const;
+private:
+    /** @note Frustum planes' normals all point outward */
+    std::array<Plane, 6> mPlanes;
+};
 }
 #endif

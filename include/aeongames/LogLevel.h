@@ -20,23 +20,23 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class LogLevel
+class LogLevel
+{
+public:
+    enum class Level
     {
-    public:
-        enum class Level
-        {
-            Info = 0,
-            Warning,
-            Error
-        };
-        DLL explicit LogLevel ( Level aLevel );
-        DLL ~LogLevel();
-        DLL friend std::ostream& operator<< ( std::ostream& os, const LogLevel& obj );
-    private:
-#ifdef _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo {};
-        HANDLE mConsoleHandle = nullptr;
-#endif
+        Info = 0,
+        Warning,
+        Error
     };
+    DLL explicit LogLevel ( Level aLevel );
+    DLL ~LogLevel();
+    DLL friend std::ostream& operator<< ( std::ostream& os, const LogLevel& obj );
+private:
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo {};
+    HANDLE mConsoleHandle = nullptr;
+#endif
+};
 }
 #endif

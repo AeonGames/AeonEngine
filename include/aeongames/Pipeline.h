@@ -24,53 +24,53 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Material;
-    class Pipeline
+class Material;
+class Pipeline
+{
+public:
+    enum AttributeBits
     {
-    public:
-        enum AttributeBits
-        {
-            VertexPositionBit = 0x1,
-            VertexNormalBit = 0x2,
-            VertexTangentBit = 0x4,
-            VertexBitangentBit = 0x8,
-            VertexUVBit = 0x10,
-            VertexWeightIndicesBit = 0x20,
-            VertexWeightsBit = 0x40,
-            VertexAllBits = VertexPositionBit |
-                            VertexNormalBit |
-                            VertexTangentBit |
-                            VertexBitangentBit |
-                            VertexUVBit |
-                            VertexWeightIndicesBit |
-                            VertexWeightsBit
-        };
-        enum AttributeFormat
-        {
-            Vector2Float,
-            Vector3Float,
-            Vector4Byte,
-            Vector4ByteNormalized,
-        };
-        Pipeline ( std::string  aFilename );
-        ~Pipeline();
-        DLL const std::string& GetVertexShaderSource() const;
-        DLL const std::string& GetFragmentShaderSource() const;
-        DLL uint32_t GetAttributes() const;
-        DLL uint32_t GetStride() const;
-        DLL uint32_t GetLocation ( AttributeBits aAttributeBit ) const;
-        DLL AttributeFormat GetFormat ( AttributeBits aAttributeBit ) const;
-        DLL uint32_t GetSize ( AttributeBits aAttributeBit ) const;
-        DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
-        DLL const std::shared_ptr<Material> GetDefaultMaterial() const;
-    private:
-        void Initialize();
-        void Finalize();
-        std::string mFilename;
-        uint32_t mAttributes;
-        std::string mVertexShader;
-        std::string mFragmentShader;
-        std::shared_ptr<Material> mDefaultMaterial;
+        VertexPositionBit = 0x1,
+        VertexNormalBit = 0x2,
+        VertexTangentBit = 0x4,
+        VertexBitangentBit = 0x8,
+        VertexUVBit = 0x10,
+        VertexWeightIndicesBit = 0x20,
+        VertexWeightsBit = 0x40,
+        VertexAllBits = VertexPositionBit |
+                        VertexNormalBit |
+                        VertexTangentBit |
+                        VertexBitangentBit |
+                        VertexUVBit |
+                        VertexWeightIndicesBit |
+                        VertexWeightsBit
     };
+    enum AttributeFormat
+    {
+        Vector2Float,
+        Vector3Float,
+        Vector4Byte,
+        Vector4ByteNormalized,
+    };
+    Pipeline ( std::string  aFilename );
+    ~Pipeline();
+    DLL const std::string& GetVertexShaderSource() const;
+    DLL const std::string& GetFragmentShaderSource() const;
+    DLL uint32_t GetAttributes() const;
+    DLL uint32_t GetStride() const;
+    DLL uint32_t GetLocation ( AttributeBits aAttributeBit ) const;
+    DLL AttributeFormat GetFormat ( AttributeBits aAttributeBit ) const;
+    DLL uint32_t GetSize ( AttributeBits aAttributeBit ) const;
+    DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
+    DLL const std::shared_ptr<Material> GetDefaultMaterial() const;
+private:
+    void Initialize();
+    void Finalize();
+    std::string mFilename;
+    uint32_t mAttributes;
+    std::string mVertexShader;
+    std::string mFragmentShader;
+    std::shared_ptr<Material> mDefaultMaterial;
+};
 }
 #endif
