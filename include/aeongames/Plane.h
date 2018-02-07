@@ -27,20 +27,20 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class AABB;
-    /*! \brief Plane class. */
-    class Plane
-    {
-    public:
-        ///@brief Default constructor.
-        DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
-        /// destructor.
-        DLL ~Plane();
-        DLL const Vector3& GetNormal() const;
-        DLL const float& GetDistance() const;
-    private:
-        Vector3 mNormal;
-        float mDistance;
-    };
+class AABB;
+/*! \brief Plane class. */
+class Plane
+{
+public:
+    ///@brief Default constructor.
+    DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
+    /// destructor.
+    DLL ~Plane();
+    DLL const Vector3& GetNormal() const;
+    DLL const float& GetDistance() const;
+private:
+    Vector3 mNormal;
+    float mDistance;
+};
 }
 #endif

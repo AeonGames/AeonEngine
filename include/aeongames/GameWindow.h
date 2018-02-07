@@ -20,12 +20,12 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class GameWindow
-    {
-    public:
-        virtual int Run() = 0;
-    protected:
-        virtual ~GameWindow() = default;;
-    };
+class GameWindow
+{
+public:
+    virtual int Run() = 0;
+protected:
+    virtual ~GameWindow() = default;;
+};
 }
 #endif

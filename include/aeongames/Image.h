@@ -22,34 +22,34 @@ limitations under the License.
 #include <string>
 namespace AeonGames
 {
-    class Image
+class Image
+{
+public:
+    enum class ImageFormat : uint32_t
     {
-    public:
-        enum class ImageFormat : uint32_t
-        {
-            Unknown,
-            RGB,
-            RGBA
-        };
-        enum class ImageType : uint32_t
-        {
-            Unknown,
-            UNSIGNED_BYTE,
-            UNSIGNED_SHORT
-        };
-        virtual uint32_t Width() const = 0;
-        virtual uint32_t Height() const = 0;
-        virtual ImageFormat Format() const = 0;
-        virtual ImageType Type() const = 0;
-        virtual const uint8_t* Data() const = 0;
-        virtual const size_t DataSize() const = 0;
-        virtual ~Image() = default;
+        Unknown,
+        RGB,
+        RGBA
     };
-    /** Factory Function */
-    DLL std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename );
-    /** Registers an image loader for a filename extension.*/
-    DLL bool RegisterImageLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader );
-    /** Unregisters an image loader for a filename extension.*/
-    DLL bool UnregisterImageLoader ( const std::string& aIdentifier );
+    enum class ImageType : uint32_t
+    {
+        Unknown,
+        UNSIGNED_BYTE,
+        UNSIGNED_SHORT
+    };
+    virtual uint32_t Width() const = 0;
+    virtual uint32_t Height() const = 0;
+    virtual ImageFormat Format() const = 0;
+    virtual ImageType Type() const = 0;
+    virtual const uint8_t* Data() const = 0;
+    virtual const size_t DataSize() const = 0;
+    virtual ~Image() = default;
+};
+/** Factory Function */
+DLL std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename );
+/** Registers an image loader for a filename extension.*/
+DLL bool RegisterImageLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader );
+/** Unregisters an image loader for a filename extension.*/
+DLL bool UnregisterImageLoader ( const std::string& aIdentifier );
 }
 #endif

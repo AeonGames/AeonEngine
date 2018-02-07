@@ -20,33 +20,33 @@ limitations under the License.
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
-    class Model;
-    class Matrix4x4;
-    class ModelInstance
-    {
-    public:
-        DLL ModelInstance ( const std::shared_ptr<const Model> aModel );
-        DLL ~ModelInstance();
-        DLL void EnableAssembly ( size_t aAssemblyIndex, bool aEnabled = true );
-        DLL void EnableAllAssemblies ( bool aEnabled = true );
-        DLL size_t GetAnimationIndex() const;
-        DLL void SetAnimationIndex ( size_t aAnimationIndex );
-        DLL double GetAnimationTime() const;
-        DLL void  SetAnimationTime ( double aTime = 0.0f );
-        DLL void StepAnimation ( double aDelta );
-        DLL const std::vector<Matrix4x4>& GetSkeletonAnimation() const;
-        DLL const std::shared_ptr<const Model>& GetModel() const;
-        DLL bool IsAssemblyEnabled ( size_t aAssemblyIndex ) const;
-        DLL static const size_t TypeId;
-    private:
-        void Initialize();
-        void Finalize();
-        void UpdateSkeletonAnimation();
-        const std::shared_ptr<const Model> mModel;
-        std::vector<bool> mEnabledAssemblies;
-        size_t mAnimationIndex;
-        double mAnimationTime;
-        std::vector<Matrix4x4> mSkeletonAnimation;
-    };
+class Model;
+class Matrix4x4;
+class ModelInstance
+{
+public:
+    DLL ModelInstance ( const std::shared_ptr<const Model> aModel );
+    DLL ~ModelInstance();
+    DLL void EnableAssembly ( size_t aAssemblyIndex, bool aEnabled = true );
+    DLL void EnableAllAssemblies ( bool aEnabled = true );
+    DLL size_t GetAnimationIndex() const;
+    DLL void SetAnimationIndex ( size_t aAnimationIndex );
+    DLL double GetAnimationTime() const;
+    DLL void  SetAnimationTime ( double aTime = 0.0f );
+    DLL void StepAnimation ( double aDelta );
+    DLL const std::vector<Matrix4x4>& GetSkeletonAnimation() const;
+    DLL const std::shared_ptr<const Model>& GetModel() const;
+    DLL bool IsAssemblyEnabled ( size_t aAssemblyIndex ) const;
+    DLL static const size_t TypeId;
+private:
+    void Initialize();
+    void Finalize();
+    void UpdateSkeletonAnimation();
+    const std::shared_ptr<const Model> mModel;
+    std::vector<bool> mEnabledAssemblies;
+    size_t mAnimationIndex;
+    double mAnimationTime;
+    std::vector<Matrix4x4> mSkeletonAnimation;
+};
 }
 #endif
