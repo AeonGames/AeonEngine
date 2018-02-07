@@ -19,7 +19,6 @@ limitations under the License.
 #include "aeongames/Platform.h"
 /** @copy 2016,2018 Rodrigo Hernandez.
     constexpr CRC32 and CRC64 implementation. */
-
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdint>
@@ -27,13 +26,14 @@ limitations under the License.
 #include <stddef.h>
 #include <stdint.h>
 #endif
-
-#ifdef __cplusplus
-extern "C"
+namespace AeonGames
 {
+#ifdef __cplusplus
+    extern "C"
+    {
 #endif
-/** Iterative non-constexpr crc32 calculation.*/
-DLL uint32_t crc32i ( const char* message, size_t size );
+    /** Iterative non-constexpr crc32 calculation.*/
+    DLL uint32_t crc32i ( const char* message, size_t size );
 #ifdef __cplusplus
 }
 #endif
@@ -222,8 +222,8 @@ static_assert ( crc32r ( "AeonGames", 9 ) == 0x2B0C3B, "CRC32 Failure." );
 extern "C"
 {
 #endif
-/** Iterative non-constexpr crc64 calculation.*/
-DLL uint64_t crc64i ( const char* message, size_t size );
+    /** Iterative non-constexpr crc64 calculation.*/
+    DLL uint64_t crc64i ( const char* message, size_t size );
 #ifdef __cplusplus
 }
 #endif
@@ -306,85 +306,85 @@ uint64_t crc_table64[256] =
 template <uint64_t bits>
 struct mask_high64
 {
-    enum { value = 0x0 };
+    enum : uint64_t { value = 0x0 };
 };
 
 template <uint64_t bits>
 struct mask_low64
 {
-    enum { value = 0x0 };
+    enum : uint64_t { value = 0x0 };
 };
 
 template <>
 struct mask_high64<1>
 {
-    enum { value = 0x5555555555555555 };
+    enum : uint64_t { value = 0x5555555555555555 };
 };
 
 template <>
 struct mask_low64<1>
 {
-    enum { value = 0xAAAAAAAAAAAAAAAA };
+    enum : uint64_t { value = 0xAAAAAAAAAAAAAAAA };
 };
 
 template <>
 struct mask_high64<2>
 {
-    enum { value = 0x3333333333333333 };
+    enum : uint64_t { value = 0x3333333333333333 };
 };
 
 template <>
 struct mask_low64<2>
 {
-    enum { value = 0xCCCCCCCCCCCCCCCC };
+    enum : uint64_t { value = 0xCCCCCCCCCCCCCCCC };
 };
 
 template <>
 struct mask_high64<4>
 {
-    enum { value = 0x0F0F0F0F0F0F0F0F };
+    enum : uint64_t { value = 0x0F0F0F0F0F0F0F0F };
 };
 
 template <>
 struct mask_low64<4>
 {
-    enum { value = 0xF0F0F0F0F0F0F0F0};
+    enum : uint64_t { value = 0xF0F0F0F0F0F0F0F0};
 };
 
 template <>
 struct mask_high64<8>
 {
-    enum { value = 0x00FF00FF00FF00FF };
+    enum : uint64_t { value = 0x00FF00FF00FF00FF };
 };
 
 template <>
 struct mask_low64<8>
 {
-    enum { value = 0xFF00FF00FF00FF00 };
+    enum : uint64_t { value = 0xFF00FF00FF00FF00 };
 };
 
 template <>
 struct mask_high64<16>
 {
-    enum { value = 0x0000FFFF0000FFFF };
+    enum : uint64_t { value = 0x0000FFFF0000FFFF };
 };
 
 template <>
 struct mask_low64<16>
 {
-    enum { value = 0xFFFF0000FFFF0000 };
+    enum : uint64_t { value = 0xFFFF0000FFFF0000 };
 };
 
 template <>
 struct mask_high64<32>
 {
-    enum { value = 0x00000000FFFFFFFF };
+    enum : uint64_t { value = 0x00000000FFFFFFFF };
 };
 
 template <>
 struct mask_low64<32>
 {
-    enum { value = 0xFFFFFFFF00000000 };
+    enum : uint64_t { value = 0xFFFFFFFF00000000 };
 };
 
 template <uint64_t bits>
@@ -433,7 +433,7 @@ constexpr const std::size_t operator "" _id ( const char* message, const std::si
 
 static_assert ( "AeonGames"_id != 0, "size_t has uncommon size." );
 static_assert ( sizeof ( "AeonGames"_id ) == sizeof ( std::size_t ), "Size of _id operator is different than sizeof(std::size_t)" );
-
+}
 #endif
 #endif
 #endif
