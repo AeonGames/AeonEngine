@@ -108,12 +108,12 @@ endif()
 #######################################
 
 if(WIN32)
+    find_program (ASTYLE_EXECUTABLE astyle HINTS ENV ProgramData PATH_SUFFIXES chocolatey/bin)
     find_program (FIND_EXECUTABLE find HINTS ENV ProgramFiles PATH_SUFFIXES Git/usr/bin NO_SYSTEM_ENVIRONMENT_PATH)
 else()
     find_program (FIND_EXECUTABLE find)
+    find_program (ASTYLE_EXECUTABLE astyle)
 endif()
-
-find_program (ASTYLE_EXECUTABLE astyle)
 
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in" "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
