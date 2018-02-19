@@ -17,10 +17,12 @@ before_build:
     
     cd build
     
+    C:\msys64\usr\bin\bash.exe -lc "pacman -R --noconfirm catgets"
+
     C:\msys64\usr\bin\bash.exe -lc "pacman -Syu --noconfirm"
     
-    C:\msys64\usr\bin\bash.exe -lc "pacman -Syu --noconfirm"
-    
+    C:\msys64\usr\bin\bash.exe -lc "pacman -Syuu --noconfirm"
+
     C:\msys64\usr\bin\bash.exe -lc "pacman -S --needed --noconfirm mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-vulkan mingw-w64-x86_64-qt5 mingw-w64-x86_64-protobuf mingw-w64-x86_64-zlib mingw-w64-x86_64-libpng mingw-w64-x86_64-glslang mingw-w64-x86_64-portaudio mingw-w64-x86_64-libogg mingw-w64-x86_64-libvorbis"
     
     C:\msys64\usr\bin\bash.exe -lc "cmake -G\"MSYS Makefiles\" .."
