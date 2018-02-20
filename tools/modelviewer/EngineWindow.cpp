@@ -32,6 +32,7 @@ limitations under the License.
 #include "aeongames/Window.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/CRC.h"
 
 namespace AeonGames
 {
@@ -49,12 +50,11 @@ namespace AeonGames
         mProjectionMatrix(),
         mViewMatrix()
     {
-        /*
-        @todo The id argument should be set to something other than 0,
-        std::hash<std::string>()("Animation") is tempting
-        BUT we dont want to be calculating string hashes on runtime.
-        */
-        mNode->AttachUpdater ( 0, {}, [] ( Node & aNode, double aDelta )
+        /** @todo Evaluate whether it makes sence to have global updaters
+         *  or rather 0..1 updaters per attribute, allowing read only
+         *  access to any updater for other attributes that are not their own.
+         */
+        mNode->AttachUpdater ( "Animation"_id, {}, [] ( Node & aNode, double aDelta )
         {
             if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( aNode.GetAttribute ( ModelInstance::TypeId ) ) )
             {
@@ -127,7 +127,10 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        mNode->SetAttribute ( ModelInstance::TypeId, std::make_shared<ModelInstance> ( Get<Model> ( filename.toUtf8().constData(), filename.toUtf8().constData() ) ) );
+        mNode->SetAttribute ( ModelInstance::TypeId,
+                              std::make_shared<ModelInstance> (
+                                  Get<Model> ( filename.toUtf8().constData(),
+                                               filename.toUtf8().constData() ) ) );
         assert ( mNode->GetAttribute ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
         if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetAttribute ( ModelInstance::TypeId ) ) )
         {

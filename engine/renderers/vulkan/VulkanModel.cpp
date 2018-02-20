@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/CRC.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanModel.h"
@@ -28,7 +29,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const size_t VulkanModel::TypeId = std::hash<std::string> {} ( "VulkanModel" );
+    const size_t VulkanModel::TypeId = "VulkanModel"_id;
     VulkanModel::VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
         mModel ( aModel ), mVulkanRenderer ( aVulkanRenderer )
     {
