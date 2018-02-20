@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/CRC.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
 #include "OpenGLPipeline.h"
@@ -28,7 +29,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const size_t OpenGLModel::TypeId = std::hash<std::string> {} ( "OpenGLModel" );
+    const size_t OpenGLModel::TypeId = "OpenGLModel"_id;
     OpenGLModel::OpenGLModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
         mModel ( aModel ), mOpenGLRenderer ( aOpenGLRenderer )
     {

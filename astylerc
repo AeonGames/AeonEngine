@@ -13,8 +13,6 @@ pad-paren
 # We're adding brackets to one line conditional statements,
 # No indent is clearer to read.
 min-conditional-indent=0
-# recurse directory tree
-recursive
 # Continue in exclude errors
 ignore-exclude-errors
 # Do not generate .orig files

@@ -24,10 +24,11 @@ limitations under the License.
 #include "aeongames/Animation.h"
 #include "aeongames/Skeleton.h"
 #include "aeongames/Matrix4x4.h"
+#include "aeongames/CRC.h"
 
 namespace AeonGames
 {
-    const size_t ModelInstance::TypeId = std::hash<std::string> {} ( "ModelInstance" );
+    const size_t ModelInstance::TypeId = "ModelInstance"_id;
     ModelInstance::ModelInstance ( const std::shared_ptr<const Model> aModel ) :
         mModel ( aModel ),
         mEnabledAssemblies ( mModel->GetMeshes().size(), true ),

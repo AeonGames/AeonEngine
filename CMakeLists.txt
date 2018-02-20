@@ -130,7 +130,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in" "${CMAKE_SOURCE_DIR}/.g
 if(MSVC)
     # Look for more useful sed oneliners at http://sed.sourceforge.net/sed1line.txt
     add_custom_target(format-code
-        ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
+        ${ASTYLE_EXECUTABLE} --recursive --options=${CMAKE_SOURCE_DIR}/astylerc ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.h
         COMMAND
             ${FIND_EXECUTABLE} "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/\\t/    /g' {} $<SEMICOLON>"
         COMMAND
@@ -148,7 +148,7 @@ if(MSVC)
 else()
     find_program (AUTOPEP8_EXECUTABLE autopep8)
     add_custom_target(format-code
-        ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc \"${CMAKE_SOURCE_DIR}/*.cpp\" \"${CMAKE_SOURCE_DIR}/*.h\"
+        ${ASTYLE_EXECUTABLE} --recursive --options=${CMAKE_SOURCE_DIR}/astylerc \"${CMAKE_SOURCE_DIR}/*.cpp\" \"${CMAKE_SOURCE_DIR}/*.h\"
         COMMAND
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/\\t/    /g' {} \\$<SEMICOLON>
         COMMAND
