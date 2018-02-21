@@ -28,10 +28,10 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
+#include "aeongames/Component.h"
 
 namespace AeonGames
 {
-
     const std::shared_ptr<Node> Node::mNullNode{};
     const size_t Node::kInvalidIndex = std::numeric_limits<size_t>::max(); // Use on VS2013
 
@@ -111,25 +111,20 @@ namespace AeonGames
         return mIndex;
     }
 
-    const void * Node::GetAttribute ( std::size_t aAttributeId ) const
+    const Component* Node::GetComponent ( std::size_t aComponentId ) const
     {
-        auto attribute = mAttributes.find ( aAttributeId );
-        if ( attribute != mAttributes.end() )
+        auto i = mComponents.Find ( aComponentId );
+        if ( i != mComponents.end() )
         {
-            return attribute->second.get();
+            return ( *i ).get();
         }
         return nullptr;
     }
 
-    void* Node::GetAttribute ( std::size_t aAttributeId )
+    Component* Node::GetComponent ( std::size_t aComponentId )
     {
         // EC++ Item 3
-        return const_cast<void*> ( static_cast<const Node&> ( *this ).GetAttribute ( aAttributeId ) );
-    }
-
-    void Node::SetAttribute ( std::size_t aAttributeId, const std::shared_ptr<void>& aAttribute )
-    {
-        mAttributes[aAttributeId] = aAttribute;
+        return const_cast<Component*> ( static_cast<const Node&> ( *this ).GetComponent ( aComponentId ) );
     }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
@@ -165,7 +160,7 @@ namespace AeonGames
     const AABB Node::GetGlobalAABB() const
     {
         ///@todo Remove dependency on ModelInstance::TypeId
-        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetAttribute ( ModelInstance::TypeId ) );
+        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetComponent ( ModelInstance::TypeId ) );
         return ( model_instance ) ? mGlobalTransform * model_instance->GetModel()->GetCenterRadii() : AABB{};
     }
 
@@ -508,23 +503,24 @@ namespace AeonGames
         }
     }
 
-    void Node::AttachUpdater (
+    void Node::AttachComponent (
         std::size_t aId,
         const std::vector<std::size_t>& aDependencies,
-        const std::function<void ( Node&, double ) >& aUpdater )
+        const std::shared_ptr<Component>& aComponent )
     {
-        mUpdaters.Insert ( DependencyMap<std::size_t, std::function<void ( Node&, double ) >>::triple {aId, aDependencies, aUpdater} );
+        mComponents.Insert ( DependencyMap<std::size_t, std::shared_ptr<Component>>::triple {aId, aDependencies, aComponent} );
     }
-    void Node::DettachUpdater ( std::size_t aId )
+
+    void Node::DettachComponent ( std::size_t aId )
     {
-        mUpdaters.Erase ( aId );
+        mComponents.Erase ( aId );
     }
 
     void Node::Update ( const double delta )
     {
-        for ( auto& i : mUpdaters )
+        for ( auto& i : mComponents )
         {
-            i ( *this, delta );
+            i->Update ( *this, delta );
         }
     }
 }

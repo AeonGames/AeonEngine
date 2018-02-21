@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,11 +23,7 @@ namespace AeonGames
 {
     DLL bool Initialize();
     DLL void Finalize();
-
     class Scene;
-    class Mesh;
-    class Material;
-    class Pipeline;
     class AeonEngine
     {
     public:
@@ -51,11 +47,10 @@ namespace AeonGames
         @return program return value.
         */
         DLL int Run();
-        DLL void SetScene ( std::shared_ptr<Scene> aScene );
-        DLL std::shared_ptr<Scene> GetScene() const;
+        DLL void SetScene ( const std::shared_ptr<Scene>& aScene );
+        DLL const std::shared_ptr<Scene>& GetScene() const;
     private:
-        struct Impl;
-        std::unique_ptr<Impl> pImpl;
+        std::shared_ptr<Scene> mScene{nullptr};
     };
 }
 #endif

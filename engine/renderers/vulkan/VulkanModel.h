@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_VULKANMODEL_H
 #define AEONGAMES_VULKANMODEL_H
+#include "aeongames/Component.h"
 namespace AeonGames
 {
     class Model;
@@ -25,12 +26,13 @@ namespace AeonGames
     class VulkanMesh;
     class VulkanSkeleton;
     class VulkanWindow;
-    class VulkanModel
+    class VulkanModel : public Component
     {
     public:
         VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
         virtual ~VulkanModel();
         void Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const;
+        virtual void Update ( const Node& aNode, double aDelta ) final;
         static const size_t TypeId;
     private:
         /// @todo Determine whether mModel should remain a shared_ptr, change to a weak_ptr or something else.

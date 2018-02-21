@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,44 +31,30 @@ limitations under the License.
 
 namespace AeonGames
 {
-    struct AeonEngine::Impl
-    {
-        Impl()
-        {
-        }
-        ~Impl()
-            = default;
-        std::shared_ptr<Scene> mScene = nullptr;
-    };
-
-    AeonEngine::AeonEngine() :
-        pImpl ( std::make_unique<Impl>() )
-    {
-    }
-
+    AeonEngine::AeonEngine() = default;
     AeonEngine::~AeonEngine() = default;
 
     void AeonEngine::Step ( double aDeltaTime )
     {
-        if ( pImpl->mScene )
+        if ( mScene )
         {
-            pImpl->mScene->Update ( aDeltaTime );
+            mScene->Update ( aDeltaTime );
         }
     }
 
     int AeonEngine::Run()
     {
+        /**@todo Implement basic game loop.*/
         return 0;
     }
 
-    void AeonEngine::SetScene ( std::shared_ptr<Scene> aScene )
+    void AeonEngine::SetScene ( const std::shared_ptr<Scene>& aScene )
     {
-        pImpl->mScene = aScene;
+        mScene = aScene;
     }
 
-    std::shared_ptr<Scene> AeonEngine::GetScene() const
+    const std::shared_ptr<Scene>& AeonEngine::GetScene() const
     {
-        return pImpl->mScene;
+        return mScene;
     }
-
 }

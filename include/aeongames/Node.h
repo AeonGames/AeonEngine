@@ -34,7 +34,7 @@ namespace AeonGames
     class Scene;
     class ModelInstance;
     class AABB;
-    /** Scene Graph Node */
+    class Component;
     class Node : public std::enable_shared_from_this<Node>
     {
     public:
@@ -127,16 +127,13 @@ namespace AeonGames
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
         DLL const std::shared_ptr<Node> GetParent() const;
         DLL size_t GetIndex() const;
-        ///@name Attribute Functions
+        ///@name Component Functions
         ///@{
-        DLL void* GetAttribute ( std::size_t aAttributeId );
-        DLL const void* GetAttribute ( std::size_t aAttributeId ) const;
-        DLL void SetAttribute ( std::size_t aAttributeId, const std::shared_ptr<void>& aAttribute );
-        ///@}
-        ///@name Updater Functions
-        ///@{
-        DLL void AttachUpdater ( std::size_t aId, const std::vector<std::size_t>& aDependencies, const std::function<void ( Node&, double ) >& aUpdater );
-        DLL void DettachUpdater ( std::size_t aId );
+        DLL const Component* GetComponent ( std::size_t aComponentId ) const;
+        DLL Component* GetComponent ( std::size_t aComponentId );
+        DLL void AttachComponent ( std::size_t aId, const std::vector<std::size_t>& aDependencies, const std::shared_ptr<Component>& aComponent );
+        /// @todo this should probably return the component.
+        DLL void DettachComponent ( std::size_t aId );
         ///@}
     private:
         void Update ( const double delta );
@@ -153,10 +150,7 @@ namespace AeonGames
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<std::shared_ptr<Node>>::size_type mIterator;
         std::bitset<8> mFlags;
-        /// @note Anything can be an attribute.
-        std::unordered_map<std::size_t, std::shared_ptr<void>> mAttributes;
-        DependencyMap<std::size_t, std::function<void ( Node&, double ) >> mUpdaters;
+        DependencyMap<std::size_t, std::shared_ptr<Component>> mComponents;
     };
 }
 #endif
-
