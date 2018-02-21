@@ -99,6 +99,11 @@ namespace AeonGames
         }
     }
 
+    void VulkanModel::Update ( const Node& aNode, double aDelta )
+    {
+        ///@todo Add code to update skeleton UBO
+    }
+
     void VulkanModel::Finalize()
     {
     }

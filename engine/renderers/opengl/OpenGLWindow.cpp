@@ -109,8 +109,8 @@ namespace AeonGames
         Frustum frustum ( projection_matrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( Node & aNode )
         {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetAttribute ( ModelInstance::TypeId ) );
-            const OpenGLModel* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode.GetAttribute ( OpenGLModel::TypeId ) );
+            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+            const OpenGLModel* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode.GetComponent ( OpenGLModel::TypeId ) );
             if ( opengl_model )
             {
                 if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
@@ -122,7 +122,7 @@ namespace AeonGames
             else
             {
                 /* This is lazy loading */
-                aNode.SetAttribute ( OpenGLModel::TypeId, std::make_shared<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
+                aNode.AttachComponent ( OpenGLModel::TypeId, {ModelInstance::TypeId}, std::make_shared<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
             }
         } );
 
@@ -165,8 +165,8 @@ namespace AeonGames
         glViewport ( 0, 0, rect.right, rect.bottom );
         OPENGL_CHECK_ERROR_THROW;
 #else
-        XWindowAttributes x_window_attributes {};
-        XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+        XWindowComponents x_window_attributes {};
+        XGetWindowComponents ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                                reinterpret_cast<::Window> ( mWindowId ), &x_window_attributes );
         std::cout << "Visual " << x_window_attributes.visual <<
                   " Default " << DefaultVisual ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),

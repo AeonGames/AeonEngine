@@ -50,17 +50,6 @@ namespace AeonGames
         mProjectionMatrix(),
         mViewMatrix()
     {
-        /** @todo Evaluate whether it makes sence to have global updaters
-         *  or rather 0..1 updaters per attribute, allowing read only
-         *  access to any updater for other attributes that are not their own.
-         */
-        mNode->AttachUpdater ( "Animation"_id, {}, [] ( Node & aNode, double aDelta )
-        {
-            if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( aNode.GetAttribute ( ModelInstance::TypeId ) ) )
-            {
-                model_instance->StepAnimation ( aDelta );
-            }
-        } );
         mScene->AddNode ( mNode );
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );
@@ -127,12 +116,12 @@ namespace AeonGames
     void EngineWindow::setModel ( const QString & filename )
     {
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
-        mNode->SetAttribute ( ModelInstance::TypeId,
-                              std::make_shared<ModelInstance> (
-                                  Get<Model> ( filename.toUtf8().constData(),
-                                               filename.toUtf8().constData() ) ) );
-        assert ( mNode->GetAttribute ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
-        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetAttribute ( ModelInstance::TypeId ) ) )
+        mNode->AttachComponent ( ModelInstance::TypeId, {},
+                                 std::make_shared<ModelInstance> (
+                                     Get<Model> ( filename.toUtf8().constData(),
+                                             filename.toUtf8().constData() ) ) );
+        assert ( mNode->GetComponent ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
+        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetComponent ( ModelInstance::TypeId ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.
             float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;

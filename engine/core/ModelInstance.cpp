@@ -147,4 +147,8 @@ namespace AeonGames
             }
         }
     }
+    void ModelInstance::Update ( const Node& aNode, double aDelta )
+    {
+        StepAnimation ( aDelta );
+    }
 }

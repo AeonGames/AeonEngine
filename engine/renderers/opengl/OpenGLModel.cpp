@@ -89,6 +89,11 @@ namespace AeonGames
         }
     }
 
+    void OpenGLModel::Update ( const Node& aNode, double aDelta )
+    {
+        ///@todo Add code to update skeleton UBO
+    }
+
     void OpenGLModel::Finalize()
     {
     }
