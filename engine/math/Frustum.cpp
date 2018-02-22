@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,47 +25,55 @@ namespace AeonGames
     Frustum::Frustum ( const Matrix4x4 & aMatrix ) :
         mPlanes
     {
-        // Left clipping plane
-        Plane{
-            - ( aMatrix[3] + aMatrix[0] ),
-            - ( aMatrix[7] + aMatrix[4] ),
-            - ( aMatrix[11] + aMatrix[8] ),
-            ( aMatrix[15] + aMatrix[12] ),
-        },
-        // Right clipping plane
-        Plane{
-            - ( aMatrix[3] - aMatrix[0] ),
-            - ( aMatrix[7] - aMatrix[4] ),
-            - ( aMatrix[11] - aMatrix[8] ),
-            ( aMatrix[15] - aMatrix[12] ),
-        },
-        // Top clipping plane
-        Plane{
-            - ( aMatrix[3] + aMatrix[1] ),
-            - ( aMatrix[7] + aMatrix[5] ),
-            - ( aMatrix[11] + aMatrix[9] ),
-            ( aMatrix[15] + aMatrix[13] ),
-        },
-        // Bottom clipping plane
-        Plane{
-            - ( aMatrix[3] - aMatrix[1] ),
-            - ( aMatrix[7] - aMatrix[5] ),
-            - ( aMatrix[11] - aMatrix[9] ),
-            ( aMatrix[15] - aMatrix[13] ),
-        },
-        // Near clipping plane
-        Plane{
-            - ( aMatrix[3] + aMatrix[2] ),
-            - ( aMatrix[7] + aMatrix[6] ),
-            - ( aMatrix[11] + aMatrix[10] ),
-            ( aMatrix[15] + aMatrix[14] ),
-        },
-        // Far clipping plane
-        Plane{
-            - ( aMatrix[3] - aMatrix[2] ),
-            - ( aMatrix[7] - aMatrix[6] ),
-            - ( aMatrix[11] - aMatrix[10] ),
-            ( aMatrix[15] - aMatrix[14] ),
+        {
+            // Left clipping plane
+            Plane
+            {
+                - ( aMatrix[3] + aMatrix[0] ),
+                - ( aMatrix[7] + aMatrix[4] ),
+                - ( aMatrix[11] + aMatrix[8] ),
+                ( aMatrix[15] + aMatrix[12] )
+            },
+            // Right clipping plane
+            Plane
+            {
+                - ( aMatrix[3] - aMatrix[0] ),
+                - ( aMatrix[7] - aMatrix[4] ),
+                - ( aMatrix[11] - aMatrix[8] ),
+                ( aMatrix[15] - aMatrix[12] )
+            },
+            // Top clipping plane
+            Plane
+            {
+                - ( aMatrix[3] + aMatrix[1] ),
+                - ( aMatrix[7] + aMatrix[5] ),
+                - ( aMatrix[11] + aMatrix[9] ),
+                ( aMatrix[15] + aMatrix[13] )
+            },
+            // Bottom clipping plane
+            Plane
+            {
+                - ( aMatrix[3] - aMatrix[1] ),
+                - ( aMatrix[7] - aMatrix[5] ),
+                - ( aMatrix[11] - aMatrix[9] ),
+                ( aMatrix[15] - aMatrix[13] )
+            },
+            // Near clipping plane
+            Plane
+            {
+                - ( aMatrix[3] + aMatrix[2] ),
+                - ( aMatrix[7] + aMatrix[6] ),
+                - ( aMatrix[11] + aMatrix[10] ),
+                ( aMatrix[15] + aMatrix[14] )
+            },
+            // Far clipping plane
+            Plane
+            {
+                - ( aMatrix[3] - aMatrix[2] ),
+                - ( aMatrix[7] - aMatrix[6] ),
+                - ( aMatrix[11] - aMatrix[10] ),
+                ( aMatrix[15] - aMatrix[14] )
+            }
         }
     }
     {

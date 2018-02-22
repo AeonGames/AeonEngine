@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,14 +48,16 @@ namespace AeonGames
     {
         return std::array<Vector3, 8>
         {
-            aOffset + mCenter + mRadii,
-            aOffset + mCenter - mRadii,
-            aOffset + mCenter + Vector3 ( -mRadii[0], mRadii[1], mRadii[2] ),
-            aOffset + mCenter - Vector3 ( -mRadii[0], mRadii[1], mRadii[2] ),
-            aOffset + mCenter + Vector3 ( mRadii[0], -mRadii[1], mRadii[2] ),
-            aOffset + mCenter - Vector3 ( mRadii[0], -mRadii[1], mRadii[2] ),
-            aOffset + mCenter + Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
-            aOffset + mCenter - Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
+            {
+                aOffset + mCenter + mRadii,
+                aOffset + mCenter - mRadii,
+                aOffset + mCenter + Vector3 ( -mRadii[0], mRadii[1], mRadii[2] ),
+                aOffset + mCenter - Vector3 ( -mRadii[0], mRadii[1], mRadii[2] ),
+                aOffset + mCenter + Vector3 ( mRadii[0], -mRadii[1], mRadii[2] ),
+                aOffset + mCenter - Vector3 ( mRadii[0], -mRadii[1], mRadii[2] ),
+                aOffset + mCenter + Vector3 ( mRadii[0], mRadii[1], -mRadii[2] ),
+                aOffset + mCenter - Vector3 ( mRadii[0], mRadii[1], -mRadii[2] )
+            }
         };
     }
     float AABB::GetDistanceToPlane ( const Plane & aPlane ) const

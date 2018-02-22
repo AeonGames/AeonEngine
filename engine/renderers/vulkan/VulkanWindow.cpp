@@ -304,8 +304,10 @@ namespace AeonGames
         {
             std::array<VkImageView, 2> attachments
             {
-                mVkSwapchainImageViews[i],
-                mVkDepthStencilImageView
+                {
+                    mVkSwapchainImageViews[i],
+                    mVkDepthStencilImageView
+                }
             };
             VkFramebufferCreateInfo framebuffer_create_info{};
             framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -458,7 +460,7 @@ namespace AeonGames
 
         VkRect2D render_area{ { 0, 0 }, { GetWidth(), GetHeight() } };
         /* [1] is depth/stencil [0] is color.*/
-        std::array<VkClearValue, 2> clear_values{ { { 0 }, { 0 } } };
+        std::array<VkClearValue, 2> clear_values{ { { {{0}} }, { {{0}} } } };
         clear_values[0].color.float32[0] = 0.5f;
         clear_values[0].color.float32[1] = 0.5f;
         clear_values[0].color.float32[2] = 0.5f;

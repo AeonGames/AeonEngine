@@ -1,7 +1,7 @@
 //
 // Copyright (C) 2002-2005  3Dlabs Inc. Ltd.
 // Copyright (C) 2013-2016 LunarG, Inc.
-// Copyright (C) 2017 Aeon Games
+// Copyright (C) 2017-2018 Aeon Games
 //
 // All rights reserved.
 //
@@ -183,7 +183,7 @@ namespace AeonGames
                 continue;
             }
             shaders.emplace_back ( static_cast<EShLanguage> ( i ) );
-            std::array<const char*, 1> source{ mShaderCompilationUnits[i] };
+            std::array<const char*, 1> source{ {mShaderCompilationUnits[i]} };
             auto stage_name = GetStageName ( static_cast<EShLanguage> ( i ) );
             shaders.back().setStringsWithLengthsAndNames ( source.data(), nullptr, &stage_name, 1 );
             shaders.back().setShiftSamplerBinding ( mBaseSamplerBinding[i] );

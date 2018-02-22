@@ -314,7 +314,7 @@ namespace AeonGames
             if ( auto scene = mScene.lock() )
             {
                 auto it = scene->mAllNodes.end();
-                aNode->LoopTraverseDFSPostOrder ( [&scene, &it, this] ( Node & node )
+                aNode->LoopTraverseDFSPostOrder ( [&scene, &it] ( Node & node )
                 {
                     node.mScene.reset();
                     it = std::remove ( scene->mAllNodes.begin(), it, node.shared_from_this() );
