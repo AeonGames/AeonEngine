@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,24 +39,28 @@ namespace AeonGames
 {
     static const std::array<const char*, 7> AttributeStrings
     {
-        "VertexPosition",
-        "VertexNormal",
-        "VertexTangent",
-        "VertexBitangent",
-        "VertexUV",
-        "VertexWeightIndices",
-        "VertexWeights"
+        {
+            "VertexPosition",
+            "VertexNormal",
+            "VertexTangent",
+            "VertexBitangent",
+            "VertexUV",
+            "VertexWeightIndices",
+            "VertexWeights"
+        }
     };
 
     static const std::array<const char*, 7> AttributeTypes
     {
-        "vec3",
-        "vec3",
-        "vec3",
-        "vec3",
-        "vec2",
-        "uvec4",
-        "vec4"
+        {
+            "vec3",
+            "vec3",
+            "vec3",
+            "vec3",
+            "vec2",
+            "uvec4",
+            "vec4"
+        }
     };
 
     Pipeline::Pipeline ( std::string  aFilename ) :

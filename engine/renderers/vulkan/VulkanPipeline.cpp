@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ namespace AeonGames
     void VulkanPipeline::Use ( const std::shared_ptr<VulkanMaterial>& aMaterial ) const
     {
         const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
-        std::array<VkDescriptorSet, 2> descriptor_sets{ mVkDescriptorSet, material->GetDescriptorSet() };
+        std::array<VkDescriptorSet, 2> descriptor_sets{ {mVkDescriptorSet, material->GetDescriptorSet() }};
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
 #if 0
         vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
@@ -256,9 +256,11 @@ namespace AeonGames
 
         std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos =
         {
-            VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
-            VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline->GetDefaultMaterial()->GetUniformBlockSize() },
-            VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
+            {
+                VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
+                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline->GetDefaultMaterial()->GetUniformBlockSize() },
+                VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
+            }
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
@@ -480,8 +482,10 @@ namespace AeonGames
 
         std::array<VkDynamicState, 2> dynamic_states
         {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR
+            {
+                VK_DYNAMIC_STATE_VIEWPORT,
+                VK_DYNAMIC_STATE_SCISSOR
+            }
         };
         VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
         pipeline_dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -498,7 +502,7 @@ namespace AeonGames
             which at maximum must be 128 bytes to be safe. */
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
-        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts { mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() };
+        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts { {mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() } };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
