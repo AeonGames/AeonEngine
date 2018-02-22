@@ -165,8 +165,8 @@ namespace AeonGames
         glViewport ( 0, 0, rect.right, rect.bottom );
         OPENGL_CHECK_ERROR_THROW;
 #else
-        XWindowComponents x_window_attributes {};
-        XGetWindowComponents ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+        XWindowAttributes x_window_attributes {};
+        XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                                reinterpret_cast<::Window> ( mWindowId ), &x_window_attributes );
         std::cout << "Visual " << x_window_attributes.visual <<
                   " Default " << DefaultVisual ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
