@@ -43,7 +43,7 @@ namespace AeonGames
         mGlobalTransform(),
         mNodes(),
         mIndex ( kInvalidIndex ),
-        mIterator ( 0 ),
+
         mFlags ( aFlags )
     {
     }
@@ -160,7 +160,7 @@ namespace AeonGames
     const AABB Node::GetGlobalAABB() const
     {
         ///@todo Remove dependency on ModelInstance::TypeId
-        const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( GetComponent ( ModelInstance::TypeId ) );
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( GetComponent ( ModelInstance::TypeId ) );
         return ( model_instance ) ? mGlobalTransform * model_instance->GetModel()->GetCenterRadii() : AABB{};
     }
 
@@ -329,7 +329,7 @@ namespace AeonGames
         return false;
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
+    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
@@ -356,8 +356,8 @@ namespace AeonGames
     }
 
     void Node::LoopTraverseDFSPreOrder (
-        std::function<void ( Node& ) > aPreamble,
-        std::function<void ( Node& ) > aPostamble )
+        const std::function<void ( Node& ) >& aPreamble,
+        const std::function<void ( Node& ) >& aPostamble )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
@@ -384,7 +384,7 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPreOrder ( std::function<void ( const Node& ) > aAction ) const
+    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
         auto node = this;
         aAction ( *node );
@@ -406,7 +406,7 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
+    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
@@ -431,7 +431,7 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPostOrder ( std::function<void ( const Node& ) > aAction ) const
+    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
@@ -456,7 +456,7 @@ namespace AeonGames
         }
     }
 
-    void Node::RecursiveTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
+    void Node::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & mNode : mNodes )
         {
@@ -465,7 +465,7 @@ namespace AeonGames
         aAction ( *this );
     }
 
-    void Node::RecursiveTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
+    void Node::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         aAction ( *this );
         for ( auto & mNode : mNodes )
@@ -474,7 +474,7 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseAncestors ( std::function<void ( Node& ) > aAction )
+    void Node::LoopTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
     {
         auto node = this;
         while ( node != nullptr )
@@ -484,7 +484,7 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseAncestors ( std::function<void ( const Node& ) > aAction ) const
+    void Node::LoopTraverseAncestors ( const std::function<void ( const Node& ) >& aAction ) const
     {
         auto node = this;
         while ( node != nullptr )
@@ -494,7 +494,7 @@ namespace AeonGames
         }
     }
 
-    void Node::RecursiveTraverseAncestors ( std::function<void ( Node& ) > aAction )
+    void Node::RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
     {
         aAction ( *this );
         if ( auto parent = mParent.lock().get() )

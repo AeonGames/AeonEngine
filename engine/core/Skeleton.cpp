@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ limitations under the License.
 namespace AeonGames
 {
     Skeleton::Joint::Joint ( Joint * aParent, const Transform & aTransform, const Transform & aInvertedTransform, const std::string & aName ) :
-        mParent ( aParent ), mTransform ( std::move ( aTransform ) ), mInvertedTransform ( std::move ( aInvertedTransform ) ), mName ( std::move ( aName ) )
+        mParent ( aParent ), mTransform ( aTransform ), mInvertedTransform ( aInvertedTransform  ), mName (  aName )
     {
     }
 
@@ -56,9 +56,9 @@ namespace AeonGames
         return mParent;
     }
 
-    Skeleton::Skeleton ( std::string  aFilename )
+    Skeleton::Skeleton ( const std::string& aFilename )
         :
-        mFilename ( std::move ( aFilename ) )
+        mFilename ( aFilename )
     {
         try
         {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,8 +24,7 @@ namespace AeonGames
     }
 
     VulkanStackBuffer::~VulkanStackBuffer()
-    {
-    }
+        = default;
 
     VulkanStackBuffer::VulkanStackMemory VulkanStackBuffer::Push ( const VkDeviceSize aSize )
     {
@@ -37,7 +36,7 @@ namespace AeonGames
         mTopOfStack += aSize;
         return VulkanStackMemory{ offset, aSize };
     }
-    void VulkanStackBuffer::Pop ( VulkanStackMemory aVulkanStackMemory )
+    void VulkanStackBuffer::Pop ( const VulkanStackMemory& aVulkanStackMemory )
     {
         if ( mTopOfStack == 0 || mTopOfStack < aVulkanStackMemory.GetSize() || ( mTopOfStack - aVulkanStackMemory.GetSize() != aVulkanStackMemory.GetOffset() ) )
         {
@@ -56,8 +55,7 @@ namespace AeonGames
     }
 
     VulkanStackBuffer::VulkanStackMemory::~VulkanStackMemory()
-    {
-    }
+        = default;
 
     VkDeviceSize VulkanStackBuffer::VulkanStackMemory::GetOffset() const
     {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace AeonGames
     class VulkanTexture
     {
     public:
-        VulkanTexture ( const std::shared_ptr<const Image> aImage, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
+        VulkanTexture ( const std::shared_ptr<const Image>&  aImage, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanTexture();
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:

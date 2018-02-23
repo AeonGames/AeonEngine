@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ limitations under the License.
 namespace AeonGames
 {
     Transform::Transform()
-    {
-    }
+        = default;
 
     Transform::Transform ( const Vector3 & aScale, const Quaternion & aRotation, const Vector3 & aTranslation ) :
         mScale{ aScale }, mRotation{ aRotation }, mTranslation{aTranslation}
@@ -46,17 +45,17 @@ namespace AeonGames
         return mTranslation;
     }
 
-    void Transform::SetScale ( const Vector3 aScale )
+    void Transform::SetScale ( const Vector3& aScale )
     {
         mScale = aScale;
     }
 
-    void Transform::SetRotation ( const Quaternion aRotation )
+    void Transform::SetRotation ( const Quaternion& aRotation )
     {
         mRotation = aRotation;
     }
 
-    void Transform::SetTranslation ( const Vector3 aTranslation )
+    void Transform::SetTranslation ( const Vector3& aTranslation )
     {
         mTranslation = aTranslation;
     }

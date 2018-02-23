@@ -19,6 +19,7 @@ limitations under the License.
 #include <unordered_map>
 #include <tuple>
 #include <algorithm>
+#include <iterator>
 
 namespace AeonGames
 {
@@ -32,15 +33,15 @@ namespace AeonGames
         >
     class DependencyMap
     {
-        typedef typename std::tuple <
-        Key,                               //-> Parent Iterator
-        size_t,                            //-> Child Iterator
-        std::vector<Key, VectorAllocator>, //-> Dependencies
-        T                                  //-> Payload
-        > GraphNode;
+        using GraphNode = typename std::tuple <
+                          Key,                               //-> Parent Iterator
+                          size_t,                            //-> Child Iterator
+                          std::vector<Key, VectorAllocator>, //-> Dependencies
+                          T                                  //-> Payload
+                          >;
 
     public:
-        typedef typename std::tuple<Key, std::vector<Key>, T> triple;
+        using triple = typename std::tuple<Key, std::vector<Key>, T>;
         class iterator
         {
             typename std::vector<Key, VectorAllocator>::iterator mIterator{};
@@ -64,11 +65,11 @@ namespace AeonGames
                 mIterator ( aIterator ),
                 mGraph ( aGraph ) {}
         public:
-            typedef typename std::vector<Key, VectorAllocator>::iterator::difference_type difference_type;
-            typedef typename std::vector<Key, VectorAllocator>::iterator::value_type value_type;
-            typedef T& reference;
-            typedef T* pointer;
-            typedef typename std::bidirectional_iterator_tag iterator_category;
+            using difference_type = typename std::vector<Key, VectorAllocator>::iterator::difference_type;
+            using value_type = typename std::vector<Key, VectorAllocator>::iterator::value_type;
+            using reference = T &;
+            using pointer = T *;
+            using iterator_category = std::bidirectional_iterator_tag;
             iterator() = default;
             iterator ( const iterator& ) = default;
             ~iterator() = default;
@@ -124,11 +125,11 @@ namespace AeonGames
                 mIterator ( aIterator ),
                 mGraph ( aGraph ) {}
         public:
-            typedef typename std::vector<Key, VectorAllocator>::const_iterator::difference_type difference_type;
-            typedef typename std::vector<Key, VectorAllocator>::const_iterator::value_type value_type;
-            typedef const T& reference;
-            typedef const T* pointer;
-            typedef typename std::bidirectional_iterator_tag iterator_category;
+            using difference_type = typename std::vector<Key, VectorAllocator>::const_iterator::difference_type;
+            using value_type = typename std::vector<Key, VectorAllocator>::const_iterator::value_type;
+            using reference = const T &;
+            using pointer = const T *;
+            using iterator_category = std::bidirectional_iterator_tag;
             const_iterator() = default;
             const_iterator ( const const_iterator& ) = default;
             ~const_iterator() = default;

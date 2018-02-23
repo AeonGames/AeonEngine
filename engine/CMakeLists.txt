@@ -171,14 +171,7 @@ endif()
 
 if(USE_CLANG_TIDY)
     set_target_properties(AeonEngine PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
-    generate_compile_commands(AeonEngine "${ENGINE_SOURCES}")
-    if(NOT MSVC)
-        add_custom_target(clang-tidy-fix-engine-code
-            COMMAND ${CLANG_TIDY_EXECUTABLE} -fix ${CLANG_TIDY_CHECKS} -p ${CMAKE_BINARY_DIR} ${ENGINE_SOURCES}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Fixing Engine Code with clang-tidy")
-    endif()
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-fix;-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
 endif()
 
 add_subdirectory(renderers/opengl)

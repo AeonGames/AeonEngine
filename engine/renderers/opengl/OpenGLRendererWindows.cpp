@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -60,23 +60,23 @@ namespace AeonGames
         wcex.lpfnWndProc = ( WNDPROC ) DefWindowProc;
         wcex.cbClsExtra = 0;
         wcex.cbWndExtra = 0;
-        wcex.hInstance = GetModuleHandle ( NULL );
-        wcex.hIcon = LoadIcon ( NULL, IDI_WINLOGO );
-        wcex.hCursor = LoadCursor ( NULL, IDC_ARROW );
-        wcex.hbrBackground = NULL;
-        wcex.lpszMenuName = NULL;
+        wcex.hInstance = GetModuleHandle ( nullptr );
+        wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
+        wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
+        wcex.hbrBackground = nullptr;
+        wcex.lpszMenuName = nullptr;
         wcex.lpszClassName = "glUnitTest";
-        wcex.hIconSm = NULL;
+        wcex.hIconSm = nullptr;
         ATOM atom = RegisterClassEx ( &wcex );
         mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
                                      MAKEINTATOM ( atom ), "OpenGL Unit Testing Window",
                                      WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                      0, 0, // Location
                                      rect.right - rect.left, rect.bottom - rect.top, // dimensions
-                                     NULL,
-                                     NULL,
-                                     GetModuleHandle ( NULL ),
-                                     NULL );
+                                     nullptr,
+                                     nullptr,
+                                     GetModuleHandle ( nullptr ),
+                                     nullptr );
         HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
@@ -200,6 +200,6 @@ namespace AeonGames
 #if defined(_M_X64) || defined(__amd64__)
                               0x0ULL +
 #endif
-                              MAKELONG ( atom, 0 ) ), NULL );
+                              MAKELONG ( atom, 0 ) ), nullptr );
     }
 }

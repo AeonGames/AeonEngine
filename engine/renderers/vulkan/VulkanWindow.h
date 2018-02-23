@@ -28,7 +28,7 @@ namespace AeonGames
     class VulkanWindow : public Window
     {
     public:
-        VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
+        VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         virtual ~VulkanWindow();
         const void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;

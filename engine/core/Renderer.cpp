@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <utility>
+
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
 #include "Factory.h"
@@ -23,7 +25,7 @@ namespace AeonGames
     {
         return Factory<Renderer>::Get ( aIdentifier );
     }
-    bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Renderer>() > aLoader )
+    bool RegisterRendererLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<Renderer>() >& aLoader )
     {
         return Factory<Renderer>::RegisterLoader ( aIdentifier, aLoader );
     }
@@ -31,7 +33,7 @@ namespace AeonGames
     {
         return Factory<Renderer>::UnregisterLoader ( aIdentifier );
     }
-    void EnumerateRendererLoaders ( std::function<bool ( const std::string& ) > aEnumerator )
+    void EnumerateRendererLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator )
     {
         Factory<Renderer>::EnumerateLoaders ( aEnumerator );
     }

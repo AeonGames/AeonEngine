@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ namespace AeonGames
             png_warning ( png_ptr, "Got NULL png_ptr pointer." );
             return;
         }
-        png_read_memory_struct* read_struct = static_cast<png_read_memory_struct*> ( png_get_io_ptr ( png_ptr ) );
+        auto* read_struct = static_cast<png_read_memory_struct*> ( png_get_io_ptr ( png_ptr ) );
         // Clip lenght not to get passed the end of the buffer.
         png_size_t real_length = std::min<png_size_t> ( ( ( read_struct->buffer + read_struct->size ) - read_struct->pointer ), length );
         if ( length < 1 )

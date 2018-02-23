@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <cassert>
 #include <cstring>
+#include <utility>
 #include <vector>
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
@@ -24,7 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLSkeleton::OpenGLSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLSkeleton::OpenGLSkeleton ( const std::shared_ptr<const Skeleton>&  aSkeleton, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
         mSkeleton ( aSkeleton )
     {
         try
@@ -52,7 +53,7 @@ namespace AeonGames
     {
         glBindBuffer ( GL_UNIFORM_BUFFER, mSkeletonBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        float* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
+        auto* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
         OPENGL_CHECK_ERROR_NO_THROW;
         memcpy ( joint_array, aSkeleton.data(), aSkeleton.size() * sizeof ( Matrix4x4 ) );
         glUnmapBuffer ( GL_UNIFORM_BUFFER );
@@ -63,7 +64,7 @@ namespace AeonGames
     {
         GLint max_uniform_block_size = 0;
         glGetIntegerv ( GL_MAX_UNIFORM_BLOCK_SIZE, &max_uniform_block_size );
-        GLint skeleton_size = static_cast<GLint> ( mSkeleton->GetJoints().size() * sizeof ( float ) * 16 );
+        auto skeleton_size = static_cast<GLint> ( mSkeleton->GetJoints().size() * sizeof ( float ) * 16 );
         if ( skeleton_size > max_uniform_block_size )
         {
             std::ostringstream stream;
@@ -78,7 +79,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindBuffer ( GL_UNIFORM_BUFFER, mSkeletonBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        float* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
+        auto* joint_array = reinterpret_cast<float*> ( glMapBuffer ( GL_UNIFORM_BUFFER, GL_WRITE_ONLY ) );
         OPENGL_CHECK_ERROR_THROW;
         const float identity[16] =
         {

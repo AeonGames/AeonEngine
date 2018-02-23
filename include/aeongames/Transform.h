@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,9 +44,9 @@ namespace AeonGames
         DLL const Vector3& GetTranslation() const;
 
         /*! \brief Set transform scale vector. */
-        DLL void SetScale ( const Vector3 aScale );
-        DLL void SetRotation ( const Quaternion aRotation );
-        DLL void SetTranslation ( const Vector3 aTranslation );
+        DLL void SetScale ( const Vector3& aScale );
+        DLL void SetRotation ( const Quaternion& aRotation );
+        DLL void SetTranslation ( const Vector3& aTranslation );
 
         /*! @brief Adds the provided vector to the position vector.
         \param x [in] X move vector value.

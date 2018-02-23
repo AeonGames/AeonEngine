@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 /*! \file
     \brief Header for the plane class.
     \author Rodrigo Hernandez.
-    \copy 2017
+    \copy 2017,2018
 */
 
 #include "aeongames/Platform.h"
@@ -27,20 +27,20 @@ limitations under the License.
 
 namespace AeonGames
 {
-class AABB;
-/*! \brief Plane class. */
-class Plane
-{
-public:
-    ///@brief Default constructor.
-    DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
-    /// destructor.
-    DLL ~Plane();
-    DLL const Vector3& GetNormal() const;
-    DLL const float& GetDistance() const;
-private:
-    Vector3 mNormal;
-    float mDistance;
-};
+    class AABB;
+    /*! \brief Plane class. */
+    class Plane
+    {
+    public:
+        ///@brief Default constructor.
+        DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
+        /// destructor.
+        DLL ~Plane();
+        DLL const Vector3& GetNormal() const;
+        DLL const float& GetDistance() const;
+    private:
+        Vector3 mNormal;
+        float mDistance;
+    };
 }
 #endif

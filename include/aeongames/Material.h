@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,20 +21,20 @@ limitations under the License.
 
 namespace AeonGames
 {
-class MaterialBuffer;
-class Material
-{
-public:
-    Material ( std::string  aFilename );
-    Material ( const MaterialBuffer& aMaterialBuffer );
-    ~Material();
-    DLL const std::vector<Uniform>& GetUniformMetaData() const;
-    DLL uint32_t GetUniformBlockSize() const;
-private:
-    void Initialize ( const MaterialBuffer& aMaterialBuffer );
-    void Finalize();
-    std::string mFilename;
-    std::vector<Uniform> mUniformMetaData;
-};
+    class MaterialBuffer;
+    class Material
+    {
+    public:
+        Material ( const std::string& aFilename );
+        Material ( const MaterialBuffer& aMaterialBuffer );
+        ~Material();
+        DLL const std::vector<Uniform>& GetUniformMetaData() const;
+        DLL uint32_t GetUniformBlockSize() const;
+    private:
+        void Initialize ( const MaterialBuffer& aMaterialBuffer );
+        void Finalize();
+        std::string mFilename;
+        std::vector<Uniform> mUniformMetaData;
+    };
 }
 #endif

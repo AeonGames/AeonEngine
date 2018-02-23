@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ limitations under the License.
 #include "aeongames/Utilities.h"
 namespace AeonGames
 {
-    const std::string GetFileExtension ( const std::string aFilePath )
+    const std::string GetFileExtension ( const std::string& aFilePath )
     {
         ///@todo Use splitpath instead?
         std::size_t extpos = aFilePath.find_last_of ( "/\\" );
         extpos = ( extpos == std::string::npos ) ? 0 : extpos;
-        extpos = aFilePath.find_first_of ( ".", extpos );
+        extpos = aFilePath.find_first_of ( '.', extpos );
         if ( extpos != std::string::npos )
         {
             std::string extension = aFilePath.substr ( extpos );

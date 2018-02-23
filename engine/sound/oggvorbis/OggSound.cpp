@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,25 +24,25 @@ namespace AeonGames
 {
     size_t OggSound::Read ( void *ptr, size_t size, size_t nmemb, void *datasource )
     {
-        OggSound* ogg_sound = static_cast<OggSound*> ( datasource );
+        auto* ogg_sound = static_cast<OggSound*> ( datasource );
         ( void ) ogg_sound;
         return 0;
     }
     int OggSound::Seek ( void *datasource, ogg_int64_t offset, int whence )
     {
-        OggSound* ogg_sound = static_cast<OggSound*> ( datasource );
+        auto* ogg_sound = static_cast<OggSound*> ( datasource );
         ( void ) ogg_sound;
         return 0;
     }
     int OggSound::Close ( void *datasource )
     {
-        OggSound* ogg_sound = static_cast<OggSound*> ( datasource );
+        auto* ogg_sound = static_cast<OggSound*> ( datasource );
         ( void ) ogg_sound;
         return 0;
     }
     long OggSound::Tell ( void *datasource )
     {
-        OggSound* ogg_sound = static_cast<OggSound*> ( datasource );
+        auto* ogg_sound = static_cast<OggSound*> ( datasource );
         ( void ) ogg_sound;
         return 0;
     }
@@ -69,6 +69,5 @@ namespace AeonGames
     }
 
     OggSound::~OggSound()
-    {
-    }
+        = default;
 }

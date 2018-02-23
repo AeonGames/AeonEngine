@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/ResourceCache.h"
 #include "Factory.h"
 #include <unordered_map>
+#include <utility>
 
 namespace AeonGames
 {
@@ -25,7 +26,7 @@ namespace AeonGames
     {
         return Factory<Image, const std::string&>::Get ( aIdentifier, aFilename );
     }
-    bool RegisterImageLoader ( const std::string& aExt, std::function<std::shared_ptr<Image> ( const std::string& ) > aLoader )
+    bool RegisterImageLoader ( const std::string& aExt, const std::function<std::shared_ptr<Image> ( const std::string& ) >& aLoader )
     {
         return Factory<Image, const std::string&>::RegisterLoader ( aExt, aLoader );
     }

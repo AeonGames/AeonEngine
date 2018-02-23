@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ limitations under the License.
 namespace AeonGames
 {
     Quaternion::Quaternion()
-    {
-    }
+        = default;
     Quaternion::Quaternion ( float w, float x, float y, float z ) :
         mQuaternion{w, x, y, z}
     {
@@ -145,7 +144,7 @@ namespace AeonGames
             }
             float dot = ( q1[0] * q2[0] ) + ( q1[1] * q2[1] ) + ( q1[2] * q2[2] ) + ( q1[3] * q2[3] );
             float sign = 1.0f;
-            if ( fabs ( dot ) > 0.9999f )
+            if ( std::fabs ( dot ) > 0.9999f )
             {
                 return Quaternion ( q1 );
             }

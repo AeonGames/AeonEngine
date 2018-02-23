@@ -26,10 +26,11 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <utility>
 
 namespace AeonGames
 {
-    OpenGLWindow::OpenGLWindow ( void* aWindowId, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLWindow::OpenGLWindow ( void* aWindowId, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer ) :
         mOpenGLRenderer ( aOpenGLRenderer ), mWindowId ( aWindowId )
     {
         try
@@ -109,8 +110,8 @@ namespace AeonGames
         Frustum frustum ( projection_matrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( Node & aNode )
         {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-            const OpenGLModel* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode.GetComponent ( OpenGLModel::TypeId ) );
+            const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+            const auto* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode.GetComponent ( OpenGLModel::TypeId ) );
             if ( opengl_model )
             {
                 if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )

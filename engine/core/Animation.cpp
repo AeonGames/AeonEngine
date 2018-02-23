@@ -37,9 +37,9 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Animation::Animation ( std::string  aFilename )
+    Animation::Animation ( const std::string&  aFilename )
         :
-        mFilename ( std::move ( aFilename ) )
+        mFilename ( aFilename )
     {
         try
         {
@@ -72,7 +72,7 @@ namespace AeonGames
         double sample = fmod ( mFrameRate * fmod ( aTime, mDuration ), mFrames.size() );
         double frame;
         double interpolation = modf ( sample, &frame );
-        size_t frame1 = static_cast<size_t> ( frame );
+        auto frame1 = static_cast<size_t> ( frame );
         size_t frame2 = ( ( frame1 + 1 ) % mFrames.size() );
         size_t frame0 = frame1 == 0 ? mFrames.size() - 1 : ( ( frame1 - 1 ) % mFrames.size() );
         size_t frame3 = ( ( frame1 + 2 ) % mFrames.size() );

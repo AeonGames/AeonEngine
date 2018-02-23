@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,56 +19,56 @@ limitations under the License.
 
 namespace AeonGames
 {
-class Mesh
-{
-public:
-    enum AttributeMask
+    class Mesh
     {
-        POSITION_BIT = 0b1,
-        NORMAL_BIT = 0b10,
-        TANGENT_BIT = 0b100,
-        BITANGENT_BIT = 0b1000,
-        UV_BIT = 0b10000,
-        WEIGHT_BIT = 0b100000,
-    };
-    enum IndexType
-    {
-        /**@todo Refactor to make order better match sizes.
-           This will involve changing the exporter and the msh format specification.*/
-        BYTE = 0x00,
-        UNSIGNED_BYTE = 0x01,
-        SHORT = 0x02,
-        UNSIGNED_SHORT = 0x03,
-        INT = 0x04,
-        UNSIGNED_INT = 0x05,
-        FLOAT = 0x06,
-        TWO_BYTES = 0x07,
-        THREE_BYTES = 0x08,
-        FOUR_BYTES = 0x09,
-        DOUBLE = 0x0A
-    };
-    struct TriangleGroup
-    {
+    public:
+        enum AttributeMask
+        {
+            POSITION_BIT = 0b1,
+            NORMAL_BIT = 0b10,
+            TANGENT_BIT = 0b100,
+            BITANGENT_BIT = 0b1000,
+            UV_BIT = 0b10000,
+            WEIGHT_BIT = 0b100000,
+        };
+        enum IndexType
+        {
+            /**@todo Refactor to make order better match sizes.
+               This will involve changing the exporter and the msh format specification.*/
+            BYTE = 0x00,
+            UNSIGNED_BYTE = 0x01,
+            SHORT = 0x02,
+            UNSIGNED_SHORT = 0x03,
+            INT = 0x04,
+            UNSIGNED_INT = 0x05,
+            FLOAT = 0x06,
+            TWO_BYTES = 0x07,
+            THREE_BYTES = 0x08,
+            FOUR_BYTES = 0x09,
+            DOUBLE = 0x0A
+        };
+        struct TriangleGroup
+        {
+            float mCenterRadii[6];
+            uint32_t mVertexFlags = 0;
+            uint32_t mVertexCount = 0;
+            uint32_t mIndexType = 0;
+            uint32_t mIndexCount = 0;
+            std::string mVertexBuffer;
+            std::string mIndexBuffer;
+        };
+        Mesh ( const std::string& aFilename );
+        ~Mesh();
+        DLL uint32_t GetStride ( uint32_t aFlags ) const;
+        DLL uint32_t GetIndexSize ( IndexType aIndexType ) const;
+        DLL const float * const GetCenterRadii() const;
+        DLL const std::vector<TriangleGroup>& GetTriangleGroups() const;
+    private:
+        void Initialize();
+        void Finalize();
+        std::string mFilename;
         float mCenterRadii[6];
-        uint32_t mVertexFlags = 0;
-        uint32_t mVertexCount = 0;
-        uint32_t mIndexType = 0;
-        uint32_t mIndexCount = 0;
-        std::string mVertexBuffer;
-        std::string mIndexBuffer;
+        std::vector<TriangleGroup> mTriangleGroups;
     };
-    Mesh ( std::string  aFilename );
-    ~Mesh();
-    DLL uint32_t GetStride ( uint32_t aFlags ) const;
-    DLL uint32_t GetIndexSize ( IndexType aIndexType ) const;
-    DLL const float * const GetCenterRadii() const;
-    DLL const std::vector<TriangleGroup>& GetTriangleGroups() const;
-private:
-    void Initialize();
-    void Finalize();
-    std::string mFilename;
-    float mCenterRadii[6];
-    std::vector<TriangleGroup> mTriangleGroups;
-};
 }
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ limitations under the License.
 #include <ostream>
 #include <regex>
 #include <array>
+#include <utility>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -37,7 +38,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<const Material>& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ),
         mMaterial ( aMaterial )
     {

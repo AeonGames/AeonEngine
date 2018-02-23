@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,15 +19,15 @@ limitations under the License.
 extern "C"
 {
 #endif
-typedef bool ( *StartUpPtr ) ( void );
-typedef void ( *ShutDownPtr ) ( void );
-typedef struct
+using StartUpPtr = bool ( * ) ();
+using ShutDownPtr = void ( * ) ();
+struct PluginModuleInterface
 {
     const char* Name;
     const char* Description;
     StartUpPtr StartUp;
     ShutDownPtr ShutDown;
-} PluginModuleInterface;
+};
 #ifdef __cplusplus
 }
 #endif

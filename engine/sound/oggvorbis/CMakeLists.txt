@@ -11,5 +11,5 @@ endif()
 target_link_libraries(OggSound AeonEngine ${OGGVORBIS_LIBRARIES})
 if(USE_CLANG_TIDY)
     set_target_properties(OggSound PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
+        CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-fix;-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
 endif()

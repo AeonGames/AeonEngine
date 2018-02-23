@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cassert>
+#include <utility>
 #include <vector>
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
@@ -24,10 +25,9 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLPipeline::OpenGLPipeline ( const std::shared_ptr<const Pipeline>&  aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer ) :
         mPipeline ( aPipeline ),
         mOpenGLRenderer ( aOpenGLRenderer ),
-        mProgramId ( 0 ),
         /**@todo Should use the resource cache to assign the default material. */
         mDefaultMaterial ( std::make_shared<OpenGLMaterial> ( mPipeline->GetDefaultMaterial(), mOpenGLRenderer ) )
     {
@@ -80,8 +80,8 @@ namespace AeonGames
         uint32_t vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const GLchar* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline->GetVertexShaderSource().c_str() );
-        GLint vertex_shader_len = static_cast<GLint> ( mPipeline->GetVertexShaderSource().length() );
+        const auto* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline->GetVertexShaderSource().c_str() );
+        auto vertex_shader_len = static_cast<GLint> ( mPipeline->GetVertexShaderSource().length() );
 
         glShaderSource (
             vertex_shader,
@@ -118,8 +118,8 @@ namespace AeonGames
         uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const GLchar* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline->GetFragmentShaderSource().c_str() );
-        GLint fragment_shader_len = static_cast<GLint> ( mPipeline->GetFragmentShaderSource().length() );
+        const auto* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline->GetFragmentShaderSource().c_str() );
+        auto fragment_shader_len = static_cast<GLint> ( mPipeline->GetFragmentShaderSource().length() );
 
         glShaderSource ( fragment_shader, 1, &fragment_shader_source_ptr, &fragment_shader_len );
         OPENGL_CHECK_ERROR_THROW;

@@ -63,8 +63,8 @@ namespace AeonGames
         }
     };
 
-    Pipeline::Pipeline ( std::string  aFilename ) :
-        mFilename ( std::move ( aFilename ) ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
+    Pipeline::Pipeline ( const std::string&  aFilename ) :
+        mFilename ( aFilename ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
         try
         {

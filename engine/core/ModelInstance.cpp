@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Material.h"
@@ -29,7 +30,7 @@ limitations under the License.
 namespace AeonGames
 {
     const size_t ModelInstance::TypeId = "ModelInstance"_id;
-    ModelInstance::ModelInstance ( const std::shared_ptr<const Model> aModel ) :
+    ModelInstance::ModelInstance ( const std::shared_ptr<const Model>&  aModel ) :
         mModel ( aModel ),
         mEnabledAssemblies ( mModel->GetMeshes().size(), true ),
         mAnimationIndex ( 0 ),

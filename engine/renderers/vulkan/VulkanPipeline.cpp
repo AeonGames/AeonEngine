@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cassert>
+#include <utility>
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -31,8 +32,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
-        mPipeline ( aPipeline ),
+    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<const Pipeline>&  aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
+        mPipeline ( aPipeline  ),
         mVulkanRenderer ( aVulkanRenderer ),
         mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) ),
         mMatrices ( *aVulkanRenderer ),
@@ -130,7 +131,7 @@ namespace AeonGames
         if ( mPipeline->GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
             mSkeleton.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            float* joint_array = static_cast<float*> ( mSkeleton.Map ( 0, VK_WHOLE_SIZE ) );
+            auto* joint_array = static_cast<float*> ( mSkeleton.Map ( 0, VK_WHOLE_SIZE ) );
             const float identity[16] =
             {
                 1.0f, 0.0f, 0.0f, 0.0f,

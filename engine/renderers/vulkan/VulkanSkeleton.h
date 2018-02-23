@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace AeonGames
     class VulkanSkeleton
     {
     public:
-        VulkanSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
+        VulkanSkeleton ( const std::shared_ptr<const Skeleton>&  aSkeleton, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
         ~VulkanSkeleton();
         VkBuffer GetBuffer() const;
         void SetPose ( const std::vector<Matrix4x4>& aSkeleton ) const;

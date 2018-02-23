@@ -22,8 +22,7 @@ limitations under the License.
 namespace AeonGames
 {
     AABB::AABB()
-    {
-    }
+        = default;
     AABB::AABB ( const Vector3 & aCenter, const Vector3 & aRadii ) : mCenter ( aCenter ), mRadii ( aRadii )
     {
     }

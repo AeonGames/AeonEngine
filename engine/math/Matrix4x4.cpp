@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <cmath>
+
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Vector3.h"
@@ -123,7 +125,7 @@ namespace AeonGames
 
     void Matrix4x4::Perspective ( float aFieldOfVision, float aAspect, float aNear, float aFar )
     {
-        float fH = tan ( aFieldOfVision / 360 * PI ) * aNear;
+        float fH = std::tan ( aFieldOfVision / 360 * PI ) * aNear;
         float fW = fH * aAspect;
         Frustum ( -fW, fW, -fH, fH, aNear, aFar );
     }
@@ -176,7 +178,7 @@ namespace AeonGames
 
     const Matrix4x4 Matrix4x4::GetRotationMatrix ( float angle, float x, float y, float z )
     {
-        float radians = float ( ( angle / 180.0f ) * PI );
+        auto radians = float ( ( angle / 180.0f ) * PI );
         float c = cosf ( radians );
         float s = sinf ( radians );
         return Matrix4x4
