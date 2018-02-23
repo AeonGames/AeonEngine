@@ -21,6 +21,7 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <utility>
 #include "aeongames/Frustum.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
@@ -29,7 +30,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanWindow::VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanWindow::VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -481,8 +482,8 @@ namespace AeonGames
         Frustum frustum ( mProjectionMatrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( Node & aNode )
         {
-            const ModelInstance* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-            const VulkanModel* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode.GetComponent ( VulkanModel::TypeId ) );
+            const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+            const auto* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode.GetComponent ( VulkanModel::TypeId ) );
             if ( vulkan_model )
             {
                 if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )

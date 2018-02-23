@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace AeonGames
     class VulkanMaterial
     {
     public:
-        VulkanMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
+        VulkanMaterial ( const std::shared_ptr<const Material>&  aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanMaterial();
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 #include <sstream>
 #include <limits>
 #include <cstring>
+#include <utility>
 #include "VulkanTexture.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
@@ -25,8 +26,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanTexture::VulkanTexture ( const std::shared_ptr<const Image> aImage, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
-        mVulkanRenderer ( aVulkanRenderer ), mImage ( aImage ),
+    VulkanTexture::VulkanTexture ( const std::shared_ptr<const Image>& aImage, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
+        mVulkanRenderer (  aVulkanRenderer  ), mImage (  aImage ),
         mVkImage ( VK_NULL_HANDLE ),
         mImageMemory ( VK_NULL_HANDLE )
     {
@@ -207,8 +208,8 @@ namespace AeonGames
                     handle any conversions?
                     We'll have to see when it comes to handling compressed and
                     "hardware accelerated" formats.*/
-                const uint16_t* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Data() );
-                uint8_t* write_pointer = static_cast<uint8_t*> ( image_memory );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Data() );
+                auto* write_pointer = static_cast<uint8_t*> ( image_memory );
                 auto data_size = mImage->DataSize() / 2;
                 for ( uint32_t i = 0; i < data_size; i += 4 )
                 {
@@ -224,7 +225,7 @@ namespace AeonGames
             if ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE )
             {
                 const uint8_t* read_pointer = mImage->Data();
-                uint8_t* write_pointer = static_cast<uint8_t*> ( image_memory );
+                auto* write_pointer = static_cast<uint8_t*> ( image_memory );
                 auto data_size = mImage->DataSize();
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
@@ -238,8 +239,8 @@ namespace AeonGames
             else
             {
                 // Is this a temporary fix?
-                const uint16_t* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Data() );
-                uint8_t* write_pointer = static_cast<uint8_t*> ( image_memory );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Data() );
+                auto* write_pointer = static_cast<uint8_t*> ( image_memory );
                 auto data_size = mImage->DataSize() / 2;
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {

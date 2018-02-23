@@ -73,8 +73,7 @@ namespace AeonGames
     }
 
     CompilerLinker::~CompilerLinker()
-    {
-    }
+        = default;
 
     void CompilerLinker::AddShaderSource ( EShLanguage aLanguage, const char* aSource )
     {

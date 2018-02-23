@@ -75,7 +75,7 @@ namespace AeonGames
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPreOrder,Node::RecursiveTraverseDFSPostOrder
         */
-        DLL void LoopTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction );
+        DLL void LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in pre-order.
         This function guarrantees that parents are processed before their children.
@@ -87,36 +87,36 @@ namespace AeonGames
         @sa Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPreOrder,Node::RecursiveTraverseDFSPostOrder
         */
         DLL void LoopTraverseDFSPreOrder (
-            std::function<void ( Node& ) > aPreamble,
-            std::function<void ( Node& ) > aPostamble );
+            const std::function<void ( Node& ) >& aPreamble,
+            const std::function<void ( Node& ) >& aPostamble );
         /** Constant version of LoopTraverseDFSPreOrder. */
-        DLL void LoopTraverseDFSPreOrder ( std::function<void ( const Node& ) > aAction ) const;
+        DLL void LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const;
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in post-order.
         This function guarrantees that children are processed before their parent.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPreOrder,Node::RecursiveTraverseDFSPreOrder,Node::RecursiveTraverseDFSPostOrder
         */
-        DLL void LoopTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction );
+        DLL void LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction );
         /** Constant version of LoopTraverseDFSPostOrder. */
-        DLL void LoopTraverseDFSPostOrder ( std::function<void ( const Node& ) > aAction ) const;
+        DLL void LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const;
         /** Recursive depth first search iteration.
         Iterates all descendants with recursion in pre-order.
         This function guarrantees that parents are processed before their children.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPreOrder,Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPostOrder
         */
-        DLL void RecursiveTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction );
+        DLL void RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
         /** Recursive depth first search iteration.
         Iterates all descendants with recursion in post-order.
         This function guarrantees that children are processed before their parent.
         @param aAction a function, function pointer or function like object to proccess each child node.
         @sa Node::LoopTraverseDFSPreOrder,Node::LoopTraverseDFSPostOrder,Node::RecursiveTraverseDFSPreOrder
         */
-        DLL void RecursiveTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction );
-        DLL void LoopTraverseAncestors ( std::function<void ( Node& ) > aAction );
-        DLL void LoopTraverseAncestors ( std::function<void ( const Node& ) > aAction ) const;
-        DLL void RecursiveTraverseAncestors ( std::function<void ( Node& ) > aAction );
+        DLL void RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction );
+        DLL void LoopTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
+        DLL void LoopTraverseAncestors ( const std::function<void ( const Node& ) >& aAction ) const;
+        DLL void RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
         DLL const Transform& GetLocalTransform() const;
         DLL const Transform& GetGlobalTransform() const;
         DLL const AABB GetLocalAABB() const;
@@ -148,7 +148,7 @@ namespace AeonGames
         size_t mIndex;
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
-        mutable std::vector<std::shared_ptr<Node>>::size_type mIterator;
+        mutable std::vector<std::shared_ptr<Node>>::size_type mIterator{ 0 };
         std::bitset<8> mFlags;
         DependencyMap<std::size_t, std::shared_ptr<Component>> mComponents;
     };

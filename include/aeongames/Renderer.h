@@ -67,11 +67,11 @@ namespace AeonGames
     /*@{*/
     DLL std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
     /** Registers a renderer loader for a specific identifier.*/
-    DLL bool RegisterRendererLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<Renderer>() > aLoader );
+    DLL bool RegisterRendererLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<Renderer>() >& aLoader );
     /** Unregisters a renderer loader for a specific identifier.*/
     DLL bool UnregisterRendererLoader ( const std::string& aIdentifier );
     /** Enumerates Renderer loader identifiers via an enumerator functor.*/
-    DLL void EnumerateRendererLoaders ( std::function<bool ( const std::string& ) > aEnumerator );
+    DLL void EnumerateRendererLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator );
     /*@}*/
 }
 #endif

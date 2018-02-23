@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace AeonGames
             }
             return nullptr;
         }
-        static bool RegisterLoader ( const std::string& aIdentifier, std::function < std::shared_ptr<T> ( Args&&... args ) > aLoader )
+        static bool RegisterLoader ( const std::string& aIdentifier, const std::function < std::shared_ptr<T> ( Args&&... args ) > & aLoader )
         {
             if ( Loaders.find ( aIdentifier ) == Loaders.end() )
             {
@@ -52,7 +52,7 @@ namespace AeonGames
             }
             return false;
         }
-        static void EnumerateLoaders ( std::function<bool ( const std::string& ) > aEnumerator )
+        static void EnumerateLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator )
         {
             for ( auto& i : Loaders )
             {

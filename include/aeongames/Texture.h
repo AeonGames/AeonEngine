@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ namespace AeonGames
     class Texture
     {
     public:
-        Texture ( std::string  aFilename );
+        Texture ( const std::string&  aFilename );
         ~Texture();
     private:
         std::string mFilename;

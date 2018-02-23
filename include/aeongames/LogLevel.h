@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,23 +20,23 @@ limitations under the License.
 
 namespace AeonGames
 {
-class LogLevel
-{
-public:
-    enum class Level
+    class LogLevel
     {
-        Info = 0,
-        Warning,
-        Error
-    };
-    DLL explicit LogLevel ( Level aLevel );
-    DLL ~LogLevel();
-    DLL friend std::ostream& operator<< ( std::ostream& os, const LogLevel& obj );
-private:
+    public:
+        enum class Level
+        {
+            Info = 0,
+            Warning,
+            Error
+        };
+        DLL explicit LogLevel ( Level aLevel );
+        DLL ~LogLevel();
+        DLL friend std::ostream& operator<< ( std::ostream& os, const LogLevel& obj );
+    private:
 #ifdef _WIN32
-    CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo {};
-    HANDLE mConsoleHandle = nullptr;
+        CONSOLE_SCREEN_BUFFER_INFO mConsoleScreenBufferInfo {};
+        HANDLE mConsoleHandle = nullptr;
 #endif
-};
+    };
 }
 #endif

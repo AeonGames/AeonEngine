@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,21 +19,11 @@ limitations under the License.
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Uniform.h"
 
-//#include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4251 )
-#endif
-//#include "property.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-
 namespace AeonGames
 {
     static_assert ( sizeof ( std::shared_ptr<Image> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
-    Uniform::Uniform ( std::string  aName, float aX ) :
-        mName ( std::move ( aName ) ),
+    Uniform::Uniform ( const std::string& aName, float aX ) :
+        mName ( aName ),
         mType ( Uniform::Type::FLOAT )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
@@ -41,8 +31,8 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( std::string  aName, float aX, float aY ) :
-        mName ( std::move ( aName ) ),
+    Uniform::Uniform ( const std::string&  aName, float aX, float aY ) :
+        mName ( aName ),
         mType ( Uniform::Type::FLOAT_VEC2 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
@@ -50,8 +40,8 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( std::string  aName, float aX, float aY, float aZ ) :
-        mName ( std::move ( aName ) ),
+    Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ ) :
+        mName ( aName ),
         mType ( Uniform::Type::FLOAT_VEC3 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
@@ -59,8 +49,8 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [2] = aZ;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( std::string  aName, float aX, float aY, float aZ, float aW ) :
-        mName ( std::move ( aName ) ),
+    Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW ) :
+        mName ( aName ),
         mType ( Uniform::Type::FLOAT_VEC4 )
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
@@ -68,8 +58,8 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [2] = aZ;
         ( reinterpret_cast<float*> ( mData ) ) [3] = aW;
     }
-    Uniform::Uniform ( std::string  aName, const std::string & aFilename ) :
-        mName ( std::move ( aName ) ),
+    Uniform::Uniform ( const std::string&  aName, const std::string & aFilename ) :
+        mName ( aName ),
         mType ( Uniform::Type::SAMPLER_2D )
     {
         /**@todo Temporarily hardcoding ".png" identifier,

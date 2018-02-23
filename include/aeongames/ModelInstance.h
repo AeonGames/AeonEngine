@@ -26,8 +26,8 @@ namespace AeonGames
     class ModelInstance : public Component
     {
     public:
-        DLL ModelInstance ( const std::shared_ptr<const Model> aModel );
-        DLL ~ModelInstance();
+        DLL ModelInstance ( const std::shared_ptr<const Model>&  aModel );
+        DLL ~ModelInstance() override;
         DLL void EnableAssembly ( size_t aAssemblyIndex, bool aEnabled = true );
         DLL void EnableAllAssemblies ( bool aEnabled = true );
         DLL size_t GetAnimationIndex() const;
@@ -38,7 +38,7 @@ namespace AeonGames
         DLL const std::vector<Matrix4x4>& GetSkeletonAnimation() const;
         DLL const std::shared_ptr<const Model>& GetModel() const;
         DLL bool IsAssemblyEnabled ( size_t aAssemblyIndex ) const;
-        DLL virtual void Update ( const Node& aNode, double aDelta ) final;
+        DLL void Update ( const Node& aNode, double aDelta ) final;
         DLL static const size_t TypeId;
     private:
         void Initialize();

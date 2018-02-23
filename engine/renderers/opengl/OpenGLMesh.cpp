@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 #include <fstream>
 #include <sstream>
 #include <exception>
+#include <utility>
 #include <vector>
 #include <cassert>
 #include <cstring>
@@ -38,7 +39,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMesh::OpenGLMesh ( const std::shared_ptr<const Mesh> aMesh, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLMesh::OpenGLMesh ( const std::shared_ptr<const Mesh>&  aMesh, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
         mMesh ( aMesh )
     {
         try
@@ -153,7 +154,7 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_THROW;
                 glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, mMesh->GetStride ( triangle_groups[i].mVertexFlags ), offset );
                 OPENGL_CHECK_ERROR_THROW;
-                offset += sizeof ( uint8_t ) * 4;
+                //offset += sizeof ( uint8_t ) * 4;
             }
             //---Index Buffer---
             if ( triangle_groups[i].mIndexCount )

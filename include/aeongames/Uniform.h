@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,11 +37,11 @@ namespace AeonGames
             SAMPLER_2D,
             SAMPLER_CUBE,
         };
-        Uniform ( std::string  aName, float aX );
-        Uniform ( std::string  aName, float aX, float aY );
-        Uniform ( std::string  aName, float aX, float aY, float aZ );
-        Uniform ( std::string  aName, float aX, float aY, float aZ, float aW );
-        Uniform ( std::string  aName, const std::string& aFilename );
+        Uniform ( const std::string&  aName, float aX );
+        Uniform ( const std::string&  aName, float aX, float aY );
+        Uniform ( const std::string&  aName, float aX, float aY, float aZ );
+        Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW );
+        Uniform ( const std::string&  aName, const std::string& aFilename );
         ~Uniform();
         ///@name Getters
         ///@{

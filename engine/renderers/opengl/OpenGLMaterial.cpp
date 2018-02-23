@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
+#include <utility>
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ResourceCache.h"
 #include "ProtoBufHelpers.h"
@@ -35,7 +36,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
+    OpenGLMaterial::OpenGLMaterial ( const std::shared_ptr<const Material>&  aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
         mMaterial ( aMaterial )
     {
         try

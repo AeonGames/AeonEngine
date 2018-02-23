@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace AeonGames
     class OpenGLTexture
     {
     public:
-        OpenGLTexture ( const std::shared_ptr<const Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLTexture ( const std::shared_ptr<const Image>&  aImage, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
         ~OpenGLTexture();
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/

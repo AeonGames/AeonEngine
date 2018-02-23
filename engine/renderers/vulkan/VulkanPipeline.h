@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace AeonGames
     class VulkanPipeline
     {
     public:
-        VulkanPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer );
+        VulkanPipeline ( const std::shared_ptr<const Pipeline>&  aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
         ~VulkanPipeline();
         void Use ( const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
         VkBuffer GetSkeletonBuffer() const;

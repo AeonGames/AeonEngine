@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace AeonGames
     class OpenGLPipeline
     {
     public:
-        OpenGLPipeline ( const std::shared_ptr<const Pipeline> aPipeline, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLPipeline ( const std::shared_ptr<const Pipeline>&  aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer );
         ~OpenGLPipeline();
         void Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial = nullptr ) const;
     private:
@@ -37,8 +37,8 @@ namespace AeonGames
         void Finalize();
         std::shared_ptr<const Pipeline> mPipeline;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
-        uint32_t mProgramId;
-        uint32_t mPropertiesBuffer = 0;
+        uint32_t mProgramId{};
+        uint32_t mPropertiesBuffer{};
         const std::shared_ptr<OpenGLMaterial> mDefaultMaterial;
     };
 }

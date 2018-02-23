@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <cassert>
 #include <cstring>
+#include <utility>
 #include <vector>
 #include <sstream>
 #include "aeongames/Skeleton.h"
@@ -27,7 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanSkeleton::VulkanSkeleton ( const std::shared_ptr<const Skeleton> aSkeleton, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanSkeleton::VulkanSkeleton ( const std::shared_ptr<const Skeleton>&  aSkeleton, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ), mSkeleton ( aSkeleton ),
         mSkeletonBuffer ( *aVulkanRenderer,
                           mSkeleton->GetJoints().size() * sizeof ( float ) * 16,
@@ -67,7 +68,7 @@ namespace AeonGames
 
     void VulkanSkeleton::Initialize()
     {
-        float* joint_array = static_cast<float*> ( mSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
+        auto* joint_array = static_cast<float*> ( mSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
         const float identity[16] =
         {
             1.0f, 0.0f, 0.0f, 0.0f,

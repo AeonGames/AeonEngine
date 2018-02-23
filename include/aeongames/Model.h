@@ -23,36 +23,36 @@ limitations under the License.
 
 namespace AeonGames
 {
-class Pipeline;
-class Material;
-class Mesh;
-class Skeleton;
-class Animation;
-class Model
-{
-public:
-    DLL Model ( std::string  aFilename );
-    DLL ~Model();
-    DLL const std::string& GetFilename() const;
-    DLL const std::vector<std::tuple<
-    std::shared_ptr<Pipeline>,
-        std::shared_ptr<Material>,
-        std::shared_ptr<Mesh>>>& GetMeshes() const;
-    DLL const AABB& GetCenterRadii() const;
-    DLL const std::shared_ptr<Skeleton>& GetSkeleton() const;
-    DLL const std::vector<std::shared_ptr<const Animation>>& GetAnimations() const;
-private:
-    AABB mCenterRadii;
-    std::string mFilename;
-    std::shared_ptr<Skeleton> mSkeleton;
-    std::vector<std::tuple<
-    std::shared_ptr<Pipeline>,
-        std::shared_ptr<Material>,
-        std::shared_ptr<Mesh>>
-        > mMeshes;
-    std::vector<std::shared_ptr<const Animation>> mAnimations;
-    void Initialize();
-    void Finalize();
-};
+    class Pipeline;
+    class Material;
+    class Mesh;
+    class Skeleton;
+    class Animation;
+    class Model
+    {
+    public:
+        DLL Model ( const std::string& aFilename );
+        DLL ~Model();
+        DLL const std::string& GetFilename() const;
+        DLL const std::vector<std::tuple<
+        std::shared_ptr<Pipeline>,
+            std::shared_ptr<Material>,
+            std::shared_ptr<Mesh>>>& GetMeshes() const;
+        DLL const AABB& GetCenterRadii() const;
+        DLL const std::shared_ptr<Skeleton>& GetSkeleton() const;
+        DLL const std::vector<std::shared_ptr<const Animation>>& GetAnimations() const;
+    private:
+        AABB mCenterRadii;
+        std::string mFilename;
+        std::shared_ptr<Skeleton> mSkeleton;
+        std::vector<std::tuple<
+        std::shared_ptr<Pipeline>,
+            std::shared_ptr<Material>,
+            std::shared_ptr<Mesh>>
+            > mMeshes;
+        std::vector<std::shared_ptr<const Animation>> mAnimations;
+        void Initialize();
+        void Finalize();
+    };
 }
 #endif

@@ -78,7 +78,7 @@ find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
-    set(CLANG_TIDY_CHECKS "-checks=modernize-*")
+    set(CLANG_TIDY_CHECKS "-checks=performance-*,modernize-*,-modernize-pass-by-value")
 endif()
 
 if(CMAKE_HOST_UNIX)
@@ -148,7 +148,7 @@ if(MSVC)
 else()
     find_program (AUTOPEP8_EXECUTABLE autopep8)
     add_custom_target(format-code
-        ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -regex "'.*\\.\\(cpp\\|hpp\\|cc\\|cxx\\)'" -exec ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc {} \\$<SEMICOLON>
+        ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -regex "'.*\\.\\(cpp\\|hpp\\|h\\|cc\\|cxx\\)'" -exec ${ASTYLE_EXECUTABLE} --options=${CMAKE_SOURCE_DIR}/astylerc {} \\$<SEMICOLON>
         COMMAND
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/\\t/    /g' {} \\$<SEMICOLON>
         COMMAND

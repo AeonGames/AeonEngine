@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,13 +16,15 @@ limitations under the License.
 
 #include "OpenGLFunctions.h"
 #include "OpenGLTexture.h"
+
+#include <utility>
 #include "aeongames/Image.h"
 #include "aeongames/Utilities.h"
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<const Image> aImage, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer ) :
-        mImage ( aImage )
+    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<const Image>& aImage, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
+        mImage ( aImage  )
     {
         try
         {

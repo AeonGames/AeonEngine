@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <utility>
+
 #include "aeongames/SoundSystem.h"
 #include "Factory.h"
 
@@ -22,7 +24,7 @@ namespace AeonGames
     {
         return Factory<SoundSystem>::Get ( aIdentifier );
     }
-    bool RegisterSoundSystemLoader ( const std::string& aIdentifier, std::function<std::shared_ptr<SoundSystem>() > aLoader )
+    bool RegisterSoundSystemLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<SoundSystem>() >& aLoader )
     {
         return Factory<SoundSystem>::RegisterLoader ( aIdentifier, aLoader );
     }
@@ -30,7 +32,7 @@ namespace AeonGames
     {
         return Factory<SoundSystem>::UnregisterLoader ( aIdentifier );
     }
-    void EnumerateSoundSystemLoaders ( std::function<bool ( const std::string& ) > aEnumerator )
+    void EnumerateSoundSystemLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator )
     {
         Factory<SoundSystem>::EnumerateLoaders ( aEnumerator );
     }

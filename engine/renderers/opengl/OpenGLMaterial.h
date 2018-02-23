@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace AeonGames
     class OpenGLMaterial
     {
     public:
-        OpenGLMaterial ( const std::shared_ptr<const Material> aMaterial, const std::shared_ptr<const OpenGLRenderer> aOpenGLRenderer );
+        OpenGLMaterial ( const std::shared_ptr<const Material>&  aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
         ~OpenGLMaterial();
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<OpenGLTexture>>& GetTextures() const;

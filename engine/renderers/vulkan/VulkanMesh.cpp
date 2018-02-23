@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 #include <fstream>
 #include <sstream>
 #include <exception>
+#include <utility>
 #include <vector>
 #include <cassert>
 #include <cstring>
@@ -28,7 +29,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMesh::VulkanMesh ( const std::shared_ptr<const Mesh> aMesh, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
+    VulkanMesh::VulkanMesh ( const std::shared_ptr<const Mesh>&  aMesh, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -75,74 +76,74 @@ namespace AeonGames
         }
         auto& triangle_groups = mMesh->GetTriangleGroups();
         mBuffers.reserve ( triangle_groups.size() );
-        for ( size_t i = 0; i < triangle_groups.size(); ++i )
+        for ( const auto & triangle_group : triangle_groups )
         {
-            const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * triangle_groups[i].mVertexCount );
-            const VkDeviceSize index_buffer_size = ( triangle_groups[i].mIndexBuffer.length() *
-                                                   ( ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
+            const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * triangle_group.mVertexCount );
+            const VkDeviceSize index_buffer_size = ( triangle_group.mIndexBuffer.length() *
+                                                   ( ( triangle_group.mIndexType == Mesh::BYTE || triangle_group.mIndexType == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
             VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
-            VkBufferUsageFlags buffer_usage = ( ( triangle_groups[i].mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( triangle_groups[i].mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
+            VkBufferUsageFlags buffer_usage = ( ( triangle_group.mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( triangle_group.mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
             mBuffers.emplace_back ( *mVulkanRenderer.get(), buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
             std::vector<uint8_t> buffer ( buffer_size );
-            if ( triangle_groups[i].mVertexCount )
+            if ( triangle_group.mVertexCount )
             {
-                Vertex* vertices = reinterpret_cast<Vertex*> ( buffer.data() );
+                auto* vertices = reinterpret_cast<Vertex*> ( buffer.data() );
                 memset ( vertices, 0, vertex_buffer_size );
                 uintptr_t offset = 0;
-                for ( uint32_t j = 0; j < triangle_groups[i].mVertexCount; ++j )
+                for ( uint32_t j = 0; j < triangle_group.mVertexCount; ++j )
                 {
-                    if ( triangle_groups[i].mVertexFlags & Mesh::POSITION_BIT )
+                    if ( triangle_group.mVertexFlags & Mesh::POSITION_BIT )
                     {
-                        memcpy ( vertices[j].position, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::position ) );
+                        memcpy ( vertices[j].position, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::position ) );
                         offset += sizeof ( Vertex::position );
                     }
 
-                    if ( triangle_groups[i].mVertexFlags & Mesh::NORMAL_BIT )
+                    if ( triangle_group.mVertexFlags & Mesh::NORMAL_BIT )
                     {
-                        memcpy ( vertices[j].normal, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::normal ) );
+                        memcpy ( vertices[j].normal, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::normal ) );
                         offset += sizeof ( Vertex::normal );
                     }
 
-                    if ( triangle_groups[i].mVertexFlags & Mesh::TANGENT_BIT )
+                    if ( triangle_group.mVertexFlags & Mesh::TANGENT_BIT )
                     {
-                        memcpy ( vertices[j].tangent, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::tangent ) );
+                        memcpy ( vertices[j].tangent, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::tangent ) );
                         offset += sizeof ( Vertex::tangent );
                     }
 
-                    if ( triangle_groups[i].mVertexFlags & Mesh::BITANGENT_BIT )
+                    if ( triangle_group.mVertexFlags & Mesh::BITANGENT_BIT )
                     {
-                        memcpy ( vertices[j].bitangent, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::bitangent ) );
+                        memcpy ( vertices[j].bitangent, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::bitangent ) );
                         offset += sizeof ( Vertex::bitangent );
                     }
 
-                    if ( triangle_groups[i].mVertexFlags & Mesh::UV_BIT )
+                    if ( triangle_group.mVertexFlags & Mesh::UV_BIT )
                     {
-                        memcpy ( vertices[j].uv, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::uv ) );
+                        memcpy ( vertices[j].uv, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::uv ) );
                         offset += sizeof ( Vertex::uv );
                     }
 
-                    if ( triangle_groups[i].mVertexFlags & Mesh::WEIGHT_BIT )
+                    if ( triangle_group.mVertexFlags & Mesh::WEIGHT_BIT )
                     {
-                        memcpy ( vertices[j].weight_indices, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::weight_indices ) );
+                        memcpy ( vertices[j].weight_indices, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::weight_indices ) );
                         offset += sizeof ( Vertex::weight_indices );
-                        memcpy ( vertices[j].weight_influences, triangle_groups[i].mVertexBuffer.data() + offset, sizeof ( Vertex::weight_influences ) );
+                        memcpy ( vertices[j].weight_influences, triangle_group.mVertexBuffer.data() + offset, sizeof ( Vertex::weight_influences ) );
                         offset += sizeof ( Vertex::weight_influences );
                     }
                 }
             }
-            if ( triangle_groups[i].mIndexCount )
+            if ( triangle_group.mIndexCount )
             {
                 void* data = buffer.data() + vertex_buffer_size;
-                if ( ! ( triangle_groups[i].mIndexType == Mesh::BYTE || triangle_groups[i].mIndexType == Mesh::UNSIGNED_BYTE ) )
+                if ( ! ( triangle_group.mIndexType == Mesh::BYTE || triangle_group.mIndexType == Mesh::UNSIGNED_BYTE ) )
                 {
-                    memcpy ( data, triangle_groups[i].mIndexBuffer.data(), triangle_groups[i].mIndexBuffer.size() );
+                    memcpy ( data, triangle_group.mIndexBuffer.data(), triangle_group.mIndexBuffer.size() );
                 }
                 else
                 {
                     /**@note upcast 16 bit indices.*/
-                    for ( size_t j = 0; j < triangle_groups[i].mIndexBuffer.size(); ++j )
+                    for ( size_t j = 0; j < triangle_group.mIndexBuffer.size(); ++j )
                     {
-                        reinterpret_cast<uint16_t*> ( data ) [j] = triangle_groups[i].mIndexBuffer[j];
+                        reinterpret_cast<uint16_t*> ( data ) [j] = triangle_group.mIndexBuffer[j];
                     }
                 }
             }

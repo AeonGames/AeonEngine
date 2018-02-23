@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cassert>
+#include <utility>
 #include <vector>
 #include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
@@ -30,8 +31,8 @@ limitations under the License.
 namespace AeonGames
 {
     const size_t VulkanModel::TypeId = "VulkanModel"_id;
-    VulkanModel::VulkanModel ( const std::shared_ptr<const Model> aModel, const std::shared_ptr<const VulkanRenderer> aVulkanRenderer ) :
-        mModel ( aModel ), mVulkanRenderer ( aVulkanRenderer )
+    VulkanModel::VulkanModel ( const std::shared_ptr<const Model>&  aModel, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
+        mModel (  aModel  ), mVulkanRenderer (  aVulkanRenderer  )
     {
         try
         {

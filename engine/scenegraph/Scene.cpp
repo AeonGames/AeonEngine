@@ -85,7 +85,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
+    void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -94,8 +94,8 @@ namespace AeonGames
     }
 
     void Scene::LoopTraverseDFSPreOrder (
-        std::function<void ( Node& ) > aPreamble,
-        std::function<void ( Node& ) > aPostamble )
+        const std::function<void ( Node& ) >& aPreamble,
+        const std::function<void ( Node& ) >& aPostamble )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -103,15 +103,15 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPreOrder ( std::function<void ( const Node& ) > aAction ) const
+    void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
-        for ( auto mRootNode : mRootNodes )
+        for ( const auto& mRootNode : mRootNodes )
         {
             static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPreOrder ( aAction );
         }
     }
 
-    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
+    void Scene::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -119,15 +119,15 @@ namespace AeonGames
         }
     }
 
-    void Scene::LoopTraverseDFSPostOrder ( std::function<void ( const Node& ) > aAction ) const
+    void Scene::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
-        for ( auto mRootNode : mRootNodes )
+        for ( const auto& mRootNode : mRootNodes )
         {
             static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPostOrder ( aAction );
         }
     }
 
-    void Scene::RecursiveTraverseDFSPreOrder ( std::function<void ( Node& ) > aAction )
+    void Scene::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
@@ -135,7 +135,7 @@ namespace AeonGames
         }
     }
 
-    void Scene::RecursiveTraverseDFSPostOrder ( std::function<void ( Node& ) > aAction )
+    void Scene::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & mRootNode : mRootNodes )
         {
