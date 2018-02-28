@@ -55,7 +55,8 @@
                     "${workspaceRoot}/engine/renderers/vulkan/SPIR-V"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
+                "databaseFilename": "",
+                "compileCommands": "${CMAKE_BINARY_DIR}/compile_commands.json"
             }
         },
         {
@@ -83,6 +84,7 @@
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             },
+            "compileCommands": "${CMAKE_BINARY_DIR}/compile_commands.json",
             "codegnuglobal.executable": "${GLOBAL_EXECUTABLE}"
         }
     ],

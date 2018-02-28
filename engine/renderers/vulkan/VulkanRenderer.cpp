@@ -611,4 +611,31 @@ namespace AeonGames
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }
+
+    void VulkanRenderer::Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
+    {
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+        if ( model_instance )
+        {
+            mVulkanModels.at ( model_instance->GetModel().get() )->Render ( model_instance, aProjectionMatrix, aViewMatrix );
+        }
+    }
+
+    void VulkanRenderer::Load ( const Node& aNode )
+    {
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+        if ( model_instance )
+        {
+            mVulkanModels[model_instance->GetModel().get()] = std::make_shared<VulkanModel> ( model_instance->GetModel(), shared_from_this() );
+        }
+    }
+
+    void VulkanRenderer::Unload ( const Node& aNode )
+    {
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+        if ( model_instance )
+        {
+            mVulkanModels[model_instance->GetModel().get()] = std::make_shared<VulkanModel> ( model_instance->GetModel(), shared_from_this() );
+        }
+    }
 }

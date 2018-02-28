@@ -37,6 +37,9 @@ namespace AeonGames
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
+        void Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const final;
+        void Load ( const Node& aNode ) final;
+        void Unload ( const Node& aNode ) final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
@@ -105,6 +108,8 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT {VK_NULL_HANDLE};
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT { VK_NULL_HANDLE};
 #endif
+        /// @todo This is probably too specific.
+        std::unordered_map<const Model*, std::shared_ptr<VulkanModel>> mVulkanModels;
     };
 }
 #endif

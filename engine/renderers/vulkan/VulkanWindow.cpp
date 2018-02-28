@@ -482,19 +482,9 @@ namespace AeonGames
         Frustum frustum ( mProjectionMatrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( Node & aNode )
         {
-            const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-            const auto* vulkan_model = reinterpret_cast<const VulkanModel*> ( aNode.GetComponent ( VulkanModel::TypeId ) );
-            if ( vulkan_model )
+            if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
             {
-                if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
-                {
-                    vulkan_model->Render ( model_instance, mProjectionMatrix, view_matrix );
-                }
-            }
-            else
-            {
-                /* This is lazy loading */
-                aNode.AttachComponent ( VulkanModel::TypeId, {ModelInstance::TypeId} , std::make_shared<VulkanModel> ( model_instance->GetModel(), mVulkanRenderer ) );
+                mVulkanRenderer->Render ( aNode, mProjectionMatrix, view_matrix );
             }
         } );
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );

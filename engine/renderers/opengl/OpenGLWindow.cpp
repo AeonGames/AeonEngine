@@ -110,20 +110,10 @@ namespace AeonGames
         Frustum frustum ( projection_matrix * view_matrix );
         aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( Node & aNode )
         {
-            const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-            const auto* opengl_model = reinterpret_cast<const OpenGLModel*> ( aNode.GetComponent ( OpenGLModel::TypeId ) );
-            if ( opengl_model )
+            if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
             {
-                if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
-                {
-                    // We dont really need to pass the matrices here, but we already have them so why not.
-                    opengl_model->Render ( model_instance, projection_matrix, view_matrix );
-                }
-            }
-            else
-            {
-                /* This is lazy loading */
-                aNode.AttachComponent ( OpenGLModel::TypeId, {ModelInstance::TypeId}, std::make_shared<OpenGLModel> ( model_instance->GetModel(), mOpenGLRenderer ) );
+                // We dont really need to pass the matrices here, but we already have them so why not.
+                mOpenGLRenderer->Render ( aNode, projection_matrix, view_matrix );
             }
         } );
 

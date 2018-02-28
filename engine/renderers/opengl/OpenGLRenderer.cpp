@@ -73,6 +73,33 @@ namespace AeonGames
         return std::make_unique<OpenGLWindow> ( aWindowId, shared_from_this() );
     }
 
+    void OpenGLRenderer::Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
+    {
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+        if ( model_instance )
+        {
+            mOpenGLModels.at ( model_instance->GetModel().get() )->Render ( model_instance, aProjectionMatrix, aViewMatrix );
+        }
+    }
+
+    void OpenGLRenderer::Load ( const Node& aNode )
+    {
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+        if ( model_instance )
+        {
+            mOpenGLModels[model_instance->GetModel().get()] = std::make_shared<OpenGLModel> ( model_instance->GetModel(), shared_from_this() );
+        }
+    }
+
+    void OpenGLRenderer::Unload ( const Node& aNode )
+    {
+        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
+        if ( model_instance )
+        {
+            mOpenGLModels.erase ( model_instance->GetModel().get() );
+        }
+    }
+
     void* OpenGLRenderer::GetOpenGLContext() const
     {
         return mOpenGLContext;

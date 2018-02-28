@@ -30,7 +30,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const size_t VulkanModel::TypeId = "VulkanModel"_id;
     VulkanModel::VulkanModel ( const std::shared_ptr<const Model>&  aModel, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mModel (  aModel  ), mVulkanRenderer (  aVulkanRenderer  )
     {
@@ -52,26 +51,31 @@ namespace AeonGames
 
     void VulkanModel::Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
-        if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
+#if 0
+        // This code to be moved into a Vulkan Render Component
+        if ( mVulkanSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
         {
-            mSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
+            mVulkanSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
         }
-
+#endif
         for ( size_t i = 0; i < mAssemblies.size(); ++i )
         {
             if ( !aInstance->IsAssemblyEnabled ( i ) )
             {
                 continue;
             }
-            if ( mSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
+#if 0
+            // This code to be moved into a Vulkan Render Component
+            if ( mVulkanSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
             {
                 /* This has to be called outside of a render pass, which currently it is not. */
                 VkBufferCopy buffer_copy{};
                 buffer_copy.dstOffset = 0;
                 buffer_copy.srcOffset = 0;
-                buffer_copy.size = mSkeleton->GetBufferSize();
+                buffer_copy.size = mVulkanSkeleton->GetBufferSize();
                 vkCmdCopyBuffer ( mVulkanRenderer->GetCommandBuffer(), mSkeleton->GetBuffer(), std::get<0> ( mAssemblies[i] )->GetSkeletonBuffer(), 1, &buffer_copy );
             }
+#endif
             std::get<0> ( mAssemblies[i] )->SetProjectionMatrix ( aProjectionMatrix );
             std::get<0> ( mAssemblies[i] )->SetViewMatrix ( aViewMatrix );
             std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
@@ -94,15 +98,12 @@ namespace AeonGames
                 std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mVulkanRenderer ) : nullptr,
                 Get<VulkanMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mVulkanRenderer ) );
         }
+#if 0
         if ( mModel->GetSkeleton() != nullptr )
         {
             mSkeleton = Get<VulkanSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mVulkanRenderer );
         }
-    }
-
-    void VulkanModel::Update ( const Node& aNode, double aDelta )
-    {
-        ///@todo Add code to update skeleton UBO
+#endif
     }
 
     void VulkanModel::Finalize()

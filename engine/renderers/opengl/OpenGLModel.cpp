@@ -30,7 +30,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const size_t OpenGLModel::TypeId = "OpenGLModel"_id;
     OpenGLModel::OpenGLModel ( const std::shared_ptr<const Model>&  aModel, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer ) :
         mModel (  aModel ), mOpenGLRenderer ( aOpenGLRenderer )
     {
@@ -52,9 +51,9 @@ namespace AeonGames
 
     void OpenGLModel::Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
-        if ( mSkeleton && mModel.get() == aInstance->GetModel().get() )
+        if ( mOpenGLSkeleton && mModel.get() == aInstance->GetModel().get() )
         {
-            mSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
+            mOpenGLSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
         }
         for ( size_t i = 0; i < mAssemblies.size(); ++i )
         {
@@ -64,9 +63,9 @@ namespace AeonGames
             }
             std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
             OPENGL_CHECK_ERROR_NO_THROW;
-            if ( mSkeleton && mModel.get() == aInstance->GetModel().get() )
+            if ( mOpenGLSkeleton && mModel.get() == aInstance->GetModel().get() )
             {
-                glBindBufferBase ( GL_UNIFORM_BUFFER, 2, mSkeleton->GetBuffer() );
+                glBindBufferBase ( GL_UNIFORM_BUFFER, 2, mOpenGLSkeleton->GetBuffer() );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             std::get<2> ( mAssemblies[i] )->Render();
@@ -86,13 +85,8 @@ namespace AeonGames
         }
         if ( mModel->GetSkeleton() != nullptr )
         {
-            mSkeleton = Get<OpenGLSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mOpenGLRenderer );
+            mOpenGLSkeleton = Get<OpenGLSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mOpenGLRenderer );
         }
-    }
-
-    void OpenGLModel::Update ( const Node& aNode, double aDelta )
-    {
-        ///@todo Add code to update skeleton UBO
     }
 
     void OpenGLModel::Finalize()
