@@ -38,6 +38,9 @@ namespace AeonGames
         OpenGLRenderer();
         ~OpenGLRenderer() override;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
+        void Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const final;
+        void Load ( const Node& aNode ) final;
+        void Unload ( const Node& aNode ) final;
         void* GetOpenGLContext() const;
         void* GetWindowId() const;
     private:
@@ -47,6 +50,8 @@ namespace AeonGames
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
+        /// @todo This is probably too specific.
+        std::unordered_map<const Model*, std::shared_ptr<OpenGLModel>> mOpenGLModels;
     };
 }
 #endif

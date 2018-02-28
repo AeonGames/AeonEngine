@@ -34,6 +34,7 @@ namespace AeonGames
     class Matrix4x4;
     class Transform;
     class Scene;
+    class Node;
     class Renderer
     {
     public:
@@ -59,6 +60,12 @@ namespace AeonGames
         */
         virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
 #endif
+        ///@}
+        ///@name Abstract member functions
+        ///@{
+        virtual void Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const = 0;
+        virtual void Load ( const Node& aNode ) = 0;
+        virtual void Unload ( const Node& aNode ) = 0;
         ///@}
         virtual ~Renderer() = default;
     };

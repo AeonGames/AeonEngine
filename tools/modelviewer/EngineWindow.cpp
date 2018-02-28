@@ -121,6 +121,8 @@ namespace AeonGames
                                      Get<Model> ( filename.toUtf8().constData(),
                                              filename.toUtf8().constData() ) ) );
         assert ( mNode->GetComponent ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
+        mRenderer->Unload ( *mNode );
+        mRenderer->Load ( *mNode );
         if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetComponent ( ModelInstance::TypeId ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.

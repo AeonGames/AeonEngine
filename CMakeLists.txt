@@ -57,6 +57,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer")
 endif()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
+
 find_package(Threads)
 find_package(Vulkan)
 find_package(OpenGL)
@@ -77,7 +79,6 @@ find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")
-    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
     set(CLANG_TIDY_CHECKS "-checks=performance-*,modernize-*,-modernize-pass-by-value")
 endif()
 
