@@ -31,7 +31,7 @@ namespace AeonGames
     /* find index of first set bit */
     constexpr uint32_t ffs ( uint32_t value )
     {
-        return ( !value ) ? 32 : DeBruijnSequence[ ( ( ( value & ( -static_cast<int64_t> ( value ) ) ) * 0x077CB531ULL ) & 0xFFFFFFFF ) >> 27];
+        return DeBruijnSequence[ ( ( ( value & ( -static_cast<int64_t> ( value ) ) ) * 0x077CB531ULL ) & 0xFFFFFFFF ) >> 27];
     }
     static_assert ( ffs ( 0x1 ) == 0, "Find First Bit Set Failure." );
     static_assert ( ffs ( 0x2 ) == 1, "Find First Bit Set Failure." );
@@ -96,7 +96,6 @@ namespace AeonGames
     static_assert ( ffs ( ~0x1fffffff ) == 29, "Find First Bit Set Failure." );
     static_assert ( ffs ( ~0x3fffffff ) == 30, "Find First Bit Set Failure." );
     static_assert ( ffs ( ~0x7fffffff ) == 31, "Find First Bit Set Failure." );
-    static_assert ( ffs ( ~0xffffffff ) == 32, "Find First Bit Set Failure." );
 
     /* Get count of bits set in 32bit unsigned int */
     constexpr uint32_t popcount ( uint32_t v )
