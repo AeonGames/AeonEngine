@@ -7,6 +7,10 @@ configuration: Release
 platform: x64
 before_build:
 - cmd: >-
+    powershell -Command new-itemproperty -path "HKLM:\SOFTWARE\Microsoft\.NETFramework\v4.0.30319" -name "SchUseStrongCrypto" -Value 1 -PropertyType "DWord";
+
+    powershell -Command new-itemproperty -path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v4.0.30319" -name "SchUseStrongCrypto" -Value 1 -PropertyType "DWord"
+
     set VCPKG_DEFAULT_TRIPLET=x64-windows
 
     git clone https://github.com/Microsoft/vcpkg.git
