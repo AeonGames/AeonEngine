@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,18 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_MODELVIEWER_H
-#define AEONGAMES_MODELVIEWER_H
+#ifndef AEONGAMES_WORLDEDITOR_H
+#define AEONGAMES_WORLDEDITOR_H
 
 #include <QApplication>
 
 namespace AeonGames
 {
-    class ModelViewer : public QApplication
+    class WorldEditor : public QApplication
     {
     public:
-        ModelViewer ( int &argc, char *argv[] );
-        virtual ~ModelViewer();
+        WorldEditor ( int &argc, char *argv[] );
+        virtual ~WorldEditor();
         bool notify ( QObject *receiver, QEvent *event ) override;
     };
 }

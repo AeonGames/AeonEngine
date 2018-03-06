@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 #include <QMessageBox>
 #include <mutex>
 #include "MainWindow.h"
-#include "ModelViewer.h"
+#include "WorldEditor.h"
 #include "Debug.h"
 #include "aeongames/AeonEngine.h"
 
@@ -73,23 +73,23 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         return -1;
     }
     int retval = 0;
-    AeonGames::ModelViewer modelviewer ( argc, argv );
-    modelviewer.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
-    modelviewer.setOrganizationName ( "AeonGames" );
-    modelviewer.setOrganizationDomain ( "aeongames.com" );
-    modelviewer.setApplicationName ( "AeonGames Model Viewer" );
+    AeonGames::WorldEditor worldeditor ( argc, argv );
+    worldeditor.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
+    worldeditor.setOrganizationName ( "AeonGames" );
+    worldeditor.setOrganizationDomain ( "aeongames.com" );
+    worldeditor.setApplicationName ( "AeonGames World Editor" );
     AeonGames::MainWindow* mainWindow;
     try
     {
         mainWindow = new AeonGames::MainWindow();
         mainWindow->showNormal();
-        retval = modelviewer.exec();
+        retval = worldeditor.exec();
         delete mainWindow;
     }
     catch ( std::runtime_error& e )
     {
         std::cout << e.what() << std::endl;
-        QMessageBox::critical ( nullptr, modelviewer.applicationName(),
+        QMessageBox::critical ( nullptr, worldeditor.applicationName(),
                                 e.what(),
                                 QMessageBox::Ok,
                                 QMessageBox::Ok );
