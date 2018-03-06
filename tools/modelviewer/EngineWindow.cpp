@@ -137,7 +137,11 @@ namespace AeonGames
             v2[1] /= length;
             mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
 
-            assert ( mFrustumVerticalHalfAngle != 0.0f );
+            if ( mFrustumVerticalHalfAngle == 0.0f )
+            {
+                throw std::runtime_error ( "mFrustumVerticalHalfAngle is zero." );
+            }
+
             float eye_length = ( diameter ) / std::tan ( mFrustumVerticalHalfAngle );
             mCameraLocation = QVector4D (
                                   QVector3D (
@@ -172,6 +176,11 @@ namespace AeonGames
             v2[0] /= length;
             v2[1] /= length;
             mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
+            start();
+        }
+        else
+        {
+            stop();
         }
     }
 
@@ -193,20 +202,21 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-        {
-            double delta = 0.0;
-            if ( mStopWatch.isValid() )
+            if ( geometry().width() && geometry().height() )
             {
-                delta = mStopWatch.restart() * 1e-3f;
-                if ( delta > 1e-1f )
+                double delta = 0.0;
+                if ( mStopWatch.isValid() )
                 {
-                    delta = 1.0 / 30.0;
+                    delta = mStopWatch.restart() * 1e-3f;
+                    if ( delta > 1e-1f )
+                    {
+                        delta = 1.0 / 30.0;
+                    }
                 }
+                mScene->Update ( delta );
+                mWindow->Render ( mScene );
+                return true;
             }
-            mScene->Update ( delta );
-            mWindow->Render ( mScene );
-            return true;
-        }
         default:
             return QWindow::event ( aEvent );
         }

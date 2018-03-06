@@ -37,6 +37,8 @@ PROTOBUF_GENERATE_EXPORT_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS "DLL_PROTOBUF"
     ${CMAKE_SOURCE_DIR}/proto/material.proto
     ${CMAKE_SOURCE_DIR}/proto/model.proto
     ${CMAKE_SOURCE_DIR}/proto/geometry.proto
+    ${CMAKE_SOURCE_DIR}/proto/scene.proto
+    ${CMAKE_SOURCE_DIR}/proto/node.proto
 )
 
 set(ENGINE_SDK_HEADERS

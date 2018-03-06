@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include "RendererSelectDialog.h"
 #include "MainWindow.h"
+#include "SceneWindow.h"
 #include "EngineWindow.h"
 
 namespace AeonGames
@@ -84,14 +85,14 @@ namespace AeonGames
         if ( ! ( filename.isEmpty() || filename.isNull() ) )
         {
             QFileInfo fileinfo ( filename );
-            EngineWindow* window = new EngineWindow ( mRenderer );
+            SceneWindow* sceneWindow;
             QMdiSubWindow*
-            mdiSubWindow = mdiArea->addSubWindow ( QWidget::createWindowContainer ( window, mdiArea ) );
+            mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mRenderer, mdiArea ) );
             mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
             mdiSubWindow->setWindowTitle ( fileinfo.absoluteFilePath() );
             mdiSubWindow->showMaximized();
             mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
-            window->setModel ( fileinfo.absoluteFilePath() );
+            sceneWindow->setModel ( fileinfo.absoluteFilePath() );
         }
     }
 }
