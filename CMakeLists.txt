@@ -93,7 +93,7 @@ if(WIN32)
     find_package(Qt5 COMPONENTS WinExtras)
 endif(WIN32)
 if(Qt5_FOUND)
-    add_subdirectory(tools/modelviewer)
+    add_subdirectory(tools/worldeditor)
 endif()
 
 find_program (SED_EXECUTABLE sed HINTS ENV MINGW_PREFIX MSYS2_PATH ProgramFiles PATH_SUFFIXES bin usr/bin Git/usr/bin)
@@ -117,13 +117,13 @@ endif()
 # Code Formating target
 #######################################
 
-#if(WIN32)
-#    find_program (ASTYLE_EXECUTABLE astyle HINTS ENV ProgramData PATH_SUFFIXES /usr/bin chocolatey/bin)
-#    find_program (FIND_EXECUTABLE find HINTS ENV ProgramFiles PATH_SUFFIXES /usr/bin Git/usr/bin NO_SYSTEM_ENVIRONMENT_PATH)
-#else()
+if(WIN32)
+    find_program (ASTYLE_EXECUTABLE astyle HINTS ENV ProgramData PATH_SUFFIXES /usr/bin chocolatey/bin)
+    find_program (FIND_EXECUTABLE find HINTS ENV ProgramFiles PATH_SUFFIXES /usr/bin Git/usr/bin)
+else()
     find_program (FIND_EXECUTABLE find)
     find_program (ASTYLE_EXECUTABLE astyle)
-#endif()
+endif()
 
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in" "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
@@ -294,7 +294,7 @@ if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
     engine/sound/oggvorbis
     engine/sound/portaudio
     tools/aeontool
-    tools/modelviewer
+    tools/worldeditor
     )
 
     set(INCLIST "")

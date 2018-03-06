@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,17 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "ModelViewer.h"
+#include "WorldEditor.h"
 #include <QMessageBox>
 #include <iostream>
 
 namespace AeonGames
 {
-    ModelViewer::ModelViewer ( int &argc, char *argv[] ) : QApplication ( argc, argv )
+    WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv )
     {}
-    ModelViewer::~ModelViewer()
+    WorldEditor::~WorldEditor()
         = default;
-    bool ModelViewer::notify ( QObject *receiver, QEvent *event )
+    bool WorldEditor::notify ( QObject *receiver, QEvent *event )
     {
         try
         {

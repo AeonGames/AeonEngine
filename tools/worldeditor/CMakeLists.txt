@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${Qt5Gui_INCLUDE_DIRS}
                     ${Qt5Widgets_INCLUDE_DIRS})
 
-set(MODELVIEWER_QT_HEADERS
+set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
     RendererSelectDialog.h
     MainWindow.h
@@ -27,15 +27,15 @@ set(MODELVIEWER_QT_HEADERS
     EngineWindow.h
     )
 
-set(MODELVIEWER_HEADERS
+set(WORLDEDITOR_HEADERS
     Debug.h
-    ModelViewer.h
-    ${MODELVIEWER_QT_HEADERS})
+    WorldEditor.h
+    ${WORLDEDITOR_QT_HEADERS})
 
-set(MODELVIEWER_SOURCES
+set(WORLDEDITOR_SOURCES
     models/SceneModel.cpp
     Main.cpp
-    ModelViewer.cpp
+    WorldEditor.cpp
     MainWindow.cpp
     SceneWindow.cpp
     RendererSelectDialog.cpp
@@ -43,7 +43,7 @@ set(MODELVIEWER_SOURCES
     Debug.cpp
     )
 
-set(MODELVIEWER_UI
+set(WORLDEDITOR_UI
     ui/MainWindow.ui
     ui/SceneWindow.ui
     ui/RendererSelectDialog.ui
@@ -52,29 +52,29 @@ set(MODELVIEWER_UI
 
 if(WIN32)
     include_directories(${Qt5WinExtras_INCLUDE_DIRS})
-    list(APPEND MODELVIEWER_SOURCES ${MODELVIEWER_SOURCES} icon.rc)
+    list(APPEND WORLDEDITOR_SOURCES ${WORLDEDITOR_SOURCES} icon.rc)
 endif(WIN32)
 
-QT5_WRAP_CPP(MODELVIEWER_MOCS ${MODELVIEWER_QT_HEADERS})
-QT5_WRAP_UI(MODELVIEWER_UI_HEADERS ${MODELVIEWER_UI})
-qt5_add_resources(MODELVIEWER_RESOURCES modelviewer.qrc)
+QT5_WRAP_CPP(WORLDEDITOR_MOCS ${WORLDEDITOR_QT_HEADERS})
+QT5_WRAP_UI(WORLDEDITOR_UI_HEADERS ${WORLDEDITOR_UI})
+qt5_add_resources(WORLDEDITOR_RESOURCES worldeditor.qrc)
 
-add_executable(modelviewer
-    ${MODELVIEWER_SOURCES}
-    ${MODELVIEWER_MOCS}
-    ${MODELVIEWER_UI_HEADERS}
-    ${MODELVIEWER_HEADERS}
-    ${MODELVIEWER_RESOURCES})
+add_executable(worldeditor
+    ${WORLDEDITOR_SOURCES}
+    ${WORLDEDITOR_MOCS}
+    ${WORLDEDITOR_UI_HEADERS}
+    ${WORLDEDITOR_HEADERS}
+    ${WORLDEDITOR_RESOURCES})
 
 if(UNIX)
-    set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-Wall -Werror -O0 -g")
+    set_target_properties(worldeditor PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif()
 
 if(MSVC)
-    set_target_properties(modelviewer PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
+    set_target_properties(worldeditor PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
 endif()
 
-target_link_libraries(modelviewer
+target_link_libraries(worldeditor
     AeonEngine
     ${Qt5Core_LIBRARIES}
     ${Qt5Gui_LIBRARIES}

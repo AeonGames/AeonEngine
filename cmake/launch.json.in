@@ -2,7 +2,7 @@
         "version": "0.2.0",
         "configurations": [
             {
-                "name": "Debug Modelviewer",
+                "name": "Debug World Editor",
                 "type": "cppdbg",
                 "request": "launch",
                 "args": [],
@@ -17,7 +17,7 @@
                 "externalConsole": true,
                 "windows":
                     {
-                        "program": "${CMAKE_BINARY_DIR}/bin/modelviewer.exe",
+                        "program": "${CMAKE_BINARY_DIR}/bin/worldeditor.exe",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
                         "setupCommands": [
