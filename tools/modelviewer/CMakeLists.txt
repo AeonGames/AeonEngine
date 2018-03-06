@@ -13,14 +13,17 @@
 # limitations under the License.
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
+                    models
                     ${CMAKE_SOURCE_DIR}/include
                     ${Qt5Core_INCLUDE_DIRS}
                     ${Qt5Gui_INCLUDE_DIRS}
                     ${Qt5Widgets_INCLUDE_DIRS})
 
 set(MODELVIEWER_QT_HEADERS
+    models/SceneModel.h
     RendererSelectDialog.h
     MainWindow.h
+    SceneWindow.h
     EngineWindow.h
     )
 
@@ -30,9 +33,11 @@ set(MODELVIEWER_HEADERS
     ${MODELVIEWER_QT_HEADERS})
 
 set(MODELVIEWER_SOURCES
+    models/SceneModel.cpp
     Main.cpp
     ModelViewer.cpp
     MainWindow.cpp
+    SceneWindow.cpp
     RendererSelectDialog.cpp
     EngineWindow.cpp
     Debug.cpp
@@ -40,6 +45,7 @@ set(MODELVIEWER_SOURCES
 
 set(MODELVIEWER_UI
     ui/MainWindow.ui
+    ui/SceneWindow.ui
     ui/RendererSelectDialog.ui
     )
 
