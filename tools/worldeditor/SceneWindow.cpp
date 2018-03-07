@@ -30,7 +30,8 @@ namespace AeonGames
         mEngineWindow = new EngineWindow ( mRenderer );
         QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, splitter );
         QSizePolicy size_policy ( QSizePolicy::Expanding , QSizePolicy::Expanding );
-        size_policy.setHorizontalStretch ( 2 );
+        size_policy.setHorizontalStretch ( 6 );
+        size_policy.setVerticalStretch ( 6 );
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
     }

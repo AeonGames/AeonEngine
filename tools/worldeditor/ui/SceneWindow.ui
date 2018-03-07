@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>SceneWindow</class>
  <widget class="QWidget" name="SceneWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>249</width>
+    <height>499</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Scene</string>
   </property>
@@ -17,13 +25,21 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QTreeView" name="treeView">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="baseSize">
+       <size>
+        <width>20</width>
+        <height>0</height>
+       </size>
       </property>
+      <property name="title">
+       <string>Scenegraph</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QTreeView" name="treeView"/>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
