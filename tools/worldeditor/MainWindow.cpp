@@ -74,6 +74,13 @@ namespace AeonGames
 
     void MainWindow::on_actionNew_triggered()
     {
+        SceneWindow* sceneWindow;
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mRenderer, mdiArea ) );
+        mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
+        mdiSubWindow->setWindowTitle ( tr ( "Untitled Scene" ) );
+        mdiSubWindow->showMaximized();
+        mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
     }
 
     void MainWindow::on_actionOpen_triggered()

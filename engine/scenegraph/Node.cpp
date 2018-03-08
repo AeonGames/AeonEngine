@@ -38,12 +38,9 @@ namespace AeonGames
     Node::Node ( uint32_t aFlags ) :
         mName ( "Node" ),
         mParent{},
-        mScene{},
         mLocalTransform(),
         mGlobalTransform(),
         mNodes(),
-        mIndex ( kInvalidIndex ),
-
         mFlags ( aFlags )
     {
     }
@@ -65,24 +62,9 @@ namespace AeonGames
                 std::cerr << "Remove Node Failed " << e.what() << std::endl;
             }
         }
-        else if ( auto scene = mScene.lock() )
-        {
-            try
-            {
-                if ( !scene->RemoveNode ( shared_from_this() ) )
-                {
-                    std::cerr << "Remove Node Failed" << std::endl;
-                }
-            }
-            catch ( std::bad_weak_ptr e )
-            {
-                std::cerr << "Remove Node Failed " << e.what() << std::endl;
-            }
-        }
         for ( auto & mNode : mNodes )
         {
             mNode->mParent.reset();
-            mNode->mScene.reset();
             mNode.reset();
         }
     }
@@ -105,12 +87,20 @@ namespace AeonGames
     {
         return mParent.lock();
     }
-
     size_t Node::GetIndex() const
     {
-        return mIndex;
+        auto parent = mParent.lock();
+        if ( parent )
+        {
+            auto index = std::find_if ( parent->mNodes.begin(), parent->mNodes.end(),
+                                        [this] ( const std::shared_ptr<Node>& node )
+            {
+                return node.get() == this;
+            } );
+            return index - parent->mNodes.begin();
+        }
+        return kInvalidIndex;
     }
-
     const Component* Node::GetComponent ( std::size_t aComponentId ) const
     {
         auto i = mComponents.Find ( aComponentId );
@@ -235,24 +225,17 @@ namespace AeonGames
                 }
             }
             aNode->mParent = shared_from_this();
-            aNode->mIndex = aIndex;
-            mNodes.insert ( mNodes.begin() + aIndex, aNode );
-            for ( auto i = mNodes.begin() + aIndex + 1; i != mNodes.end(); ++i )
+            if ( aIndex < mNodes.size() )
             {
-                ++ ( *i )->mIndex;
+                mNodes.insert ( mNodes.begin() + aIndex, aNode );
+            }
+            else
+            {
+                mNodes.emplace_back ( aNode );
             }
             // Force a recalculation of the LOCAL transform
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
-            aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node & node )
-            {
-                if ( auto scene = mScene.lock() )
-                {
-                    scene->mAllNodes.push_back ( node.shared_from_this() );
-                }
-                node.mScene = this->mScene;
-            } );
             return true;
         }
         return false;
@@ -271,20 +254,10 @@ namespace AeonGames
                 }
             }
             aNode->mParent = shared_from_this();
-            aNode->mIndex = mNodes.size();
             mNodes.push_back ( aNode );
             // Force a recalculation of the LOCAL transform
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
-            aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node & node )
-            {
-                if ( auto scene = mScene.lock() )
-                {
-                    scene->mAllNodes.push_back ( node.shared_from_this() );
-                }
-                node.mScene = mScene;
-            } );
             return true;
         }
         return false;
@@ -292,38 +265,27 @@ namespace AeonGames
 
     bool Node::RemoveNode ( const std::shared_ptr<Node>& aNode )
     {
+        return RemoveNode ( aNode.get() );
+    }
+
+    bool Node::RemoveNode ( Node* aNode )
+    {
         assert ( aNode != nullptr );
-        assert ( aNode.get() != this );
+        assert ( aNode != this );
         // If passed a null or this pointer find SHOULD not find it on release builds.
-        /*  While only a single instance should be found and erase does the element shifting
-            we're using remove here to do the shifting in order to stablish
-            that the erase-remove idiom is what should be used in these situations.*/
-        auto it = std::remove ( mNodes.begin(), mNodes.end(), aNode );
+        auto it = std::find_if (
+                      mNodes.begin(),
+                      mNodes.end(),
+                      [aNode] ( const std::shared_ptr<Node>& node )
+        {
+            return aNode == node.get();
+        } );
         if ( it != mNodes.end() )
         {
-            mNodes.erase ( it );
-            for ( auto i = mNodes.begin() + aNode->GetIndex(); i != mNodes.end(); ++i )
-            {
-                ( *i )->mIndex = i - mNodes.begin();
-            }
             aNode->mParent.reset();
-            aNode->mIndex = Node::kInvalidIndex;
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
-            // Remove node from Scene
-            if ( auto scene = mScene.lock() )
-            {
-                auto it = scene->mAllNodes.end();
-                aNode->LoopTraverseDFSPostOrder ( [&scene, &it] ( Node & node )
-                {
-                    node.mScene.reset();
-                    it = std::remove ( scene->mAllNodes.begin(), it, node.shared_from_this() );
-                } );
-                if ( it != scene->mAllNodes.end() )
-                {
-                    scene->mAllNodes.erase ( it, scene->mAllNodes.end() );
-                }
-            }
+            mNodes.erase ( it );
             return true;
         }
         return false;

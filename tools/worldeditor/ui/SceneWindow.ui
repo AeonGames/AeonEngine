@@ -37,14 +37,60 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QTreeView" name="treeView"/>
+        <widget class="QTreeView" name="treeView">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
+         <property name="dragEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::DragOnly</enum>
+         </property>
+         <property name="defaultDropAction">
+          <enum>Qt::CopyAction</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
     </widget>
    </item>
   </layout>
+  <action name="actionAddNode">
+   <property name="text">
+    <string>Add node</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a child node to this scene or node</string>
+   </property>
+  </action>
+  <action name="actionRemoveNode">
+   <property name="text">
+    <string>Remove node</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove a child node from this scene or node</string>
+   </property>
+  </action>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>treeView</sender>
+   <signal>customContextMenuRequested(QPoint)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_customContextMenuRequested(QPoint)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>544</x>
+     <y>336</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>456</x>
+     <y>328</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
