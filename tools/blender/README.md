@@ -7,17 +7,17 @@ Specifically, you will need to install pip and then build and install the PB lib
 I may expand some more on this, but right now this is mostly something to look up when configuring an environment. The process is quite involved and I couldn't or haven't been able to easily automate it.
 
 1. Run as administrator or root a command line window or terminal.
-2. Add the directory containing the python executable from Blender into the PATH enviroment variable. (Only valid for Windows, Ubuntu 16.04 now uses the system's python, but you may have to install pip for python3 since the default is python 2.x).
+2. Add the directory containing the python executable from Blender into the PATH enviroment variable, this is usually Program Files -> Blender Foundation -> Blender Version -> python -> bin. (Only valid for Windows, Ubuntu 16.04 now uses the system's python, but you may have to install pip for python3 since the default is python 2.x).
 3. Install pip using get-pip.py (https://pip.pypa.io/en/stable/installing/)
-4. IF installing from source
-4.1. After building and/or installing protocol buffer, add the path to protoc to the PATH enviroment variable.
-4.2. From the python folder under the protobuffer source run "python setup.py build" then "python setup.py test" and "python setup.py install"
-5. IF installing from the PIP package directory
-5.1. Run either 'python -m pip install protobuf' OR just 'pip install protobuf' at the time of writing, the version at pip is 3.1.0 which should be compatible with the one on the runtime.
+4. IF installing from source:
+    1. After building and/or installing protocol buffer, add the path to protoc to the PATH enviroment variable.
+    2. From the python folder under the protobuffer source run "python setup.py build" then "python setup.py test" and "python setup.py install"
+5. IF installing from the PIP package directory:
+    1. Run either 'python -m pip install protobuf' OR just 'pip install protobuf' at the time of writing, the version at pip is 3.1.0 which should be compatible with the one on the runtime.
 
 Thats it. To actually run the exporters:
 
-1. Make or build the generate-python-protobuf-source target of [this project](https://github.com/AeonGames/AeonEngine).
+1. Make or build the generate-python-protobuf-source target for [this project](https://github.com/AeonGames/AeonEngine).
 2. Run Blender and go to File->User Preferences and click on the "Files" Tab.
 3. Type or browse for this folder on the "Scripts" field.
 4. Save preferences and restart Blender.

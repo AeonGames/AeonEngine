@@ -55,16 +55,32 @@ if(WIN32)
     list(APPEND WORLDEDITOR_SOURCES ${WORLDEDITOR_SOURCES} icon.rc)
 endif(WIN32)
 
+add_custom_command(
+    OUTPUT
+        ${CMAKE_CURRENT_BINARY_DIR}/cube.msh
+    COMMAND
+        $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o cube.msh
+    MAIN_DEPENDENCY
+        ../../game/meshes/cube.txt
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT
+        "Creating binary meshes."
+)
+
+configure_file(worldeditor_dynamic.qrc ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
+
 QT5_WRAP_CPP(WORLDEDITOR_MOCS ${WORLDEDITOR_QT_HEADERS})
 QT5_WRAP_UI(WORLDEDITOR_UI_HEADERS ${WORLDEDITOR_UI})
-qt5_add_resources(WORLDEDITOR_RESOURCES worldeditor.qrc)
+qt5_add_resources(WORLDEDITOR_RESOURCES worldeditor_static.qrc ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
 
 add_executable(worldeditor
     ${WORLDEDITOR_SOURCES}
     ${WORLDEDITOR_MOCS}
     ${WORLDEDITOR_UI_HEADERS}
     ${WORLDEDITOR_HEADERS}
-    ${WORLDEDITOR_RESOURCES})
+    ${WORLDEDITOR_RESOURCES}
+)
 
 if(UNIX)
     set_target_properties(worldeditor PROPERTIES COMPILE_FLAGS "-Wall -Werror")
