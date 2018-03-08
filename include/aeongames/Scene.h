@@ -34,7 +34,7 @@ namespace AeonGames
       Scene is the container for all elements in a game level,
       takes care of collision, rendering and updates to all elements therein.
     */
-    class Scene : public std::enable_shared_from_this<Scene>
+    class Scene
     {
     public:
         DLL explicit Scene(); // "Explicit Scene"... chuckle
@@ -44,7 +44,7 @@ namespace AeonGames
         DLL bool AddNode ( const std::shared_ptr<Node>& aNode );
         DLL bool InsertNode ( size_t aIndex, const std::shared_ptr<Node>& aNode );
         DLL bool RemoveNode ( const std::shared_ptr<Node>& aNode );
-        DLL size_t GetNodeCount() const;
+        DLL bool RemoveNode ( Node* aNode );
         DLL size_t GetChildrenCount() const;
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
         DLL void Update ( const double delta );
@@ -72,8 +72,7 @@ namespace AeonGames
     private:
         friend class Node;
         std::string mName;
-        std::vector<std::shared_ptr<Node>> mRootNodes;
-        std::vector<std::shared_ptr<Node>> mAllNodes;
+        std::vector<std::shared_ptr<Node>> mNodes;
     };
 }
 #endif

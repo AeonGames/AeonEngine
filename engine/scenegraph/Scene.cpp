@@ -28,16 +28,14 @@ namespace AeonGames
     */
     Scene::Scene() :
         mName{ "Scene" },
-        mRootNodes{},
-        mAllNodes{}
+        mNodes{}
     {
     }
 
     Scene::~Scene()
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
-            mRootNode->mScene.reset();
             mRootNode.reset();
         }
     }
@@ -52,28 +50,23 @@ namespace AeonGames
         return mName.c_str();
     }
 
-    size_t Scene::GetNodeCount() const
-    {
-        return mAllNodes.size();
-    }
-
     size_t Scene::GetChildrenCount() const
     {
-        return mRootNodes.size();
+        return mNodes.size();
     }
 
     const std::shared_ptr<Node>& Scene::GetChild ( size_t aIndex ) const
     {
-        if ( aIndex < mRootNodes.size() )
+        if ( aIndex < mNodes.size() )
         {
-            return mRootNodes[aIndex];
+            return mNodes[aIndex];
         }
         return Node::mNullNode;
     }
 
     void Scene::Update ( const double delta )
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
             mRootNode->LoopTraverseDFSPreOrder ( [delta] ( Node & node )
             {
@@ -87,7 +80,7 @@ namespace AeonGames
 
     void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
             mRootNode->LoopTraverseDFSPreOrder ( aAction );
         }
@@ -97,7 +90,7 @@ namespace AeonGames
         const std::function<void ( Node& ) >& aPreamble,
         const std::function<void ( Node& ) >& aPostamble )
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
             mRootNode->LoopTraverseDFSPreOrder ( aPreamble, aPostamble );
         }
@@ -105,7 +98,7 @@ namespace AeonGames
 
     void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
-        for ( const auto& mRootNode : mRootNodes )
+        for ( const auto& mRootNode : mNodes )
         {
             static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPreOrder ( aAction );
         }
@@ -113,7 +106,7 @@ namespace AeonGames
 
     void Scene::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
             mRootNode->LoopTraverseDFSPostOrder ( aAction );
         }
@@ -121,7 +114,7 @@ namespace AeonGames
 
     void Scene::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
-        for ( const auto& mRootNode : mRootNodes )
+        for ( const auto& mRootNode : mNodes )
         {
             static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPostOrder ( aAction );
         }
@@ -129,7 +122,7 @@ namespace AeonGames
 
     void Scene::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
             mRootNode->RecursiveTraverseDFSPreOrder ( aAction );
         }
@@ -137,7 +130,7 @@ namespace AeonGames
 
     void Scene::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
-        for ( auto & mRootNode : mRootNodes )
+        for ( auto & mRootNode : mNodes )
         {
             mRootNode->RecursiveTraverseDFSPostOrder ( aAction );
         }
@@ -146,7 +139,7 @@ namespace AeonGames
     bool Scene::InsertNode ( size_t aIndex, const std::shared_ptr<Node>& aNode )
     {
         // Never append null or this pointers.
-        if ( ( aNode != nullptr ) && ( std::find ( mRootNodes.begin(), mRootNodes.end(), aNode ) == mRootNodes.end() ) )
+        if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
             if ( auto parent = aNode->mParent.lock() )
             {
@@ -156,23 +149,17 @@ namespace AeonGames
                 }
             }
             aNode->mParent.reset();
-            aNode->mIndex = ( aIndex > mRootNodes.size() ) ? mRootNodes.size() : aIndex;
-            mRootNodes.insert ( mRootNodes.begin() + aNode->mIndex, aNode );
-            for ( auto i = mRootNodes.begin() + aNode->mIndex + 1; i != mRootNodes.end(); ++i )
+            if ( aIndex < mNodes.size() )
             {
-                ++ ( *i )->mIndex;
+                mNodes.insert ( mNodes.begin() + aIndex, aNode );
             }
-
+            else
+            {
+                mNodes.emplace_back ( aNode );
+            }
             // Force a recalculation of the LOCAL transform
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
-            aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node & node )
-            {
-                ///@todo Evaluate wether we really need the mAllNodes vector.
-                mAllNodes.push_back ( node.shared_from_this() );
-                node.mScene = shared_from_this();
-            } );
             return true;
         }
         return false;
@@ -181,7 +168,7 @@ namespace AeonGames
     bool Scene::AddNode ( const std::shared_ptr<Node>& aNode )
     {
         // Never append null or this pointers.
-        if ( ( aNode != nullptr ) && ( std::find ( mRootNodes.begin(), mRootNodes.end(), aNode ) == mRootNodes.end() ) )
+        if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
             if ( auto parent = aNode->mParent.lock() )
             {
@@ -191,17 +178,10 @@ namespace AeonGames
                 }
             }
             aNode->mParent.reset();
-            aNode->mIndex = mRootNodes.size();
-            mRootNodes.push_back ( aNode );
+            mNodes.emplace_back ( aNode );
             // Force a recalculation of the LOCAL transform
             // by setting the GLOBAL transform to itself.
             aNode->SetGlobalTransform ( aNode->mGlobalTransform );
-            aNode->LoopTraverseDFSPreOrder (
-                [this] ( Node & node )
-            {
-                mAllNodes.push_back ( node.shared_from_this() );
-                node.mScene = shared_from_this();
-            } );
             return true;
         }
         return false;
@@ -209,36 +189,27 @@ namespace AeonGames
 
     bool Scene::RemoveNode ( const std::shared_ptr<Node>& aNode )
     {
+        return RemoveNode ( aNode.get() );
+    }
+
+    bool Scene::RemoveNode ( Node* aNode )
+    {
         if ( aNode == nullptr )
         {
             return false;
         }
         // If passed a null or this pointer find SHOULD not find it on release builds.
-        /*  While only a single instance should be found and erase does the element shifting
-        we're using remove here to do the shifting in order to stablish
-        that the erase-remove idiom is what should be used in these situations.*/
-        auto it = std::remove ( mRootNodes.begin(), mRootNodes.end(), aNode );
-        if ( it != mRootNodes.end() )
+        auto it = std::find_if ( mNodes.begin(), mNodes.end(),
+                                 [aNode] ( const std::shared_ptr<Node>& node )
         {
-            mRootNodes.erase ( it );
-            for ( auto i = mRootNodes.begin() + aNode->GetIndex(); i != mRootNodes.end(); ++i )
-            {
-                ( *i )->mIndex = i - mRootNodes.begin();
-            }
-            aNode->mParent.reset();
-            aNode->mIndex = Node::kInvalidIndex;
+            return aNode == node.get();
+        } );
+        if ( it != mNodes.end() )
+        {
             // Force recalculation of transforms.
+            aNode->mParent.reset();
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
-            auto it = mAllNodes.end();
-            aNode->LoopTraverseDFSPostOrder ( [&it, this] ( Node & node )
-            {
-                node.mScene.reset();
-                it = std::remove ( this->mAllNodes.begin(), it, node.shared_from_this() );
-            } );
-            if ( it != mAllNodes.end() )
-            {
-                mAllNodes.erase ( it, mAllNodes.end() );
-            }
+            mNodes.erase ( it );
             return true;
         }
         return false;

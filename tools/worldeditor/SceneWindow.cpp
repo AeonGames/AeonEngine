@@ -16,6 +16,7 @@ limitations under the License.
 #include <QFileDialog>
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
+#include <QMenu>
 #include "SceneWindow.h"
 #include "EngineWindow.h"
 
@@ -34,6 +35,9 @@ namespace AeonGames
         size_policy.setVerticalStretch ( 6 );
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
+        treeView->setModel ( &mSceneModel );
+        treeView->addAction ( actionAddNode );
+        treeView->addAction ( actionRemoveNode );
     }
 
     SceneWindow::~SceneWindow()
@@ -42,5 +46,29 @@ namespace AeonGames
     void SceneWindow::setModel ( const QString& filename )
     {
         mEngineWindow->setModel ( filename );
+    }
+
+    void SceneWindow::on_actionAddNode_triggered()
+    {
+        QModelIndex index = treeView->currentIndex();
+        mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index );
+    }
+
+    void SceneWindow::on_actionRemoveNode_triggered()
+    {
+        mSceneModel.RemoveNode ( treeView->currentIndex() );
+    }
+
+    void SceneWindow::on_customContextMenuRequested ( const QPoint& aPoint )
+    {
+        QList<QAction *> actions;
+        QModelIndex index = treeView->indexAt ( aPoint );
+        actions.append ( actionAddNode );
+        if ( index.isValid() )
+        {
+            actions.append ( actionRemoveNode );
+        }
+        treeView->setCurrentIndex ( index );
+        QMenu::exec ( actions, treeView->mapToGlobal ( aPoint ) );
     }
 }

@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <memory>
 #include "ui_SceneWindow.h"
+#include "models/SceneModel.h"
 
 namespace AeonGames
 {
@@ -31,8 +32,12 @@ namespace AeonGames
         virtual ~SceneWindow();
         void setModel ( const QString& filename );
     private slots:
+        void on_actionAddNode_triggered();
+        void on_actionRemoveNode_triggered();
+        void on_customContextMenuRequested ( const QPoint& aPoint );
     private:
         std::shared_ptr<Renderer> mRenderer;
+        SceneModel mSceneModel{};
         EngineWindow* mEngineWindow{};
     };
 }

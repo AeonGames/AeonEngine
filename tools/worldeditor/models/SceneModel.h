@@ -19,6 +19,7 @@ limitations under the License.
 #include <QAbstractItemModel>
 #include <vector>
 #include "aeongames/Memory.h"
+#include "aeongames/Scene.h"
 
 QT_BEGIN_NAMESPACE
 class QIODevice;
@@ -55,7 +56,7 @@ namespace AeonGames
         void RemoveNode ( const QModelIndex & index );
         const Scene& GetScene() const;
     private:
-        std::unique_ptr<Scene> mScene;
+        Scene mScene{};
     };
 }
 #endif

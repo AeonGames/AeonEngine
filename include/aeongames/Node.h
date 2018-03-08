@@ -69,6 +69,7 @@ namespace AeonGames
         DLL bool AddNode ( const std::shared_ptr<Node>& aNode );
         DLL bool InsertNode ( size_t aIndex, const std::shared_ptr<Node>& aNode );
         DLL bool RemoveNode ( const std::shared_ptr<Node>& );
+        DLL bool RemoveNode ( Node* );
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in pre-order.
         This function guarrantees that parents are processed before their children.
@@ -141,11 +142,9 @@ namespace AeonGames
         friend class Scene;
         std::string mName;
         std::weak_ptr<Node> mParent;
-        std::weak_ptr<Scene> mScene;
         Transform mLocalTransform;
         Transform mGlobalTransform;
         std::vector<std::shared_ptr<Node>> mNodes;
-        size_t mIndex;
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<std::shared_ptr<Node>>::size_type mIterator{ 0 };
