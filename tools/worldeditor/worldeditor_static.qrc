@@ -20,7 +20,4 @@
     <file alias="icon_subtract">resources/icons/subtract.svg</file>
     <file alias="icon_close">resources/icons/close.svg</file>    
   </qresource>
-  <qresource prefix="meshes">
-    <file alias="cube.msh">../../clang64/tools/worldeditor/cube.msh</file>
-  </qresource>
 </RCC>
