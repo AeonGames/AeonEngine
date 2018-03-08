@@ -56,6 +56,36 @@
                             }
                          ]
                     }
+            },
+            {
+                "name": "Debug Aeon Tool",
+                "type": "cppdbg",
+                "request": "launch",
+                "args": [
+                    "-i","game/meshes/cube.txt","-o","game/meshes/cube.msh"
+                ],
+                "stopAtEntry": false,
+                "cwd": "${CMAKE_SOURCE_DIR}",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"$ENV{MINGW_PREFIX}/bin"
+                    }                    
+                ],
+                "externalConsole": true,
+                "windows":
+                    {
+                        "program": "${CMAKE_BINARY_DIR}/bin/aeontool.exe",
+                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
+                    }
             }
         ]
     }
