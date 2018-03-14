@@ -53,7 +53,7 @@ namespace AeonGames
     {
         if ( !parent.isValid() )
         {
-            auto& node = mScene.GetChild ( row );
+            auto node = mScene.GetChild ( row );
             if ( node != nullptr )
             {
                 return createIndex ( row, column, node.get() );
@@ -61,7 +61,7 @@ namespace AeonGames
         }
         else
         {
-            auto& node = reinterpret_cast<Node*> ( parent.internalPointer() )->GetChild ( row );
+            auto node = reinterpret_cast<Node*> ( parent.internalPointer() )->GetChild ( row );
             if ( node != nullptr )
             {
                 return createIndex ( row, column, node.get() );
@@ -75,9 +75,9 @@ namespace AeonGames
         if ( index.isValid() )
         {
             auto node = reinterpret_cast<Node*> ( index.internalPointer() )->GetParent();
-            if ( node != nullptr )
+            if ( node.get() != nullptr )
             {
-                return createIndex ( static_cast<int> ( node->GetIndex() ), 0, node.get() );
+                return createIndex ( static_cast<int> ( reinterpret_cast<Node*> ( index.internalPointer() )->GetIndex() ), 0, node.get() );
             }
         }
         return QModelIndex();
@@ -300,13 +300,14 @@ namespace AeonGames
     void SceneModel::InsertNode ( int row, const QModelIndex & parent )
     {
         beginResetModel();
+        auto new_node = std::make_shared<Node>();
         if ( parent.isValid() )
         {
-            reinterpret_cast<Node*> ( parent.internalPointer() )->InsertNode ( row, std::make_shared<Node>() );
+            reinterpret_cast<Node*> ( parent.internalPointer() )->InsertNode ( row, new_node );
         }
         else
         {
-            mScene.InsertNode ( row, std::make_shared<Node>() );
+            mScene.InsertNode ( row, new_node );
         }
         endResetModel();
     }
