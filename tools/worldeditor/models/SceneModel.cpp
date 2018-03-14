@@ -53,10 +53,13 @@ namespace AeonGames
     {
         if ( !parent.isValid() )
         {
-            auto node = mScene.GetChild ( row );
-            if ( node != nullptr )
+            if ( row < mScene.GetChildrenCount() )
             {
-                return createIndex ( row, column, node.get() );
+                auto node = mScene.GetChild ( row );
+                if ( node != nullptr )
+                {
+                    return createIndex ( row, column, node.get() );
+                }
             }
         }
         else
@@ -163,7 +166,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    auto& node = source->GetChild ( sourceRow );
+                    auto node = source->GetChild ( sourceRow );
                     source->RemoveNode ( node );
                     destination->InsertNode ( destinationRow + i, node );
                 }
@@ -182,7 +185,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    auto& node = source->GetChild ( sourceRow );
+                    auto node = source->GetChild ( sourceRow );
                     source->RemoveNode ( node );
                     mScene.InsertNode ( destinationRow, node );
                 }
@@ -201,7 +204,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    auto& node = mScene.GetChild ( sourceRow );
+                    auto node = mScene.GetChild ( sourceRow );
                     mScene.RemoveNode ( node );
                     destination->InsertNode ( destinationRow, node );
                 }
@@ -219,7 +222,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    auto& node = mScene.GetChild ( sourceRow );
+                    auto node = mScene.GetChild ( sourceRow );
                     mScene.RemoveNode ( node );
                     mScene.InsertNode ( destinationRow, node );
                 }
@@ -263,8 +266,9 @@ namespace AeonGames
         {
             Node* pointer;
             dataStream.readRawData ( reinterpret_cast<char*> ( &pointer ), sizeof ( void* ) );
-            QModelIndex index = createIndex ( static_cast<int> ( pointer->GetIndex() ), 0, pointer );
-            moveRow ( this->parent ( index ), static_cast<int> ( pointer->GetIndex() ), parent, row );
+            auto index = ( pointer->GetParent() == nullptr ) ? mScene.GetChildIndex ( pointer ) : pointer->GetIndex();
+            QModelIndex model_index = createIndex ( static_cast<int> ( index ), 0, pointer );
+            moveRow ( this->parent ( model_index ), static_cast<int> ( index ), parent, row );
         }
         return true;
     }
@@ -300,14 +304,13 @@ namespace AeonGames
     void SceneModel::InsertNode ( int row, const QModelIndex & parent )
     {
         beginResetModel();
-        auto new_node = std::make_shared<Node>();
         if ( parent.isValid() )
         {
-            reinterpret_cast<Node*> ( parent.internalPointer() )->InsertNode ( row, new_node );
+            reinterpret_cast<Node*> ( parent.internalPointer() )->InsertNode ( row, std::make_shared<Node>() );
         }
         else
         {
-            mScene.InsertNode ( row, new_node );
+            mScene.InsertNode ( row, std::make_shared<Node>() );
         }
         endResetModel();
     }

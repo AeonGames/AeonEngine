@@ -57,11 +57,31 @@ namespace AeonGames
 
     const std::shared_ptr<Node>& Scene::GetChild ( size_t aIndex ) const
     {
-        if ( aIndex < mNodes.size() )
+        return mNodes.at ( aIndex );
+    }
+
+    const std::size_t Scene::GetChildIndex ( const Node* aNode ) const
+    {
+        auto index = std::find_if ( mNodes.begin(), mNodes.end(),
+                                    [aNode] ( const std::shared_ptr<Node>& node )
         {
-            return mNodes[aIndex];
+            return node.get() == aNode;
+        } );
+        if ( index != mNodes.end() )
+        {
+            return index - mNodes.begin();
         }
-        return Node::mNullNode;
+        throw std::runtime_error ( "Node is not a child of this object." );
+    }
+
+    const Node& Scene::operator[] ( const std::size_t index ) const
+    {
+        return * ( mNodes[index].get() );
+    }
+
+    Node& Scene::operator[] ( const std::size_t index )
+    {
+        return const_cast<Node&> ( static_cast<const Scene&> ( *this ) [index] );
     }
 
     void Scene::Update ( const double delta )
