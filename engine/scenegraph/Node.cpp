@@ -99,6 +99,7 @@ namespace AeonGames
             } );
             return index - parent->mNodes.begin();
         }
+        throw std::runtime_error ( "Node has no parent and thus no assigned index." );
         return kInvalidIndex;
     }
     const Component* Node::GetComponent ( std::size_t aComponentId ) const
