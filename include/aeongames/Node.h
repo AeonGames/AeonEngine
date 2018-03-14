@@ -50,8 +50,7 @@ namespace AeonGames
             Visible,
             FlagCount
         };
-        DLL static const size_t kInvalidIndex;
-        DLL explicit Node ( uint32_t aFlags = AllBits );
+        DLL Node ( uint32_t aFlags = AllBits );
         DLL virtual ~Node();
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
@@ -126,6 +125,8 @@ namespace AeonGames
         DLL void SetGlobalTransform ( const Transform& aTransform );
         DLL size_t GetChildrenCount() const;
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
+        DLL const Node& operator[] ( const std::size_t index ) const;
+        DLL Node& operator[] ( const std::size_t index );
         DLL const std::shared_ptr<Node> GetParent() const;
         DLL size_t GetIndex() const;
         ///@name Component Functions
@@ -138,7 +139,6 @@ namespace AeonGames
         ///@}
     private:
         void Update ( const double delta );
-        static const std::shared_ptr<Node> mNullNode;
         friend class Scene;
         std::string mName;
         std::weak_ptr<Node> mParent;

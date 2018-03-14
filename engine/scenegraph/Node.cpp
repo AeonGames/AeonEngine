@@ -32,9 +32,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const std::shared_ptr<Node> Node::mNullNode{};
-    const size_t Node::kInvalidIndex = std::numeric_limits<size_t>::max(); // Use on VS2013
-
     Node::Node ( uint32_t aFlags ) :
         mName ( "Node" ),
         mParent{},
@@ -68,21 +65,23 @@ namespace AeonGames
             mNode.reset();
         }
     }
-
     size_t Node::GetChildrenCount() const
     {
         return mNodes.size();
     }
-
-    const std::shared_ptr<Node>& Node::GetChild ( size_t aIndex ) const
+    const Node& Node::operator[] ( const std::size_t index ) const
     {
-        if ( aIndex < mNodes.size() )
-        {
-            return mNodes[aIndex];
-        }
-        return mNullNode;
+        return * ( mNodes[index].get() );
     }
 
+    Node& Node::operator[] ( const std::size_t index )
+    {
+        return const_cast<Node&> ( static_cast<const Node&> ( *this ) [index] );
+    }
+    const std::shared_ptr<Node>& Node::GetChild ( size_t aIndex ) const
+    {
+        return mNodes.at ( aIndex );
+    }
     const std::shared_ptr<Node> Node::GetParent() const
     {
         return mParent.lock();
@@ -100,7 +99,6 @@ namespace AeonGames
             return index - parent->mNodes.begin();
         }
         throw std::runtime_error ( "Node has no parent and thus no assigned index." );
-        return kInvalidIndex;
     }
     const Component* Node::GetComponent ( std::size_t aComponentId ) const
     {

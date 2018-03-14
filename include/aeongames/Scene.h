@@ -47,6 +47,9 @@ namespace AeonGames
         DLL bool RemoveNode ( Node* aNode );
         DLL size_t GetChildrenCount() const;
         DLL const std::shared_ptr<Node>& GetChild ( size_t aIndex ) const;
+        DLL const std::size_t GetChildIndex ( const Node* aNode ) const;
+        DLL const Node& operator[] ( const std::size_t index ) const;
+        DLL Node& operator[] ( const std::size_t index );
         DLL void Update ( const double delta );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node&) > aAction)*/
         DLL void LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
