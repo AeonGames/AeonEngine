@@ -56,13 +56,14 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "",
-                "compileCommands": "${CMAKE_BINARY_DIR}/compile_commands.json"
+                "compileCommands": "@CMAKE_BINARY_DIR@/compile_commands.json"
             }
         },
         {
             "name": "Windows",
             "includePath": [
-                ${INCLIST}
+                "${workspaceRoot}/include",
+                @INCLIST@
             ],
             "defines": [
                 "_DEBUG",
@@ -79,13 +80,14 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    ${INCLIST}
+                    "${workspaceRoot}/include",
+                    @INCLIST@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             },
-            "compileCommands": "${CMAKE_BINARY_DIR}/compile_commands.json",
-            "codegnuglobal.executable": "${GLOBAL_EXECUTABLE}"
+            "compileCommands": "@CMAKE_BINARY_DIR@/compile_commands.json",
+            "codegnuglobal.executable": "@GLOBAL_EXECUTABLE@"
         }
     ],
     "version": 3
