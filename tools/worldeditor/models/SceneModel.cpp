@@ -53,7 +53,7 @@ namespace AeonGames
     {
         if ( !parent.isValid() )
         {
-            if ( row < mScene.GetChildrenCount() )
+            if ( row < static_cast<int> ( mScene.GetChildrenCount() ) )
             {
                 auto node = mScene.GetChild ( row );
                 if ( node != nullptr )
