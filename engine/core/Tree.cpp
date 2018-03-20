@@ -19,7 +19,7 @@ limitations under the License.
 namespace AeonGames
 {
     Tree::Node::Node() {}
-    Tree::Node::Node ( const Node & aNode ) : mParent{}, mNodes{aNode.mNodes}, mIterator{}
+    Tree::Node::Node ( const Node & aNode ) : mParent{}, mFlags{aNode.mFlags}, mNodes{aNode.mNodes}, mIterator{}
     {
         for ( auto& i : mNodes )
         {
@@ -27,7 +27,7 @@ namespace AeonGames
             i.mTree = mTree;
         }
     }
-    Tree::Node::Node ( const Node && aNode ) : mParent{}, mNodes{std::move ( aNode.mNodes ) }, mIterator{}
+    Tree::Node::Node ( const Node && aNode ) : mParent{}, mFlags{std::move ( aNode.mFlags ) }, mNodes{std::move ( aNode.mNodes ) }, mIterator{}
     {
         for ( auto& i : mNodes )
         {
@@ -37,6 +37,7 @@ namespace AeonGames
     }
     Tree::Node& Tree::Node::operator= ( const Tree::Node & aNode )
     {
+        mFlags = aNode.mFlags;
         mNodes = aNode.mNodes;
         mTree = aNode.mTree;
         mIterator = 0;
@@ -48,6 +49,7 @@ namespace AeonGames
     }
     Tree::Node& Tree::Node::operator= ( const Tree::Node && aNode )
     {
+        mFlags = std::move ( aNode.mFlags );
         mNodes = std::move ( aNode.mNodes );
         mTree = aNode.mTree;
         mIterator = 0;
@@ -308,6 +310,7 @@ namespace AeonGames
             node = node->mParent;
         }
     }
+
     void Tree::Node::RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
     {
         aAction ( *this );
@@ -316,6 +319,22 @@ namespace AeonGames
             mParent->RecursiveTraverseAncestors ( aAction );
         }
     }
+
+    void Tree::Node::SetFlags ( size_t aFlagBits, bool aEnabled )
+    {
+        ( aEnabled ) ? mFlags |= aFlagBits : mFlags &= static_cast<uint32_t> ( ~aFlagBits );
+    }
+
+    void Tree::Node::SetFlag ( enum Flags aFlag, bool aEnabled )
+    {
+        mFlags[aFlag] = aEnabled;
+    }
+
+    bool Tree::Node::IsFlagEnabled ( enum Flags aFlag ) const
+    {
+        return mFlags[aFlag];
+    }
+
 
     Tree::Tree ( std::initializer_list<Tree::Node> aList ) : mNodes ( aList )
     {

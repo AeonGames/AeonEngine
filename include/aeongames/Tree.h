@@ -107,10 +107,37 @@ namespace AeonGames
 
             DLL void RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
             ///@}
+            ///@name Flag Functions
+            ///@{
+            enum FlagBits
+            {
+                EnabledBit = 1,
+                VisibleBit = 2,
+                AllBits    = 3
+            };
+            enum Flags
+            {
+                Enabled = 0,
+                Visible,
+                FlagCount
+            };
+            /** Enables or disables a set of node flags.
+            @param aFlagBits Flag bits to enable/disable.
+            @param aEnabled true to enable, false to disable.
+            */
+            DLL void SetFlags ( size_t aFlagBits, bool aEnabled = true );
+            /** Enables or disables a single node flag.
+            @param aFlag Flag to enable/disable.
+            @param aEnabled true to enable, false to disable.
+            */
+            DLL void SetFlag ( enum Flags aFlag, bool aEnabled = true );
+            DLL bool IsFlagEnabled ( enum Flags aFlag ) const;
+            ///@}
         private:
             friend class Tree;
             Node* mParent{};
             Tree* mTree{};
+            std::bitset<sizeof ( size_t ) > mFlags{AllBits};
             std::vector<Node> mNodes{};
             /** Tree iteration helper.
                 Mutable to allow for constant iterations (EC++ Item 3).*/
