@@ -81,6 +81,7 @@ set(ENGINE_CORE_HEADERS
     include/ProtoBufHelpers.h
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Tree.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
@@ -112,6 +113,7 @@ set(ENGINE_CORE_SOURCES
     core/ModelInstance.cpp
     core/Window.cpp
     core/CRC.cpp
+    core/Tree.cpp
     )
 
 set(ENGINE_SCENEGRAPH_SOURCES
