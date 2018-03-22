@@ -133,15 +133,24 @@ namespace AeonGames
             DLL void SetFlag ( enum Flags aFlag, bool aEnabled = true );
             DLL bool IsFlagEnabled ( enum Flags aFlag ) const;
             ///@}
+            ///@name Transform Functions
+            ///@{
+            DLL const Transform& GetLocalTransform() const;
+            DLL const Transform& GetGlobalTransform() const;
+            DLL void SetLocalTransform ( const Transform& aTransform );
+            DLL void SetGlobalTransform ( const Transform& aTransform );
+            ///@}
         private:
             friend class Tree;
             Node* mParent{};
             Tree* mTree{};
-            std::bitset<sizeof ( size_t ) > mFlags{AllBits};
-            std::vector<Node> mNodes{};
             /** Tree iteration helper.
                 Mutable to allow for constant iterations (EC++ Item 3).*/
             mutable std::vector<Node>::size_type mIterator{ 0 };
+            std::bitset<sizeof ( size_t ) > mFlags{AllBits};
+            Transform mLocalTransform{};
+            Transform mGlobalTransform{};
+            std::vector<Node> mNodes{};
         };
 
         ///@name Tree Functions
