@@ -43,17 +43,52 @@ namespace AeonGames
             DLL ~Node();
             ///@name Tree Functions
             ///@{
+            /** Append a child node at the end of the child vector. */
             DLL void Append ( const Node& aNode );
+            /** Insert a child node at the specified index on the child vector. */
             DLL void Insert ( size_t aIndex, const Node& aNode );
+            /** Delete a child node given its index.
+             * This function deletes the child node and recursivelly all further descendants.
+             */
             DLL void Erase ( std::vector<Node>::size_type aIndex );
+            /** Delete a child node given a reference to it.
+             * This function deletes the child node and recursivelly all further descendants.
+             * @note the provided reference MUST be to the specific node to be removed,
+             * passing a copy of the node will likely make the operation fail.
+             * @todo Decide if having iterators is a better idea to delete by reference.
+             */
             DLL void Erase ( const Node& aNode );
+            /** Get the current size of the children node vector.
+             * This is the count of direct descendants.
+             */
             DLL std::vector<Node>::size_type GetChildrenCount() const;
+            /** Get a const reference to a direct descendant by index.
+             * May throw an std::out_of_range exception.
+             */
             DLL const Node& GetChild ( size_t aIndex ) const;
+            /** Get a eference to a direct descendant by index.
+             * May throw an std::out_of_range exception.
+             */
             DLL Node& GetChild ( size_t aIndex );
+            /** Get a const reference to a direct descendant by index.
+             * Does NOT do bounds checking.
+             */
             DLL const Node& operator[] ( const std::size_t aIndex ) const;
+            /** Get a eference to a direct descendant by index.
+             * Does NOT do bounds checking.
+             */
             DLL Node& operator[] ( const std::size_t aIndex );
+            /** Get a const pointer to the node's parent.
+             * Returned pointer may be nullptr.
+             */
             DLL const Node* GetParent() const;
+            /** Get a pointer to the node's parent.
+             * Returned pointer may be nullptr.
+             */
             DLL Node* GetParent();
+            /** Get The index of the node in its parent or tree child node vector.
+             * If the parent is nullptr this function throws an std::runtime_error exception.
+             */
             DLL std::size_t GetIndex() const;
             /** Iterative depth first search iteration.
             Iterates all descendants without recursion in pre-order.
