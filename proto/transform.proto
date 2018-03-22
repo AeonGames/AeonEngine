@@ -15,7 +15,11 @@
 syntax = "proto3";
 package AeonGames;
 
-message NodeBuffer
-{
-    repeated NodeBuffer node = 1;
+import "vector3.proto";
+import "quaternion.proto";
+
+message TransformBuffer {
+    Vector3Buffer Scale               = 1;
+    QuaternionBuffer Rotation         = 2;
+    Vector3Buffer Translation         = 3;
 }

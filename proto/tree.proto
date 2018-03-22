@@ -15,9 +15,18 @@
 syntax = "proto3";
 package AeonGames;
 
-import "node.proto";
+import "transform.proto";
 
-message SceneBuffer
+message NodeBuffer
+{
+    oneof transform{
+        TransformBuffer local = 1;
+        TransformBuffer global = 2;
+    }
+    repeated NodeBuffer node = 3;
+}
+
+message TreeBuffer
 {
     repeated NodeBuffer node = 1;
 }

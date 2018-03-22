@@ -209,150 +209,135 @@ namespace AeonGames
         EXPECT_EQ ( mTree.GetChildrenCount(), 0u );
     }
 
-#if 0
     TEST_F ( TreeTest, LocalTransformSyncsGlobalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree.SetLocalTransform ( transform );
-        EXPECT_EQ ( mTree.GetLocalTransform(), mTree.GetGlobalTransform() );
+        mTree[0].SetLocalTransform ( transform );
+        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0].GetGlobalTransform() );
     }
 
     TEST_F ( TreeTest, GlobalTransformSyncsLocalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree.SetGlobalTransform ( transform );
-        EXPECT_EQ ( mTree.GetLocalTransform(), mTree.GetGlobalTransform() );
+        mTree[0].SetGlobalTransform ( transform );
+        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0].GetGlobalTransform() );
     }
 
-    TEST_F ( TreeTest, AddNodeSynchsLocalTransform )
+    TEST_F ( TreeTest, AppendSynchsLocalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{2, 4, 6}};
-        mTree.RemoveNode ( a );
-        a->SetGlobalTransform ( transform );
+        Tree::Node node;
+        node.SetGlobalTransform ( transform );
         transform.SetTranslation ( {1, 2, 3} );
-        mTree.SetLocalTransform ( transform );
-        mTree.AddNode ( a );
-        EXPECT_EQ ( transform, a->GetLocalTransform() );
-    }
-
-    TEST_F ( TreeTest, RemoveNodeSynchsLocalTransform )
-    {
-        Transform transform{Vector3{1, 1, 1}, Quaternion{}, Vector3{1, 2, 3}};
-        mTree.SetLocalTransform ( transform );
-        a->SetLocalTransform ( transform );
-        transform.SetTranslation ( {2, 4, 6} );
-        EXPECT_EQ ( transform, a->GetGlobalTransform() );
-        mTree.RemoveNode ( a );
-        EXPECT_EQ ( transform, a->GetLocalTransform() );
+        mTree[0].SetLocalTransform ( transform );
+        mTree[0].Append ( node );
+        EXPECT_EQ ( transform, mTree[0][mTree[0].GetChildrenCount() - 1].GetLocalTransform() );
     }
 
     TEST_F ( TreeTest, LocalTransformSyncsGlobalTransformInChildNode )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree.SetLocalTransform ( transform );
-        EXPECT_EQ ( mTree.GetLocalTransform(), a->GetGlobalTransform() );
+        mTree[0].SetLocalTransform ( transform );
+        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0][0].GetGlobalTransform() );
     }
 
     TEST_F ( TreeTest, GlobalTransformSyncsGlobalTransformInChildNode )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree.SetGlobalTransform ( transform );
-        EXPECT_EQ ( mTree.GetLocalTransform(), a->GetGlobalTransform() );
+        mTree[0].SetGlobalTransform ( transform );
+        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0][0].GetGlobalTransform() );
     }
 
     TEST_F ( TreeTest, LocalTransformLeavesLocalTransformInChildNodeUntoched )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree.SetLocalTransform ( transform );
+        mTree[0].SetLocalTransform ( transform );
         transform.SetTranslation ( {0, 0, 0} );
-        EXPECT_EQ ( transform, a->GetLocalTransform() );
+        EXPECT_EQ ( transform, mTree[0][0].GetLocalTransform() );
     }
 
     TEST_F ( TreeTest, GlobalTransformLeavesLocalTransformInChildNodeUntoched )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree.SetGlobalTransform ( transform );
+        mTree[0].SetGlobalTransform ( transform );
         transform.SetTranslation ( {0, 0, 0} );
-        EXPECT_EQ ( transform, a->GetLocalTransform() );
+        EXPECT_EQ ( transform, mTree[0][0].GetLocalTransform() );
     }
 
     TEST_F ( TreeTest, DefaultIndexIsInvalid )
     {
-        std::shared_ptr<Node> node ( std::make_shared<Node>() );
-        EXPECT_THROW ( node->GetIndex(), std::runtime_error );
+        Tree::Node node;
+        EXPECT_THROW ( node.GetIndex(), std::runtime_error );
     }
 
     TEST_F ( TreeTest, IndicesAreContiguous )
     {
-        std::shared_ptr<Node> node ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        size_t count = node->GetChildrenCount();
+        Tree::Node node{{}};
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        size_t count = node[0].GetChildrenCount();
         for ( size_t i = 0; i < count; ++i )
         {
-            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node[0].GetChild ( i ).GetIndex(), i );
         }
     }
 
     TEST_F ( TreeTest, IndicesAreContiguousAfterRemovingFirstNode )
     {
-        std::shared_ptr<Node> node ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        EXPECT_EQ ( node->GetChildrenCount(), 3u );
-        std::shared_ptr<Node> removedNode = node->GetChild ( 0 );
-        node->RemoveNode ( removedNode );
-        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
+        Tree::Node node {{}};
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        EXPECT_EQ ( node[0].GetChildrenCount(), 3u );
+        auto& removedNode = node[0].GetChild ( 0 );
+        node[0].Erase ( removedNode );
+        for ( size_t i = 0; i < node[0].GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node[0].GetChild ( i ).GetIndex(), i );
         }
     }
 
     TEST_F ( TreeTest, IndicesAreContiguousAfterRemovingMiddleNode )
     {
-        std::shared_ptr<Node> node ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        EXPECT_EQ ( node->GetChildrenCount(), 3u );
-        std::shared_ptr<Node> removedNode = node->GetChild ( 1 );
-        node->RemoveNode ( removedNode );
-        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
+        Tree::Node node {{}};
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        EXPECT_EQ ( node[0].GetChildrenCount(), 3u );
+        auto& removedNode = node[0].GetChild ( 1 );
+        node[0].Erase ( removedNode );
+        for ( size_t i = 0; i < node[0].GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node[0].GetChild ( i ).GetIndex(), i );
         }
     }
 
     TEST_F ( TreeTest, IndicesAreContiguousAfterInsertingNodeOnFront )
     {
-        std::shared_ptr<Node> node ( std::make_shared<Node>() );
-        std::shared_ptr<Node> inserted;
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->InsertNode ( 0, inserted = std::make_shared<Node>() );
-        EXPECT_EQ ( node->GetChildrenCount(), 3u );
-        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
+        Tree::Node node {{}};
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        node[0].Insert ( 0, {} );
+        EXPECT_EQ ( node[0].GetChildrenCount(), 3u );
+        for ( size_t i = 0; i < node[0].GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node[0].GetChild ( i ).GetIndex(), i );
         }
-        EXPECT_EQ ( inserted, node->GetChild ( 0 ) );
+        EXPECT_EQ ( &node[0][0], &node[0].GetChild ( 0 ) );
     }
 
     TEST_F ( TreeTest, IndicesAreContiguousAfterInsertingNodeAtMiddle )
     {
-        std::shared_ptr<Node> node ( std::make_shared<Node>() );
-        std::shared_ptr<Node> inserted = nullptr;
-        node->AddNode ( std::make_shared<Node>() );
-        node->AddNode ( std::make_shared<Node>() );
-        node->InsertNode ( 1, inserted = std::make_shared<Node>() );
-        EXPECT_EQ ( node->GetChildrenCount(), 3u );
-        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
+        Tree::Node node {{}};
+        node[0].Append ( {} );
+        node[0].Append ( {} );
+        node[0].Insert ( 1, {} );
+        EXPECT_EQ ( node[0].GetChildrenCount(), 3u );
+        for ( size_t i = 0; i < node[0].GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node[0].GetChild ( i ).GetIndex(), i );
         }
-        EXPECT_EQ ( inserted, node->GetChild ( 1 ) );
+        EXPECT_EQ ( &node[0][1], &node[0].GetChild ( 1 ) );
     }
-#endif
 }

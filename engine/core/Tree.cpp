@@ -20,7 +20,7 @@ namespace AeonGames
 {
     Tree::Node::Node() = default;
     Tree::Node::Node ( const Node & aNode ) :
-        mParent{},
+        mParent{aNode.mParent},
         mIterator{},
         mFlags{aNode.mFlags},
         mGlobalTransform{aNode.mGlobalTransform},
@@ -34,7 +34,8 @@ namespace AeonGames
         SetGlobalTransform ( mGlobalTransform );
     }
     Tree::Node::Node ( const Node && aNode ) :
-        mParent{}, mIterator{},
+        mParent{aNode.mParent},
+        mIterator{},
         mFlags{std::move ( aNode.mFlags ) },
         mGlobalTransform{aNode.mGlobalTransform},
         mNodes{std::move ( aNode.mNodes ) }
