@@ -117,10 +117,10 @@ namespace AeonGames
         DLL void LoopTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
         DLL void LoopTraverseAncestors ( const std::function<void ( const Node& ) >& aAction ) const;
         DLL void RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
-        DLL const Transform& GetLocalTransform() const;
-        DLL const Transform& GetGlobalTransform() const;
         DLL const AABB GetLocalAABB() const;
         DLL const AABB GetGlobalAABB() const;
+        DLL const Transform& GetLocalTransform() const;
+        DLL const Transform& GetGlobalTransform() const;
         DLL void SetLocalTransform ( const Transform& aTransform );
         DLL void SetGlobalTransform ( const Transform& aTransform );
         DLL size_t GetChildrenCount() const;

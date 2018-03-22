@@ -18,22 +18,33 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Tree::Node::Node() {}
-    Tree::Node::Node ( const Node & aNode ) : mParent{}, mFlags{aNode.mFlags}, mNodes{aNode.mNodes}, mIterator{}
+    Tree::Node::Node() = default;
+    Tree::Node::Node ( const Node & aNode ) :
+        mParent{},
+        mIterator{},
+        mFlags{aNode.mFlags},
+        mGlobalTransform{aNode.mGlobalTransform},
+        mNodes{aNode.mNodes}
     {
         for ( auto& i : mNodes )
         {
             i.mParent = this;
             i.mTree = mTree;
         }
+        SetGlobalTransform ( mGlobalTransform );
     }
-    Tree::Node::Node ( const Node && aNode ) : mParent{}, mFlags{std::move ( aNode.mFlags ) }, mNodes{std::move ( aNode.mNodes ) }, mIterator{}
+    Tree::Node::Node ( const Node && aNode ) :
+        mParent{}, mIterator{},
+        mFlags{std::move ( aNode.mFlags ) },
+        mGlobalTransform{aNode.mGlobalTransform},
+        mNodes{std::move ( aNode.mNodes ) }
     {
         for ( auto& i : mNodes )
         {
             i.mParent = this;
             i.mTree = mTree;
         }
+        SetGlobalTransform ( mGlobalTransform );
     }
     Tree::Node& Tree::Node::operator= ( const Tree::Node & aNode )
     {
@@ -41,10 +52,12 @@ namespace AeonGames
         mNodes = aNode.mNodes;
         mTree = aNode.mTree;
         mIterator = 0;
+        mGlobalTransform = aNode.mGlobalTransform;
         for ( auto& i : mNodes )
         {
             i.mParent = this;
         }
+        SetGlobalTransform ( mGlobalTransform );
         return *this;
     }
     Tree::Node& Tree::Node::operator= ( const Tree::Node && aNode )
@@ -53,10 +66,12 @@ namespace AeonGames
         mNodes = std::move ( aNode.mNodes );
         mTree = aNode.mTree;
         mIterator = 0;
+        mGlobalTransform = aNode.mGlobalTransform;
         for ( auto& i : mNodes )
         {
             i.mParent = this;
         }
+        SetGlobalTransform ( mGlobalTransform );
         return *this;
     }
     Tree::Node::Node ( std::initializer_list<Tree::Node> aList ) : mNodes ( aList )
@@ -66,24 +81,32 @@ namespace AeonGames
             i.mParent = this;
             i.mTree = mTree;
         }
+        SetGlobalTransform ( mGlobalTransform );
     }
+
     Tree::Node::~Node() = default;
+
     void Tree::Node::Append ( const Tree::Node& aNode )
     {
         mNodes.emplace_back ( aNode );
         mNodes.back().mParent = this;
         mNodes.back().mTree = mTree;
+        mNodes.back().SetGlobalTransform ( mNodes.back().mGlobalTransform );
     }
+
     void Tree::Node::Insert ( size_t aIndex, const Tree::Node& aNode )
     {
         auto node = mNodes.emplace ( mNodes.begin() + aIndex, aNode );
         node->mParent = this;
         node->mTree = mTree;
+        node->SetGlobalTransform ( node->mGlobalTransform );
     }
+
     void Tree::Node::Erase ( std::vector<Node>::size_type aIndex )
     {
         mNodes.erase ( mNodes.begin() + aIndex );
     }
+
     void Tree::Node::Erase ( const Node& aNode )
     {
         if ( aNode.mParent != this )
@@ -335,6 +358,61 @@ namespace AeonGames
         return mFlags[aFlag];
     }
 
+    const Transform& Tree::Node::GetLocalTransform() const
+    {
+        return mLocalTransform;
+    }
+
+    const Transform& Tree::Node::GetGlobalTransform() const
+    {
+        return mGlobalTransform;
+    }
+    void Tree::Node::SetLocalTransform ( const Transform& aTransform )
+    {
+        mLocalTransform = aTransform;
+        LoopTraverseDFSPreOrder (
+            [] ( Node & node )
+        {
+            if ( node.mParent )
+            {
+                node.mGlobalTransform = node.mParent->mGlobalTransform * node.mLocalTransform;
+            }
+            else
+            {
+                node.mGlobalTransform = node.mLocalTransform;
+            }
+        } );
+    }
+
+    void Tree::Node::SetGlobalTransform ( const Transform& aTransform )
+    {
+        mGlobalTransform = aTransform;
+        // Update the Local transform for this node only
+        if ( mParent )
+        {
+            mLocalTransform = mGlobalTransform * mParent->mGlobalTransform.GetInverted();
+        }
+        else
+        {
+            mLocalTransform = mGlobalTransform;
+        }
+        // Then Update the Global transform for all children
+        LoopTraverseDFSPreOrder (
+            [this] ( Node & node )
+        {
+            /*! @todo Although this->mLocalTransform has already been computed
+                      think about removing the check and let it be recomputed,
+                      it may be faster than the branch that needs to run
+                      for each node and is false only once.*/
+            if ( &node != this )
+            {
+                if ( node.mParent )
+                {
+                    node.mGlobalTransform = node.mParent->mGlobalTransform * node.mLocalTransform;
+                }
+            }
+        } );
+    }
 
     Tree::Tree ( std::initializer_list<Tree::Node> aList ) : mNodes ( aList )
     {
