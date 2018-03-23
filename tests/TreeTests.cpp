@@ -36,6 +36,7 @@ namespace AeonGames
         }
         virtual void TearDown()
         {
+            mTree.Serialize();
         }
         /*
         This tree should look like this:

@@ -13,6 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include <google/protobuf/text_format.h>
+#include "aeongames/ProtoBufClasses.h"
+#include "tree.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 #include <algorithm>
 #include "aeongames/Tree.h"
 
@@ -527,5 +537,32 @@ namespace AeonGames
         {
             node.RecursiveTraverseDFSPostOrder ( aAction );
         }
+    }
+    void Tree::Serialize() const
+    {
+        static TreeBuffer tree_buffer;
+        TreeBuffer& tree_buffer_ref = tree_buffer;
+        LoopTraverseDFSPreOrder (
+            [&tree_buffer_ref] ( const Tree::Node & node )
+        {
+            NodeBuffer* node_buffer =
+                tree_buffer_ref.add_node();
+            node_buffer->mutable_local()->mutable_scale()->set_x ( node.GetLocalTransform().GetScale() [0] );
+            node_buffer->mutable_local()->mutable_scale()->set_y ( node.GetLocalTransform().GetScale() [1] );
+            node_buffer->mutable_local()->mutable_scale()->set_z ( node.GetLocalTransform().GetScale() [2] );
+            node_buffer->mutable_local()->mutable_rotation()->set_w ( node.GetLocalTransform().GetRotation() [0] );
+            node_buffer->mutable_local()->mutable_rotation()->set_x ( node.GetLocalTransform().GetRotation() [1] );
+            node_buffer->mutable_local()->mutable_rotation()->set_y ( node.GetLocalTransform().GetRotation() [2] );
+            node_buffer->mutable_local()->mutable_rotation()->set_z ( node.GetLocalTransform().GetRotation() [3] );
+            node_buffer->mutable_local()->mutable_translation()->set_x ( node.GetLocalTransform().GetTranslation() [0] );
+            node_buffer->mutable_local()->mutable_translation()->set_y ( node.GetLocalTransform().GetTranslation() [1] );
+            node_buffer->mutable_local()->mutable_translation()->set_z ( node.GetLocalTransform().GetTranslation() [2] );
+        } );
+
+        google::protobuf::TextFormat::Printer printer;
+        std::string text_string;
+        printer.PrintToString ( tree_buffer, &text_string );
+        std::cout << text_string << std::endl;
+        tree_buffer.Clear();
     }
 }
