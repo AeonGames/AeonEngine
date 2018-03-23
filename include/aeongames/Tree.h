@@ -220,6 +220,7 @@ namespace AeonGames
         /** @copydoc Node::RecursiveTraverseDFSPostOrder(std::function<void(const std::shared_ptr<Node>&) > aAction)*/
         DLL void RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction );
         ///@}
+        DLL void Serialize() const;
     private:
         std::vector<Node> mNodes{};
     };
