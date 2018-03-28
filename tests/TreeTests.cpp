@@ -36,7 +36,6 @@ namespace AeonGames
         }
         virtual void TearDown()
         {
-            mTree.Serialize();
         }
         /*
         This tree should look like this:
@@ -340,5 +339,18 @@ namespace AeonGames
             EXPECT_EQ ( node[0].GetChild ( i ).GetIndex(), i );
         }
         EXPECT_EQ ( &node[0][1], &node[0].GetChild ( 1 ) );
+    }
+
+    TEST_F ( TreeTest, SerializeAsTextHasProperHeader )
+    {
+        std::string serialized = mTree.Serialize ( false );
+        EXPECT_EQ ( serialized.substr ( 0, 8 ), "AEONTRE\n" );
+    }
+
+    TEST_F ( TreeTest, SerializeAsBinaryHasProperHeader )
+    {
+        std::string serialized = mTree.Serialize ( true );
+        EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONTRE" );
+        EXPECT_EQ ( serialized[7], 0 );
     }
 }

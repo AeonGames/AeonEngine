@@ -100,6 +100,14 @@ namespace AeonGames
             {
                 return &std::get<3> ( mGraph->at ( *mIterator ) );
             };
+            const Key& GetKey() const
+            {
+                return *mIterator;
+            };
+            const std::vector<Key, VectorAllocator>& GetDependencies() const
+            {
+                return std::get<2> ( mGraph->at ( *mIterator ) );
+            };
         };
 
         class const_iterator
@@ -159,6 +167,14 @@ namespace AeonGames
             pointer operator->() const
             {
                 return &std::get<3> ( mGraph->at ( *mIterator ) );
+            };
+            const Key& GetKey() const
+            {
+                return *mIterator;
+            };
+            const std::vector<Key, VectorAllocator>& GetDependencies() const
+            {
+                return std::get<2> ( mGraph->at ( *mIterator ) );
             };
         };
 
