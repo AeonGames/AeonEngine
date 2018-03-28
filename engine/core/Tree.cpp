@@ -24,6 +24,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include <algorithm>
+#include <sstream>
 #include "aeongames/Tree.h"
 
 namespace AeonGames
@@ -538,15 +539,25 @@ namespace AeonGames
             node.RecursiveTraverseDFSPostOrder ( aAction );
         }
     }
-    void Tree::Serialize() const
+
+    std::string Tree::Serialize ( bool aAsBinary ) const
     {
         static TreeBuffer tree_buffer;
         TreeBuffer& tree_buffer_ref = tree_buffer;
+        std::unordered_map<const Tree::Node*, NodeBuffer*> node_map;
         LoopTraverseDFSPreOrder (
-            [&tree_buffer_ref] ( const Tree::Node & node )
+            [&tree_buffer_ref, &node_map] ( const Tree::Node & node )
         {
-            NodeBuffer* node_buffer =
-                tree_buffer_ref.add_node();
+            NodeBuffer* node_buffer;
+            std::unordered_map<const Tree::Node*, NodeBuffer*>::iterator parent = node_map.find ( node.GetParent() );
+            if ( parent != node_map.end() )
+            {
+                node_buffer = ( *parent ).second->add_node();
+            }
+            else
+            {
+                node_buffer = tree_buffer_ref.add_node();
+            }
             node_buffer->mutable_local()->mutable_scale()->set_x ( node.GetLocalTransform().GetScale() [0] );
             node_buffer->mutable_local()->mutable_scale()->set_y ( node.GetLocalTransform().GetScale() [1] );
             node_buffer->mutable_local()->mutable_scale()->set_z ( node.GetLocalTransform().GetScale() [2] );
@@ -557,12 +568,23 @@ namespace AeonGames
             node_buffer->mutable_local()->mutable_translation()->set_x ( node.GetLocalTransform().GetTranslation() [0] );
             node_buffer->mutable_local()->mutable_translation()->set_y ( node.GetLocalTransform().GetTranslation() [1] );
             node_buffer->mutable_local()->mutable_translation()->set_z ( node.GetLocalTransform().GetTranslation() [2] );
+            node_map.emplace ( std::make_pair ( &node, node_buffer ) );
         } );
-
-        google::protobuf::TextFormat::Printer printer;
-        std::string text_string;
-        printer.PrintToString ( tree_buffer, &text_string );
-        std::cout << text_string << std::endl;
+        std::stringstream serialization;
+        if ( aAsBinary )
+        {
+            serialization << "AEONTRE" << '\0';
+            tree_buffer.SerializeToOstream ( &serialization );
+        }
+        else
+        {
+            std::string text;
+            serialization << "AEONTRE\n";
+            google::protobuf::TextFormat::Printer printer;
+            printer.PrintToString ( tree_buffer, &text );
+            serialization << text;
+        }
         tree_buffer.Clear();
+        return serialization.str();
     }
 }

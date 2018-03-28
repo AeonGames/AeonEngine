@@ -75,6 +75,7 @@ if(PYTHONINTERP_FOUND)
 endif()
 
 find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
+find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
 
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)

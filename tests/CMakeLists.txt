@@ -32,7 +32,18 @@ source_group("Tests" FILES ${TEST_SRCS})
 
 add_executable(unit-tests ${TEST_SRCS} ${TESTED_SRCS})
 
-target_link_libraries(unit-tests AeonEngine ${GTEST_LIBRARY})
+if(GTEST_LIBRARY AND GTEST_LIBRARY_DEBUG)
+ set(GTEST_LIBRARIES optimized ${GTEST_LIBRARY} debug ${GTEST_LIBRARY_DEBUG})
+else()
+ if(GTEST_LIBRARY_DEBUG)
+  set(GTEST_LIBRARIES ${GTEST_LIBRARY_DEBUG})
+ endif()
+ if(GTEST_LIBRARY)
+  set(GTEST_LIBRARIES ${GTEST_LIBRARY})
+ endif()
+endif()
+
+target_link_libraries(unit-tests AeonEngine ${GTEST_LIBRARIES})
 set_target_properties(unit-tests PROPERTIES
     COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
 add_test(NAME unit-tests COMMAND unit-tests)

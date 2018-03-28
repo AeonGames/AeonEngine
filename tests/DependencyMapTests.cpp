@@ -84,10 +84,21 @@ namespace AeonGames
             }
         };
         ASSERT_EQ ( result.size(), dependency_map.Size() );
-        ///@todo A better test would be to make sure all dependants lie before their dependencies.
-        for ( size_t i = 0; i != dependency_map.Size(); ++i )
+        for ( auto i = dependency_map.begin(); i != dependency_map.end(); ++i )
         {
-            EXPECT_EQ ( dependency_map[i], result[i] );
+            for ( auto& j : i.GetDependencies() )
+            {
+                bool dependency_stored_before{false};
+                for ( auto k = dependency_map.begin(); k != i; ++k )
+                {
+                    if ( k.GetKey() == j )
+                    {
+                        dependency_stored_before = true;
+                        break;
+                    }
+                }
+                EXPECT_TRUE ( dependency_stored_before );
+            }
         }
     }
 }
