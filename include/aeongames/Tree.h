@@ -47,6 +47,8 @@ namespace AeonGames
             DLL void Append ( const Node& aNode );
             /** Insert a child node at the specified index on the child vector. */
             DLL void Insert ( size_t aIndex, const Node& aNode );
+            /** Reparent a node at the specified index on this node's child vector. */
+            DLL void Move ( size_t aIndex, Node&& aNode );
             /** Delete a child node given its index.
              * This function deletes the child node and recursivelly all further descendants.
              */
@@ -175,8 +177,14 @@ namespace AeonGames
             DLL void SetLocalTransform ( const Transform& aTransform );
             DLL void SetGlobalTransform ( const Transform& aTransform );
             ///@}
+            ///@name Node Name Functions
+            ///@{
+            DLL const std::string& GetName() const;
+            DLL void SetName ( const std::string& aName );
+            ///@}
         private:
             friend class Tree;
+            std::string mName{};
             Node* mParent{};
             Tree* mTree{};
             /** Tree iteration helper.
@@ -194,6 +202,8 @@ namespace AeonGames
         DLL ~Tree();
         DLL void Append ( const Node& aNode );
         DLL void Insert ( size_t aIndex, const Node& aNode );
+        /** Reparent a node at the specified index on this tree's child vector. */
+        DLL void Move ( size_t aIndex, Node&& aNode );
         DLL void Erase ( std::vector<Node>::size_type aIndex );
         DLL void Erase ( const Node& aNode );
         DLL std::vector<Node>::size_type GetChildrenCount() const;
