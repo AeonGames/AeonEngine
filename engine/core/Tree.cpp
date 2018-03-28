@@ -31,6 +31,7 @@ namespace AeonGames
 {
     Tree::Node::Node() = default;
     Tree::Node::Node ( const Node & aNode ) :
+        mName{ aNode.mName },
         mParent{aNode.mParent},
         mIterator{},
         mFlags{aNode.mFlags},
@@ -45,6 +46,7 @@ namespace AeonGames
         SetGlobalTransform ( mGlobalTransform );
     }
     Tree::Node::Node ( const Node && aNode ) :
+        mName{ std::move ( aNode.mName ) },
         mParent{aNode.mParent},
         mIterator{},
         mFlags{std::move ( aNode.mFlags ) },
@@ -60,6 +62,7 @@ namespace AeonGames
     }
     Tree::Node& Tree::Node::operator= ( const Tree::Node & aNode )
     {
+        mName = aNode.mName;
         mFlags = aNode.mFlags;
         mNodes = aNode.mNodes;
         mTree = aNode.mTree;
@@ -74,6 +77,7 @@ namespace AeonGames
     }
     Tree::Node& Tree::Node::operator= ( const Tree::Node && aNode )
     {
+        mName = std::move ( aNode.mName );
         mFlags = std::move ( aNode.mFlags );
         mNodes = std::move ( aNode.mNodes );
         mTree = aNode.mTree;
@@ -98,6 +102,16 @@ namespace AeonGames
 
     Tree::Node::~Node() = default;
 
+    const std::string& Tree::Node::GetName() const
+    {
+        return mName;
+    }
+
+    void Tree::Node::SetName ( const std::string& aName )
+    {
+        mName = aName;
+    }
+
     void Tree::Node::Append ( const Tree::Node& aNode )
     {
         mNodes.emplace_back ( aNode );
@@ -112,6 +126,18 @@ namespace AeonGames
         node->mParent = this;
         node->mTree = mTree;
         node->SetGlobalTransform ( node->mGlobalTransform );
+    }
+
+    void Tree::Node::Move ( size_t aIndex, Tree::Node&& aNode )
+    {
+        auto node = mNodes.emplace ( mNodes.begin() + aIndex, std::move ( aNode ) );
+        node->mParent = this;
+        node->mTree = mTree;
+        node->SetGlobalTransform ( node->mGlobalTransform );
+        if ( aNode.GetParent() )
+        {
+            aNode.GetParent()->Erase ( aNode );
+        }
     }
 
     void Tree::Node::Erase ( std::vector<Node>::size_type aIndex )
@@ -449,6 +475,19 @@ namespace AeonGames
         node->mParent = nullptr;
         node->mTree = this;
     }
+
+    void Tree::Move ( size_t aIndex, Tree::Node&& aNode )
+    {
+        auto node = mNodes.emplace ( mNodes.begin() + aIndex, std::move ( aNode ) );
+        node->mParent = nullptr;
+        node->mTree = this;
+        node->SetGlobalTransform ( node->mGlobalTransform );
+        if ( aNode.GetParent() )
+        {
+            aNode.GetParent()->Erase ( aNode );
+        }
+    }
+
     void Tree::Erase ( std::vector<Node>::size_type aIndex )
     {
         mNodes.erase ( mNodes.begin() + aIndex );
@@ -549,7 +588,7 @@ namespace AeonGames
             [&tree_buffer_ref, &node_map] ( const Tree::Node & node )
         {
             NodeBuffer* node_buffer;
-            std::unordered_map<const Tree::Node*, NodeBuffer*>::iterator parent = node_map.find ( node.GetParent() );
+            auto parent = node_map.find ( node.GetParent() );
             if ( parent != node_map.end() )
             {
                 node_buffer = ( *parent ).second->add_node();
