@@ -17,16 +17,14 @@ package AeonGames;
 
 import "transform.proto";
 
-message NodeBuffer
-{
-    oneof transform{
+message NodeBuffer {
+    oneof transform {
         TransformBuffer local = 1;
         TransformBuffer global = 2;
     }
     repeated NodeBuffer node = 3;
 }
 
-message TreeBuffer
-{
+message TreeBuffer{
     repeated NodeBuffer node = 1;
 }
