@@ -54,16 +54,13 @@ namespace AeonGames
         {
             if ( row < static_cast<int> ( mScene.GetChildrenCount() ) )
             {
-                if ( row < mScene.GetChildrenCount() )
-                {
-                    return createIndex ( row, column, &const_cast<SceneModel*> ( this )->mScene[row] );
-                }
+                return createIndex ( row, column, &const_cast<SceneModel*> ( this )->mScene[row] );
             }
         }
         else
         {
             Tree::Node* node = reinterpret_cast<Tree::Node*> ( parent.internalPointer() );
-            if ( row < node->GetChildrenCount() )
+            if ( row < static_cast<int> ( node->GetChildrenCount() ) )
             {
                 return createIndex ( row, column, & ( node->GetChild ( row ) ) );
             }
