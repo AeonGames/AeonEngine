@@ -65,7 +65,7 @@ namespace AeonGames
             Tree::Node* node = reinterpret_cast<Tree::Node*> ( parent.internalPointer() );
             if ( row < node->GetChildrenCount() )
             {
-                return createIndex ( row, column, &node[row] );
+                return createIndex ( row, column, & ( node->GetChild ( row ) ) );
             }
         }
         return QModelIndex();
