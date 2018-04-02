@@ -103,7 +103,6 @@ namespace AeonGames
         std::vector < Tree::Node* > nodeVector;
         mTree.LoopTraverseDFSPostOrder ( [&nodeVector] ( Tree::Node & aNode )
         {
-            std::cout << aNode.GetChildrenCount() << std::endl;
             nodeVector.push_back ( &aNode );
         } );
         EXPECT_EQ ( nodeVector.size(), 14u );

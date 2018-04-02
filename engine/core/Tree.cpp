@@ -13,19 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <algorithm>
+#include <sstream>
+#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/Tree.h"
+
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
 #include <google/protobuf/text_format.h>
-#include "aeongames/ProtoBufClasses.h"
 #include "tree.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include <algorithm>
-#include <sstream>
-#include "aeongames/Tree.h"
 
 namespace AeonGames
 {
@@ -582,10 +583,9 @@ namespace AeonGames
     std::string Tree::Serialize ( bool aAsBinary ) const
     {
         static TreeBuffer tree_buffer;
-        TreeBuffer& tree_buffer_ref = tree_buffer;
         std::unordered_map<const Tree::Node*, NodeBuffer*> node_map;
         LoopTraverseDFSPreOrder (
-            [&tree_buffer_ref, &node_map] ( const Tree::Node & node )
+            [&node_map] ( const Tree::Node & node )
         {
             NodeBuffer* node_buffer;
             auto parent = node_map.find ( node.GetParent() );
@@ -595,7 +595,7 @@ namespace AeonGames
             }
             else
             {
-                node_buffer = tree_buffer_ref.add_node();
+                node_buffer = tree_buffer.add_node();
             }
             node_buffer->mutable_local()->mutable_scale()->set_x ( node.GetLocalTransform().GetScale() [0] );
             node_buffer->mutable_local()->mutable_scale()->set_y ( node.GetLocalTransform().GetScale() [1] );
