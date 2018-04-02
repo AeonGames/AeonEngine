@@ -184,7 +184,7 @@ namespace AeonGames
             ///@}
         private:
             friend class Tree;
-            std::string mName{};
+            std::string mName{"Node"};
             Node* mParent{};
             Tree* mTree{};
             /** Tree iteration helper.
