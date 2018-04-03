@@ -30,8 +30,6 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Window.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
 #include "aeongames/CRC.h"
 
 namespace AeonGames
@@ -42,15 +40,12 @@ namespace AeonGames
         mStopWatch(),
         mRenderer ( aRenderer ),
         mWindow(),
-        mScene ( std::make_shared<Scene>() ),
-        mNode ( std::make_shared<Node>() ),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
         mProjectionMatrix(),
         mViewMatrix()
     {
-        mScene->AddNode ( mNode );
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );
 
@@ -115,6 +110,8 @@ namespace AeonGames
 
     void EngineWindow::setModel ( const QString & filename )
     {
+#if 0
+        // Commented pending Refactor
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
         mNode->AttachComponent ( ModelInstance::TypeId, {},
                                  std::make_shared<ModelInstance> (
@@ -152,6 +149,7 @@ namespace AeonGames
             updateViewMatrix();
             mStep = eye_length / 100.0f;
         }
+#endif
     }
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
@@ -213,8 +211,6 @@ namespace AeonGames
                         delta = 1.0 / 30.0;
                     }
                 }
-                mScene->Update ( delta );
-                mWindow->Render ( mScene );
                 return true;
             }
         default:

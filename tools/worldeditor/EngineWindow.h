@@ -26,8 +26,7 @@ limitations under the License.
 #include <QCloseEvent>
 
 #include "aeongames/AeonEngine.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
+#include "aeongames/Tree.h"
 #include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
@@ -66,8 +65,6 @@ namespace AeonGames
         QElapsedTimer mStopWatch;
         std::shared_ptr<Renderer> mRenderer;
         std::unique_ptr<AeonGames::Window> mWindow;
-        std::shared_ptr<Scene> mScene;
-        std::shared_ptr<Node> mNode;
         float mFrustumVerticalHalfAngle;
         float mStep;
         /* We're using QT classes for now... */

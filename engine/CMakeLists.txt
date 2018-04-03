@@ -51,7 +51,6 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Animation.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Image.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Sound.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Texture.h
@@ -61,10 +60,6 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h)
-
-set(ENGINE_SCENEGRAPH_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h)
 
 set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.h
@@ -116,10 +111,6 @@ set(ENGINE_CORE_SOURCES
     core/Tree.cpp
     )
 
-set(ENGINE_SCENEGRAPH_SOURCES
-    scenegraph/Scene.cpp
-    scenegraph/Node.cpp)
-
 set(ENGINE_MATH_SOURCES
     math/Quaternion.cpp
     math/Vector4.cpp
@@ -132,18 +123,15 @@ set(ENGINE_MATH_SOURCES
 
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
 source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
-source_group("scenegraph" FILES ${ENGINE_SCENEGRAPH_HEADERS} ${ENGINE_SCENEGRAPH_SOURCES})
 source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
 source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS} ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
 
 set(ENGINE_SOURCES  ${ENGINE_CORE_SOURCES}
                     ${ENGINE_RENDERER_SOURCES}
-                    ${ENGINE_SCENEGRAPH_SOURCES}
                     ${ENGINE_MATH_SOURCES})
 set(ENGINE_HEADERS  ${ENGINE_SDK_HEADERS}
                     ${ENGINE_CORE_HEADERS}
                     ${ENGINE_RENDERER_HEADERS}
-                    ${ENGINE_SCENEGRAPH_HEADERS}
                     ${ENGINE_MATH_HEADERS})
 
 if(MSVC)

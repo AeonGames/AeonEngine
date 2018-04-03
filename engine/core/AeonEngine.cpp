@@ -26,7 +26,6 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
-#include "aeongames/Scene.h"
 #include "aeongames/GameWindow.h"
 
 namespace AeonGames
@@ -36,25 +35,11 @@ namespace AeonGames
 
     void AeonEngine::Step ( double aDeltaTime )
     {
-        if ( mScene )
-        {
-            mScene->Update ( aDeltaTime );
-        }
     }
 
     int AeonEngine::Run()
     {
         /**@todo Implement basic game loop.*/
         return 0;
-    }
-
-    void AeonEngine::SetScene ( const std::shared_ptr<Scene>& aScene )
-    {
-        mScene = aScene;
-    }
-
-    const std::shared_ptr<Scene>& AeonEngine::GetScene() const
-    {
-        return mScene;
     }
 }

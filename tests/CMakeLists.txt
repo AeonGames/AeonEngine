@@ -17,13 +17,11 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Tree.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
 )
 set(TEST_SRCS
     Main.cpp
     DependencyMapTests.cpp
     CRCTests.cpp
-    NodeTests.cpp
     TreeTests.cpp
 )
 

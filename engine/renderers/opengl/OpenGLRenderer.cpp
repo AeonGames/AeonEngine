@@ -39,8 +39,6 @@ limitations under the License.
 #include "aeongames/ModelInstance.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
 #include "aeongames/Frustum.h"
 
 namespace AeonGames
@@ -73,6 +71,8 @@ namespace AeonGames
         return std::make_unique<OpenGLWindow> ( aWindowId, shared_from_this() );
     }
 
+#if 0
+    // To be refactored.
     void OpenGLRenderer::Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
         const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
@@ -99,7 +99,7 @@ namespace AeonGames
             mOpenGLModels.erase ( model_instance->GetModel().get() );
         }
     }
-
+#endif
     void* OpenGLRenderer::GetOpenGLContext() const
     {
         return mOpenGLContext;
