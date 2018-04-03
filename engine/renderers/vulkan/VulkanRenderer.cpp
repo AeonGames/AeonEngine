@@ -45,8 +45,6 @@ limitations under the License.
 #include "math/3DMath.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
 #include "aeongames/Frustum.h"
 namespace AeonGames
 {
@@ -612,6 +610,8 @@ namespace AeonGames
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }
 
+#if 0
+    // To Be refactored
     void VulkanRenderer::Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
         const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
@@ -638,4 +638,5 @@ namespace AeonGames
             mVulkanModels[model_instance->GetModel().get()] = std::make_shared<VulkanModel> ( model_instance->GetModel(), shared_from_this() );
         }
     }
+#endif
 }

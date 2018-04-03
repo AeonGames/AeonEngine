@@ -37,9 +37,12 @@ namespace AeonGames
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
+#if 0
+        // To be refactored.
         void Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const final;
         void Load ( const Node& aNode ) final;
         void Unload ( const Node& aNode ) final;
+#endif
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;

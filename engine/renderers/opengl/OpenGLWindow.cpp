@@ -16,8 +16,6 @@ limitations under the License.
 #include "aeongames/ModelInstance.h"
 #include "aeongames/Frustum.h"
 #include "aeongames/AABB.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
@@ -74,6 +72,8 @@ namespace AeonGames
         }
     }
 
+#if 0
+    // To be refactored.
     void OpenGLWindow::Render ( const std::shared_ptr<Scene>& aScene ) const
     {
 #ifdef _WIN32
@@ -125,6 +125,7 @@ namespace AeonGames
                          reinterpret_cast<::Window> ( mWindowId ) );
 #endif
     }
+#endif
 
     const GLuint OpenGLWindow::GetMatricesBuffer() const
     {

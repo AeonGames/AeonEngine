@@ -23,8 +23,6 @@ limitations under the License.
 #include <array>
 #include <utility>
 #include "aeongames/Frustum.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
 
@@ -420,6 +418,8 @@ namespace AeonGames
         }
     }
 
+#if 0
+    // To be refactored.
     void VulkanWindow::Render ( const std::shared_ptr<Scene>& aScene ) const
     {
         if ( VkResult result = vkAcquireNextImageKHR (
@@ -519,6 +519,7 @@ namespace AeonGames
             std::cout << GetVulkanResultString ( result ) << std::endl;
         }
     }
+#endif
 
     const VkSwapchainKHR& VulkanWindow::GetSwapchain() const
     {
