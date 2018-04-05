@@ -1,4 +1,4 @@
-// Copyright 2016 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,20 +17,14 @@ package AeonGames;
 
 import "vector3.proto";
 
-message TriangleGroupBuffer {
-    Vector3Buffer Center   = 1;
-    Vector3Buffer Radii    = 2;
-    uint32 VertexFlags     = 3;
-    uint32 VertexCount     = 4;
-    uint32 IndexType       = 5;		
-    uint32 IndexCount      = 6;
-    bytes VertexBuffer     = 7;
-    bytes IndexBuffer      = 8;
-}
-
 message MeshBuffer {
 	uint32 Version         = 1;
     Vector3Buffer Center   = 2;
     Vector3Buffer Radii    = 3;
-	repeated TriangleGroupBuffer TriangleGroup = 4;
+    uint32 VertexFlags     = 4;
+    uint32 VertexCount     = 5;
+    uint32 IndexType       = 6;		
+    uint32 IndexCount      = 7;
+    bytes VertexBuffer     = 8;
+    bytes IndexBuffer      = 9;
 }

@@ -38,7 +38,7 @@ namespace AeonGames
         VkIndexType GetIndexType ( Mesh::IndexType aIndexType ) const;
         std::shared_ptr<const Mesh> mMesh;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
-        std::vector<VulkanBuffer> mBuffers;
+        VulkanBuffer mBuffer;
     };
 }
 #endif
