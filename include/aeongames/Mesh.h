@@ -47,28 +47,29 @@ namespace AeonGames
             FOUR_BYTES = 0x09,
             DOUBLE = 0x0A
         };
-        struct TriangleGroup
-        {
-            float mCenterRadii[6];
-            uint32_t mVertexFlags = 0;
-            uint32_t mVertexCount = 0;
-            uint32_t mIndexType = 0;
-            uint32_t mIndexCount = 0;
-            std::string mVertexBuffer;
-            std::string mIndexBuffer;
-        };
         Mesh ( const std::string& aFilename );
         ~Mesh();
-        DLL uint32_t GetStride ( uint32_t aFlags ) const;
-        DLL uint32_t GetIndexSize ( IndexType aIndexType ) const;
+        DLL uint32_t GetStride () const;
+        DLL uint32_t GetIndexSize () const;
         DLL const float * const GetCenterRadii() const;
-        DLL const std::vector<TriangleGroup>& GetTriangleGroups() const;
+        DLL uint32_t GetVertexFlags() const;
+        DLL uint32_t GetVertexCount() const;
+        DLL uint32_t GetIndexType() const;
+        DLL uint32_t GetIndexCount() const;
+        DLL const std::string& GetVertexBuffer() const;
+        DLL const std::string& GetIndexBuffer() const;
+
     private:
         void Initialize();
         void Finalize();
         std::string mFilename;
         float mCenterRadii[6];
-        std::vector<TriangleGroup> mTriangleGroups;
+        uint32_t mVertexFlags = 0;
+        uint32_t mVertexCount = 0;
+        uint32_t mIndexType = 0;
+        uint32_t mIndexCount = 0;
+        std::string mVertexBuffer;
+        std::string mIndexBuffer;
     };
 }
 #endif

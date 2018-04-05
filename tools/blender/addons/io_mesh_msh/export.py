@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -158,12 +158,12 @@ class MSHExporterCommon():
             dictionary[key] = index
         return dictionary
 
-    def fill_triangle_group(self, triangle_group, mesh_object):
+    def fill_mesh_buffer(self, mesh_buffer, mesh_object):
         self.mesh = mesh_object.data
         self.object = mesh_object
         pool = ThreadPool()
         # Store center, radii.
-        triangle_group_min_x = min(
+        mesh_buffer_min_x = min(
             mesh_object.bound_box[0][0],
             mesh_object.bound_box[1][0],
             mesh_object.bound_box[2][0],
@@ -172,7 +172,7 @@ class MSHExporterCommon():
             mesh_object.bound_box[5][0],
             mesh_object.bound_box[6][0],
             mesh_object.bound_box[7][0])
-        triangle_group_max_x = max(
+        mesh_buffer_max_x = max(
             mesh_object.bound_box[0][0],
             mesh_object.bound_box[1][0],
             mesh_object.bound_box[2][0],
@@ -181,7 +181,7 @@ class MSHExporterCommon():
             mesh_object.bound_box[5][0],
             mesh_object.bound_box[6][0],
             mesh_object.bound_box[7][0])
-        triangle_group_min_y = min(
+        mesh_buffer_min_y = min(
             mesh_object.bound_box[0][1],
             mesh_object.bound_box[1][1],
             mesh_object.bound_box[2][1],
@@ -190,7 +190,7 @@ class MSHExporterCommon():
             mesh_object.bound_box[5][1],
             mesh_object.bound_box[6][1],
             mesh_object.bound_box[7][1])
-        triangle_group_max_y = max(
+        mesh_buffer_max_y = max(
             mesh_object.bound_box[0][1],
             mesh_object.bound_box[1][1],
             mesh_object.bound_box[2][1],
@@ -199,7 +199,7 @@ class MSHExporterCommon():
             mesh_object.bound_box[5][1],
             mesh_object.bound_box[6][1],
             mesh_object.bound_box[7][1])
-        triangle_group_min_z = min(
+        mesh_buffer_min_z = min(
             mesh_object.bound_box[0][2],
             mesh_object.bound_box[1][2],
             mesh_object.bound_box[2][2],
@@ -208,7 +208,7 @@ class MSHExporterCommon():
             mesh_object.bound_box[5][2],
             mesh_object.bound_box[6][2],
             mesh_object.bound_box[7][2])
-        triangle_group_max_z = max(
+        mesh_buffer_max_z = max(
             mesh_object.bound_box[0][2],
             mesh_object.bound_box[1][2],
             mesh_object.bound_box[2][2],
@@ -217,16 +217,16 @@ class MSHExporterCommon():
             mesh_object.bound_box[5][2],
             mesh_object.bound_box[6][2],
             mesh_object.bound_box[7][2])
-        triangle_group.Center.x = (
-            triangle_group_min_x + triangle_group_max_x) / 2
-        triangle_group.Center.y = (
-            triangle_group_min_y + triangle_group_max_y) / 2
-        triangle_group.Center.z = (
-            triangle_group_min_z + triangle_group_max_z) / 2
+        mesh_buffer.Center.x = (
+            mesh_buffer_min_x + mesh_buffer_max_x) / 2
+        mesh_buffer.Center.y = (
+            mesh_buffer_min_y + mesh_buffer_max_y) / 2
+        mesh_buffer.Center.z = (
+            mesh_buffer_min_z + mesh_buffer_max_z) / 2
 
-        triangle_group.Radii.x = triangle_group_max_x - triangle_group.Center.x
-        triangle_group.Radii.y = triangle_group_max_y - triangle_group.Center.y
-        triangle_group.Radii.z = triangle_group_max_z - triangle_group.Center.z
+        mesh_buffer.Radii.x = mesh_buffer_max_x - mesh_buffer.Center.x
+        mesh_buffer.Radii.y = mesh_buffer_max_y - mesh_buffer.Center.y
+        mesh_buffer.Radii.z = mesh_buffer_max_z - mesh_buffer.Center.z
 
         mesh = mesh_object.data
         mesh.calc_normals()
@@ -240,35 +240,35 @@ class MSHExporterCommon():
                     if armaturemodifier.object:
                         self.armature = armaturemodifier.object.data
                     break
-        triangle_group.VertexFlags = 0
+        mesh_buffer.VertexFlags = 0
         vertex_struct_string = ''
         # Position and Normal aren't optional (for now)
-        triangle_group.VertexFlags |= ATTR_POSITION_MASK
+        mesh_buffer.VertexFlags |= ATTR_POSITION_MASK
         vertex_struct_string += '3f'
 
-        triangle_group.VertexFlags |= ATTR_NORMAL_MASK
+        mesh_buffer.VertexFlags |= ATTR_NORMAL_MASK
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
 
             mesh.calc_tangents(mesh.uv_layers[0].name)
 
-            triangle_group.VertexFlags |= ATTR_TANGENT_MASK
+            mesh_buffer.VertexFlags |= ATTR_TANGENT_MASK
             vertex_struct_string += '3f'
 
-            triangle_group.VertexFlags |= ATTR_BITANGENT_MASK
+            mesh_buffer.VertexFlags |= ATTR_BITANGENT_MASK
             vertex_struct_string += '3f'
 
-            triangle_group.VertexFlags |= ATTR_UV_MASK
+            mesh_buffer.VertexFlags |= ATTR_UV_MASK
             vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier.
         if self.armature is not None:
-            triangle_group.VertexFlags |= ATTR_WEIGHT_MASK
+            mesh_buffer.VertexFlags |= ATTR_WEIGHT_MASK
             vertex_struct_string += '8B'
 
         # Generate Vertex Buffer--------------------------------------
-        self.flags = triangle_group.VertexFlags
+        self.flags = mesh_buffer.VertexFlags
         self.vertices = list(pool.map(self.get_vertex, mesh.loops))
         self.vertices.sort(key=operator.itemgetter(1))
         # The next line of code is so dense;
@@ -312,28 +312,28 @@ class MSHExporterCommon():
             len(self.vertices) *
             vertex_struct.size,
             "bytes for vertex buffer")
-        triangle_group.VertexCount = len(self.vertices)
-        triangle_group.VertexBuffer = b''.join(
+        mesh_buffer.VertexCount = len(self.vertices)
+        mesh_buffer.VertexBuffer = b''.join(
             list(pool.map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
         print("Done")
 
         index_struct = None
         # Write indices -----------------------------------
-        triangle_group.IndexCount = len(self.indices)
+        mesh_buffer.IndexCount = len(self.indices)
 
         # Save memory space by using best fitting type for indices.
         if len(self.vertices) < 0x100:
-            triangle_group.IndexType = UNSIGNED_BYTE
+            mesh_buffer.IndexType = UNSIGNED_BYTE
             index_struct = struct.Struct('B')
         elif len(self.vertices) < 0x10000:
-            triangle_group.IndexType = UNSIGNED_SHORT
+            mesh_buffer.IndexType = UNSIGNED_SHORT
             index_struct = struct.Struct('H')
         else:
-            triangle_group.IndexType = UNSIGNED_INT
+            mesh_buffer.IndexType = UNSIGNED_INT
             index_struct = struct.Struct('I')
 
-        print("Writting", triangle_group.IndexCount, "indices.")
-        triangle_group.IndexBuffer = b''.join(
+        print("Writting", mesh_buffer.IndexCount, "indices.")
+        mesh_buffer.IndexBuffer = b''.join(
             list(pool.map(index_struct.pack, self.indices)))
         print("Done")
         pool.close()
@@ -344,48 +344,15 @@ class MSHExporterCommon():
         mesh_buffer = mesh_pb2.MeshBuffer()
         # Initialize Protocol Buffer Message
         mesh_buffer.Version = 1
-        global_min_x = float('inf')
-        global_min_y = float('inf')
-        global_min_z = float('inf')
-        global_max_x = float('-inf')
-        global_max_y = float('-inf')
-        global_max_z = float('-inf')
 
-        triangle_group = mesh_buffer.TriangleGroup.add()
-        self.fill_triangle_group(triangle_group, mesh_object)
-        # cProfile.runctx('self.fill_triangle_group(triangle_group, object)', globals(), locals())
+        self.fill_mesh_buffer(mesh_buffer, mesh_object)
+        # cProfile.runctx('self.fill_mesh_buffer(mesh_buffer, object)', globals(), locals())
         # print(
         # timeit.timeit(
-        # lambda: self.fill_triangle_group(
-        # triangle_group,
+        # lambda: self.fill_mesh_buffer(
+        # mesh_buffer,
         # object),
         # number=1))
-        global_min_x = min(
-            global_min_x,
-            (triangle_group.Center.x - triangle_group.Radii.x))
-        global_min_y = min(
-            global_min_y,
-            (triangle_group.Center.y - triangle_group.Radii.y))
-        global_min_z = min(
-            global_min_z,
-            (triangle_group.Center.z - triangle_group.Radii.z))
-        global_max_x = max(
-            global_max_x,
-            (triangle_group.Center.x + triangle_group.Radii.x))
-        global_max_y = max(
-            global_max_y,
-            (triangle_group.Center.y + triangle_group.Radii.y))
-        global_max_z = max(
-            global_max_z,
-            (triangle_group.Center.z + triangle_group.Radii.z))
-
-        # Set Global Center and Radii
-        mesh_buffer.Center.x = (global_min_x + global_max_x) / 2
-        mesh_buffer.Center.y = (global_min_y + global_max_y) / 2
-        mesh_buffer.Center.z = (global_min_z + global_max_z) / 2
-        mesh_buffer.Radii.x = global_max_x - mesh_buffer.Center.x
-        mesh_buffer.Radii.y = global_max_y - mesh_buffer.Center.y
-        mesh_buffer.Radii.z = global_max_z - mesh_buffer.Center.z
 
         # Open File for Writing
         print("Writting", self.filepath, ".")

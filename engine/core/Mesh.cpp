@@ -60,69 +60,35 @@ namespace AeonGames
         return mCenterRadii;
     }
 
-    const std::vector<Mesh::TriangleGroup>& Mesh::GetTriangleGroups() const
-    {
-        return mTriangleGroups;
-    }
-
     void Mesh::Initialize()
     {
         static MeshBuffer mesh_buffer;
         LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
 
-        if ( mesh_buffer.trianglegroup().size() == 1 )
+        // Extract Center
+        mCenterRadii[0] = mesh_buffer.center().x();
+        mCenterRadii[1] = mesh_buffer.center().y();
+        mCenterRadii[2] = mesh_buffer.center().z();
+        // Extract Radius
+        mCenterRadii[3] = mesh_buffer.radii().x();
+        mCenterRadii[4] = mesh_buffer.radii().y();
+        mCenterRadii[5] = mesh_buffer.radii().z();
+
+        mVertexCount = mesh_buffer.vertexcount();
+        mIndexCount = mesh_buffer.indexcount();
+        mIndexType = mesh_buffer.indextype();
+
+        mVertexFlags = mesh_buffer.vertexflags();
+        // Sadly we must copy here (or do we?)
+        if ( mesh_buffer.vertexcount() )
         {
-            /* This avoids having to duplicate the values on single triangle group meshes.*/
-            // Extract Center
-            mCenterRadii[0] = mesh_buffer.trianglegroup().Get ( 0 ).center().x();
-            mCenterRadii[1] = mesh_buffer.trianglegroup().Get ( 0 ).center().y();
-            mCenterRadii[2] = mesh_buffer.trianglegroup().Get ( 0 ).center().z();
-            // Extract Radius
-            mCenterRadii[3] = mesh_buffer.trianglegroup().Get ( 0 ).radii().x();
-            mCenterRadii[4] = mesh_buffer.trianglegroup().Get ( 0 ).radii().y();
-            mCenterRadii[5] = mesh_buffer.trianglegroup().Get ( 0 ).radii().z();
+            mVertexBuffer = mesh_buffer.vertexbuffer();
         }
-        else
+        if ( mesh_buffer.indexcount() )
         {
-            // Extract Center
-            mCenterRadii[0] = mesh_buffer.center().x();
-            mCenterRadii[1] = mesh_buffer.center().y();
-            mCenterRadii[2] = mesh_buffer.center().z();
-            // Extract Radius
-            mCenterRadii[3] = mesh_buffer.radii().x();
-            mCenterRadii[4] = mesh_buffer.radii().y();
-            mCenterRadii[5] = mesh_buffer.radii().z();
+            mIndexBuffer = mesh_buffer.indexbuffer();
         }
 
-        mTriangleGroups.reserve ( mesh_buffer.trianglegroup().size() );
-        for ( auto& i : mesh_buffer.trianglegroup() )
-        {
-            mTriangleGroups.emplace_back();
-
-            // Extract Center
-            mTriangleGroups.back().mCenterRadii[0] = i.center().x();
-            mTriangleGroups.back().mCenterRadii[1] = i.center().y();
-            mTriangleGroups.back().mCenterRadii[2] = i.center().z();
-            // Extract Radius
-            mTriangleGroups.back().mCenterRadii[3] = i.radii().x();
-            mTriangleGroups.back().mCenterRadii[4] = i.radii().y();
-            mTriangleGroups.back().mCenterRadii[5] = i.radii().z();
-
-            mTriangleGroups.back().mVertexCount = i.vertexcount();
-            mTriangleGroups.back().mIndexCount = i.indexcount();
-            mTriangleGroups.back().mIndexType = i.indextype();
-
-            mTriangleGroups.back().mVertexFlags = i.vertexflags();
-            // Sadly we must copy here
-            if ( i.vertexcount() )
-            {
-                mTriangleGroups.back().mVertexBuffer = i.vertexbuffer();
-            }
-            if ( i.indexcount() )
-            {
-                mTriangleGroups.back().mIndexBuffer = i.indexbuffer();
-            }
-        }
         mesh_buffer.Clear();
     }
 
@@ -130,39 +96,39 @@ namespace AeonGames
     {
     }
 
-    uint32_t Mesh::GetStride ( uint32_t aFlags ) const
+    uint32_t Mesh::GetStride () const
     {
         uint32_t stride = 0;
-        if ( aFlags & POSITION_BIT )
+        if ( mVertexFlags & POSITION_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & NORMAL_BIT )
+        if ( mVertexFlags & NORMAL_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & TANGENT_BIT )
+        if ( mVertexFlags & TANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & BITANGENT_BIT )
+        if ( mVertexFlags & BITANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aFlags & UV_BIT )
+        if ( mVertexFlags & UV_BIT )
         {
             stride += sizeof ( float ) * 2;
         }
-        if ( aFlags & WEIGHT_BIT )
+        if ( mVertexFlags & WEIGHT_BIT )
         {
             stride += sizeof ( uint8_t ) * 8;
         }
         return stride;
     }
 
-    uint32_t Mesh::GetIndexSize ( IndexType aIndexType ) const
+    uint32_t Mesh::GetIndexSize() const
     {
-        switch ( aIndexType )
+        switch ( mIndexType )
         {
         case BYTE:
         case UNSIGNED_BYTE:
@@ -183,5 +149,30 @@ namespace AeonGames
         };
         assert ( 0 && "Invalid Index Type." );
         return 0;
+    }
+
+    uint32_t Mesh::GetVertexFlags() const
+    {
+        return mVertexFlags;
+    }
+    uint32_t Mesh::GetVertexCount() const
+    {
+        return mVertexCount;
+    }
+    uint32_t Mesh::GetIndexType() const
+    {
+        return mIndexType;
+    }
+    uint32_t Mesh::GetIndexCount() const
+    {
+        return mIndexCount;
+    }
+    const std::string& Mesh::GetVertexBuffer() const
+    {
+        return mVertexBuffer;
+    }
+    const std::string& Mesh::GetIndexBuffer() const
+    {
+        return mIndexBuffer;
     }
 }

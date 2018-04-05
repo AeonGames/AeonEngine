@@ -35,13 +35,9 @@ namespace AeonGames
         void Finalize();
         std::shared_ptr<const Mesh> mMesh;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
-        struct Buffers
-        {
-            uint32_t mArray = 0;
-            uint32_t mVertexBuffer = 0;
-            uint32_t mIndexBuffer = 0;
-        };
-        std::vector<Buffers> mBuffers;
+        uint32_t mArray = 0;
+        uint32_t mVertexBuffer = 0;
+        uint32_t mIndexBuffer = 0;
     };
 }
 #endif
