@@ -1,6 +1,6 @@
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
-* text=auto
+* text=input
 
 # Set default behavior for command prompt diff.
 #
@@ -29,9 +29,9 @@
 #*.wwaproj   merge=binary
 # behavior for image files
 # image files are treated as binary by default.
-#*.jpg   binary
-#*.png   binary
-#*.gif   binary
+*.jpg   binary
+*.png   binary
+*.gif   binary
 # diff behavior for common document formats
 # Convert binary document formats to text before diffing them. This feature
 # is only available from the command line. Turn it on by uncommenting the
