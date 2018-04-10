@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,6 +46,35 @@ limitations under the License.
 
 namespace AeonGames
 {
+    uint32_t GetStride ( const MeshBuffer& aMeshBuffer )
+    {
+        uint32_t stride = 0;
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+        {
+            stride += sizeof ( float ) * 2;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+        {
+            stride += sizeof ( uint8_t ) * 8;
+        }
+        return stride;
+    }
     class CodeFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
     {
     public:
@@ -62,6 +91,67 @@ namespace AeonGames
             return printed;
         }
     };
+
+    class VertexBufferFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
+    {
+    public:
+        VertexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
+            google::protobuf::TextFormat::FieldValuePrinter(),
+            mMeshBuffer{aMeshBuffer}
+        {
+        };
+        std::string PrintBytes ( const std::string & val ) const override
+        {
+            const uint8_t* cursor = reinterpret_cast<const uint8_t*> ( val.data() );
+            std::ostringstream stream;
+            stream << "\"" << std::endl;
+            for ( std::size_t i = 0; i < mMeshBuffer.vertexcount(); ++i )
+            {
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+                {
+                    const float* values = reinterpret_cast<const float*> ( cursor );
+                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    cursor += sizeof ( float ) * 3;
+                }
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
+                {
+                    const float* values = reinterpret_cast<const float*> ( cursor );
+                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    cursor += sizeof ( float ) * 3;
+                }
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+                {
+                    const float* values = reinterpret_cast<const float*> ( cursor );
+                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    cursor += sizeof ( float ) * 3;
+                }
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+                {
+                    const float* values = reinterpret_cast<const float*> ( cursor );
+                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    cursor += sizeof ( float ) * 3;
+                }
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+                {
+                    const float* values = reinterpret_cast<const float*> ( cursor );
+                    stream << "\t" << values[0] << ",\t" << values[1] << ",";
+                    cursor += sizeof ( float ) * 2;
+                }
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+                {
+                    const uint8_t* values = cursor;
+                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",\t" << values[3] << ",";
+                    cursor += sizeof ( uint8_t ) * 8;
+                }
+                stream << std::endl;
+            }
+            stream << "\"";
+            return stream.str();
+        }
+    private:
+        const MeshBuffer& mMeshBuffer;
+    };
+
     Convert::Convert ( int argc, char** argv )
     {
         for ( int i = 1; i < argc; ++i )
@@ -187,8 +277,9 @@ namespace AeonGames
             }
             else
             {
+                google::protobuf::TextFormat::Parser parser;
                 std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
-                if ( !google::protobuf::TextFormat::ParseFromString (
+                if ( !parser.ParseFromString (
                          text,
                          message ) )
                 {
@@ -204,7 +295,6 @@ namespace AeonGames
                 // Write Text Version
                 google::protobuf::TextFormat::Printer printer;
 
-
                 // Try to print shader code in a more human readable format.
                 if ( ( message == &pipeline_buffer ) && ( !printer.RegisterFieldValuePrinter (
                             pipeline_buffer.vertex_shader().GetDescriptor()->FindFieldByName ( "code" ),
@@ -213,6 +303,13 @@ namespace AeonGames
                     std::cout << "Failed to register field value printer." << std::endl;
                 }
 
+                // Print Vertex buffers in a more human readable format.
+                if ( ( message == &mesh_buffer ) && ( !printer.RegisterFieldValuePrinter (
+                        mesh_buffer.GetDescriptor()->FindFieldByName ( "VertexBuffer" ),
+                        new VertexBufferFieldValuePrinter ( mesh_buffer ) ) ) )
+                {
+                    std::cout << "Failed to register vertex buffer printer." << std::endl;
+                }
 
                 std::string text_string;
                 std::ofstream text_file ( mOutputFile, std::ifstream::out );

@@ -18,6 +18,16 @@ package AeonGames;
 import "vector3.proto";
 
 message MeshBuffer {
+    enum FlagMask
+    {
+        UNKNOWN = 0;
+        POSITION_BIT = 1;
+        NORMAL_BIT = 2;
+        TANGENT_BIT = 4;
+        BITANGENT_BIT = 8;
+        UV_BIT = 16;
+        WEIGHT_BIT = 32;
+    }
 	uint32 Version         = 1;
     Vector3Buffer Center   = 2;
     Vector3Buffer Radii    = 3;
