@@ -46,6 +46,10 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static const char float_pattern[] = "([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?)";
+    static const char int_pattern[] = "([-+]?[0-9]*)";
+    static const char whitespace_pattern[] = "\\s*";
+    static const char separator_pattern[] = "\\s+";
     uint32_t GetStride ( const MeshBuffer& aMeshBuffer )
     {
         uint32_t stride = 0;
@@ -74,6 +78,86 @@ namespace AeonGames
             stride += sizeof ( uint8_t ) * 8;
         }
         return stride;
+    }
+    std::string GetVertexBufferRegexPattern ( const MeshBuffer& aMeshBuffer )
+    {
+        std::string pattern{"\\(\\s*"};
+        bool want_initial_separator = false;
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+        {
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += int_pattern;
+            pattern += separator_pattern;
+            pattern += int_pattern;
+            pattern += separator_pattern;
+            pattern += int_pattern;
+            pattern += separator_pattern;
+            pattern += int_pattern;
+        }
+        pattern += "\\s*\\)";
+        return pattern;
     }
     class CodeFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
     {
@@ -104,48 +188,56 @@ namespace AeonGames
         {
             const uint8_t* cursor = reinterpret_cast<const uint8_t*> ( val.data() );
             std::ostringstream stream;
-            stream << "\"" << std::endl;
+            stream << std::endl;
             for ( std::size_t i = 0; i < mMeshBuffer.vertexcount(); ++i )
             {
+                stream << "\"(";
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",";
+                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream << "\t" << values[0] << ",\t" << values[1] << ",";
+                    stream  << " " << values[0] << " " << values[1];
                     cursor += sizeof ( float ) * 2;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
                 {
                     const uint8_t* values = cursor;
-                    stream << "\t" << values[0] << ",\t" << values[1] << ",\t" << values[2] << ",\t" << values[3] << ",";
+                    stream  << " " <<
+                            static_cast<uint32_t> ( values[0] ) << " " <<
+                            static_cast<uint32_t> ( values[1] ) << " " <<
+                            static_cast<uint32_t> ( values[2] ) << " " <<
+                            static_cast<uint32_t> ( values[3] ) << " " <<
+                            static_cast<uint32_t> ( values[4] ) << " " <<
+                            static_cast<uint32_t> ( values[5] ) << " " <<
+                            static_cast<uint32_t> ( values[6] ) << " " <<
+                            static_cast<uint32_t> ( values[7] );
                     cursor += sizeof ( uint8_t ) * 8;
                 }
-                stream << std::endl;
+                stream << " )\"" << std::endl;
             }
-            stream << "\"";
             return stream.str();
         }
     private:
@@ -284,6 +376,88 @@ namespace AeonGames
                          message ) )
                 {
                     throw std::runtime_error ( "Text file parsing failed." );
+                }
+                if ( message == &mesh_buffer )
+                {
+                    /* Presume raw buffer data if the lenght of the vertex buffer
+                     string exactly maches the string length. */
+                    if ( GetStride ( mesh_buffer ) *mesh_buffer.vertexcount() != mesh_buffer.vertexbuffer().size() )
+                    {
+                        std::string vertex_buffer;
+                        std::smatch match_results;
+                        std::string vertex_string{mesh_buffer.vertexbuffer() };
+                        std::regex vertex_regex ( GetVertexBufferRegexPattern ( mesh_buffer ) );
+                        while ( std::regex_search ( vertex_string, match_results, vertex_regex ) )
+                        {
+                            float float_value;
+                            uint8_t uint8_t_value;
+                            size_t index = 1;
+                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+                            {
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                            }
+                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
+                            {
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                            }
+                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+                            {
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                            }
+                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+                            {
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                            }
+                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+                            {
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                                float_value = std::stof ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                            }
+                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+                            {
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                                uint8_t_value = std::stoi ( match_results[index++] );
+                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                            }
+                            vertex_string = match_results.suffix();
+                        }
+                        mesh_buffer.set_vertexbuffer ( std::move ( vertex_buffer ) );
+                    }
                 }
             }
             file.close();
