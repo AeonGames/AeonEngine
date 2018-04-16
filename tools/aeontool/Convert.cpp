@@ -47,33 +47,33 @@ limitations under the License.
 namespace AeonGames
 {
     static const char float_pattern[] = "([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?)";
-    static const char int_pattern[] = "([-+]?[0-9]*)";
+    static const char int_pattern[] = "([-+]?[0-9]+)";
     static const char whitespace_pattern[] = "\\s*";
     static const char separator_pattern[] = "\\s+";
     uint32_t GetStride ( const MeshBuffer& aMeshBuffer )
     {
         uint32_t stride = 0;
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
         {
             stride += sizeof ( float ) * 2;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
         {
             stride += sizeof ( uint8_t ) * 8;
         }
@@ -83,7 +83,7 @@ namespace AeonGames
     {
         std::string pattern{"\\(\\s*"};
         bool want_initial_separator = false;
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
         {
             pattern += float_pattern;
             pattern += separator_pattern;
@@ -92,20 +92,7 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
-        {
-            if ( want_initial_separator )
-            {
-                pattern += separator_pattern;
-            }
-            pattern += float_pattern;
-            pattern += separator_pattern;
-            pattern += float_pattern;
-            pattern += separator_pattern;
-            pattern += float_pattern;
-            want_initial_separator = true;
-        }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
         {
             if ( want_initial_separator )
             {
@@ -118,7 +105,7 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
         {
             if ( want_initial_separator )
             {
@@ -131,7 +118,20 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
         {
             if ( want_initial_separator )
             {
@@ -142,7 +142,7 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
         {
             if ( want_initial_separator )
             {
@@ -192,37 +192,37 @@ namespace AeonGames
             for ( std::size_t i = 0; i < mMeshBuffer.vertexcount(); ++i )
             {
                 stream << "\"(";
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream  << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream  << " " << values[0] << " " << values[1];
                     cursor += sizeof ( float ) * 2;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
+                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
                 {
                     const uint8_t* values = cursor;
                     stream  << " " <<
@@ -243,6 +243,167 @@ namespace AeonGames
     private:
         const MeshBuffer& mMeshBuffer;
     };
+
+    class IndexBufferFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
+    {
+    public:
+        IndexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
+            google::protobuf::TextFormat::FieldValuePrinter(),
+            mMeshBuffer{ aMeshBuffer }
+        {
+        };
+        std::string PrintBytes ( const std::string & val ) const override
+        {
+            const uint8_t* cursor8;
+            const uint16_t* cursor16;
+            const uint32_t* cursor32 =
+                reinterpret_cast<const uint32_t*> ( cursor16 = reinterpret_cast<const uint16_t*> ( cursor8 = reinterpret_cast<const uint8_t*> ( val.data() ) ) );
+            std::ostringstream stream;
+            stream << std::endl;
+            for ( size_t i = 0; i < mMeshBuffer.indexcount(); ++i )
+            {
+                if ( i % 3 == 0 )
+                {
+                    stream << "\"";
+                }
+                switch ( mMeshBuffer.indextype() )
+                {
+                case MeshBuffer_IndexTypeEnum_UNSIGNED_BYTE:
+                    stream << static_cast<uint32_t> ( cursor8[i] );
+                    break;
+                case MeshBuffer_IndexTypeEnum_UNSIGNED_SHORT:
+                    stream << static_cast<uint32_t> ( cursor16[i] );
+                    break;
+                case MeshBuffer_IndexTypeEnum_UNSIGNED_INT:
+                    stream << cursor32[i];
+                    break;
+                default:
+                    // I am deprecating any index types not supported by the official exporter.
+                    throw std::runtime_error ( "Unknown or deprecated index buffer type." );
+                }
+                if ( ( i + 1 ) % 3 == 0 )
+                {
+                    stream << " \""  << std::endl;
+                }
+                else
+                {
+                    stream << " ";
+                }
+            }
+            return stream.str();
+        }
+    private:
+        const MeshBuffer& mMeshBuffer;
+    };
+
+    std::string ParseVertexBuffer ( const MeshBuffer& aMeshBuffer )
+    {
+        std::string vertex_buffer;
+        std::smatch match_results;
+        std::string vertex_string{ aMeshBuffer.vertexbuffer() };
+        std::regex vertex_regex ( GetVertexBufferRegexPattern ( aMeshBuffer ) );
+        while ( std::regex_search ( vertex_string, match_results, vertex_regex ) )
+        {
+            float float_value;
+            uint8_t uint8_t_value;
+            size_t index = 1;
+            if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
+            {
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+            }
+            if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
+            {
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+            }
+            if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
+            {
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+            }
+            if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
+            {
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+            }
+            if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
+            {
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+                float_value = std::stof ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
+            }
+            if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
+            {
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                uint8_t_value = std::stoi ( match_results[index++] );
+                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+            }
+            vertex_string = match_results.suffix();
+        }
+        return vertex_buffer;
+    }
+
+    std::string ParseIndexBuffer ( const MeshBuffer& aMeshBuffer )
+    {
+        std::string index_buffer;
+        std::smatch match_results;
+        std::string index_string{ aMeshBuffer.indexbuffer() };
+        std::regex index_regex ( int_pattern );
+        while ( std::regex_search ( index_string, match_results, index_regex ) )
+        {
+            uint8_t uint8_t_value;
+            uint16_t uint16_t_value;
+            uint32_t uint32_t_value;
+            switch ( aMeshBuffer.indextype() )
+            {
+            case MeshBuffer_IndexTypeEnum_UNSIGNED_BYTE:
+                uint8_t_value = static_cast<uint8_t> ( std::stoi ( match_results[1] ) );
+                index_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
+                break;
+            case MeshBuffer_IndexTypeEnum_UNSIGNED_SHORT:
+                uint16_t_value = static_cast<uint16_t> ( std::stoi ( match_results[1] ) );
+                index_buffer.append ( reinterpret_cast<char*> ( &uint16_t_value ), sizeof ( uint16_t ) );
+                break;
+            case MeshBuffer_IndexTypeEnum_UNSIGNED_INT:
+                uint32_t_value = static_cast<uint32_t> ( std::stoi ( match_results[1] ) );
+                index_buffer.append ( reinterpret_cast<char*> ( &uint32_t_value ), sizeof ( uint32_t ) );
+                break;
+            }
+            index_string = match_results.suffix();
+        }
+        return index_buffer;
+    }
 
     Convert::Convert ( int argc, char** argv )
     {
@@ -383,80 +544,16 @@ namespace AeonGames
                      string exactly maches the string length. */
                     if ( GetStride ( mesh_buffer ) *mesh_buffer.vertexcount() != mesh_buffer.vertexbuffer().size() )
                     {
-                        std::string vertex_buffer;
-                        std::smatch match_results;
-                        std::string vertex_string{mesh_buffer.vertexbuffer() };
-                        std::regex vertex_regex ( GetVertexBufferRegexPattern ( mesh_buffer ) );
-                        while ( std::regex_search ( vertex_string, match_results, vertex_regex ) )
-                        {
-                            float float_value;
-                            uint8_t uint8_t_value;
-                            size_t index = 1;
-                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_POSITION_BIT )
-                            {
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                            }
-                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_NORMAL_BIT )
-                            {
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                            }
-                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_TANGENT_BIT )
-                            {
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                            }
-                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_BITANGENT_BIT )
-                            {
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                            }
-                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_UV_BIT )
-                            {
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                                float_value = std::stof ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
-                            }
-                            if ( mesh_buffer.vertexflags() & MeshBuffer_FlagMask_WEIGHT_BIT )
-                            {
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                                uint8_t_value = std::stoi ( match_results[index++] );
-                                vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
-                            }
-                            vertex_string = match_results.suffix();
-                        }
-                        mesh_buffer.set_vertexbuffer ( std::move ( vertex_buffer ) );
+                        mesh_buffer.set_vertexbuffer ( ParseVertexBuffer ( mesh_buffer ) );
+                    }
+                    /* Presume raw buffer data if the lenght of the index buffer
+                    string exactly maches the string length. */
+                    if ( ( mesh_buffer.indexcount() *
+                           ( ( mesh_buffer.indextype() == MeshBuffer_IndexTypeEnum_UNSIGNED_BYTE ) ? 1 :
+                             ( mesh_buffer.indextype() == MeshBuffer_IndexTypeEnum_UNSIGNED_SHORT ) ? 2 : 4 ) )
+                         != mesh_buffer.vertexbuffer().size() )
+                    {
+                        mesh_buffer.set_indexbuffer ( ParseIndexBuffer ( mesh_buffer ) );
                     }
                 }
             }
@@ -483,6 +580,14 @@ namespace AeonGames
                         new VertexBufferFieldValuePrinter ( mesh_buffer ) ) ) )
                 {
                     std::cout << "Failed to register vertex buffer printer." << std::endl;
+                }
+
+                // Print Index buffers in a more human readable format.
+                if ( ( message == &mesh_buffer ) && ( !printer.RegisterFieldValuePrinter (
+                        mesh_buffer.GetDescriptor()->FindFieldByName ( "IndexBuffer" ),
+                        new IndexBufferFieldValuePrinter ( mesh_buffer ) ) ) )
+                {
+                    std::cout << "Failed to register index buffer printer." << std::endl;
                 }
 
                 std::string text_string;

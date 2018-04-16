@@ -1,5 +1,5 @@
 <RCC>
   <qresource prefix="meshes">
-    <file alias="cube.msh">${CMAKE_CURRENT_BINARY_DIR}/cube.msh</file>
+    <file alias="aabb.msh">${CMAKE_CURRENT_BINARY_DIR}/aabb.msh</file>
   </qresource>
 </RCC>

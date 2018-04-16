@@ -59,11 +59,11 @@ endif(WIN32)
 
 add_custom_command(
     OUTPUT
-        ${CMAKE_CURRENT_BINARY_DIR}/cube.msh
+        ${CMAKE_CURRENT_BINARY_DIR}/aabb.msh
     COMMAND
-        $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o cube.msh
+        $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb.txt -o aabb.msh
     MAIN_DEPENDENCY
-        ../../game/meshes/cube.txt
+        resources/meshes/aabb.txt
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT
