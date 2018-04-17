@@ -2,4 +2,7 @@
   <qresource prefix="meshes">
     <file alias="aabb.msh">${CMAKE_CURRENT_BINARY_DIR}/aabb.msh</file>
   </qresource>
+  <qresource prefix="pipelines">
+    <file alias="solid_color.prg">${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg</file>
+  </qresource>
 </RCC>

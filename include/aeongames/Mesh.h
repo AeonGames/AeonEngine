@@ -48,6 +48,7 @@ namespace AeonGames
             DOUBLE = 0x0A
         };
         Mesh ( const std::string& aFilename );
+        Mesh ( const void* aBuffer, size_t aBufferSize );
         ~Mesh();
         DLL uint32_t GetStride () const;
         DLL uint32_t GetIndexSize () const;
@@ -58,9 +59,8 @@ namespace AeonGames
         DLL uint32_t GetIndexCount() const;
         DLL const std::string& GetVertexBuffer() const;
         DLL const std::string& GetIndexBuffer() const;
-
     private:
-        void Initialize();
+        void Initialize ( const void * aBuffer = nullptr, size_t aBufferSize = 0 );
         void Finalize();
         std::string mFilename;
         float mCenterRadii[6];

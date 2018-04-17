@@ -50,6 +50,24 @@ namespace AeonGames
             throw;
         }
     }
+    Mesh::Mesh ( const void * aBuffer, size_t aBufferSize )
+        :
+        mFilename{}
+    {
+        if ( !aBuffer && !aBufferSize )
+        {
+            throw std::runtime_error ( "Cannot initialize mesh object with null data." );
+        }
+        try
+        {
+            Initialize ( aBuffer, aBufferSize );
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
+    }
     Mesh::~Mesh()
     {
         Finalize();
@@ -60,11 +78,17 @@ namespace AeonGames
         return mCenterRadii;
     }
 
-    void Mesh::Initialize()
+    void Mesh::Initialize ( const void * aBuffer, size_t aBufferSize )
     {
         static MeshBuffer mesh_buffer;
-        LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
-
+        if ( !aBuffer && !aBufferSize )
+        {
+            LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
+        }
+        else
+        {
+            LoadProtoBufObject<MeshBuffer> ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
+        }
         // Extract Center
         mCenterRadii[0] = mesh_buffer.center().x();
         mCenterRadii[1] = mesh_buffer.center().y();

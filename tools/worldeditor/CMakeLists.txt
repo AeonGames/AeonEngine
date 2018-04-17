@@ -57,6 +57,8 @@ if(WIN32)
     list(APPEND WORLDEDITOR_SOURCES ${WORLDEDITOR_SOURCES} icon.rc)
 endif(WIN32)
 
+configure_file(worldeditor_dynamic.qrc ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
+
 add_custom_command(
     OUTPUT
         ${CMAKE_CURRENT_BINARY_DIR}/aabb.msh
@@ -70,7 +72,18 @@ add_custom_command(
         "Creating binary meshes."
 )
 
-configure_file(worldeditor_dynamic.qrc ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
+add_custom_command(
+    OUTPUT
+        ${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg
+    COMMAND
+        $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_color.txt -o solid_color.prg
+    MAIN_DEPENDENCY
+        resources/pipelines/solid_color.txt
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT
+        "Creating binary pipelines."
+)
 
 QT5_WRAP_CPP(WORLDEDITOR_MOCS ${WORLDEDITOR_QT_HEADERS})
 QT5_WRAP_UI(WORLDEDITOR_UI_HEADERS ${WORLDEDITOR_UI})

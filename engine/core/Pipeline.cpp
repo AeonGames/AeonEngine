@@ -77,6 +77,23 @@ namespace AeonGames
         }
     }
 
+    Pipeline::Pipeline ( const void * aBuffer, size_t aBufferSize )
+    {
+        if ( !aBuffer && !aBufferSize )
+        {
+            throw std::runtime_error ( "Cannot initialize pipeline object with null data." );
+        }
+        try
+        {
+            Initialize ( aBuffer, aBufferSize );
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
+    }
+
     Pipeline::~Pipeline()
         = default;
 
@@ -150,10 +167,17 @@ namespace AeonGames
         return mDefaultMaterial;
     }
 
-    void Pipeline::Initialize()
+    void Pipeline::Initialize ( const void* aBuffer, size_t aBufferSize )
     {
         static PipelineBuffer pipeline_buffer;
-        LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
+        if ( !aBuffer && !aBufferSize )
+        {
+            LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
+        }
+        else
+        {
+            LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
+        }
         {
             mVertexShader.append ( "#version 430\n" );
             mFragmentShader.append ( "#version 430\n" );
