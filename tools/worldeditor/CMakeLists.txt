@@ -62,10 +62,14 @@ configure_file(worldeditor_dynamic.qrc ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_d
 add_custom_command(
     OUTPUT
         ${CMAKE_CURRENT_BINARY_DIR}/aabb.msh
+        ${CMAKE_CURRENT_BINARY_DIR}/aabb_wire.msh
     COMMAND
         $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb.txt -o aabb.msh
-    MAIN_DEPENDENCY
+    COMMAND
+        $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb_wire.txt -o aabb_wire.msh
+    DEPENDS
         resources/meshes/aabb.txt
+        resources/meshes/aabb_wire.txt
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT
