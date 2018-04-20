@@ -16,7 +16,7 @@ limitations under the License.
 #include <iostream>
 #include <unordered_map>
 #include <functional>
-#include "Memory.h"
+#include "aeongames/Memory.h"
 
 #ifdef _MSC_VER
 #pragma warning( push )
