@@ -195,7 +195,6 @@ namespace AeonGames
             std::string code = pipeline_buffer.vertex_shader().code();
             while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
             {
-                std::cout << attribute_matches.str() << std::endl;
                 for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
                 {
                     if ( attribute_matches.str().substr ( 6 ) == AttributeStrings[i] + 6 )

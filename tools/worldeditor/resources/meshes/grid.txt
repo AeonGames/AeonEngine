@@ -1,0 +1,15 @@
+AEONMSH
+Version: 1
+Center {
+}
+Radii {
+}
+VertexFlags: 1
+VertexCount: 8
+IndexType: 0
+IndexCount: 0
+VertexBuffer: 
+"( 0.5  0.0 0.0)"
+"(-0.5  0.0 0.0)"
+"( 0.0  0.5 0.0)"
+"( 0.0 -0.5 0.0)"

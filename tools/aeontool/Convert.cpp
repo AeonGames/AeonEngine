@@ -81,7 +81,7 @@ namespace AeonGames
     }
     std::string GetVertexBufferRegexPattern ( const MeshBuffer& aMeshBuffer )
     {
-        std::string pattern{"\\(\\s*"};
+        std::string pattern{ "\\(\\s*" };
         bool want_initial_separator = false;
         if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
         {
@@ -181,7 +181,7 @@ namespace AeonGames
     public:
         VertexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
             google::protobuf::TextFormat::FieldValuePrinter(),
-            mMeshBuffer{aMeshBuffer}
+            mMeshBuffer{ aMeshBuffer }
         {
         };
         std::string PrintBytes ( const std::string & val ) const override
@@ -195,45 +195,45 @@ namespace AeonGames
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
+                    stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
+                    stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
+                    stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream  << " " << values[0] << " " << values[1] << " " << values[2];
+                    stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
-                    stream  << " " << values[0] << " " << values[1];
+                    stream << " " << values[0] << " " << values[1];
                     cursor += sizeof ( float ) * 2;
                 }
                 if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
                 {
                     const uint8_t* values = cursor;
-                    stream  << " " <<
-                            static_cast<uint32_t> ( values[0] ) << " " <<
-                            static_cast<uint32_t> ( values[1] ) << " " <<
-                            static_cast<uint32_t> ( values[2] ) << " " <<
-                            static_cast<uint32_t> ( values[3] ) << " " <<
-                            static_cast<uint32_t> ( values[4] ) << " " <<
-                            static_cast<uint32_t> ( values[5] ) << " " <<
-                            static_cast<uint32_t> ( values[6] ) << " " <<
-                            static_cast<uint32_t> ( values[7] );
+                    stream << " " <<
+                           static_cast<uint32_t> ( values[0] ) << " " <<
+                           static_cast<uint32_t> ( values[1] ) << " " <<
+                           static_cast<uint32_t> ( values[2] ) << " " <<
+                           static_cast<uint32_t> ( values[3] ) << " " <<
+                           static_cast<uint32_t> ( values[4] ) << " " <<
+                           static_cast<uint32_t> ( values[5] ) << " " <<
+                           static_cast<uint32_t> ( values[6] ) << " " <<
+                           static_cast<uint32_t> ( values[7] );
                     cursor += sizeof ( uint8_t ) * 8;
                 }
                 stream << " )\"" << std::endl;
@@ -283,7 +283,7 @@ namespace AeonGames
                 }
                 if ( ( i + 1 ) % 3 == 0 )
                 {
-                    stream << " \""  << std::endl;
+                    stream << " \"" << std::endl;
                 }
                 else
                 {
@@ -405,9 +405,20 @@ namespace AeonGames
         return index_buffer;
     }
 
-    Convert::Convert ( int argc, char** argv )
+    Convert::Convert()
+        = default;
+    Convert::~Convert()
+        = default;
+
+    void Convert::ProcessArgs ( int argc, char** argv )
     {
-        for ( int i = 1; i < argc; ++i )
+        if ( argc < 2 || ( strcmp ( argv[1], "convert" ) != 0 ) )
+        {
+            std::ostringstream stream;
+            stream << "Invalid tool name, expected convert, got " << ( ( argc < 2 ) ? "nothing" : argv[1] ) << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        for ( int i = 2; i < argc; ++i )
         {
             if ( argv[i][0] == '-' )
             {
@@ -454,10 +465,9 @@ namespace AeonGames
             mOutputFile = mInputFile + ".out";
         }
     }
-    Convert::~Convert()
-        = default;
-    int Convert::Run()
+    int Convert::operator() ( int argc, char** argv )
     {
+        ProcessArgs ( argc, argv );
         PipelineBuffer pipeline_buffer;
         MaterialBuffer material_buffer;
         MeshBuffer mesh_buffer;

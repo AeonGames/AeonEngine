@@ -222,15 +222,15 @@ add_custom_target(generate-python-protobuf-source
 ###########################################
 add_custom_target(generate-binary-assets
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
+        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> convert -i ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
+        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> convert -i ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
+        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> convert -i ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
+        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> convert -i ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
     COMMAND
-        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
+        ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses> $<TARGET_FILE:aeontool> convert -i ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
     COMMAND
         ${CMAKE_COMMAND} -DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/GenerateDevelopmentTextures.cmake
     DEPENDS aeontool ProtoBufClasses

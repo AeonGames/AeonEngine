@@ -81,6 +81,12 @@ namespace AeonGames
             case Uniform::FLOAT:
                 size += sizeof ( float );
                 break;
+            case Uniform::UINT:
+                size += sizeof ( uint32_t );
+                break;
+            case Uniform::SINT:
+                size += sizeof ( int32_t );
+                break;
             case Uniform::FLOAT_VEC2:
                 size += sizeof ( float ) * 2;
                 break;
@@ -107,6 +113,12 @@ namespace AeonGames
             {
             case PropertyBuffer::DefaultValueCase::kScalarFloat:
                 mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
+                break;
+            case PropertyBuffer::DefaultValueCase::kScalarUint:
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_uint() );
+                break;
+            case PropertyBuffer::DefaultValueCase::kScalarInt:
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_int() );
                 break;
             case PropertyBuffer::DefaultValueCase::kVector2:
                 mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );

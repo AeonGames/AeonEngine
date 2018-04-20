@@ -31,6 +31,24 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
+    Uniform::Uniform ( const std::string & aName, uint32_t aX ) :
+        mName{aName},
+        mType ( Uniform::Type::UINT )
+    {
+        ( reinterpret_cast<uint32_t*> ( mData ) ) [0] = aX;
+        ( reinterpret_cast<uint32_t*> ( mData ) ) [1] = 0;
+        ( reinterpret_cast<uint32_t*> ( mData ) ) [2] = 0;
+        ( reinterpret_cast<uint32_t*> ( mData ) ) [3] = 0;
+    }
+    Uniform::Uniform ( const std::string & aName, int32_t aX ) :
+        mName{ aName },
+        mType ( Uniform::Type::SINT )
+    {
+        ( reinterpret_cast<int32_t*> ( mData ) ) [0] = aX;
+        ( reinterpret_cast<int32_t*> ( mData ) ) [1] = 0;
+        ( reinterpret_cast<int32_t*> ( mData ) ) [2] = 0;
+        ( reinterpret_cast<int32_t*> ( mData ) ) [3] = 0;
+    }
     Uniform::Uniform ( const std::string&  aName, float aX, float aY ) :
         mName ( aName ),
         mType ( Uniform::Type::FLOAT_VEC2 )
@@ -91,6 +109,12 @@ namespace AeonGames
         case Uniform::Type::FLOAT:
             declaration = "float " + mName + ";\n";
             break;
+        case Uniform::Type::UINT:
+            declaration = "uint " + mName + ";\n";
+            break;
+        case Uniform::Type::SINT:
+            declaration = "int " + mName + ";\n";
+            break;
         case Uniform::Type::FLOAT_VEC2:
             declaration = "vec2 " + mName + ";\n";
             break;
@@ -112,6 +136,18 @@ namespace AeonGames
     const std::string & Uniform::GetName() const
     {
         return mName;
+    }
+
+    uint32_t Uniform::GetUInt() const
+    {
+        assert ( mType == Uniform::Type::UINT );
+        return ( reinterpret_cast<const uint32_t*> ( mData ) ) [0];
+    }
+
+    DLL int32_t Uniform::GetSInt() const
+    {
+        assert ( mType == Uniform::Type::SINT );
+        return ( reinterpret_cast<const int32_t*> ( mData ) ) [0];
     }
 
     float Uniform::GetX() const

@@ -15,7 +15,7 @@ default_material {
 vertex_shader {
   code: "void main()\n"
   "{\n"
-  "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
+  "gl_Position = ProjectionMatrix * ViewMatrix * vec4(VertexPosition, 1.0);\n"
   "}\n"
 }
 
