@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(AEONTOOL_HEADERS Convert.h)
-set(AEONTOOL_SOURCES Main.cpp Convert.cpp)
+set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h)
+set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp)
 
 include_directories(
-                    ${PROTOBUF_INCLUDE_DIR}
-                    ${CMAKE_SOURCE_DIR}/include
-      ${CMAKE_CURRENT_BINARY_DIR}
-      ${CMAKE_BINARY_DIR}/engine
+ ${PROTOBUF_INCLUDE_DIR}
+ ${CMAKE_SOURCE_DIR}/include
+ ${CMAKE_CURRENT_BINARY_DIR}
+ ${CMAKE_BINARY_DIR}/engine
 )
 
 add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
-target_link_libraries(aeontool ProtoBufClasses)
+target_link_libraries(aeontool ProtoBufClasses AeonEngine)
 if(MSVC)
     set_target_properties(aeontool PROPERTIES
         COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")

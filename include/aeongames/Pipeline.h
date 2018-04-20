@@ -52,9 +52,9 @@ namespace AeonGames
             Vector4Byte,
             Vector4ByteNormalized,
         };
-        Pipeline ( const std::string& aFilename );
-        Pipeline ( const void* aBuffer, size_t aBufferSize );
-        ~Pipeline();
+        DLL Pipeline ( const std::string& aFilename );
+        DLL Pipeline ( const void* aBuffer, size_t aBufferSize );
+        DLL ~Pipeline();
         DLL const std::string& GetVertexShaderSource() const;
         DLL const std::string& GetFragmentShaderSource() const;
         DLL uint32_t GetAttributes() const;

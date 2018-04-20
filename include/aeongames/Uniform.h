@@ -30,7 +30,9 @@ namespace AeonGames
         enum Type
         {
             UNKNOWN = 0,
+            UINT,
             FLOAT,
+            SINT,
             FLOAT_VEC2,
             FLOAT_VEC3,
             FLOAT_VEC4,
@@ -38,6 +40,8 @@ namespace AeonGames
             SAMPLER_CUBE,
         };
         Uniform ( const std::string&  aName, float aX );
+        Uniform ( const std::string&  aName, uint32_t aX );
+        Uniform ( const std::string&  aName, int32_t aX );
         Uniform ( const std::string&  aName, float aX, float aY );
         Uniform ( const std::string&  aName, float aX, float aY, float aZ );
         Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW );
@@ -48,6 +52,8 @@ namespace AeonGames
         DLL Type GetType() const;
         DLL const std::string GetDeclaration() const;
         DLL const std::string& GetName() const;
+        DLL uint32_t GetUInt() const;
+        DLL int32_t GetSInt() const;
         DLL float GetX() const;
         DLL float GetY() const;
         DLL float GetZ() const;

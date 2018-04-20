@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@ limitations under the License.
 #define AEONGAMES_CONVERT_H
 #include <string>
 #include <stdexcept>
+#include "Tool.h"
 
 namespace AeonGames
 {
-    class Convert
+    class Convert : public Tool
     {
     public:
-        Convert ( int argc, char** argv );
+        Convert();
         ~Convert();
-        int Run();
+        int operator() ( int argc, char** argv ) override;
     private:
+        void ProcessArgs ( int argc, char** argv );
         enum class FileType
         {
             UNKNOWN = 0,

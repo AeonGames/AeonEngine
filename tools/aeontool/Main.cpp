@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <iostream>
-#include <regex>
+#include <unordered_map>
+#include <functional>
+#include "Memory.h"
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -28,10 +30,16 @@ limitations under the License.
 #include <cassert>
 #include <cstdint>
 #include "Convert.h"
+#include "PipelineTool.h"
 
 int main ( int argc, char *argv[] )
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+    std::unordered_map<std::string, std::function<std::unique_ptr<AeonGames::Tool>() > > ToolFactories
+    {
+        { "convert", [] { return std::make_unique<AeonGames::Convert>(); } },
+        { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
+    };
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #if 0
@@ -47,8 +55,15 @@ int main ( int argc, char *argv[] )
 #endif
     try
     {
-        AeonGames::Convert convert ( argc, argv );
-        int retval = convert.Run();
+        int retval = 0;
+        if ( argc >= 2 || ToolFactories.find ( argv[1] ) != ToolFactories.end() )
+        {
+            ToolFactories[argv[1]]()->operator() ( argc, argv );
+        }
+        else
+        {
+            std::cout << "Usage: " << argv[0] << " <tool> [-help | ...]" << std::endl;
+        }
         google::protobuf::ShutdownProtobufLibrary();
         return retval;
     }

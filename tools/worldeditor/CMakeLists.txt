@@ -63,13 +63,17 @@ add_custom_command(
     OUTPUT
         ${CMAKE_CURRENT_BINARY_DIR}/aabb.msh
         ${CMAKE_CURRENT_BINARY_DIR}/aabb_wire.msh
+        ${CMAKE_CURRENT_BINARY_DIR}/grid.msh
     COMMAND
-        $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb.txt -o aabb.msh
+        $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb.txt -o aabb.msh
     COMMAND
-        $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb_wire.txt -o aabb_wire.msh
+        $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb_wire.txt -o aabb_wire.msh
+    COMMAND
+        $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/grid.txt -o grid.msh
     DEPENDS
         resources/meshes/aabb.txt
         resources/meshes/aabb_wire.txt
+        resources/meshes/grid.txt
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT
@@ -79,10 +83,14 @@ add_custom_command(
 add_custom_command(
     OUTPUT
         ${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg
+        ${CMAKE_CURRENT_BINARY_DIR}/grid.prg
     COMMAND
-        $<TARGET_FILE:aeontool> -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_color.txt -o solid_color.prg
-    MAIN_DEPENDENCY
+        $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_color.txt -o solid_color.prg
+    COMMAND
+        $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/grid.txt -o grid.prg
+    DEPENDS
         resources/pipelines/solid_color.txt
+        resources/pipelines/grid.txt
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT

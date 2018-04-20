@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,11 @@ message PropertyBuffer {
 	oneof default_value
 	{
 		float    scalar_float = 3;
-		Vector2Buffer vector2 = 4;
-		Vector3Buffer vector3 = 5;
-		Vector4Buffer vector4 = 6;
-		string        texture = 7;
+		uint32   scalar_uint  = 4;
+		sint32   scalar_int  = 5;
+		Vector2Buffer vector2 = 6;
+		Vector3Buffer vector3 = 7;
+		Vector4Buffer vector4 = 8;
+		string        texture = 9;
 	}
 }
