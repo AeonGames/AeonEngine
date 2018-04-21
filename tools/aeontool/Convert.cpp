@@ -386,6 +386,7 @@ namespace AeonGames
         catch ( std::regex_error& e )
         {
             std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
+            std::cout << "Regex: " << GetVertexBufferRegexPattern ( aMeshBuffer ) << std::endl;
             throw;
         }
     }
