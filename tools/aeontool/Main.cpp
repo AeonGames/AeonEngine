@@ -70,13 +70,11 @@ int main ( int argc, char *argv[] )
     catch ( std::runtime_error &e )
     {
         std::cout << e.what() << std::endl;
-        google::protobuf::ShutdownProtobufLibrary();
-        return -1;
     }
     catch ( ... )
     {
         std::cout << "Error: Unknown Exception caught." << std::endl;
-        google::protobuf::ShutdownProtobufLibrary();
-        return -1;
     }
+    google::protobuf::ShutdownProtobufLibrary();
+    return -1;
 }
