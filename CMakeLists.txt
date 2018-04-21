@@ -281,12 +281,12 @@ endif()
 ###########################################
 # Generate VS Code Environment
 ###########################################
-if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
+if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
     # TODO SOURCE_DIRECTORIES could be set and used to call add_subdirectory directly from this top level
     set(SOURCE_DIRECTORIES
     ${CMAKE_SOURCE_DIR}
     application
-    application/windows
+    #application/windows
     engine
     engine/images
     engine/images/png
