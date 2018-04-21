@@ -15,8 +15,6 @@
                     }                    
                 ],
                 "externalConsole": true,
-                "windows":
-                    {
                         "program": "${CMAKE_BINARY_DIR}/bin/worldeditor.exe",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
@@ -27,7 +25,6 @@
                                 "ignoreFailures": true
                             }
                          ]
-                    }
             },
             {
                 "name": "Debug Unit Tests",
@@ -43,8 +40,6 @@
                     }                    
                 ],
                 "externalConsole": true,
-                "windows":
-                    {
                         "program": "${CMAKE_BINARY_DIR}/bin/unit-tests.exe",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
@@ -55,7 +50,6 @@
                                 "ignoreFailures": true
                             }
                          ]
-                    }
             },
             {
                 "name": "Debug Aeon Tool",
@@ -73,8 +67,6 @@
                     }                    
                 ],
                 "externalConsole": true,
-                "windows":
-                    {
                         "program": "${CMAKE_BINARY_DIR}/bin/aeontool.exe",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
@@ -85,7 +77,6 @@
                                 "ignoreFailures": true
                             }
                          ]
-                    }
             }
         ]
     }
