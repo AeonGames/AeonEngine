@@ -17,7 +17,8 @@ limitations under the License.
 #define AEONGAMES_WORLDEDITOR_H
 
 #include <QApplication>
-
+#include "aeongames/Pipeline.h"
+#include "aeongames/Mesh.h"
 namespace AeonGames
 {
     class WorldEditor : public QApplication
@@ -26,6 +27,9 @@ namespace AeonGames
         WorldEditor ( int &argc, char *argv[] );
         virtual ~WorldEditor();
         bool notify ( QObject *receiver, QEvent *event ) override;
+    private:
+        Pipeline mGridPipeline;
+        Mesh mGridMesh;
     };
 }
 #endif

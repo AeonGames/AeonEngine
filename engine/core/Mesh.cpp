@@ -36,17 +36,21 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Mesh::Mesh()
+    {
+        memset ( mCenterRadii, 0, sizeof ( float ) * 6 );
+    }
     Mesh::Mesh ( const std::string&  aFilename )
         :
         mFilename ( aFilename )
     {
         try
         {
-            Initialize();
+            Load ( aFilename );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
@@ -60,35 +64,26 @@ namespace AeonGames
         }
         try
         {
-            Initialize ( aBuffer, aBufferSize );
+            Load ( aBuffer, aBufferSize );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
-    Mesh::~Mesh()
-    {
-        Finalize();
-    }
+
+    Mesh::~Mesh() = default;
 
     const float * const Mesh::GetCenterRadii() const
     {
         return mCenterRadii;
     }
 
-    void Mesh::Initialize ( const void * aBuffer, size_t aBufferSize )
+    void Mesh::Load ( const std::string& aFilename )
     {
         static MeshBuffer mesh_buffer;
-        if ( !aBuffer && !aBufferSize )
-        {
-            LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
-        }
-        else
-        {
-            LoadProtoBufObject<MeshBuffer> ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
-        }
+        LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
         // Extract Center
         mCenterRadii[0] = mesh_buffer.center().x();
         mCenterRadii[1] = mesh_buffer.center().y();
@@ -116,8 +111,46 @@ namespace AeonGames
         mesh_buffer.Clear();
     }
 
-    void Mesh::Finalize()
+    void Mesh::Load ( const void * aBuffer, size_t aBufferSize )
     {
+        static MeshBuffer mesh_buffer;
+        LoadProtoBufObject<MeshBuffer> ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
+        // Extract Center
+        mCenterRadii[0] = mesh_buffer.center().x();
+        mCenterRadii[1] = mesh_buffer.center().y();
+        mCenterRadii[2] = mesh_buffer.center().z();
+        // Extract Radius
+        mCenterRadii[3] = mesh_buffer.radii().x();
+        mCenterRadii[4] = mesh_buffer.radii().y();
+        mCenterRadii[5] = mesh_buffer.radii().z();
+
+        mVertexCount = mesh_buffer.vertexcount();
+        mIndexCount = mesh_buffer.indexcount();
+        mIndexType = mesh_buffer.indextype();
+
+        mVertexFlags = mesh_buffer.vertexflags();
+        // Sadly we must copy here (or do we?)
+        if ( mesh_buffer.vertexcount() )
+        {
+            mVertexBuffer = mesh_buffer.vertexbuffer();
+        }
+        if ( mesh_buffer.indexcount() )
+        {
+            mIndexBuffer = mesh_buffer.indexbuffer();
+        }
+        mesh_buffer.Clear();
+    }
+
+    void Mesh::Unload()
+    {
+        mFilename.clear();
+        memset ( mCenterRadii, 0, sizeof ( float ) * 6 );
+        mVertexFlags =
+            mVertexCount =
+                mIndexType =
+                    mIndexCount = 0;
+        mVertexBuffer.clear();
+        mIndexBuffer.clear();
     }
 
     uint32_t Mesh::GetStride () const

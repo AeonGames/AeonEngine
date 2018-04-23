@@ -47,9 +47,13 @@ namespace AeonGames
             FOUR_BYTES = 0x09,
             DOUBLE = 0x0A
         };
-        Mesh ( const std::string& aFilename );
-        Mesh ( const void* aBuffer, size_t aBufferSize );
-        ~Mesh();
+        DLL Mesh ();
+        DLL Mesh ( const std::string& aFilename );
+        DLL Mesh ( const void* aBuffer, size_t aBufferSize );
+        DLL ~Mesh();
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
+        DLL void Unload ();
         DLL uint32_t GetStride () const;
         DLL uint32_t GetIndexSize () const;
         DLL const float * const GetCenterRadii() const;
@@ -60,8 +64,6 @@ namespace AeonGames
         DLL const std::string& GetVertexBuffer() const;
         DLL const std::string& GetIndexBuffer() const;
     private:
-        void Initialize ( const void * aBuffer = nullptr, size_t aBufferSize = 0 );
-        void Finalize();
         std::string mFilename;
         float mCenterRadii[6];
         uint32_t mVertexFlags = 0;

@@ -52,9 +52,13 @@ namespace AeonGames
             Vector4Byte,
             Vector4ByteNormalized,
         };
+        DLL Pipeline();
         DLL Pipeline ( const std::string& aFilename );
         DLL Pipeline ( const void* aBuffer, size_t aBufferSize );
         DLL ~Pipeline();
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
+        DLL void Unload ();
         DLL const std::string& GetVertexShaderSource() const;
         DLL const std::string& GetFragmentShaderSource() const;
         DLL uint32_t GetAttributes() const;
@@ -65,8 +69,6 @@ namespace AeonGames
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
         DLL const std::shared_ptr<Material> GetDefaultMaterial() const;
     private:
-        void Initialize ( const void* aBuffer = nullptr, size_t aBufferSize = 0 );
-        void Finalize();
         std::string mFilename;
         uint32_t mAttributes;
         std::string mVertexShader;

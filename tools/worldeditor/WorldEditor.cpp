@@ -15,12 +15,32 @@ limitations under the License.
 */
 #include "WorldEditor.h"
 #include <QMessageBox>
+#include <QFile>
 #include <iostream>
 
 namespace AeonGames
 {
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv )
-    {}
+    {
+        {
+            QFile grid_pipeline_file ( ":/pipelines/grid.prg" );
+            if ( !grid_pipeline_file.open ( QIODevice::ReadOnly ) )
+            {
+                throw std::runtime_error ( "Unable to open grid pipeline resource." );
+            }
+            QByteArray grid_pipeline_byte_array = grid_pipeline_file.readAll();
+            mGridPipeline.Load ( grid_pipeline_byte_array.data(), grid_pipeline_byte_array.size() );
+        }
+        {
+            QFile grid_mesh_file ( ":/meshes/grid.msh" );
+            if ( !grid_mesh_file.open ( QIODevice::ReadOnly ) )
+            {
+                throw std::runtime_error ( "Unable to open grid mesh resource." );
+            }
+            QByteArray grid_mesh_byte_array = grid_mesh_file.readAll();
+            mGridMesh.Load ( grid_mesh_byte_array.data(), grid_mesh_byte_array.size() );
+        }
+    }
     WorldEditor::~WorldEditor()
         = default;
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )
