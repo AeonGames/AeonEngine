@@ -11,10 +11,9 @@ env:
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - sudo add-apt-repository --yes ppa:beineri/opt-qt571-trusty
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
   - sudo apt-get -qq install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev g++-4.8
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+  - sudo apt-get -qq upgrade
 install:
   - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
   - tar -xzf v3.2.0.tar.gz
