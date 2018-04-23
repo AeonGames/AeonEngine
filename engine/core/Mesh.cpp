@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <mutex>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -82,63 +83,49 @@ namespace AeonGames
 
     void Mesh::Load ( const std::string& aFilename )
     {
+        static std::mutex m;
         static MeshBuffer mesh_buffer;
+        std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
-        // Extract Center
-        mCenterRadii[0] = mesh_buffer.center().x();
-        mCenterRadii[1] = mesh_buffer.center().y();
-        mCenterRadii[2] = mesh_buffer.center().z();
-        // Extract Radius
-        mCenterRadii[3] = mesh_buffer.radii().x();
-        mCenterRadii[4] = mesh_buffer.radii().y();
-        mCenterRadii[5] = mesh_buffer.radii().z();
-
-        mVertexCount = mesh_buffer.vertexcount();
-        mIndexCount = mesh_buffer.indexcount();
-        mIndexType = mesh_buffer.indextype();
-
-        mVertexFlags = mesh_buffer.vertexflags();
-        // Sadly we must copy here (or do we?)
-        if ( mesh_buffer.vertexcount() )
-        {
-            mVertexBuffer = mesh_buffer.vertexbuffer();
-        }
-        if ( mesh_buffer.indexcount() )
-        {
-            mIndexBuffer = mesh_buffer.indexbuffer();
-        }
-
+        Load ( mesh_buffer );
         mesh_buffer.Clear();
     }
 
     void Mesh::Load ( const void * aBuffer, size_t aBufferSize )
     {
+        static std::mutex m;
         static MeshBuffer mesh_buffer;
+        std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject<MeshBuffer> ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
-        // Extract Center
-        mCenterRadii[0] = mesh_buffer.center().x();
-        mCenterRadii[1] = mesh_buffer.center().y();
-        mCenterRadii[2] = mesh_buffer.center().z();
-        // Extract Radius
-        mCenterRadii[3] = mesh_buffer.radii().x();
-        mCenterRadii[4] = mesh_buffer.radii().y();
-        mCenterRadii[5] = mesh_buffer.radii().z();
-
-        mVertexCount = mesh_buffer.vertexcount();
-        mIndexCount = mesh_buffer.indexcount();
-        mIndexType = mesh_buffer.indextype();
-
-        mVertexFlags = mesh_buffer.vertexflags();
-        // Sadly we must copy here (or do we?)
-        if ( mesh_buffer.vertexcount() )
-        {
-            mVertexBuffer = mesh_buffer.vertexbuffer();
-        }
-        if ( mesh_buffer.indexcount() )
-        {
-            mIndexBuffer = mesh_buffer.indexbuffer();
-        }
+        Load ( mesh_buffer );
         mesh_buffer.Clear();
+    }
+
+    void Mesh::Load ( const MeshBuffer & aMeshBuffer )
+    {
+        // Extract Center
+        mCenterRadii[0] = aMeshBuffer.center().x();
+        mCenterRadii[1] = aMeshBuffer.center().y();
+        mCenterRadii[2] = aMeshBuffer.center().z();
+        // Extract Radius
+        mCenterRadii[3] = aMeshBuffer.radii().x();
+        mCenterRadii[4] = aMeshBuffer.radii().y();
+        mCenterRadii[5] = aMeshBuffer.radii().z();
+
+        mVertexCount = aMeshBuffer.vertexcount();
+        mIndexCount = aMeshBuffer.indexcount();
+        mIndexType = aMeshBuffer.indextype();
+
+        mVertexFlags = aMeshBuffer.vertexflags();
+        // Sadly we must copy here
+        if ( aMeshBuffer.vertexcount() )
+        {
+            mVertexBuffer = aMeshBuffer.vertexbuffer();
+        }
+        if ( aMeshBuffer.indexcount() )
+        {
+            mIndexBuffer = aMeshBuffer.indexbuffer();
+        }
     }
 
     void Mesh::Unload()

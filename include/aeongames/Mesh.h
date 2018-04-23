@@ -19,6 +19,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class MeshBuffer;
     class Mesh
     {
     public:
@@ -64,6 +65,7 @@ namespace AeonGames
         DLL const std::string& GetVertexBuffer() const;
         DLL const std::string& GetIndexBuffer() const;
     private:
+        void Load ( const MeshBuffer& aMeshBuffer );
         std::string mFilename;
         float mCenterRadii[6];
         uint32_t mVertexFlags = 0;

@@ -19,6 +19,7 @@ limitations under the License.
 #include <iostream>
 #include <regex>
 #include <array>
+#include <mutex>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #include "aeongames/Utilities.h"
@@ -101,6 +102,194 @@ namespace AeonGames
     Pipeline::~Pipeline()
         = default;
 
+    void Pipeline::Load ( const std::string& aFilename )
+    {
+        static std::mutex m;
+        static PipelineBuffer pipeline_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, aFilename, "AEONPRG" );
+        Load ( pipeline_buffer );
+        pipeline_buffer.Clear();
+    }
+
+    void Pipeline::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static std::mutex m;
+        static PipelineBuffer pipeline_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
+        Load ( pipeline_buffer );
+        pipeline_buffer.Clear();
+    }
+
+    void Pipeline::Load ( const PipelineBuffer& aPipelineBuffer )
+    {
+        mVertexShader.append ( "#version 430\n" );
+        mFragmentShader.append ( "#version 430\n" );
+        /* Find out which attributes are being used and add them to the shader source */
+        std::smatch attribute_matches;
+        /**@note static const regex: construct once, use for ever.*/
+        static const std::regex attribute_regex (
+            "\\bVertexPosition\\b|"
+            "\\bVertexNormal\\b|"
+            "\\bVertexTangent\\b|"
+            "\\bVertexBitangent\\b|"
+            "\\bVertexUV\\b|"
+            "\\bVertexWeightIndices\\b|"
+            "\\bVertexWeights\\b" );
+        std::string code = aPipelineBuffer.vertex_shader().code();
+        while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
+        {
+            for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
+            {
+                if ( attribute_matches.str().substr ( 6 ) == AttributeStrings[i] + 6 )
+                {
+                    if ( ! ( mAttributes & ( 1 << i ) ) )
+                    {
+                        mAttributes |= ( 1 << i );
+                        mVertexShader.append ( "layout(location = " );
+                        mVertexShader.append ( std::to_string ( i ) );
+                        mVertexShader.append ( ") in " );
+                        mVertexShader.append ( AttributeTypes[i] );
+                        mVertexShader.append ( " " );
+                        mVertexShader.append ( AttributeStrings[i] );
+                        mVertexShader.append ( ";\n" );
+                    }
+                    break;
+                }
+            }
+            code = attribute_matches.suffix();
+        }
+        std::string transforms (
+            "#ifdef VULKAN\n"
+            "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+            "#else\n"
+            "layout(binding = 0, std140) uniform Matrices{\n"
+            "#endif\n"
+            "mat4 ProjectionMatrix;\n"
+            "mat4 ViewMatrix;\n"
+            "};\n"
+        );
+        mVertexShader.append ( transforms );
+        mFragmentShader.append ( transforms );
+
+        mDefaultMaterial = std::make_shared<Material> ( aPipelineBuffer.default_material() );
+        if ( mDefaultMaterial->GetUniformMetaData().size() )
+        {
+            uint32_t sampler_binding = 0;
+            std::string properties (
+                "#ifdef VULKAN\n"
+                "layout(set = 0, binding = 1,std140) uniform Properties{\n"
+                "#else\n"
+                "layout(binding = 1,std140) uniform Properties{\n"
+                "#endif\n"
+            );
+            std::string samplers ( "//----SAMPLERS-START----\n" );
+            for ( auto& i : mDefaultMaterial->GetUniformMetaData() )
+            {
+                switch ( i.GetType() )
+                {
+                case Uniform::Type::SAMPLER_2D:
+                    samplers.append ( "#ifdef VULKAN\n" );
+                    samplers.append ( "layout(set = 1, binding = " +
+                                      std::to_string ( sampler_binding ) +
+                                      ", location =" + std::to_string ( sampler_binding ) + ") " );
+                    samplers.append ( i.GetDeclaration() );
+                    samplers.append ( "#else\n" );
+                    samplers.append ( "layout(location = " + std::to_string ( sampler_binding ) + ") " );
+                    samplers.append ( i.GetDeclaration() );
+                    samplers.append ( "#endif\n" );
+                    ++sampler_binding;
+                    break;
+                default:
+                    properties.append ( i.GetDeclaration() );
+                    break;
+                }
+            }
+            properties.append ( "};\n" );
+            samplers.append ( "//----SAMPLERS-END----\n" );
+            mVertexShader.append ( properties );
+            mVertexShader.append ( samplers );
+            mFragmentShader.append ( properties );
+            mFragmentShader.append ( samplers );
+        }
+        if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        {
+            std::string skeleton (
+                "#ifdef VULKAN\n"
+                "layout(set = 0, binding = 2, std140) uniform Skeleton{\n"
+                "#else\n"
+                "layout(std140, binding = 2) uniform Skeleton{\n"
+                "#endif\n"
+                "mat4 skeleton[256];\n"
+                "};\n"
+            );
+            mVertexShader.append ( skeleton );
+            mFragmentShader.append ( skeleton );
+        }
+#if 0
+        std::string mathlib (
+            "vec4 MultQuatVec4(vec4 q, vec4 v)\n"
+            "{\n"
+            "	vec4 t = vec4(\n"
+            "		(-q.y * v.x - q.z * v.y - q.w * v.z),\n"
+            "		( q.x * v.x + q.z * v.z - q.w * v.y),\n"
+            "		( q.x * v.y + q.w * v.x - q.y * v.z),\n"
+            "		( q.x * v.z + q.y * v.y - q.z * v.x));\n"
+            "	return vec4(\n"
+            "		t.x * -q.y + t.y * q.x + t.z * -q.w - t.w * -q.z,\n"
+            "		t.x * -q.z + t.z * q.x + t.w * -q.y - t.y * -q.w,\n"
+            "		t.x * -q.w + t.w * q.x + t.y * -q.z - t.z * -q.y,\n"
+            "		v.w);\n"
+            "}\n"
+            "vec4 MultQuats ( vec4 q1, vec4 q2 )\n"
+            "{\n"
+            "    return vec4(\n"
+            "        q1.x * q2.x - q1.y * q2.y - q1.z * q2.z - q1.w * q2.w,\n"
+            "        q1.x * q2.y + q1.y * q2.x + q1.z * q2.w - q1.w * q2.z,\n"
+            "        q1.x * q2.z - q1.y * q2.w + q1.z * q2.x + q1.w * q2.y,\n"
+            "        q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x);\n"
+            "}\n"
+        );
+        mVertexShader.append ( mathlib );
+        mFragmentShader.append ( mathlib );
+#endif
+        switch ( aPipelineBuffer.vertex_shader().source_case() )
+        {
+        case ShaderBuffer::SourceCase::kCode:
+        {
+            mVertexShader.append ( aPipelineBuffer.vertex_shader().code() );
+        }
+        break;
+        default:
+            throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
+        }
+        switch ( aPipelineBuffer.fragment_shader().source_case() )
+        {
+        case ShaderBuffer::SourceCase::kCode:
+            mFragmentShader.append ( aPipelineBuffer.fragment_shader().code() );
+            break;
+        default:
+            throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
+        }
+#if 1
+        std::ofstream shader_vert ( "shader.vert" );
+        std::ofstream shader_frag ( "shader.frag" );
+        shader_vert << mVertexShader;
+        shader_frag << mFragmentShader;
+        shader_vert.close();
+        shader_frag.close();
+#endif
+    }
+
+    void Pipeline::Unload()
+    {
+        mFilename.clear();
+        mAttributes = 0;
+        mVertexShader.clear();
+        mFragmentShader.clear();
+        mDefaultMaterial.reset();
+    }
     const std::string & Pipeline::GetVertexShaderSource() const
     {
         return mVertexShader;
@@ -169,192 +358,5 @@ namespace AeonGames
     const std::shared_ptr<Material> Pipeline::GetDefaultMaterial() const
     {
         return mDefaultMaterial;
-    }
-
-    void Pipeline::Load ( const std::string& aFilename )
-    {
-        /// @todo This is no good, may be a better idea to just expose the Protobuf classes.
-        mFilename = aFilename;
-        Load ( nullptr, 0 );
-    }
-    void Pipeline::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static PipelineBuffer pipeline_buffer;
-        if ( !aBuffer && !aBufferSize )
-        {
-            LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, mFilename, "AEONPRG" );
-        }
-        else
-        {
-            LoadProtoBufObject<PipelineBuffer> ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
-        }
-        {
-            mVertexShader.append ( "#version 430\n" );
-            mFragmentShader.append ( "#version 430\n" );
-            /* Find out which attributes are being used and add them to the shader source */
-            std::smatch attribute_matches;
-            /**@note static const regex: construct once, use for ever.*/
-            static const std::regex attribute_regex (
-                "\\bVertexPosition\\b|"
-                "\\bVertexNormal\\b|"
-                "\\bVertexTangent\\b|"
-                "\\bVertexBitangent\\b|"
-                "\\bVertexUV\\b|"
-                "\\bVertexWeightIndices\\b|"
-                "\\bVertexWeights\\b" );
-            std::string code = pipeline_buffer.vertex_shader().code();
-            while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
-            {
-                for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
-                {
-                    if ( attribute_matches.str().substr ( 6 ) == AttributeStrings[i] + 6 )
-                    {
-                        if ( ! ( mAttributes & ( 1 << i ) ) )
-                        {
-                            mAttributes |= ( 1 << i );
-                            mVertexShader.append ( "layout(location = " );
-                            mVertexShader.append ( std::to_string ( i ) );
-                            mVertexShader.append ( ") in " );
-                            mVertexShader.append ( AttributeTypes[i] );
-                            mVertexShader.append ( " " );
-                            mVertexShader.append ( AttributeStrings[i] );
-                            mVertexShader.append ( ";\n" );
-                        }
-                        break;
-                    }
-                }
-                code = attribute_matches.suffix();
-            }
-            std::string transforms (
-                "#ifdef VULKAN\n"
-                "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
-                "#else\n"
-                "layout(binding = 0, std140) uniform Matrices{\n"
-                "#endif\n"
-                "mat4 ProjectionMatrix;\n"
-                "mat4 ViewMatrix;\n"
-                "};\n"
-            );
-            mVertexShader.append ( transforms );
-            mFragmentShader.append ( transforms );
-
-            mDefaultMaterial = std::make_shared<Material> ( pipeline_buffer.default_material() );
-            if ( mDefaultMaterial->GetUniformMetaData().size() )
-            {
-                uint32_t sampler_binding = 0;
-                std::string properties (
-                    "#ifdef VULKAN\n"
-                    "layout(set = 0, binding = 1,std140) uniform Properties{\n"
-                    "#else\n"
-                    "layout(binding = 1,std140) uniform Properties{\n"
-                    "#endif\n"
-                );
-                std::string samplers ( "//----SAMPLERS-START----\n" );
-                for ( auto& i : mDefaultMaterial->GetUniformMetaData() )
-                {
-                    switch ( i.GetType() )
-                    {
-                    case Uniform::Type::SAMPLER_2D:
-                        samplers.append ( "#ifdef VULKAN\n" );
-                        samplers.append ( "layout(set = 1, binding = " +
-                                          std::to_string ( sampler_binding ) +
-                                          ", location =" + std::to_string ( sampler_binding ) + ") " );
-                        samplers.append ( i.GetDeclaration() );
-                        samplers.append ( "#else\n" );
-                        samplers.append ( "layout(location = " + std::to_string ( sampler_binding ) + ") " );
-                        samplers.append ( i.GetDeclaration() );
-                        samplers.append ( "#endif\n" );
-                        ++sampler_binding;
-                        break;
-                    default:
-                        properties.append ( i.GetDeclaration() );
-                        break;
-                    }
-                }
-                properties.append ( "};\n" );
-                samplers.append ( "//----SAMPLERS-END----\n" );
-                mVertexShader.append ( properties );
-                mVertexShader.append ( samplers );
-                mFragmentShader.append ( properties );
-                mFragmentShader.append ( samplers );
-            }
-            if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
-            {
-                std::string skeleton (
-                    "#ifdef VULKAN\n"
-                    "layout(set = 0, binding = 2, std140) uniform Skeleton{\n"
-                    "#else\n"
-                    "layout(std140, binding = 2) uniform Skeleton{\n"
-                    "#endif\n"
-                    "mat4 skeleton[256];\n"
-                    "};\n"
-                );
-                mVertexShader.append ( skeleton );
-                mFragmentShader.append ( skeleton );
-            }
-#if 0
-            std::string mathlib (
-                "vec4 MultQuatVec4(vec4 q, vec4 v)\n"
-                "{\n"
-                "	vec4 t = vec4(\n"
-                "		(-q.y * v.x - q.z * v.y - q.w * v.z),\n"
-                "		( q.x * v.x + q.z * v.z - q.w * v.y),\n"
-                "		( q.x * v.y + q.w * v.x - q.y * v.z),\n"
-                "		( q.x * v.z + q.y * v.y - q.z * v.x));\n"
-                "	return vec4(\n"
-                "		t.x * -q.y + t.y * q.x + t.z * -q.w - t.w * -q.z,\n"
-                "		t.x * -q.z + t.z * q.x + t.w * -q.y - t.y * -q.w,\n"
-                "		t.x * -q.w + t.w * q.x + t.y * -q.z - t.z * -q.y,\n"
-                "		v.w);\n"
-                "}\n"
-                "vec4 MultQuats ( vec4 q1, vec4 q2 )\n"
-                "{\n"
-                "    return vec4(\n"
-                "        q1.x * q2.x - q1.y * q2.y - q1.z * q2.z - q1.w * q2.w,\n"
-                "        q1.x * q2.y + q1.y * q2.x + q1.z * q2.w - q1.w * q2.z,\n"
-                "        q1.x * q2.z - q1.y * q2.w + q1.z * q2.x + q1.w * q2.y,\n"
-                "        q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x);\n"
-                "}\n"
-            );
-            mVertexShader.append ( mathlib );
-            mFragmentShader.append ( mathlib );
-#endif
-            switch ( pipeline_buffer.vertex_shader().source_case() )
-            {
-            case ShaderBuffer::SourceCase::kCode:
-            {
-                mVertexShader.append ( pipeline_buffer.vertex_shader().code() );
-            }
-            break;
-            default:
-                throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
-            }
-            switch ( pipeline_buffer.fragment_shader().source_case() )
-            {
-            case ShaderBuffer::SourceCase::kCode:
-                mFragmentShader.append ( pipeline_buffer.fragment_shader().code() );
-                break;
-            default:
-                throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
-            }
-        }
-        pipeline_buffer.Clear();
-#if 1
-        std::ofstream shader_vert ( "shader.vert" );
-        std::ofstream shader_frag ( "shader.frag" );
-        shader_vert << mVertexShader;
-        shader_frag << mFragmentShader;
-        shader_vert.close();
-        shader_frag.close();
-#endif
-    }
-
-    void Pipeline::Unload()
-    {
-        mFilename.clear();
-        mAttributes = 0;
-        mVertexShader.clear();
-        mFragmentShader.clear();
-        mDefaultMaterial.reset();
     }
 }
