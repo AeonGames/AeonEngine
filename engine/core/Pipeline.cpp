@@ -63,16 +63,20 @@ namespace AeonGames
         }
     };
 
+    Pipeline::Pipeline()
+    {
+    }
+
     Pipeline::Pipeline ( const std::string&  aFilename ) :
         mFilename ( aFilename ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
         try
         {
-            Initialize();
+            Load ( aFilename );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
@@ -85,11 +89,11 @@ namespace AeonGames
         }
         try
         {
-            Initialize ( aBuffer, aBufferSize );
+            Load ( aBuffer, aBufferSize );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
@@ -167,7 +171,13 @@ namespace AeonGames
         return mDefaultMaterial;
     }
 
-    void Pipeline::Initialize ( const void* aBuffer, size_t aBufferSize )
+    void Pipeline::Load ( const std::string& aFilename )
+    {
+        /// @todo This is no good, may be a better idea to just expose the Protobuf classes.
+        mFilename = aFilename;
+        Load ( nullptr, 0 );
+    }
+    void Pipeline::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static PipelineBuffer pipeline_buffer;
         if ( !aBuffer && !aBufferSize )
@@ -339,7 +349,12 @@ namespace AeonGames
 #endif
     }
 
-    void Pipeline::Finalize()
+    void Pipeline::Unload()
     {
+        mFilename.clear();
+        mAttributes = 0;
+        mVertexShader.clear();
+        mFragmentShader.clear();
+        mDefaultMaterial.reset();
     }
 }
