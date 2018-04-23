@@ -25,6 +25,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Material;
+    class PipelineBuffer;
     class Pipeline
     {
     public:
@@ -69,6 +70,7 @@ namespace AeonGames
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
         DLL const std::shared_ptr<Material> GetDefaultMaterial() const;
     private:
+        void Load ( const PipelineBuffer& aPipelineBuffer );
         std::string mFilename;
         uint32_t mAttributes;
         std::string mVertexShader;

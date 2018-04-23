@@ -150,7 +150,7 @@ namespace AeonGames
             *data = mCursor;
             *size = ( ( mEnd - mCursor ) > std::numeric_limits<int>::max() ) ? std::numeric_limits<int>::max() : static_cast<int> ( mEnd - mCursor );
             mCursor += *size;
-            return mCursor == mEnd;
+            return ( ( mCursor != mEnd ) || *size );
         }
         void BackUp ( int count ) override
         {
