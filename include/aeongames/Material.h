@@ -25,14 +25,18 @@ namespace AeonGames
     class Material
     {
     public:
-        Material ( const std::string& aFilename );
-        Material ( const MaterialBuffer& aMaterialBuffer );
-        ~Material();
+        DLL Material();
+        DLL Material ( const std::string& aFilename );
+        DLL Material ( const void* aBuffer, size_t aBufferSize );
+        DLL Material ( const MaterialBuffer& aMaterialBuffer );
+        DLL ~Material();
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
+        DLL void Load ( const MaterialBuffer& aMaterialBuffer );
+        DLL void Unload();
         DLL const std::vector<Uniform>& GetUniformMetaData() const;
         DLL uint32_t GetUniformBlockSize() const;
     private:
-        void Initialize ( const MaterialBuffer& aMaterialBuffer );
-        void Finalize();
         std::string mFilename;
         std::vector<Uniform> mUniformMetaData;
     };
