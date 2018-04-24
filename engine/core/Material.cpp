@@ -32,19 +32,31 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Material::Material() = default;
+
     Material::Material ( const std::string&  aFilename ) :
         mFilename ( aFilename )
     {
         try
         {
-            static MaterialBuffer material_buffer;
-            LoadProtoBufObject ( material_buffer, mFilename, "AEONMTL" );
-            Initialize ( material_buffer );
-            material_buffer.Clear();
+            Load ( aFilename );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
+            throw;
+        }
+    }
+
+    Material::Material ( const void* aBuffer, size_t aBufferSize )
+    {
+        try
+        {
+            Load ( aBuffer, aBufferSize );
+        }
+        catch ( ... )
+        {
+            Unload();
             throw;
         }
     }
@@ -53,57 +65,36 @@ namespace AeonGames
     {
         try
         {
-            Initialize ( aMaterialBuffer );
+            Load ( aMaterialBuffer );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
 
-
     Material::~Material()
         = default;
 
-    const std::vector<Uniform>& Material::GetUniformMetaData() const
+    void Material::Load ( const std::string&  aFilename )
     {
-        return mUniformMetaData;
+        static MaterialBuffer material_buffer;
+        LoadProtoBufObject ( material_buffer, mFilename, "AEONMTL" );
+        Load ( material_buffer );
+        material_buffer.Clear();
     }
 
-    uint32_t Material::GetUniformBlockSize() const
+
+    void Material::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        uint32_t size = 0;
-        for ( auto& i : mUniformMetaData )
-        {
-            switch ( i.GetType() )
-            {
-            case Uniform::FLOAT:
-                size += sizeof ( float );
-                break;
-            case Uniform::UINT:
-                size += sizeof ( uint32_t );
-                break;
-            case Uniform::SINT:
-                size += sizeof ( int32_t );
-                break;
-            case Uniform::FLOAT_VEC2:
-                size += sizeof ( float ) * 2;
-                break;
-            case Uniform::FLOAT_VEC3:
-                size += sizeof ( float ) * 4; /* VEC3 requires padding in std140 */
-                break;
-            case Uniform::FLOAT_VEC4:
-                size += sizeof ( float ) * 4;
-                break;
-            default:
-                break;
-            }
-        }
-        return size;
+        static MaterialBuffer material_buffer;
+        LoadProtoBufObject ( material_buffer, aBuffer, aBufferSize, "AEONMTL" );
+        Load ( material_buffer );
+        material_buffer.Clear();
     }
 
-    void Material::Initialize ( const MaterialBuffer& aMaterialBuffer )
+    void Material::Load ( const MaterialBuffer& aMaterialBuffer )
     {
         mUniformMetaData.clear();
         mUniformMetaData.reserve ( aMaterialBuffer.property().size() );
@@ -144,7 +135,46 @@ namespace AeonGames
         }
     }
 
-    void Material::Finalize()
+    void Material::Unload()
     {
+        mFilename.clear();
+        mUniformMetaData.clear();
+    }
+
+    const std::vector<Uniform>& Material::GetUniformMetaData() const
+    {
+        return mUniformMetaData;
+    }
+
+    uint32_t Material::GetUniformBlockSize() const
+    {
+        uint32_t size = 0;
+        for ( auto& i : mUniformMetaData )
+        {
+            switch ( i.GetType() )
+            {
+            case Uniform::FLOAT:
+                size += sizeof ( float );
+                break;
+            case Uniform::UINT:
+                size += sizeof ( uint32_t );
+                break;
+            case Uniform::SINT:
+                size += sizeof ( int32_t );
+                break;
+            case Uniform::FLOAT_VEC2:
+                size += sizeof ( float ) * 2;
+                break;
+            case Uniform::FLOAT_VEC3:
+                size += sizeof ( float ) * 4; /* VEC3 requires padding in std140 */
+                break;
+            case Uniform::FLOAT_VEC4:
+                size += sizeof ( float ) * 4;
+                break;
+            default:
+                break;
+            }
+        }
+        return size;
     }
 }
