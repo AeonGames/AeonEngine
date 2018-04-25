@@ -22,16 +22,22 @@ limitations under the License.
 namespace AeonGames
 {
     template<class Key, class Value>
-    class Flyweight
+    class FlyWeight
     {
         friend Value;
-        Flyweight ( const Key& aKey ) : mKey ( aKey )
+        FlyWeight() = default;
+        FlyWeight ( const Key& aKey ) : mKey ( aKey )
         {
+            mStore[mKey] = this;
+        }
+        virtual ~FlyWeight ()
+        {
+            mStore.erase ( mKey );
         }
         Key mKey{};
         static std::unordered_map<Key, Value*> mStore;
     };
     template <class Key, class Value>
-    std::unordered_map<Key, Value*> Flyweight<Key, Value>::mStore{};
+    std::unordered_map<Key, Value*> FlyWeight<Key, Value>::mStore{};
 }
 #endif
