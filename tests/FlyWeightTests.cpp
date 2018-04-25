@@ -23,10 +23,25 @@ namespace AeonGames
 {
     class FlyWeightPayload : public FlyWeight<size_t, FlyWeightPayload>
     {
+    public:
+        FlyWeightPayload() = default;
+        FlyWeightPayload ( size_t aKey ) : FlyWeight ( aKey ) {}
     };
-    TEST ( FlyWeight, Dummy )
+    TEST ( FlyWeight, ZeroKeyConstructorThrowsException )
     {
-        //FlyWeightPayload flyweight_payload;
+        EXPECT_THROW ( FlyWeightPayload{0}, std::runtime_error );
+        ASSERT_TRUE ( true );
+    }
+    TEST ( FlyWeight, ZeroKeyPackingThrowsException )
+    {
+        FlyWeightPayload payload;
+        EXPECT_THROW ( payload.Pack ( 0 ), std::runtime_error );
+        ASSERT_TRUE ( true );
+    }
+
+    TEST ( FlyWeight, ZeroKeyHandleConstructorThrowsException )
+    {
+        EXPECT_THROW ( FlyWeightPayload::Handle{0}, std::runtime_error );
         ASSERT_TRUE ( true );
     }
 }
