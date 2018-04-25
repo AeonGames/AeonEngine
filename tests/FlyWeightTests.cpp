@@ -21,13 +21,12 @@ using namespace ::testing;
 
 namespace AeonGames
 {
-#if 0
     class FlyWeightPayload : public FlyWeight<size_t, FlyWeightPayload>
     {
     };
-#endif
     TEST ( FlyWeight, Dummy )
     {
+        //FlyWeightPayload flyweight_payload;
         ASSERT_TRUE ( true );
     }
 }
