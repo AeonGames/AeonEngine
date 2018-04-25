@@ -76,6 +76,7 @@ set(ENGINE_CORE_HEADERS
     include/ProtoBufHelpers.h
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Tree.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h

@@ -21,6 +21,7 @@ set(TESTED_SRCS
 set(TEST_SRCS
     Main.cpp
     DependencyMapTests.cpp
+    FlyWeightTests.cpp
     CRCTests.cpp
     TreeTests.cpp
 )
