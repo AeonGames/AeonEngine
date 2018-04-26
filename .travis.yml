@@ -13,7 +13,7 @@ before_install:
   - sudo add-apt-repository --yes ppa:beineri/opt-qt571-trusty
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
-  - sudo apt-get -qq install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev gcc-5 g++-5
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev gcc-5 g++-5
   - sudo apt-get -qq upgrade
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
 install:
