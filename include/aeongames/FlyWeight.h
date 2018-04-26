@@ -53,9 +53,13 @@ namespace AeonGames
                 auto it = FlyWeight<Key, Value>::mStore.find ( mKey );
                 if ( it != FlyWeight<Key, Value>::mStore.end() )
                 {
-                    return it->second;
+                    return reinterpret_cast<Value*> ( it->second );
                 }
                 return nullptr;
+            }
+            const Handle GetHandle() const
+            {
+                return Handle ( mKey );
             }
             bool IsValid() const
             {
@@ -71,7 +75,7 @@ namespace AeonGames
                 return result;
             }
         };
-        void Pack ( const Key& aKey )
+        const Handle Pack ( const Key& aKey )
         {
             if ( aKey == Key{} )
             {
@@ -81,6 +85,7 @@ namespace AeonGames
             static std::mutex m;
             std::lock_guard<std::mutex> hold ( m );
             mStore[mKey] = this;
+            return Handle{mKey};
         }
         void Unpack()
         {

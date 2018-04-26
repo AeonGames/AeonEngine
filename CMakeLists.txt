@@ -111,6 +111,18 @@ add_subdirectory(engine)
 add_subdirectory(application)
 find_package(GTest)
 if(GTest_FOUND)
+    find_library(GMOCK_LIBRARY
+                NAMES gmock
+                      libgmock
+                      libgmock.a
+                PATHS "${GTEST_DIR}"
+                PATH_SUFFIXES lib)
+    find_library(GMOCK_LIBRARY_DEBUG
+                NAMES gmockd
+                      libgmockd
+                      libgmockd.a
+                PATHS "${GTEST_DIR}"
+                PATH_SUFFIXES lib)
     add_subdirectory(tests)
 endif()
 
