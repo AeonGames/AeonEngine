@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "aeongames/FlyWeight.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 using namespace ::testing;
 
@@ -25,23 +26,42 @@ namespace AeonGames
     {
     public:
         FlyWeightPayload() = default;
+        virtual ~FlyWeightPayload() = default;
         FlyWeightPayload ( size_t aKey ) : FlyWeight ( aKey ) {}
+        MOCK_CONST_METHOD0 ( Function, void() );
     };
     TEST ( FlyWeight, ZeroKeyConstructorThrowsException )
     {
         EXPECT_THROW ( FlyWeightPayload{0}, std::runtime_error );
-        ASSERT_TRUE ( true );
     }
     TEST ( FlyWeight, ZeroKeyPackingThrowsException )
     {
         FlyWeightPayload payload;
         EXPECT_THROW ( payload.Pack ( 0 ), std::runtime_error );
-        ASSERT_TRUE ( true );
     }
 
     TEST ( FlyWeight, ZeroKeyHandleConstructorThrowsException )
     {
         EXPECT_THROW ( FlyWeightPayload::Handle{0}, std::runtime_error );
-        ASSERT_TRUE ( true );
+    }
+
+    TEST ( FlyWeight, PackingWorks )
+    {
+        FlyWeightPayload payload;
+        FlyWeightPayload::Handle handle = payload.Pack ( 1 );
+        EXPECT_EQ ( &payload, handle.Get() );
+    }
+
+    TEST ( FlyWeight, ContextInvalidatesHandle )
+    {
+        FlyWeightPayload::Handle handle{1};
+        {
+            FlyWeightPayload payload{1};
+            EXPECT_CALL ( payload, Function() ).Times ( 1 );
+            EXPECT_EQ ( &payload, handle.Get() );
+            handle->Function();
+        }
+        EXPECT_EQ ( nullptr, handle.Get() );
+        EXPECT_THROW ( handle->Function(), std::runtime_error );
     }
 }
