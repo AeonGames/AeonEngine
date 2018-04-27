@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <iostream>
 #include "aeongames/FlyWeight.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -28,6 +29,8 @@ namespace AeonGames
         FlyWeightPayload() = default;
         FlyWeightPayload ( const FlyWeightPayload& aPayload ) :
             FlyWeight<size_t, FlyWeightPayload> ( aPayload ) {};
+        FlyWeightPayload ( FlyWeightPayload&& aPayload ) :
+            FlyWeight<size_t, FlyWeightPayload> ( std::move ( aPayload ) ) {};
         virtual ~FlyWeightPayload() = default;
         FlyWeightPayload ( size_t aKey ) : FlyWeight ( aKey ) {}
         MOCK_CONST_METHOD0 ( Function, void() );
@@ -90,5 +93,23 @@ namespace AeonGames
         FlyWeightPayload payload1{1};
         FlyWeightPayload payload2{payload1};
         EXPECT_THROW ( payload2.GetHandle()->Function(), std::runtime_error );
+    }
+    TEST ( FlyWeight, MoveConstructor )
+    {
+        FlyWeightPayload payload ( std::move ( FlyWeightPayload ( 1 ) ) );
+        EXPECT_CALL ( payload, Function() ).Times ( 1 );
+        payload.GetHandle()->Function();
+    }
+    TEST ( FlyWeight, CopyOperator )
+    {
+        FlyWeightPayload payload1{1};
+        FlyWeightPayload payload2 = payload1;
+        EXPECT_THROW ( payload2.GetHandle()->Function(), std::runtime_error );
+    }
+    TEST ( FlyWeight, MoveOperator )
+    {
+        FlyWeightPayload payload = std::move ( FlyWeightPayload ( 1 ) );
+        EXPECT_CALL ( payload, Function() ).Times ( 1 );
+        payload.GetHandle()->Function();
     }
 }
