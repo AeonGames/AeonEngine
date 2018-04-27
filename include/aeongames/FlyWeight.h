@@ -26,6 +26,16 @@ namespace AeonGames
     {
         friend Value;
         FlyWeight() = default;
+        FlyWeight ( const FlyWeight& aFlyWeight ) : mKey{}
+        {
+            /* A Copy cannot have the same key as the original so do nothing*/
+        }
+        FlyWeight ( const FlyWeight&& aFlyWeight ) : mKey{}
+        {
+            // A Moved object's key is moved.
+            mKey = aFlyWeight.mKey;
+            aFlyWeight.mKey = Key{};
+        }
         FlyWeight ( const Key& aKey ) : mKey ( aKey )
         {
             Pack ( aKey );
@@ -74,18 +84,41 @@ namespace AeonGames
                 }
                 return result;
             }
+            const Value& operator*() const
+            {
+                auto result = Get();
+                if ( !result )
+                {
+                    throw std::runtime_error ( "Invalid FlyWeight Object." );
+                }
+                return *result;
+            }
+            const Value* const operator&() const
+            {
+                auto result = Get();
+                if ( !result )
+                {
+                    throw std::runtime_error ( "Invalid FlyWeight Object." );
+                }
+                return result;
+            }
         };
         const Handle Pack ( const Key& aKey )
         {
+            static std::mutex m;
+            std::lock_guard<std::mutex> hold ( m );
             if ( aKey == Key{} )
             {
                 throw std::runtime_error ( "The null/empty key is reserved for unpacked objects." );
             }
             mKey = aKey;
-            static std::mutex m;
-            std::lock_guard<std::mutex> hold ( m );
+            Handle handle{mKey};
+            if ( handle.Get() )
+            {
+                throw std::runtime_error ( "An object with the same key has already been packed." );
+            }
             mStore[mKey] = this;
-            return Handle{mKey};
+            return handle;
         }
         void Unpack()
         {
@@ -93,6 +126,14 @@ namespace AeonGames
             std::lock_guard<std::mutex> hold ( m );
             mStore.erase ( mKey );
             mKey = Key{};
+        }
+        const Handle GetHandle() const
+        {
+            if ( mKey == Key{} )
+            {
+                throw std::runtime_error ( "Object is not packed." );
+            }
+            return Handle{mKey};
         }
     };
     template <class Key, class Value>
