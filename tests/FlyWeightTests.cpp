@@ -26,6 +26,8 @@ namespace AeonGames
     {
     public:
         FlyWeightPayload() = default;
+        FlyWeightPayload ( const FlyWeightPayload& aPayload ) :
+            FlyWeight<size_t, FlyWeightPayload> ( aPayload ) {};
         virtual ~FlyWeightPayload() = default;
         FlyWeightPayload ( size_t aKey ) : FlyWeight ( aKey ) {}
         MOCK_CONST_METHOD0 ( Function, void() );
@@ -63,5 +65,30 @@ namespace AeonGames
         }
         EXPECT_EQ ( nullptr, handle.Get() );
         EXPECT_THROW ( handle->Function(), std::runtime_error );
+    }
+
+    TEST ( FlyWeight, MemberOfPointerOperator )
+    {
+        FlyWeightPayload payload{1};
+        EXPECT_CALL ( payload, Function() ).Times ( 1 );
+        payload.GetHandle()->Function();
+    }
+    TEST ( FlyWeight, IndirectionOperator )
+    {
+        FlyWeightPayload payload{1};
+        EXPECT_CALL ( payload, Function() ).Times ( 1 );
+        ( *payload.GetHandle() ).Function();
+    }
+    TEST ( FlyWeight, AddressOfOperator )
+    {
+        FlyWeightPayload payload{1};
+        EXPECT_CALL ( payload, Function() ).Times ( 1 );
+        ( &payload.GetHandle() )->Function();
+    }
+    TEST ( FlyWeight, CopyConstructor )
+    {
+        FlyWeightPayload payload1{1};
+        FlyWeightPayload payload2{payload1};
+        EXPECT_THROW ( payload2.GetHandle()->Function(), std::runtime_error );
     }
 }
