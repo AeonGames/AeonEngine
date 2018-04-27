@@ -30,11 +30,35 @@ namespace AeonGames
         {
             /* A Copy cannot have the same key as the original so do nothing*/
         }
-        FlyWeight ( const FlyWeight&& aFlyWeight ) : mKey{}
+        FlyWeight ( FlyWeight&& aFlyWeight ) : mKey ( std::move ( aFlyWeight.mKey ) )
         {
+            static std::mutex m;
+            std::lock_guard<std::mutex> hold ( m );
             // A Moved object's key is moved.
-            mKey = aFlyWeight.mKey;
             aFlyWeight.mKey = Key{};
+            mStore[mKey] = this;
+        }
+        const FlyWeight& operator= ( const FlyWeight& aFlyWeight )
+        {
+            /* A Copy cannot have the same key as the original*/
+            if ( &aFlyWeight != this )
+            {
+                mKey = Key{};
+            }
+            return *this;
+        }
+        const FlyWeight& operator= ( FlyWeight&& aFlyWeight )
+        {
+            if ( &aFlyWeight != this )
+            {
+                static std::mutex m;
+                std::lock_guard<std::mutex> hold ( m );
+                // A Moved object's key is moved.
+                aFlyWeight.mKey = Key{};
+                mKey = std::move ( aFlyWeight.mKey );
+                mStore[mKey] = this;
+            }
+            return *this;
         }
         FlyWeight ( const Key& aKey ) : mKey ( aKey )
         {
