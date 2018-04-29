@@ -1,4 +1,4 @@
-# Copyright 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ find_library(GLSLANG_LIB
 find_library(OGLCompiler_LIB
     NAMES
         OGLCompiler
-        OGLCompilerd
     PATHS
         /usr/local
         /mingw64
@@ -50,7 +49,6 @@ find_library(OGLCompiler_LIB
 find_library(OSDependent_LIB
     NAMES
         OSDependent
-        OSDependentd
     PATHS
         /usr/local
         /mingw64
@@ -60,7 +58,6 @@ find_library(OSDependent_LIB
 find_library(HLSL_LIB
     NAMES
         HLSL
-        HLSLd
     PATHS
         /usr/local
         /mingw64
@@ -70,7 +67,6 @@ find_library(HLSL_LIB
 find_library(SPIRV_LIB
     NAMES
         SPIRV
-        SPIRVd
     PATHS
         /usr/local
         /mingw64
@@ -80,7 +76,6 @@ find_library(SPIRV_LIB
 find_library(SPIRV_REMAPPER_LIB
     NAMES
         SPVRemapper
-        SPVRemapperd
     PATHS
         /usr/local
         /mingw64
@@ -92,7 +87,6 @@ find_library(SPIRV_REMAPPER_LIB
 find_library(GLSLANG_DEBUG_LIB
     NAMES
         glslangd
-        glslang
     PATHS
         /usr/local
         /mingw64
@@ -102,7 +96,6 @@ find_library(GLSLANG_DEBUG_LIB
 find_library(OGLCompiler_DEBUG_LIB
     NAMES
         OGLCompilerd
-        OGLCompiler
     PATHS
         /usr/local
         /mingw64
@@ -112,7 +105,6 @@ find_library(OGLCompiler_DEBUG_LIB
 find_library(OSDependent_DEBUG_LIB
     NAMES
         OSDependentd
-        OSDependent
     PATHS
         /usr/local
         /mingw64
@@ -122,7 +114,6 @@ find_library(OSDependent_DEBUG_LIB
 find_library(HLSL_DEBUG_LIB
     NAMES
         HLSLd
-        HLSL
     PATHS
         /usr/local
         /mingw64
@@ -132,7 +123,6 @@ find_library(HLSL_DEBUG_LIB
 find_library(SPIRV_DEBUG_LIB
     NAMES
         SPIRVd
-        SPIRV
     PATHS
         /usr/local
         /mingw64
@@ -142,28 +132,48 @@ find_library(SPIRV_DEBUG_LIB
 find_library(SPIRV_REMAPPER_DEBUG_LIB
     NAMES
         SPVRemapperd
-        SPVRemapper
     PATHS
         /usr/local
         /mingw64
         /mingw32
 )
 
-set(GLSLANG_LIBRARIES 
-    optimized ${GLSLANG_LIB}
-    debug ${GLSLANG_DEBUG_LIB}
-    optimized ${OGLCompiler_LIB} 
-    debug ${OGLCompiler_DEBUG_LIB} 
-    optimized ${OSDependent_LIB}
-    debug ${OSDependent_DEBUG_LIB}
-    optimized ${HLSL_LIB}
-    debug ${HLSL_DEBUG_LIB}
-    optimized ${SPIRV_LIB}
-    debug ${SPIRV_DEBUG_LIB}
-    optimized ${SPIRV_REMAPPER_LIB}
-    debug ${SPIRV_REMAPPER_DEBUG_LIB}
-    CACHE STRING "GLSLANG_LIBRARIES"
-)
+if(GLSLANG_LIB)
+    list(APPEND GLSLANG_LIBRARIES optimized ${GLSLANG_LIB})
+endif()
+if(GLSLANG_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES debug ${GLSLANG_DEBUG_LIB})
+endif()
+if(OGLCompiler_LIB)
+    list(APPEND GLSLANG_LIBRARIES optimized ${OGLCompiler_LIB}) 
+endif()
+if(OGLCompiler_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES debug ${OGLCompiler_DEBUG_LIB}) 
+endif()
+if(OSDependent_LIB)
+    list(APPEND GLSLANG_LIBRARIES optimized ${OSDependent_LIB})
+endif()
+if(OSDependent_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES debug ${OSDependent_DEBUG_LIB})
+endif()
+if(HLSL_LIB)
+    list(APPEND GLSLANG_LIBRARIES optimized ${HLSL_LIB})
+endif()
+if(HLSL_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES debug ${HLSL_DEBUG_LIB})
+endif()
+if(SPIRV_LIB)
+    list(APPEND GLSLANG_LIBRARIES optimized ${SPIRV_LIB})
+endif()
+if(SPIRV_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES debug ${SPIRV_DEBUG_LIB})
+endif()
+if(SPIRV_REMAPPER_LIB)
+    list(APPEND GLSLANG_LIBRARIES optimized ${SPIRV_REMAPPER_LIB})
+endif()
+if(SPIRV_REMAPPER_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES debug ${SPIRV_REMAPPER_DEBUG_LIB})
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(GLslang 
