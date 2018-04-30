@@ -11,11 +11,11 @@
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"$ENV{MINGW_PREFIX}/bin"
+                        "value":"${DEBUG_PATH}"
                     }                    
                 ],
                 "externalConsole": true,
-                        "program": "${CMAKE_BINARY_DIR}/bin/worldeditor.exe",
+                        "program": "${CMAKE_BINARY_DIR}/bin/worldeditor${CMAKE_EXECUTABLE_SUFFIX}",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
                         "setupCommands": [
@@ -36,11 +36,11 @@
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"$ENV{MINGW_PREFIX}/bin"
+                        "value":"${DEBUG_PATH}"
                     }                    
                 ],
                 "externalConsole": true,
-                        "program": "${CMAKE_BINARY_DIR}/bin/unit-tests.exe",
+                        "program": "${CMAKE_BINARY_DIR}/bin/unit-tests${CMAKE_EXECUTABLE_SUFFIX}",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
                         "setupCommands": [
@@ -63,11 +63,11 @@
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"$ENV{MINGW_PREFIX}/bin"
+                        "value":"${DEBUG_PATH}"
                     }                    
                 ],
                 "externalConsole": true,
-                        "program": "${CMAKE_BINARY_DIR}/bin/aeontool.exe",
+                        "program": "${CMAKE_BINARY_DIR}/bin/aeontool${CMAKE_EXECUTABLE_SUFFIX}",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
                         "setupCommands": [
