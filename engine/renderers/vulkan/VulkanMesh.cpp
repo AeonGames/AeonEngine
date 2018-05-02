@@ -56,7 +56,7 @@ namespace AeonGames
             vkCmdBindIndexBuffer ( mVulkanRenderer->GetCommandBuffer(),
                                    mBuffer.GetBuffer(), ( sizeof ( Vertex ) * mMesh->GetVertexCount() ),
                                    GetIndexType ( static_cast<AeonGames::Mesh::IndexType> ( mMesh->GetIndexType() ) ) );
-            vkCmdDrawIndexed ( mVulkanRenderer->GetCommandBuffer(), mMesh->GetIndexCount(), 1, 0, 0, 1 );
+            vkCmdDrawIndexed ( mVulkanRenderer->GetCommandBuffer(), mMesh->GetIndexCount(), 1, 0, 0, 0 );
         }
         else
         {

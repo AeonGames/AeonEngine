@@ -59,6 +59,8 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
 
+set(Portaudio_FIND_QUIETLY ON)
+
 find_package(Threads)
 find_package(Vulkan)
 find_package(OpenGL)

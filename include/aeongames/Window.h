@@ -26,7 +26,12 @@ namespace AeonGames
     public:
         DLL virtual ~Window() = 0;
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
-        //virtual void Render ( const std::shared_ptr<Scene>& aScene ) const = 0;
+        ///@name Render Functions
+        ///@{
+        virtual void BeginRender() const = 0;
+        virtual void EndRender() const = 0;
+        virtual void Render ( const Scene* aScene ) const = 0;
+        ///@}
         ///@name Matrix Functions
         ///@{
         DLL void SetProjectionMatrix ( const Matrix4x4& aMatrix );

@@ -211,6 +211,9 @@ namespace AeonGames
                         delta = 1.0 / 30.0;
                     }
                 }
+                mWindow->BeginRender();
+                mWindow->Render ( nullptr );
+                mWindow->EndRender();
                 return true;
             }
         default:

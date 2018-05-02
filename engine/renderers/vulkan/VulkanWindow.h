@@ -28,19 +28,12 @@ namespace AeonGames
     class VulkanWindow : public Window
     {
     public:
-        VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
+        VulkanWindow ( void* aWindowId, const ::std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         virtual ~VulkanWindow();
-        const void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
-        //void Render ( const std::shared_ptr<Scene>& aScene ) const final;
-        const VkSwapchainKHR& GetSwapchain() const;
-        uint32_t GetWidth() const;
-        uint32_t GetHeight() const;
-        const uint32_t& GetActiveImageIndex() const;
-        const VkFramebuffer& GetActiveFrameBuffer() const;
-        void AcquireNextImage();
-        const VkViewport& GetViewport() const;
-        const VkRect2D& GetScissor() const;
+        void BeginRender() const final;
+        void EndRender() const final;
+        void Render ( const Scene* aScene ) const final;
     private:
         void Initialize();
         void Finalize();
@@ -54,20 +47,30 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
-        void* mWindowId;
-        VkSurfaceKHR mVkSurfaceKHR = VK_NULL_HANDLE;
-        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
+
+        const VkSwapchainKHR& GetSwapchain() const;
+        uint32_t GetWidth() const;
+        uint32_t GetHeight() const;
+        const uint32_t& GetActiveImageIndex() const;
+        const VkFramebuffer& GetActiveFrameBuffer() const;
+        void AcquireNextImage();
+        const VkViewport& GetViewport() const;
+        const VkRect2D& GetScissor() const;
+
+        void* mWindowId{};
+        VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
+        ::std::shared_ptr<const VulkanRenderer> mVulkanRenderer{};
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
-        uint32_t mSwapchainImageCount = 2;
-        VkSwapchainKHR mVkSwapchainKHR = VK_NULL_HANDLE;
-        std::vector<VkImage> mVkSwapchainImages;
-        std::vector<VkImageView> mVkSwapchainImageViews;
-        VkImage mVkDepthStencilImage = VK_NULL_HANDLE;
-        VkDeviceMemory mVkDepthStencilImageMemory = VK_NULL_HANDLE;
-        VkImageView mVkDepthStencilImageView = VK_NULL_HANDLE;
-        bool mHasStencil = false;
-        std::vector<VkFramebuffer> mVkFramebuffers;
-        uint32_t mActiveImageIndex = UINT32_MAX;
+        uint32_t mSwapchainImageCount{ 2 };
+        VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };
+        ::std::vector<VkImage> mVkSwapchainImages{};
+        ::std::vector<VkImageView> mVkSwapchainImageViews{};
+        VkImage mVkDepthStencilImage{ VK_NULL_HANDLE };
+        VkDeviceMemory mVkDepthStencilImageMemory{ VK_NULL_HANDLE };
+        VkImageView mVkDepthStencilImageView { VK_NULL_HANDLE};
+        bool mHasStencil{ false };
+        ::std::vector<VkFramebuffer> mVkFramebuffers{};
+        uint32_t mActiveImageIndex{ UINT32_MAX };
         VkViewport mVkViewport{};
         VkRect2D mVkScissor{};
     };
