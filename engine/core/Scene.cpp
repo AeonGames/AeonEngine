@@ -16,22 +16,22 @@ limitations under the License.
 #include <algorithm>
 #include <sstream>
 #include "aeongames/ProtoBufClasses.h"
-#include "aeongames/Tree.h"
+#include "aeongames/Scene.h"
 
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
 #include <google/protobuf/text_format.h>
-#include "tree.pb.h"
+#include "scene.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 
 namespace AeonGames
 {
-    Tree::Node::Node() = default;
-    Tree::Node::Node ( const Node & aNode ) :
+    Scene::Node::Node() = default;
+    Scene::Node::Node ( const Node & aNode ) :
         mName{ aNode.mName },
         mParent{aNode.mParent},
         mIterator{},
@@ -42,11 +42,11 @@ namespace AeonGames
         for ( auto& i : mNodes )
         {
             i.mParent = this;
-            i.mTree = mTree;
+            i.mScene = mScene;
         }
         SetGlobalTransform ( mGlobalTransform );
     }
-    Tree::Node::Node ( const Node && aNode ) :
+    Scene::Node::Node ( const Node && aNode ) :
         mName{ std::move ( aNode.mName ) },
         mParent{aNode.mParent},
         mIterator{},
@@ -57,16 +57,16 @@ namespace AeonGames
         for ( auto& i : mNodes )
         {
             i.mParent = this;
-            i.mTree = mTree;
+            i.mScene = mScene;
         }
         SetGlobalTransform ( mGlobalTransform );
     }
-    Tree::Node& Tree::Node::operator= ( const Tree::Node & aNode )
+    Scene::Node& Scene::Node::operator= ( const Scene::Node & aNode )
     {
         mName = aNode.mName;
         mFlags = aNode.mFlags;
         mNodes = aNode.mNodes;
-        mTree = aNode.mTree;
+        mScene = aNode.mScene;
         mIterator = 0;
         mGlobalTransform = aNode.mGlobalTransform;
         for ( auto& i : mNodes )
@@ -76,12 +76,12 @@ namespace AeonGames
         SetGlobalTransform ( mGlobalTransform );
         return *this;
     }
-    Tree::Node& Tree::Node::operator= ( const Tree::Node && aNode )
+    Scene::Node& Scene::Node::operator= ( const Scene::Node && aNode )
     {
         mName = std::move ( aNode.mName );
         mFlags = std::move ( aNode.mFlags );
         mNodes = std::move ( aNode.mNodes );
-        mTree = aNode.mTree;
+        mScene = aNode.mScene;
         mIterator = 0;
         mGlobalTransform = aNode.mGlobalTransform;
         for ( auto& i : mNodes )
@@ -91,49 +91,49 @@ namespace AeonGames
         SetGlobalTransform ( mGlobalTransform );
         return *this;
     }
-    Tree::Node::Node ( std::initializer_list<Tree::Node> aList ) : mNodes ( aList )
+    Scene::Node::Node ( std::initializer_list<Scene::Node> aList ) : mNodes ( aList )
     {
         for ( auto& i : mNodes )
         {
             i.mParent = this;
-            i.mTree = mTree;
+            i.mScene = mScene;
         }
         SetGlobalTransform ( mGlobalTransform );
     }
 
-    Tree::Node::~Node() = default;
+    Scene::Node::~Node() = default;
 
-    const std::string& Tree::Node::GetName() const
+    const std::string& Scene::Node::GetName() const
     {
         return mName;
     }
 
-    void Tree::Node::SetName ( const std::string& aName )
+    void Scene::Node::SetName ( const std::string& aName )
     {
         mName = aName;
     }
 
-    void Tree::Node::Append ( const Tree::Node& aNode )
+    void Scene::Node::Append ( const Scene::Node& aNode )
     {
         mNodes.emplace_back ( aNode );
         mNodes.back().mParent = this;
-        mNodes.back().mTree = mTree;
+        mNodes.back().mScene = mScene;
         mNodes.back().SetGlobalTransform ( mNodes.back().mGlobalTransform );
     }
 
-    void Tree::Node::Insert ( size_t aIndex, const Tree::Node& aNode )
+    void Scene::Node::Insert ( size_t aIndex, const Scene::Node& aNode )
     {
         auto node = mNodes.emplace ( mNodes.begin() + aIndex, aNode );
         node->mParent = this;
-        node->mTree = mTree;
+        node->mScene = mScene;
         node->SetGlobalTransform ( node->mGlobalTransform );
     }
 
-    void Tree::Node::Move ( size_t aIndex, Tree::Node&& aNode )
+    void Scene::Node::Move ( size_t aIndex, Scene::Node&& aNode )
     {
         auto node = mNodes.emplace ( mNodes.begin() + aIndex, std::move ( aNode ) );
         node->mParent = this;
-        node->mTree = mTree;
+        node->mScene = mScene;
         node->SetGlobalTransform ( node->mGlobalTransform );
         if ( aNode.GetParent() )
         {
@@ -141,12 +141,12 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::Erase ( std::vector<Node>::size_type aIndex )
+    void Scene::Node::Erase ( std::vector<Node>::size_type aIndex )
     {
         mNodes.erase ( mNodes.begin() + aIndex );
     }
 
-    void Tree::Node::Erase ( const Node& aNode )
+    void Scene::Node::Erase ( const Node& aNode )
     {
         if ( aNode.mParent != this )
         {
@@ -155,42 +155,42 @@ namespace AeonGames
         mNodes.erase ( mNodes.begin() + aNode.GetIndex() );
     }
 
-    std::vector<Tree::Node>::size_type Tree::Node::GetChildrenCount() const
+    std::vector<Scene::Node>::size_type Scene::Node::GetChildrenCount() const
     {
         return mNodes.size();
     }
 
-    const Tree::Node& Tree::Node::GetChild ( size_t aIndex ) const
+    const Scene::Node& Scene::Node::GetChild ( size_t aIndex ) const
     {
         return mNodes.at ( aIndex );
     }
 
-    Tree::Node& Tree::Node::GetChild ( size_t aIndex )
+    Scene::Node& Scene::Node::GetChild ( size_t aIndex )
     {
-        return const_cast<Tree::Node&> ( static_cast<const Tree::Node&> ( *this ).GetChild ( aIndex ) );
+        return const_cast<Scene::Node&> ( static_cast<const Scene::Node&> ( *this ).GetChild ( aIndex ) );
     }
 
-    const Tree::Node& Tree::Node::operator[] ( const std::size_t aIndex ) const
+    const Scene::Node& Scene::Node::operator[] ( const std::size_t aIndex ) const
     {
         return mNodes[aIndex];
     }
 
-    Tree::Node& Tree::Node::operator[] ( const std::size_t aIndex )
+    Scene::Node& Scene::Node::operator[] ( const std::size_t aIndex )
     {
-        return const_cast<Tree::Node&> ( static_cast<const Tree::Node&> ( *this ) [aIndex] );
+        return const_cast<Scene::Node&> ( static_cast<const Scene::Node&> ( *this ) [aIndex] );
     }
 
-    const Tree::Node* Tree::Node::GetParent() const
+    const Scene::Node* Scene::Node::GetParent() const
     {
         return mParent;
     }
 
-    Tree::Node* Tree::Node::GetParent()
+    Scene::Node* Scene::Node::GetParent()
     {
-        return const_cast<Tree::Node*> ( static_cast<const Node&> ( *this ).mParent );
+        return const_cast<Scene::Node*> ( static_cast<const Node&> ( *this ).mParent );
     }
 
-    std::size_t Tree::Node::GetIndex() const
+    std::size_t Scene::Node::GetIndex() const
     {
         if ( mParent )
         {
@@ -201,19 +201,19 @@ namespace AeonGames
             } );
             return index - mParent->mNodes.begin();
         }
-        else if ( mTree )
+        else if ( mScene )
         {
-            auto index = std::find_if ( mTree->mNodes.begin(), mTree->mNodes.end(),
+            auto index = std::find_if ( mScene->mNodes.begin(), mScene->mNodes.end(),
                                         [this] ( const Node & node )
             {
                 return &node == this;
             } );
-            return index - mTree->mNodes.begin();
+            return index - mScene->mNodes.begin();
         }
         throw std::runtime_error ( "Node has no parent and thus no assigned index." );
     }
 
-    void Tree::Node::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::Node::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         /** @todo (EC++ Item 3) This code is the same as the constant overload,
         but can't easily be implemented in terms of that because of aAction's node parameter
@@ -238,7 +238,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::LoopTraverseDFSPreOrder (
+    void Scene::Node::LoopTraverseDFSPreOrder (
         const std::function<void ( Node& ) >& aPreamble,
         const std::function<void ( Node& ) >& aPostamble )
     {
@@ -266,7 +266,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
+    void Scene::Node::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
         auto node = this;
         aAction ( *node );
@@ -287,7 +287,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::Node::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
@@ -311,7 +311,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
+    void Scene::Node::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
         /*
         This code implements a similar solution to this stackoverflow answer:
@@ -335,7 +335,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::Node::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         aAction ( *this );
         for ( auto & node : mNodes )
@@ -344,7 +344,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::Node::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & node : mNodes )
         {
@@ -353,7 +353,7 @@ namespace AeonGames
         aAction ( *this );
     }
 
-    void Tree::Node::LoopTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
+    void Scene::Node::LoopTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
     {
         auto node = this;
         while ( node != nullptr )
@@ -363,7 +363,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::LoopTraverseAncestors ( const std::function<void ( const Node& ) >& aAction ) const
+    void Scene::Node::LoopTraverseAncestors ( const std::function<void ( const Node& ) >& aAction ) const
     {
         auto node = this;
         while ( node != nullptr )
@@ -373,7 +373,7 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
+    void Scene::Node::RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
     {
         aAction ( *this );
         if ( mParent )
@@ -382,31 +382,31 @@ namespace AeonGames
         }
     }
 
-    void Tree::Node::SetFlags ( size_t aFlagBits, bool aEnabled )
+    void Scene::Node::SetFlags ( size_t aFlagBits, bool aEnabled )
     {
         ( aEnabled ) ? mFlags |= aFlagBits : mFlags &= static_cast<uint32_t> ( ~aFlagBits );
     }
 
-    void Tree::Node::SetFlag ( enum Flags aFlag, bool aEnabled )
+    void Scene::Node::SetFlag ( enum Flags aFlag, bool aEnabled )
     {
         mFlags[aFlag] = aEnabled;
     }
 
-    bool Tree::Node::IsFlagEnabled ( enum Flags aFlag ) const
+    bool Scene::Node::IsFlagEnabled ( enum Flags aFlag ) const
     {
         return mFlags[aFlag];
     }
 
-    const Transform& Tree::Node::GetLocalTransform() const
+    const Transform& Scene::Node::GetLocalTransform() const
     {
         return mLocalTransform;
     }
 
-    const Transform& Tree::Node::GetGlobalTransform() const
+    const Transform& Scene::Node::GetGlobalTransform() const
     {
         return mGlobalTransform;
     }
-    void Tree::Node::SetLocalTransform ( const Transform& aTransform )
+    void Scene::Node::SetLocalTransform ( const Transform& aTransform )
     {
         mLocalTransform = aTransform;
         LoopTraverseDFSPreOrder (
@@ -423,7 +423,7 @@ namespace AeonGames
         } );
     }
 
-    void Tree::Node::SetGlobalTransform ( const Transform& aTransform )
+    void Scene::Node::SetGlobalTransform ( const Transform& aTransform )
     {
         mGlobalTransform = aTransform;
         // Update the Local transform for this node only
@@ -453,35 +453,35 @@ namespace AeonGames
         } );
     }
 
-    Tree::Tree ( std::initializer_list<Tree::Node> aList ) : mNodes ( aList )
+    Scene::Scene ( std::initializer_list<Scene::Node> aList ) : mNodes ( aList )
     {
         for ( auto& i : mNodes )
         {
             i.mParent = nullptr;
-            i.mTree = this;
+            i.mScene = this;
         }
     }
 
-    Tree::~Tree() = default;
+    Scene::~Scene() = default;
 
-    void Tree::Append ( const Node& aNode )
+    void Scene::Append ( const Node& aNode )
     {
         mNodes.emplace_back ( aNode );
         mNodes.back().mParent = nullptr;
-        mNodes.back().mTree = this;
+        mNodes.back().mScene = this;
     }
-    void Tree::Insert ( size_t aIndex, const Node& aNode )
+    void Scene::Insert ( size_t aIndex, const Node& aNode )
     {
         auto node = mNodes.emplace ( mNodes.begin() + aIndex, aNode );
         node->mParent = nullptr;
-        node->mTree = this;
+        node->mScene = this;
     }
 
-    void Tree::Move ( size_t aIndex, Tree::Node&& aNode )
+    void Scene::Move ( size_t aIndex, Scene::Node&& aNode )
     {
         auto node = mNodes.emplace ( mNodes.begin() + aIndex, std::move ( aNode ) );
         node->mParent = nullptr;
-        node->mTree = this;
+        node->mScene = this;
         node->SetGlobalTransform ( node->mGlobalTransform );
         if ( aNode.GetParent() )
         {
@@ -489,53 +489,53 @@ namespace AeonGames
         }
     }
 
-    void Tree::Erase ( std::vector<Node>::size_type aIndex )
+    void Scene::Erase ( std::vector<Node>::size_type aIndex )
     {
         mNodes.erase ( mNodes.begin() + aIndex );
     }
 
-    void Tree::Erase ( const Node& aNode )
+    void Scene::Erase ( const Node& aNode )
     {
-        if ( aNode.mParent != nullptr || aNode.mTree != this )
+        if ( aNode.mParent != nullptr || aNode.mScene != this )
         {
             throw std::runtime_error ( "Node's parent does not match this node." );
         }
         mNodes.erase ( mNodes.begin() + aNode.GetIndex() );
     }
 
-    std::vector<Tree::Node>::size_type Tree::GetChildrenCount() const
+    std::vector<Scene::Node>::size_type Scene::GetChildrenCount() const
     {
         return mNodes.size();
     }
 
-    const Tree::Node& Tree::GetChild ( size_t aIndex ) const
+    const Scene::Node& Scene::GetChild ( size_t aIndex ) const
     {
         return mNodes.at ( aIndex );
     }
 
-    Tree::Node& Tree::GetChild ( size_t aIndex )
+    Scene::Node& Scene::GetChild ( size_t aIndex )
     {
-        return const_cast<Tree::Node&> ( static_cast<const Tree&> ( *this ).GetChild ( aIndex ) );
+        return const_cast<Scene::Node&> ( static_cast<const Scene&> ( *this ).GetChild ( aIndex ) );
     }
 
-    const Tree::Node& Tree::operator[] ( const std::size_t aIndex ) const
+    const Scene::Node& Scene::operator[] ( const std::size_t aIndex ) const
     {
         return mNodes[aIndex];
     }
 
-    Tree::Node& Tree::operator[] ( const std::size_t aIndex )
+    Scene::Node& Scene::operator[] ( const std::size_t aIndex )
     {
-        return const_cast<Tree::Node&> ( static_cast<const Tree&> ( *this ) [aIndex] );
+        return const_cast<Scene::Node&> ( static_cast<const Scene&> ( *this ) [aIndex] );
     }
 
-    void Tree::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & node : mNodes )
         {
             node.LoopTraverseDFSPreOrder ( aAction );
         }
     }
-    void Tree::LoopTraverseDFSPreOrder (
+    void Scene::LoopTraverseDFSPreOrder (
         const std::function<void ( Node& ) >& aPreamble,
         const std::function<void ( Node& ) >& aPostamble )
     {
@@ -544,35 +544,35 @@ namespace AeonGames
             node.LoopTraverseDFSPreOrder ( aPreamble, aPostamble );
         }
     }
-    void Tree::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
+    void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
         for ( const auto& node : mNodes )
         {
             node.LoopTraverseDFSPreOrder ( aAction );
         }
     }
-    void Tree::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & node : mNodes )
         {
             node.LoopTraverseDFSPostOrder ( aAction );
         }
     }
-    void Tree::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
+    void Scene::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
     {
         for ( const auto& node : mNodes )
         {
             node.LoopTraverseDFSPostOrder ( aAction );
         }
     }
-    void Tree::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & node : mNodes )
         {
             node.RecursiveTraverseDFSPreOrder ( aAction );
         }
     }
-    void Tree::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
+    void Scene::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & node : mNodes )
         {
@@ -580,12 +580,12 @@ namespace AeonGames
         }
     }
 
-    std::string Tree::Serialize ( bool aAsBinary ) const
+    std::string Scene::Serialize ( bool aAsBinary ) const
     {
-        static TreeBuffer tree_buffer;
-        std::unordered_map<const Tree::Node*, NodeBuffer*> node_map;
+        static SceneBuffer scene_buffer;
+        std::unordered_map<const Scene::Node*, NodeBuffer*> node_map;
         LoopTraverseDFSPreOrder (
-            [&node_map] ( const Tree::Node & node )
+            [&node_map] ( const Scene::Node & node )
         {
             NodeBuffer* node_buffer;
             auto parent = node_map.find ( node.GetParent() );
@@ -595,7 +595,7 @@ namespace AeonGames
             }
             else
             {
-                node_buffer = tree_buffer.add_node();
+                node_buffer = scene_buffer.add_node();
             }
             node_buffer->mutable_local()->mutable_scale()->set_x ( node.GetLocalTransform().GetScale() [0] );
             node_buffer->mutable_local()->mutable_scale()->set_y ( node.GetLocalTransform().GetScale() [1] );
@@ -613,17 +613,17 @@ namespace AeonGames
         if ( aAsBinary )
         {
             serialization << "AEONTRE" << '\0';
-            tree_buffer.SerializeToOstream ( &serialization );
+            scene_buffer.SerializeToOstream ( &serialization );
         }
         else
         {
             std::string text;
             serialization << "AEONTRE\n";
             google::protobuf::TextFormat::Printer printer;
-            printer.PrintToString ( tree_buffer, &text );
+            printer.PrintToString ( scene_buffer, &text );
             serialization << text;
         }
-        tree_buffer.Clear();
+        scene_buffer.Clear();
         return serialization.str();
     }
 }

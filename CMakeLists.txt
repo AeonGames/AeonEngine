@@ -211,7 +211,7 @@ add_custom_target(generate-python-protobuf-source
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/transform.proto
     COMMAND
-        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/tree.proto
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/scene.proto
     SOURCES
         ${CMAKE_SOURCE_DIR}/proto/mesh.proto
         ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
@@ -226,7 +226,7 @@ add_custom_target(generate-python-protobuf-source
         ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
         ${CMAKE_SOURCE_DIR}/proto/geometry.proto
         ${CMAKE_SOURCE_DIR}/proto/transform.proto
-        ${CMAKE_SOURCE_DIR}/proto/tree.proto
+        ${CMAKE_SOURCE_DIR}/proto/scene.proto
     COMMENT "Generating Protocol Buffers Python Code")
 
 ###########################################

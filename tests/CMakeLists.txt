@@ -15,7 +15,7 @@
 include_directories(${GTEST_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Tree.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
 )
 set(TEST_SRCS
@@ -23,7 +23,7 @@ set(TEST_SRCS
     DependencyMapTests.cpp
     FlyWeightTests.cpp
     CRCTests.cpp
-    TreeTests.cpp
+    SceneTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
