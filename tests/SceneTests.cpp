@@ -16,19 +16,19 @@ limitations under the License.
 #include <cstring>
 #include <memory>
 #include "gtest/gtest.h"
-#include "aeongames/Tree.h"
+#include "aeongames/Scene.h"
 #include "aeongames/Memory.h"
 
 using namespace ::testing;
 namespace AeonGames
 {
-    class TreeTest : public ::testing::Test
+    class SceneTest : public ::testing::Test
     {
     protected:
-        TreeTest()
+        SceneTest()
         {
         }
-        virtual ~TreeTest()
+        virtual ~SceneTest()
         {
         }
         virtual void SetUp()
@@ -51,7 +51,7 @@ namespace AeonGames
                                           /\   /\  /\   /\
                                           g h i  j k l  m n
         */
-        Tree mTree
+        Scene mScene
         {
             {
                 // a
@@ -98,20 +98,20 @@ namespace AeonGames
         };
     };
 
-    TEST_F ( TreeTest, LoopTraverseDFSPostOrderTraversesAllNodes )
+    TEST_F ( SceneTest, LoopTraverseDFSPostOrderTraversesAllNodes )
     {
-        std::vector < Tree::Node* > nodeVector;
-        mTree.LoopTraverseDFSPostOrder ( [&nodeVector] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > nodeVector;
+        mScene.LoopTraverseDFSPostOrder ( [&nodeVector] ( Scene::Node & aNode )
         {
             nodeVector.push_back ( &aNode );
         } );
         EXPECT_EQ ( nodeVector.size(), 14u );
     }
 
-    TEST_F ( TreeTest, RecursiveTraverseDFSPostOrderTraversesAllNodes )
+    TEST_F ( SceneTest, RecursiveTraverseDFSPostOrderTraversesAllNodes )
     {
-        std::vector < Tree::Node* > nodeVector;
-        mTree.LoopTraverseDFSPostOrder ( [&nodeVector] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > nodeVector;
+        mScene.LoopTraverseDFSPostOrder ( [&nodeVector] ( Scene::Node & aNode )
         {
             nodeVector.push_back ( &aNode );
         } );
@@ -119,159 +119,159 @@ namespace AeonGames
     }
 
 
-    TEST_F ( TreeTest, LoopTraverseDFSPostOrderIsEquivalentToRecursiveTraverseDFS )
+    TEST_F ( SceneTest, LoopTraverseDFSPostOrderIsEquivalentToRecursiveTraverseDFS )
     {
-        std::vector < Tree::Node* > loopNodeVector;
-        std::vector < Tree::Node* > recurseNodeVector;
-        mTree.LoopTraverseDFSPostOrder ( [&loopNodeVector] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > loopNodeVector;
+        std::vector < Scene::Node* > recurseNodeVector;
+        mScene.LoopTraverseDFSPostOrder ( [&loopNodeVector] ( Scene::Node & aNode )
         {
             loopNodeVector.push_back ( &aNode );
         } );
-        mTree.RecursiveTraverseDFSPostOrder ( [&recurseNodeVector] ( Tree::Node & aNode )
+        mScene.RecursiveTraverseDFSPostOrder ( [&recurseNodeVector] ( Scene::Node & aNode )
         {
             recurseNodeVector.push_back ( &aNode );
         } );
         EXPECT_EQ ( loopNodeVector, recurseNodeVector );
     }
 
-    TEST_F ( TreeTest, CallingLoopTraverseDFSPostOrderMoreThanOnceHasSameResult )
+    TEST_F ( SceneTest, CallingLoopTraverseDFSPostOrderMoreThanOnceHasSameResult )
     {
-        std::vector < Tree::Node* > nodeVectorA;
-        std::vector < Tree::Node* > nodeVectorB;
-        mTree.LoopTraverseDFSPostOrder ( [&nodeVectorA] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > nodeVectorA;
+        std::vector < Scene::Node* > nodeVectorB;
+        mScene.LoopTraverseDFSPostOrder ( [&nodeVectorA] ( Scene::Node & aNode )
         {
             nodeVectorA.push_back ( &aNode );
         } );
-        mTree.LoopTraverseDFSPostOrder ( [&nodeVectorB] ( Tree::Node & aNode )
+        mScene.LoopTraverseDFSPostOrder ( [&nodeVectorB] ( Scene::Node & aNode )
         {
             nodeVectorB.push_back ( &aNode );
         } );
         EXPECT_EQ ( nodeVectorA, nodeVectorB );
     }
 
-    TEST_F ( TreeTest, LoopTraverseDFSPreOrderTraversesAllNodes )
+    TEST_F ( SceneTest, LoopTraverseDFSPreOrderTraversesAllNodes )
     {
-        std::vector < Tree::Node* > nodeVector;
-        mTree.LoopTraverseDFSPreOrder ( [&nodeVector] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > nodeVector;
+        mScene.LoopTraverseDFSPreOrder ( [&nodeVector] ( Scene::Node & aNode )
         {
             nodeVector.push_back ( &aNode );
         } );
         EXPECT_EQ ( nodeVector.size(), 14u );
     }
 
-    TEST_F ( TreeTest, RecursiveTraverseDFSPreOrderTraversesAllNodes )
+    TEST_F ( SceneTest, RecursiveTraverseDFSPreOrderTraversesAllNodes )
     {
-        std::vector < Tree::Node* > nodeVector;
-        mTree.LoopTraverseDFSPreOrder ( [&nodeVector] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > nodeVector;
+        mScene.LoopTraverseDFSPreOrder ( [&nodeVector] ( Scene::Node & aNode )
         {
             nodeVector.push_back ( &aNode );
         } );
         EXPECT_EQ ( nodeVector.size(), 14u );
     }
 
-    TEST_F ( TreeTest, LoopTraverseDFSPreOrderIsEquivalentToRecursiveTraverseDFS )
+    TEST_F ( SceneTest, LoopTraverseDFSPreOrderIsEquivalentToRecursiveTraverseDFS )
     {
-        std::vector < Tree::Node* > loopNodeVector;
-        std::vector < Tree::Node* > recurseNodeVector;
-        mTree.LoopTraverseDFSPreOrder ( [&loopNodeVector] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > loopNodeVector;
+        std::vector < Scene::Node* > recurseNodeVector;
+        mScene.LoopTraverseDFSPreOrder ( [&loopNodeVector] ( Scene::Node & aNode )
         {
             loopNodeVector.push_back ( &aNode );
         } );
-        mTree.RecursiveTraverseDFSPreOrder ( [&recurseNodeVector] ( Tree::Node & aNode )
+        mScene.RecursiveTraverseDFSPreOrder ( [&recurseNodeVector] ( Scene::Node & aNode )
         {
             recurseNodeVector.push_back ( &aNode );
         } );
         EXPECT_EQ ( loopNodeVector, recurseNodeVector );
     }
 
-    TEST_F ( TreeTest, CallingLoopTraverseDFSPreOrderMoreThanOnceHasSameResult )
+    TEST_F ( SceneTest, CallingLoopTraverseDFSPreOrderMoreThanOnceHasSameResult )
     {
-        std::vector < Tree::Node* > nodeVectorA;
-        std::vector < Tree::Node* > nodeVectorB;
-        mTree.LoopTraverseDFSPreOrder ( [&nodeVectorA] ( Tree::Node & aNode )
+        std::vector < Scene::Node* > nodeVectorA;
+        std::vector < Scene::Node* > nodeVectorB;
+        mScene.LoopTraverseDFSPreOrder ( [&nodeVectorA] ( Scene::Node & aNode )
         {
             nodeVectorA.push_back ( &aNode );
         } );
-        mTree.LoopTraverseDFSPreOrder ( [&nodeVectorB] ( Tree::Node & aNode )
+        mScene.LoopTraverseDFSPreOrder ( [&nodeVectorB] ( Scene::Node & aNode )
         {
             nodeVectorB.push_back ( &aNode );
         } );
         EXPECT_EQ ( nodeVectorA, nodeVectorB );
     }
 
-    TEST_F ( TreeTest, EraseWorks )
+    TEST_F ( SceneTest, EraseWorks )
     {
-        EXPECT_EQ ( mTree.GetChildrenCount(), 2u );
-        mTree.Erase ( 0 );
-        EXPECT_EQ ( mTree.GetChildrenCount(), 1u );
-        mTree.Erase ( mTree[0] );
-        EXPECT_EQ ( mTree.GetChildrenCount(), 0u );
+        EXPECT_EQ ( mScene.GetChildrenCount(), 2u );
+        mScene.Erase ( 0 );
+        EXPECT_EQ ( mScene.GetChildrenCount(), 1u );
+        mScene.Erase ( mScene[0] );
+        EXPECT_EQ ( mScene.GetChildrenCount(), 0u );
     }
 
-    TEST_F ( TreeTest, LocalTransformSyncsGlobalTransform )
-    {
-        Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree[0].SetLocalTransform ( transform );
-        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0].GetGlobalTransform() );
-    }
-
-    TEST_F ( TreeTest, GlobalTransformSyncsLocalTransform )
+    TEST_F ( SceneTest, LocalTransformSyncsGlobalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree[0].SetGlobalTransform ( transform );
-        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0].GetGlobalTransform() );
+        mScene[0].SetLocalTransform ( transform );
+        EXPECT_EQ ( mScene[0].GetLocalTransform(), mScene[0].GetGlobalTransform() );
     }
 
-    TEST_F ( TreeTest, AppendSynchsLocalTransform )
+    TEST_F ( SceneTest, GlobalTransformSyncsLocalTransform )
+    {
+        Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
+        mScene[0].SetGlobalTransform ( transform );
+        EXPECT_EQ ( mScene[0].GetLocalTransform(), mScene[0].GetGlobalTransform() );
+    }
+
+    TEST_F ( SceneTest, AppendSynchsLocalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{2, 4, 6}};
-        Tree::Node node;
+        Scene::Node node;
         node.SetGlobalTransform ( transform );
         transform.SetTranslation ( {1, 2, 3} );
-        mTree[0].SetLocalTransform ( transform );
-        mTree[0].Append ( node );
-        EXPECT_EQ ( transform, mTree[0][mTree[0].GetChildrenCount() - 1].GetLocalTransform() );
+        mScene[0].SetLocalTransform ( transform );
+        mScene[0].Append ( node );
+        EXPECT_EQ ( transform, mScene[0][mScene[0].GetChildrenCount() - 1].GetLocalTransform() );
     }
 
-    TEST_F ( TreeTest, LocalTransformSyncsGlobalTransformInChildNode )
+    TEST_F ( SceneTest, LocalTransformSyncsGlobalTransformInChildNode )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree[0].SetLocalTransform ( transform );
-        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0][0].GetGlobalTransform() );
+        mScene[0].SetLocalTransform ( transform );
+        EXPECT_EQ ( mScene[0].GetLocalTransform(), mScene[0][0].GetGlobalTransform() );
     }
 
-    TEST_F ( TreeTest, GlobalTransformSyncsGlobalTransformInChildNode )
+    TEST_F ( SceneTest, GlobalTransformSyncsGlobalTransformInChildNode )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree[0].SetGlobalTransform ( transform );
-        EXPECT_EQ ( mTree[0].GetLocalTransform(), mTree[0][0].GetGlobalTransform() );
+        mScene[0].SetGlobalTransform ( transform );
+        EXPECT_EQ ( mScene[0].GetLocalTransform(), mScene[0][0].GetGlobalTransform() );
     }
 
-    TEST_F ( TreeTest, LocalTransformLeavesLocalTransformInChildNodeUntoched )
+    TEST_F ( SceneTest, LocalTransformLeavesLocalTransformInChildNodeUntoched )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree[0].SetLocalTransform ( transform );
+        mScene[0].SetLocalTransform ( transform );
         transform.SetTranslation ( {0, 0, 0} );
-        EXPECT_EQ ( transform, mTree[0][0].GetLocalTransform() );
+        EXPECT_EQ ( transform, mScene[0][0].GetLocalTransform() );
     }
 
-    TEST_F ( TreeTest, GlobalTransformLeavesLocalTransformInChildNodeUntoched )
+    TEST_F ( SceneTest, GlobalTransformLeavesLocalTransformInChildNodeUntoched )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{1, 2, 3}};
-        mTree[0].SetGlobalTransform ( transform );
+        mScene[0].SetGlobalTransform ( transform );
         transform.SetTranslation ( {0, 0, 0} );
-        EXPECT_EQ ( transform, mTree[0][0].GetLocalTransform() );
+        EXPECT_EQ ( transform, mScene[0][0].GetLocalTransform() );
     }
 
-    TEST_F ( TreeTest, DefaultIndexIsInvalid )
+    TEST_F ( SceneTest, DefaultIndexIsInvalid )
     {
-        Tree::Node node;
+        Scene::Node node;
         EXPECT_THROW ( node.GetIndex(), std::runtime_error );
     }
 
-    TEST_F ( TreeTest, IndicesAreContiguous )
+    TEST_F ( SceneTest, IndicesAreContiguous )
     {
-        Tree::Node node{{}};
+        Scene::Node node{{}};
         node[0].Append ( {} );
         node[0].Append ( {} );
         node[0].Append ( {} );
@@ -282,9 +282,9 @@ namespace AeonGames
         }
     }
 
-    TEST_F ( TreeTest, IndicesAreContiguousAfterRemovingFirstNode )
+    TEST_F ( SceneTest, IndicesAreContiguousAfterRemovingFirstNode )
     {
-        Tree::Node node {{}};
+        Scene::Node node {{}};
         node[0].Append ( {} );
         node[0].Append ( {} );
         node[0].Append ( {} );
@@ -297,9 +297,9 @@ namespace AeonGames
         }
     }
 
-    TEST_F ( TreeTest, IndicesAreContiguousAfterRemovingMiddleNode )
+    TEST_F ( SceneTest, IndicesAreContiguousAfterRemovingMiddleNode )
     {
-        Tree::Node node {{}};
+        Scene::Node node {{}};
         node[0].Append ( {} );
         node[0].Append ( {} );
         node[0].Append ( {} );
@@ -312,9 +312,9 @@ namespace AeonGames
         }
     }
 
-    TEST_F ( TreeTest, IndicesAreContiguousAfterInsertingNodeOnFront )
+    TEST_F ( SceneTest, IndicesAreContiguousAfterInsertingNodeOnFront )
     {
-        Tree::Node node {{}};
+        Scene::Node node {{}};
         node[0].Append ( {} );
         node[0].Append ( {} );
         node[0].Insert ( 0, {} );
@@ -326,9 +326,9 @@ namespace AeonGames
         EXPECT_EQ ( &node[0][0], &node[0].GetChild ( 0 ) );
     }
 
-    TEST_F ( TreeTest, IndicesAreContiguousAfterInsertingNodeAtMiddle )
+    TEST_F ( SceneTest, IndicesAreContiguousAfterInsertingNodeAtMiddle )
     {
-        Tree::Node node {{}};
+        Scene::Node node {{}};
         node[0].Append ( {} );
         node[0].Append ( {} );
         node[0].Insert ( 1, {} );
@@ -340,15 +340,15 @@ namespace AeonGames
         EXPECT_EQ ( &node[0][1], &node[0].GetChild ( 1 ) );
     }
 
-    TEST_F ( TreeTest, SerializeAsTextHasProperHeader )
+    TEST_F ( SceneTest, SerializeAsTextHasProperHeader )
     {
-        std::string serialized = mTree.Serialize ( false );
+        std::string serialized = mScene.Serialize ( false );
         EXPECT_EQ ( serialized.substr ( 0, 8 ), "AEONTRE\n" );
     }
 
-    TEST_F ( TreeTest, SerializeAsBinaryHasProperHeader )
+    TEST_F ( SceneTest, SerializeAsBinaryHasProperHeader )
     {
-        std::string serialized = mTree.Serialize ( true );
+        std::string serialized = mScene.Serialize ( true );
         EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONTRE" );
         EXPECT_EQ ( serialized[7], 0 );
     }

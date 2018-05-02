@@ -25,6 +25,6 @@ message NodeBuffer {
     repeated NodeBuffer node = 3;
 }
 
-message TreeBuffer{
+message SceneBuffer{
     repeated NodeBuffer node = 1;
 }

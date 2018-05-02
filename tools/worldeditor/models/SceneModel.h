@@ -19,7 +19,7 @@ limitations under the License.
 #include <QAbstractItemModel>
 #include <vector>
 #include "aeongames/Memory.h"
-#include "aeongames/Tree.h"
+#include "aeongames/Scene.h"
 
 QT_BEGIN_NAMESPACE
 class QIODevice;
@@ -27,8 +27,6 @@ QT_END_NAMESPACE
 
 namespace AeonGames
 {
-    class Scene;
-    class Node;
     class SceneModel : public QAbstractItemModel
     {
         Q_OBJECT
@@ -54,9 +52,9 @@ namespace AeonGames
         //@}
         void InsertNode ( int row, const QModelIndex & parent = QModelIndex() );
         void RemoveNode ( const QModelIndex & index );
-        const Tree& GetScene() const;
+        const Scene& GetScene() const;
     private:
-        Tree mScene{};
+        Scene mScene{};
     };
 }
 #endif

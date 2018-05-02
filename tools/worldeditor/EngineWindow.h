@@ -26,7 +26,7 @@ limitations under the License.
 #include <QCloseEvent>
 
 #include "aeongames/AeonEngine.h"
-#include "aeongames/Tree.h"
+#include "aeongames/Scene.h"
 #include "aeongames/Matrix4x4.h"
 
 namespace AeonGames

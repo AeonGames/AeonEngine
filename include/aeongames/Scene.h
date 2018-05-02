@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_TREE_H
-#define AEONGAMES_TREE_H
+#ifndef AEONGAMES_SCENE_H
+#define AEONGAMES_SCENE_H
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Tree
+    class Scene
     {
     public:
         class Node
@@ -41,7 +41,7 @@ namespace AeonGames
             DLL Node& operator= ( const Node && aNode );
             DLL Node ( std::initializer_list<Node> aList );
             DLL ~Node();
-            ///@name Tree Functions
+            ///@name Scene Functions
             ///@{
             /** Append a child node at the end of the child vector. */
             DLL void Append ( const Node& aNode );
@@ -183,11 +183,11 @@ namespace AeonGames
             DLL void SetName ( const std::string& aName );
             ///@}
         private:
-            friend class Tree;
+            friend class Scene;
             std::string mName{"Node"};
             Node* mParent{};
-            Tree* mTree{};
-            /** Tree iteration helper.
+            Scene* mScene{};
+            /** Scene iteration helper.
                 Mutable to allow for constant iterations (EC++ Item 3).*/
             mutable std::vector<Node>::size_type mIterator{ 0 };
             std::bitset<sizeof ( size_t ) > mFlags{AllBits};
@@ -196,10 +196,10 @@ namespace AeonGames
             std::vector<Node> mNodes{};
         };
 
-        ///@name Tree Functions
+        ///@name Scene Functions
         ///@{
-        DLL Tree ( std::initializer_list<Node> aList );
-        DLL ~Tree();
+        DLL Scene ( std::initializer_list<Node> aList );
+        DLL ~Scene();
         DLL void Append ( const Node& aNode );
         DLL void Insert ( size_t aIndex, const Node& aNode );
         /** Reparent a node at the specified index on this tree's child vector. */

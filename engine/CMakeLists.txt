@@ -38,7 +38,7 @@ PROTOBUF_GENERATE_EXPORT_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS "DLL_PROTOBUF"
     ${CMAKE_SOURCE_DIR}/proto/model.proto
     ${CMAKE_SOURCE_DIR}/proto/geometry.proto
     ${CMAKE_SOURCE_DIR}/proto/transform.proto
-    ${CMAKE_SOURCE_DIR}/proto/tree.proto
+    ${CMAKE_SOURCE_DIR}/proto/scene.proto
 )
 
 set(ENGINE_SDK_HEADERS
@@ -77,7 +77,7 @@ set(ENGINE_CORE_HEADERS
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Tree.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
@@ -109,7 +109,7 @@ set(ENGINE_CORE_SOURCES
     core/ModelInstance.cpp
     core/Window.cpp
     core/CRC.cpp
-    core/Tree.cpp
+    core/Scene.cpp
     )
 
 set(ENGINE_MATH_SOURCES
