@@ -16,6 +16,7 @@ limitations under the License.
 #include "aeongames/ModelInstance.h"
 #include "aeongames/Frustum.h"
 #include "aeongames/AABB.h"
+#include "aeongames/Scene.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLModel.h"
@@ -72,15 +73,16 @@ namespace AeonGames
         }
     }
 
-#if 0
-    // To be refactored.
-    void OpenGLWindow::Render ( const std::shared_ptr<Scene>& aScene ) const
+    void OpenGLWindow::BeginRender() const
     {
 #ifdef _WIN32
-        HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
-        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        if ( mDeviceContext )
+        {
+            throw std::runtime_error ( "BeginRender call without a previous EndRender call." );
+        }
+        mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );
+        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ),
@@ -106,9 +108,29 @@ namespace AeonGames
         glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+    }
 
+    void OpenGLWindow::EndRender() const
+    {
+#if _WIN32
+        if ( !mDeviceContext )
+        {
+            throw std::runtime_error ( "EndRender call without a previous BeginRender call." );
+        }
+        SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
+        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
+        mDeviceContext = nullptr;
+#else
+        glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+                         reinterpret_cast<::Window> ( mWindowId ) );
+#endif
+    }
+
+    void OpenGLWindow::Render ( const Scene* aScene ) const
+    {
+#if 0
         Frustum frustum ( projection_matrix * view_matrix );
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( Node & aNode )
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( Scene::Node & aNode )
         {
             if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
             {
@@ -116,16 +138,8 @@ namespace AeonGames
                 mOpenGLRenderer->Render ( aNode, projection_matrix, view_matrix );
             }
         } );
-
-#if _WIN32
-        SwapBuffers ( hdc );
-        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
-#else
-        glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
-                         reinterpret_cast<::Window> ( mWindowId ) );
 #endif
     }
-#endif
 
     const GLuint OpenGLWindow::GetMatricesBuffer() const
     {

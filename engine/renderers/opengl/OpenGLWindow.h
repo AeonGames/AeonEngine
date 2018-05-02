@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <cstdint>
 #include <vector>
+#include <mutex>
 #include "aeongames/Memory.h"
 #include "aeongames/Window.h"
 #include "OpenGLFunctions.h"
@@ -32,13 +33,16 @@ namespace AeonGames
         ~OpenGLWindow() final;
         void* GetWindowId() const;
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
-        //void Render ( const std::shared_ptr<Scene>& aScene ) const final;
+        void BeginRender() const final;
+        void EndRender() const final;
+        void Render ( const Scene* aScene ) const final;
         const GLuint GetMatricesBuffer() const;
     private:
         void Initialize();
         void Finalize();
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
-        void* mWindowId;
+        void* mWindowId{};
+        mutable void* mDeviceContext{};
         GLuint mMatricesBuffer{};
     };
 }

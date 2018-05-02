@@ -25,6 +25,7 @@ limitations under the License.
 #include "aeongames/Frustum.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
+#include "aeongames/Scene.h"
 
 namespace AeonGames
 {
@@ -45,11 +46,6 @@ namespace AeonGames
     VulkanWindow::~VulkanWindow()
     {
         Finalize();
-    }
-
-    const void* VulkanWindow::GetWindowId() const
-    {
-        return mWindowId;
     }
 
     void VulkanWindow::InitializeSurface()
@@ -418,9 +414,7 @@ namespace AeonGames
         }
     }
 
-#if 0
-    // To be refactored.
-    void VulkanWindow::Render ( const std::shared_ptr<Scene>& aScene ) const
+    void VulkanWindow::BeginRender() const
     {
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer->GetDevice(),
@@ -477,16 +471,10 @@ namespace AeonGames
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVulkanRenderer->GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+    }
 
-        Matrix4x4 view_matrix{ mViewTransform.GetInverted().GetMatrix() };
-        Frustum frustum ( mProjectionMatrix * view_matrix );
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( Node & aNode )
-        {
-            if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
-            {
-                mVulkanRenderer->Render ( aNode, mProjectionMatrix, view_matrix );
-            }
-        } );
+    void VulkanWindow::EndRender() const
+    {
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );
         if ( VkResult result = vkEndCommandBuffer ( mVulkanRenderer->GetCommandBuffer() ) )
         {
@@ -519,7 +507,21 @@ namespace AeonGames
             std::cout << GetVulkanResultString ( result ) << std::endl;
         }
     }
+
+    void VulkanWindow::Render ( const Scene* aScene ) const
+    {
+#if 0
+        Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };
+        Frustum frustum ( mProjectionMatrix * view_matrix );
+        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( Node & aNode )
+        {
+            if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
+            {
+                mVulkanRenderer->Render ( aNode, mProjectionMatrix, view_matrix );
+            }
+        } );
 #endif
+    }
 
     const VkSwapchainKHR& VulkanWindow::GetSwapchain() const
     {
