@@ -101,18 +101,16 @@ namespace AeonGames
         std::vector<const char*> mDeviceExtensionNames;
         // Instance Functions
         bool mFunctionsLoaded = false;
-        PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE};
-        PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE};
-        // Device Extension Functions
+        PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
+        PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
 #if 0
-        PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE};
-        PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT { VK_NULL_HANDLE};
-        PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT { VK_NULL_HANDLE};
-        PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT {VK_NULL_HANDLE};
-        PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT { VK_NULL_HANDLE};
+        // Device Extension Functions
+        PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE };
+        PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT { VK_NULL_HANDLE };
+        PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT { VK_NULL_HANDLE };
+        PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT {VK_NULL_HANDLE };
+        PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT { VK_NULL_HANDLE };
 #endif
-        /// @todo This is probably too specific.
-        std::unordered_map<const Model*, std::shared_ptr<VulkanModel>> mVulkanModels;
     };
 }
 #endif

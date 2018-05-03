@@ -25,16 +25,16 @@ limitations under the License.
 namespace AeonGames
 {
     class Window;
-    class Mesh;
-    class Pipeline;
-    class Texture;
-    class Model;
-    class RenderModel;
-    class ModelInstance;
-    class Matrix4x4;
-    class Transform;
-    class Scene;
-    class Node;
+    //class Mesh;
+    //class Pipeline;
+    //class Texture;
+    //class Model;
+    //class RenderModel;
+    //class ModelInstance;
+    //class Matrix4x4;
+    //class Transform;
+    //class Scene;
+    //class Node;
     class Renderer
     {
     public:
@@ -61,14 +61,6 @@ namespace AeonGames
         virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
 #endif
         ///@}
-#if 0
-        ///@name Abstract member functions
-        ///@{
-        virtual void Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const = 0;
-        virtual void Load ( const Node& aNode ) = 0;
-        virtual void Unload ( const Node& aNode ) = 0;
-        ///@}
-#endif
         virtual ~Renderer() = default;
     };
 

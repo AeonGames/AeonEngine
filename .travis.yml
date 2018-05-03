@@ -52,6 +52,7 @@ before_script:
   - cmake -G "Unix Makefiles" .
 script:
   - make -j4 VERBOSE=1
+  - make VERBOSE=1 test
 notifications:
   email: false
 addons:

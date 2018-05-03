@@ -21,31 +21,14 @@ limitations under the License.
     http://gpuopen.com/using-the-vulkan-validation-layers/?utm_source=silverpop&utm_medium=email&utm_campaign=25324445&utm_term=link-article2&utm_content=p-global-developer-hcnewsflash-april-2016%20%281%29:&spMailingID=25324445&spUserID=NzI5Mzc5ODY4NjQS1&spJobID=783815030&spReportId=NzgzODE1MDMwS0
 */
 
-#include <cstring>
 #include <cassert>
-#include <cstdio>
 #include <iostream>
 #include <sstream>
-#include <vector>
-#include <array>
-#include <stdexcept>
 #include <algorithm>
-#include "aeongames/LogLevel.h"
-#include "aeongames/Memory.h"
-#include "aeongames/Window.h"
-#include "aeongames/Model.h"
-#include "aeongames/ModelInstance.h"
-#include "aeongames/ResourceCache.h"
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanUtilities.h"
-#include "VulkanPipeline.h"
-#include "VulkanMesh.h"
-#include "VulkanModel.h"
-#include "math/3DMath.h"
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Transform.h"
-#include "aeongames/Frustum.h"
+
 namespace AeonGames
 {
     VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
@@ -609,34 +592,4 @@ namespace AeonGames
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
     }
-
-#if 0
-    // To Be refactored
-    void VulkanRenderer::Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
-    {
-        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-        if ( model_instance )
-        {
-            mVulkanModels.at ( model_instance->GetModel().get() )->Render ( model_instance, aProjectionMatrix, aViewMatrix );
-        }
-    }
-
-    void VulkanRenderer::Load ( const Node& aNode )
-    {
-        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-        if ( model_instance )
-        {
-            mVulkanModels[model_instance->GetModel().get()] = std::make_shared<VulkanModel> ( model_instance->GetModel(), shared_from_this() );
-        }
-    }
-
-    void VulkanRenderer::Unload ( const Node& aNode )
-    {
-        const auto* model_instance = reinterpret_cast<const ModelInstance*> ( aNode.GetComponent ( ModelInstance::TypeId ) );
-        if ( model_instance )
-        {
-            mVulkanModels[model_instance->GetModel().get()] = std::make_shared<VulkanModel> ( model_instance->GetModel(), shared_from_this() );
-        }
-    }
-#endif
 }
