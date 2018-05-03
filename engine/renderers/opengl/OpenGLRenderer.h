@@ -45,7 +45,6 @@ namespace AeonGames
         void Unload ( const Node& aNode ) final;
 #endif
         void* GetOpenGLContext() const;
-        void* GetWindowId() const;
     private:
         void Initialize();
         void Finalize();
@@ -53,8 +52,6 @@ namespace AeonGames
         void* mWindowId = nullptr;
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext = nullptr;
-        /// @todo This is probably too specific.
-        std::unordered_map<const Model*, std::shared_ptr<OpenGLModel>> mOpenGLModels;
     };
 }
 #endif
