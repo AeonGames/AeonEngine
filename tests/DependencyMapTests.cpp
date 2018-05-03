@@ -66,19 +66,19 @@ namespace AeonGames
             },
             {
                 "five", {"four"}, 5
-            } ,
+            },
             {
                 "nine", {"seven"}, 9
-            } ,
+            },
             {
                 "two", {}, 2
-            } ,
+            },
             {
                 "four", {}, 4
-            } ,
+            },
             {
                 "seven", {"one", "two", "three", "four", "five"}, 7
-            } ,
+            },
             {
                 "eight", {"nine"}, 8
             }
