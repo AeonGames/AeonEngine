@@ -1979,7 +1979,7 @@ inline float* GetInnerQuat ( float* past, float* current, float* future, float* 
     float tmp5[4];
     float tmp6[4];
     float tmp7[4];
-    return Normalize4 ( MultQuats ( current , ScalarMultiply4 ( QuatExp ( Add4 ( QuatLn ( MultQuats ( q , past, tmp1 ), tmp2 ) , QuatLn ( MultQuats ( q , future, tmp3 ), tmp4 ), tmp5 ), tmp6 ) , -0.25f, tmp7 ), out ) );
+    return Normalize4 ( MultQuats ( current, ScalarMultiply4 ( QuatExp ( Add4 ( QuatLn ( MultQuats ( q, past, tmp1 ), tmp2 ), QuatLn ( MultQuats ( q, future, tmp3 ), tmp4 ), tmp5 ), tmp6 ), -0.25f, tmp7 ), out ) );
 }
 
 /*! \brief Spherical quadrangle interpolation between two quaternions.

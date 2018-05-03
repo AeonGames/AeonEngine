@@ -111,21 +111,29 @@ endif()
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
-find_package(GTest)
-if(GTest_FOUND)
-    find_library(GMOCK_LIBRARY
-                NAMES gmock
-                      libgmock
-                      libgmock.a
-                PATHS "${GTEST_DIR}"
-                PATH_SUFFIXES lib)
-    find_library(GMOCK_LIBRARY_DEBUG
-                NAMES gmockd
-                      libgmockd
-                      libgmockd.a
-                PATHS "${GTEST_DIR}"
-                PATH_SUFFIXES lib)
+find_path (GTEST_SOURCE_PATH googletest PATHS /usr/src/googletest)
+if(GTEST_SOURCE_PATH)
+    add_subdirectory(${GTEST_SOURCE_PATH} ${CMAKE_BINARY_DIR}/googletest)
+    set(GTEST_LIBRARY gtest)
+    set(GMOCK_LIBRARY gmock)
     add_subdirectory(tests)
+else()
+    find_package(GTest)
+    if(GTest_FOUND)
+        find_library(GMOCK_LIBRARY
+                    NAMES gmock
+                        libgmock
+                        libgmock.a
+                    PATHS "${GTEST_DIR}"
+                    PATH_SUFFIXES lib)
+        find_library(GMOCK_LIBRARY_DEBUG
+                    NAMES gmockd
+                        libgmockd
+                        libgmockd.a
+                    PATHS "${GTEST_DIR}"
+                    PATH_SUFFIXES lib)
+        add_subdirectory(tests)
+    endif()
 endif()
 
 #######################################
