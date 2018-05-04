@@ -44,6 +44,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLWindow.h
     OpenGLFunctions.h
     OpenGLPipeline.h
+    OpenGLBuffer.h
     OpenGLMaterial.h
     OpenGLTexture.h
     OpenGLModel.h
@@ -59,6 +60,7 @@ endif()
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
     OpenGLWindow.cpp
+    OpenGLBuffer.cpp
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
     OpenGLTexture.cpp

@@ -158,7 +158,6 @@ namespace AeonGames
             glBufferData ( GL_ELEMENT_ARRAY_BUFFER, mMesh->GetIndexBuffer().size(), mMesh->GetIndexBuffer().data(), GL_STATIC_DRAW );
             OPENGL_CHECK_ERROR_THROW;
         }
-
     }
 
     void OpenGLMesh::Finalize()
