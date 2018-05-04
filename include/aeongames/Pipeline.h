@@ -53,6 +53,11 @@ namespace AeonGames
             Vector4Byte,
             Vector4ByteNormalized,
         };
+        class IRenderPipeline
+        {
+        public:
+            virtual ~IRenderPipeline() = 0;
+        };
         DLL Pipeline();
         DLL Pipeline ( const std::string& aFilename );
         DLL Pipeline ( const void* aBuffer, size_t aBufferSize );

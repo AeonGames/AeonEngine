@@ -85,6 +85,7 @@ namespace AeonGames
 
     void VulkanModel::Initialize()
     {
+#if 0
         if ( !mVulkanRenderer )
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
@@ -98,7 +99,6 @@ namespace AeonGames
                 std::get<1> ( i ) ? Get<VulkanMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mVulkanRenderer ) : nullptr,
                 Get<VulkanMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mVulkanRenderer ) );
         }
-#if 0
         if ( mModel->GetSkeleton() != nullptr )
         {
             mSkeleton = Get<VulkanSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mVulkanRenderer );

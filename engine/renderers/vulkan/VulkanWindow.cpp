@@ -16,7 +16,7 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
-#include "VulkanModel.h"
+#include "VulkanMesh.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -521,6 +521,19 @@ namespace AeonGames
             }
         } );
 #endif
+    }
+
+    void VulkanWindow::Render ( const Mesh& aMesh ) const
+    {
+        const Mesh::IRenderMesh* render_mesh = aMesh.GetRenderMesh();
+        if ( render_mesh )
+        {
+            render_mesh->Render();
+        }
+        else
+        {
+            aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, mVulkanRenderer ) );
+        }
     }
 
     const VkSwapchainKHR& VulkanWindow::GetSwapchain() const

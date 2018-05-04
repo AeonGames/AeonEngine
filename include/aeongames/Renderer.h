@@ -25,16 +25,6 @@ limitations under the License.
 namespace AeonGames
 {
     class Window;
-    //class Mesh;
-    //class Pipeline;
-    //class Texture;
-    //class Model;
-    //class RenderModel;
-    //class ModelInstance;
-    //class Matrix4x4;
-    //class Transform;
-    //class Scene;
-    //class Node;
     class Renderer
     {
     public:

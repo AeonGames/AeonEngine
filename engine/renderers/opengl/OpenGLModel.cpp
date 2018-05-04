@@ -76,6 +76,8 @@ namespace AeonGames
     {
         auto& meshes = mModel->GetMeshes();
         mAssemblies.reserve ( meshes.size() );
+#if 0
+        // Render specific Models may soon become obsolete.
         for ( auto& i : meshes )
         {
             mAssemblies.emplace_back (
@@ -83,6 +85,7 @@ namespace AeonGames
                 std::get<1> ( i ) ? Get<OpenGLMaterial> ( std::get<1> ( i ).get(), std::get<1> ( i ), mOpenGLRenderer ) : nullptr,
                 Get<OpenGLMesh> ( std::get<2> ( i ).get(), std::get<2> ( i ), mOpenGLRenderer ) );
         }
+#endif
         if ( mModel->GetSkeleton() != nullptr )
         {
             mOpenGLSkeleton = Get<OpenGLSkeleton> ( mModel->GetSkeleton().get(), mModel->GetSkeleton(), mOpenGLRenderer );

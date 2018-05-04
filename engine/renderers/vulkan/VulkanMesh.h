@@ -26,17 +26,17 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanMesh
+    class VulkanMesh : public Mesh::IRenderMesh
     {
     public:
-        VulkanMesh ( const std::shared_ptr<const Mesh>&  aMesh, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
+        VulkanMesh ( const Mesh& aMesh, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanMesh();
-        void Render() const;
+        void Render() const final;
     private:
         void Initialize();
         void Finalize();
         VkIndexType GetIndexType ( Mesh::IndexType aIndexType ) const;
-        std::shared_ptr<const Mesh> mMesh;
+        const Mesh& mMesh;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         VulkanBuffer mBuffer;
     };

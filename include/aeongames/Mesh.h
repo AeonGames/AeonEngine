@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_MESH_H
 #define AEONGAMES_MESH_H
 #include <cstdint>
+#include "Memory.h"
 
 namespace AeonGames
 {
@@ -48,6 +49,12 @@ namespace AeonGames
             FOUR_BYTES = 0x09,
             DOUBLE = 0x0A
         };
+        class IRenderMesh
+        {
+        public:
+            virtual void Render() const = 0;
+            virtual ~IRenderMesh() = 0;
+        };
         DLL Mesh ();
         DLL Mesh ( const std::string& aFilename );
         DLL Mesh ( const void* aBuffer, size_t aBufferSize );
@@ -64,14 +71,17 @@ namespace AeonGames
         DLL uint32_t GetIndexCount() const;
         DLL const std::string& GetVertexBuffer() const;
         DLL const std::string& GetIndexBuffer() const;
+        DLL void SetRenderMesh ( std::unique_ptr<IRenderMesh> aRenderMesh ) const;
+        DLL const IRenderMesh* const GetRenderMesh() const;
     private:
         void Load ( const MeshBuffer& aMeshBuffer );
-        std::string mFilename;
+        std::string mFilename{};
         float mCenterRadii[6];
-        uint32_t mVertexFlags = 0;
-        uint32_t mVertexCount = 0;
-        uint32_t mIndexType = 0;
-        uint32_t mIndexCount = 0;
+        uint32_t mVertexFlags{};
+        uint32_t mVertexCount{};
+        uint32_t mIndexType{};
+        uint32_t mIndexCount{};
+        mutable std::unique_ptr<IRenderMesh>mRenderMesh{};
         std::string mVertexBuffer;
         std::string mIndexBuffer;
     };

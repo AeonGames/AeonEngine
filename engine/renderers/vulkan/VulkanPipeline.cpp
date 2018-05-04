@@ -32,10 +32,10 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const std::shared_ptr<const Pipeline>&  aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
+    VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
         mPipeline ( aPipeline  ),
         mVulkanRenderer ( aVulkanRenderer ),
-        mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline->GetDefaultMaterial(), mVulkanRenderer ) ),
+        mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline.GetDefaultMaterial(), mVulkanRenderer ) ),
         mMatrices ( *aVulkanRenderer ),
         mProperties ( *aVulkanRenderer ),
         mSkeleton ( *aVulkanRenderer )
@@ -115,7 +115,7 @@ namespace AeonGames
 
     void VulkanPipeline::InitializePropertiesUniform()
     {
-        auto& properties = mPipeline->GetDefaultMaterial()->GetUniformMetaData();
+        auto& properties = mPipeline.GetDefaultMaterial()->GetUniformMetaData();
         if ( properties.size() )
         {
             mProperties.Initialize ( mDefaultMaterial->GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial->GetUniformData().data() ) );
@@ -128,7 +128,7 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeSkeletonUniform()
     {
-        if ( mPipeline->GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
+        if ( mPipeline.GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
             mSkeleton.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
             auto* joint_array = static_cast<float*> ( mSkeleton.Map ( 0, VK_WHOLE_SIZE ) );
@@ -212,7 +212,7 @@ namespace AeonGames
     {
         std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() == 0 ) ? 1 : 2;
+        descriptor_pool_sizes[0].descriptorCount = ( mPipeline.GetDefaultMaterial()->GetUniformBlockSize() == 0 ) ? 1 : 2;
         descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_pool_sizes[1].descriptorCount = 1;
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
@@ -259,7 +259,7 @@ namespace AeonGames
         {
             {
                 VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
-                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline->GetDefaultMaterial()->GetUniformBlockSize() },
+                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline.GetDefaultMaterial()->GetUniformBlockSize() },
                 VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
             }
         };
@@ -278,7 +278,7 @@ namespace AeonGames
         write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
         write_descriptor_sets.back().pImageInfo = nullptr;
         write_descriptor_sets.back().pTexelBufferView = nullptr;
-        if ( mPipeline->GetDefaultMaterial()->GetUniformBlockSize() )
+        if ( mPipeline.GetDefaultMaterial()->GetUniformBlockSize() )
         {
             write_descriptor_sets.emplace_back();
             write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -326,13 +326,13 @@ namespace AeonGames
         InitializeDescriptorPool();
         InitializeDescriptorSet();
         CompilerLinker compiler_linker;
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline->GetVertexShaderSource().c_str() );
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline->GetFragmentShaderSource().c_str() );
+        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline.GetVertexShaderSource().c_str() );
+        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline.GetFragmentShaderSource().c_str() );
         if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
         {
             std::ostringstream stream;
-            stream << mPipeline->GetVertexShaderSource() << std::endl;
-            stream << mPipeline->GetFragmentShaderSource() << std::endl;
+            stream << mPipeline.GetVertexShaderSource() << std::endl;
+            stream << mPipeline.GetFragmentShaderSource() << std::endl;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
                    " Error:" << std::endl << compiler_linker.GetLog();
             throw std::runtime_error ( stream.str().c_str() );
@@ -384,15 +384,15 @@ namespace AeonGames
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        uint32_t attributes = mPipeline->GetAttributes();
+        uint32_t attributes = mPipeline.GetAttributes();
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
         for ( auto& i : vertex_input_attribute_descriptions )
         {
             uint32_t attribute_bit = ( 1 << ffs ( attributes ) );
-            i.location = mPipeline->GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
+            i.location = mPipeline.GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             i.binding = 0;
-            i.format = GetVulkanFormat ( mPipeline->GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
-            i.offset = mPipeline->GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
+            i.format = GetVulkanFormat ( mPipeline.GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
+            i.offset = mPipeline.GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             attributes ^= attribute_bit;
         }
 
