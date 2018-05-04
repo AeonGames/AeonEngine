@@ -17,9 +17,10 @@ limitations under the License.
 #include "aeongames/Frustum.h"
 #include "aeongames/AABB.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Mesh.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
-#include "OpenGLModel.h"
+#include "OpenGLMesh.h"
 #include "OpenGLFunctions.h"
 #include <sstream>
 #include <iostream>
@@ -139,6 +140,19 @@ namespace AeonGames
             }
         } );
 #endif
+    }
+
+    void OpenGLWindow::Render ( const Mesh& aMesh ) const
+    {
+        const Mesh::IRenderMesh* render_mesh = aMesh.GetRenderMesh();
+        if ( render_mesh )
+        {
+            render_mesh->Render();
+        }
+        else
+        {
+            aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, mOpenGLRenderer ) );
+        }
     }
 
     const GLuint OpenGLWindow::GetMatricesBuffer() const

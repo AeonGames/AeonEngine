@@ -21,6 +21,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Scene;
+    class Mesh;
     class Window
     {
     public:
@@ -31,6 +32,7 @@ namespace AeonGames
         virtual void BeginRender() const = 0;
         virtual void EndRender() const = 0;
         virtual void Render ( const Scene* aScene ) const = 0;
+        virtual void Render ( const Mesh& aScene ) const = 0;
         ///@}
         ///@name Matrix Functions
         ///@{

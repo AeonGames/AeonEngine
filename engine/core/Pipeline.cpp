@@ -68,6 +68,10 @@ namespace AeonGames
     {
     }
 
+    DLL Pipeline::IRenderPipeline::~IRenderPipeline()
+    {
+    }
+
     Pipeline::Pipeline ( const std::string&  aFilename ) :
         mFilename ( aFilename ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {

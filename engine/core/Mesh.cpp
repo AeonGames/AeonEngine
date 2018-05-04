@@ -75,6 +75,7 @@ namespace AeonGames
     }
 
     Mesh::~Mesh() = default;
+    DLL Mesh::IRenderMesh::~IRenderMesh() = default;
 
     const float * const Mesh::GetCenterRadii() const
     {
@@ -138,6 +139,16 @@ namespace AeonGames
                     mIndexCount = 0;
         mVertexBuffer.clear();
         mIndexBuffer.clear();
+    }
+
+    void Mesh::SetRenderMesh ( std::unique_ptr<IRenderMesh> aRenderMesh ) const
+    {
+        mRenderMesh = std::move ( aRenderMesh );
+    }
+
+    const Mesh::IRenderMesh* const Mesh::GetRenderMesh() const
+    {
+        return mRenderMesh.get();
     }
 
     uint32_t Mesh::GetStride () const

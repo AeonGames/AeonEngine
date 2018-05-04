@@ -34,6 +34,7 @@ namespace AeonGames
         void BeginRender() const final;
         void EndRender() const final;
         void Render ( const Scene* aScene ) const final;
+        void Render ( const Mesh& aMesh ) const final;
     private:
         void Initialize();
         void Finalize();

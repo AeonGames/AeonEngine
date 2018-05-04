@@ -20,21 +20,21 @@ limitations under the License.
 #include <array>
 #include <vulkan/vulkan.h>
 #include "aeongames/Utilities.h"
+#include "aeongames/Pipeline.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames
 {
-    class Pipeline;
     class Matrix4x4;
     class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
     class VulkanMaterial;
-    class VulkanPipeline
+    class VulkanPipeline : public Pipeline::IRenderPipeline
     {
     public:
-        VulkanPipeline ( const std::shared_ptr<const Pipeline>&  aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
-        ~VulkanPipeline();
+        VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
+        ~VulkanPipeline() final;
         void Use ( const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
         VkBuffer GetSkeletonBuffer() const;
         void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix );
@@ -54,7 +54,7 @@ namespace AeonGames
         void FinalizeDescriptorSet();
         void Initialize();
         void Finalize();
-        std::shared_ptr<const Pipeline> mPipeline;
+        const Pipeline& mPipeline;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };

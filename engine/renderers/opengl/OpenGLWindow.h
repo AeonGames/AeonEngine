@@ -36,6 +36,7 @@ namespace AeonGames
         void BeginRender() const final;
         void EndRender() const final;
         void Render ( const Scene* aScene ) const final;
+        void Render ( const Mesh& aMesh ) const final;
         const GLuint GetMatricesBuffer() const;
     private:
         void Initialize();
