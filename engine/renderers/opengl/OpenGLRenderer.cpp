@@ -45,4 +45,9 @@ namespace AeonGames
     {
         return mOpenGLContext;
     }
+
+    void* OpenGLRenderer::GetWindowId() const
+    {
+        return mWindowId;
+    }
 }

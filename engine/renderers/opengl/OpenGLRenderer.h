@@ -45,6 +45,7 @@ namespace AeonGames
         void Unload ( const Node& aNode ) final;
 #endif
         void* GetOpenGLContext() const;
+        void* GetWindowId() const;
     private:
         void Initialize();
         void Finalize();
