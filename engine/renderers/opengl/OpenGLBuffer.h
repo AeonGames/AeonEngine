@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLBUFFER_H
 #define AEONGAMES_OPENGLBUFFER_H
 #include <cstddef>
+#include "OpenGLFunctions.h"
 namespace AeonGames
 {
     class OpenGLRenderer;
@@ -23,21 +24,21 @@ namespace AeonGames
     {
     public:
         OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer );
-        OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer, const size_t aSize, const size_t aUsage, const size_t aProperties, const void *aData = nullptr );
+        OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer, const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         ~OpenGLBuffer();
-        void Initialize ( const size_t aSize, const size_t aUsage, const size_t aProperties, const void *aData = nullptr );
+        void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         void Finalize();
-        void WriteMemory ( const size_t aOffset, const  size_t aSize, const void *aData = nullptr ) const ;
-        void* Map ( const size_t aOffset, const size_t aSize ) const;
+        void WriteMemory ( const GLintptr aOffset, const GLsizeiptr aSize, const void *aData = nullptr ) const ;
+        void* Map ( const GLbitfield aAccess ) const;
+        void* MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const;
         void Unmap() const;
         size_t GetSize() const;
     private:
         void Initialize ( const void *aData );
         const OpenGLRenderer& mOpenGLRenderer;
-        uint32_t mBuffer{};
-        size_t mSize{};
-        size_t mUsage{};
-        size_t mProperties{};
+        GLuint mBuffer{};
+        GLsizei mSize{};
+        GLenum mUsage{};
     };
 }
 #endif
