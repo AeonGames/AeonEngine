@@ -52,11 +52,13 @@ namespace AeonGames
     {
         QModelIndex index = treeView->currentIndex();
         mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index );
+        treeView->expand ( index );
     }
 
     void SceneWindow::on_actionRemoveNode_triggered()
     {
-        mSceneModel.RemoveNode ( treeView->currentIndex() );
+        QModelIndex index = treeView->currentIndex();
+        mSceneModel.RemoveNode ( index.row() , index.parent() );
     }
 
     void SceneWindow::on_customContextMenuRequested ( const QPoint& aPoint )

@@ -294,7 +294,7 @@ namespace AeonGames
 
     void SceneModel::InsertNode ( int row, const QModelIndex & parent )
     {
-        beginResetModel();
+        beginInsertRows ( parent, row, row );
         if ( parent.isValid() )
         {
             reinterpret_cast<Scene::Node*> ( parent.internalPointer() )->Insert ( row, {} );
@@ -303,26 +303,21 @@ namespace AeonGames
         {
             mScene.Insert ( row, {} );
         }
-        endResetModel();
+        endInsertRows();
     }
 
-    void SceneModel::RemoveNode ( const QModelIndex & index )
+    void SceneModel::RemoveNode ( int row, const QModelIndex & parent )
     {
-        beginResetModel();
-        if ( index.isValid() )
+        beginRemoveRows ( parent, row, row );
+        if ( parent.isValid() )
         {
-            Scene::Node* node = reinterpret_cast<Scene::Node*> ( index.internalPointer() );
-            Scene::Node* parent = node->GetParent();
-            if ( parent )
-            {
-                parent->Erase ( *node );
-            }
-            else
-            {
-                mScene.Erase ( *node );
-            }
+            reinterpret_cast<Scene::Node*> ( parent.internalPointer() )->Erase ( row );
         }
-        endResetModel();
+        else
+        {
+            mScene.Erase ( row );
+        }
+        endRemoveRows();
     }
 
     const Scene& SceneModel::GetScene() const
