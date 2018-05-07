@@ -25,8 +25,8 @@ namespace AeonGames
     OpenGLBuffer::OpenGLBuffer ( const OpenGLRenderer & aOpenGLRenderer ) : mOpenGLRenderer ( aOpenGLRenderer )
     {
     }
-    OpenGLBuffer::OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer, const size_t aSize, const size_t aUsage, const size_t aProperties, const void *aData ) :
-        mOpenGLRenderer ( aOpenGLRenderer ), mSize ( aSize ), mUsage ( aUsage ), mProperties ( aProperties )
+    OpenGLBuffer::OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer, const GLsizei aSize, const GLenum aUsage, const void *aData ) :
+        mOpenGLRenderer ( aOpenGLRenderer ), mSize ( aSize ), mUsage ( aUsage )
     {
         try
         {
@@ -44,33 +44,44 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLBuffer::Initialize ( const size_t aSize, const size_t aUsage, const size_t aProperties, const void * aData )
+    void OpenGLBuffer::Initialize ( const GLsizei aSize, const GLenum aUsage, const void * aData )
     {
-        if ( mBuffer != 0 )
-        {
-            throw ( std::runtime_error ( "Buffer already initialized." ) );
-        }
+        Finalize();
         mSize = aSize;
         mUsage = aUsage;
-        mProperties = aProperties;
         Initialize ( aData );
     }
 
-    void OpenGLBuffer::WriteMemory ( const size_t aOffset, const size_t aSize, const void * aData ) const
+    void OpenGLBuffer::WriteMemory ( const GLintptr aOffset, const GLsizeiptr aSize, const void * aData ) const
     {
-        if ( aData )
+        if ( ( glIsBuffer ( mBuffer ) ) && ( aData ) )
         {
+            glNamedBufferSubData ( mBuffer,
+                                   aOffset,
+                                   aSize,
+                                   aData );
+            OPENGL_CHECK_ERROR_THROW;
         }
     }
 
-    void * OpenGLBuffer::Map ( const size_t aOffset, const size_t aSize ) const
+    void * OpenGLBuffer::Map ( const GLbitfield aAccess ) const
     {
-        void* data = nullptr;
+        void* data = glMapNamedBuffer ( mBuffer, aAccess );
+        OPENGL_CHECK_ERROR_THROW;
+        return data;
+    }
+
+    void * OpenGLBuffer::MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const
+    {
+        void* data = glMapNamedBufferRange ( mBuffer, aOffset, aSize, aAccess );
+        OPENGL_CHECK_ERROR_THROW;
         return data;
     }
 
     void OpenGLBuffer::Unmap() const
     {
+        glUnmapNamedBuffer ( mBuffer );
+        OPENGL_CHECK_ERROR_THROW;
     }
 
     size_t OpenGLBuffer::GetSize() const
@@ -84,13 +95,22 @@ namespace AeonGames
         {
             return;
         }
-        WriteMemory ( 0, mSize, aData );
+        glGenBuffers ( 1, &mBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glNamedBufferData (  mBuffer,
+                             mSize,
+                             aData,
+                             mUsage );
+        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLBuffer::Finalize()
     {
-        if ( mBuffer != 0 )
+        if ( glIsBuffer ( mBuffer ) )
         {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteBuffers ( 1, &mBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
             mBuffer = 0;
         }
     }
