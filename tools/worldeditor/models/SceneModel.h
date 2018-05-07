@@ -51,7 +51,7 @@ namespace AeonGames
         QStringList mimeTypes() const override;
         //@}
         void InsertNode ( int row, const QModelIndex & parent = QModelIndex() );
-        void RemoveNode ( const QModelIndex & index );
+        void RemoveNode ( int row, const QModelIndex & parent = QModelIndex() );
         const Scene& GetScene() const;
     private:
         Scene mScene{};
