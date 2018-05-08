@@ -33,7 +33,6 @@ limitations under the License.
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include "glcorearb.h"
-#include "glxext.h"
 #endif // ANDROID
 #include <sstream>
 #include <iostream>

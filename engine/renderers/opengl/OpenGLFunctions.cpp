@@ -46,7 +46,6 @@ limitations under the License.
 #else
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include "glxext.h"
 #define GLGETPROCADDRESS(glFunctionType,glFunction) \
     if(glFunction==nullptr) { \
     glFunction = ( glFunctionType ) glXGetProcAddress ( (const GLubyte*) #glFunction ); \
