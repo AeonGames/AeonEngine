@@ -36,7 +36,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial ( const std::shared_ptr<const Material>&  aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
+    OpenGLMaterial::OpenGLMaterial ( const Material& aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
         mMaterial ( aMaterial )
     {
         try
@@ -67,14 +67,10 @@ namespace AeonGames
 
     void OpenGLMaterial::Initialize()
     {
-        if ( !mMaterial )
-        {
-            throw std::runtime_error ( "Material cannot be null." );
-        }
-        mUniformData.resize ( mMaterial->GetUniformBlockSize() );
+        mUniformData.resize ( mMaterial.GetUniformBlockSize() );
         uint32_t offset = 0;
         GLint image_unit = 0;
-        for ( auto& i : mMaterial->GetUniformMetaData() )
+        for ( auto& i : mMaterial.GetUniformMetaData() )
         {
             uint32_t advance = 0;
             switch ( i.GetType() )

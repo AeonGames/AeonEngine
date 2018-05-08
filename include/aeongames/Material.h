@@ -25,6 +25,11 @@ namespace AeonGames
     class Material
     {
     public:
+        class IRenderMaterial
+        {
+        public:
+            virtual ~IRenderMaterial() = 0;
+        };
         DLL Material();
         DLL Material ( const std::string& aFilename );
         DLL Material ( const void* aBuffer, size_t aBufferSize );

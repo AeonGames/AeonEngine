@@ -20,23 +20,23 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include "aeongames/Memory.h"
+#include "aeongames/Material.h"
 
 namespace AeonGames
 {
-    class Material;
     class OpenGLRenderer;
     class OpenGLTexture;
-    class OpenGLMaterial
+    class OpenGLMaterial : public Material::IRenderMaterial
     {
     public:
-        OpenGLMaterial ( const std::shared_ptr<const Material>&  aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
-        ~OpenGLMaterial();
+        OpenGLMaterial ( const Material& aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
+        ~OpenGLMaterial() final;
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<OpenGLTexture>>& GetTextures() const;
     private:
         void Initialize();
         void Finalize();
-        std::shared_ptr<const Material> mMaterial;
+        const Material& mMaterial;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         std::vector<uint8_t> mUniformData;
         std::vector<std::shared_ptr<OpenGLTexture>> mTextures;

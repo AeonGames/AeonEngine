@@ -76,6 +76,8 @@ namespace AeonGames
 
     Material::~Material()
         = default;
+    DLL Material::IRenderMaterial::~IRenderMaterial()
+        = default;
 
     void Material::Load ( const std::string&  aFilename )
     {

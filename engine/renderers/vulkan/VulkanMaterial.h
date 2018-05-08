@@ -24,14 +24,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class Material;
     class VulkanRenderer;
     class VulkanTexture;
-    class VulkanMaterial
+    class VulkanMaterial : Material::IRenderMaterial
     {
     public:
-        VulkanMaterial ( const std::shared_ptr<const Material>&  aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
-        ~VulkanMaterial();
+        VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
+        ~VulkanMaterial() final;
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
         const VkDescriptorSet& GetDescriptorSet() const;
@@ -46,7 +45,7 @@ namespace AeonGames
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
-        std::shared_ptr<const Material> mMaterial;
+        const Material& mMaterial;
         std::vector<uint8_t> mUniformData;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;

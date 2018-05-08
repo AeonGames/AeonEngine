@@ -51,6 +51,7 @@ namespace AeonGames
 
     void OpenGLModel::Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
+#if 0
         if ( mOpenGLSkeleton && mModel.get() == aInstance->GetModel().get() )
         {
             mOpenGLSkeleton->SetPose ( aInstance->GetSkeletonAnimation() );
@@ -70,6 +71,7 @@ namespace AeonGames
             }
             std::get<2> ( mAssemblies[i] )->Render();
         }
+#endif
     }
 
     void OpenGLModel::Initialize()
