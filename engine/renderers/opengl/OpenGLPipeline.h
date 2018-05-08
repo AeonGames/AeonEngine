@@ -20,18 +20,18 @@ limitations under the License.
 #include "OpenGLFunctions.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Uniform.h"
+#include "OpenGLMaterial.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLMaterial;
     class OpenGLTexture;
     class OpenGLPipeline : public Pipeline::IRenderPipeline
     {
     public:
         OpenGLPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer );
         ~OpenGLPipeline() final;
-        void Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial = nullptr ) const;
+        void Use ( const OpenGLMaterial* aMaterial = nullptr ) const;
     private:
         void Initialize();
         void Finalize();
@@ -39,7 +39,7 @@ namespace AeonGames
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         uint32_t mProgramId{};
         uint32_t mPropertiesBuffer{};
-        const std::shared_ptr<OpenGLMaterial> mDefaultMaterial;
+        OpenGLMaterial mDefaultMaterial;
     };
 }
 #endif

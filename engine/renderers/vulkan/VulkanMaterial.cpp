@@ -38,7 +38,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const std::shared_ptr<const Material>& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
+    VulkanMaterial::VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ),
         mMaterial ( aMaterial )
     {
@@ -82,13 +82,9 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        if ( !mMaterial )
-        {
-            throw std::runtime_error ( "Material cannot be null." );
-        }
-        mUniformData.resize ( mMaterial->GetUniformBlockSize() );
+        mUniformData.resize ( mMaterial.GetUniformBlockSize() );
         uint32_t offset = 0;
-        for ( auto& i : mMaterial->GetUniformMetaData() )
+        for ( auto& i : mMaterial.GetUniformMetaData() )
         {
             uint32_t advance = 0;
             switch ( i.GetType() )
@@ -128,15 +124,15 @@ namespace AeonGames
     }
     void VulkanMaterial::InitializeDescriptorSetLayout()
     {
-        if ( !mMaterial->GetUniformMetaData().size() )
+        if ( !mMaterial.GetUniformMetaData().size() )
         {
             return;
         }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         /*  Reserve enough slots as if all uniforms where shaders, better safe than sorry.*/
-        descriptor_set_layout_bindings.reserve ( mMaterial->GetUniformMetaData().size() );
+        descriptor_set_layout_bindings.reserve ( mMaterial.GetUniformMetaData().size() );
 
-        for ( auto& i : mMaterial->GetUniformMetaData() )
+        for ( auto& i : mMaterial.GetUniformMetaData() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {
@@ -176,12 +172,12 @@ namespace AeonGames
 
     void VulkanMaterial::InitializeDescriptorPool()
     {
-        if ( !mMaterial->GetUniformMetaData().size() )
+        if ( !mMaterial.GetUniformMetaData().size() )
         {
             return;
         }
         uint32_t sampler_descriptor_count = 0;
-        for ( auto&i : mMaterial->GetUniformMetaData() )
+        for ( auto&i : mMaterial.GetUniformMetaData() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {
@@ -245,7 +241,7 @@ namespace AeonGames
         }
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets;
-        write_descriptor_sets.reserve ( mMaterial->GetUniformMetaData().size() );
+        write_descriptor_sets.reserve ( mMaterial.GetUniformMetaData().size() );
 
         for ( uint32_t i = 0; i < mTextures.size(); ++i )
         {

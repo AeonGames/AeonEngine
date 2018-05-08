@@ -28,8 +28,7 @@ namespace AeonGames
     OpenGLPipeline::OpenGLPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer ) :
         mPipeline ( aPipeline ),
         mOpenGLRenderer ( aOpenGLRenderer ),
-        /**@todo Should use the resource cache to assign the default material. */
-        mDefaultMaterial ( std::make_shared<OpenGLMaterial> ( mPipeline.GetDefaultMaterial(), mOpenGLRenderer ) )
+        mDefaultMaterial ( mPipeline.GetDefaultMaterial(), mOpenGLRenderer )
     {
         try
         {
@@ -47,9 +46,9 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLPipeline::Use ( const std::shared_ptr<OpenGLMaterial>& aMaterial ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial ) const
     {
-        const std::shared_ptr<OpenGLMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
+        const OpenGLMaterial* material = ( aMaterial ) ? aMaterial : &mDefaultMaterial;
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
         for ( GLenum i = 0; i < material->GetTextures().size(); ++i )
@@ -179,10 +178,10 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mPipeline.GetDefaultMaterial()->GetUniformBlockSize() )
+        if ( mPipeline.GetDefaultMaterial().GetUniformBlockSize() )
         {
 #if 1
-            for ( GLenum i = 0; i < mDefaultMaterial->GetTextures().size(); ++i )
+            for ( GLenum i = 0; i < mDefaultMaterial.GetTextures().size(); ++i )
             {
                 glUniform1i ( i, i );
                 OPENGL_CHECK_ERROR_THROW;
@@ -190,7 +189,7 @@ namespace AeonGames
 #else
             // Keeping this code for reference
             GLuint uniform = 0;
-            for ( auto& i : mPipeline.GetDefaultMaterial()->GetUniformMetaData() )
+            for ( auto& i : mPipeline.GetDefaultMaterial().GetUniformMetaData() )
             {
                 if ( i.GetType() == Uniform::SAMPLER_2D )
                 {

@@ -177,8 +177,8 @@ namespace AeonGames
         mVertexShader.append ( transforms );
         mFragmentShader.append ( transforms );
 
-        mDefaultMaterial = std::make_shared<Material> ( aPipelineBuffer.default_material() );
-        if ( mDefaultMaterial->GetUniformMetaData().size() )
+        mDefaultMaterial = Material ( aPipelineBuffer.default_material() );
+        if ( mDefaultMaterial.GetUniformMetaData().size() )
         {
             uint32_t sampler_binding = 0;
             std::string properties (
@@ -189,7 +189,7 @@ namespace AeonGames
                 "#endif\n"
             );
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : mDefaultMaterial->GetUniformMetaData() )
+            for ( auto& i : mDefaultMaterial.GetUniformMetaData() )
             {
                 switch ( i.GetType() )
                 {
@@ -292,8 +292,9 @@ namespace AeonGames
         mAttributes = 0;
         mVertexShader.clear();
         mFragmentShader.clear();
-        mDefaultMaterial.reset();
+        mDefaultMaterial.Unload();
     }
+
     const std::string & Pipeline::GetVertexShaderSource() const
     {
         return mVertexShader;
@@ -359,7 +360,7 @@ namespace AeonGames
         return offset;
     }
 
-    const std::shared_ptr<Material> Pipeline::GetDefaultMaterial() const
+    const Material& Pipeline::GetDefaultMaterial() const
     {
         return mDefaultMaterial;
     }
