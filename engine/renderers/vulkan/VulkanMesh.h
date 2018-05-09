@@ -31,7 +31,7 @@ namespace AeonGames
     public:
         VulkanMesh ( const Mesh& aMesh, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanMesh();
-        void Render() const final;
+        void Render(uint32_t aInstanceCount=1, uint32_t aFirstInstance=0) const final;
     private:
         void Initialize();
         void Finalize();

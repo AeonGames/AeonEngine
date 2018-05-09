@@ -54,6 +54,9 @@ else()
 endif()
 
 target_link_libraries(unit-tests AeonEngine ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES})
-set_target_properties(unit-tests PROPERTIES
-    COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
+if(MSVC)
+ # VCPKG compiles GTest/GMock DLLs.
+ set_target_properties(unit-tests PROPERTIES
+  COMPILE_FLAGS "-DGTEST_LINKED_AS_SHARED_LIBRARY -D_CRT_SECURE_NO_WARNINGS -nowarn:4251")
+endif()
 add_test(NAME unit-tests COMMAND unit-tests)

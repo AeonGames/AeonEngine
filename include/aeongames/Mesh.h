@@ -52,8 +52,9 @@ namespace AeonGames
         class IRenderMesh
         {
         public:
-            virtual void Render() const = 0;
-            virtual ~IRenderMesh() = 0;
+            /// @todo Render does NOT really need to be part of the interface.
+            virtual void Render(uint32_t aInstanceCount=1, uint32_t aFirstInstance=0) const = 0;
+            DLL virtual ~IRenderMesh() = 0;
         };
         DLL Mesh ();
         DLL Mesh ( const std::string& aFilename );

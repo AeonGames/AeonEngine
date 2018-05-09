@@ -21,6 +21,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/Utilities.h"
 #include "aeongames/Pipeline.h"
+#include "VulkanMaterial.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames
@@ -29,13 +30,12 @@ namespace AeonGames
     class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
-    class VulkanMaterial;
     class VulkanPipeline : public Pipeline::IRenderPipeline
     {
     public:
         VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
         ~VulkanPipeline() final;
-        void Use ( const std::shared_ptr<VulkanMaterial>& aMaterial = nullptr ) const;
+        void Use ( const VulkanMaterial* aMaterial = nullptr ) const;
         VkBuffer GetSkeletonBuffer() const;
         void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix );
         void SetViewMatrix ( const Matrix4x4& aViewMatrix );
@@ -58,15 +58,15 @@ namespace AeonGames
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };
-        const std::shared_ptr<VulkanMaterial> mDefaultMaterial;
         VulkanBuffer mMatrices;
         VulkanBuffer mProperties;
         VulkanBuffer mSkeleton;
-        VkPipelineLayout mVkPipelineLayout = VK_NULL_HANDLE;
-        VkPipeline mVkPipeline = VK_NULL_HANDLE;
-        VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
-        VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
-        VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;
+        VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
+        VkPipeline mVkPipeline{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mVkDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
+        VulkanMaterial mDefaultMaterial;
     };
 }
 #endif

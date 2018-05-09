@@ -25,7 +25,9 @@ limitations under the License.
 #include <array>
 #include <utility>
 #include "aeongames/Frustum.h"
-#include "aeongames/ModelInstance.h"
+#include "aeongames/Material.h"
+#include "aeongames/Pipeline.h"
+#include "aeongames/Mesh.h"
 #include "aeongames/AABB.h"
 #include "aeongames/Scene.h"
 
@@ -510,7 +512,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial ) const
+    void VulkanWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial, uint32_t aInstanceCount, uint32_t aFirstInstance ) const
     {
 #if 0
         Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };
