@@ -13,13 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/ModelInstance.h"
 #include "aeongames/Frustum.h"
 #include "aeongames/AABB.h"
-#include "aeongames/Scene.h"
+#include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
+#include "OpenGLPipeline.h"
+#include "OpenGLMaterial.h"
 #include "OpenGLMesh.h"
 #include "OpenGLFunctions.h"
 #include <sstream>
@@ -127,7 +129,7 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const Scene* aScene ) const
+    void OpenGLWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial ) const
     {
 #if 0
         Frustum frustum ( projection_matrix * view_matrix );
@@ -140,18 +142,27 @@ namespace AeonGames
             }
         } );
 #endif
-    }
-
-    void OpenGLWindow::Render ( const Mesh& aMesh ) const
-    {
+        const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
+        const Pipeline::IRenderPipeline* render_pipeline = aPipeline.GetRenderPipeline();
+        const Material::IRenderMaterial* render_material = material->GetRenderMaterial();
         const Mesh::IRenderMesh* render_mesh = aMesh.GetRenderMesh();
-        if ( render_mesh )
+        if ( render_pipeline && render_mesh && render_material )
         {
-            render_mesh->Render();
         }
         else
         {
-            aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, mOpenGLRenderer ) );
+            if ( !render_pipeline )
+            {
+                aPipeline.SetRenderPipeline ( std::make_unique<OpenGLPipeline> ( aPipeline, mOpenGLRenderer ) );
+            }
+            if ( !render_mesh )
+            {
+                aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, mOpenGLRenderer ) );
+            }
+            if ( !render_material )
+            {
+                material->SetRenderMaterial ( std::make_unique<OpenGLMaterial> ( *material, mOpenGLRenderer ) );
+            }
         }
     }
 

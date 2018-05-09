@@ -22,6 +22,8 @@ namespace AeonGames
 {
     class Scene;
     class Mesh;
+    class Pipeline;
+    class Material;
     class Window
     {
     public:
@@ -31,8 +33,7 @@ namespace AeonGames
         ///@{
         virtual void BeginRender() const = 0;
         virtual void EndRender() const = 0;
-        virtual void Render ( const Scene* aScene ) const = 0;
-        virtual void Render ( const Mesh& aScene ) const = 0;
+        virtual void Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial = nullptr ) const = 0;
         ///@}
         ///@name Matrix Functions
         ///@{

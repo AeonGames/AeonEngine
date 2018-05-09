@@ -41,9 +41,12 @@ namespace AeonGames
         DLL void Unload();
         DLL const std::vector<Uniform>& GetUniformMetaData() const;
         DLL uint32_t GetUniformBlockSize() const;
+        DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
+        DLL const IRenderMaterial* const GetRenderMaterial() const;
     private:
         std::string mFilename;
         std::vector<Uniform> mUniformMetaData;
+        mutable std::unique_ptr<IRenderMaterial> mRenderMaterial{};
     };
 }
 #endif

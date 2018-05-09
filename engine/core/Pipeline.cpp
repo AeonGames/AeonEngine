@@ -177,7 +177,7 @@ namespace AeonGames
         mVertexShader.append ( transforms );
         mFragmentShader.append ( transforms );
 
-        mDefaultMaterial = Material ( aPipelineBuffer.default_material() );
+        mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
         if ( mDefaultMaterial.GetUniformMetaData().size() )
         {
             uint32_t sampler_binding = 0;
@@ -363,5 +363,15 @@ namespace AeonGames
     const Material& Pipeline::GetDefaultMaterial() const
     {
         return mDefaultMaterial;
+    }
+
+    void Pipeline::SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const
+    {
+        mRenderPipeline = std::move ( aRenderPipeline );
+    }
+
+    const Pipeline::IRenderPipeline* const Pipeline::GetRenderPipeline() const
+    {
+        return mRenderPipeline.get();
     }
 }

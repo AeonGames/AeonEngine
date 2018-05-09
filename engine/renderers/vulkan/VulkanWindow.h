@@ -33,8 +33,7 @@ namespace AeonGames
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() const final;
         void EndRender() const final;
-        void Render ( const Scene* aScene ) const final;
-        void Render ( const Mesh& aMesh ) const final;
+        void Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial = nullptr ) const final;
     private:
         void Initialize();
         void Finalize();
