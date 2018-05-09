@@ -74,6 +74,8 @@ namespace AeonGames
         DLL uint32_t GetSize ( AttributeBits aAttributeBit ) const;
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
         DLL const Material& GetDefaultMaterial() const;
+        DLL void SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const;
+        DLL const IRenderPipeline* const GetRenderPipeline() const;
     private:
         void Load ( const PipelineBuffer& aPipelineBuffer );
         std::string mFilename;
@@ -81,6 +83,7 @@ namespace AeonGames
         std::string mVertexShader;
         std::string mFragmentShader;
         Material mDefaultMaterial;
+        mutable std::unique_ptr<IRenderPipeline> mRenderPipeline{};
     };
 }
 #endif

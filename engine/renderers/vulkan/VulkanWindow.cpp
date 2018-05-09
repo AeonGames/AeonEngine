@@ -16,6 +16,8 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
+#include "VulkanPipeline.h"
+#include "VulkanMaterial.h"
 #include "VulkanMesh.h"
 #include <sstream>
 #include <iostream>
@@ -508,7 +510,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Render ( const Scene* aScene ) const
+    void VulkanWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial ) const
     {
 #if 0
         Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };
@@ -521,18 +523,27 @@ namespace AeonGames
             }
         } );
 #endif
-    }
-
-    void VulkanWindow::Render ( const Mesh& aMesh ) const
-    {
+        const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
+        const Pipeline::IRenderPipeline* render_pipeline = aPipeline.GetRenderPipeline();
+        const Material::IRenderMaterial* render_material = material->GetRenderMaterial();
         const Mesh::IRenderMesh* render_mesh = aMesh.GetRenderMesh();
-        if ( render_mesh )
+        if ( render_pipeline && render_mesh && render_material )
         {
-            render_mesh->Render();
         }
         else
         {
-            aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, mVulkanRenderer ) );
+            if ( !render_pipeline )
+            {
+                aPipeline.SetRenderPipeline ( std::make_unique<VulkanPipeline> ( aPipeline, mVulkanRenderer ) );
+            }
+            if ( !render_mesh )
+            {
+                aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, mVulkanRenderer ) );
+            }
+            if ( !render_material )
+            {
+                material->SetRenderMaterial ( std::make_unique<VulkanMaterial> ( *material, mVulkanRenderer ) );
+            }
         }
     }
 

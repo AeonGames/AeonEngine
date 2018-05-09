@@ -212,7 +212,7 @@ namespace AeonGames
                     }
                 }
                 mWindow->BeginRender();
-                mWindow->Render ( nullptr );
+                ///@todo Add render commands
                 mWindow->EndRender();
                 return true;
             }

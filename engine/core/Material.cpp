@@ -90,6 +90,7 @@ namespace AeonGames
 
     void Material::Load ( const void* aBuffer, size_t aBufferSize )
     {
+        Unload();
         static MaterialBuffer material_buffer;
         LoadProtoBufObject ( material_buffer, aBuffer, aBufferSize, "AEONMTL" );
         Load ( material_buffer );
@@ -98,7 +99,7 @@ namespace AeonGames
 
     void Material::Load ( const MaterialBuffer& aMaterialBuffer )
     {
-        mUniformMetaData.clear();
+        Unload();
         mUniformMetaData.reserve ( aMaterialBuffer.property().size() );
         for ( auto& i : aMaterialBuffer.property() )
         {
@@ -178,5 +179,15 @@ namespace AeonGames
             }
         }
         return size;
+    }
+
+    void Material::SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const
+    {
+        mRenderMaterial = std::move ( aRenderMaterial );
+    }
+
+    const Material::IRenderMaterial* const Material::GetRenderMaterial() const
+    {
+        return mRenderMaterial.get();
     }
 }
