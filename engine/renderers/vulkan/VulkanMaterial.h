@@ -26,7 +26,7 @@ namespace AeonGames
 {
     class VulkanRenderer;
     class VulkanTexture;
-    class VulkanMaterial : Material::IRenderMaterial
+    class VulkanMaterial : public Material::IRenderMaterial
     {
     public:
         VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );

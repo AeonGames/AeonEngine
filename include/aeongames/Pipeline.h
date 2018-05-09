@@ -56,7 +56,7 @@ namespace AeonGames
         class IRenderPipeline
         {
         public:
-            virtual ~IRenderPipeline() = 0;
+            DLL virtual ~IRenderPipeline() = 0;
         };
         DLL Pipeline();
         DLL Pipeline ( const std::string& aFilename );

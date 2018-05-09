@@ -35,10 +35,10 @@ namespace AeonGames
     VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
         mPipeline ( aPipeline  ),
         mVulkanRenderer ( aVulkanRenderer ),
-        mDefaultMaterial ( std::make_shared<VulkanMaterial> ( mPipeline.GetDefaultMaterial(), mVulkanRenderer ) ),
         mMatrices ( *aVulkanRenderer ),
         mProperties ( *aVulkanRenderer ),
-        mSkeleton ( *aVulkanRenderer )
+        mSkeleton ( *aVulkanRenderer ),
+        mDefaultMaterial ( mPipeline.GetDefaultMaterial(), mVulkanRenderer )
     {
         try
         {
@@ -56,9 +56,9 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanPipeline::Use ( const std::shared_ptr<VulkanMaterial>& aMaterial ) const
+    void VulkanPipeline::Use ( const VulkanMaterial* aMaterial ) const
     {
-        const std::shared_ptr<VulkanMaterial>& material = ( aMaterial ) ? aMaterial : mDefaultMaterial;
+        const VulkanMaterial* material = ( aMaterial ) ? aMaterial : &mDefaultMaterial;
         std::array<VkDescriptorSet, 2> descriptor_sets{ {mVkDescriptorSet, material->GetDescriptorSet() }};
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
 #if 0
@@ -118,7 +118,7 @@ namespace AeonGames
         auto& properties = mPipeline.GetDefaultMaterial().GetUniformMetaData();
         if ( properties.size() )
         {
-            mProperties.Initialize ( mDefaultMaterial->GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial->GetUniformData().data() ) );
+            mProperties.Initialize ( mDefaultMaterial.GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial.GetUniformData().data() ) );
         }
     }
 
@@ -503,7 +503,7 @@ namespace AeonGames
             which at maximum must be 128 bytes to be safe. */
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
-        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts { {mVkDescriptorSetLayout, mDefaultMaterial->GetDescriptorSetLayout() } };
+        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts { {mVkDescriptorSetLayout, mDefaultMaterial.GetDescriptorSetLayout() } };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;

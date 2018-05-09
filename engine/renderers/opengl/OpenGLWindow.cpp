@@ -129,7 +129,7 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial ) const
+    void OpenGLWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial, uint32_t aInstanceCount, uint32_t aFirstInstance ) const
     {
 #if 0
         Frustum frustum ( projection_matrix * view_matrix );
@@ -143,11 +143,15 @@ namespace AeonGames
         } );
 #endif
         const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
-        const Pipeline::IRenderPipeline* render_pipeline = aPipeline.GetRenderPipeline();
-        const Material::IRenderMaterial* render_material = material->GetRenderMaterial();
-        const Mesh::IRenderMesh* render_mesh = aMesh.GetRenderMesh();
+        const OpenGLPipeline* render_pipeline = reinterpret_cast<const OpenGLPipeline*>(aPipeline.GetRenderPipeline());
+        const OpenGLMaterial* render_material = reinterpret_cast<const OpenGLMaterial*>(material->GetRenderMaterial());
+        const OpenGLMesh* render_mesh = reinterpret_cast<const OpenGLMesh*>(aMesh.GetRenderMesh());
         if ( render_pipeline && render_mesh && render_material )
         {
+            render_pipeline->Use ( render_material );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            render_mesh->Render(aInstanceCount, aFirstInstance);
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {

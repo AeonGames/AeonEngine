@@ -47,7 +47,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanMesh::Render() const
+    void VulkanMesh::Render(uint32_t aInstanceCount, uint32_t aFirstInstance) const
     {
         const VkDeviceSize offset = 0;
         vkCmdBindVertexBuffers ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &mBuffer.GetBuffer(), &offset );
@@ -56,11 +56,11 @@ namespace AeonGames
             vkCmdBindIndexBuffer ( mVulkanRenderer->GetCommandBuffer(),
                                    mBuffer.GetBuffer(), ( sizeof ( Vertex ) * mMesh.GetVertexCount() ),
                                    GetIndexType ( static_cast<AeonGames::Mesh::IndexType> ( mMesh.GetIndexType() ) ) );
-            vkCmdDrawIndexed ( mVulkanRenderer->GetCommandBuffer(), mMesh.GetIndexCount(), 1, 0, 0, 0 );
+            vkCmdDrawIndexed ( mVulkanRenderer->GetCommandBuffer(), mMesh.GetIndexCount(), aInstanceCount, 0, 0, aFirstInstance );
         }
         else
         {
-            vkCmdDraw ( mVulkanRenderer->GetCommandBuffer(), mMesh.GetVertexCount(), 1, 0, 0 );
+            vkCmdDraw ( mVulkanRenderer->GetCommandBuffer(), mMesh.GetVertexCount(), aInstanceCount, 0, aFirstInstance );
         }
     }
 

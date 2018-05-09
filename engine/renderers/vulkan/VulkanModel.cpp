@@ -52,6 +52,7 @@ namespace AeonGames
     void VulkanModel::Render ( const ModelInstance* aInstance, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const
     {
 #if 0
+#if 0
         // This code to be moved into a Vulkan Render Component
         if ( mVulkanSkeleton && ( mModel.get() == aInstance->GetModel().get() ) )
         {
@@ -81,6 +82,7 @@ namespace AeonGames
             std::get<0> ( mAssemblies[i] )->Use ( std::get<1> ( mAssemblies[i] ) );
             std::get<2> ( mAssemblies[i] )->Render();
         }
+#endif
     }
 
     void VulkanModel::Initialize()

@@ -57,21 +57,22 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLMesh::Render() const
+    void OpenGLMesh::Render(uint32_t aInstanceCount, uint32_t aFirstInstance) const
     {
+        /// @todo Add some sort of way to make use of the aFirstInstance parameter
         glBindVertexArray ( mArray );
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( mMesh.GetIndexCount() )
         {
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glDrawElements ( GL_TRIANGLES, mMesh.GetIndexCount(),
-                             0x1400 | mMesh.GetIndexType(), nullptr );
+            glDrawElementsInstanced ( GL_TRIANGLES, mMesh.GetIndexCount(),
+                             0x1400 | mMesh.GetIndexType(), nullptr,aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            glDrawArrays ( GL_TRIANGLES, 0, mMesh.GetVertexCount() );
+            glDrawArraysInstanced ( GL_TRIANGLES, 0, mMesh.GetVertexCount(),aInstanceCount);
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }
