@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,22 @@ message ShaderBuffer {
 }
 
 message PipelineBuffer {
+    enum Topology
+    {
+		POINT_LIST						 = 0;
+		LINE_STRIP 						 = 1;
+		LINE_LIST  						 = 2;
+		TRIANGLE_STRIP					 = 3;
+		TRIANGLE_FAN					 = 4;
+		TRIANGLE_LIST					 = 5;
+		LINE_LIST_WITH_ADJACENCY		 = 6;
+		LINE_STRIP_WITH_ADJACENCY		 = 7;
+		TRIANGLE_LIST_WITH_ADJACENCY	 = 8;
+		TRIANGLE_STRIP_WITH_ADJACENCY	 = 9;
+		PATCH_LIST						 = 10;
+    }
 	MaterialBuffer default_material    = 1;
-	ShaderBuffer vertex_shader         = 2;
-	ShaderBuffer fragment_shader       = 3;
+	Topology       topology            = 2;
+	ShaderBuffer vertex_shader         = 3;
+	ShaderBuffer fragment_shader       = 4;
 }

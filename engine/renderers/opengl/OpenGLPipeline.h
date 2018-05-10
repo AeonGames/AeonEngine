@@ -32,6 +32,7 @@ namespace AeonGames
         OpenGLPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer );
         ~OpenGLPipeline() final;
         void Use ( const OpenGLMaterial* aMaterial = nullptr ) const;
+        GLenum GetTopology() const;
     private:
         void Initialize();
         void Finalize();

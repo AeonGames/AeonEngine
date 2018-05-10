@@ -22,6 +22,7 @@ limitations under the License.
 #include <iostream>
 #include <exception>
 #include <stdexcept>
+#include "WorldEditor.h"
 #include "EngineWindow.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
@@ -212,7 +213,9 @@ namespace AeonGames
                     }
                 }
                 mWindow->BeginRender();
-                ///@todo Add render commands
+                mWindow->Render ( Transform{},
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
                 mWindow->EndRender();
                 return true;
             }

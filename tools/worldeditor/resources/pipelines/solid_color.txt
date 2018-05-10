@@ -11,7 +11,7 @@ default_material {
       }
     }
 }
-
+topology: TRIANGLE_LIST
 vertex_shader {
   code: "void main()\n"
   "{\n"

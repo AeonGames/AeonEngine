@@ -20,6 +20,14 @@ limitations under the License.
 
 namespace AeonGames
 {
+    const Pipeline& WorldEditor::GetGridPipeline() const
+    {
+        return mGridPipeline;
+    }
+    const Mesh& WorldEditor::GetGridMesh() const
+    {
+        return mGridMesh;
+    }
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv )
     {
         {

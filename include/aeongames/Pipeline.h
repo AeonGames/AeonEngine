@@ -29,6 +29,20 @@ namespace AeonGames
     class Pipeline
     {
     public:
+        enum class Topology
+        {
+            POINT_LIST = 0,
+            LINE_STRIP,
+            LINE_LIST,
+            TRIANGLE_STRIP,
+            TRIANGLE_FAN,
+            TRIANGLE_LIST,
+            LINE_LIST_WITH_ADJACENCY,
+            LINE_STRIP_WITH_ADJACENCY,
+            TRIANGLE_LIST_WITH_ADJACENCY,
+            TRIANGLE_STRIP_WITH_ADJACENCY,
+            PATCH_LIST
+        };
         enum AttributeBits
         {
             VertexPositionBit = 0x1,
@@ -74,15 +88,17 @@ namespace AeonGames
         DLL uint32_t GetSize ( AttributeBits aAttributeBit ) const;
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
         DLL const Material& GetDefaultMaterial() const;
+        DLL const Topology GetTopology() const;
         DLL void SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const;
         DLL const IRenderPipeline* const GetRenderPipeline() const;
     private:
         void Load ( const PipelineBuffer& aPipelineBuffer );
-        std::string mFilename;
-        uint32_t mAttributes;
-        std::string mVertexShader;
-        std::string mFragmentShader;
-        Material mDefaultMaterial;
+        std::string mFilename{};
+        Topology mTopology{};
+        uint32_t mAttributes{};
+        std::string mVertexShader{};
+        std::string mFragmentShader{};
+        Material mDefaultMaterial{};
         mutable std::unique_ptr<IRenderPipeline> mRenderPipeline{};
     };
 }

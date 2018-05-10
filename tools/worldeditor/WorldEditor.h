@@ -27,6 +27,8 @@ namespace AeonGames
         WorldEditor ( int &argc, char *argv[] );
         virtual ~WorldEditor();
         bool notify ( QObject *receiver, QEvent *event ) override;
+        const Pipeline& GetGridPipeline() const;
+        const Mesh& GetGridMesh() const;
     private:
         Pipeline mGridPipeline;
         Mesh mGridMesh;

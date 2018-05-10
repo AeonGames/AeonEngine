@@ -73,7 +73,7 @@ default_material {
       }
     }
 }
-
+topology: LINE_LIST
 vertex_shader {
   code:
     "#ifndef VULKAN\n"

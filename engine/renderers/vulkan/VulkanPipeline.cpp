@@ -409,7 +409,47 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+        switch ( mPipeline.GetTopology() )
+        {
+        case Pipeline::Topology::POINT_LIST:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+            break;
+        case Pipeline::Topology::LINE_STRIP:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+            break;
+        case Pipeline::Topology::LINE_LIST:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+            break;
+        case Pipeline::Topology::TRIANGLE_STRIP:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+            break;
+        case Pipeline::Topology::TRIANGLE_FAN:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+            break;
+        case Pipeline::Topology::TRIANGLE_LIST:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            break;
+        case Pipeline::Topology::LINE_LIST_WITH_ADJACENCY:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
+            break;
+        case Pipeline::Topology::LINE_STRIP_WITH_ADJACENCY:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
+            break;
+        case Pipeline::Topology::TRIANGLE_LIST_WITH_ADJACENCY:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
+            break;
+        case Pipeline::Topology::TRIANGLE_STRIP_WITH_ADJACENCY:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
+            break;
+        case Pipeline::Topology::PATCH_LIST:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+            break;
+        default:
+            pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+            break;
+        }
+
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};

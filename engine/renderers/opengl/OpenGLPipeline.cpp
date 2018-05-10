@@ -66,6 +66,38 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
+    GLenum OpenGLPipeline::GetTopology() const
+    {
+        switch ( mPipeline.GetTopology() )
+        {
+        case Pipeline::Topology::POINT_LIST:
+            return GL_POINTS;
+        case Pipeline::Topology::LINE_STRIP:
+            return GL_LINE_STRIP;
+        case Pipeline::Topology::LINE_LIST:
+            return GL_LINES;
+        case Pipeline::Topology::TRIANGLE_STRIP:
+            return GL_TRIANGLE_STRIP;
+        case Pipeline::Topology::TRIANGLE_FAN:
+            return GL_TRIANGLE_FAN;
+        case Pipeline::Topology::TRIANGLE_LIST:
+            return GL_TRIANGLES;
+        case Pipeline::Topology::LINE_LIST_WITH_ADJACENCY:
+            return GL_LINES_ADJACENCY;
+        case Pipeline::Topology::LINE_STRIP_WITH_ADJACENCY:
+            return GL_LINE_STRIP_ADJACENCY;
+        case Pipeline::Topology::TRIANGLE_LIST_WITH_ADJACENCY:
+            return GL_TRIANGLES_ADJACENCY;
+        case Pipeline::Topology::TRIANGLE_STRIP_WITH_ADJACENCY:
+            return GL_TRIANGLE_STRIP_ADJACENCY;
+        case Pipeline::Topology::PATCH_LIST:
+            return GL_PATCHES;
+        default:
+            break;
+        }
+        return GL_POINTS;
+    }
+
     void OpenGLPipeline::Initialize()
     {
         //--------------------------------------------------

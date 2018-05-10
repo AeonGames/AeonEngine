@@ -143,15 +143,29 @@ namespace AeonGames
         } );
 #endif
         const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
-        const OpenGLPipeline* render_pipeline = reinterpret_cast<const OpenGLPipeline*>(aPipeline.GetRenderPipeline());
-        const OpenGLMaterial* render_material = reinterpret_cast<const OpenGLMaterial*>(material->GetRenderMaterial());
-        const OpenGLMesh* render_mesh = reinterpret_cast<const OpenGLMesh*>(aMesh.GetRenderMesh());
+        const OpenGLPipeline* render_pipeline = reinterpret_cast<const OpenGLPipeline*> ( aPipeline.GetRenderPipeline() );
+        const OpenGLMaterial* render_material = reinterpret_cast<const OpenGLMaterial*> ( material->GetRenderMaterial() );
+        const OpenGLMesh* render_mesh = reinterpret_cast<const OpenGLMesh*> ( aMesh.GetRenderMesh() );
         if ( render_pipeline && render_mesh && render_material )
         {
             render_pipeline->Use ( render_material );
             OPENGL_CHECK_ERROR_NO_THROW;
-            render_mesh->Render(aInstanceCount, aFirstInstance);
+            /// @todo Add some sort of way to make use of the aFirstInstance parameter
+            glBindVertexArray ( render_mesh->GetArray() );
             OPENGL_CHECK_ERROR_NO_THROW;
+            if ( aMesh.GetIndexCount() )
+            {
+                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, render_mesh->GetIndexBuffer() );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glDrawElementsInstanced ( render_pipeline->GetTopology(), aMesh.GetIndexCount(),
+                                          0x1400 | aMesh.GetIndexType(), nullptr, aInstanceCount );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            else
+            {
+                glDrawArraysInstanced ( render_pipeline->GetTopology(), 0, aMesh.GetVertexCount(), aInstanceCount );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
         }
         else
         {

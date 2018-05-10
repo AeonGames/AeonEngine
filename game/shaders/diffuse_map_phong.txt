@@ -24,6 +24,7 @@ default_material {
       texture: "game/images/orange.png"
     }
 }
+topology: TRIANGLE_LIST
 vertex_shader {
   code: 
   "layout(location = 0) out vec3 LightIntensity;\n"
