@@ -73,7 +73,7 @@ namespace AeonGames
     }
 
     Pipeline::Pipeline ( const std::string&  aFilename ) :
-        mFilename ( aFilename ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
+        mFilename ( aFilename ), mTopology ( Topology::POINT_LIST ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
         try
         {
@@ -128,6 +128,44 @@ namespace AeonGames
 
     void Pipeline::Load ( const PipelineBuffer& aPipelineBuffer )
     {
+        switch ( aPipelineBuffer.topology() )
+        {
+        case PipelineBuffer_Topology_POINT_LIST:
+            mTopology = Topology::POINT_LIST;
+            break;
+        case PipelineBuffer_Topology_LINE_STRIP:
+            mTopology = Topology::LINE_STRIP;
+            break;
+        case PipelineBuffer_Topology_LINE_LIST:
+            mTopology = Topology::LINE_LIST;
+            break;
+        case PipelineBuffer_Topology_TRIANGLE_STRIP:
+            mTopology = Topology::TRIANGLE_STRIP;
+            break;
+        case PipelineBuffer_Topology_TRIANGLE_FAN:
+            mTopology = Topology::TRIANGLE_FAN;
+            break;
+        case PipelineBuffer_Topology_TRIANGLE_LIST:
+            mTopology = Topology::TRIANGLE_LIST;
+            break;
+        case PipelineBuffer_Topology_LINE_LIST_WITH_ADJACENCY:
+            mTopology = Topology::LINE_LIST_WITH_ADJACENCY;
+            break;
+        case PipelineBuffer_Topology_LINE_STRIP_WITH_ADJACENCY:
+            mTopology = Topology::LINE_STRIP_WITH_ADJACENCY;
+            break;
+        case PipelineBuffer_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
+            mTopology = Topology::TRIANGLE_LIST_WITH_ADJACENCY;
+            break;
+        case PipelineBuffer_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
+            mTopology = Topology::TRIANGLE_STRIP_WITH_ADJACENCY;
+            break;
+        case PipelineBuffer_Topology_PATCH_LIST:
+            mTopology = Topology::PATCH_LIST;
+            break;
+        default:
+            break;
+        }
         mVertexShader.append ( "#version 430\n" );
         mFragmentShader.append ( "#version 430\n" );
         /* Find out which attributes are being used and add them to the shader source */
@@ -363,6 +401,11 @@ namespace AeonGames
     const Material& Pipeline::GetDefaultMaterial() const
     {
         return mDefaultMaterial;
+    }
+
+    const Pipeline::Topology Pipeline::GetTopology() const
+    {
+        return mTopology;
     }
 
     void Pipeline::SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const

@@ -47,7 +47,7 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanMesh::Render(uint32_t aInstanceCount, uint32_t aFirstInstance) const
+    void VulkanMesh::Render ( uint32_t aInstanceCount, uint32_t aFirstInstance ) const
     {
         const VkDeviceSize offset = 0;
         vkCmdBindVertexBuffers ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &mBuffer.GetBuffer(), &offset );

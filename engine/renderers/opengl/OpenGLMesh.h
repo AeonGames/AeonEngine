@@ -29,7 +29,9 @@ namespace AeonGames
     public:
         OpenGLMesh ( const Mesh& aMesh, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
         ~OpenGLMesh() final;
-        void Render(uint32_t aInstanceCount=1, uint32_t aFirstInstance=0) const final;
+        uint32_t GetArray() const;
+        uint32_t GetVertexBuffer() const;
+        uint32_t GetIndexBuffer() const;
     private:
         void Initialize();
         void Finalize();
