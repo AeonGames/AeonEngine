@@ -27,8 +27,7 @@ namespace AeonGames
 {
     OpenGLPipeline::OpenGLPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer ) :
         mPipeline ( aPipeline ),
-        mOpenGLRenderer ( aOpenGLRenderer ),
-        mDefaultMaterial ( mPipeline.GetDefaultMaterial(), mOpenGLRenderer )
+        mOpenGLRenderer ( aOpenGLRenderer )
     {
         try
         {
@@ -46,21 +45,20 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial ) const
     {
-        const OpenGLMaterial* material = ( aMaterial ) ? aMaterial : &mDefaultMaterial;
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
-        for ( GLenum i = 0; i < material->GetTextures().size(); ++i )
+        for ( GLenum i = 0; i < aMaterial.GetTextures().size(); ++i )
         {
             glActiveTexture ( GL_TEXTURE0 + i );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, material->GetTextures() [i]->GetTexture() );
+            glBindTexture ( GL_TEXTURE_2D, aMaterial.GetTextures() [i]->GetTexture() );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, material->GetUniformData().size(), material->GetUniformData().data(), GL_DYNAMIC_DRAW );
+        glBufferData ( GL_UNIFORM_BUFFER, aMaterial.GetUniformData().size(), aMaterial.GetUniformData().data(), GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
         OPENGL_CHECK_ERROR_THROW;
@@ -213,10 +211,15 @@ namespace AeonGames
         if ( mPipeline.GetDefaultMaterial().GetUniformBlockSize() )
         {
 #if 1
-            for ( GLenum i = 0; i < mDefaultMaterial.GetTextures().size(); ++i )
+            GLuint uniform = 0;
+            for ( auto& i : mPipeline.GetDefaultMaterial().GetUniformMetaData() )
             {
-                glUniform1i ( i, i );
-                OPENGL_CHECK_ERROR_THROW;
+                if ( i.GetType() == Uniform::SAMPLER_2D )
+                {
+                    glUniform1i ( uniform, uniform );
+                    OPENGL_CHECK_ERROR_THROW;
+                    uniform++;
+                }
             }
 #else
             // Keeping this code for reference
@@ -232,7 +235,6 @@ namespace AeonGames
                 }
             }
 #endif
-            /** @todo Keep a buffer per material? */
             glGenBuffers ( 1, &mPropertiesBuffer );
             OPENGL_CHECK_ERROR_THROW;
         }
