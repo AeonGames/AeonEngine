@@ -72,23 +72,38 @@ namespace AeonGames
         GLint image_unit = 0;
         for ( auto& i : mMaterial.GetUniformMetaData() )
         {
-            uint32_t advance = 0;
             switch ( i.GetType() )
             {
             case Uniform::FLOAT_VEC4:
+                offset += ( offset % 16 ) ? 16 - ( offset % 16 ) : 0;
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 3 ) = i.GetW();
-            /* Intentional Pass-Thru */
-            case Uniform::FLOAT_VEC3:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 2 ) = i.GetZ();
-                advance += sizeof ( float ) * 2; /* Both VEC3 and VEC4 have a 4 float stride due to std140 padding. */
-            /* Intentional Pass-Thru */
-            case Uniform::FLOAT_VEC2:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 1 ) = i.GetY();
-                advance += sizeof ( float );
-            /* Intentional Pass-Thru */
-            case Uniform::FLOAT:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 0 ) = i.GetX();
-                advance += sizeof ( float );
+                offset += sizeof ( float ) * 4;
+                break;
+            case Uniform::FLOAT_VEC3:
+                offset += ( offset % 16 ) ? 16 - ( offset % 16 ) : 0;
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 2 ) = i.GetZ();
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 1 ) = i.GetY();
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 0 ) = i.GetX();
+                offset += sizeof ( float ) * 3;
+                break;
+            case Uniform::FLOAT_VEC2:
+                offset += ( offset % 8 ) ? 8 - ( offset % 8 ) : 0;
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 1 ) = i.GetY();
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 0 ) = i.GetX();
+                offset += sizeof ( float ) * 2;
+                break;
+            case Uniform::FLOAT:
+                offset += ( offset % 4 ) ? 4 - ( offset % 4 ) : 0;
+                * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 0 ) = i.GetX();
+                offset += sizeof ( float );
+                break;
+            case Uniform::UINT:
+                offset += ( offset % 4 ) ? 4 - ( offset % 4 ) : 0;
+                * ( reinterpret_cast<uint32_t*> ( mUniformData.data() + offset ) + 0 ) = i.GetUInt();
+                offset += sizeof ( float );
                 break;
             case Uniform::SAMPLER_2D:
                 if ( image_unit >= ( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - GL_TEXTURE0 ) )
@@ -100,7 +115,6 @@ namespace AeonGames
             default:
                 break;
             }
-            offset += advance;
         }
     }
     void OpenGLMaterial::Finalize()

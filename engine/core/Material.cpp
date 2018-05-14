@@ -157,27 +157,34 @@ namespace AeonGames
             switch ( i.GetType() )
             {
             case Uniform::FLOAT:
+                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
                 size += sizeof ( float );
                 break;
             case Uniform::UINT:
+                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
                 size += sizeof ( uint32_t );
                 break;
             case Uniform::SINT:
+                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
                 size += sizeof ( int32_t );
                 break;
             case Uniform::FLOAT_VEC2:
+                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
                 size += sizeof ( float ) * 2;
                 break;
             case Uniform::FLOAT_VEC3:
-                size += sizeof ( float ) * 4; /* VEC3 requires padding in std140 */
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 3;
                 break;
             case Uniform::FLOAT_VEC4:
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 4;
                 break;
             default:
                 break;
             }
         }
+        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
         return size;
     }
 

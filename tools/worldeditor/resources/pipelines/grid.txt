@@ -4,9 +4,9 @@ default_material {
       uniform_name: "OddLineColor"
       display_name: "Odd Line Color"
       vector4 {
-        x: 0.5
-        y: 0.5
-        z: 0.5
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.0
       }
     }
@@ -14,9 +14,9 @@ default_material {
       uniform_name: "EvenLineColor"
       display_name: "Even Line Color"
       vector4 {
-        x: 0.5
-        y: 0.5
-        z: 0.5
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.0
       }
     }
@@ -24,9 +24,9 @@ default_material {
       uniform_name: "CentralLineColor"
       display_name: "Central Line Color"
       vector4 {
-        x: 0.5
-        y: 0.5
-        z: 0.5
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.0
       }
     }
@@ -34,16 +34,11 @@ default_material {
       uniform_name: "BorderLineColor"
       display_name: "Border Line Color"
       vector4 {
-        x: 0.5
-        y: 0.5
-        z: 0.5
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.0
       }
-    }
-    property {
-      uniform_name: "LineCount"
-      display_name: "Line Count"
-      scalar_uint: 32
     }
     property {
       uniform_name: "Scale"
@@ -72,6 +67,11 @@ default_material {
         z: 0
       }
     }
+    property {
+      uniform_name: "LineCount"
+      display_name: "Line Count"
+      scalar_uint: 32
+    }
 }
 topology: LINE_LIST
 vertex_shader {
@@ -83,7 +83,9 @@ vertex_shader {
     "void main()\n"
     "{\n"
     "instance_index = uint ( gl_InstanceIndex );\n"
-    "gl_Position = ProjectionMatrix * ViewMatrix * vec4 ( ( StartingPosition + ( vec3 ( VertexPosition.x * Scale.x, VertexPosition.y * Scale.y, VertexPosition.z * Scale.z ) ) + ( Offset * gl_InstanceIndex ) ), 1.0 );\n"
+    "gl_Position =  ProjectionMatrix *\n"
+    "               ViewMatrix *\n"
+    "               vec4(StartingPosition + (VertexPosition*Scale) + ( Offset * gl_InstanceIndex ),1.0);\n"
     "}\n"
 }
 

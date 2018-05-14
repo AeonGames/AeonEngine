@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
     RendererSelectDialog.h
+    SettingsDialog.h
     MainWindow.h
     SceneWindow.h
     EngineWindow.h
@@ -30,7 +31,7 @@ set(WORLDEDITOR_QT_HEADERS
 set(WORLDEDITOR_HEADERS
     Debug.h
     WorldEditor.h
-    #Grid.h
+    GridSettings.h
     ${WORLDEDITOR_QT_HEADERS})
 
 set(WORLDEDITOR_SOURCES
@@ -40,15 +41,17 @@ set(WORLDEDITOR_SOURCES
     MainWindow.cpp
     SceneWindow.cpp
     RendererSelectDialog.cpp
+    SettingsDialog.cpp
     EngineWindow.cpp
     Debug.cpp
-    #Grid.cpp
+    GridSettings.cpp
     )
 
 set(WORLDEDITOR_UI
     ui/MainWindow.ui
     ui/SceneWindow.ui
     ui/RendererSelectDialog.ui
+    ui/SettingsDialog.ui
     )
 
 
