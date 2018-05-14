@@ -58,7 +58,7 @@ namespace AeonGames
     void SceneWindow::on_actionRemoveNode_triggered()
     {
         QModelIndex index = treeView->currentIndex();
-        mSceneModel.RemoveNode ( index.row() , index.parent() );
+        mSceneModel.RemoveNode ( index.row(), index.parent() );
     }
 
     void SceneWindow::on_customContextMenuRequested ( const QPoint& aPoint )

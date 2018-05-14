@@ -148,7 +148,7 @@ namespace AeonGames
         const OpenGLMesh* render_mesh = reinterpret_cast<const OpenGLMesh*> ( aMesh.GetRenderMesh() );
         if ( render_pipeline && render_mesh && render_material )
         {
-            render_pipeline->Use ( render_material );
+            render_pipeline->Use ( *render_material );
             OPENGL_CHECK_ERROR_NO_THROW;
             /// @todo Add some sort of way to make use of the aFirstInstance parameter
             glBindVertexArray ( render_mesh->GetArray() );
