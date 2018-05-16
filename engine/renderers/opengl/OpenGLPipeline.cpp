@@ -210,7 +210,7 @@ namespace AeonGames
         {
 #if 1
             GLuint uniform = 0;
-            for ( auto& i : mPipeline.GetDefaultMaterial().GetUniformMetaData() )
+            for ( auto& i : mPipeline.GetDefaultMaterial().GetUniforms() )
             {
                 if ( i.GetType() == Uniform::SAMPLER_2D )
                 {

@@ -21,7 +21,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    static_assert ( sizeof ( std::shared_ptr<Image> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
     Uniform::Uniform ( const std::string& aName, float aX, uint8_t* aData ) :
         mName ( aName ),
         mType ( Uniform::Type::FLOAT ),
@@ -50,8 +49,6 @@ namespace AeonGames
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
-        ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
-        ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
     Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ, uint8_t* aData ) :
         mName ( aName ),
@@ -61,7 +58,6 @@ namespace AeonGames
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
         ( reinterpret_cast<float*> ( mData ) ) [2] = aZ;
-        ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
     Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW, uint8_t* aData ) :
         mName ( aName ),
@@ -182,5 +178,72 @@ namespace AeonGames
     {
         assert ( mType == Uniform::Type::SAMPLER_2D );
         return * ( reinterpret_cast<const std::shared_ptr<Image>*> ( mData ) );
+    }
+
+    void Uniform::SetUInt ( uint32_t aValue )
+    {
+        assert ( mType == Uniform::Type::UINT );
+        ( reinterpret_cast<uint32_t*> ( mData ) ) [0] = aValue;
+    }
+    void Uniform::SetSInt ( int32_t aValue )
+    {
+        assert ( mType == Uniform::Type::SINT );
+        ( reinterpret_cast<int32_t*> ( mData ) ) [0] = aValue;
+    }
+    void Uniform::SetX ( float aValue )
+    {
+        assert (
+            mType == Uniform::Type::FLOAT ||
+            mType == Uniform::Type::FLOAT_VEC2 ||
+            mType == Uniform::Type::FLOAT_VEC3 ||
+            mType == Uniform::Type::FLOAT_VEC4 );
+        ( reinterpret_cast<float*> ( mData ) ) [0] = aValue;
+    }
+    void Uniform::SetY ( float aValue )
+    {
+        assert (
+            mType == Uniform::Type::FLOAT_VEC2 ||
+            mType == Uniform::Type::FLOAT_VEC3 ||
+            mType == Uniform::Type::FLOAT_VEC4 );
+        ( reinterpret_cast<float*> ( mData ) ) [1] = aValue;
+    }
+    void Uniform::SetZ ( float aValue )
+    {
+        assert (
+            mType == Uniform::Type::FLOAT_VEC3 ||
+            mType == Uniform::Type::FLOAT_VEC4 );
+        ( reinterpret_cast<float*> ( mData ) ) [2] = aValue;
+    }
+    void Uniform::SetW ( float aValue )
+    {
+        assert ( mType == Uniform::Type::FLOAT_VEC4 );
+        ( reinterpret_cast<float*> ( mData ) ) [3] = aValue;
+    }
+    void Uniform::Set ( void* aValue )
+    {
+        switch ( mType )
+        {
+        case UINT:
+            memcpy ( mData, aValue, sizeof ( uint32_t ) );
+            break;
+        case FLOAT:
+            memcpy ( mData, aValue, sizeof ( float ) );
+            break;
+        case SINT:
+            memcpy ( mData, aValue, sizeof ( int32_t ) );
+            break;
+        case FLOAT_VEC2:
+            memcpy ( mData, aValue, sizeof ( float ) * 2 );
+            break;
+        case FLOAT_VEC3:
+            memcpy ( mData, aValue, sizeof ( float ) * 3 );
+            break;
+        case FLOAT_VEC4:
+            memcpy ( mData, aValue, sizeof ( float ) * 4 );
+            break;
+        default:
+            // Do nothing for now.
+            break;
+        }
     }
 }

@@ -216,7 +216,7 @@ namespace AeonGames
         mFragmentShader.append ( transforms );
 
         mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
-        if ( mDefaultMaterial.GetUniformMetaData().size() )
+        if ( mDefaultMaterial.GetUniforms().size() )
         {
             uint32_t sampler_binding = 0;
             std::string properties (
@@ -227,7 +227,7 @@ namespace AeonGames
                 "#endif\n"
             );
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : mDefaultMaterial.GetUniformMetaData() )
+            for ( auto& i : mDefaultMaterial.GetUniforms() )
             {
                 switch ( i.GetType() )
                 {

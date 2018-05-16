@@ -56,7 +56,7 @@ namespace AeonGames
     VulkanMaterial::~VulkanMaterial()
         = default;
 
-    void VulkanMaterial::Update ( size_t aOffset, size_t aSize, uint8_t aValue )
+    void VulkanMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {
     }
 
@@ -88,7 +88,7 @@ namespace AeonGames
         }
         mUniformData.resize ( mMaterial.GetUniformBlock().size() );
         uint32_t offset = 0;
-        for ( auto& i : mMaterial.GetUniformMetaData() )
+        for ( auto& i : mMaterial.GetUniforms() )
         {
             uint32_t advance = 0;
             switch ( i.GetType() )
@@ -128,15 +128,15 @@ namespace AeonGames
     }
     void VulkanMaterial::InitializeDescriptorSetLayout()
     {
-        if ( !mMaterial.GetUniformMetaData().size() )
+        if ( !mMaterial.GetUniforms().size() )
         {
             return;
         }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         /*  Reserve enough slots as if all uniforms where shaders, better safe than sorry.*/
-        descriptor_set_layout_bindings.reserve ( mMaterial.GetUniformMetaData().size() );
+        descriptor_set_layout_bindings.reserve ( mMaterial.GetUniforms().size() );
 
-        for ( auto& i : mMaterial.GetUniformMetaData() )
+        for ( auto& i : mMaterial.GetUniforms() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {
@@ -176,12 +176,12 @@ namespace AeonGames
 
     void VulkanMaterial::InitializeDescriptorPool()
     {
-        if ( !mMaterial.GetUniformMetaData().size() )
+        if ( !mMaterial.GetUniforms().size() )
         {
             return;
         }
         uint32_t sampler_descriptor_count = 0;
-        for ( auto&i : mMaterial.GetUniformMetaData() )
+        for ( auto&i : mMaterial.GetUniforms() )
         {
             if ( i.GetType() == Uniform::Type::SAMPLER_2D )
             {
@@ -245,7 +245,7 @@ namespace AeonGames
         }
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets;
-        write_descriptor_sets.reserve ( mMaterial.GetUniformMetaData().size() );
+        write_descriptor_sets.reserve ( mMaterial.GetUniforms().size() );
 
         for ( uint32_t i = 0; i < mTextures.size(); ++i )
         {

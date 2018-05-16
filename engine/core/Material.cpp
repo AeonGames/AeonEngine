@@ -34,8 +34,7 @@ namespace AeonGames
 {
     Material::Material() = default;
 
-    Material::Material ( const std::string&  aFilename ) :
-        mFilename ( aFilename )
+    Material::Material ( const std::string&  aFilename )
     {
         try
         {
@@ -80,11 +79,10 @@ namespace AeonGames
     void Material::Load ( const std::string&  aFilename )
     {
         static MaterialBuffer material_buffer;
-        LoadProtoBufObject ( material_buffer, mFilename, "AEONMTL" );
+        LoadProtoBufObject ( material_buffer, aFilename, "AEONMTL" );
         Load ( material_buffer );
         material_buffer.Clear();
     }
-
 
     void Material::Load ( const void* aBuffer, size_t aBufferSize )
     {
@@ -137,7 +135,7 @@ namespace AeonGames
     void Material::Load ( const MaterialBuffer& aMaterialBuffer )
     {
         Unload();
-        mUniformMetaData.reserve ( aMaterialBuffer.property().size() );
+        mUniforms.reserve ( aMaterialBuffer.property().size() );
         mUniformBlock.resize ( AeonGames::GetUniformBlockSize ( aMaterialBuffer ) );
         size_t offset = 0;
         for ( auto& i : aMaterialBuffer.property() )
@@ -146,36 +144,36 @@ namespace AeonGames
             {
             case PropertyBuffer::DefaultValueCase::kScalarFloat:
                 offset += ( offset % sizeof ( float ) ) ? sizeof ( float ) - ( offset % sizeof ( float ) ) : 0;
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float(), mUniformBlock.data() + offset );
+                mUniforms.emplace_back ( i.uniform_name(), i.scalar_float(), mUniformBlock.data() + offset );
                 offset += sizeof ( float );
                 break;
             case PropertyBuffer::DefaultValueCase::kScalarUint:
                 offset += ( offset % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( offset % sizeof ( uint32_t ) ) : 0;
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_uint(), mUniformBlock.data() + offset );
+                mUniforms.emplace_back ( i.uniform_name(), i.scalar_uint(), mUniformBlock.data() + offset );
                 offset += sizeof ( uint32_t );
                 break;
             case PropertyBuffer::DefaultValueCase::kScalarInt:
                 offset += ( offset % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( offset % sizeof ( int32_t ) ) : 0;
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_int(), mUniformBlock.data() + offset );
+                mUniforms.emplace_back ( i.uniform_name(), i.scalar_int(), mUniformBlock.data() + offset );
                 offset += sizeof ( int32_t );
                 break;
             case PropertyBuffer::DefaultValueCase::kVector2:
                 offset += ( offset % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( offset % ( sizeof ( float ) * 2 ) ) : 0;
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y(), mUniformBlock.data() + offset );
+                mUniforms.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y(), mUniformBlock.data() + offset );
                 offset += ( sizeof ( float ) * 2 );
                 break;
             case PropertyBuffer::DefaultValueCase::kVector3:
                 offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z(), mUniformBlock.data() + offset );
+                mUniforms.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z(), mUniformBlock.data() + offset );
                 offset += ( sizeof ( float ) * 3 );
                 break;
             case PropertyBuffer::DefaultValueCase::kVector4:
                 offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w(), mUniformBlock.data() + offset );
+                mUniforms.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w(), mUniformBlock.data() + offset );
                 offset += ( sizeof ( float ) * 4 );
                 break;
             case PropertyBuffer::DefaultValueCase::kTexture:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
+                mUniforms.emplace_back ( i.uniform_name(), i.texture() );
                 break;
             default:
                 throw std::runtime_error ( "Unknown Type." );
@@ -185,13 +183,12 @@ namespace AeonGames
 
     void Material::Unload()
     {
-        mFilename.clear();
-        mUniformMetaData.clear();
+        mUniforms.clear();
     }
 
-    const std::vector<Uniform>& Material::GetUniformMetaData() const
+    const std::vector<Uniform>& Material::GetUniforms() const
     {
-        return mUniformMetaData;
+        return mUniforms;
     }
 
     const std::vector<uint8_t>& Material::GetUniformBlock() const

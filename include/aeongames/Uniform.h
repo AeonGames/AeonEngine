@@ -60,6 +60,16 @@ namespace AeonGames
         DLL float GetW() const;
         DLL const std::shared_ptr<Image> GetImage() const;
         ///@}
+        ///@name Setters
+        ///@{
+        DLL void SetUInt ( uint32_t aValue );
+        DLL void SetSInt ( int32_t aValue );
+        DLL void SetX ( float aValue );
+        DLL void SetY ( float aValue );
+        DLL void SetZ ( float aValue );
+        DLL void SetW ( float aValue );
+        DLL void Set ( void* aValue );
+        ///@}
     private:
         std::string mName{};
         Type mType{ UNKNOWN };
