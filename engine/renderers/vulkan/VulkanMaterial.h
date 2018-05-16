@@ -31,7 +31,7 @@ namespace AeonGames
     public:
         VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanMaterial() final;
-        void Update ( size_t aOffset, size_t aSize, uint8_t aValue ) final;
+        void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
         const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
         const VkDescriptorSet& GetDescriptorSet() const;

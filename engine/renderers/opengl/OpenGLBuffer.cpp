@@ -95,7 +95,7 @@ namespace AeonGames
         {
             return;
         }
-        glGenBuffers ( 1, &mBuffer );
+        glCreateBuffers ( 1, &mBuffer );
         OPENGL_CHECK_ERROR_THROW;
         glNamedBufferData (  mBuffer,
                              mSize,

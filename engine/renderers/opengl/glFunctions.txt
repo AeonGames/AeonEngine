@@ -97,6 +97,7 @@ glCompressedTexImage2D
 glActiveTexture
 glDetachShader
 glIsBuffer
+glCreateBuffers
 glDrawArraysInstanced
 glDrawElementsInstanced
 glGenRenderbuffers
