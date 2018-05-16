@@ -216,7 +216,12 @@ namespace AeonGames
                 mWindow->BeginRender();
                 mWindow->Render ( Transform{},
                                   reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline(),
+                                  nullptr, 0, 2, 32 );
+                mWindow->Render ( Transform{},
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline(),
+                                  nullptr, 2, 2, 32 );
                 mWindow->EndRender();
                 return true;
             }

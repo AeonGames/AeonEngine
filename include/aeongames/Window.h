@@ -33,7 +33,7 @@ namespace AeonGames
         ///@{
         virtual void BeginRender() const = 0;
         virtual void EndRender() const = 0;
-        virtual void Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial = nullptr, uint32_t aInstanceCount = 1, uint32_t aFirstInstance = 0 ) const = 0;
+        virtual void Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial = nullptr, uint32_t aVertexStart = 0, uint32_t aVertexCount = 0xffffffff, uint32_t aInstanceCount = 1, uint32_t aFirstInstance = 0 ) const = 0;
         ///@}
         ///@name Matrix Functions
         ///@{

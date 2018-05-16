@@ -28,7 +28,8 @@ namespace AeonGames
         class IRenderMaterial
         {
         public:
-            DLL virtual ~IRenderMaterial() = 0;
+            virtual void Update ( size_t aOffset, size_t aSize, uint8_t aValue ) = 0;
+            virtual ~IRenderMaterial() {};
         };
         DLL Material();
         DLL Material ( const std::string& aFilename );
@@ -40,12 +41,13 @@ namespace AeonGames
         DLL void Load ( const MaterialBuffer& aMaterialBuffer );
         DLL void Unload();
         DLL const std::vector<Uniform>& GetUniformMetaData() const;
-        DLL uint32_t GetUniformBlockSize() const;
+        DLL const std::vector<uint8_t>& GetUniformBlock() const;
         DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
         DLL const IRenderMaterial* const GetRenderMaterial() const;
     private:
         std::string mFilename;
-        std::vector<Uniform> mUniformMetaData;
+        std::vector<Uniform> mUniformMetaData{};
+        std::vector<uint8_t> mUniformBlock{};
         mutable std::unique_ptr<IRenderMaterial> mRenderMaterial{};
     };
 }

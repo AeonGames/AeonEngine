@@ -55,9 +55,8 @@ namespace AeonGames
         Finalize();
     }
 
-    const std::vector<uint8_t>& OpenGLMaterial::GetUniformData() const
+    void OpenGLMaterial::Update ( size_t aOffset, size_t aSize, uint8_t aValue )
     {
-        return mUniformData;
     }
 
     const std::vector<std::shared_ptr<OpenGLTexture>>& OpenGLMaterial::GetTextures() const
@@ -65,9 +64,14 @@ namespace AeonGames
         return mTextures;
     }
 
+    GLuint OpenGLMaterial::GetPropertiesBuffer() const
+    {
+        return mPropertiesBuffer;
+    }
+
     void OpenGLMaterial::Initialize()
     {
-        mUniformData.resize ( mMaterial.GetUniformBlockSize() );
+#if 0
         uint32_t offset = 0;
         GLint image_unit = 0;
         for ( auto& i : mMaterial.GetUniformMetaData() )
@@ -116,8 +120,21 @@ namespace AeonGames
                 break;
             }
         }
+#endif
+        glGenBuffers ( 1, &mPropertiesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glNamedBufferData ( mPropertiesBuffer, mMaterial.GetUniformBlock().size(), mMaterial.GetUniformBlock().data(), GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_THROW;
     }
     void OpenGLMaterial::Finalize()
     {
+        if ( glIsBuffer ( mPropertiesBuffer ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteBuffers ( 1, &mPropertiesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mPropertiesBuffer = 0;
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 }

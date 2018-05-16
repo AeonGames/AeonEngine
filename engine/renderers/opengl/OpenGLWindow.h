@@ -35,7 +35,14 @@ namespace AeonGames
         void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() const final;
         void EndRender() const final;
-        void Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial = nullptr, uint32_t aInstanceCount = 1, uint32_t aFirstInstance = 0 ) const final;
+        void Render (   const Transform& aModelTransform,
+                        const Mesh& aMesh,
+                        const Pipeline& aPipeline,
+                        const Material* aMaterial = nullptr,
+                        uint32_t aVertexStart = 0,
+                        uint32_t aVertexCount = 0xffffffff,
+                        uint32_t aInstanceCount = 1,
+                        uint32_t aFirstInstance = 0 ) const final;
         const GLuint GetMatricesBuffer() const;
     private:
         void Initialize();

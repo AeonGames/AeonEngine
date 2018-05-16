@@ -22,54 +22,51 @@ limitations under the License.
 namespace AeonGames
 {
     static_assert ( sizeof ( std::shared_ptr<Image> ) <= ( sizeof ( float ) * 4 ), "Size of shared pointer is bigger than a vec4" );
-    Uniform::Uniform ( const std::string& aName, float aX ) :
+    Uniform::Uniform ( const std::string& aName, float aX, uint8_t* aData ) :
         mName ( aName ),
-        mType ( Uniform::Type::FLOAT )
+        mType ( Uniform::Type::FLOAT ),
+        mData{ aData }
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
-        ( reinterpret_cast<float*> ( mData ) ) [1] = 0;
-        ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
-        ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( const std::string & aName, uint32_t aX ) :
+    Uniform::Uniform ( const std::string & aName, uint32_t aX, uint8_t* aData ) :
         mName{aName},
-        mType ( Uniform::Type::UINT )
+        mType ( Uniform::Type::UINT ),
+        mData{ aData }
     {
         ( reinterpret_cast<uint32_t*> ( mData ) ) [0] = aX;
-        ( reinterpret_cast<uint32_t*> ( mData ) ) [1] = 0;
-        ( reinterpret_cast<uint32_t*> ( mData ) ) [2] = 0;
-        ( reinterpret_cast<uint32_t*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( const std::string & aName, int32_t aX ) :
+    Uniform::Uniform ( const std::string & aName, int32_t aX, uint8_t* aData ) :
         mName{ aName },
-        mType ( Uniform::Type::SINT )
+        mType ( Uniform::Type::SINT ),
+        mData{ aData }
     {
         ( reinterpret_cast<int32_t*> ( mData ) ) [0] = aX;
-        ( reinterpret_cast<int32_t*> ( mData ) ) [1] = 0;
-        ( reinterpret_cast<int32_t*> ( mData ) ) [2] = 0;
-        ( reinterpret_cast<int32_t*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( const std::string&  aName, float aX, float aY ) :
+    Uniform::Uniform ( const std::string&  aName, float aX, float aY, uint8_t* aData ) :
         mName ( aName ),
-        mType ( Uniform::Type::FLOAT_VEC2 )
+        mType ( Uniform::Type::FLOAT_VEC2 ),
+        mData{ aData }
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
         ( reinterpret_cast<float*> ( mData ) ) [2] = 0;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ ) :
+    Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ, uint8_t* aData ) :
         mName ( aName ),
-        mType ( Uniform::Type::FLOAT_VEC3 )
+        mType ( Uniform::Type::FLOAT_VEC3 ),
+        mData{ aData }
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
         ( reinterpret_cast<float*> ( mData ) ) [2] = aZ;
         ( reinterpret_cast<float*> ( mData ) ) [3] = 0;
     }
-    Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW ) :
+    Uniform::Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW, uint8_t* aData ) :
         mName ( aName ),
-        mType ( Uniform::Type::FLOAT_VEC4 )
+        mType ( Uniform::Type::FLOAT_VEC4 ),
+        mData{ aData }
     {
         ( reinterpret_cast<float*> ( mData ) ) [0] = aX;
         ( reinterpret_cast<float*> ( mData ) ) [1] = aY;
@@ -78,11 +75,15 @@ namespace AeonGames
     }
     Uniform::Uniform ( const std::string&  aName, const std::string & aFilename ) :
         mName ( aName ),
-        mType ( Uniform::Type::SAMPLER_2D )
+        mType ( Uniform::Type::SAMPLER_2D ),
+        mData{ nullptr }
     {
+#if 0
+        /// To be refactored
         /**@todo Temporarily hardcoding ".png" identifier,
         the AeonGames::GetImage has to change to deduce image type based on extension.*/
         new ( mData ) std::shared_ptr<Image> ( AeonGames::GetImage ( ".png", aFilename ) );
+#endif
     }
     Uniform::~Uniform()
     {

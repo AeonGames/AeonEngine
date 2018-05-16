@@ -56,6 +56,10 @@ namespace AeonGames
     VulkanMaterial::~VulkanMaterial()
         = default;
 
+    void VulkanMaterial::Update ( size_t aOffset, size_t aSize, uint8_t aValue )
+    {
+    }
+
     const std::vector<uint8_t>& VulkanMaterial::GetUniformData() const
     {
         return mUniformData;
@@ -82,7 +86,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        mUniformData.resize ( mMaterial.GetUniformBlockSize() );
+        mUniformData.resize ( mMaterial.GetUniformBlock().size() );
         uint32_t offset = 0;
         for ( auto& i : mMaterial.GetUniformMetaData() )
         {

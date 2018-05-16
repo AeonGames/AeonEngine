@@ -31,14 +31,15 @@ namespace AeonGames
     public:
         OpenGLMaterial ( const Material& aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
         ~OpenGLMaterial() final;
-        const std::vector<uint8_t>& GetUniformData() const;
+        void Update ( size_t aOffset, size_t aSize, uint8_t aValue ) final;
         const std::vector<std::shared_ptr<OpenGLTexture>>& GetTextures() const;
+        GLuint GetPropertiesBuffer() const;
     private:
         void Initialize();
         void Finalize();
         const Material& mMaterial;
+        GLuint mPropertiesBuffer{};
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
-        std::vector<uint8_t> mUniformData;
         std::vector<std::shared_ptr<OpenGLTexture>> mTextures;
     };
 }

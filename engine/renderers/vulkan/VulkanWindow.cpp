@@ -512,7 +512,14 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial, uint32_t aInstanceCount, uint32_t aFirstInstance ) const
+    void VulkanWindow::Render ( const Transform& aModelTransform,
+                                const Mesh& aMesh,
+                                const Pipeline& aPipeline,
+                                const Material* aMaterial,
+                                uint32_t aVertexStart,
+                                uint32_t aVertexCount,
+                                uint32_t aInstanceCount,
+                                uint32_t aFirstInstance ) const
     {
 #if 0
         Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };

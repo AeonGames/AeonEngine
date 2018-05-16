@@ -76,8 +76,6 @@ namespace AeonGames
 
     Material::~Material()
         = default;
-    DLL Material::IRenderMaterial::~IRenderMaterial()
-        = default;
 
     void Material::Load ( const std::string&  aFilename )
     {
@@ -97,41 +95,88 @@ namespace AeonGames
         material_buffer.Clear();
     }
 
-    void Material::Load ( const MaterialBuffer& aMaterialBuffer )
+    static size_t GetUniformBlockSize ( const MaterialBuffer& aMaterialBuffer )
     {
-        Unload();
-        mUniformMetaData.reserve ( aMaterialBuffer.property().size() );
+        size_t size = 0;
         for ( auto& i : aMaterialBuffer.property() )
         {
             switch ( i.default_value_case() )
             {
             case PropertyBuffer::DefaultValueCase::kScalarFloat:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float() );
+                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
+                size += sizeof ( float );
                 break;
             case PropertyBuffer::DefaultValueCase::kScalarUint:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_uint() );
+                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
+                size += sizeof ( uint32_t );
                 break;
             case PropertyBuffer::DefaultValueCase::kScalarInt:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_int() );
+                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
+                size += sizeof ( int32_t );
                 break;
             case PropertyBuffer::DefaultValueCase::kVector2:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y() );
+                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
+                size += sizeof ( float ) * 2;
                 break;
             case PropertyBuffer::DefaultValueCase::kVector3:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z() );
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 3;
                 break;
             case PropertyBuffer::DefaultValueCase::kVector4:
-                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w() );
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 4;
+                break;
+            default:
+                break;
+            }
+        }
+        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+        return size;
+    }
+
+    void Material::Load ( const MaterialBuffer& aMaterialBuffer )
+    {
+        Unload();
+        mUniformMetaData.reserve ( aMaterialBuffer.property().size() );
+        mUniformBlock.resize ( AeonGames::GetUniformBlockSize ( aMaterialBuffer ) );
+        size_t offset = 0;
+        for ( auto& i : aMaterialBuffer.property() )
+        {
+            switch ( i.default_value_case() )
+            {
+            case PropertyBuffer::DefaultValueCase::kScalarFloat:
+                offset += ( offset % sizeof ( float ) ) ? sizeof ( float ) - ( offset % sizeof ( float ) ) : 0;
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_float(), mUniformBlock.data() + offset );
+                offset += sizeof ( float );
+                break;
+            case PropertyBuffer::DefaultValueCase::kScalarUint:
+                offset += ( offset % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( offset % sizeof ( uint32_t ) ) : 0;
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_uint(), mUniformBlock.data() + offset );
+                offset += sizeof ( uint32_t );
+                break;
+            case PropertyBuffer::DefaultValueCase::kScalarInt:
+                offset += ( offset % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( offset % sizeof ( int32_t ) ) : 0;
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.scalar_int(), mUniformBlock.data() + offset );
+                offset += sizeof ( int32_t );
+                break;
+            case PropertyBuffer::DefaultValueCase::kVector2:
+                offset += ( offset % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( offset % ( sizeof ( float ) * 2 ) ) : 0;
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector2().x(), i.vector2().y(), mUniformBlock.data() + offset );
+                offset += ( sizeof ( float ) * 2 );
+                break;
+            case PropertyBuffer::DefaultValueCase::kVector3:
+                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector3().x(), i.vector3().y(), i.vector3().z(), mUniformBlock.data() + offset );
+                offset += ( sizeof ( float ) * 3 );
+                break;
+            case PropertyBuffer::DefaultValueCase::kVector4:
+                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
+                mUniformMetaData.emplace_back ( i.uniform_name(), i.vector4().x(), i.vector4().y(), i.vector4().z(), i.vector4().w(), mUniformBlock.data() + offset );
+                offset += ( sizeof ( float ) * 4 );
                 break;
             case PropertyBuffer::DefaultValueCase::kTexture:
                 mUniformMetaData.emplace_back ( i.uniform_name(), i.texture() );
                 break;
-#if 0
-            case PropertyBuffer_Type_SAMPLER_CUBE:
-                //type_name = "samplerCube ";
-                /* To be continued ... */
-                break;
-#endif
             default:
                 throw std::runtime_error ( "Unknown Type." );
             }
@@ -149,43 +194,9 @@ namespace AeonGames
         return mUniformMetaData;
     }
 
-    uint32_t Material::GetUniformBlockSize() const
+    const std::vector<uint8_t>& Material::GetUniformBlock() const
     {
-        uint32_t size = 0;
-        for ( auto& i : mUniformMetaData )
-        {
-            switch ( i.GetType() )
-            {
-            case Uniform::FLOAT:
-                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
-                size += sizeof ( float );
-                break;
-            case Uniform::UINT:
-                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
-                size += sizeof ( uint32_t );
-                break;
-            case Uniform::SINT:
-                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
-                size += sizeof ( int32_t );
-                break;
-            case Uniform::FLOAT_VEC2:
-                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
-                size += sizeof ( float ) * 2;
-                break;
-            case Uniform::FLOAT_VEC3:
-                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                size += sizeof ( float ) * 3;
-                break;
-            case Uniform::FLOAT_VEC4:
-                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                size += sizeof ( float ) * 4;
-                break;
-            default:
-                break;
-            }
-        }
-        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
-        return size;
+        return mUniformBlock;
     }
 
     void Material::SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const

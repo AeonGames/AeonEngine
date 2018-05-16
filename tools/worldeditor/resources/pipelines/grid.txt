@@ -63,7 +63,7 @@ default_material {
       display_name: "Offset"
       vector3 {
         x: 0
-        y: 0
+        y: 0.03225806451
         z: 0
       }
     }
