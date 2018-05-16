@@ -129,7 +129,14 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const Transform& aModelTransform, const Mesh& aMesh, const Pipeline& aPipeline, const Material* aMaterial, uint32_t aInstanceCount, uint32_t aFirstInstance ) const
+    void OpenGLWindow::Render ( const Transform& aModelTransform,
+                                const Mesh& aMesh,
+                                const Pipeline& aPipeline,
+                                const Material* aMaterial,
+                                uint32_t aVertexStart,
+                                uint32_t aVertexCount,
+                                uint32_t aInstanceCount,
+                                uint32_t aFirstInstance ) const
     {
 #if 0
         Frustum frustum ( projection_matrix * view_matrix );
@@ -157,13 +164,13 @@ namespace AeonGames
             {
                 glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, render_mesh->GetIndexBuffer() );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glDrawElementsInstanced ( render_pipeline->GetTopology(), aMesh.GetIndexCount(),
-                                          0x1400 | aMesh.GetIndexType(), nullptr, aInstanceCount );
+                glDrawElementsInstanced ( render_pipeline->GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                          0x1400 | aMesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             else
             {
-                glDrawArraysInstanced ( render_pipeline->GetTopology(), 0, aMesh.GetVertexCount(), aInstanceCount );
+                glDrawArraysInstanced ( render_pipeline->GetTopology(), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
         }

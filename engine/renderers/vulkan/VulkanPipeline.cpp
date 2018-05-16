@@ -212,7 +212,7 @@ namespace AeonGames
     {
         std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = ( mPipeline.GetDefaultMaterial().GetUniformBlockSize() == 0 ) ? 1 : 2;
+        descriptor_pool_sizes[0].descriptorCount = ( mPipeline.GetDefaultMaterial().GetUniformBlock().size() == 0 ) ? 1 : 2;
         descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_pool_sizes[1].descriptorCount = 1;
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
@@ -259,7 +259,7 @@ namespace AeonGames
         {
             {
                 VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
-                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline.GetDefaultMaterial().GetUniformBlockSize() },
+                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline.GetDefaultMaterial().GetUniformBlock().size() },
                 VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
             }
         };
@@ -278,7 +278,7 @@ namespace AeonGames
         write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
         write_descriptor_sets.back().pImageInfo = nullptr;
         write_descriptor_sets.back().pTexelBufferView = nullptr;
-        if ( mPipeline.GetDefaultMaterial().GetUniformBlockSize() )
+        if ( mPipeline.GetDefaultMaterial().GetUniformBlock().size() )
         {
             write_descriptor_sets.emplace_back();
             write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

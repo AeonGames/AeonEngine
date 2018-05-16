@@ -56,11 +56,9 @@ namespace AeonGames
             glBindTexture ( GL_TEXTURE_2D, aMaterial.GetTextures() [i]->GetTexture() );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
-        glBindBuffer ( GL_UNIFORM_BUFFER, mPropertiesBuffer );
+        glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBuffer() );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_UNIFORM_BUFFER, aMaterial.GetUniformData().size(), aMaterial.GetUniformData().data(), GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, mPropertiesBuffer );
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBuffer() );
         OPENGL_CHECK_ERROR_THROW;
     }
 
@@ -208,7 +206,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mPipeline.GetDefaultMaterial().GetUniformBlockSize() )
+        if ( mPipeline.GetDefaultMaterial().GetUniformBlock().size() )
         {
 #if 1
             GLuint uniform = 0;
@@ -235,8 +233,6 @@ namespace AeonGames
                 }
             }
 #endif
-            glGenBuffers ( 1, &mPropertiesBuffer );
-            OPENGL_CHECK_ERROR_THROW;
         }
     }
 
@@ -249,14 +245,6 @@ namespace AeonGames
             glDeleteProgram ( mProgramId );
             OPENGL_CHECK_ERROR_NO_THROW;
             mProgramId = 0;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
-        if ( glIsBuffer ( mPropertiesBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteBuffers ( 1, &mPropertiesBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mPropertiesBuffer = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
     }

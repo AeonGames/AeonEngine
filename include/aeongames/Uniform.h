@@ -39,12 +39,12 @@ namespace AeonGames
             SAMPLER_2D,
             SAMPLER_CUBE,
         };
-        Uniform ( const std::string&  aName, float aX );
-        Uniform ( const std::string&  aName, uint32_t aX );
-        Uniform ( const std::string&  aName, int32_t aX );
-        Uniform ( const std::string&  aName, float aX, float aY );
-        Uniform ( const std::string&  aName, float aX, float aY, float aZ );
-        Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW );
+        Uniform ( const std::string&  aName, float aX, uint8_t* aData );
+        Uniform ( const std::string&  aName, uint32_t aX, uint8_t* aData );
+        Uniform ( const std::string&  aName, int32_t aX, uint8_t* aData );
+        Uniform ( const std::string&  aName, float aX, float aY, uint8_t* aData );
+        Uniform ( const std::string&  aName, float aX, float aY, float aZ, uint8_t* aData );
+        Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW, uint8_t* aData );
         Uniform ( const std::string&  aName, const std::string& aFilename );
         ~Uniform();
         ///@name Getters
@@ -61,9 +61,9 @@ namespace AeonGames
         DLL const std::shared_ptr<Image> GetImage() const;
         ///@}
     private:
-        std::string mName;
-        Type mType = UNKNOWN;
-        uint8_t mData[sizeof ( float ) * 4];
+        std::string mName{};
+        Type mType{ UNKNOWN };
+        uint8_t* mData{};
     };
 }
 #endif

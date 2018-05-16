@@ -39,7 +39,6 @@ namespace AeonGames
         const Pipeline& mPipeline;
         std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
         uint32_t mProgramId{};
-        uint32_t mPropertiesBuffer{};
     };
 }
 #endif
