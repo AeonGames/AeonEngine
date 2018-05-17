@@ -35,6 +35,8 @@ namespace AeonGames
         DLL Material ( const std::string& aFilename );
         DLL Material ( const void* aBuffer, size_t aBufferSize );
         DLL Material ( const MaterialBuffer& aMaterialBuffer );
+        DLL Material ( const Material& aMaterial );
+        DLL Material& operator = ( const Material& aMaterial );
         DLL ~Material();
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
@@ -42,6 +44,7 @@ namespace AeonGames
         DLL void Unload();
         DLL const std::vector<Uniform>& GetUniforms() const;
         DLL const std::vector<uint8_t>& GetUniformBlock() const;
+        DLL void SetUniform ( const std::string& aName, void* aValue );
         DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
         DLL const IRenderMaterial* const GetRenderMaterial() const;
     private:

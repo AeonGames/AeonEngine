@@ -73,6 +73,22 @@ namespace AeonGames
         }
     }
 
+    Material::Material ( const Material& aMaterial ) :
+        mUniforms ( aMaterial.mUniforms ),
+        mUniformBlock ( aMaterial.mUniformBlock ),
+        mRenderMaterial{}
+    {
+    }
+
+    Material& Material::operator = ( const Material& aMaterial )
+    {
+        // This will not Work
+        mUniforms = aMaterial.mUniforms;
+        mUniformBlock = aMaterial.mUniformBlock;
+        mRenderMaterial.reset();
+        return *this;
+    }
+
     Material::~Material()
         = default;
 
@@ -195,7 +211,21 @@ namespace AeonGames
     {
         return mUniformBlock;
     }
-
+    void Material::SetUniform ( const std::string& aName, void* aValue )
+    {
+        auto i = std::find_if ( mUniforms.begin(), mUniforms.end(), [&aName] ( const Uniform & aUniform )
+        {
+            return aUniform.GetName() == aName;
+        } );
+        if ( i != mUniforms.end() )
+        {
+            ( *i ).Set ( aValue );
+            if ( mRenderMaterial )
+            {
+                mRenderMaterial->Update ( mUniformBlock.data() );
+            }
+        }
+    }
     void Material::SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const
     {
         mRenderMaterial = std::move ( aRenderMaterial );
