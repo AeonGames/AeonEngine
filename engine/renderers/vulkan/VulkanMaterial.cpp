@@ -93,22 +93,22 @@ namespace AeonGames
             uint32_t advance = 0;
             switch ( i.GetType() )
             {
-            case Uniform::FLOAT_VEC4:
+            case Material::Uniform::FLOAT_VEC4:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 3 ) = i.GetW();
             /* Intentional Pass-Thru */
-            case Uniform::FLOAT_VEC3:
+            case Material::Uniform::FLOAT_VEC3:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 2 ) = i.GetZ();
                 advance += sizeof ( float ) * 2; /* Both VEC3 and VEC4 have a 4 float stride due to std140 padding. */
             /* Intentional Pass-Thru */
-            case Uniform::FLOAT_VEC2:
+            case Material::Uniform::FLOAT_VEC2:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 1 ) = i.GetY();
                 advance += sizeof ( float );
             /* Intentional Pass-Thru */
-            case Uniform::FLOAT:
+            case Material::Uniform::FLOAT:
                 * ( reinterpret_cast<float*> ( mUniformData.data() + offset ) + 0 ) = i.GetX();
                 advance += sizeof ( float );
                 break;
-            case Uniform::SAMPLER_2D:
+            case Material::Uniform::SAMPLER_2D:
                 mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage().get(), i.GetImage(), mVulkanRenderer ) );
                 break;
             default:
@@ -138,7 +138,7 @@ namespace AeonGames
 
         for ( auto& i : mMaterial.GetUniforms() )
         {
-            if ( i.GetType() == Uniform::Type::SAMPLER_2D )
+            if ( i.GetType() == Material::Uniform::Type::SAMPLER_2D )
             {
                 descriptor_set_layout_bindings.emplace_back();
                 auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
@@ -183,7 +183,7 @@ namespace AeonGames
         uint32_t sampler_descriptor_count = 0;
         for ( auto&i : mMaterial.GetUniforms() )
         {
-            if ( i.GetType() == Uniform::Type::SAMPLER_2D )
+            if ( i.GetType() == Material::Uniform::Type::SAMPLER_2D )
             {
                 ++sampler_descriptor_count;
             }

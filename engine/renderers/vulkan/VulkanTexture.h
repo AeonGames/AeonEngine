@@ -19,7 +19,6 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "aeongames/Uniform.h"
 #include "aeongames/Memory.h"
 
 namespace AeonGames

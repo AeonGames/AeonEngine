@@ -19,7 +19,6 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "Uniform.h"
 #include "aeongames/Platform.h"
 #include "aeongames/Material.h"
 

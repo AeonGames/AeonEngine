@@ -18,7 +18,6 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "aeongames/Uniform.h"
 #include "aeongames/Memory.h"
 
 namespace AeonGames

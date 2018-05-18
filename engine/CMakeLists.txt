@@ -46,7 +46,6 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Uniform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.h
@@ -94,7 +93,6 @@ set(ENGINE_CORE_SOURCES
     core/Sound.cpp
     core/Texture.cpp
     core/Pipeline.cpp
-    core/Uniform.cpp
     core/Material.cpp
     core/Mesh.cpp
     core/Skeleton.cpp
