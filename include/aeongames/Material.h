@@ -17,10 +17,11 @@ limitations under the License.
 #define AEONGAMES_MATERIAL_H
 #include <string>
 #include <vector>
-#include "Uniform.h"
+#include "aeongames/Memory.h"
 
 namespace AeonGames
 {
+    class Image;
     class MaterialBuffer;
     class Material
     {
@@ -31,6 +32,58 @@ namespace AeonGames
             virtual void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) = 0;
             virtual ~IRenderMaterial() {};
         };
+        class Uniform
+        {
+        public:
+            enum Type
+            {
+                UNKNOWN = 0,
+                UINT,
+                FLOAT,
+                SINT,
+                FLOAT_VEC2,
+                FLOAT_VEC3,
+                FLOAT_VEC4,
+                SAMPLER_2D,
+                SAMPLER_CUBE,
+            };
+            Uniform ( const std::string&  aName, float aX, uint8_t* aData );
+            Uniform ( const std::string&  aName, uint32_t aX, uint8_t* aData );
+            Uniform ( const std::string&  aName, int32_t aX, uint8_t* aData );
+            Uniform ( const std::string&  aName, float aX, float aY, uint8_t* aData );
+            Uniform ( const std::string&  aName, float aX, float aY, float aZ, uint8_t* aData );
+            Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW, uint8_t* aData );
+            Uniform ( const std::string&  aName, const std::string& aFilename );
+            ~Uniform();
+            ///@name Getters
+            ///@{
+            DLL Type GetType() const;
+            DLL const std::string GetDeclaration() const;
+            DLL const std::string& GetName() const;
+            DLL uint32_t GetUInt() const;
+            DLL int32_t GetSInt() const;
+            DLL float GetX() const;
+            DLL float GetY() const;
+            DLL float GetZ() const;
+            DLL float GetW() const;
+            DLL const std::shared_ptr<Image> GetImage() const;
+            ///@}
+            ///@name Setters
+            ///@{
+            DLL void SetUInt ( uint32_t aValue );
+            DLL void SetSInt ( int32_t aValue );
+            DLL void SetX ( float aValue );
+            DLL void SetY ( float aValue );
+            DLL void SetZ ( float aValue );
+            DLL void SetW ( float aValue );
+            DLL void Set ( void* aValue );
+            ///@}
+        private:
+            std::string mName{};
+            Type mType{ UNKNOWN };
+            uint8_t* mData{};
+        };
+
         DLL Material();
         DLL Material ( const std::string& aFilename );
         DLL Material ( const void* aBuffer, size_t aBufferSize );

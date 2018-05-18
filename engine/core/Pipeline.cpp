@@ -231,7 +231,7 @@ namespace AeonGames
             {
                 switch ( i.GetType() )
                 {
-                case Uniform::Type::SAMPLER_2D:
+                case Material::Uniform::Type::SAMPLER_2D:
                     samplers.append ( "#ifdef VULKAN\n" );
                     samplers.append ( "layout(set = 1, binding = " +
                                       std::to_string ( sampler_binding ) +

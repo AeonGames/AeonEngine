@@ -18,6 +18,7 @@ limitations under the License.
 #include <vector>
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLTexture.h"
@@ -212,7 +213,7 @@ namespace AeonGames
             GLuint uniform = 0;
             for ( auto& i : mPipeline.GetDefaultMaterial().GetUniforms() )
             {
-                if ( i.GetType() == Uniform::SAMPLER_2D )
+                if ( i.GetType() == Material::Uniform::SAMPLER_2D )
                 {
                     glUniform1i ( uniform, uniform );
                     OPENGL_CHECK_ERROR_THROW;

@@ -19,7 +19,6 @@ limitations under the License.
 #include <string>
 #include "OpenGLFunctions.h"
 #include "aeongames/Pipeline.h"
-#include "aeongames/Uniform.h"
 
 namespace AeonGames
 {
