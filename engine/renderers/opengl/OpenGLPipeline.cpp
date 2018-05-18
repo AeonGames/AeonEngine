@@ -56,9 +56,9 @@ namespace AeonGames
             glBindTexture ( GL_TEXTURE_2D, aMaterial.GetTextures() [i]->GetTexture() );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
-        glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBuffer() );
+        glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBuffer() );
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
     }
 

@@ -22,11 +22,9 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLBuffer::OpenGLBuffer ( const OpenGLRenderer & aOpenGLRenderer ) : mOpenGLRenderer ( aOpenGLRenderer )
-    {
-    }
-    OpenGLBuffer::OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer, const GLsizei aSize, const GLenum aUsage, const void *aData ) :
-        mOpenGLRenderer ( aOpenGLRenderer ), mSize ( aSize ), mUsage ( aUsage )
+    OpenGLBuffer::OpenGLBuffer (  ) = default;
+    OpenGLBuffer::OpenGLBuffer ( const GLsizei aSize, const GLenum aUsage, const void *aData ) :
+        mSize ( aSize ), mUsage ( aUsage )
     {
         try
         {
@@ -42,6 +40,11 @@ namespace AeonGames
     OpenGLBuffer::~OpenGLBuffer()
     {
         Finalize();
+    }
+
+    GLuint OpenGLBuffer::GetBufferId() const
+    {
+        return mBuffer;
     }
 
     void OpenGLBuffer::Initialize ( const GLsizei aSize, const GLenum aUsage, const void * aData )

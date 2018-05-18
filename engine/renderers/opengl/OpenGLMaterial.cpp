@@ -36,8 +36,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial ( const Material& aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
-        mMaterial ( aMaterial )
+    OpenGLMaterial::OpenGLMaterial ( const Material& aMaterial ) :
+        mMaterial ( aMaterial ), mPropertiesBuffer{}
     {
         try
         {
@@ -57,8 +57,7 @@ namespace AeonGames
 
     void OpenGLMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {
-        glNamedBufferSubData ( mPropertiesBuffer, aOffset, ( aSize ) ? aSize : mMaterial.GetUniformBlock().size() - aOffset, aValue );
-        OPENGL_CHECK_ERROR_NO_THROW;
+        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : mMaterial.GetUniformBlock().size() - aOffset, aValue );
     }
 
     const std::vector<std::shared_ptr<OpenGLTexture>>& OpenGLMaterial::GetTextures() const
@@ -66,27 +65,18 @@ namespace AeonGames
         return mTextures;
     }
 
-    GLuint OpenGLMaterial::GetPropertiesBuffer() const
+    GLuint OpenGLMaterial::GetPropertiesBufferId() const
     {
-        return mPropertiesBuffer;
+        return mPropertiesBuffer.GetBufferId();
     }
 
     void OpenGLMaterial::Initialize()
     {
-        glCreateBuffers ( 1, &mPropertiesBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        glNamedBufferData ( mPropertiesBuffer, mMaterial.GetUniformBlock().size(), mMaterial.GetUniformBlock().data(), GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_THROW;
+        mPropertiesBuffer.Initialize ( mMaterial.GetUniformBlock().size(), GL_DYNAMIC_DRAW, mMaterial.GetUniformBlock().data() );
     }
+
     void OpenGLMaterial::Finalize()
     {
-        if ( glIsBuffer ( mPropertiesBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteBuffers ( 1, &mPropertiesBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mPropertiesBuffer = 0;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
+        mPropertiesBuffer.Finalize();
     }
 }

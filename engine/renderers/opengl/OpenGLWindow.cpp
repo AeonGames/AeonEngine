@@ -186,7 +186,7 @@ namespace AeonGames
             }
             if ( !render_material )
             {
-                material->SetRenderMaterial ( std::make_unique<OpenGLMaterial> ( *material, mOpenGLRenderer ) );
+                material->SetRenderMaterial ( std::make_unique<OpenGLMaterial> ( *material ) );
             }
         }
     }

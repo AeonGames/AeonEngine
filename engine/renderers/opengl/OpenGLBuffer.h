@@ -23,8 +23,8 @@ namespace AeonGames
     class OpenGLBuffer
     {
     public:
-        OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer );
-        OpenGLBuffer ( const OpenGLRenderer& aOpenGLRenderer, const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
+        OpenGLBuffer ();
+        OpenGLBuffer ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         ~OpenGLBuffer();
         void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         void Finalize();
@@ -33,9 +33,9 @@ namespace AeonGames
         void* MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const;
         void Unmap() const;
         size_t GetSize() const;
+        GLuint GetBufferId() const;
     private:
         void Initialize ( const void *aData );
-        const OpenGLRenderer& mOpenGLRenderer;
         GLuint mBuffer{};
         GLsizei mSize{};
         GLenum mUsage{};

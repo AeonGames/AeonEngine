@@ -15,12 +15,12 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OPENGLMATERIAL_H
 #define AEONGAMES_OPENGLMATERIAL_H
-#include "aeongames/Material.h"
 #include <cstdint>
 #include <string>
 #include <vector>
 #include "aeongames/Memory.h"
 #include "aeongames/Material.h"
+#include "OpenGLBuffer.h"
 
 namespace AeonGames
 {
@@ -29,17 +29,17 @@ namespace AeonGames
     class OpenGLMaterial : public Material::IRenderMaterial
     {
     public:
-        OpenGLMaterial ( const Material& aMaterial, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
+        OpenGLMaterial ( const Material& aMaterial );
         ~OpenGLMaterial() final;
         void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
         const std::vector<std::shared_ptr<OpenGLTexture>>& GetTextures() const;
-        GLuint GetPropertiesBuffer() const;
+        GLuint GetPropertiesBufferId() const;
     private:
         void Initialize();
         void Finalize();
         const Material& mMaterial;
-        GLuint mPropertiesBuffer{};
-        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
+        //GLuint mPropertiesBuffer{};
+        OpenGLBuffer mPropertiesBuffer{};
         std::vector<std::shared_ptr<OpenGLTexture>> mTextures;
     };
 }
