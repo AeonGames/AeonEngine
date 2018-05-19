@@ -23,6 +23,7 @@ namespace AeonGames
 {
     class Image;
     class MaterialBuffer;
+    class PropertyBuffer;
     class Material
     {
     public:
@@ -47,13 +48,7 @@ namespace AeonGames
                 SAMPLER_2D,
                 SAMPLER_CUBE,
             };
-            Uniform ( const std::string&  aName, float aX, uint8_t* aData );
-            Uniform ( const std::string&  aName, uint32_t aX, uint8_t* aData );
-            Uniform ( const std::string&  aName, int32_t aX, uint8_t* aData );
-            Uniform ( const std::string&  aName, float aX, float aY, uint8_t* aData );
-            Uniform ( const std::string&  aName, float aX, float aY, float aZ, uint8_t* aData );
-            Uniform ( const std::string&  aName, float aX, float aY, float aZ, float aW, uint8_t* aData );
-            Uniform ( const std::string&  aName, const std::string& aFilename );
+            Uniform ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer );
             ~Uniform();
             ///@name Getters
             ///@{
@@ -79,17 +74,18 @@ namespace AeonGames
             DLL void Set ( void* aValue );
             ///@}
         private:
+            Material& mMaterial;
             std::string mName{};
             Type mType{ UNKNOWN };
-            uint8_t* mData{};
+            size_t mOffset{};
         };
 
         DLL Material();
         DLL Material ( const std::string& aFilename );
         DLL Material ( const void* aBuffer, size_t aBufferSize );
         DLL Material ( const MaterialBuffer& aMaterialBuffer );
-        DLL Material ( const Material& aMaterial );
-        DLL Material& operator = ( const Material& aMaterial );
+        //DLL Material ( const Material& aMaterial );
+        //DLL Material& operator = ( const Material& aMaterial );
         DLL ~Material();
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
