@@ -72,7 +72,7 @@ namespace AeonGames
 
     void OpenGLMaterial::Initialize()
     {
-        mPropertiesBuffer.Initialize ( mMaterial.GetUniformBlock().size(), GL_DYNAMIC_DRAW, mMaterial.GetUniformBlock().data() );
+        mPropertiesBuffer.Initialize ( static_cast<GLsizei> ( mMaterial.GetUniformBlock().size() ), GL_DYNAMIC_DRAW, mMaterial.GetUniformBlock().data() );
     }
 
     void OpenGLMaterial::Finalize()
