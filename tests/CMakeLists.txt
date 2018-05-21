@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_directories(${GTEST_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include)
+include_directories(
+    ${GTEST_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/engine/include
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${PROTOBUF_INCLUDE_DIR}
+    ${CMAKE_BINARY_DIR}/engine
+)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
@@ -24,6 +31,7 @@ set(TEST_SRCS
     FlyWeightTests.cpp
     CRCTests.cpp
     SceneTests.cpp
+    MaterialTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})

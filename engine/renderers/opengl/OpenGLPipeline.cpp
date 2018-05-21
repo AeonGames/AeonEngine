@@ -207,13 +207,13 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mPipeline.GetDefaultMaterial().GetUniformBlock().size() )
+        if ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() )
         {
 #if 1
             GLuint uniform = 0;
-            for ( auto& i : mPipeline.GetDefaultMaterial().GetUniforms() )
+            for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
             {
-                if ( i.GetType() == Material::Uniform::SAMPLER_2D )
+                if ( i.GetType() == Material::SAMPLER_2D )
                 {
                     glUniform1i ( uniform, uniform );
                     OPENGL_CHECK_ERROR_THROW;
@@ -223,13 +223,13 @@ namespace AeonGames
 #else
             // Keeping this code for reference
             GLuint uniform = 0;
-            for ( auto& i : mPipeline.GetDefaultMaterial().GetUniformMetaData() )
+            for ( auto& i : mPipeline.GetDefaultMaterial().GetPropertyMetaData() )
             {
-                if ( i.GetType() == Uniform::SAMPLER_2D )
+                if ( i.GetType() == Property::SAMPLER_2D )
                 {
-                    auto location = glGetUniformLocation ( mProgramId, i.GetName().c_str() );
+                    auto location = glGetPropertyLocation ( mProgramId, i.GetName().c_str() );
                     OPENGL_CHECK_ERROR_THROW;
-                    glUniform1i ( location, uniform++ );
+                    glProperty1i ( location, uniform++ );
                     OPENGL_CHECK_ERROR_THROW;
                 }
             }

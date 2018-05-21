@@ -216,7 +216,7 @@ namespace AeonGames
         mFragmentShader.append ( transforms );
 
         mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
-        if ( mDefaultMaterial.GetUniforms().size() )
+        if ( mDefaultMaterial.GetProperties().size() )
         {
             uint32_t sampler_binding = 0;
             std::string properties (
@@ -227,11 +227,11 @@ namespace AeonGames
                 "#endif\n"
             );
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : mDefaultMaterial.GetUniforms() )
+            for ( auto& i : mDefaultMaterial.GetProperties() )
             {
                 switch ( i.GetType() )
                 {
-                case Material::Uniform::Type::SAMPLER_2D:
+                case Material::PropertyType::SAMPLER_2D:
                     samplers.append ( "#ifdef VULKAN\n" );
                     samplers.append ( "layout(set = 1, binding = " +
                                       std::to_string ( sampler_binding ) +

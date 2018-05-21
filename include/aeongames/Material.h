@@ -17,88 +17,93 @@ limitations under the License.
 #define AEONGAMES_MATERIAL_H
 #include <string>
 #include <vector>
+#include "aeongames/Platform.h"
 #include "aeongames/Memory.h"
 
 namespace AeonGames
 {
     class Image;
+    class Vector2;
+    class Vector3;
+    class Vector4;
     class MaterialBuffer;
     class PropertyBuffer;
     class Material
     {
     public:
+        enum PropertyType
+        {
+            UNKNOWN = 0,
+            UINT,
+            FLOAT,
+            SINT,
+            FLOAT_VEC2,
+            FLOAT_VEC3,
+            FLOAT_VEC4,
+            SAMPLER_2D,
+            SAMPLER_CUBE,
+        };
         class IRenderMaterial
         {
         public:
             virtual void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) = 0;
             virtual ~IRenderMaterial() {};
         };
-        class Uniform
+    private:
+        class Property
         {
         public:
-            enum Type
-            {
-                UNKNOWN = 0,
-                UINT,
-                FLOAT,
-                SINT,
-                FLOAT_VEC2,
-                FLOAT_VEC3,
-                FLOAT_VEC4,
-                SAMPLER_2D,
-                SAMPLER_CUBE,
-            };
-            Uniform ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer );
-            ~Uniform();
+            Property ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer );
+            ~Property();
+            DLL Property ( const Property& aProperty );
+            DLL Property& operator = ( const Property& aProperty );
             ///@name Getters
             ///@{
-            DLL Type GetType() const;
+            DLL PropertyType GetType() const;
             DLL const std::string GetDeclaration() const;
             DLL const std::string& GetName() const;
-            DLL uint32_t GetUInt() const;
-            DLL int32_t GetSInt() const;
-            DLL float GetX() const;
-            DLL float GetY() const;
-            DLL float GetZ() const;
-            DLL float GetW() const;
-            DLL const std::shared_ptr<Image> GetImage() const;
+            DLL uint32_t GetUint() const;
+            DLL int32_t GetSint() const;
+            DLL float GetFloat() const;
+            DLL Vector2 GetVector2() const;
+            DLL Vector3 GetVector3() const;
+            DLL Vector4 GetVector4() const;
             ///@}
             ///@name Setters
             ///@{
-            DLL void SetUInt ( uint32_t aValue );
-            DLL void SetSInt ( int32_t aValue );
-            DLL void SetX ( float aValue );
-            DLL void SetY ( float aValue );
-            DLL void SetZ ( float aValue );
-            DLL void SetW ( float aValue );
-            DLL void Set ( void* aValue );
+            DLL void Set ( uint32_t aValue );
+            DLL void Set ( int32_t aValue );
+            DLL void Set ( float aValue );
+            DLL void Set ( const Vector2& aValue );
+            DLL void Set ( const Vector3& aValue );
+            DLL void Set ( const Vector4& aValue );
             ///@}
         private:
-            Material& mMaterial;
+            friend class Material;
+            Material* mMaterial{};
             std::string mName{};
-            Type mType{ UNKNOWN };
+            PropertyType mType{ UNKNOWN };
             size_t mOffset{};
         };
-
+    public:
         DLL Material();
         DLL Material ( const std::string& aFilename );
         DLL Material ( const void* aBuffer, size_t aBufferSize );
         DLL Material ( const MaterialBuffer& aMaterialBuffer );
-        //DLL Material ( const Material& aMaterial );
-        //DLL Material& operator = ( const Material& aMaterial );
+        DLL Material ( const Material& aMaterial );
+        DLL Material& operator = ( const Material& aMaterial );
         DLL ~Material();
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void Load ( const MaterialBuffer& aMaterialBuffer );
         DLL void Unload();
-        DLL const std::vector<Uniform>& GetUniforms() const;
-        DLL const std::vector<uint8_t>& GetUniformBlock() const;
-        DLL void SetUniform ( const std::string& aName, void* aValue );
+        DLL const std::vector<Property>& GetProperties() const;
+        DLL const std::vector<uint8_t>& GetPropertyBlock() const;
         DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
         DLL const IRenderMaterial* const GetRenderMaterial() const;
     private:
-        std::vector<Uniform> mUniforms{};
-        std::vector<uint8_t> mUniformBlock{};
+        std::vector<Property> mProperties{};
+        std::vector<uint8_t> mPropertyBlock{};
         mutable std::unique_ptr<IRenderMaterial> mRenderMaterial{};
     };
 }
