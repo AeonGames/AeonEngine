@@ -115,23 +115,23 @@ namespace AeonGames
         {
         case PropertyBuffer::DefaultValueCase::kScalarFloat:
                     return Material::Uniform::Type::FLOAT;
-            case PropertyBuffer::DefaultValueCase::kScalarUint:
-                return Material::Uniform::Type::UINT;
-            case PropertyBuffer::DefaultValueCase::kScalarInt:
-                return Material::Uniform::Type::SINT;
-            case PropertyBuffer::DefaultValueCase::kVector2:
-                return Material::Uniform::Type::FLOAT_VEC2;
-            case PropertyBuffer::DefaultValueCase::kVector3:
-                return Material::Uniform::Type::FLOAT_VEC3;
-            case PropertyBuffer::DefaultValueCase::kVector4:
-                return Material::Uniform::Type::FLOAT_VEC4;
-            default:
-                break;
-            }
-            return Material::Uniform::Type::UNKNOWN;
+        case PropertyBuffer::DefaultValueCase::kScalarUint:
+            return Material::Uniform::Type::UINT;
+        case PropertyBuffer::DefaultValueCase::kScalarInt:
+            return Material::Uniform::Type::SINT;
+        case PropertyBuffer::DefaultValueCase::kVector2:
+            return Material::Uniform::Type::FLOAT_VEC2;
+        case PropertyBuffer::DefaultValueCase::kVector3:
+            return Material::Uniform::Type::FLOAT_VEC3;
+        case PropertyBuffer::DefaultValueCase::kVector4:
+            return Material::Uniform::Type::FLOAT_VEC4;
+        default:
+            break;
         }
+        return Material::Uniform::Type::UNKNOWN;
+    }
 
-        static size_t GetUniformBlockSize ( const MaterialBuffer& aMaterialBuffer )
+    static size_t GetUniformBlockSize ( const MaterialBuffer& aMaterialBuffer )
     {
         size_t size = 0;
         for ( auto& i : aMaterialBuffer.property() )
@@ -265,7 +265,7 @@ namespace AeonGames
             reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.vector4().x();
             reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [1] = aPropertyBuffer.vector4().y();
             reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [2] = aPropertyBuffer.vector4().z();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [2] = aPropertyBuffer.vector4().w();
+            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [3] = aPropertyBuffer.vector4().w();
             break;
 #if 0
         case PropertyBuffer::DefaultValueCase::kTexture:
