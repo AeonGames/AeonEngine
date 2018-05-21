@@ -115,23 +115,23 @@ namespace AeonGames
         {
         case PropertyBuffer::DefaultValueCase::kScalarFloat:
                     return Material::Uniform::Type::FLOAT;
-        case PropertyBuffer::DefaultValueCase::kScalarUint:
-            return Material::Uniform::Type::UINT;
-        case PropertyBuffer::DefaultValueCase::kScalarInt:
-            return Material::Uniform::Type::SINT;
-        case PropertyBuffer::DefaultValueCase::kVector2:
-            return Material::Uniform::Type::FLOAT_VEC2;
-        case PropertyBuffer::DefaultValueCase::kVector3:
-            return Material::Uniform::Type::FLOAT_VEC3;
-        case PropertyBuffer::DefaultValueCase::kVector4:
-            return Material::Uniform::Type::FLOAT_VEC4;
-        default:
-            break;
+            case PropertyBuffer::DefaultValueCase::kScalarUint:
+                return Material::Uniform::Type::UINT;
+            case PropertyBuffer::DefaultValueCase::kScalarInt:
+                return Material::Uniform::Type::SINT;
+            case PropertyBuffer::DefaultValueCase::kVector2:
+                return Material::Uniform::Type::FLOAT_VEC2;
+            case PropertyBuffer::DefaultValueCase::kVector3:
+                return Material::Uniform::Type::FLOAT_VEC3;
+            case PropertyBuffer::DefaultValueCase::kVector4:
+                return Material::Uniform::Type::FLOAT_VEC4;
+            default:
+                break;
+            }
+            return Material::Uniform::Type::UNKNOWN;
         }
-        return Material::Uniform::Type::UNKNOWN;
-    }
 
-    static size_t GetUniformBlockSize ( const MaterialBuffer& aMaterialBuffer )
+        static size_t GetUniformBlockSize ( const MaterialBuffer& aMaterialBuffer )
     {
         size_t size = 0;
         for ( auto& i : aMaterialBuffer.property() )
