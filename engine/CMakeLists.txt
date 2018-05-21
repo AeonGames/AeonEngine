@@ -62,8 +62,9 @@ set(ENGINE_SDK_HEADERS
 
 set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Vector3.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector2.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Plane.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AABB.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Frustum.h
@@ -114,6 +115,7 @@ set(ENGINE_MATH_SOURCES
     math/Quaternion.cpp
     math/Vector4.cpp
     math/Vector3.cpp
+    math/Vector2.cpp
     math/Plane.cpp
     math/AABB.cpp
     math/Frustum.cpp

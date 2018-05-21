@@ -32,7 +32,6 @@ namespace AeonGames
         VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanMaterial() final;
         void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
-        const std::vector<uint8_t>& GetUniformData() const;
         const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
         const VkDescriptorSet& GetDescriptorSet() const;
         const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
@@ -47,7 +46,6 @@ namespace AeonGames
         void FinalizeDescriptorSet();
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         const Material& mMaterial;
-        std::vector<uint8_t> mUniformData;
         VkDescriptorSetLayout mVkDescriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool mVkDescriptorPool = VK_NULL_HANDLE;
         VkDescriptorSet mVkDescriptorSet = VK_NULL_HANDLE;

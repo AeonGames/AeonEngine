@@ -17,6 +17,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
+#include <string.h>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -29,12 +30,15 @@ limitations under the License.
 #endif
 
 #include "aeongames/Material.h"
+#include "aeongames/Vector2.h"
+#include "aeongames/Vector3.h"
+#include "aeongames/Vector4.h"
 
 namespace AeonGames
 {
     Material::Material() = default;
 
-    Material::Material ( const std::string&  aFilename )
+    Material::Material ( const std::string& aFilename )
     {
         try
         {
@@ -72,23 +76,33 @@ namespace AeonGames
             throw;
         }
     }
-#if 0
+
     Material::Material ( const Material& aMaterial ) :
-        mUniforms ( aMaterial.mUniforms ),
-        mUniformBlock ( aMaterial.mUniformBlock ),
+        mProperties ( aMaterial.mProperties ),
+        mPropertyBlock ( aMaterial.mPropertyBlock ),
         mRenderMaterial{}
     {
+        for ( auto&i : mProperties )
+        {
+            i.mMaterial = this;
+        }
     }
 
     Material& Material::operator = ( const Material& aMaterial )
     {
-        // This will not Work
-        mUniforms = aMaterial.mUniforms;
-        mUniformBlock = aMaterial.mUniformBlock;
-        mRenderMaterial.reset();
+        if ( this != &aMaterial )
+        {
+            mProperties = aMaterial.mProperties;
+            for ( auto&i : mProperties )
+            {
+                i.mMaterial = this;
+            }
+            mPropertyBlock = aMaterial.mPropertyBlock;
+            mRenderMaterial.reset();
+        }
         return *this;
     }
-#endif
+
     Material::~Material()
         = default;
 
@@ -109,29 +123,29 @@ namespace AeonGames
         material_buffer.Clear();
     }
 
-    static constexpr enum Material::Uniform::Type GetType ( PropertyBuffer::DefaultValueCase aPropertyBufferType )
+    static constexpr enum Material::PropertyType GetType ( PropertyBuffer::DefaultValueCase aPropertyBufferType )
     {
         switch ( aPropertyBufferType )
         {
         case PropertyBuffer::DefaultValueCase::kScalarFloat:
-                    return Material::Uniform::Type::FLOAT;
+                    return Material::PropertyType::FLOAT;
             case PropertyBuffer::DefaultValueCase::kScalarUint:
-                return Material::Uniform::Type::UINT;
+                return Material::PropertyType::UINT;
             case PropertyBuffer::DefaultValueCase::kScalarInt:
-                return Material::Uniform::Type::SINT;
+                return Material::PropertyType::SINT;
             case PropertyBuffer::DefaultValueCase::kVector2:
-                return Material::Uniform::Type::FLOAT_VEC2;
+                return Material::PropertyType::FLOAT_VEC2;
             case PropertyBuffer::DefaultValueCase::kVector3:
-                return Material::Uniform::Type::FLOAT_VEC3;
+                return Material::PropertyType::FLOAT_VEC3;
             case PropertyBuffer::DefaultValueCase::kVector4:
-                return Material::Uniform::Type::FLOAT_VEC4;
+                return Material::PropertyType::FLOAT_VEC4;
             default:
                 break;
             }
-            return Material::Uniform::Type::UNKNOWN;
+            return Material::PropertyType::UNKNOWN;
         }
 
-        static size_t GetUniformBlockSize ( const MaterialBuffer& aMaterialBuffer )
+        static size_t GetPropertyBlockSize ( const MaterialBuffer& aMaterialBuffer )
     {
         size_t size = 0;
         for ( auto& i : aMaterialBuffer.property() )
@@ -173,45 +187,31 @@ namespace AeonGames
     void Material::Load ( const MaterialBuffer& aMaterialBuffer )
     {
         Unload();
-        mUniforms.reserve ( aMaterialBuffer.property().size() );
-        mUniformBlock.reserve ( AeonGames::GetUniformBlockSize ( aMaterialBuffer ) );
+        mProperties.reserve ( aMaterialBuffer.property().size() );
+        mPropertyBlock.reserve ( AeonGames::GetPropertyBlockSize ( aMaterialBuffer ) );
         for ( auto& i : aMaterialBuffer.property() )
         {
-            mUniforms.emplace_back ( *this, i );
+            mProperties.emplace_back ( *this, i );
         }
-        mUniformBlock.resize ( AeonGames::GetUniformBlockSize ( aMaterialBuffer ) );
+        mPropertyBlock.resize ( AeonGames::GetPropertyBlockSize ( aMaterialBuffer ) );
     }
 
     void Material::Unload()
     {
-        mUniforms.clear();
-        mUniformBlock.clear();
+        mProperties.clear();
+        mPropertyBlock.clear();
     }
 
-    const std::vector<Material::Uniform>& Material::GetUniforms() const
+    const std::vector<Material::Property>& Material::GetProperties() const
     {
-        return mUniforms;
+        return mProperties;
     }
 
-    const std::vector<uint8_t>& Material::GetUniformBlock() const
+    const std::vector<uint8_t>& Material::GetPropertyBlock() const
     {
-        return mUniformBlock;
+        return mPropertyBlock;
     }
-    void Material::SetUniform ( const std::string& aName, void* aValue )
-    {
-        auto i = std::find_if ( mUniforms.begin(), mUniforms.end(), [&aName] ( const Uniform & aUniform )
-        {
-            return aUniform.GetName() == aName;
-        } );
-        if ( i != mUniforms.end() )
-        {
-            ( *i ).Set ( aValue );
-            if ( mRenderMaterial )
-            {
-                mRenderMaterial->Update ( mUniformBlock.data() );
-            }
-        }
-    }
+
     void Material::SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const
     {
         mRenderMaterial = std::move ( aRenderMaterial );
@@ -222,54 +222,54 @@ namespace AeonGames
         return mRenderMaterial.get();
     }
 
-    Material::Uniform::Uniform ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer ) :
-        mMaterial{aMaterial},
+    Material::Property::Property ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer ) :
+        mMaterial{&aMaterial},
         mName { aPropertyBuffer.uniform_name() },
         mType{AeonGames::GetType ( aPropertyBuffer.default_value_case() ) },
-        mOffset{mMaterial.mUniformBlock.size() }
+        mOffset{ mMaterial->mPropertyBlock.size() }
     {
         // Could use mType directly too.
         switch ( aPropertyBuffer.default_value_case() )
         {
         case PropertyBuffer::DefaultValueCase::kScalarFloat:
             mOffset += ( mOffset % sizeof ( float ) ) ? sizeof ( float ) - ( mOffset % sizeof ( float ) ) : 0;
-            mMaterial.mUniformBlock.resize ( mOffset + sizeof ( float ) );
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.scalar_float();
+            mMaterial->mPropertyBlock.resize ( mOffset + sizeof ( float ) );
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [0] = aPropertyBuffer.scalar_float();
             break;
         case PropertyBuffer::DefaultValueCase::kScalarUint:
             mOffset += ( mOffset % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( mOffset % sizeof ( uint32_t ) ) : 0;
-            mMaterial.mUniformBlock.resize ( mOffset + sizeof ( uint32_t ) );
-            reinterpret_cast<uint32_t*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.scalar_uint();
+            mMaterial->mPropertyBlock.resize ( mOffset + sizeof ( uint32_t ) );
+            reinterpret_cast<uint32_t*> ( mMaterial->mPropertyBlock.data() + mOffset ) [0] = aPropertyBuffer.scalar_uint();
             break;
         case PropertyBuffer::DefaultValueCase::kScalarInt:
             mOffset += ( mOffset % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( mOffset % sizeof ( int32_t ) ) : 0;
-            mMaterial.mUniformBlock.resize ( mOffset + sizeof ( int32_t ) );
-            reinterpret_cast<int32_t*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.scalar_int();
+            mMaterial->mPropertyBlock.resize ( mOffset + sizeof ( int32_t ) );
+            reinterpret_cast<int32_t*> ( mMaterial->mPropertyBlock.data() + mOffset ) [0] = aPropertyBuffer.scalar_int();
             break;
         case PropertyBuffer::DefaultValueCase::kVector2:
             mOffset += ( mOffset % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( mOffset % ( sizeof ( float ) * 2 ) ) : 0;
-            mMaterial.mUniformBlock.resize ( mOffset + ( sizeof ( float ) * 2 ) );
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.vector2().x();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [1] = aPropertyBuffer.vector2().y();
+            mMaterial->mPropertyBlock.resize ( mOffset + ( sizeof ( float ) * 2 ) );
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [0] = aPropertyBuffer.vector2().x();
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [1] = aPropertyBuffer.vector2().y();
             break;
         case PropertyBuffer::DefaultValueCase::kVector3:
             mOffset += ( mOffset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( mOffset % ( sizeof ( float ) * 4 ) ) : 0;
-            mMaterial.mUniformBlock.resize ( mOffset + ( sizeof ( float ) * 3 ) );
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.vector3().x();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [1] = aPropertyBuffer.vector3().y();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [2] = aPropertyBuffer.vector3().z();
+            mMaterial->mPropertyBlock.resize ( mOffset + ( sizeof ( float ) * 3 ) );
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [0] = aPropertyBuffer.vector3().x();
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [1] = aPropertyBuffer.vector3().y();
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [2] = aPropertyBuffer.vector3().z();
             break;
         case PropertyBuffer::DefaultValueCase::kVector4:
             mOffset += ( mOffset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( mOffset % ( sizeof ( float ) * 4 ) ) : 0;
-            mMaterial.mUniformBlock.resize ( mOffset + ( sizeof ( float ) * 4 ) );
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aPropertyBuffer.vector4().x();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [1] = aPropertyBuffer.vector4().y();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [2] = aPropertyBuffer.vector4().z();
-            reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [3] = aPropertyBuffer.vector4().w();
+            mMaterial->mPropertyBlock.resize ( mOffset + ( sizeof ( float ) * 4 ) );
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [0] = aPropertyBuffer.vector4().x();
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [1] = aPropertyBuffer.vector4().y();
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [2] = aPropertyBuffer.vector4().z();
+            reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [3] = aPropertyBuffer.vector4().w();
             break;
 #if 0
         case PropertyBuffer::DefaultValueCase::kTexture:
-            mUniforms.emplace_back ( *this, i.uniform_name(), i.texture() );
+            mProperties.emplace_back ( *this, i.uniform_name(), i.texture() );
             break;
 #endif
         default:
@@ -277,39 +277,59 @@ namespace AeonGames
         }
     }
 
-    Material::Uniform::~Uniform()
+    Material::Property::Property ( const Property& aProperty ) :
+        mMaterial{nullptr},
+        mName { aProperty.mName },
+        mType{ aProperty.mType },
+        mOffset{ aProperty.mOffset }
     {
     }
 
-    Material::Uniform::Type Material::Uniform::GetType() const
+    Material::Property& Material::Property::operator = ( const Property& aProperty )
+    {
+        if ( this != &aProperty )
+        {
+            mMaterial = nullptr;
+            mName =  aProperty.mName;
+            mType = aProperty.mType;
+            mOffset = aProperty.mOffset;
+        }
+        return *this;
+    }
+
+    Material::Property::~Property()
+    {
+    }
+
+    Material::PropertyType Material::Property::GetType() const
     {
         return mType;
     }
 
-    const std::string Material::Uniform::GetDeclaration() const
+    const std::string Material::Property::GetDeclaration() const
     {
         std::string declaration;
         switch ( mType )
         {
-        case Material::Uniform::Type::FLOAT:
+        case Material::PropertyType::FLOAT:
             declaration = "float " + mName + ";\n";
             break;
-        case Material::Uniform::Type::UINT:
+        case Material::PropertyType::UINT:
             declaration = "uint " + mName + ";\n";
             break;
-        case Material::Uniform::Type::SINT:
+        case Material::PropertyType::SINT:
             declaration = "int " + mName + ";\n";
             break;
-        case Material::Uniform::Type::FLOAT_VEC2:
+        case Material::PropertyType::FLOAT_VEC2:
             declaration = "vec2 " + mName + ";\n";
             break;
-        case Material::Uniform::Type::FLOAT_VEC3:
+        case Material::PropertyType::FLOAT_VEC3:
             declaration = "vec3 " + mName + ";\n";
             break;
-        case Material::Uniform::Type::FLOAT_VEC4:
+        case Material::PropertyType::FLOAT_VEC4:
             declaration = "vec4 " + mName + ";\n";
             break;
-        case Material::Uniform::Type::SAMPLER_2D:
+        case Material::PropertyType::SAMPLER_2D:
             declaration = "uniform sampler2D " + mName + ";\n";
             break;
         default:
@@ -318,120 +338,129 @@ namespace AeonGames
         return declaration;
     }
 
-    const std::string & Material::Uniform::GetName() const
+    const std::string & Material::Property::GetName() const
     {
         return mName;
     }
 
-    uint32_t Material::Uniform::GetUInt() const
+    void Material::Property::Set ( uint32_t aValue )
     {
-        assert ( mType == Material::Uniform::Type::UINT );
-        return reinterpret_cast<const uint32_t*> ( mMaterial.mUniformBlock.data() + mOffset ) [0];
-    }
-
-    DLL int32_t Material::Uniform::GetSInt() const
-    {
-        assert ( mType == Material::Uniform::Type::SINT );
-        return reinterpret_cast<const int32_t*> ( mMaterial.mUniformBlock.data() + mOffset ) [0];
-    }
-
-    float Material::Uniform::GetX() const
-    {
-        assert (
-            mType == Material::Uniform::Type::FLOAT ||
-            mType == Material::Uniform::Type::FLOAT_VEC2 ||
-            mType == Material::Uniform::Type::FLOAT_VEC3 ||
-            mType == Material::Uniform::Type::FLOAT_VEC4 );
-        return reinterpret_cast<const float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0];
-    }
-    float Material::Uniform::GetY() const
-    {
-        assert ( mType == Material::Uniform::Type::FLOAT_VEC2 ||
-                 mType == Material::Uniform::Type::FLOAT_VEC3 ||
-                 mType == Material::Uniform::Type::FLOAT_VEC4 );
-        return reinterpret_cast<const float*> ( mMaterial.mUniformBlock.data() + mOffset ) [1];
-    }
-    float Material::Uniform::GetZ() const
-    {
-        assert ( mType == Material::Uniform::Type::FLOAT_VEC3 ||
-                 mType == Material::Uniform::Type::FLOAT_VEC4 );
-        return reinterpret_cast<const float*> ( mMaterial.mUniformBlock.data() + mOffset ) [3];
-    }
-    float Material::Uniform::GetW() const
-    {
-        assert ( mType == Material::Uniform::Type::FLOAT_VEC4 );
-        return reinterpret_cast<const float*> ( mMaterial.mUniformBlock.data() + mOffset ) [4];
-    }
-    const std::shared_ptr<Image> Material::Uniform::GetImage() const
-    {
-        assert ( mType == Material::Uniform::Type::SAMPLER_2D );
-        return nullptr;
-    }
-
-    void Material::Uniform::SetUInt ( uint32_t aValue )
-    {
-        assert ( mType == Material::Uniform::Type::UINT );
-        reinterpret_cast<uint32_t*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aValue;
-    }
-    void Material::Uniform::SetSInt ( int32_t aValue )
-    {
-        assert ( mType == Material::Uniform::Type::SINT );
-        reinterpret_cast<int32_t*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aValue;
-    }
-    void Material::Uniform::SetX ( float aValue )
-    {
-        assert (
-            mType == Material::Uniform::Type::FLOAT ||
-            mType == Material::Uniform::Type::FLOAT_VEC2 ||
-            mType == Material::Uniform::Type::FLOAT_VEC3 ||
-            mType == Material::Uniform::Type::FLOAT_VEC4 );
-        reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [0] = aValue;
-    }
-    void Material::Uniform::SetY ( float aValue )
-    {
-        assert (
-            mType == Material::Uniform::Type::FLOAT_VEC2 ||
-            mType == Material::Uniform::Type::FLOAT_VEC3 ||
-            mType == Material::Uniform::Type::FLOAT_VEC4 );
-        reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [1] = aValue;
-    }
-    void Material::Uniform::SetZ ( float aValue )
-    {
-        assert (
-            mType == Material::Uniform::Type::FLOAT_VEC3 ||
-            mType == Material::Uniform::Type::FLOAT_VEC4 );
-        reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [2] = aValue;
-    }
-    void Material::Uniform::SetW ( float aValue )
-    {
-        assert ( mType == Material::Uniform::Type::FLOAT_VEC4 );
-        reinterpret_cast<float*> ( mMaterial.mUniformBlock.data() + mOffset ) [3] = aValue;
-    }
-    void Material::Uniform::Set ( void* aValue )
-    {
-        switch ( mType )
+        if ( mType != Material::PropertyType::UINT )
         {
-        case UINT:
-            memcpy ( mMaterial.mUniformBlock.data() + mOffset, aValue, sizeof ( uint32_t ) );
-            break;
-        case FLOAT:
-            memcpy ( mMaterial.mUniformBlock.data() + mOffset, aValue, sizeof ( float ) );
-            break;
-        case SINT:
-            memcpy ( mMaterial.mUniformBlock.data() + mOffset, aValue, sizeof ( int32_t ) );
-            break;
-        case FLOAT_VEC2:
-            memcpy ( mMaterial.mUniformBlock.data() + mOffset, aValue, sizeof ( float ) * 2 );
-            break;
-        case FLOAT_VEC3:
-            memcpy ( mMaterial.mUniformBlock.data() + mOffset, aValue, sizeof ( float ) * 3 );
-            break;
-        case FLOAT_VEC4:
-            memcpy ( mMaterial.mUniformBlock.data() + mOffset, aValue, sizeof ( float ) * 4 );
-            break;
-        default:
-            // Do nothing for now.
-            break;
+            throw std::runtime_error ( "Invalid Type." );
         }
+        memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), &aValue, sizeof ( uint32_t ) );
+        if ( mMaterial->mRenderMaterial )
+        {
+            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( uint32_t ) );
+        }
+    }
+    void Material::Property::Set ( int32_t aValue )
+    {
+        if ( mType != Material::PropertyType::SINT )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), &aValue, sizeof ( int32_t ) );
+        if ( mMaterial->mRenderMaterial )
+        {
+            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( int32_t ) );
+        }
+    }
+    void Material::Property::Set ( float aValue )
+    {
+        if ( mType != Material::PropertyType::FLOAT )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), &aValue, sizeof ( float ) );
+        if ( mMaterial->mRenderMaterial )
+        {
+            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) );
+        }
+    }
+    void Material::Property::Set ( const Vector2& aValue )
+    {
+        if ( mType != Material::PropertyType::FLOAT_VEC2 )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), aValue.GetVector(), sizeof ( float ) * 2 );
+        if ( mMaterial->mRenderMaterial )
+        {
+            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 2 );
+        }
+    }
+    void Material::Property::Set ( const Vector3& aValue )
+    {
+        if ( mType != Material::PropertyType::FLOAT_VEC3 )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), aValue.GetVector3(), sizeof ( float ) * 3 );
+        if ( mMaterial->mRenderMaterial )
+        {
+            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 3 );
+        }
+    }
+    void Material::Property::Set ( const Vector4& aValue )
+    {
+        if ( mType != Material::PropertyType::FLOAT_VEC4 )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), aValue.GetVector4(), sizeof ( float ) * 4 );
+        if ( mMaterial->mRenderMaterial )
+        {
+            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 4 );
+        }
+    }
+    uint32_t Material::Property::GetUint() const
+    {
+        if ( mType != Material::PropertyType::UINT )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return *reinterpret_cast<uint32_t*> ( mMaterial->mPropertyBlock.data() + mOffset );
+    }
+    int32_t Material::Property::GetSint() const
+    {
+        if ( mType != Material::PropertyType::SINT )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return *reinterpret_cast<int32_t*> ( mMaterial->mPropertyBlock.data() + mOffset );
+    }
+    float Material::Property::GetFloat() const
+    {
+        if ( mType != Material::PropertyType::FLOAT )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return *reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset );
+    }
+    Vector2 Material::Property::GetVector2() const
+    {
+        if ( mType != Material::PropertyType::FLOAT_VEC2 )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return Vector2{ reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) };
+    }
+    Vector3 Material::Property::GetVector3() const
+    {
+        if ( mType != Material::PropertyType::FLOAT_VEC3 )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return Vector3{ reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) };
+    }
+    Vector4 Material::Property::GetVector4() const
+    {
+        if ( mType != Material::PropertyType::FLOAT_VEC4 )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return Vector4{ reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) };
     }
 }

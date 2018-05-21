@@ -69,8 +69,8 @@ namespace AeonGames
 #endif
 #if 0
         /** @todo vkCmdUpdateBuffer is not supposed to be called inside a render pass... but it works here.*/
-        vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesUniformBuffer, 0,
-                            material->GetUniformData().size(), material->GetUniformData().data() );
+        vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesPropertyBuffer, 0,
+                            material->GetPropertyData().size(), material->GetPropertyData().data() );
 #endif
         /** @todo Add a Stack buffer for skeletons and properly set the offset. */
         uint32_t offset = 0;
@@ -115,10 +115,14 @@ namespace AeonGames
 
     void VulkanPipeline::InitializePropertiesUniform()
     {
-        auto& properties = mPipeline.GetDefaultMaterial().GetUniforms();
+        auto& properties = mPipeline.GetDefaultMaterial().GetProperties();
         if ( properties.size() )
         {
-            mProperties.Initialize ( mDefaultMaterial.GetUniformData().size(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, static_cast<const void*> ( mDefaultMaterial.GetUniformData().data() ) );
+            mProperties.Initialize (
+                mPipeline.GetDefaultMaterial().GetPropertyBlock().size(),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                static_cast<const void*> ( mPipeline.GetDefaultMaterial().GetPropertyBlock().data() ) );
         }
     }
 
@@ -212,7 +216,7 @@ namespace AeonGames
     {
         std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = ( mPipeline.GetDefaultMaterial().GetUniformBlock().size() == 0 ) ? 1 : 2;
+        descriptor_pool_sizes[0].descriptorCount = ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() == 0 ) ? 1 : 2;
         descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_pool_sizes[1].descriptorCount = 1;
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
@@ -259,7 +263,7 @@ namespace AeonGames
         {
             {
                 VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
-                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline.GetDefaultMaterial().GetUniformBlock().size() },
+                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline.GetDefaultMaterial().GetPropertyBlock().size() },
                 VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
             }
         };
@@ -278,7 +282,7 @@ namespace AeonGames
         write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
         write_descriptor_sets.back().pImageInfo = nullptr;
         write_descriptor_sets.back().pTexelBufferView = nullptr;
-        if ( mPipeline.GetDefaultMaterial().GetUniformBlock().size() )
+        if ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() )
         {
             write_descriptor_sets.emplace_back();
             write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

@@ -57,7 +57,7 @@ namespace AeonGames
 
     void OpenGLMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {
-        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : mMaterial.GetUniformBlock().size() - aOffset, aValue );
+        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : mMaterial.GetPropertyBlock().size() - aOffset, aValue );
     }
 
     const std::vector<std::shared_ptr<OpenGLTexture>>& OpenGLMaterial::GetTextures() const
@@ -72,7 +72,7 @@ namespace AeonGames
 
     void OpenGLMaterial::Initialize()
     {
-        mPropertiesBuffer.Initialize ( static_cast<GLsizei> ( mMaterial.GetUniformBlock().size() ), GL_DYNAMIC_DRAW, mMaterial.GetUniformBlock().data() );
+        mPropertiesBuffer.Initialize ( static_cast<GLsizei> ( mMaterial.GetPropertyBlock().size() ), GL_DYNAMIC_DRAW, mMaterial.GetPropertyBlock().data() );
     }
 
     void OpenGLMaterial::Finalize()
