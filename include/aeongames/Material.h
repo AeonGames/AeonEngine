@@ -101,6 +101,16 @@ namespace AeonGames
         DLL const std::vector<uint8_t>& GetPropertyBlock() const;
         DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
         DLL const IRenderMaterial* const GetRenderMaterial() const;
+        ///@}
+        ///@name Property Setters
+        ///@{
+        DLL void Set ( const std::string& aName, uint32_t aValue );
+        DLL void Set ( const std::string& aName, int32_t aValue );
+        DLL void Set ( const std::string& aName, float aValue );
+        DLL void Set ( const std::string& aName, const Vector2& aValue );
+        DLL void Set ( const std::string& aName, const Vector3& aValue );
+        DLL void Set ( const std::string& aName, const Vector4& aValue );
+        ///@}
     private:
         std::vector<Property> mProperties{};
         std::vector<uint8_t> mPropertyBlock{};
