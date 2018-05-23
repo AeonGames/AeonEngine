@@ -217,11 +217,13 @@ namespace AeonGames
                 mWindow->Render ( Transform{},
                                   reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
                                   reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline(),
-                                  nullptr, 0, 2, 32 );
+                                  &reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial(), 0, 2,
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridSettings().horizontalSpacing() + 1 );
                 mWindow->Render ( Transform{},
                                   reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
                                   reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline(),
-                                  nullptr, 2, 2, 32 );
+                                  &reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial(), 2, 2,
+                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridSettings().verticalSpacing() + 1 );
                 mWindow->EndRender();
                 return true;
             }

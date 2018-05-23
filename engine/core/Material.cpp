@@ -343,6 +343,18 @@ namespace AeonGames
         return mName;
     }
 
+    void Material::Set ( const std::string& aName, uint32_t aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(),
+                                [&aName] ( const Property & aProperty )
+        {
+            return aName == aProperty.GetName();
+        } );
+        if ( i != mProperties.end() )
+        {
+            ( *i ).Set ( aValue );
+        }
+    }
     void Material::Property::Set ( uint32_t aValue )
     {
         if ( mType != Material::PropertyType::UINT )
@@ -353,6 +365,18 @@ namespace AeonGames
         if ( mMaterial->mRenderMaterial )
         {
             mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( uint32_t ) );
+        }
+    }
+    void Material::Set ( const std::string& aName, int32_t aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(),
+                                [&aName] ( const Property & aProperty )
+        {
+            return aName == aProperty.GetName();
+        } );
+        if ( i != mProperties.end() )
+        {
+            ( *i ).Set ( aValue );
         }
     }
     void Material::Property::Set ( int32_t aValue )
@@ -367,6 +391,18 @@ namespace AeonGames
             mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( int32_t ) );
         }
     }
+    void Material::Set ( const std::string& aName, float aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(),
+                                [&aName] ( const Property & aProperty )
+        {
+            return aName == aProperty.GetName();
+        } );
+        if ( i != mProperties.end() )
+        {
+            ( *i ).Set ( aValue );
+        }
+    }
     void Material::Property::Set ( float aValue )
     {
         if ( mType != Material::PropertyType::FLOAT )
@@ -377,6 +413,18 @@ namespace AeonGames
         if ( mMaterial->mRenderMaterial )
         {
             mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) );
+        }
+    }
+    void Material::Set ( const std::string& aName, const Vector2& aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(),
+                                [&aName] ( const Property & aProperty )
+        {
+            return aName == aProperty.GetName();
+        } );
+        if ( i != mProperties.end() )
+        {
+            ( *i ).Set ( aValue );
         }
     }
     void Material::Property::Set ( const Vector2& aValue )
@@ -391,6 +439,18 @@ namespace AeonGames
             mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 2 );
         }
     }
+    void Material::Set ( const std::string& aName, const Vector3& aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(),
+                                [&aName] ( const Property & aProperty )
+        {
+            return aName == aProperty.GetName();
+        } );
+        if ( i != mProperties.end() )
+        {
+            ( *i ).Set ( aValue );
+        }
+    }
     void Material::Property::Set ( const Vector3& aValue )
     {
         if ( mType != Material::PropertyType::FLOAT_VEC3 )
@@ -401,6 +461,18 @@ namespace AeonGames
         if ( mMaterial->mRenderMaterial )
         {
             mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 3 );
+        }
+    }
+    void Material::Set ( const std::string& aName, const Vector4& aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(),
+                                [&aName] ( const Property & aProperty )
+        {
+            return aName == aProperty.GetName();
+        } );
+        if ( i != mProperties.end() )
+        {
+            ( *i ).Set ( aValue );
         }
     }
     void Material::Property::Set ( const Vector4& aValue )

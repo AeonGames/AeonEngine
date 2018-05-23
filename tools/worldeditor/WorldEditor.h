@@ -17,8 +17,10 @@ limitations under the License.
 #define AEONGAMES_WORLDEDITOR_H
 
 #include <QApplication>
+#include "GridSettings.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/Material.h"
 namespace AeonGames
 {
     class WorldEditor : public QApplication
@@ -27,11 +29,17 @@ namespace AeonGames
         WorldEditor ( int &argc, char *argv[] );
         virtual ~WorldEditor();
         bool notify ( QObject *receiver, QEvent *event ) override;
+        const GridSettings& GetGridSettings() const;
         const Pipeline& GetGridPipeline() const;
         const Mesh& GetGridMesh() const;
+        const Material& GetXGridMaterial() const;
+        const Material& GetYGridMaterial() const;
     private:
-        Pipeline mGridPipeline;
-        Mesh mGridMesh;
+        GridSettings mGridSettings{};
+        Pipeline mGridPipeline{};
+        Mesh mGridMesh{};
+        Material mXGridMaterial{};
+        Material mYGridMaterial{};
     };
 }
 #endif
