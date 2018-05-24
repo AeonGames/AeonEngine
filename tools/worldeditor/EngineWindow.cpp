@@ -43,8 +43,8 @@ namespace AeonGames
         mWindow(),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
-        //mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
-        mCameraLocation ( 4.59279297f, -4.59279358f, 3.74999969f, 1 ),
+        mCameraLocation ( 45.9279297f, -45.9279358f, 37.4999969f, 1 ),
+        //mCameraLocation ( 4.59279297f, -4.59279358f, 3.74999969f, 1 ),
         mProjectionMatrix(),
         mViewMatrix()
     {

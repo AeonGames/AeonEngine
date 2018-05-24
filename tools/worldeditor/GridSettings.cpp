@@ -18,13 +18,13 @@ limitations under the License.
 namespace AeonGames
 {
     GridSettings::GridSettings() :
-        mWidth ( 64.0f ), mHeight ( 64.0f ),
+        mWidth ( 768.0f ), mHeight ( 768.0f ),
         mOddLineColor ( 74, 74, 74 ),
         mEvenLineColor ( 74, 74, 74 ),
-        mXLineColor ( 132, 22, 22 ),
-        mYLineColor ( 22, 132, 22 ),
+        mXLineColor ( 255, 0, 0 ),
+        mYLineColor ( 0, 255, 0 ),
         mBorderLineColor ( 74, 74, 74 ),
-        mHorizontalSpacing ( 64 ), mVerticalSpacing ( 64 )
+        mHorizontalSpacing ( 16 ), mVerticalSpacing ( 16 )
     {
     }
     GridSettings::~GridSettings()
