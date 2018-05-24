@@ -79,7 +79,7 @@ vertex_shader {
     "#ifndef VULKAN\n"
     "#define gl_InstanceIndex gl_InstanceID\n"
     "#endif\n"
-    "flat out uint instance_index;\n"
+    "layout(location = 0) flat out uint instance_index;\n"
     "void main()\n"
     "{\n"
     "instance_index = uint ( gl_InstanceIndex );\n"
@@ -92,7 +92,7 @@ vertex_shader {
 fragment_shader {
   code: 
     "layout ( location = 0 ) out vec4 FragColor;\n"
-    "flat in uint instance_index;\n"
+    "layout ( location = 0 ) flat in uint instance_index;\n"
     "void main ( void )\n"
     "{\n"
     "    if ( ( instance_index != 0u ) && ( instance_index != ( LineCount - 1u ) ) )\n"
