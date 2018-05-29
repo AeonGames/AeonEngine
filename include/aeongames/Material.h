@@ -101,6 +101,7 @@ namespace AeonGames
         DLL const std::vector<uint8_t>& GetPropertyBlock() const;
         DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
         DLL const IRenderMaterial* const GetRenderMaterial() const;
+        DLL size_t GetSamplerCount() const;
         ///@}
         ///@name Property Setters
         ///@{

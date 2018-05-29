@@ -533,11 +533,17 @@ namespace AeonGames
         } );
 #endif
         const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
-        const Pipeline::IRenderPipeline* render_pipeline = aPipeline.GetRenderPipeline();
-        const Material::IRenderMaterial* render_material = material->GetRenderMaterial();
-        const Mesh::IRenderMesh* render_mesh = aMesh.GetRenderMesh();
+        const VulkanPipeline* render_pipeline = reinterpret_cast<const VulkanPipeline*> ( aPipeline.GetRenderPipeline() );
+        const VulkanMaterial* render_material = reinterpret_cast<const VulkanMaterial*> ( material->GetRenderMaterial() );
+        const VulkanMesh* render_mesh = reinterpret_cast<const VulkanMesh*> ( aMesh.GetRenderMesh() );
         if ( render_pipeline && render_mesh && render_material )
         {
+#if 0
+            render_pipeline->SetProjectionMatrix ( mProjectionMatrix );
+            render_pipeline->SetViewMatrix ( mViewTransform.GetInverted().GetMatrix() );
+            render_pipeline->Use ( *render_material );
+            render_mesh->Render();
+#endif
         }
         else
         {

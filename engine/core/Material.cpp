@@ -535,4 +535,16 @@ namespace AeonGames
         }
         return Vector4{ reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) };
     }
+    size_t Material::GetSamplerCount() const
+    {
+        size_t sampler_count = 0;
+        for ( auto&i : mProperties )
+        {
+            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
+            {
+                ++sampler_count;
+            }
+        }
+        return sampler_count;
+    }
 }
