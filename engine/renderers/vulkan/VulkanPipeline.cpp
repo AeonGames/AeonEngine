@@ -37,8 +37,11 @@ namespace AeonGames
         mVulkanRenderer ( aVulkanRenderer ),
         mMatrices ( *aVulkanRenderer ),
         mProperties ( *aVulkanRenderer ),
-        mSkeleton ( *aVulkanRenderer ),
+        mSkeleton ( *aVulkanRenderer )
+#if 0
+        ,
         mDefaultMaterial ( mPipeline.GetDefaultMaterial(), mVulkanRenderer )
+#endif
     {
         try
         {
@@ -56,10 +59,9 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanPipeline::Use ( const VulkanMaterial* aMaterial ) const
+    void VulkanPipeline::Use ( const VulkanMaterial& aMaterial ) const
     {
-        const VulkanMaterial* material = ( aMaterial ) ? aMaterial : &mDefaultMaterial;
-        std::array<VkDescriptorSet, 2> descriptor_sets{ {mVkDescriptorSet, material->GetDescriptorSet() }};
+        std::array<VkDescriptorSet, 1> descriptor_sets{ { mVkDescriptorSet }};
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
 #if 0
         vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
@@ -158,7 +160,7 @@ namespace AeonGames
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 3 );
+        descriptor_set_layout_bindings.reserve ( 3 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
         // Matrices binding
         descriptor_set_layout_bindings.emplace_back();
         descriptor_set_layout_bindings[0].binding = 0;
@@ -188,6 +190,22 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
+        // Sampler bindings
+        uint32_t binding = 0;
+        for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
+        {
+            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
+            {
+                descriptor_set_layout_bindings.emplace_back();
+                auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
+                descriptor_set_layout_binding.binding = binding++;
+                // Descriptor Count is the count of elements in an array.
+                descriptor_set_layout_binding.descriptorCount = 1;
+                descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+                descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            }
+        }
 
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -214,19 +232,21 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorPool()
     {
-        std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
+        std::array<VkDescriptorPoolSize, 3> descriptor_pool_sizes{};
         descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_pool_sizes[0].descriptorCount = ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() == 0 ) ? 1 : 2;
         descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_pool_sizes[1].descriptorCount = 1;
+        descriptor_pool_sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptor_pool_sizes[2].descriptorCount = static_cast<uint32_t> ( mPipeline.GetDefaultMaterial().GetSamplerCount() );
+
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_create_info.pNext = nullptr;
         descriptor_pool_create_info.flags = 0;
         descriptor_pool_create_info.maxSets = 1;
-        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
+        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() ) - ( descriptor_pool_sizes[2].descriptorCount ) ? 0 : 1;
         descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
-
         if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer->GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
         {
             std::ostringstream stream;
@@ -269,7 +289,7 @@ namespace AeonGames
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( 3 );
+        write_descriptor_sets.reserve ( 3 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
         // Matrices
         write_descriptor_sets.emplace_back();
         write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -309,6 +329,20 @@ namespace AeonGames
             write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[2];
             write_descriptor_sets.back().pImageInfo = nullptr;
             write_descriptor_sets.back().pTexelBufferView = nullptr;
+        }
+        for ( uint32_t i = 0; i < mPipeline.GetDefaultMaterial().GetSamplerCount(); ++i )
+        {
+            write_descriptor_sets.emplace_back();
+            auto& write_descriptor_set = write_descriptor_sets.back();
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mVkDescriptorSet;
+            write_descriptor_set.dstBinding = i; // this will probably break because of how the shader code is build.
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_descriptor_set.descriptorCount = 1;
+            assert ( 0 && "TODO: Set pImageInfo" );
+            write_descriptor_set.pImageInfo = nullptr;//&mTextures[i]->GetDescriptorImageInfo();
         }
         vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
@@ -547,11 +581,11 @@ namespace AeonGames
             which at maximum must be 128 bytes to be safe. */
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
-        std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts { {mVkDescriptorSetLayout, mDefaultMaterial.GetDescriptorSetLayout() } };
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts { { mVkDescriptorSetLayout } };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = ( descriptor_set_layouts[1] == VK_NULL_HANDLE ) ? 1 : 2;
+        pipeline_layout_create_info.setLayoutCount = 1;
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts.data();
 #if 0
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );

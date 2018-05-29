@@ -35,7 +35,7 @@ namespace AeonGames
     public:
         VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
         ~VulkanPipeline() final;
-        void Use ( const VulkanMaterial* aMaterial = nullptr ) const;
+        void Use ( const VulkanMaterial& aMaterial ) const;
         VkBuffer GetSkeletonBuffer() const;
         void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix );
         void SetViewMatrix ( const Matrix4x4& aViewMatrix );
@@ -66,7 +66,7 @@ namespace AeonGames
         VkDescriptorSetLayout mVkDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
-        VulkanMaterial mDefaultMaterial;
+        //VulkanMaterial mDefaultMaterial;
     };
 }
 #endif
