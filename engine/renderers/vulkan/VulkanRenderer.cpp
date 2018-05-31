@@ -55,9 +55,11 @@ namespace AeonGames
             InitializeFence();
             InitializeRenderPass();
             InitializeCommandPool();
+            InitializeMatrixDescriptorSetLayout();
         }
         catch ( ... )
         {
+            FinalizeMatrixDescriptorSetLayout();
             FinalizeCommandPool();
             FinalizeRenderPass();
             FinalizeFence();
@@ -72,6 +74,7 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        FinalizeMatrixDescriptorSetLayout();
         FinalizeCommandPool();
         FinalizeRenderPass();
         FinalizeFence();
@@ -593,5 +596,43 @@ namespace AeonGames
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
+    }
+
+    const VkDescriptorSetLayout& VulkanRenderer::GetMatrixDescriptorSetLayout() const
+    {
+        return mVkMatrixDescriptorSetLayout;
+    }
+
+    void VulkanRenderer::InitializeMatrixDescriptorSetLayout()
+    {
+        std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
+        // Matrices binding
+        descriptor_set_layout_bindings[0].binding = 0;
+        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
+        descriptor_set_layout_bindings[0].descriptorCount = 1;
+        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.pNext = nullptr;
+        descriptor_set_layout_create_info.flags = 0;
+        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
+        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr, &mVkMatrixDescriptorSetLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+    void VulkanRenderer::FinalizeMatrixDescriptorSetLayout()
+    {
+        if ( mVkMatrixDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVkDevice, mVkMatrixDescriptorSetLayout, nullptr );
+            mVkMatrixDescriptorSetLayout = VK_NULL_HANDLE;
+        }
     }
 }

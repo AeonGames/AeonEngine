@@ -37,12 +37,6 @@ namespace AeonGames
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-#if 0
-        // To be refactored.
-        void Render ( const Node& aNode, const Matrix4x4& aProjectionMatrix, const Matrix4x4& aViewMatrix ) const final;
-        void Load ( const Node& aNode ) final;
-        void Unload ( const Node& aNode ) final;
-#endif
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
@@ -55,6 +49,7 @@ namespace AeonGames
         const VkCommandBuffer& GetCommandBuffer() const;
         const VkCommandPool& GetCommandPool() const;
         const VkSemaphore& GetSignalSemaphore() const;
+        const VkDescriptorSetLayout& GetMatrixDescriptorSetLayout() const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
@@ -78,6 +73,8 @@ namespace AeonGames
         void FinalizeRenderPass();
         void FinalizeCommandPool();
         void FinalizeDebug();
+        void InitializeMatrixDescriptorSetLayout();
+        void FinalizeMatrixDescriptorSetLayout();
         bool mValidate{ true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
@@ -93,6 +90,7 @@ namespace AeonGames
         VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
+        VkDescriptorSetLayout mVkMatrixDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames;

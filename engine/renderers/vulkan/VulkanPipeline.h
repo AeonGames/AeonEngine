@@ -37,36 +37,21 @@ namespace AeonGames
         ~VulkanPipeline() final;
         void Use ( const VulkanMaterial& aMaterial ) const;
         VkBuffer GetSkeletonBuffer() const;
-        void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix );
-        void SetViewMatrix ( const Matrix4x4& aViewMatrix );
     private:
-        void InitializeMatricesUniform();
-        void FinalizeMatricesUniform();
         void InitializePropertiesUniform();
         void FinalizePropertiesUniform();
         void InitializeSkeletonUniform();
         void FinalizeSkeletonUniform();
-        void InitializeDescriptorSetLayout();
-        void FinalizeDescriptorSetLayout();
-        void InitializeDescriptorPool();
-        void FinalizeDescriptorPool();
-        void InitializeDescriptorSet();
-        void FinalizeDescriptorSet();
         void Initialize();
         void Finalize();
         const Pipeline& mPipeline;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };
-        VulkanBuffer mMatrices;
-        VulkanBuffer mProperties;
-        VulkanBuffer mSkeleton;
+        VulkanBuffer mPropertiesBuffer;
+        VulkanBuffer mSkeletonBuffer;
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
-        VkDescriptorSetLayout mVkDescriptorSetLayout{ VK_NULL_HANDLE };
-        VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
-        VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
-        //VulkanMaterial mDefaultMaterial;
     };
 }
 #endif
