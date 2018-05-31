@@ -67,6 +67,7 @@ namespace AeonGames
         void* mWindowId{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         ::std::shared_ptr<const VulkanRenderer> mVulkanRenderer{};
+        VulkanBuffer mMatrices;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };

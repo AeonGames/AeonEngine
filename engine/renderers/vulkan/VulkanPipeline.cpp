@@ -35,13 +35,8 @@ namespace AeonGames
     VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
         mPipeline ( aPipeline  ),
         mVulkanRenderer ( aVulkanRenderer ),
-        mMatrices ( *aVulkanRenderer ),
-        mProperties ( *aVulkanRenderer ),
-        mSkeleton ( *aVulkanRenderer )
-#if 0
-        ,
-        mDefaultMaterial ( mPipeline.GetDefaultMaterial(), mVulkanRenderer )
-#endif
+        mPropertiesBuffer ( *aVulkanRenderer ),
+        mSkeletonBuffer ( *aVulkanRenderer )
     {
         try
         {
@@ -61,7 +56,8 @@ namespace AeonGames
 
     void VulkanPipeline::Use ( const VulkanMaterial& aMaterial ) const
     {
-        std::array<VkDescriptorSet, 1> descriptor_sets{ { mVkDescriptorSet }};
+#if 0
+        std::array<VkDescriptorSet, 1> descriptor_sets { { mVkDescriptorSet }};
         vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
 #if 0
         vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
@@ -78,41 +74,12 @@ namespace AeonGames
         uint32_t offset = 0;
         vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, ( descriptor_sets[1] == VK_NULL_HANDLE ) ? 1 : 2, descriptor_sets.data(), 1, &offset );
+#endif
     }
 
     VkBuffer VulkanPipeline::GetSkeletonBuffer() const
     {
-        return mSkeleton.GetBuffer();
-    }
-
-    void VulkanPipeline::SetProjectionMatrix ( const Matrix4x4 & aProjectionMatrix )
-    {
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aProjectionMatrix.GetMatrix4x4() );
-    }
-
-    void VulkanPipeline::SetViewMatrix ( const Matrix4x4 & aViewMatrix )
-    {
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aViewMatrix.GetMatrix4x4() );
-    }
-
-    void VulkanPipeline::InitializeMatricesUniform()
-    {
-        const float matrices[32] =
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        mMatrices.Initialize ( sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, matrices );
-    }
-
-    void VulkanPipeline::FinalizeMatricesUniform()
-    {
+        return mSkeletonBuffer.GetBuffer();
     }
 
     void VulkanPipeline::InitializePropertiesUniform()
@@ -120,7 +87,7 @@ namespace AeonGames
         auto& properties = mPipeline.GetDefaultMaterial().GetProperties();
         if ( properties.size() )
         {
-            mProperties.Initialize (
+            mPropertiesBuffer.Initialize (
                 mPipeline.GetDefaultMaterial().GetPropertyBlock().size(),
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -136,8 +103,8 @@ namespace AeonGames
     {
         if ( mPipeline.GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
-            mSkeleton.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            auto* joint_array = static_cast<float*> ( mSkeleton.Map ( 0, VK_WHOLE_SIZE ) );
+            mSkeletonBuffer.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            auto* joint_array = static_cast<float*> ( mSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
             const float identity[16] =
             {
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -149,49 +116,31 @@ namespace AeonGames
             {
                 memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
             }
-            mSkeleton.Unmap();
+            mSkeletonBuffer.Unmap();
         }
     }
 
     void VulkanPipeline::FinalizeSkeletonUniform()
     {
     }
-
+#if 0
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 3 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
-        // Matrices binding
-        descriptor_set_layout_bindings.emplace_back();
-        descriptor_set_layout_bindings[0].binding = 0;
-        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-        descriptor_set_layout_bindings[0].descriptorCount = 1;
-        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
-
+        descriptor_set_layout_bindings.reserve ( 2 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
+        uint32_t binding = 0;
         // Properties binding
-        if ( mProperties.GetSize() )
+        if ( mPropertiesBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = 1;
+            descriptor_set_layout_bindings.back().binding = binding++;
             descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptor_set_layout_bindings.back().descriptorCount = 1;
-            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
-            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
-        }
-        // Skeleton binding
-        if ( mSkeleton.GetSize() )
-        {
-            descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = 2;
-            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
             descriptor_set_layout_bindings.back().descriptorCount = 1;
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
         // Sampler bindings
-        uint32_t binding = 0;
         for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
@@ -206,14 +155,23 @@ namespace AeonGames
                 descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             }
         }
-
+        // Skeleton binding
+        if ( mSkeletonBuffer.GetSize() )
+        {
+            descriptor_set_layout_bindings.emplace_back();
+            descriptor_set_layout_bindings.back().binding = binding++;
+            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            descriptor_set_layout_bindings.back().descriptorCount = 1;
+            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
+            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
+        }
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
         descriptor_set_layout_create_info.flags = 0;
         descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayout ) )
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -223,10 +181,10 @@ namespace AeonGames
 
     void VulkanPipeline::FinalizeDescriptorSetLayout()
     {
-        if ( mVkDescriptorSetLayout != VK_NULL_HANDLE )
+        if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
         {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkDescriptorSetLayout, nullptr );
-            mVkDescriptorSetLayout = VK_NULL_HANDLE;
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
+            mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
         }
     }
 
@@ -266,7 +224,7 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorSet()
     {
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkDescriptorSetLayout } };
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkPropertiesDescriptorSetLayout } };
         VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
         descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
@@ -278,7 +236,7 @@ namespace AeonGames
             stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-
+        // We'll be moving this somewhere else.
         std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos =
         {
             {
@@ -350,6 +308,7 @@ namespace AeonGames
     void VulkanPipeline::FinalizeDescriptorSet()
     {
     }
+#endif
 
     void VulkanPipeline::Initialize()
     {
@@ -357,12 +316,8 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        InitializeMatricesUniform();
         InitializePropertiesUniform();
         InitializeSkeletonUniform();
-        InitializeDescriptorSetLayout();
-        InitializeDescriptorPool();
-        InitializeDescriptorSet();
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline.GetVertexShaderSource().c_str() );
         compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline.GetFragmentShaderSource().c_str() );
@@ -581,11 +536,12 @@ namespace AeonGames
             which at maximum must be 128 bytes to be safe. */
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts { { mVkDescriptorSetLayout } };
+        /** @todo Gather Layouts from Renderer and Material*/
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts { { /*mVkPropertiesDescriptorSetLayout*/ } };
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = 1;
+        pipeline_layout_create_info.setLayoutCount = descriptor_set_layouts.size();
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts.data();
 #if 0
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
@@ -646,11 +602,7 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-        FinalizeDescriptorSet();
-        FinalizeDescriptorPool();
-        FinalizeDescriptorSetLayout();
         FinalizeSkeletonUniform();
         FinalizePropertiesUniform();
-        FinalizeMatricesUniform();
     }
 }

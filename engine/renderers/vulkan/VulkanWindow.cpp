@@ -34,7 +34,19 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
-        mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer )
+        mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer ),
+        mMatrices ( *mVulkanRenderer, sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    ( const float [32] )
+    {
+        1.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 1.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 1.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 1.0f,
+              1.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 1.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 1.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 1.0f
+    } )
     {
         try
         {
@@ -420,6 +432,12 @@ namespace AeonGames
 
     void VulkanWindow::BeginRender() const
     {
+        /** @todo I no longer think writing to the matrix buffer each time is optimal,
+         *  but I do not want to introduce a dirty matrix flag. */
+        Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer->GetDevice(),
                                    mVkSwapchainKHR,

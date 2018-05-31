@@ -18,9 +18,10 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 #include "aeongames/Material.h"
 #include "aeongames/Memory.h"
-#include <vulkan/vulkan.h>
+#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
@@ -32,12 +33,17 @@ namespace AeonGames
         VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
         ~VulkanMaterial() final;
         void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
+        const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
         const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
     private:
         void Initialize();
         void Finalize();
+        void InitializeDescriptorSetLayout();
+        void FinalizeDescriptorSetLayout();
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         const Material& mMaterial;
+        VkDescriptorSetLayout mVkPropertiesDescriptorSetLayout{ VK_NULL_HANDLE };
+        VulkanBuffer mPropertiesBuffer;
         std::vector<std::shared_ptr<VulkanTexture>> mTextures;
     };
 }
