@@ -34,9 +34,7 @@ namespace AeonGames
 {
     VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
         mPipeline ( aPipeline  ),
-        mVulkanRenderer ( aVulkanRenderer ),
-        mPropertiesBuffer ( *aVulkanRenderer ),
-        mSkeletonBuffer ( *aVulkanRenderer )
+        mVulkanRenderer ( aVulkanRenderer )
     {
         try
         {
@@ -77,28 +75,7 @@ namespace AeonGames
 #endif
     }
 
-    VkBuffer VulkanPipeline::GetSkeletonBuffer() const
-    {
-        return mSkeletonBuffer.GetBuffer();
-    }
-
-    void VulkanPipeline::InitializePropertiesUniform()
-    {
-        auto& properties = mPipeline.GetDefaultMaterial().GetProperties();
-        if ( properties.size() )
-        {
-            mPropertiesBuffer.Initialize (
-                mPipeline.GetDefaultMaterial().GetPropertyBlock().size(),
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                static_cast<const void*> ( mPipeline.GetDefaultMaterial().GetPropertyBlock().data() ) );
-        }
-    }
-
-    void VulkanPipeline::FinalizePropertiesUniform()
-    {
-    }
-
+#if 0
     void VulkanPipeline::InitializeSkeletonUniform()
     {
         if ( mPipeline.GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
@@ -123,6 +100,7 @@ namespace AeonGames
     void VulkanPipeline::FinalizeSkeletonUniform()
     {
     }
+#endif
 #if 0
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
@@ -316,8 +294,6 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
-        InitializePropertiesUniform();
-        InitializeSkeletonUniform();
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline.GetVertexShaderSource().c_str() );
         compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline.GetFragmentShaderSource().c_str() );
@@ -602,7 +578,5 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-        FinalizeSkeletonUniform();
-        FinalizePropertiesUniform();
     }
 }

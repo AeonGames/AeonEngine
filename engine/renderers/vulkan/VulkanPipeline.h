@@ -36,20 +36,13 @@ namespace AeonGames
         VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
         ~VulkanPipeline() final;
         void Use ( const VulkanMaterial& aMaterial ) const;
-        VkBuffer GetSkeletonBuffer() const;
     private:
-        void InitializePropertiesUniform();
-        void FinalizePropertiesUniform();
-        void InitializeSkeletonUniform();
-        void FinalizeSkeletonUniform();
         void Initialize();
         void Finalize();
         const Pipeline& mPipeline;
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };
-        VulkanBuffer mPropertiesBuffer;
-        VulkanBuffer mSkeletonBuffer;
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
     };

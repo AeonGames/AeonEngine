@@ -76,6 +76,10 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
         }
+        InitializeDescriptorSetLayout();
+        InitializeDescriptorPool();
+        InitializePropertiesUniform();
+#if 0
         for ( auto& i : mMaterial.GetProperties() )
         {
             switch ( i.GetType() )
@@ -88,13 +92,22 @@ namespace AeonGames
                 break;
             }
         }
+#endif
     }
     void VulkanMaterial::Finalize()
     {
+        FinalizePropertiesUniform();
+        FinalizeDescriptorPool();
+        FinalizeDescriptorSetLayout();
     }
 
     void VulkanMaterial::InitializeDescriptorSetLayout()
     {
+        if ( !mMaterial.GetProperties().size() )
+        {
+            // We don' need a layout.
+            return;
+        }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 1 + mMaterial.GetSamplerCount() );
         uint32_t binding = 0;
@@ -145,4 +158,62 @@ namespace AeonGames
         }
     }
 
+    void VulkanMaterial::InitializeDescriptorPool()
+    {
+        std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
+        descriptor_pool_sizes.reserve ( 2 );
+        if ( mMaterial.GetPropertyBlock().size() )
+        {
+            descriptor_pool_sizes.emplace_back();
+            descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_pool_sizes.back().descriptorCount = 1;
+        }
+        if ( mMaterial.GetSamplerCount() )
+        {
+            descriptor_pool_sizes.emplace_back();
+            descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptor_pool_sizes.back().descriptorCount = static_cast<uint32_t> ( mMaterial.GetSamplerCount() );
+        }
+        if ( descriptor_pool_sizes.size() )
+        {
+            VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+            descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            descriptor_pool_create_info.pNext = nullptr;
+            descriptor_pool_create_info.flags = 0;
+            descriptor_pool_create_info.maxSets = 1;
+            descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
+            descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+            if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer->GetDevice(), &descriptor_pool_create_info, nullptr, &mVkPropertiesDescriptorPool ) )
+            {
+                std::ostringstream stream;
+                stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+    }
+
+    void VulkanMaterial::FinalizeDescriptorPool()
+    {
+        if ( mVkPropertiesDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorPool, nullptr );
+            mVkPropertiesDescriptorPool = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanMaterial::InitializePropertiesUniform()
+    {
+        if ( mMaterial.GetPropertyBlock().size() )
+        {
+            mPropertiesBuffer.Initialize (
+                mMaterial.GetPropertyBlock().size(),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                static_cast<const void*> ( mMaterial.GetPropertyBlock().data() ) );
+        }
+    }
+
+    void VulkanMaterial::FinalizePropertiesUniform()
+    {
+    }
 }

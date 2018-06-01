@@ -40,9 +40,14 @@ namespace AeonGames
         void Finalize();
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
+        void InitializeDescriptorPool();
+        void FinalizeDescriptorPool();
+        void InitializePropertiesUniform();
+        void FinalizePropertiesUniform();
         std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
         const Material& mMaterial;
         VkDescriptorSetLayout mVkPropertiesDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorPool mVkPropertiesDescriptorPool{ VK_NULL_HANDLE };
         VulkanBuffer mPropertiesBuffer;
         std::vector<std::shared_ptr<VulkanTexture>> mTextures;
     };
