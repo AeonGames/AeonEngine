@@ -74,7 +74,6 @@ namespace AeonGames
         DLL const IRenderMesh* const GetRenderMesh() const;
     private:
         void Load ( const MeshBuffer& aMeshBuffer );
-        std::string mFilename{};
         float mCenterRadii[6];
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};

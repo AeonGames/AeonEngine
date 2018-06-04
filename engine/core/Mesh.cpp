@@ -42,8 +42,6 @@ namespace AeonGames
         memset ( mCenterRadii, 0, sizeof ( float ) * 6 );
     }
     Mesh::Mesh ( const std::string&  aFilename )
-        :
-        mFilename ( aFilename )
     {
         try
         {
@@ -56,8 +54,6 @@ namespace AeonGames
         }
     }
     Mesh::Mesh ( const void * aBuffer, size_t aBufferSize )
-        :
-        mFilename{}
     {
         if ( !aBuffer && !aBufferSize )
         {
@@ -87,7 +83,7 @@ namespace AeonGames
         static std::mutex m;
         static MeshBuffer mesh_buffer;
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<MeshBuffer> ( mesh_buffer, mFilename, "AEONMSH" );
+        LoadProtoBufObject<MeshBuffer> ( mesh_buffer, aFilename, "AEONMSH" );
         Load ( mesh_buffer );
         mesh_buffer.Clear();
     }
@@ -131,7 +127,6 @@ namespace AeonGames
 
     void Mesh::Unload()
     {
-        mFilename.clear();
         memset ( mCenterRadii, 0, sizeof ( float ) * 6 );
         mVertexFlags =
             mVertexCount =

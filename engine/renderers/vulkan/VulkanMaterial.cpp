@@ -58,11 +58,17 @@ namespace AeonGames
 
     void VulkanMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {
+        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : mMaterial.GetPropertyBlock().size() - aOffset, aValue );
     }
 
     const VkDescriptorSetLayout& VulkanMaterial::GetPropertiesDescriptorSetLayout() const
     {
         return mVkPropertiesDescriptorSetLayout;
+    }
+
+    const VkDescriptorSet VulkanMaterial::GetPropertiesDescriptorSet() const
+    {
+        return mVkPropertiesDescriptorSet;
     }
 
     const std::vector<std::shared_ptr<VulkanTexture>>& VulkanMaterial::GetTextures() const
@@ -79,6 +85,7 @@ namespace AeonGames
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
         InitializePropertiesUniform();
+        InitializeDescriptorSet();
 #if 0
         for ( auto& i : mMaterial.GetProperties() )
         {
@@ -96,6 +103,7 @@ namespace AeonGames
     }
     void VulkanMaterial::Finalize()
     {
+        FinalizeDescriptorSet();
         FinalizePropertiesUniform();
         FinalizeDescriptorPool();
         FinalizeDescriptorSetLayout();
@@ -214,6 +222,66 @@ namespace AeonGames
     }
 
     void VulkanMaterial::FinalizePropertiesUniform()
+    {
+    }
+
+    void VulkanMaterial::InitializeDescriptorSet()
+    {
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkPropertiesDescriptorSetLayout } };
+        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptor_set_allocate_info.descriptorPool = mVkPropertiesDescriptorPool;
+        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer->GetDevice(), &descriptor_set_allocate_info, &mVkPropertiesDescriptorSet ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
+        {
+            {
+                VkDescriptorBufferInfo{mPropertiesBuffer.GetBuffer(), 0, mMaterial.GetPropertyBlock().size() }
+            }
+        };
+
+        std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
+        write_descriptor_sets.reserve ( 1 + mMaterial.GetSamplerCount() );
+
+        if ( mMaterial.GetPropertyBlock().size() )
+        {
+            write_descriptor_sets.emplace_back();
+            write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_sets.back().pNext = nullptr;
+            write_descriptor_sets.back().dstSet = mVkPropertiesDescriptorSet;
+            write_descriptor_sets.back().dstBinding = 0;
+            write_descriptor_sets.back().dstArrayElement = 0;
+            write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_sets.back().descriptorCount = 1;
+            write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
+            write_descriptor_sets.back().pImageInfo = nullptr;
+            write_descriptor_sets.back().pTexelBufferView = nullptr;
+        }
+
+        for ( uint32_t i = 0; i < mMaterial.GetSamplerCount(); ++i )
+        {
+            write_descriptor_sets.emplace_back();
+            auto& write_descriptor_set = write_descriptor_sets.back();
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
+            write_descriptor_set.dstBinding = i; // this will probably break because of how the shader code is build.
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_descriptor_set.descriptorCount = 1;
+            assert ( 0 && "TODO: Set pImageInfo" );
+            write_descriptor_set.pImageInfo = nullptr;//&mTextures[i]->GetDescriptorImageInfo();
+        }
+        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
+    }
+
+    void VulkanMaterial::FinalizeDescriptorSet()
     {
     }
 }

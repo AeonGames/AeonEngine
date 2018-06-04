@@ -73,7 +73,7 @@ namespace AeonGames
     }
 
     Pipeline::Pipeline ( const std::string&  aFilename ) :
-        mFilename ( aFilename ), mTopology ( Topology::POINT_LIST ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
+        mTopology ( Topology::POINT_LIST ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
     {
         try
         {
@@ -221,7 +221,7 @@ namespace AeonGames
             uint32_t sampler_binding = 0;
             std::string properties (
                 "#ifdef VULKAN\n"
-                "layout(set = 0, binding = 1,std140) uniform Properties{\n"
+                "layout(set = 1, binding = 0,std140) uniform Properties{\n"
                 "#else\n"
                 "layout(binding = 1,std140) uniform Properties{\n"
                 "#endif\n"
@@ -234,7 +234,7 @@ namespace AeonGames
                 case Material::PropertyType::SAMPLER_2D:
                     samplers.append ( "#ifdef VULKAN\n" );
                     samplers.append ( "layout(set = 1, binding = " +
-                                      std::to_string ( sampler_binding ) +
+                                      std::to_string ( sampler_binding + 1 ) +
                                       ", location =" + std::to_string ( sampler_binding ) + ") " );
                     samplers.append ( i.GetDeclaration() );
                     samplers.append ( "#else\n" );
@@ -326,7 +326,6 @@ namespace AeonGames
 
     void Pipeline::Unload()
     {
-        mFilename.clear();
         mAttributes = 0;
         mVertexShader.clear();
         mFragmentShader.clear();
