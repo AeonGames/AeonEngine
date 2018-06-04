@@ -36,7 +36,7 @@ namespace AeonGames
     VulkanWindow::VulkanWindow ( void* aWindowId, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer ),
         mMatrices ( *mVulkanRenderer, sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                    ( const float [32] )
+                    std::array<float, 32>
     {
         1.0f, 0.0f, 0.0f, 0.0f,
               0.0f, 1.0f, 0.0f, 0.0f,
@@ -46,7 +46,7 @@ namespace AeonGames
               0.0f, 1.0f, 0.0f, 0.0f,
               0.0f, 0.0f, 1.0f, 0.0f,
               0.0f, 0.0f, 0.0f, 1.0f
-    } )
+    } .data() )
     {
         try
         {
@@ -351,7 +351,7 @@ namespace AeonGames
                                    mVulkanRenderer->GetFence(),
                                    const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
     }
 
@@ -376,6 +376,8 @@ namespace AeonGames
         InitializeImageViews();
         InitializeDepthStencil();
         InitializeFrameBuffers();
+        InitializeDescriptorPool();
+        InitializeDescriptorSet();
     }
 
     void VulkanWindow::Finalize()
@@ -388,6 +390,8 @@ namespace AeonGames
         {
             std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
+        FinalizeDescriptorSet();
+        FinalizeDescriptorPool();
         FinalizeFrameBuffers();
         FinalizeDepthStencil();
         FinalizeImageViews();
@@ -433,10 +437,11 @@ namespace AeonGames
     void VulkanWindow::BeginRender() const
     {
         /** @todo I no longer think writing to the matrix buffer each time is optimal,
-         *  but I do not want to introduce a dirty matrix flag. */
+         *  but I do not want to introduce a dirty matrix flag.
+         *  Will probably just make the set projection and transform to virtual. */
         Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
 
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer->GetDevice(),
@@ -445,23 +450,23 @@ namespace AeonGames
                                    mVulkanRenderer->GetFence(),
                                    const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
 
         if ( VkResult result = vkWaitForFences ( mVulkanRenderer->GetDevice(), 1,
                                &mVulkanRenderer->GetFence(),
                                VK_TRUE, UINT64_MAX ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         if ( VkResult result = vkResetFences ( mVulkanRenderer->GetDevice(), 1,
                                                &mVulkanRenderer->GetFence() ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer->GetQueue() ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
 
         VkCommandBufferBeginInfo command_buffer_begin_info{};
@@ -469,7 +474,7 @@ namespace AeonGames
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         if ( VkResult result = vkBeginCommandBuffer ( mVulkanRenderer->GetCommandBuffer(), &command_buffer_begin_info ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
 
         vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &GetViewport() );
@@ -500,7 +505,7 @@ namespace AeonGames
         vkCmdEndRenderPass ( mVulkanRenderer->GetCommandBuffer() );
         if ( VkResult result = vkEndCommandBuffer ( mVulkanRenderer->GetCommandBuffer() ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         VkSubmitInfo submit_info{};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -513,7 +518,7 @@ namespace AeonGames
         submit_info.pSignalSemaphores = &mVulkanRenderer->GetSignalSemaphore();
         if ( VkResult result = vkQueueSubmit ( mVulkanRenderer->GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         std::array<VkResult, 1> result_array{ { VkResult::VK_SUCCESS } };
         VkPresentInfoKHR present_info{};
@@ -526,7 +531,7 @@ namespace AeonGames
         present_info.pResults = result_array.data();
         if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer->GetQueue(), &present_info ) )
         {
-            std::cout << GetVulkanResultString ( result ) << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
     }
 
@@ -556,12 +561,43 @@ namespace AeonGames
         const VulkanMesh* render_mesh = reinterpret_cast<const VulkanMesh*> ( aMesh.GetRenderMesh() );
         if ( render_pipeline && render_mesh && render_material )
         {
-#if 0
-            render_pipeline->SetProjectionMatrix ( mProjectionMatrix );
-            render_pipeline->SetViewMatrix ( mViewTransform.GetInverted().GetMatrix() );
-            render_pipeline->Use ( *render_material );
-            render_mesh->Render();
-#endif
+            std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, render_material->GetPropertiesDescriptorSet() }};
+            vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline->GetPipeline() );
+            {
+                uint32_t offset = 0;
+                vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          render_pipeline->GetPipelineLayout(),
+                                          0,
+                                          static_cast<uint32_t> ( descriptor_sets.size() ),
+                                          descriptor_sets.data(), 1, &offset );
+            }
+            {
+                const VkDeviceSize offset = 0;
+                vkCmdBindVertexBuffers ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &render_mesh->GetBuffer(), &offset );
+                if ( aMesh.GetIndexCount() )
+                {
+                    vkCmdBindIndexBuffer ( mVulkanRenderer->GetCommandBuffer(),
+                                           render_mesh->GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
+                                           GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMesh.GetIndexType() ) ) );
+                    vkCmdDrawIndexed (
+                        mVulkanRenderer->GetCommandBuffer(),
+                        ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                        aInstanceCount,
+                        aVertexStart,
+                        0,
+                        aFirstInstance );
+                }
+                else
+                {
+                    vkCmdDraw (
+                        mVulkanRenderer->GetCommandBuffer(),
+                        ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                        aInstanceCount,
+                        aVertexStart,
+                        aFirstInstance );
+                }
+            }
         }
         else
         {
@@ -648,5 +684,79 @@ namespace AeonGames
                 vkDestroyFramebuffer ( mVulkanRenderer->GetDevice(), i, nullptr );
             }
         }
+    }
+
+    void VulkanWindow::InitializeDescriptorPool()
+    {
+        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{};
+        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_pool_sizes[0].descriptorCount = 1;
+        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptor_pool_create_info.pNext = nullptr;
+        descriptor_pool_create_info.flags = 0;
+        descriptor_pool_create_info.maxSets = 1;
+        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
+        descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+        if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer->GetDevice(), &descriptor_pool_create_info, nullptr, &mVkMatricesDescriptorPool ) )
+        {
+            std::ostringstream stream;
+            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
+    void VulkanWindow::FinalizeDescriptorPool()
+    {
+        if ( mVkMatricesDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVulkanRenderer->GetDevice(), mVkMatricesDescriptorPool, nullptr );
+            mVkMatricesDescriptorPool = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanWindow::InitializeDescriptorSet()
+    {
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVulkanRenderer->GetMatrixDescriptorSetLayout() } };
+        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptor_set_allocate_info.descriptorPool = mVkMatricesDescriptorPool;
+        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+
+        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer->GetDevice(), &descriptor_set_allocate_info, &mVkMatricesDescriptorSet ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
+        {
+            {
+                VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32}
+            }
+        };
+
+        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets{};
+        // Matrices
+        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_sets[0].pNext = nullptr;
+        write_descriptor_sets[0].dstSet = mVkMatricesDescriptorSet;
+        write_descriptor_sets[0].dstBinding = 0;
+        write_descriptor_sets[0].dstArrayElement = 0;
+        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_sets[0].descriptorCount = 1;
+        write_descriptor_sets[0].pBufferInfo = &descriptor_buffer_infos[0];
+        write_descriptor_sets[0].pImageInfo = nullptr;
+        write_descriptor_sets[0].pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets (
+            mVulkanRenderer->GetDevice(),
+            static_cast<uint32_t> ( write_descriptor_sets.size() ),
+            write_descriptor_sets.data(), 0, nullptr );
+    }
+
+    void VulkanWindow::FinalizeDescriptorSet()
+    {
     }
 }

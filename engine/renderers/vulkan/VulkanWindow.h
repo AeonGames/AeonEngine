@@ -54,6 +54,10 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
+        void InitializeDescriptorPool();
+        void FinalizeDescriptorPool();
+        void InitializeDescriptorSet();
+        void FinalizeDescriptorSet();
 
         const VkSwapchainKHR& GetSwapchain() const;
         uint32_t GetWidth() const;
@@ -81,6 +85,8 @@ namespace AeonGames
         uint32_t mActiveImageIndex{ UINT32_MAX };
         VkViewport mVkViewport{};
         VkRect2D mVkScissor{};
+        VkDescriptorPool mVkMatricesDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorSet mVkMatricesDescriptorSet{ VK_NULL_HANDLE };
     };
 }
 #endif

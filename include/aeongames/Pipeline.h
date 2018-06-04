@@ -92,7 +92,6 @@ namespace AeonGames
         DLL const IRenderPipeline* const GetRenderPipeline() const;
     private:
         void Load ( const PipelineBuffer& aPipelineBuffer );
-        std::string mFilename{};
         Topology mTopology{};
         uint32_t mAttributes{};
         std::string mVertexShader{};

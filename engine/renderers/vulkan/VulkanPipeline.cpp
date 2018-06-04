@@ -52,27 +52,13 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanPipeline::Use ( const VulkanMaterial& aMaterial ) const
+    const VkPipelineLayout VulkanPipeline::GetPipelineLayout() const
     {
-#if 0
-        std::array<VkDescriptorSet, 1> descriptor_sets { { mVkDescriptorSet }};
-        vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
-#if 0
-        vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
-                             mVkPipelineLayout,
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( VulkanRenderer::Transforms ), &mVulkanRenderer->GetTransforms() );
-#endif
-#if 0
-        /** @todo vkCmdUpdateBuffer is not supposed to be called inside a render pass... but it works here.*/
-        vkCmdUpdateBuffer ( mVulkanRenderer->GetCommandBuffer(), mVkPropertiesPropertyBuffer, 0,
-                            material->GetPropertyData().size(), material->GetPropertyData().data() );
-#endif
-        /** @todo Add a Stack buffer for skeletons and properly set the offset. */
-        uint32_t offset = 0;
-        vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipelineLayout, 0, ( descriptor_sets[1] == VK_NULL_HANDLE ) ? 1 : 2, descriptor_sets.data(), 1, &offset );
-#endif
+        return mVkPipelineLayout;
+    }
+    const VkPipeline VulkanPipeline::GetPipeline() const
+    {
+        return mVkPipeline;
     }
 
 #if 0
@@ -512,13 +498,22 @@ namespace AeonGames
             which at maximum must be 128 bytes to be safe. */
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
-        /** @todo Gather Layouts from Renderer and Material*/
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts { { /*mVkPropertiesDescriptorSetLayout*/ } };
+        InitializeDescriptorSetLayout();
+        std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
+        descriptor_set_layouts.reserve ( 2 );
+        if ( mVulkanRenderer->GetMatrixDescriptorSetLayout() != VK_NULL_HANDLE )
+        {
+            descriptor_set_layouts.emplace_back ( mVulkanRenderer->GetMatrixDescriptorSetLayout() );
+        }
+        if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            descriptor_set_layouts.emplace_back ( mVkPropertiesDescriptorSetLayout );
+        }
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = descriptor_set_layouts.size();
-        pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts.data();
+        pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        pipeline_layout_create_info.pSetLayouts = ( pipeline_layout_create_info.setLayoutCount ) ? descriptor_set_layouts.data() : nullptr;
 #if 0
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
         pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
@@ -577,6 +572,63 @@ namespace AeonGames
                 vkDestroyShaderModule ( mVulkanRenderer->GetDevice(), i, nullptr );
                 i = VK_NULL_HANDLE;
             }
+        }
+        FinalizeDescriptorSetLayout();
+    }
+    void VulkanPipeline::InitializeDescriptorSetLayout()
+    {
+        if ( !mPipeline.GetDefaultMaterial().GetProperties().size() )
+        {
+            // We don' need a layout.
+            return;
+        }
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
+        descriptor_set_layout_bindings.reserve ( 1 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
+        uint32_t binding = 0;
+        for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
+        {
+            if ( i.GetType() != Material::PropertyType::SAMPLER_2D )
+            {
+                descriptor_set_layout_bindings.emplace_back();
+                descriptor_set_layout_bindings.back().binding = binding++;
+                descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
+                descriptor_set_layout_bindings.back().descriptorCount = 1;
+                descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
+                descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
+            }
+            else
+            {
+                descriptor_set_layout_bindings.emplace_back();
+                auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
+                descriptor_set_layout_binding.binding = binding++;
+                descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                // Descriptor Count is the count of elements in an array.
+                descriptor_set_layout_binding.descriptorCount = 1;
+                descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+            }
+        }
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.pNext = nullptr;
+        descriptor_set_layout_create_info.flags = 0;
+        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
+        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
+    void VulkanPipeline::FinalizeDescriptorSetLayout()
+    {
+        if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
+            mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
         }
     }
 }
