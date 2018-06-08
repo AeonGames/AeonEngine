@@ -24,6 +24,9 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Mesh;
+    class Pipeline;
+    class Material;
     class Window;
     class Renderer
     {
@@ -51,6 +54,12 @@ namespace AeonGames
         virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
 #endif
         ///@}
+        virtual void LoadRenderMesh ( const Mesh& aMesh ) const = 0;
+        virtual void UnloadRenderMesh ( const Mesh& aMesh ) const = 0;
+        virtual void LoadRenderPipeline ( const Pipeline& aPipeline ) const = 0;
+        virtual void UnloadRenderPipeline ( const Pipeline& aPipeline ) const = 0;
+        virtual void LoadRenderMaterial ( const Material& aMaterial ) const = 0;
+        virtual void UnloadRenderMaterial ( const Material& aMaterial ) const = 0;
         virtual ~Renderer() = default;
     };
 

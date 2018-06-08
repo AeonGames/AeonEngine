@@ -18,6 +18,7 @@ limitations under the License.
 #include <QSurfaceFormat>
 #include "aeongames/Renderer.h"
 #include "RendererSelectDialog.h"
+#include "WorldEditor.h"
 #include "MainWindow.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
@@ -62,10 +63,19 @@ namespace AeonGames
         {
             throw std::runtime_error ( "No renderer selected, cannot continue." );
         }
+        mRenderer->LoadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
+        mRenderer->LoadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
+        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
+        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
     }
 
     MainWindow::~MainWindow()
-        = default;
+    {
+        mRenderer->UnloadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
+        mRenderer->UnloadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
+        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
+        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
+    }
 
     void MainWindow::on_actionExit_triggered()
     {

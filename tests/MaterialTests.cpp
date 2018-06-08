@@ -117,7 +117,7 @@ namespace AeonGames
             break;
             case Material::PropertyType::FLOAT_VEC2:
             {
-                EXPECT_EQ ( i.GetVector2() , Vector2 ( 2.0f, 1.0f ) );
+                EXPECT_EQ ( i.GetVector2(), Vector2 ( 2.0f, 1.0f ) );
             }
             break;
             case Material::PropertyType::FLOAT_VEC3:
@@ -168,7 +168,7 @@ namespace AeonGames
             break;
             case Material::PropertyType::FLOAT_VEC2:
             {
-                EXPECT_EQ ( i.GetVector2() , Vector2 ( 2.0f, 1.0f ) );
+                EXPECT_EQ ( i.GetVector2(), Vector2 ( 2.0f, 1.0f ) );
             }
             break;
             case Material::PropertyType::FLOAT_VEC3:
@@ -220,7 +220,7 @@ namespace AeonGames
             break;
             case Material::PropertyType::FLOAT_VEC2:
             {
-                EXPECT_EQ ( i.GetVector2() , Vector2 ( 2.0f, 1.0f ) );
+                EXPECT_EQ ( i.GetVector2(), Vector2 ( 2.0f, 1.0f ) );
             }
             break;
             case Material::PropertyType::FLOAT_VEC3:
