@@ -71,6 +71,7 @@ namespace AeonGames
     }
 
     Mesh::~Mesh() = default;
+
     DLL Mesh::IRenderMesh::~IRenderMesh() = default;
 
     const float * const Mesh::GetCenterRadii() const

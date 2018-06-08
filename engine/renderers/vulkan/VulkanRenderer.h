@@ -36,7 +36,6 @@ namespace AeonGames
     public:
         VulkanRenderer ( bool aValidate = true );
         ~VulkanRenderer() override;
-        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
@@ -55,6 +54,13 @@ namespace AeonGames
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
+        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
+        void LoadRenderMesh ( const Mesh& aMesh ) const final;
+        void UnloadRenderMesh ( const Mesh& aMesh ) const final;
+        void LoadRenderPipeline ( const Pipeline& aPipeline ) const final;
+        void UnloadRenderPipeline ( const Pipeline& aPipeline ) const final;
+        void LoadRenderMaterial ( const Material& aMaterial ) const final;
+        void UnloadRenderMaterial ( const Material& aMaterial ) const final;
     private:
         void InitializeInstance();
         void InitializeDevice();

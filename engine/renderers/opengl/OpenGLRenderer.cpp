@@ -15,6 +15,9 @@ limitations under the License.
 */
 #include "OpenGLRenderer.h"
 #include "OpenGLWindow.h"
+#include "OpenGLMesh.h"
+#include "OpenGLMaterial.h"
+#include "OpenGLPipeline.h"
 
 namespace AeonGames
 {
@@ -39,6 +42,36 @@ namespace AeonGames
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
         return std::make_unique<OpenGLWindow> ( aWindowId, shared_from_this() );
+    }
+
+    void OpenGLRenderer::LoadRenderMesh ( const Mesh & aMesh ) const
+    {
+        aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, shared_from_this() ) );
+    }
+
+    void OpenGLRenderer::UnloadRenderMesh ( const Mesh & aMesh ) const
+    {
+        aMesh.SetRenderMesh ( nullptr );
+    }
+
+    void OpenGLRenderer::LoadRenderPipeline ( const Pipeline & aPipeline ) const
+    {
+        aPipeline.SetRenderPipeline ( std::make_unique<OpenGLPipeline> ( aPipeline, shared_from_this() ) );
+    }
+
+    void OpenGLRenderer::UnloadRenderPipeline ( const Pipeline & aPipeline ) const
+    {
+        aPipeline.SetRenderPipeline ( nullptr );
+    }
+
+    void OpenGLRenderer::LoadRenderMaterial ( const Material & aMaterial ) const
+    {
+        aMaterial.SetRenderMaterial ( std::make_unique<OpenGLMaterial> ( aMaterial ) );
+    }
+
+    void OpenGLRenderer::UnloadRenderMaterial ( const Material & aMaterial ) const
+    {
+        aMaterial.SetRenderMaterial ( nullptr );
     }
 
     void* OpenGLRenderer::GetOpenGLContext() const

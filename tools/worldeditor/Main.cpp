@@ -84,12 +84,6 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         mainWindow = new AeonGames::MainWindow();
         mainWindow->showNormal();
         retval = worldeditor.exec();
-        // Make sure renderer resources are deleted before engine finalization.
-        worldeditor.GetGridMesh().SetRenderMesh ( nullptr );
-        worldeditor.GetGridPipeline().GetDefaultMaterial().SetRenderMaterial ( nullptr );
-        worldeditor.GetGridPipeline().SetRenderPipeline ( nullptr );
-        worldeditor.GetXGridMaterial().SetRenderMaterial ( nullptr );
-        worldeditor.GetYGridMaterial().SetRenderMaterial ( nullptr );
         delete mainWindow;
     }
     catch ( std::runtime_error& e )

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -70,6 +70,8 @@ namespace AeonGames
             return "VK_ERROR_VALIDATION_FAILED_EXT";
         case VK_ERROR_INVALID_SHADER_NV:
             return "VK_ERROR_INVALID_SHADER_NV";
+        case VK_ERROR_OUT_OF_POOL_MEMORY_KHR:
+            return "VK_ERROR_OUT_OF_POOL_MEMORY_KHR";
         default:
             return "Unknown Result";
         }

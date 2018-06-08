@@ -474,7 +474,7 @@ namespace AeonGames
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         if ( VkResult result = vkBeginCommandBuffer ( mVulkanRenderer->GetCommandBuffer(), &command_buffer_begin_info ) )
         {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            std::cout << GetVulkanResultString ( result ) << "  Error Code: " << result << " at " << __func__ << " line " << __LINE__ << " " << std::endl;
         }
 
         vkCmdSetViewport ( mVulkanRenderer->GetCommandBuffer(), 0, 1, &GetViewport() );
@@ -597,21 +597,6 @@ namespace AeonGames
                         aVertexStart,
                         aFirstInstance );
                 }
-            }
-        }
-        else
-        {
-            if ( !render_pipeline )
-            {
-                aPipeline.SetRenderPipeline ( std::make_unique<VulkanPipeline> ( aPipeline, mVulkanRenderer ) );
-            }
-            if ( !render_mesh )
-            {
-                aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, mVulkanRenderer ) );
-            }
-            if ( !render_material )
-            {
-                material->SetRenderMaterial ( std::make_unique<VulkanMaterial> ( *material, mVulkanRenderer ) );
             }
         }
     }

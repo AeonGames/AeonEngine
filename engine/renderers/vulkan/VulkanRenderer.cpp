@@ -29,6 +29,9 @@ limitations under the License.
 #include <algorithm>
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
+#include "VulkanMesh.h"
+#include "VulkanPipeline.h"
+#include "VulkanMaterial.h"
 #include "VulkanUtilities.h"
 
 namespace AeonGames
@@ -596,6 +599,36 @@ namespace AeonGames
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
         return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
+    }
+
+    void VulkanRenderer::LoadRenderMesh ( const Mesh & aMesh ) const
+    {
+        aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, shared_from_this() ) );
+    }
+
+    void VulkanRenderer::UnloadRenderMesh ( const Mesh & aMesh ) const
+    {
+        aMesh.SetRenderMesh ( nullptr );
+    }
+
+    void VulkanRenderer::LoadRenderPipeline ( const Pipeline & aPipeline ) const
+    {
+        aPipeline.SetRenderPipeline ( std::make_unique<VulkanPipeline> ( aPipeline, shared_from_this() ) );
+    }
+
+    void VulkanRenderer::UnloadRenderPipeline ( const Pipeline & aPipeline ) const
+    {
+        aPipeline.SetRenderPipeline ( nullptr );
+    }
+
+    void VulkanRenderer::LoadRenderMaterial ( const Material & aMaterial ) const
+    {
+        aMaterial.SetRenderMaterial ( std::make_unique<VulkanMaterial> ( aMaterial, shared_from_this() ) );
+    }
+
+    void VulkanRenderer::UnloadRenderMaterial ( const Material & aMaterial ) const
+    {
+        aMaterial.SetRenderMaterial ( nullptr );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetMatrixDescriptorSetLayout() const
