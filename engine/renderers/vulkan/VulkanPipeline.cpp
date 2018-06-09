@@ -585,19 +585,21 @@ namespace AeonGames
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 1 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
         uint32_t binding = 0;
+
+        if ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() )
+        {
+            descriptor_set_layout_bindings.emplace_back();
+            descriptor_set_layout_bindings.back().binding = binding++;
+            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
+            descriptor_set_layout_bindings.back().descriptorCount = 1;
+            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
+            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
+        }
+
         for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
         {
-            if ( i.GetType() != Material::PropertyType::SAMPLER_2D )
-            {
-                descriptor_set_layout_bindings.emplace_back();
-                descriptor_set_layout_bindings.back().binding = binding++;
-                descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-                descriptor_set_layout_bindings.back().descriptorCount = 1;
-                descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
-                descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
-            }
-            else
+            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
             {
                 descriptor_set_layout_bindings.emplace_back();
                 auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
