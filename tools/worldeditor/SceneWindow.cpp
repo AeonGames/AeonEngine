@@ -17,18 +17,18 @@ limitations under the License.
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
 #include <QMenu>
+#include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
 
 namespace AeonGames
 {
-    SceneWindow::SceneWindow ( const std::shared_ptr<Renderer>& aRenderer, QWidget *parent, Qt::WindowFlags f ) :
+    SceneWindow::SceneWindow ( QWidget *parent, Qt::WindowFlags f ) :
         QWidget ( parent, f ),
-        Ui::SceneWindow(),
-        mRenderer ( aRenderer )
+        Ui::SceneWindow()
     {
         setupUi ( this );
-        mEngineWindow = new EngineWindow ( mRenderer );
+        mEngineWindow = new EngineWindow();
         QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, splitter );
         QSizePolicy size_policy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
         size_policy.setHorizontalStretch ( 6 );

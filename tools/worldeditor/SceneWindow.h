@@ -28,7 +28,7 @@ namespace AeonGames
     {
         Q_OBJECT
     public:
-        SceneWindow ( const std::shared_ptr<Renderer>& aRenderer, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
+        SceneWindow ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
         virtual ~SceneWindow();
         void setModel ( const QString& filename );
     private slots:
@@ -36,7 +36,6 @@ namespace AeonGames
         void on_actionRemoveNode_triggered();
         void on_customContextMenuRequested ( const QPoint& aPoint );
     private:
-        std::shared_ptr<Renderer> mRenderer;
         SceneModel mSceneModel{};
         EngineWindow* mEngineWindow{};
     };

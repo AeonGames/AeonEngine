@@ -17,7 +17,6 @@ limitations under the License.
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
 #include "aeongames/Renderer.h"
-#include "RendererSelectDialog.h"
 #include "WorldEditor.h"
 #include "MainWindow.h"
 #include "SceneWindow.h"
@@ -32,50 +31,9 @@ namespace AeonGames
         surface_format.setDepthBufferSize ( 24 );
         surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
         QSurfaceFormat::setDefaultFormat ( surface_format );
-
-        /* Add a nice renderer selection window.*/
-        QStringList renderer_list;
-        EnumerateRendererLoaders ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
-        {
-            renderer_list.append ( QString::fromStdString ( aIdentifier ) );
-            return true;
-        } );
-
-        if ( !renderer_list.size() )
-        {
-            throw std::runtime_error ( "No renderer available, cannot continue." );
-        }
-        if ( renderer_list.size() == 1 )
-        {
-            this->mRenderer = GetRenderer ( renderer_list.at ( 0 ).toStdString() );
-        }
-        else
-        {
-            RendererSelectDialog select_renderer;
-            select_renderer.SetRenderers ( renderer_list );
-            if ( select_renderer.exec() == QDialog::Accepted )
-            {
-                this->mRenderer = GetRenderer ( select_renderer.GetSelected().toStdString() );
-            }
-        }
-
-        if ( mRenderer == nullptr )
-        {
-            throw std::runtime_error ( "No renderer selected, cannot continue." );
-        }
-        mRenderer->LoadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
-        mRenderer->LoadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
-        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
-        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
     }
 
-    MainWindow::~MainWindow()
-    {
-        mRenderer->UnloadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
-        mRenderer->UnloadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
-        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
-        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
-    }
+    MainWindow::~MainWindow() = default;
 
     void MainWindow::on_actionExit_triggered()
     {
@@ -86,7 +44,7 @@ namespace AeonGames
     {
         SceneWindow* sceneWindow;
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mRenderer, mdiArea ) );
+        mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mdiArea ) );
         mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
         mdiSubWindow->setWindowTitle ( tr ( "Untitled Scene" ) );
         mdiSubWindow->showMaximized();
@@ -104,7 +62,7 @@ namespace AeonGames
             QFileInfo fileinfo ( filename );
             SceneWindow* sceneWindow;
             QMdiSubWindow*
-            mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mRenderer, mdiArea ) );
+            mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mdiArea ) );
             mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
             mdiSubWindow->setWindowTitle ( fileinfo.absoluteFilePath() );
             mdiSubWindow->showMaximized();

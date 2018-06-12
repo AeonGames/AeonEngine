@@ -6,6 +6,7 @@
   </qresource>
   <qresource prefix="pipelines">
     <file alias="solid_color.prg">${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg</file>
+    <file alias="solid_wire.prg">${CMAKE_CURRENT_BINARY_DIR}/solid_wire.prg</file>
     <file alias="grid.prg">${CMAKE_CURRENT_BINARY_DIR}/grid.prg</file>
   </qresource>
 </RCC>
