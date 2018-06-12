@@ -85,15 +85,19 @@ add_custom_command(
 
 add_custom_command(
     OUTPUT
-        ${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg
-        ${CMAKE_CURRENT_BINARY_DIR}/grid.prg
+    ${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg
+    ${CMAKE_CURRENT_BINARY_DIR}/solid_wire.prg
+    ${CMAKE_CURRENT_BINARY_DIR}/grid.prg
     COMMAND
         $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_color.txt -o solid_color.prg
     COMMAND
+        $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_wire.txt -o solid_wire.prg
+    COMMAND
         $<TARGET_FILE:aeontool> convert -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/grid.txt -o grid.prg
     DEPENDS
-        resources/pipelines/solid_color.txt
-        resources/pipelines/grid.txt
+    resources/pipelines/solid_color.txt
+    resources/pipelines/solid_wire.txt
+    resources/pipelines/grid.txt
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT

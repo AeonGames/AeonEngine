@@ -73,14 +73,14 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         return -1;
     }
     int retval = 0;
-    AeonGames::WorldEditor worldeditor ( argc, argv );
-    worldeditor.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
-    worldeditor.setOrganizationName ( "AeonGames" );
-    worldeditor.setOrganizationDomain ( "aeongames.com" );
-    worldeditor.setApplicationName ( "AeonGames World Editor" );
-    AeonGames::MainWindow* mainWindow;
     try
     {
+        AeonGames::WorldEditor worldeditor ( argc, argv );
+        worldeditor.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
+        worldeditor.setOrganizationName ( "AeonGames" );
+        worldeditor.setOrganizationDomain ( "aeongames.com" );
+        worldeditor.setApplicationName ( "AeonGames World Editor" );
+        AeonGames::MainWindow* mainWindow;
         mainWindow = new AeonGames::MainWindow();
         mainWindow->showNormal();
         retval = worldeditor.exec();
@@ -89,7 +89,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     catch ( std::runtime_error& e )
     {
         std::cout << e.what() << std::endl;
-        QMessageBox::critical ( nullptr, worldeditor.applicationName(),
+        QMessageBox::critical ( nullptr, "AeonGames World Editor Error",
                                 e.what(),
                                 QMessageBox::Ok,
                                 QMessageBox::Ok );

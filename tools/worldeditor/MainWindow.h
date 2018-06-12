@@ -33,8 +33,6 @@ namespace AeonGames
         void on_actionNew_triggered();
         void on_actionOpen_triggered();
         void on_actionExit_triggered();
-    private:
-        std::shared_ptr<Renderer> mRenderer;
     };
 }
 #endif

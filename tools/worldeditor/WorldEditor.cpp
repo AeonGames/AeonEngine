@@ -16,12 +16,18 @@ limitations under the License.
 #include "WorldEditor.h"
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
+#include "aeongames/Renderer.h"
+#include "RendererSelectDialog.h"
 #include <QMessageBox>
 #include <QFile>
 #include <iostream>
 
 namespace AeonGames
 {
+    const Renderer* WorldEditor::GetRenderer() const
+    {
+        return mRenderer.get();
+    }
     const GridSettings& WorldEditor::GetGridSettings() const
     {
         return mGridSettings;
@@ -44,6 +50,37 @@ namespace AeonGames
     }
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv )
     {
+        /* Add a nice renderer selection window.*/
+        QStringList renderer_list;
+        EnumerateRendererLoaders ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
+        {
+            renderer_list.append ( QString::fromStdString ( aIdentifier ) );
+            return true;
+        } );
+
+        if ( !renderer_list.size() )
+        {
+            throw std::runtime_error ( "No renderer available, cannot continue." );
+        }
+        if ( renderer_list.size() == 1 )
+        {
+            this->mRenderer = AeonGames::GetRenderer ( renderer_list.at ( 0 ).toStdString() );
+        }
+        else
+        {
+            RendererSelectDialog select_renderer;
+            select_renderer.SetRenderers ( renderer_list );
+            if ( select_renderer.exec() == QDialog::Accepted )
+            {
+                this->mRenderer = AeonGames::GetRenderer ( select_renderer.GetSelected().toStdString() );
+            }
+        }
+
+        if ( mRenderer == nullptr )
+        {
+            throw std::runtime_error ( "No renderer selected, cannot continue." );
+        }
+
         {
             QFile grid_pipeline_file ( ":/pipelines/grid.prg" );
             if ( !grid_pipeline_file.open ( QIODevice::ReadOnly ) )
@@ -138,9 +175,19 @@ namespace AeonGames
             QByteArray grid_mesh_byte_array = grid_mesh_file.readAll();
             mGridMesh.Load ( grid_mesh_byte_array.data(), grid_mesh_byte_array.size() );
         }
+        mRenderer->LoadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
+        mRenderer->LoadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
+        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
+        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
     }
     WorldEditor::~WorldEditor()
-        = default;
+    {
+        mRenderer->UnloadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
+        mRenderer->UnloadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
+        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
+        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
+    }
+
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )
     {
         try

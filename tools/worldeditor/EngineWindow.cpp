@@ -35,11 +35,10 @@ limitations under the License.
 
 namespace AeonGames
 {
-    EngineWindow::EngineWindow ( const std::shared_ptr<Renderer> aRenderer, QWindow *parent ) :
+    EngineWindow::EngineWindow ( QWindow *parent ) :
         QWindow ( parent ),
         mTimer(),
         mStopWatch(),
-        mRenderer ( aRenderer ),
         mWindow(),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
@@ -69,7 +68,7 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-        mWindow = mRenderer->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
+        mWindow = qWorldEditorApp->GetRenderer()->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
         if ( !mWindow )
         {
             throw std::runtime_error ( "Window creation failed." );

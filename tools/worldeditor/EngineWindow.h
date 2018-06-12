@@ -39,7 +39,7 @@ namespace AeonGames
     {
         Q_OBJECT
     public:
-        EngineWindow ( const std::shared_ptr<Renderer> aRenderer, QWindow *parent = nullptr );
+        EngineWindow ( QWindow *parent = nullptr );
         ~EngineWindow();
         void stop();
         void start();
@@ -63,7 +63,6 @@ namespace AeonGames
         QPoint mLastCursorPosition;
         QTimer mTimer;
         QElapsedTimer mStopWatch;
-        std::shared_ptr<Renderer> mRenderer;
         std::unique_ptr<AeonGames::Window> mWindow;
         float mFrustumVerticalHalfAngle;
         float mStep;

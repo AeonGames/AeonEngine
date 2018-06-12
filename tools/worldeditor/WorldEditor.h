@@ -21,8 +21,12 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Material.h"
+
+#define qWorldEditorApp (reinterpret_cast<WorldEditor*> ( qApp ))
+
 namespace AeonGames
 {
+    class Renderer;
     class WorldEditor : public QApplication
     {
     public:
@@ -34,12 +38,14 @@ namespace AeonGames
         const Mesh& GetGridMesh() const;
         const Material& GetXGridMaterial() const;
         const Material& GetYGridMaterial() const;
+        const Renderer* GetRenderer() const;
     private:
         GridSettings mGridSettings{};
         Pipeline mGridPipeline{};
         Mesh mGridMesh{};
         Material mXGridMaterial{};
         Material mYGridMaterial{};
+        std::shared_ptr<Renderer> mRenderer;
     };
 }
 #endif
