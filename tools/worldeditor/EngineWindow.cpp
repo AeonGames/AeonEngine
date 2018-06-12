@@ -31,6 +31,7 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Window.h"
+#include "aeongames/Frustum.h"
 #include "aeongames/CRC.h"
 
 namespace AeonGames
@@ -40,7 +41,7 @@ namespace AeonGames
         mTimer(),
         mStopWatch(),
         mWindow(),
-        mFrustumVerticalHalfAngle ( 0 ), mStep ( 0 ),
+        mFrustumVerticalHalfAngle ( 0 ), mStep ( 10 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         // Stand back 3 meters.
         mCameraLocation ( -QVector3D ( mCameraRotation.rotatedVector ( forward ) * 300.0f ), 1 ),
@@ -109,10 +110,14 @@ namespace AeonGames
         }
     }
 
+    void EngineWindow::setScene ( const Scene* aScene )
+    {
+        mScene = aScene;
+    }
+#if 0
+    // Commented pending Refactor
     void EngineWindow::setModel ( const QString & filename )
     {
-#if 0
-        // Commented pending Refactor
         /**@todo We probably don't want to expose the Resource Cache this way to avoid misuse.*/
         mNode->AttachComponent ( ModelInstance::TypeId, {},
                                  std::make_shared<ModelInstance> (
@@ -150,8 +155,8 @@ namespace AeonGames
             updateViewMatrix();
             mStep = eye_length / 100.0f;
         }
-#endif
     }
+#endif
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
@@ -214,15 +219,30 @@ namespace AeonGames
                 }
                 mWindow->BeginRender();
                 mWindow->Render ( Transform{},
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline(),
-                                  &reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial(), 0, 2,
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridSettings().horizontalSpacing() + 1 );
+                                  qWorldEditorApp->GetGridMesh(),
+                                  qWorldEditorApp->GetGridPipeline(),
+                                  &qWorldEditorApp->GetXGridMaterial(), 0, 2,
+                                  qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
                 mWindow->Render ( Transform{},
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh(),
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline(),
-                                  &reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial(), 2, 2,
-                                  reinterpret_cast<WorldEditor*> ( qApp )->GetGridSettings().verticalSpacing() + 1 );
+                                  qWorldEditorApp->GetGridMesh(),
+                                  qWorldEditorApp->GetGridPipeline(),
+                                  &qWorldEditorApp->GetYGridMaterial(), 2, 2,
+                                  qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
+                if ( mScene )
+                {
+                    Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
+                    Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
+                    mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Scene::Node & aNode )
+                    {
+                        if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
+                        {
+                            mWindow->Render ( Transform{},
+                                              qWorldEditorApp->GetAABBWireMesh(),
+                                              qWorldEditorApp->GetWirePipeline(),
+                                              &qWorldEditorApp->GetWirePipeline().GetDefaultMaterial() );
+                        }
+                    } );
+                }
                 mWindow->EndRender();
                 return true;
             }

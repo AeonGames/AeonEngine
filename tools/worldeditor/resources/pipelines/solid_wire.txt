@@ -4,9 +4,9 @@ default_material {
       uniform_name: "SolidColor"
       display_name: "Solid Color"
       vector4 {
-        x: 0.5
+        x: 1.0
         y: 0.5
-        z: 0.5
+        z: 0.0
         w: 1.0
       }
     }

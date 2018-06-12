@@ -67,7 +67,8 @@ namespace AeonGames
             mdiSubWindow->setWindowTitle ( fileinfo.absoluteFilePath() );
             mdiSubWindow->showMaximized();
             mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
-            sceneWindow->setModel ( fileinfo.absoluteFilePath() );
+            ///@todo implement Open Scene
+            //sceneWindow->setModel ( fileinfo.absoluteFilePath() );
         }
     }
 }
