@@ -70,4 +70,22 @@ namespace AeonGames
             ( aPlane.GetNormal() [2] < 0 ) ? mRadii[2] : -mRadii[2]
         } ) - aPlane.GetDistance();
     }
+    AABB& AABB::operator+= ( const AABB& lhs )
+    {
+        Vector3 min =
+        {
+            std::min ( mCenter[0] - mRadii[0], lhs.mCenter[0] - lhs.mRadii[0] ),
+            std::min ( mCenter[1] - mRadii[1], lhs.mCenter[1] - lhs.mRadii[1] ),
+            std::min ( mCenter[2] - mRadii[2], lhs.mCenter[2] - lhs.mRadii[2] )
+        };
+        Vector3 max =
+        {
+            std::max ( mCenter[0] + mRadii[0], lhs.mCenter[0] + lhs.mRadii[0] ),
+            std::max ( mCenter[1] + mRadii[1], lhs.mCenter[1] + lhs.mRadii[1] ),
+            std::max ( mCenter[2] + mRadii[2], lhs.mCenter[2] + lhs.mRadii[2] )
+        };
+        mCenter = ( min + max ) / 2.0f;
+        mRadii = max - mCenter;
+        return *this;
+    }
 }

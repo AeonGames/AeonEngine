@@ -38,15 +38,11 @@ namespace AeonGames
         treeView->setModel ( &mSceneModel );
         treeView->addAction ( actionAddNode );
         treeView->addAction ( actionRemoveNode );
+        mEngineWindow->setScene ( &mSceneModel.GetScene() );
     }
 
     SceneWindow::~SceneWindow()
         = default;
-
-    void SceneWindow::setModel ( const QString& filename )
-    {
-        mEngineWindow->setModel ( filename );
-    }
 
     void SceneWindow::on_actionAddNode_triggered()
     {

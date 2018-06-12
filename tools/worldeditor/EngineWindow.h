@@ -43,7 +43,7 @@ namespace AeonGames
         ~EngineWindow();
         void stop();
         void start();
-        void setModel ( const QString& filename );
+        void setScene ( const Scene* aScene );
     private:
         const QVector3D right
         {
@@ -60,6 +60,7 @@ namespace AeonGames
         void wheelEvent ( QWheelEvent *event ) override final;
         bool event ( QEvent* aEvent ) override final;
         void updateViewMatrix();
+        const Scene* mScene{nullptr};
         QPoint mLastCursorPosition;
         QTimer mTimer;
         QElapsedTimer mStopWatch;

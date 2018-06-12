@@ -37,9 +37,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Mesh::Mesh()
+    Mesh::Mesh() : mAABB{}
     {
-        memset ( mCenterRadii, 0, sizeof ( float ) * 6 );
     }
     Mesh::Mesh ( const std::string&  aFilename )
     {
@@ -74,9 +73,9 @@ namespace AeonGames
 
     DLL Mesh::IRenderMesh::~IRenderMesh() = default;
 
-    const float * const Mesh::GetCenterRadii() const
+    const AABB& Mesh::GetAABB() const
     {
-        return mCenterRadii;
+        return mAABB;
     }
 
     void Mesh::Load ( const std::string& aFilename )
@@ -101,6 +100,20 @@ namespace AeonGames
 
     void Mesh::Load ( const MeshBuffer & aMeshBuffer )
     {
+        mAABB = AABB
+        {
+            {
+                aMeshBuffer.center().x(),
+                aMeshBuffer.center().y(),
+                aMeshBuffer.center().z()
+            },
+            {
+                aMeshBuffer.radii().x(),
+                aMeshBuffer.radii().y(),
+                aMeshBuffer.radii().z()
+            }
+        };
+#if 0
         // Extract Center
         mCenterRadii[0] = aMeshBuffer.center().x();
         mCenterRadii[1] = aMeshBuffer.center().y();
@@ -109,7 +122,7 @@ namespace AeonGames
         mCenterRadii[3] = aMeshBuffer.radii().x();
         mCenterRadii[4] = aMeshBuffer.radii().y();
         mCenterRadii[5] = aMeshBuffer.radii().z();
-
+#endif
         mVertexCount = aMeshBuffer.vertexcount();
         mIndexCount = aMeshBuffer.indexcount();
         mIndexType = aMeshBuffer.indextype();
@@ -128,7 +141,7 @@ namespace AeonGames
 
     void Mesh::Unload()
     {
-        memset ( mCenterRadii, 0, sizeof ( float ) * 6 );
+        mAABB = {};
         mVertexFlags =
             mVertexCount =
                 mIndexType =

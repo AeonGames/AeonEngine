@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 /*! \file
     \brief Header for the axis aligned bounding box class.
     \author Rodrigo Hernandez.
-    \copy 2017
+    \copy 2017,2018
 */
 
 #include <array>
@@ -49,6 +49,10 @@ namespace AeonGames
         In other words returns the required displacement of the AABB along the normal direction
         to leave the AABB just touching the plane from the positive side.*/
         DLL float GetDistanceToPlane ( const Plane& aPlane ) const;
+        /*! \name Operators */
+        //@{
+        DLL AABB& operator+= ( const AABB& lhs );
+        //@}
     private:
         Vector3 mCenter{};
         Vector3 mRadii{};

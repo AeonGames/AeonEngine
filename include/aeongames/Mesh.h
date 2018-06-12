@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_MESH_H
 #include <cstdint>
 #include "Memory.h"
+#include "aeongames/AABB.h"
 
 namespace AeonGames
 {
@@ -63,7 +64,7 @@ namespace AeonGames
         DLL void Unload ();
         DLL uint32_t GetStride () const;
         DLL uint32_t GetIndexSize () const;
-        DLL const float * const GetCenterRadii() const;
+        DLL const AABB& GetAABB() const;
         DLL uint32_t GetVertexFlags() const;
         DLL uint32_t GetVertexCount() const;
         DLL uint32_t GetIndexType() const;
@@ -74,7 +75,8 @@ namespace AeonGames
         DLL const IRenderMesh* const GetRenderMesh() const;
     private:
         void Load ( const MeshBuffer& aMeshBuffer );
-        float mCenterRadii[6];
+        //float mCenterRadii[6];
+        AABB mAABB;
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};
         uint32_t mIndexType{};

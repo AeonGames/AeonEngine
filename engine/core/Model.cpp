@@ -112,8 +112,7 @@ namespace AeonGames
             }
         }
         mMeshes.reserve ( model_buffer.assembly_size() );
-        float min[3] {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
-        float max[3] { std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min() };
+        mCenterRadii = {};
         for ( int i = 0; i < model_buffer.assembly_size(); ++i )
         {
             std::shared_ptr<Pipeline> pipeline = ( model_buffer.assembly ( i ).has_pipeline() ) ?
@@ -128,30 +127,8 @@ namespace AeonGames
                 mMeshes.emplace_back ( pipeline, material, Get<Mesh> ( model_buffer.assembly ( i ).mesh().file(),
                                        model_buffer.assembly ( i ).mesh().file() ) );
             }
-            const float *const center_radii = std::get<2> ( mMeshes.back() )->GetCenterRadii();
-            min[0] = std::min ( min[0], center_radii[0] - center_radii[3] );
-            min[1] = std::min ( min[1], center_radii[1] - center_radii[4] );
-            min[2] = std::min ( min[2], center_radii[2] - center_radii[5] );
-            max[0] = std::max ( max[0], center_radii[0] + center_radii[3] );
-            max[1] = std::max ( max[1], center_radii[1] + center_radii[4] );
-            max[2] = std::max ( max[2], center_radii[2] + center_radii[5] );
+            mCenterRadii += std::get<2> ( mMeshes.back() )->GetAABB();
         }
-
-        mCenterRadii.SetCenter
-        (
-        {
-            ( ( min[0] + max[0] ) / 2 ),
-            ( ( min[1] + max[1] ) / 2 ),
-            ( ( min[2] + max[2] ) / 2 )
-        } );
-
-        mCenterRadii.SetRadii
-        (
-        {
-            ( max[0] - mCenterRadii.GetCenter() [0] ),
-            ( max[1] - mCenterRadii.GetCenter() [1] ),
-            ( max[2] - mCenterRadii.GetCenter() [2] )
-        } );
 
         if ( model_buffer.animation_size() )
         {

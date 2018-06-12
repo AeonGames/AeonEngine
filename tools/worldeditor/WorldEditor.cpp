@@ -48,6 +48,37 @@ namespace AeonGames
     {
         return mYGridMaterial;
     }
+    const Pipeline& WorldEditor::GetWirePipeline() const
+    {
+        return mWirePipeline;
+    }
+    const Mesh& WorldEditor::GetAABBWireMesh() const
+    {
+        return mAABBWireMesh;
+    }
+
+    static void LoadPipeline ( Pipeline& aPipeline, const std::string& aFileName )
+    {
+        QFile pipeline_file ( aFileName.c_str() );
+        if ( !pipeline_file.open ( QIODevice::ReadOnly ) )
+        {
+            throw std::runtime_error ( "Unable to open pipeline." );
+        }
+        QByteArray pipeline_byte_array = pipeline_file.readAll();
+        aPipeline.Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
+    }
+
+    static void LoadMesh ( Mesh& aMesh, const std::string& aFileName )
+    {
+        QFile mesh_file ( aFileName.c_str() );
+        if ( !mesh_file.open ( QIODevice::ReadOnly ) )
+        {
+            throw std::runtime_error ( "Unable to open mesh." );
+        }
+        QByteArray mesh_byte_array = mesh_file.readAll();
+        aMesh.Load ( mesh_byte_array.data(), mesh_byte_array.size() );
+    }
+
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv )
     {
         /* Add a nice renderer selection window.*/
@@ -82,13 +113,8 @@ namespace AeonGames
         }
 
         {
-            QFile grid_pipeline_file ( ":/pipelines/grid.prg" );
-            if ( !grid_pipeline_file.open ( QIODevice::ReadOnly ) )
-            {
-                throw std::runtime_error ( "Unable to open grid pipeline resource." );
-            }
-            QByteArray grid_pipeline_byte_array = grid_pipeline_file.readAll();
-            mGridPipeline.Load ( grid_pipeline_byte_array.data(), grid_pipeline_byte_array.size() );
+            LoadPipeline ( mGridPipeline, ":/pipelines/grid.prg" );
+            LoadPipeline ( mWirePipeline, ":/pipelines/solid_wire.prg" );
 
             mXGridMaterial = mGridPipeline.GetDefaultMaterial();
             mXGridMaterial.Set ( "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} );
@@ -166,26 +192,23 @@ namespace AeonGames
                 static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
             } );
         }
-        {
-            QFile grid_mesh_file ( ":/meshes/grid.msh" );
-            if ( !grid_mesh_file.open ( QIODevice::ReadOnly ) )
-            {
-                throw std::runtime_error ( "Unable to open grid mesh resource." );
-            }
-            QByteArray grid_mesh_byte_array = grid_mesh_file.readAll();
-            mGridMesh.Load ( grid_mesh_byte_array.data(), grid_mesh_byte_array.size() );
-        }
-        mRenderer->LoadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
-        mRenderer->LoadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
-        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
-        mRenderer->LoadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
+        LoadMesh ( mGridMesh, ":/meshes/grid.msh" );
+        LoadMesh ( mAABBWireMesh, ":/meshes/aabb_wire.msh" );
+        mRenderer->LoadRenderMesh ( mGridMesh );
+        mRenderer->LoadRenderPipeline ( mGridPipeline );
+        mRenderer->LoadRenderMaterial ( mXGridMaterial );
+        mRenderer->LoadRenderMaterial ( mYGridMaterial );
+
+        mRenderer->LoadRenderMesh ( mAABBWireMesh );
+        mRenderer->LoadRenderPipeline ( mWirePipeline );
+        mRenderer->LoadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
     }
     WorldEditor::~WorldEditor()
     {
-        mRenderer->UnloadRenderMesh ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridMesh() );
-        mRenderer->UnloadRenderPipeline ( reinterpret_cast<WorldEditor*> ( qApp )->GetGridPipeline() );
-        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetXGridMaterial() );
-        mRenderer->UnloadRenderMaterial ( reinterpret_cast<WorldEditor*> ( qApp )->GetYGridMaterial() );
+        mRenderer->UnloadRenderMesh ( mGridMesh );
+        mRenderer->UnloadRenderPipeline ( mGridPipeline );
+        mRenderer->UnloadRenderMaterial ( mXGridMaterial );
+        mRenderer->UnloadRenderMaterial ( mYGridMaterial );
     }
 
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )

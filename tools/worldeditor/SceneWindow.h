@@ -30,7 +30,6 @@ namespace AeonGames
     public:
         SceneWindow ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
         virtual ~SceneWindow();
-        void setModel ( const QString& filename );
     private slots:
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
