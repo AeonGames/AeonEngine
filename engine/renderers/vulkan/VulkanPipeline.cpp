@@ -454,15 +454,10 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.flags = 0;
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
-#if 0
         std::array<VkPushConstantRange, 1> push_constant_ranges {};
         push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
         push_constant_ranges[0].offset = 0;
-        /** @todo We'll have to reduce our matrices to just two here,
-            the validation layers don't like size to be more than VkPhysicalLimits::maxPushConstantsSize
-            which at maximum must be 128 bytes to be safe. */
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
-#endif
         InitializeDescriptorSetLayout();
         std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
         descriptor_set_layouts.reserve ( 2 );
@@ -479,10 +474,8 @@ namespace AeonGames
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
         pipeline_layout_create_info.pSetLayouts = ( pipeline_layout_create_info.setLayoutCount ) ? descriptor_set_layouts.data() : nullptr;
-#if 0
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
         pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
-#endif
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer->GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;

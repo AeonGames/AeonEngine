@@ -236,7 +236,7 @@ namespace AeonGames
                     {
                         if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
                         {
-                            mWindow->Render ( Transform{},
+                            mWindow->Render ( aNode.GetGlobalTransform(),
                                               qWorldEditorApp->GetAABBWireMesh(),
                                               qWorldEditorApp->GetWirePipeline(),
                                               &qWorldEditorApp->GetWirePipeline().GetDefaultMaterial() );
