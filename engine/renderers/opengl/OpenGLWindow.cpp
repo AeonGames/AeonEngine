@@ -106,9 +106,9 @@ namespace AeonGames
 
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, 0, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
+        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
     }
@@ -138,17 +138,6 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-#if 0
-        Frustum frustum ( projection_matrix * view_matrix );
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &projection_matrix, &view_matrix] ( Scene::Node & aNode )
-        {
-            if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
-            {
-                // We dont really need to pass the matrices here, but we already have them so why not.
-                mOpenGLRenderer->Render ( aNode, projection_matrix, view_matrix );
-            }
-        } );
-#endif
         const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
         const OpenGLPipeline* render_pipeline = reinterpret_cast<const OpenGLPipeline*> ( aPipeline.GetRenderPipeline() );
         const OpenGLMaterial* render_material = reinterpret_cast<const OpenGLMaterial*> ( material->GetRenderMaterial() );
@@ -157,6 +146,10 @@ namespace AeonGames
         {
             render_pipeline->Use ( *render_material );
             OPENGL_CHECK_ERROR_NO_THROW;
+            Matrix4x4 model_matrix = aModelTransform.GetMatrix();
+            glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, model_matrix.GetMatrix4x4() );
+            OPENGL_CHECK_ERROR_NO_THROW;
+
             /// @todo Add some sort of way to make use of the aFirstInstance parameter
             glBindVertexArray ( render_mesh->GetArray() );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -266,8 +259,12 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
-        float matrices[32] =
+        float matrices[48] =
         {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -277,7 +274,7 @@ namespace AeonGames
             0.0f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
         };
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 32,
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
                        matrices, GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_NO_THROW;
     }

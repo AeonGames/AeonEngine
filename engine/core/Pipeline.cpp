@@ -204,9 +204,11 @@ namespace AeonGames
         }
         std::string transforms (
             "#ifdef VULKAN\n"
+            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
             "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
             "#else\n"
             "layout(binding = 0, std140) uniform Matrices{\n"
+            "mat4 ModelMatrix;\n"
             "#endif\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
@@ -314,7 +316,7 @@ namespace AeonGames
         default:
             throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
         }
-#if 1
+#if 0
         std::ofstream shader_vert ( "shader.vert" );
         std::ofstream shader_frag ( "shader.frag" );
         shader_vert << mVertexShader;

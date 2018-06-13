@@ -544,17 +544,6 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-#if 0
-        Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };
-        Frustum frustum ( mProjectionMatrix * view_matrix );
-        aScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( Node & aNode )
-        {
-            if ( frustum.Intersects ( aNode.GetGlobalAABB() ) )
-            {
-                mVulkanRenderer->Render ( aNode, mProjectionMatrix, view_matrix );
-            }
-        } );
-#endif
         const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
         const VulkanPipeline* render_pipeline = reinterpret_cast<const VulkanPipeline*> ( aPipeline.GetRenderPipeline() );
         const VulkanMaterial* render_material = reinterpret_cast<const VulkanMaterial*> ( material->GetRenderMaterial() );
@@ -563,6 +552,11 @@ namespace AeonGames
         {
             std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, render_material->GetPropertiesDescriptorSet() }};
             vkCmdBindPipeline ( mVulkanRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline->GetPipeline() );
+            Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
+            vkCmdPushConstants ( mVulkanRenderer->GetCommandBuffer(),
+                                 render_pipeline->GetPipelineLayout(),
+                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                 0, sizeof ( float ) * 16, ModelMatrix.GetMatrix4x4() );
             {
                 uint32_t offset = 0;
                 vkCmdBindDescriptorSets ( mVulkanRenderer->GetCommandBuffer(),
