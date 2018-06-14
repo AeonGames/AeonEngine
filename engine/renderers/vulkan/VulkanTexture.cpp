@@ -195,7 +195,7 @@ namespace AeonGames
         {
             if ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE )
             {
-                memcpy ( image_memory, mImage->Data(), mImage->DataSize() );
+                memcpy ( image_memory, mImage->Pixels(), mImage->PixelsSize() );
             }
             else
             {
@@ -208,9 +208,9 @@ namespace AeonGames
                     handle any conversions?
                     We'll have to see when it comes to handling compressed and
                     "hardware accelerated" formats.*/
-                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Data() );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Pixels() );
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage->DataSize() / 2;
+                auto data_size = mImage->PixelsSize() / 2;
                 for ( uint32_t i = 0; i < data_size; i += 4 )
                 {
                     write_pointer[i] = read_pointer[i] / 256;
@@ -224,9 +224,9 @@ namespace AeonGames
         {
             if ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE )
             {
-                const uint8_t* read_pointer = mImage->Data();
+                const uint8_t* read_pointer = mImage->Pixels();
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage->DataSize();
+                auto data_size = mImage->PixelsSize();
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
                     write_pointer[0] = read_pointer[i];
@@ -239,9 +239,9 @@ namespace AeonGames
             else
             {
                 // Is this a temporary fix?
-                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Data() );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Pixels() );
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage->DataSize() / 2;
+                auto data_size = mImage->PixelsSize() / 2;
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
                     write_pointer[0] = read_pointer[i] / 256;

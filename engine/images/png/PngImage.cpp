@@ -26,8 +26,8 @@ namespace AeonGames
 {
     struct png_read_memory_struct
     {
-        uint8_t* buffer;
-        uint8_t* pointer;
+        const uint8_t* buffer;
+        const uint8_t* pointer;
         png_size_t size;
     };
 
@@ -56,21 +56,13 @@ namespace AeonGames
         }
         read_struct->pointer += real_length;
     }
-
-    PngImage::PngImage ( const std::string & aFileName )
+    bool DecodePNG ( Image& aImage, size_t aBufferSize, const void* aBuffer )
     {
-        //--------------------------------------------------------
-        // File loading code
-        std::ifstream file;
-        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-        file.open ( aFileName, std::ios::binary );
-        std::vector<uint8_t> buffer ( (
-                                          std::istreambuf_iterator<char> ( file ) ),
-                                      ( std::istreambuf_iterator<char>() ) );
-        file.close();
-        //--------------------------------------------------------
-
-        if ( png_sig_cmp ( buffer.data(), 0, 8 ) == 0 )
+        if ( png_sig_cmp ( static_cast<const uint8_t*> ( aBuffer ), 0, 8 ) != 0 )
+        {
+            return false;
+        }
+        try
         {
             png_structp png_ptr =
                 png_create_read_struct ( PNG_LIBPNG_VER_STRING,
@@ -88,23 +80,25 @@ namespace AeonGames
             {
                 throw std::runtime_error ( "Error during init_io." );
             }
-            png_read_memory_struct read_memory_struct = {buffer.data(), buffer.data() + 8,
-                                                         static_cast<png_size_t> ( buffer.size() *sizeof ( uint8_t ) )
+            png_read_memory_struct read_memory_struct = {static_cast<const uint8_t*> ( aBuffer ), static_cast<const uint8_t*> ( aBuffer ) + 8,
+                                                         static_cast<png_size_t> ( aBufferSize * sizeof ( uint8_t ) )
                                                         };
             png_set_read_fn ( png_ptr, &read_memory_struct, png_read_memory_data );
             png_set_sig_bytes ( png_ptr, 8 );
 
             png_read_info ( png_ptr, info_ptr );
 
-            mWidth = png_get_image_width ( png_ptr, info_ptr );
-            mHeight = png_get_image_height ( png_ptr, info_ptr );
+            uint32_t width = png_get_image_width ( png_ptr, info_ptr );
+            uint32_t height = png_get_image_height ( png_ptr, info_ptr );
             png_byte color_type = png_get_color_type ( png_ptr, info_ptr );
             png_byte bit_depth = png_get_bit_depth ( png_ptr, info_ptr );
 
+            Image::ImageFormat format;
+            Image::ImageType type;
             if ( ( color_type == PNG_COLOR_TYPE_RGB ) || ( color_type == PNG_COLOR_TYPE_RGBA ) )
             {
-                mFormat = ( color_type == PNG_COLOR_TYPE_RGB ) ? ImageFormat::RGB : ImageFormat::RGBA;
-                mType   = ( bit_depth == 8 ) ? ImageType::UNSIGNED_BYTE : ImageType::UNSIGNED_SHORT;
+                format = ( color_type == PNG_COLOR_TYPE_RGB ) ? Image::ImageFormat::RGB : Image::ImageFormat::RGBA;
+                type   = ( bit_depth == 8 ) ? Image::ImageType::UNSIGNED_BYTE : Image::ImageType::UNSIGNED_SHORT;
             }
             else
             {
@@ -122,46 +116,25 @@ namespace AeonGames
             // --------------------------------------
             // This has to be changed to create a single buffer to which all row_pointers point at.
             // See http://www.piko3d.com/tutorials/libpng-tutorial-loading-png-files-from-streams
+            /**@todo Add Map/Unmap functions to Image class.*/
             png_size_t rowbytes = png_get_rowbytes ( png_ptr, info_ptr );
-            std::vector<uint8_t*> row_pointers ( sizeof ( png_bytep ) * mHeight );
-            mData.resize ( rowbytes * mHeight );
-            for ( png_uint_32 y = 0; y < mHeight; ++y )
+            std::vector<uint8_t*> row_pointers ( sizeof ( png_bytep ) * height );
+            aImage.Initialize ( width, height, format, type );
+            uint8_t* data = static_cast<uint8_t*> ( aImage.Map() );
+            for ( png_uint_32 y = 0; y < height; ++y )
             {
-                row_pointers[y] = mData.data() + ( rowbytes * y );
+                row_pointers[y] = data + ( rowbytes * y );
             }
             // --------------------------------------
             png_read_image ( png_ptr, row_pointers.data() );
             png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) nullptr );
+            aImage.Unmap();
         }
-        else
+        catch ( std::runtime_error& e )
         {
-            throw std::runtime_error ( "Image format not supported...yet" );
+            std::cout << e.what() << std::endl;
+            return false;
         }
-    }
-    PngImage::~PngImage()
-        = default;
-    uint32_t PngImage::Width() const
-    {
-        return mWidth;
-    }
-    uint32_t PngImage::Height() const
-    {
-        return mHeight;
-    }
-    Image::ImageFormat PngImage::Format() const
-    {
-        return mFormat;
-    }
-    Image::ImageType PngImage::Type() const
-    {
-        return mType;
-    }
-    const uint8_t* PngImage::Data() const
-    {
-        return mData.data();
-    }
-    const size_t PngImage::DataSize() const
-    {
-        return mData.size();
+        return true;
     }
 }
