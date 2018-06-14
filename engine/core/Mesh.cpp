@@ -113,16 +113,6 @@ namespace AeonGames
                 aMeshBuffer.radii().z()
             }
         };
-#if 0
-        // Extract Center
-        mCenterRadii[0] = aMeshBuffer.center().x();
-        mCenterRadii[1] = aMeshBuffer.center().y();
-        mCenterRadii[2] = aMeshBuffer.center().z();
-        // Extract Radius
-        mCenterRadii[3] = aMeshBuffer.radii().x();
-        mCenterRadii[4] = aMeshBuffer.radii().y();
-        mCenterRadii[5] = aMeshBuffer.radii().z();
-#endif
         mVertexCount = aMeshBuffer.vertexcount();
         mIndexCount = aMeshBuffer.indexcount();
         mIndexType = aMeshBuffer.indextype();

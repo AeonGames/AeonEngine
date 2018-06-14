@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,16 +23,12 @@ extern "C"
 {
     bool PngStartUp()
     {
-        return AeonGames::RegisterImageLoader ( ".png",
-                                                [] ( const std::string & aFilename )
-        {
-            return std::make_shared<AeonGames::PngImage> ( aFilename );
-        } );
+        return AeonGames::RegisterImageDecoder ( "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a", AeonGames::DecodePNG );
     }
 
     void PngShutdown()
     {
-        AeonGames::UnregisterImageLoader ( ".png" );
+        AeonGames::UnregisterImageDecoder ( "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a" );
     }
 
     PLUGIN PluginModuleInterface PMI =

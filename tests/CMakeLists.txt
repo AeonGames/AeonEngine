@@ -21,12 +21,14 @@ include_directories(
     ${CMAKE_BINARY_DIR}/engine
 )
 set(TESTED_SRCS
+    ${CMAKE_SOURCE_DIR}/engine/include/Decoder.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
 )
 set(TEST_SRCS
     Main.cpp
+    DecoderTests.cpp
     DependencyMapTests.cpp
     FlyWeightTests.cpp
     CRCTests.cpp
@@ -65,6 +67,6 @@ target_link_libraries(unit-tests AeonEngine ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES
 if(MSVC)
  # VCPKG compiles GTest/GMock DLLs.
  set_target_properties(unit-tests PROPERTIES
-  COMPILE_FLAGS "-DGTEST_LINKED_AS_SHARED_LIBRARY -D_CRT_SECURE_NO_WARNINGS -nowarn:4251")
+  COMPILE_FLAGS "-DGTEST_LINKED_AS_SHARED_LIBRARY -D_CRT_SECURE_NO_WARNINGS -wd4251 -wd4275")
 endif()
 add_test(NAME unit-tests COMMAND unit-tests)

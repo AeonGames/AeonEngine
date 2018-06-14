@@ -72,6 +72,7 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_HEADERS
+    include/Decoder.h
     include/Factory.h
     include/ProtoBufHelpers.h
     include/Configuration.h

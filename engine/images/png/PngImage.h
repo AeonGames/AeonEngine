@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ limitations under the License.
 
 namespace AeonGames
 {
+    bool DecodePNG ( Image& aImage, size_t aBufferSize, const void* aBuffer );
+#if 0
     class PngImage : public Image
     {
     public:
@@ -39,5 +41,6 @@ namespace AeonGames
         ImageType mType = ImageType::Unknown;
         std::vector<uint8_t> mData;
     };
+#endif
 }
 #endif

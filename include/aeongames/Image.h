@@ -18,8 +18,11 @@ limitations under the License.
 #include "Platform.h"
 #include <cstdint>
 #include "aeongames/Memory.h"
+#include "aeongames/Platform.h"
 #include <functional>
 #include <string>
+#include <vector>
+#include <mutex>
 namespace AeonGames
 {
     class Image
@@ -27,29 +30,45 @@ namespace AeonGames
     public:
         enum class ImageFormat : uint32_t
         {
-            Unknown,
+            Unknown = 0,
             RGB,
             RGBA
         };
         enum class ImageType : uint32_t
         {
-            Unknown,
+            Unknown = 0,
             UNSIGNED_BYTE,
             UNSIGNED_SHORT
         };
-        virtual uint32_t Width() const = 0;
-        virtual uint32_t Height() const = 0;
-        virtual ImageFormat Format() const = 0;
-        virtual ImageType Type() const = 0;
-        virtual const uint8_t* Data() const = 0;
-        virtual const size_t DataSize() const = 0;
-        virtual ~Image() = default;
+        DLL Image();
+        DLL Image ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr );
+        DLL ~Image();
+        DLL void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr );
+        DLL void Finalize();
+        DLL uint32_t Width() const;
+        DLL uint32_t Height() const;
+        DLL ImageFormat Format() const;
+        DLL ImageType Type() const;
+        DLL const uint8_t* Pixels() const;
+        DLL const size_t PixelsSize() const;
+        DLL void* Map();
+        DLL void Unmap();
+    private:
+        bool mMapped{false};
+        uint32_t mWidth{};
+        uint32_t mHeight{};
+        ImageFormat mFormat{ImageFormat::Unknown};
+        ImageType mType{ImageType::Unknown};
+        std::vector<uint8_t> mPixels{};
     };
-    /** Factory Function */
-    DLL std::shared_ptr<Image> GetImage ( const std::string& aIdentifier, const std::string& aFilename );
-    /** Registers an image loader for a filename extension.*/
-    DLL bool RegisterImageLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<Image> ( const std::string& ) >& aLoader );
-    /** Unregisters an image loader for a filename extension.*/
-    DLL bool UnregisterImageLoader ( const std::string& aIdentifier );
+    /**@name Decoder Functions */
+    /*@{*/
+    /***/
+    DLL bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Image&, size_t, const void* ) > & aDecoder );
+    /***/
+    DLL bool UnregisterImageDecoder ( const std::string& aMagick );
+    /***/
+    DLL bool DecodeImage ( Image& aImage, size_t aBufferSize, const void* aBuffer );
+    /*@}*/
 }
 #endif

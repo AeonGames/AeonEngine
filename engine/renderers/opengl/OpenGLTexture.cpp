@@ -58,7 +58,7 @@ namespace AeonGames
                        0,
                        ( mImage->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
                        ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-                       mImage->Data() );
+                       mImage->Pixels() );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
         OPENGL_CHECK_ERROR_THROW;
