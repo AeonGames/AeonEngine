@@ -135,6 +135,7 @@ glNamedBufferSubData
 glMapNamedBuffer
 glMapNamedBufferRange
 glUnmapNamedBuffer
+glTextureSubImage2D
 #endif
 #if 0
 // We're no longer using

@@ -51,6 +51,8 @@ namespace AeonGames
         }
     }
 
+    DLL Image::IRenderImage::~IRenderImage() = default;
+
     void Image::Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
     {
         if ( mMapped )
@@ -123,16 +125,33 @@ namespace AeonGames
         mMapped = false;
     }
 
+    void Image::SetRenderImage ( std::unique_ptr<IRenderImage> aRenderImage ) const
+    {
+        mRenderImage = std::move ( aRenderImage );
+    }
+
+    const Image::IRenderImage* Image::GetRenderImage() const
+    {
+        return mRenderImage.get();
+    }
+
     bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Image&, size_t, const void* ) > & aDecoder )
     {
         return Decoder<Image>::RegisterDecoder ( aMagick, aDecoder );
     }
+
     bool UnregisterImageDecoder ( const std::string& aMagick )
     {
         return Decoder<Image>::UnregisterDecoder ( aMagick );
     }
+
     bool DecodeImage ( Image& aImage, size_t aBufferSize, const void* aBuffer )
     {
         return Decoder<Image>::Decode ( aImage, aBufferSize, aBuffer );
+    }
+
+    bool DecodeImage ( Image& aImage, const std::string& aFileName )
+    {
+        return Decoder<Image>::Decode ( aImage, aFileName );
     }
 }

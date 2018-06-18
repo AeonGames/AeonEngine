@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture ( const std::shared_ptr<const Image>& aImage, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
+    OpenGLTexture::OpenGLTexture ( const Image& aImage ) :
         mImage ( aImage  )
     {
         try
@@ -48,17 +48,15 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, mTexture );
         OPENGL_CHECK_ERROR_THROW;
-        /**@todo Write a format/type dictionary?
-        These guesses only work for PNG at the moment.*/
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( mImage->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       mImage->Width(),
-                       mImage->Height(),
+                       ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       mImage.Width(),
+                       mImage.Height(),
                        0,
-                       ( mImage->Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-                       mImage->Pixels() );
+                       ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                       mImage.Pixels() );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
         OPENGL_CHECK_ERROR_THROW;
@@ -77,6 +75,23 @@ namespace AeonGames
         }
         OPENGL_CHECK_ERROR_NO_THROW;
         mTexture = 0;
+    }
+
+    void OpenGLTexture::Update()
+    {
+        if ( glIsTexture ( mTexture ) == GL_FALSE )
+        {
+            return;
+        }
+        glTextureSubImage2D ( mTexture,
+                              0,
+                              ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                              mImage.Width(),
+                              mImage.Height(),
+                              0,
+                              ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                              ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                              mImage.Pixels() );
     }
 
     const uint32_t OpenGLTexture::GetTexture() const

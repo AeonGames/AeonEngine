@@ -68,6 +68,7 @@ namespace AeonGames
             DLL Vector2 GetVector2() const;
             DLL Vector3 GetVector3() const;
             DLL Vector4 GetVector4() const;
+            DLL const Image* GetImage() const;
             ///@}
             ///@name Setters
             ///@{
@@ -77,13 +78,18 @@ namespace AeonGames
             DLL void Set ( const Vector2& aValue );
             DLL void Set ( const Vector3& aValue );
             DLL void Set ( const Vector4& aValue );
+            DLL void Set ( const std::string& aFileName );
             ///@}
         private:
             friend class Material;
             Material* mMaterial{};
             std::string mName{};
             PropertyType mType{ UNKNOWN };
-            size_t mOffset{};
+            union
+            {
+                size_t mOffset;
+                std::unique_ptr<AeonGames::Image> mImage;
+            };
         };
     public:
         DLL Material();
