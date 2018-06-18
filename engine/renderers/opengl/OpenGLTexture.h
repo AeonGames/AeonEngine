@@ -19,25 +19,25 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include "aeongames/Memory.h"
+#include "aeongames/Image.h"
 
 namespace AeonGames
 {
-    class Image;
     class OpenGLRenderer;
-    class OpenGLTexture
+    class OpenGLTexture : public Image::IRenderImage
     {
     public:
-        OpenGLTexture ( const std::shared_ptr<const Image>&  aImage, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer );
-        ~OpenGLTexture();
+        OpenGLTexture ( const Image& aImage );
+        ~OpenGLTexture() final;
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/
         const uint32_t GetTexture() const;
+        void Update () final;
     private:
         void Initialize();
         void Finalize();
-        std::shared_ptr<const Image> mImage;
-        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
-        uint32_t mTexture;
+        const Image& mImage;
+        uint32_t mTexture{};
     };
 }
 #endif

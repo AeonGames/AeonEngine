@@ -343,13 +343,13 @@ namespace AeonGames
     TEST_F ( SceneTest, SerializeAsTextHasProperHeader )
     {
         std::string serialized = mScene.Serialize ( false );
-        EXPECT_EQ ( serialized.substr ( 0, 8 ), "AEONTRE\n" );
+        EXPECT_EQ ( serialized.substr ( 0, 8 ), "AEONSCE\n" );
     }
 
     TEST_F ( SceneTest, SerializeAsBinaryHasProperHeader )
     {
         std::string serialized = mScene.Serialize ( true );
-        EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONTRE" );
+        EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONSCE" );
         EXPECT_EQ ( serialized[7], 0 );
     }
 }

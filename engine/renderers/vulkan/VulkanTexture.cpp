@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanTexture::VulkanTexture ( const std::shared_ptr<const Image>& aImage, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
+    VulkanTexture::VulkanTexture ( const Image& aImage, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
         mVulkanRenderer (  aVulkanRenderer  ), mImage (  aImage ),
         mVkImage ( VK_NULL_HANDLE ),
         mImageMemory ( VK_NULL_HANDLE )
@@ -102,8 +102,8 @@ namespace AeonGames
         image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
         VkFormatProperties format_properties{};
         vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer->GetPhysicalDevice(), image_create_info.format, &format_properties );
-        image_create_info.extent.width = mImage->Width();
-        image_create_info.extent.height = mImage->Height();
+        image_create_info.extent.width = mImage.Width();
+        image_create_info.extent.height = mImage.Height();
         image_create_info.extent.depth = 1;
         image_create_info.mipLevels = 1;
         image_create_info.arrayLayers = 1;
@@ -145,15 +145,21 @@ namespace AeonGames
             stream << "Bind Image Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+        Update();
+    }
 
+    void VulkanTexture::Update()
+    {
         // -----------------------------
         // Write Memory
-        VkBuffer image_buffer;
-        VkDeviceMemory image_buffer_memory;
+        VkBuffer image_buffer{};
+        VkDeviceMemory image_buffer_memory{};
+        VkMemoryRequirements memory_requirements{};
+        VkMemoryAllocateInfo memory_allocate_info{};
 
         VkBufferCreateInfo buffer_create_info = {};
         buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.size = mImage->Width() * mImage->Height() * 4;
+        buffer_create_info.size = mImage.Width() * mImage.Height() * 4;
         buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -191,11 +197,11 @@ namespace AeonGames
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        if ( mImage->Format() == Image::ImageFormat::RGBA )
+        if ( mImage.Format() == Image::ImageFormat::RGBA )
         {
-            if ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE )
+            if ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE )
             {
-                memcpy ( image_memory, mImage->Pixels(), mImage->PixelsSize() );
+                memcpy ( image_memory, mImage.Pixels(), mImage.PixelsSize() );
             }
             else
             {
@@ -208,9 +214,9 @@ namespace AeonGames
                     handle any conversions?
                     We'll have to see when it comes to handling compressed and
                     "hardware accelerated" formats.*/
-                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Pixels() );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage.Pixels() );
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage->PixelsSize() / 2;
+                auto data_size = mImage.PixelsSize() / 2;
                 for ( uint32_t i = 0; i < data_size; i += 4 )
                 {
                     write_pointer[i] = read_pointer[i] / 256;
@@ -222,11 +228,11 @@ namespace AeonGames
         }
         else
         {
-            if ( mImage->Type() == Image::ImageType::UNSIGNED_BYTE )
+            if ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE )
             {
-                const uint8_t* read_pointer = mImage->Pixels();
+                const uint8_t* read_pointer = mImage.Pixels();
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage->PixelsSize();
+                auto data_size = mImage.PixelsSize();
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
                     write_pointer[0] = read_pointer[i];
@@ -239,9 +245,9 @@ namespace AeonGames
             else
             {
                 // Is this a temporary fix?
-                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage->Pixels() );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage.Pixels() );
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage->PixelsSize() / 2;
+                auto data_size = mImage.PixelsSize() / 2;
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
                     write_pointer[0] = read_pointer[i] / 256;
@@ -287,7 +293,7 @@ namespace AeonGames
         buffer_image_copy.imageSubresource.baseArrayLayer = 0;
         buffer_image_copy.imageSubresource.layerCount = 1;
         buffer_image_copy.imageOffset = { 0, 0, 0 };
-        buffer_image_copy.imageExtent = { mImage->Width(), mImage->Height(), 1 };
+        buffer_image_copy.imageExtent = { mImage.Width(), mImage.Height(), 1 };
         vkCmdCopyBufferToImage ( command_buffer, image_buffer, mVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy );
 
         image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;

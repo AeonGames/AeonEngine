@@ -612,13 +612,13 @@ namespace AeonGames
         std::stringstream serialization;
         if ( aAsBinary )
         {
-            serialization << "AEONTRE" << '\0';
+            serialization << "AEONSCE" << '\0';
             scene_buffer.SerializeToOstream ( &serialization );
         }
         else
         {
             std::string text;
-            serialization << "AEONTRE\n";
+            serialization << "AEONSCE\n";
             google::protobuf::TextFormat::Printer printer;
             printer.PrintToString ( scene_buffer, &text );
             serialization << text;

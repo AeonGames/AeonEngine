@@ -33,6 +33,7 @@ limitations under the License.
 #include "aeongames/Vector2.h"
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
+#include "aeongames/Image.h"
 
 namespace AeonGames
 {
@@ -267,11 +268,15 @@ namespace AeonGames
             reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [2] = aPropertyBuffer.vector4().z();
             reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [3] = aPropertyBuffer.vector4().w();
             break;
-#if 0
         case PropertyBuffer::DefaultValueCase::kTexture:
-            mProperties.emplace_back ( *this, i.uniform_name(), i.texture() );
+            mImage = std::make_unique<Image>();
+            if ( !DecodeImage ( *mImage, aPropertyBuffer.texture() ) )
+            {
+                std::ostringstream stream;
+                stream << "Unable to load image " << aPropertyBuffer.texture();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
             break;
-#endif
         default:
             throw std::runtime_error ( "Unknown Type." );
         }
@@ -487,6 +492,31 @@ namespace AeonGames
             mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 4 );
         }
     }
+
+    const Image* Material::Property::GetImage() const
+    {
+        if ( mType != Material::PropertyType::SAMPLER_2D )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        return mImage.get();
+    }
+
+    void Material::Property::Set ( const std::string& aFileName )
+    {
+        if ( mType != Material::PropertyType::SAMPLER_2D )
+        {
+            throw std::runtime_error ( "Invalid Type." );
+        }
+        mImage = std::make_unique<Image>();
+        if ( !DecodeImage ( *mImage, aFileName ) )
+        {
+            std::ostringstream stream;
+            stream << "Unable to load image " << aFileName;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
     uint32_t Material::Property::GetUint() const
     {
         if ( mType != Material::PropertyType::UINT )
