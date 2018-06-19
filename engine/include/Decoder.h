@@ -67,7 +67,7 @@ namespace AeonGames
             {
                 return false;
             }
-            Decoders.insert ( iterator, {aMagick, aDecoder} );
+            Decoders.insert ( iterator, std::tuple<std::string, std::function < bool ( T&, size_t, const void* ) >> ( aMagick, aDecoder ) );
             return true;
         }
         static bool UnregisterDecoder ( const std::string& aMagick )

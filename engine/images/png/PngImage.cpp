@@ -58,7 +58,7 @@ namespace AeonGames
     }
     bool DecodePNG ( Image& aImage, size_t aBufferSize, const void* aBuffer )
     {
-        if ( png_sig_cmp ( static_cast<const uint8_t*> ( aBuffer ), 0, 8 ) != 0 )
+        if ( png_sig_cmp ( static_cast<uint8_t*> ( const_cast<void*> ( aBuffer ) ), 0, 8 ) != 0 )
         {
             return false;
         }

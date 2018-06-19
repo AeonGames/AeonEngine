@@ -19,6 +19,7 @@ limitations under the License.
 #include "Decoder.h"
 #include <unordered_map>
 #include <utility>
+#include <cstring>
 
 namespace AeonGames
 {
