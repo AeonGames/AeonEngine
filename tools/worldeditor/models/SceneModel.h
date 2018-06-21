@@ -55,6 +55,7 @@ namespace AeonGames
         const Scene& GetScene() const;
     private:
         Scene mScene{};
+        std::vector<std::unique_ptr<Node>> mNodes;
     };
 }
 #endif

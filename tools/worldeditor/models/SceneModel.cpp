@@ -23,9 +23,18 @@ limitations under the License.
 #include <QTextStream>
 #include "SceneModel.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
+    class NullNode : public Node
+    {
+    public:
+        ~NullNode() = default;
+    private:
+        void Update ( double aDelta ) override {}
+    };
+
     SceneModel::SceneModel ( QObject *parent ) :
         QAbstractItemModel ( parent )
     {
@@ -59,10 +68,10 @@ namespace AeonGames
         }
         else
         {
-            Scene::Node* node = reinterpret_cast<Scene::Node*> ( parent.internalPointer() );
+            Node* node = reinterpret_cast<Node*> ( parent.internalPointer() );
             if ( row < static_cast<int> ( node->GetChildrenCount() ) )
             {
-                return createIndex ( row, column, & ( node->GetChild ( row ) ) );
+                return createIndex ( row, column, node->GetChild ( row ) );
             }
         }
         return QModelIndex();
@@ -72,8 +81,8 @@ namespace AeonGames
     {
         if ( index.isValid() )
         {
-            Scene::Node* node = reinterpret_cast<Scene::Node*> ( index.internalPointer() );
-            Scene::Node* node_parent = node->GetParent();
+            Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
+            Node* node_parent = node->GetParent();
             if ( node_parent != nullptr )
             {
                 return createIndex ( static_cast<int> ( node->GetIndex() ), 0, node_parent );
@@ -86,7 +95,7 @@ namespace AeonGames
     {
         if ( index.isValid() )
         {
-            return static_cast<int> ( reinterpret_cast<Scene::Node*> ( index.internalPointer() )->GetChildrenCount() );
+            return static_cast<int> ( reinterpret_cast<Node*> ( index.internalPointer() )->GetChildrenCount() );
         }
         return static_cast<int> ( mScene.GetChildrenCount() );
     }
@@ -100,7 +109,7 @@ namespace AeonGames
     {
         if ( index.isValid() )
         {
-            return ( reinterpret_cast<Scene::Node*> ( index.internalPointer() )->GetChildrenCount() > 0 );
+            return ( reinterpret_cast<Node*> ( index.internalPointer() )->GetChildrenCount() > 0 );
         }
         return ( mScene.GetChildrenCount() > 0 );
     }
@@ -114,7 +123,7 @@ namespace AeonGames
                 switch ( index.column() )
                 {
                 case 0:
-                    return QString ( reinterpret_cast<Scene::Node*> ( index.internalPointer() )->GetName().c_str() );
+                    return QString ( reinterpret_cast<Node*> ( index.internalPointer() )->GetName().c_str() );
                     break;
                 }
             }
@@ -141,7 +150,7 @@ namespace AeonGames
 
     bool SceneModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
-        Scene::Node* node = reinterpret_cast<Scene::Node*> ( index.internalPointer() );
+        Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
         if  ( role == Qt::EditRole )
         {
             node->SetName ( value.toString().toUtf8().constData() );
@@ -156,14 +165,14 @@ namespace AeonGames
         if ( sourceParent.isValid() && destinationParent.isValid() )
         {
             // Moving between nodes
-            Scene::Node* source = reinterpret_cast<Scene::Node*> ( sourceParent.internalPointer() );
-            Scene::Node* destination = reinterpret_cast<Scene::Node*> ( destinationParent.internalPointer() );
+            Node* source = reinterpret_cast<Node*> ( sourceParent.internalPointer() );
+            Node* destination = reinterpret_cast<Node*> ( destinationParent.internalPointer() );
             if ( beginMoveRows ( sourceParent, sourceRow, ( sourceRow + count ) - 1, destinationParent, destinationRow ) )
             {
                 for ( int i = 0; i < count; ++i )
                 {
                     auto node = source->GetChild ( sourceRow );
-                    destination->Move ( destinationRow + i, std::move ( *source ) );
+                    destination->Move ( destinationRow + i, source );
                 }
                 endMoveRows();
             }
@@ -175,13 +184,13 @@ namespace AeonGames
         else if ( sourceParent.isValid() )
         {
             // Moving from a node to the scene
-            Scene::Node* source = reinterpret_cast<Scene::Node*> ( sourceParent.internalPointer() );
+            Node* source = reinterpret_cast<Node*> ( sourceParent.internalPointer() );
             if ( beginMoveRows ( sourceParent, sourceRow, ( sourceRow + count ) - 1, destinationParent, destinationRow ) )
             {
                 for ( int i = 0; i < count; ++i )
                 {
                     auto node = source->GetChild ( sourceRow );
-                    mScene.Move ( destinationRow, std::move ( *source ) );
+                    mScene.Move ( destinationRow, source );
                 }
                 endMoveRows();
             }
@@ -193,13 +202,13 @@ namespace AeonGames
         else if ( destinationParent.isValid() )
         {
             // Moving from the scene to a node
-            Scene::Node* destination = reinterpret_cast<Scene::Node*> ( destinationParent.internalPointer() );
+            Node* destination = reinterpret_cast<Node*> ( destinationParent.internalPointer() );
             if ( beginMoveRows ( sourceParent, sourceRow, ( sourceRow + count ) - 1, destinationParent, destinationRow ) )
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    Scene::Node* node = &mScene.GetChild ( sourceRow );
-                    destination->Move ( destinationRow, std::move ( *node ) );
+                    Node* node = mScene.GetChild ( sourceRow );
+                    destination->Move ( destinationRow, node );
                 }
                 endMoveRows();
             }
@@ -215,8 +224,8 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    Scene::Node* node = &mScene.GetChild ( sourceRow );
-                    mScene.Move ( destinationRow, std::move ( *node ) );
+                    Node* node = mScene.GetChild ( sourceRow );
+                    mScene.Move ( destinationRow, node );
                 }
                 endMoveRows();
             }
@@ -256,7 +265,7 @@ namespace AeonGames
         dataStream >> count;
         for ( int i = 0; i < count; ++i )
         {
-            Scene::Node* pointer;
+            Node* pointer;
             dataStream.readRawData ( reinterpret_cast<char*> ( &pointer ), sizeof ( void* ) );
             QModelIndex model_index = createIndex ( static_cast<int> ( pointer->GetIndex() ), 0, pointer );
             moveRow ( this->parent ( model_index ), static_cast<int> ( pointer->GetIndex() ), parent, row );
@@ -297,11 +306,13 @@ namespace AeonGames
         beginInsertRows ( parent, row, row );
         if ( parent.isValid() )
         {
-            reinterpret_cast<Scene::Node*> ( parent.internalPointer() )->Insert ( row, {} );
+            mNodes.emplace_back ( std::make_unique<NullNode>() );
+            reinterpret_cast<Node*> ( parent.internalPointer() )->Insert ( row, mNodes.back().get() );
         }
         else
         {
-            mScene.Insert ( row, {} );
+            mNodes.emplace_back ( std::make_unique<NullNode>() );
+            mScene.Insert ( row, mNodes.back().get() );
         }
         endInsertRows();
     }
@@ -311,11 +322,21 @@ namespace AeonGames
         beginRemoveRows ( parent, row, row );
         if ( parent.isValid() )
         {
-            reinterpret_cast<Scene::Node*> ( parent.internalPointer() )->Erase ( row );
+            Node* node = reinterpret_cast<Node*> ( parent.internalPointer() )->GetChild ( row );
+            reinterpret_cast<Node*> ( parent.internalPointer() )->RemoveByIndex ( row );
+            mNodes.erase ( std::remove_if ( mNodes.begin(), mNodes.end(), [node] ( const std::unique_ptr<Node>& aNode )
+            {
+                return aNode.get() == node;
+            } ), mNodes.end() );
         }
         else
         {
-            mScene.Erase ( row );
+            Node* node = mScene.GetChild ( row );
+            mScene.RemoveByIndex ( row );
+            mNodes.erase ( std::remove_if ( mNodes.begin(), mNodes.end(), [node] ( const std::unique_ptr<Node>& aNode )
+            {
+                return aNode.get() == node;
+            } ), mNodes.end() );
         }
         endRemoveRows();
     }

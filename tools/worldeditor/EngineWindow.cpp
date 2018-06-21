@@ -33,6 +33,7 @@ limitations under the License.
 #include "aeongames/Window.h"
 #include "aeongames/Frustum.h"
 #include "aeongames/CRC.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
@@ -232,7 +233,7 @@ namespace AeonGames
                 {
                     Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
                     Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
-                    mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Scene::Node & aNode )
+                    mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Node & aNode )
                     {
                         if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
                         {
