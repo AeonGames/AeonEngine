@@ -171,7 +171,6 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    auto node = source->GetChild ( sourceRow );
                     destination->Move ( destinationRow + i, source );
                 }
                 endMoveRows();
@@ -189,7 +188,6 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    auto node = source->GetChild ( sourceRow );
                     mScene.Move ( destinationRow, source );
                 }
                 endMoveRows();

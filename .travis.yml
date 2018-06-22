@@ -28,14 +28,14 @@ install:
   - make
   - sudo make install
   - cd ..
-  - wget https://vulkan.lunarg.com/sdk/download/1.0.30.0/linux/vulkansdk-linux-x86_64-1.0.30.0.run
-  - chmod a+x vulkansdk-linux-x86_64-1.0.30.0.run
-  - sudo ./vulkansdk-linux-x86_64-1.0.30.0.run
-  - echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.30.0/x86_64" >> ~/.bashrc
+  - wget https://vulkan.lunarg.com/sdk/download/1.0.54.0/linux/vulkansdk-linux-x86_64-1.0.54.0.run
+  - chmod a+x vulkansdk-linux-x86_64-1.0.54.0.run
+  - sudo ./vulkansdk-linux-x86_64-1.0.54.0.run
+  - echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.54.0/x86_64" >> ~/.bashrc
   - echo "export VULKAN_SDK" >> ~/.bashrc
-  - echo "export PATH=$PWD/VulkanSDK/1.0.30.0/bin:$PATH" >> ~/.bashrc   
-  - echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.30.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
-  - echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.30.0/etc/explicit_layer.d" >> ~/.bashrc
+  - echo "export PATH=$PWD/VulkanSDK/1.0.54.0/bin:$PATH" >> ~/.bashrc   
+  - echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.54.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
+  - echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.54.0/etc/explicit_layer.d" >> ~/.bashrc
   - source ~/.bashrc
   - sudo ldconfig
   - git clone https://github.com/KhronosGroup/glslang.git
