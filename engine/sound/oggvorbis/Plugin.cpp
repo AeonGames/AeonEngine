@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,16 +25,12 @@ extern "C"
 {
     bool OggStartUp()
     {
-        return AeonGames::RegisterSoundLoader ( ".ogg",
-                                                [] ( const std::string & aFilename )
-        {
-            return std::make_shared<AeonGames::OggSound> ( aFilename );
-        } );
+        return AeonGames::RegisterSoundDecoder ( "OggS", AeonGames::DecodeOGG );
     }
 
     void OggShutdown()
     {
-        AeonGames::UnregisterSoundLoader ( ".ogg" );
+        AeonGames::UnregisterSoundDecoder ( "OggS" );
     }
 
     PLUGIN PluginModuleInterface PMI =

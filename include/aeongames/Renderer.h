@@ -65,13 +65,13 @@ namespace AeonGames
 
     /**@name Factory Functions */
     /*@{*/
-    DLL std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier );
     /** Registers a renderer loader for a specific identifier.*/
-    DLL bool RegisterRendererLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<Renderer>() >& aLoader );
+    DLL bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor );
     /** Unregisters a renderer loader for a specific identifier.*/
-    DLL bool UnregisterRendererLoader ( const std::string& aIdentifier );
+    DLL bool UnregisterRendererConstructor ( const std::string& aIdentifier );
     /** Enumerates Renderer loader identifiers via an enumerator functor.*/
-    DLL void EnumerateRendererLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator );
+    DLL void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
     /*@}*/
 }
 #endif

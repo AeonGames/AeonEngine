@@ -21,20 +21,20 @@ limitations under the License.
 
 namespace AeonGames
 {
-    std::shared_ptr<Renderer> GetRenderer ( const std::string& aIdentifier )
+    std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier )
     {
-        return Factory<Renderer>::Get ( aIdentifier );
+        return Factory<Renderer>::Construct ( aIdentifier );
     }
-    bool RegisterRendererLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<Renderer>() >& aLoader )
+    bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor )
     {
-        return Factory<Renderer>::RegisterLoader ( aIdentifier, aLoader );
+        return Factory<Renderer>::RegisterConstructor ( aIdentifier, aConstructor );
     }
-    bool UnregisterRendererLoader ( const std::string& aIdentifier )
+    bool UnregisterRendererConstructor ( const std::string& aIdentifier )
     {
-        return Factory<Renderer>::UnregisterLoader ( aIdentifier );
+        return Factory<Renderer>::UnregisterConstructor ( aIdentifier );
     }
-    void EnumerateRendererLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator )
+    void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
     {
-        Factory<Renderer>::EnumerateLoaders ( aEnumerator );
+        Factory<Renderer>::EnumerateConstructors ( aEnumerator );
     }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,16 +23,16 @@ extern "C"
 {
     bool OpenGLStartUp()
     {
-        return AeonGames::RegisterRendererLoader ( "OpenGL",
+        return AeonGames::RegisterRendererConstructor ( "OpenGL",
                 [] ()
         {
-            return std::make_shared<AeonGames::OpenGLRenderer>();
+            return std::make_unique<AeonGames::OpenGLRenderer>();
         } );
     }
 
     void OpenGLShutdown()
     {
-        AeonGames::UnregisterRendererLoader ( "OpenGL" );
+        AeonGames::UnregisterRendererConstructor ( "OpenGL" );
     }
 
     PLUGIN PluginModuleInterface PMI =

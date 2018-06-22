@@ -27,11 +27,16 @@ namespace AeonGames
     public:
         virtual ~Sound() = default;
     };
-    /** Factory Function */
-    DLL std::shared_ptr<Sound> GetSound ( const std::string& aIdentifier, const std::string& aFilename );
-    /** Registers a sound loader for a filename extension.*/
-    DLL bool RegisterSoundLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<Sound> ( const std::string& ) >& aLoader );
-    /** Unregisters a sound loader for a filename extension.*/
-    DLL bool UnregisterSoundLoader ( const std::string& aIdentifier );
+    /**@name Decoder Functions */
+    /*@{*/
+    /***/
+    DLL bool RegisterSoundDecoder ( const std::string& aMagick, const std::function < bool ( Sound&, size_t, const void* ) > & aDecoder );
+    /***/
+    DLL bool UnregisterSoundDecoder ( const std::string& aMagick );
+    /***/
+    DLL bool DecodeSound ( Sound& aSound, size_t aBufferSize, const void* aBuffer );
+    /***/
+    DLL bool DecodeSound ( Sound& aSound, const std::string& aFileName );
+    /*@}*/
 }
 #endif

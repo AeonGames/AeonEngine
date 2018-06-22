@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,16 +25,16 @@ extern "C"
     bool VulkanStartUp()
     {
         glslang::InitializeProcess();
-        return AeonGames::RegisterRendererLoader ( "Vulkan",
+        return AeonGames::RegisterRendererConstructor ( "Vulkan",
                 [] ()
         {
-            return std::make_shared<AeonGames::VulkanRenderer>();
+            return std::make_unique<AeonGames::VulkanRenderer>();
         } );
     }
 
     void VulkanShutdown()
     {
-        AeonGames::UnregisterRendererLoader ( "Vulkan" );
+        AeonGames::UnregisterRendererConstructor ( "Vulkan" );
         glslang::FinalizeProcess();
     }
 

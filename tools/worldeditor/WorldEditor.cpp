@@ -83,7 +83,7 @@ namespace AeonGames
     {
         /* Add a nice renderer selection window.*/
         QStringList renderer_list;
-        EnumerateRendererLoaders ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
+        EnumerateRendererConstructors ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
         {
             renderer_list.append ( QString::fromStdString ( aIdentifier ) );
             return true;
@@ -95,7 +95,7 @@ namespace AeonGames
         }
         if ( renderer_list.size() == 1 )
         {
-            this->mRenderer = AeonGames::GetRenderer ( renderer_list.at ( 0 ).toStdString() );
+            this->mRenderer = AeonGames::ConstructRenderer ( renderer_list.at ( 0 ).toStdString() );
         }
         else
         {
@@ -103,7 +103,7 @@ namespace AeonGames
             select_renderer.SetRenderers ( renderer_list );
             if ( select_renderer.exec() == QDialog::Accepted )
             {
-                this->mRenderer = AeonGames::GetRenderer ( select_renderer.GetSelected().toStdString() );
+                this->mRenderer = AeonGames::ConstructRenderer ( select_renderer.GetSelected().toStdString() );
             }
         }
 

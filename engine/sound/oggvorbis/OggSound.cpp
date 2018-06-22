@@ -22,6 +22,10 @@ limitations under the License.
 
 namespace AeonGames
 {
+    bool DecodeOGG ( Sound& aSound, size_t aBufferSize, const void* aBuffer )
+    {
+        return false;
+    }
     size_t OggSound::Read ( void *ptr, size_t size, size_t nmemb, void *datasource )
     {
         auto* ogg_sound = static_cast<OggSound*> ( datasource );
