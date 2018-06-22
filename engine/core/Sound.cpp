@@ -16,22 +16,29 @@ limitations under the License.
 #include "aeongames/Sound.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ResourceCache.h"
-#include "Factory.h"
+#include "Decoder.h"
 #include <unordered_map>
 #include <utility>
 
 namespace AeonGames
 {
-    std::shared_ptr<Sound> GetSound ( const std::string& aIdentifier, const std::string& aFilename )
+    bool RegisterSoundDecoder ( const std::string& aMagick, const std::function < bool ( Sound&, size_t, const void* ) > & aDecoder )
     {
-        return Factory<Sound, const std::string&>::Get ( aIdentifier, aFilename );
+        return Decoder<Sound>::RegisterDecoder ( aMagick, aDecoder );
     }
-    bool RegisterSoundLoader ( const std::string& aExt, const std::function<std::shared_ptr<Sound> ( const std::string& ) >& aLoader )
+
+    bool UnregisterSoundDecoder ( const std::string& aMagick )
     {
-        return Factory<Sound, const std::string&>::RegisterLoader ( aExt,  aLoader );
+        return Decoder<Sound>::UnregisterDecoder ( aMagick );
     }
-    bool UnregisterSoundLoader ( const std::string& aExt )
+
+    bool DecodeSound ( Sound& aSound, size_t aBufferSize, const void* aBuffer )
     {
-        return Factory<Sound, const std::string&>::UnregisterLoader ( aExt );
+        return Decoder<Sound>::Decode ( aSound, aBufferSize, aBuffer );
+    }
+
+    bool DecodeSound ( Sound& aSound, const std::string& aFileName )
+    {
+        return Decoder<Sound>::Decode ( aSound, aFileName );
     }
 }

@@ -22,6 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    bool DecodeOGG ( Sound& aSound, size_t aBufferSize, const void* aBuffer );
     class OggSound : public Sound
     {
     public:

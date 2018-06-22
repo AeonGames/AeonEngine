@@ -31,9 +31,9 @@ namespace AeonGames
 
     /**@name Factory Functions */
     /*@{*/
-    DLL std::shared_ptr<SoundSystem> GetSoundSystem ( const std::string& aIdentifier );
+    DLL std::unique_ptr<SoundSystem> GetSoundSystem ( const std::string& aIdentifier );
     /** Registers a SoundSystem loader for a specific identifier.*/
-    DLL bool RegisterSoundSystemLoader ( const std::string& aIdentifier, const std::function<std::shared_ptr<SoundSystem>() >& aLoader );
+    DLL bool RegisterSoundSystemLoader ( const std::string& aIdentifier, const std::function<std::unique_ptr<SoundSystem>() >& aLoader );
     /** Unregisters a SoundSystem loader for a specific identifier.*/
     DLL bool UnregisterSoundSystemLoader ( const std::string& aIdentifier );
     /** Enumerates SoundSystem loader identifiers via an enumerator functor.*/

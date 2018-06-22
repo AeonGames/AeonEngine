@@ -22,25 +22,5 @@ limitations under the License.
 namespace AeonGames
 {
     bool DecodePNG ( Image& aImage, size_t aBufferSize, const void* aBuffer );
-#if 0
-    class PngImage : public Image
-    {
-    public:
-        PngImage ( const std::string & aFileName );
-        ~PngImage() final;
-        uint32_t Width() const final;
-        uint32_t Height() const final;
-        ImageFormat Format() const final;
-        ImageType Type() const final;
-        const uint8_t* Data() const final;
-        const size_t DataSize() const final;
-    private:
-        uint32_t mWidth = 0;
-        uint32_t mHeight = 0;
-        ImageFormat mFormat = ImageFormat::Unknown;
-        ImageType mType = ImageType::Unknown;
-        std::vector<uint8_t> mData;
-    };
-#endif
 }
 #endif

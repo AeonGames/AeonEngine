@@ -24,37 +24,37 @@ namespace AeonGames
     class Factory
     {
     public:
-        static std::shared_ptr<T> Get ( const std::string& aIdentifier, Args&&... args )
+        static std::unique_ptr<T> Construct ( const std::string& aIdentifier, Args&&... args )
         {
-            auto it = Loaders.find ( aIdentifier );
-            if ( it != Loaders.end() )
+            auto it = Constructors.find ( aIdentifier );
+            if ( it != Constructors.end() )
             {
                 return it->second ( std::forward<Args> ( args )... );
             }
             return nullptr;
         }
-        static bool RegisterLoader ( const std::string& aIdentifier, const std::function < std::shared_ptr<T> ( Args&&... args ) > & aLoader )
+        static bool RegisterConstructor ( const std::string& aIdentifier, const std::function < std::unique_ptr<T> ( Args&&... args ) > & aConstructor )
         {
-            if ( Loaders.find ( aIdentifier ) == Loaders.end() )
+            if ( Constructors.find ( aIdentifier ) == Constructors.end() )
             {
-                Loaders[aIdentifier] = aLoader;
+                Constructors[aIdentifier] = aConstructor;
                 return true;
             }
             return false;
         }
-        static bool UnregisterLoader ( const std::string& aIdentifier )
+        static bool UnregisterConstructor ( const std::string& aIdentifier )
         {
-            auto it = Loaders.find ( aIdentifier );
-            if ( it != Loaders.end() )
+            auto it = Constructors.find ( aIdentifier );
+            if ( it != Constructors.end() )
             {
-                Loaders.erase ( it );
+                Constructors.erase ( it );
                 return true;
             }
             return false;
         }
-        static void EnumerateLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator )
+        static void EnumerateConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
         {
-            for ( auto& i : Loaders )
+            for ( auto& i : Constructors )
             {
                 if ( !aEnumerator ( i.first ) )
                 {
@@ -63,8 +63,8 @@ namespace AeonGames
             }
         }
     private:
-        static std::unordered_map < std::string, std::function < std::shared_ptr<T> ( Args&&... args ) >> Loaders;
+        static std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Constructors;
     };
     template<class T, typename... Args>
-    std::unordered_map < std::string, std::function < std::shared_ptr<T> ( Args&&... args ) >> Factory<T, Args...>::Loaders;
+    std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Factory<T, Args...>::Constructors;
 }
