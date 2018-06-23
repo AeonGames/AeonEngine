@@ -209,6 +209,10 @@ namespace AeonGames
         mRenderer->UnloadRenderPipeline ( mGridPipeline );
         mRenderer->UnloadRenderMaterial ( mXGridMaterial );
         mRenderer->UnloadRenderMaterial ( mYGridMaterial );
+
+        mRenderer->UnloadRenderMesh ( mAABBWireMesh );
+        mRenderer->UnloadRenderPipeline ( mWirePipeline );
+        mRenderer->UnloadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
     }
 
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )

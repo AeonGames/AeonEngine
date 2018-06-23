@@ -144,5 +144,15 @@ namespace AeonGames
         mutable std::vector<Node*>::size_type mIterator{ 0 };
         std::bitset<8> mFlags;
     };
+    /**@name Factory Functions */
+    /*@{*/
+    DLL std::unique_ptr<Node> ConstructNode ( const std::string& aIdentifier );
+    /** Registers a renderer loader for a specific identifier.*/
+    DLL bool RegisterNodeConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Node>() >& aConstructor );
+    /** Unregisters a renderer loader for a specific identifier.*/
+    DLL bool UnregisterNodeConstructor ( const std::string& aIdentifier );
+    /** Enumerates Node loader identifiers via an enumerator functor.*/
+    DLL void EnumerateNodeConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
+    /*@}*/
 }
 #endif

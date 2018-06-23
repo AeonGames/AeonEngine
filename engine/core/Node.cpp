@@ -28,7 +28,7 @@ limitations under the License.
 #include "aeongames/Model.h"
 #include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
-#include "aeongames/Component.h"
+#include "Factory.h"
 
 namespace AeonGames
 {
@@ -450,4 +450,5 @@ namespace AeonGames
             parent->RecursiveTraverseAncestors ( aAction );
         }
     }
+    FactoryImplementation ( Node );
 }

@@ -18,6 +18,25 @@ limitations under the License.
 #include <functional>
 #include "aeongames/Memory.h"
 #include <utility>
+
+#define FactoryImplementation(X) \
+    std::unique_ptr<X> Construct##X ( const std::string& aIdentifier )\
+    { \
+        return Factory<X>::Construct ( aIdentifier ); \
+    } \
+    bool Register##X##Constructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ) \
+    { \
+        return Factory<X>::RegisterConstructor ( aIdentifier, aConstructor );\
+    }\
+    bool Unregister##X##Constructor ( const std::string& aIdentifier )\
+    {\
+        return Factory<X>::UnregisterConstructor ( aIdentifier );\
+    }\
+    void Enumerate##X##Constructors ( const std::function<bool ( const std::string& ) >& aEnumerator )\
+    {\
+        Factory<X>::EnumerateConstructors ( aEnumerator );\
+    }
+
 namespace AeonGames
 {
     template<class T, typename... Args>

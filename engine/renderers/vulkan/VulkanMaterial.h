@@ -30,7 +30,7 @@ namespace AeonGames
     class VulkanMaterial : public Material::IRenderMaterial
     {
     public:
-        VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer );
+        VulkanMaterial ( const Material& aMaterial, const VulkanRenderer&  aVulkanRenderer );
         ~VulkanMaterial() final;
         void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
         const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
@@ -47,7 +47,7 @@ namespace AeonGames
         void FinalizePropertiesUniform();
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
-        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
+        const VulkanRenderer& mVulkanRenderer;
         const Material& mMaterial;
         VkDescriptorSetLayout mVkPropertiesDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorPool mVkPropertiesDescriptorPool{ VK_NULL_HANDLE };

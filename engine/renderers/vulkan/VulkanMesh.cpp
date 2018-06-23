@@ -29,8 +29,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMesh::VulkanMesh ( const Mesh& aMesh, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
-        mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer ), mBuffer ( *mVulkanRenderer.get() )
+    VulkanMesh::VulkanMesh ( const Mesh& aMesh, const VulkanRenderer&  aVulkanRenderer ) :
+        mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer ), mBuffer ( mVulkanRenderer )
     {
         try
         {
@@ -54,10 +54,6 @@ namespace AeonGames
 
     void VulkanMesh::Initialize()
     {
-        if ( !mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
-        }
         const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * mMesh.GetVertexCount() );
         const VkDeviceSize index_buffer_size = ( mMesh.GetIndexBuffer().length() *
                                                ( ( mMesh.GetIndexType() == Mesh::BYTE || mMesh.GetIndexType() == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );

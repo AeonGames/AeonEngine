@@ -31,7 +31,7 @@ namespace AeonGames
 {
     class VulkanWindow;
     class VulkanModel;
-    class VulkanRenderer : public Renderer, public std::enable_shared_from_this<VulkanRenderer>
+    class VulkanRenderer : public Renderer
     {
     public:
         VulkanRenderer ( bool aValidate = true );

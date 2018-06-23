@@ -38,9 +38,9 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const Material& aMaterial, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
+    VulkanMaterial::VulkanMaterial ( const Material& aMaterial, const VulkanRenderer&  aVulkanRenderer ) :
         mVulkanRenderer ( aVulkanRenderer ),
-        mMaterial ( aMaterial ), mPropertiesBuffer ( *mVulkanRenderer )
+        mMaterial ( aMaterial ), mPropertiesBuffer ( mVulkanRenderer )
     {
         try
         {
@@ -78,10 +78,6 @@ namespace AeonGames
 
     void VulkanMaterial::Initialize()
     {
-        if ( !mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
-        }
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
         InitializePropertiesUniform();
@@ -151,7 +147,7 @@ namespace AeonGames
         descriptor_set_layout_create_info.flags = 0;
         descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -163,7 +159,7 @@ namespace AeonGames
     {
         if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
         {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
             mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
         }
     }
@@ -193,7 +189,7 @@ namespace AeonGames
             descriptor_pool_create_info.maxSets = 1;
             descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
             descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
-            if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer->GetDevice(), &descriptor_pool_create_info, nullptr, &mVkPropertiesDescriptorPool ) )
+            if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkPropertiesDescriptorPool ) )
             {
                 std::ostringstream stream;
                 stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
@@ -206,7 +202,7 @@ namespace AeonGames
     {
         if ( mVkPropertiesDescriptorPool != VK_NULL_HANDLE )
         {
-            vkDestroyDescriptorPool ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorPool, nullptr );
+            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorPool, nullptr );
             mVkPropertiesDescriptorPool = VK_NULL_HANDLE;
         }
     }
@@ -235,7 +231,7 @@ namespace AeonGames
         descriptor_set_allocate_info.descriptorPool = mVkPropertiesDescriptorPool;
         descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
         descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer->GetDevice(), &descriptor_set_allocate_info, &mVkPropertiesDescriptorSet ) )
+        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mVkPropertiesDescriptorSet ) )
         {
             std::ostringstream stream;
             stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -280,7 +276,7 @@ namespace AeonGames
             assert ( 0 && "TODO: Set pImageInfo" );
             write_descriptor_set.pImageInfo = nullptr;//&mTextures[i]->GetDescriptorImageInfo();
         }
-        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
+        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
     void VulkanMaterial::FinalizeDescriptorSet()

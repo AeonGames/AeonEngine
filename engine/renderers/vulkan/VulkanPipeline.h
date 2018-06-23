@@ -33,7 +33,7 @@ namespace AeonGames
     class VulkanPipeline : public Pipeline::IRenderPipeline
     {
     public:
-        VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer );
+        VulkanPipeline ( const Pipeline& aPipeline, const VulkanRenderer& aVulkanRenderer );
         ~VulkanPipeline() final;
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
@@ -43,7 +43,7 @@ namespace AeonGames
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
         const Pipeline& mPipeline;
-        std::shared_ptr<const VulkanRenderer> mVulkanRenderer;
+        const VulkanRenderer& mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };
         /** Local DescriptorSetLayout,

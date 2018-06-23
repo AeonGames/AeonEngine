@@ -24,15 +24,15 @@ namespace AeonGames
     {
         return Factory<SoundSystem>::Construct ( aIdentifier );
     }
-    bool RegisterSoundSystemLoader ( const std::string& aIdentifier, const std::function<std::unique_ptr<SoundSystem>() >& aLoader )
+    bool RegisterSoundSystemConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<SoundSystem>() >& aConstructor )
     {
-        return Factory<SoundSystem>::RegisterConstructor ( aIdentifier, aLoader );
+        return Factory<SoundSystem>::RegisterConstructor ( aIdentifier, aConstructor );
     }
-    bool UnregisterSoundSystemLoader ( const std::string& aIdentifier )
+    bool UnregisterSoundSystemConstructor ( const std::string& aIdentifier )
     {
         return Factory<SoundSystem>::UnregisterConstructor ( aIdentifier );
     }
-    void EnumerateSoundSystemLoaders ( const std::function<bool ( const std::string& ) >& aEnumerator )
+    void EnumerateSoundSystemConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
     {
         Factory<SoundSystem>::EnumerateConstructors ( aEnumerator );
     }
