@@ -31,7 +31,7 @@ namespace AeonGames
     {
     public:
         WorldEditor ( int &argc, char *argv[] );
-        virtual ~WorldEditor();
+        ~WorldEditor() final;
         bool notify ( QObject *receiver, QEvent *event ) override;
         const GridSettings& GetGridSettings() const;
         const Pipeline& GetGridPipeline() const;
@@ -42,16 +42,14 @@ namespace AeonGames
         const Pipeline& GetWirePipeline() const;
         const Mesh& GetAABBWireMesh() const;
     private:
+        std::unique_ptr<Renderer> mRenderer;
         GridSettings mGridSettings{};
         Pipeline mGridPipeline{};
         Mesh mGridMesh{};
         Material mXGridMaterial{};
         Material mYGridMaterial{};
-
         Pipeline mWirePipeline{};
         Mesh mAABBWireMesh{};
-
-        std::shared_ptr<Renderer> mRenderer;
     };
 }
 #endif

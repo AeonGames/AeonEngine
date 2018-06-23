@@ -32,7 +32,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const VulkanRenderer>& aVulkanRenderer ) :
+    VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const VulkanRenderer& aVulkanRenderer ) :
         mPipeline ( aPipeline  ),
         mVulkanRenderer ( aVulkanRenderer )
     {
@@ -135,7 +135,7 @@ namespace AeonGames
         descriptor_set_layout_create_info.flags = 0;
         descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -147,7 +147,7 @@ namespace AeonGames
     {
         if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
         {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
             mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
         }
     }
@@ -159,7 +159,7 @@ namespace AeonGames
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
         descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
         descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer->GetDevice(), &descriptor_set_allocate_info, &mVkDescriptorSet ) )
+        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mVkDescriptorSet ) )
         {
             std::ostringstream stream;
             stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -231,7 +231,7 @@ namespace AeonGames
             assert ( 0 && "TODO: Set pImageInfo" );
             write_descriptor_set.pImageInfo = nullptr;//&mTextures[i]->GetDescriptorImageInfo();
         }
-        vkUpdateDescriptorSets ( mVulkanRenderer->GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
+        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
     void VulkanPipeline::FinalizeDescriptorSet()
@@ -241,10 +241,6 @@ namespace AeonGames
 
     void VulkanPipeline::Initialize()
     {
-        if ( !mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Pointer to Vulkan Renderer is nullptr." );
-        }
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline.GetVertexShaderSource().c_str() );
         compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline.GetFragmentShaderSource().c_str() );
@@ -263,7 +259,7 @@ namespace AeonGames
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).data();
 
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -275,7 +271,7 @@ namespace AeonGames
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).data();
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer->GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )] ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -461,9 +457,9 @@ namespace AeonGames
         InitializeDescriptorSetLayout();
         std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
         descriptor_set_layouts.reserve ( 2 );
-        if ( mVulkanRenderer->GetMatrixDescriptorSetLayout() != VK_NULL_HANDLE )
+        if ( mVulkanRenderer.GetMatrixDescriptorSetLayout() != VK_NULL_HANDLE )
         {
-            descriptor_set_layouts.emplace_back ( mVulkanRenderer->GetMatrixDescriptorSetLayout() );
+            descriptor_set_layouts.emplace_back ( mVulkanRenderer.GetMatrixDescriptorSetLayout() );
         }
         if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
         {
@@ -476,7 +472,7 @@ namespace AeonGames
         pipeline_layout_create_info.pSetLayouts = ( pipeline_layout_create_info.setLayoutCount ) ? descriptor_set_layouts.data() : nullptr;
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
         pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
-        if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer->GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
+        if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;
             stream << "Pipeline Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -499,11 +495,11 @@ namespace AeonGames
         graphics_pipeline_create_info.pColorBlendState = &pipeline_color_blend_state_create_info;
         graphics_pipeline_create_info.pDynamicState = &pipeline_dynamic_state_create_info;
         graphics_pipeline_create_info.layout = mVkPipelineLayout;
-        graphics_pipeline_create_info.renderPass = mVulkanRenderer->GetRenderPass();
+        graphics_pipeline_create_info.renderPass = mVulkanRenderer.GetRenderPass();
         graphics_pipeline_create_info.subpass = 0;
         graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         graphics_pipeline_create_info.basePipelineIndex = 0;
-        if ( VkResult result = vkCreateGraphicsPipelines ( mVulkanRenderer->GetDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_create_info, nullptr, &mVkPipeline ) )
+        if ( VkResult result = vkCreateGraphicsPipelines ( mVulkanRenderer.GetDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_create_info, nullptr, &mVkPipeline ) )
         {
             std::ostringstream stream;
             stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -515,19 +511,19 @@ namespace AeonGames
     {
         if ( mVkPipeline != VK_NULL_HANDLE )
         {
-            vkDestroyPipeline ( mVulkanRenderer->GetDevice(), mVkPipeline, nullptr );
+            vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkPipeline, nullptr );
             mVkPipeline = VK_NULL_HANDLE;
         }
         if ( mVkPipelineLayout != VK_NULL_HANDLE )
         {
-            vkDestroyPipelineLayout ( mVulkanRenderer->GetDevice(), mVkPipelineLayout, nullptr );
+            vkDestroyPipelineLayout ( mVulkanRenderer.GetDevice(), mVkPipelineLayout, nullptr );
             mVkPipelineLayout = VK_NULL_HANDLE;
         }
         for ( auto& i : mVkShaderModules )
         {
             if ( i != VK_NULL_HANDLE )
             {
-                vkDestroyShaderModule ( mVulkanRenderer->GetDevice(), i, nullptr );
+                vkDestroyShaderModule ( mVulkanRenderer.GetDevice(), i, nullptr );
                 i = VK_NULL_HANDLE;
             }
         }
@@ -575,7 +571,7 @@ namespace AeonGames
         descriptor_set_layout_create_info.flags = 0;
         descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer->GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -587,7 +583,7 @@ namespace AeonGames
     {
         if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
         {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer->GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
+            vkDestroyDescriptorSetLayout ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
             mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
         }
     }

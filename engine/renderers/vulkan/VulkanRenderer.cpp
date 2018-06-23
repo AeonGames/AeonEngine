@@ -598,12 +598,12 @@ namespace AeonGames
 
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<VulkanWindow> ( aWindowId, shared_from_this() );
+        return std::make_unique<VulkanWindow> ( aWindowId, *this );
     }
 
     void VulkanRenderer::LoadRenderMesh ( const Mesh & aMesh ) const
     {
-        aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, shared_from_this() ) );
+        aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, *this ) );
     }
 
     void VulkanRenderer::UnloadRenderMesh ( const Mesh & aMesh ) const
@@ -613,7 +613,7 @@ namespace AeonGames
 
     void VulkanRenderer::LoadRenderPipeline ( const Pipeline & aPipeline ) const
     {
-        aPipeline.SetRenderPipeline ( std::make_unique<VulkanPipeline> ( aPipeline, shared_from_this() ) );
+        aPipeline.SetRenderPipeline ( std::make_unique<VulkanPipeline> ( aPipeline, *this ) );
     }
 
     void VulkanRenderer::UnloadRenderPipeline ( const Pipeline & aPipeline ) const
@@ -623,7 +623,7 @@ namespace AeonGames
 
     void VulkanRenderer::LoadRenderMaterial ( const Material & aMaterial ) const
     {
-        aMaterial.SetRenderMaterial ( std::make_unique<VulkanMaterial> ( aMaterial, shared_from_this() ) );
+        aMaterial.SetRenderMaterial ( std::make_unique<VulkanMaterial> ( aMaterial, *this ) );
     }
 
     void VulkanRenderer::UnloadRenderMaterial ( const Material & aMaterial ) const

@@ -30,7 +30,7 @@ extern "C"
             std::cerr << "Error initializing PortAudio: " << Pa_GetErrorText ( error_code ) << std::endl;
             return false;
         }
-        return AeonGames::RegisterSoundSystemLoader ( "Portaudio",
+        return AeonGames::RegisterSoundSystemConstructor ( "Portaudio",
                 []()
         {
             return std::make_unique<AeonGames::PortAudioSoundSystem>();
@@ -39,7 +39,7 @@ extern "C"
 
     void PortAudioShutdown()
     {
-        AeonGames::UnregisterSoundSystemLoader ( "Portaudio" );
+        AeonGames::UnregisterSoundSystemConstructor ( "Portaudio" );
         if ( PaError error_code = Pa_Terminate() != paNoError )
         {
             std::cerr << "Error finalizing PortAudio: " << Pa_GetErrorText ( error_code ) << std::endl;
