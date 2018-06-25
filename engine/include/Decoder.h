@@ -21,6 +21,8 @@ limitations under the License.
 #include <fstream>
 #include "aeongames/Memory.h"
 #include <utility>
+#ifndef AEONGAMES_DECODER_H
+#define AEONGAMES_DECODER_H
 namespace AeonGames
 {
     template<class T>
@@ -94,3 +96,4 @@ namespace AeonGames
     template<class T>
     std::vector < std::tuple<std::string, std::function < bool ( T&, size_t, const void* ) >>> Decoder<T>::Decoders{};
 }
+#endif
