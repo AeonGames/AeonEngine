@@ -17,17 +17,24 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/Memory.h"
+#include "aeongames/Node.h"
+#include "MeshNode.h"
 #include <iostream>
 
 extern "C"
 {
     bool AeonEngineNodesStartUp()
     {
+        AeonGames::RegisterNodeConstructor ( "MeshNode", []()
+        {
+            return std::make_unique<AeonGames::MeshNode>();
+        } );
         return true;
     }
 
     void AeonEngineNodesShutdown()
     {
+        AeonGames::UnregisterNodeConstructor ( "MeshNode" );
     }
 
     PLUGIN PluginModuleInterface PMI =

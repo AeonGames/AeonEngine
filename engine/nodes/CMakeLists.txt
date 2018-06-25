@@ -1,5 +1,10 @@
-set(NODES_HEADERS)
-set(NODES_SOURCES Plugin.cpp)
+set(NODES_HEADERS
+    MeshNode.h
+)
+set(NODES_SOURCES
+    Plugin.cpp
+    MeshNode.cpp
+)
 add_library(AeonEngineNodes SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
     set_target_properties(AeonEngineNodes PROPERTIES COMPILE_FLAGS "-WX -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
