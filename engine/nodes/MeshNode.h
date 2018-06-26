@@ -24,7 +24,8 @@ namespace AeonGames
     public:
         MeshNode();
         ~MeshNode() final;
-        void Update ( double aDelta ) final;
+        void SetProperty ( uint32_t aPropertyId, void* aProperty ) final;
+        const void* GetProperty ( uint32_t aPropertyId ) const final;
     private:
         Mesh* mMesh{nullptr};
     };

@@ -15,13 +15,33 @@ limitations under the License.
 */
 #include "MeshNode.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/CRC.h"
 namespace AeonGames
 {
     MeshNode::MeshNode()
     {
+        SetName ( "Mesh" );
     }
-    MeshNode::~MeshNode() {}
-    void MeshNode::Update ( double aDelta )
+
+    MeshNode::~MeshNode() = default;
+
+    void MeshNode::SetProperty ( uint32_t aPropertyId, void* aProperty )
     {
+        switch ( aPropertyId )
+        {
+        case "Mesh"_crc32:
+            mMesh = reinterpret_cast<Mesh*> ( aProperty );
+            break;
+        }
+    }
+    const void* MeshNode::GetProperty ( uint32_t aPropertyId ) const
+    {
+        switch ( aPropertyId )
+        {
+        case "Mesh"_crc32:
+            return mMesh;
+            break;
+        }
+        return nullptr;
     }
 }

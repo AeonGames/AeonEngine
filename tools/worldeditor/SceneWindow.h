@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_SCENEWINDOW_H
 #define AEONGAMES_SCENEWINDOW_H
 
+#include <QList>
 #include <memory>
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
@@ -35,6 +36,7 @@ namespace AeonGames
         void on_actionRemoveNode_triggered();
         void on_customContextMenuRequested ( const QPoint& aPoint );
     private:
+        QList<QAction *> mNodeAddActions{};
         SceneModel mSceneModel{};
         EngineWindow* mEngineWindow{};
     };

@@ -50,7 +50,7 @@ namespace AeonGames
         QMimeData * mimeData ( const QModelIndexList & indexes ) const override;
         QStringList mimeTypes() const override;
         //@}
-        void InsertNode ( int row, const QModelIndex & parent = QModelIndex() );
+        void InsertNode ( int row, const QModelIndex & parent = QModelIndex(), std::unique_ptr<Node> aNode = {} );
         void RemoveNode ( int row, const QModelIndex & parent = QModelIndex() );
         const Scene& GetScene() const;
     private:

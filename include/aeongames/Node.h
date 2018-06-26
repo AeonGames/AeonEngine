@@ -51,7 +51,7 @@ namespace AeonGames
             FlagCount
         };
         DLL Node ( uint32_t aFlags = AllBits );
-        DLL virtual ~Node() = 0;
+        DLL virtual ~Node();
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
         /** Enables or disables a set of node flags.
@@ -128,10 +128,15 @@ namespace AeonGames
         DLL Node& operator[] ( const std::size_t index );
         DLL Node* GetParent() const;
         DLL size_t GetIndex() const;
+        /** @name Properties */
+        /** @{ */
+        DLL virtual void SetProperty ( uint32_t aPropertyId, void* aProperty );
+        DLL virtual const void* GetProperty ( uint32_t aPropertyId ) const;
+        /** @} */
     private:
         /** @name Abstract functions */
         /** @{ */
-        virtual void Update ( const double delta ) = 0;
+        DLL virtual void Update ( const double delta );
         /** @} */
         friend class Scene;
         std::string mName;

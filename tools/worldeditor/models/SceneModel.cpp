@@ -27,18 +27,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class NullNode : public Node
-    {
-    public:
-        ~NullNode() = default;
-    private:
-        void Update ( double aDelta ) override {}
-    };
-
     SceneModel::SceneModel ( QObject *parent ) :
-        QAbstractItemModel ( parent )
-    {
-    }
+        QAbstractItemModel ( parent ) {}
 
     SceneModel::~SceneModel() = default;
 
@@ -242,7 +232,7 @@ namespace AeonGames
 
     bool SceneModel::dropMimeData ( const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent )
     {
-        QString format ( "application/x-aeon-editor-node" );
+        QString format ( "application/x-aeon-engine-node" );
         // check if the action is supported
         if ( !data || ( action != Qt::MoveAction ) )
         {
@@ -295,21 +285,21 @@ namespace AeonGames
     QStringList SceneModel::mimeTypes() const
     {
         QStringList types;
-        types << "application/x-aeon-editor-node";
+        types << "application/x-aeon-engine-node";
         return types;
     }
 
-    void SceneModel::InsertNode ( int row, const QModelIndex & parent )
+    void SceneModel::InsertNode ( int row, const QModelIndex & parent, std::unique_ptr<Node> aNode )
     {
         beginInsertRows ( parent, row, row );
         if ( parent.isValid() )
         {
-            mNodes.emplace_back ( std::make_unique<NullNode>() );
+            mNodes.emplace_back ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() );
             reinterpret_cast<Node*> ( parent.internalPointer() )->Insert ( row, mNodes.back().get() );
         }
         else
         {
-            mNodes.emplace_back ( std::make_unique<NullNode>() );
+            mNodes.emplace_back ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() );
             mScene.Insert ( row, mNodes.back().get() );
         }
         endInsertRows();

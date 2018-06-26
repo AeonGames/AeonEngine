@@ -450,5 +450,23 @@ namespace AeonGames
             parent->RecursiveTraverseAncestors ( aAction );
         }
     }
+
+    void Node::SetProperty ( uint32_t aPropertyId, void* aProperty )
+    {
+        ( void ) aPropertyId;
+        ( void ) aProperty;
+    }
+
+    const void* Node::GetProperty ( uint32_t aPropertyId ) const
+    {
+        ( void ) aPropertyId;
+        return nullptr;
+    }
+
+    void Node::Update ( const double aDelta )
+    {
+        ( void ) aDelta;
+    }
+
     FactoryImplementation ( Node );
 }
