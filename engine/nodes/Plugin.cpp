@@ -25,7 +25,7 @@ extern "C"
 {
     bool AeonEngineNodesStartUp()
     {
-        AeonGames::RegisterNodeConstructor ( "MeshNode", []()
+        AeonGames::RegisterNodeConstructor ( "Mesh", []()
         {
             return std::make_unique<AeonGames::MeshNode>();
         } );
@@ -34,7 +34,7 @@ extern "C"
 
     void AeonEngineNodesShutdown()
     {
-        AeonGames::UnregisterNodeConstructor ( "MeshNode" );
+        AeonGames::UnregisterNodeConstructor ( "Mesh" );
     }
 
     PLUGIN PluginModuleInterface PMI =

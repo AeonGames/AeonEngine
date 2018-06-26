@@ -20,6 +20,7 @@ limitations under the License.
 #include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
@@ -39,6 +40,22 @@ namespace AeonGames
         treeView->addAction ( actionAddNode );
         treeView->addAction ( actionRemoveNode );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
+        EnumerateNodeConstructors ( [this] ( const std::string & aNodeConstructor )
+        {
+            QString text ( tr ( "Add " ) );
+            text.append ( aNodeConstructor.c_str() );
+            QAction *action = new QAction ( QIcon ( ":/icons/icon_node" ), text, this );
+            mNodeAddActions.append ( action );
+            action->setStatusTip ( tr ( "Adds a new node of the specified type" ) );
+            connect ( action, &QAction::triggered, this,
+                      [this, aNodeConstructor]()
+            {
+                QModelIndex index = treeView->currentIndex();
+                mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index, ConstructNode ( aNodeConstructor ) );
+                treeView->expand ( index );
+            } );
+            return true;
+        } );
     }
 
     SceneWindow::~SceneWindow()
@@ -62,6 +79,7 @@ namespace AeonGames
         QList<QAction *> actions;
         QModelIndex index = treeView->indexAt ( aPoint );
         actions.append ( actionAddNode );
+        actions.append ( mNodeAddActions );
         if ( index.isValid() )
         {
             actions.append ( actionRemoveNode );

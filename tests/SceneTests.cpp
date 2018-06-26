@@ -28,7 +28,6 @@ namespace AeonGames
     public:
         ~TestNode() = default;
     private:
-        void Update ( double aDelta ) override {}
     };
 
     class SceneTest : public ::testing::Test
