@@ -36,9 +36,9 @@ namespace AeonGames
         size_policy.setVerticalStretch ( 6 );
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
-        treeView->setModel ( &mSceneModel );
-        treeView->addAction ( actionAddNode );
-        treeView->addAction ( actionRemoveNode );
+        sceneTreeView->setModel ( &mSceneModel );
+        sceneTreeView->addAction ( actionAddNode );
+        sceneTreeView->addAction ( actionRemoveNode );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
         EnumerateNodeConstructors ( [this] ( const std::string & aNodeConstructor )
         {
@@ -50,9 +50,9 @@ namespace AeonGames
             connect ( action, &QAction::triggered, this,
                       [this, aNodeConstructor]()
             {
-                QModelIndex index = treeView->currentIndex();
+                QModelIndex index = sceneTreeView->currentIndex();
                 mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index, ConstructNode ( aNodeConstructor ) );
-                treeView->expand ( index );
+                sceneTreeView->expand ( index );
             } );
             return true;
         } );
@@ -63,28 +63,28 @@ namespace AeonGames
 
     void SceneWindow::on_actionAddNode_triggered()
     {
-        QModelIndex index = treeView->currentIndex();
+        QModelIndex index = sceneTreeView->currentIndex();
         mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index );
-        treeView->expand ( index );
+        sceneTreeView->expand ( index );
     }
 
     void SceneWindow::on_actionRemoveNode_triggered()
     {
-        QModelIndex index = treeView->currentIndex();
+        QModelIndex index = sceneTreeView->currentIndex();
         mSceneModel.RemoveNode ( index.row(), index.parent() );
     }
 
     void SceneWindow::on_customContextMenuRequested ( const QPoint& aPoint )
     {
         QList<QAction *> actions;
-        QModelIndex index = treeView->indexAt ( aPoint );
+        QModelIndex index = sceneTreeView->indexAt ( aPoint );
         actions.append ( actionAddNode );
         actions.append ( mNodeAddActions );
         if ( index.isValid() )
         {
             actions.append ( actionRemoveNode );
         }
-        treeView->setCurrentIndex ( index );
-        QMenu::exec ( actions, treeView->mapToGlobal ( aPoint ) );
+        sceneTreeView->setCurrentIndex ( index );
+        QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );
     }
 }

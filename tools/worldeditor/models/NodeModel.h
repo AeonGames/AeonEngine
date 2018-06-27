@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,16 +19,16 @@ limitations under the License.
 #include <QAbstractItemModel>
 #include <vector>
 #include "aeongames/Memory.h"
-#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
-    class SceneModel : public QAbstractItemModel
+    class NodeModel : public QAbstractItemModel
     {
         Q_OBJECT
     public:
-        SceneModel ( QObject *parent = nullptr );
-        virtual ~SceneModel();
+        NodeModel ( QObject *parent = nullptr );
+        virtual ~NodeModel();
         ///@name Qt QAbstractItemModel overrides
         //@{
         QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const override;
@@ -40,18 +40,10 @@ namespace AeonGames
         bool hasChildren ( const QModelIndex & index = QModelIndex() ) const override;
         Qt::ItemFlags flags ( const QModelIndex & index ) const override;
         bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
-        bool moveRows ( const QModelIndex & sourceParent, int sourceRow, int count, const QModelIndex & destinationParent, int destinationRow ) override;
-        Qt::DropActions supportedDropActions() const override;
-        bool dropMimeData ( const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent ) override;
-        QMimeData * mimeData ( const QModelIndexList & indexes ) const override;
-        QStringList mimeTypes() const override;
         //@}
-        void InsertNode ( int row, const QModelIndex & parent = QModelIndex(), std::unique_ptr<Node> aNode = {} );
-        void RemoveNode ( int row, const QModelIndex & parent = QModelIndex() );
-        const Scene& GetScene() const;
+        void SetNode ( Node* aNode );
     private:
-        Scene mScene{};
-        std::vector<std::unique_ptr<Node>> mNodes;
+        Node* mNode{};
     };
 }
 #endif
