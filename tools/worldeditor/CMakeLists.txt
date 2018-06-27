@@ -21,6 +21,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 
 set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
+    models/NodeModel.h
     RendererSelectDialog.h
     SettingsDialog.h
     MainWindow.h
@@ -36,6 +37,7 @@ set(WORLDEDITOR_HEADERS
 
 set(WORLDEDITOR_SOURCES
     models/SceneModel.cpp
+    models/NodeModel.cpp
     Main.cpp
     WorldEditor.cpp
     MainWindow.cpp
