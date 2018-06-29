@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_SCENEMODEL_H
-#define AEONGAMES_SCENEMODEL_H
+#ifndef AEONGAMES_NODEMODEL_H
+#define AEONGAMES_NODEMODEL_H
 #include <QAbstractItemModel>
 #include <vector>
 #include "aeongames/Memory.h"

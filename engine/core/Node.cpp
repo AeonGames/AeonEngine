@@ -29,6 +29,7 @@ limitations under the License.
 #include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
 #include "Factory.h"
+#include "aeongames/CRC.h"
 
 namespace AeonGames
 {
@@ -451,21 +452,93 @@ namespace AeonGames
         }
     }
 
-    void Node::SetProperty ( uint32_t aPropertyId, void* aProperty )
+    void Node::SetProperty ( uint32_t aPropertyId, const void* aProperty )
     {
-        ( void ) aPropertyId;
-        ( void ) aProperty;
+        switch ( aPropertyId )
+        {
+        case "LocalTransform"_crc32:
+        {
+            const float* FloatArray = static_cast<const float*> ( aProperty );
+            SetLocalTransform (
+            {
+                {FloatArray[0], FloatArray[1], FloatArray[2]},
+                {FloatArray[3], FloatArray[4], FloatArray[5], FloatArray[6]},
+                {FloatArray[7], FloatArray[8], FloatArray[9]}
+            } );
+        }
+        break;
+        case "GlobalTransform"_crc32:
+        {
+            const float* FloatArray = static_cast<const float*> ( aProperty );
+            SetGlobalTransform (
+            {
+                {FloatArray[0], FloatArray[1], FloatArray[2]},
+                {FloatArray[3], FloatArray[4], FloatArray[5], FloatArray[6]},
+                {FloatArray[7], FloatArray[8], FloatArray[9]}
+            } );
+        }
+        break;
+        }
     }
 
-    const void* Node::GetProperty ( uint32_t aPropertyId ) const
+    void Node::GetProperty ( uint32_t aPropertyId, void** aProperty ) const
     {
-        ( void ) aPropertyId;
-        return nullptr;
+        switch ( aPropertyId )
+        {
+        case "LocalTransform"_crc32:
+        {
+            float* FloatArray = static_cast<float*> ( *aProperty );
+            FloatArray[0] = GetLocalTransform().GetScale() [0];
+            FloatArray[1] = GetLocalTransform().GetScale() [1];
+            FloatArray[2] = GetLocalTransform().GetScale() [2];
+            FloatArray[3] = GetLocalTransform().GetRotation() [0];
+            FloatArray[4] = GetLocalTransform().GetRotation() [1];
+            FloatArray[5] = GetLocalTransform().GetRotation() [2];
+            FloatArray[6] = GetLocalTransform().GetRotation() [3];
+            FloatArray[7] = GetLocalTransform().GetTranslation() [0];
+            FloatArray[8] = GetLocalTransform().GetTranslation() [1];
+            FloatArray[9] = GetLocalTransform().GetTranslation() [2];
+        }
+        break;
+        case "GlobalTransform"_crc32:
+        {
+            float* FloatArray = static_cast<float*> ( *aProperty );
+            FloatArray[0] = GetGlobalTransform().GetScale() [0];
+            FloatArray[1] = GetGlobalTransform().GetScale() [1];
+            FloatArray[2] = GetGlobalTransform().GetScale() [2];
+            FloatArray[3] = GetGlobalTransform().GetRotation() [0];
+            FloatArray[4] = GetGlobalTransform().GetRotation() [1];
+            FloatArray[5] = GetGlobalTransform().GetRotation() [2];
+            FloatArray[6] = GetGlobalTransform().GetRotation() [3];
+            FloatArray[7] = GetGlobalTransform().GetTranslation() [0];
+            FloatArray[8] = GetGlobalTransform().GetTranslation() [1];
+            FloatArray[9] = GetGlobalTransform().GetTranslation() [2];
+        }
+        break;
+        }
     }
 
     void Node::Update ( const double aDelta )
     {
         ( void ) aDelta;
+    }
+
+    static const std::array<Node::PropertyDescriptor, 2> PropertyDescriptors
+    {
+        {
+            {"LocalTransform"_crc32, "Local Transform", "10f"},
+            {"GlobalTransform"_crc32, "Global Transform", "10f"}
+        }
+    };
+
+    size_t Node::GetPropertyCount() const
+    {
+        return PropertyDescriptors.size();
+    }
+
+    const Node::PropertyDescriptor& Node::GetPropertyDescriptor ( size_t aIndex ) const
+    {
+        return PropertyDescriptors[aIndex];
     }
 
     FactoryImplementation ( Node );

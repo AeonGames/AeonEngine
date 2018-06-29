@@ -50,6 +50,12 @@ namespace AeonGames
             Visible,
             FlagCount
         };
+        struct PropertyDescriptor
+        {
+            const size_t mId{};
+            const char*  mName{};
+            const char*  mTupleFormat{};
+        };
         DLL Node ( uint32_t aFlags = AllBits );
         DLL virtual ~Node();
         DLL void SetName ( const std::string& aName );
@@ -130,8 +136,10 @@ namespace AeonGames
         DLL size_t GetIndex() const;
         /** @name Properties */
         /** @{ */
-        DLL virtual void SetProperty ( uint32_t aPropertyId, void* aProperty );
-        DLL virtual const void* GetProperty ( uint32_t aPropertyId ) const;
+        DLL virtual size_t GetPropertyCount() const;
+        DLL virtual const PropertyDescriptor& GetPropertyDescriptor ( size_t aIndex ) const;
+        DLL virtual void SetProperty ( uint32_t aPropertyId, const void* aProperty );
+        DLL virtual void GetProperty ( uint32_t aPropertyId, void** aProperty ) const;
         /** @} */
     private:
         /** @name Abstract functions */
