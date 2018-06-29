@@ -25,16 +25,14 @@ namespace AeonGames
 
     MeshNode::~MeshNode() = default;
 
-    static const std::array<Node::PropertyDescriptor, 1> PropertyDescriptors
+    static Node::PropertyDescriptor PropertyDescriptors[] =
     {
-        {
-            {"Mesh"_crc32, "Mesh", ""}
-        }
+        {"Mesh"_crc32, "Mesh", ""}
     };
 
     size_t MeshNode::GetPropertyCount() const
     {
-        return Node::GetPropertyCount() + PropertyDescriptors.size();
+        return Node::GetPropertyCount() + ( sizeof ( PropertyDescriptors ) / sizeof ( Node::PropertyDescriptor ) );
     }
 
     const Node::PropertyDescriptor& MeshNode::GetPropertyDescriptor ( size_t aIndex ) const
