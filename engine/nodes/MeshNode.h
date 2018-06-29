@@ -24,6 +24,8 @@ namespace AeonGames
     public:
         MeshNode();
         ~MeshNode() final;
+        size_t GetPropertyCount() const final;
+        const PropertyDescriptor& GetPropertyDescriptor ( size_t aIndex ) const final;
         void SetProperty ( uint32_t aPropertyId, const void* aProperty ) final;
         void GetProperty ( uint32_t aPropertyId, void** aProperty ) const final;
     private:

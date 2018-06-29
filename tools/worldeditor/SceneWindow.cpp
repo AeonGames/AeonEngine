@@ -37,6 +37,7 @@ namespace AeonGames
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
+        propertiesTreeView->setModel ( &mNodeModel );
         sceneTreeView->addAction ( actionAddNode );
         sceneTreeView->addAction ( actionRemoveNode );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
@@ -86,5 +87,17 @@ namespace AeonGames
         }
         sceneTreeView->setCurrentIndex ( index );
         QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );
+    }
+    void SceneWindow::on_sceneTreeViewClicked ( const QModelIndex& aModelIndex )
+    {
+        if ( aModelIndex.isValid() )
+        {
+            if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
+            {
+                mNodeModel.SetNode ( node );
+                return;
+            }
+        }
+        mNodeModel.SetNode ( nullptr );
     }
 }
