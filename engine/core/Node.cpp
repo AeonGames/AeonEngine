@@ -523,17 +523,15 @@ namespace AeonGames
         ( void ) aDelta;
     }
 
-    static const std::array<Node::PropertyDescriptor, 2> PropertyDescriptors
+    static Node::PropertyDescriptor PropertyDescriptors [] =
     {
-        {
-            {"LocalTransform"_crc32, "Local Transform", "10f"},
-            {"GlobalTransform"_crc32, "Global Transform", "10f"}
-        }
+        {"LocalTransform"_crc32, "Local Transform", "10f"},
+        {"GlobalTransform"_crc32, "Global Transform", "10f"}
     };
 
     size_t Node::GetPropertyCount() const
     {
-        return PropertyDescriptors.size();
+        return sizeof ( PropertyDescriptors ) / sizeof ( Node::PropertyDescriptor );
     }
 
     const Node::PropertyDescriptor& Node::GetPropertyDescriptor ( size_t aIndex ) const
