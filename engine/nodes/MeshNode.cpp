@@ -25,23 +25,23 @@ namespace AeonGames
 
     MeshNode::~MeshNode() = default;
 
-    void MeshNode::SetProperty ( uint32_t aPropertyId, void* aProperty )
+    void MeshNode::SetProperty ( uint32_t aPropertyId, const void* aProperty )
     {
+        ///@ I'll come back to this one later
         switch ( aPropertyId )
         {
         case "Mesh"_crc32:
-            mMesh = reinterpret_cast<Mesh*> ( aProperty );
+            mMesh = reinterpret_cast<Mesh*> ( const_cast<void*> ( aProperty ) );
             break;
         }
     }
-    const void* MeshNode::GetProperty ( uint32_t aPropertyId ) const
+    void MeshNode::GetProperty ( uint32_t aPropertyId, void** aProperty ) const
     {
         switch ( aPropertyId )
         {
         case "Mesh"_crc32:
-            return mMesh;
+            ( *aProperty ) = mMesh;
             break;
         }
-        return nullptr;
     }
 }
