@@ -122,7 +122,9 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../worldeditor_static.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>sceneTreeView</sender>
@@ -131,8 +133,8 @@
    <slot>on_customContextMenuRequested(QPoint)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>336</y>
+     <x>229</x>
+     <y>239</y>
     </hint>
     <hint type="destinationlabel">
      <x>456</x>
@@ -140,5 +142,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>sceneTreeView</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_sceneTreeViewClicked(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>98</x>
+     <y>130</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>173</x>
+     <y>-12</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>on_sceneTreeViewClicked(QModelIndex)</slot>
+  <slot>on_customContextMenuRequested(QPoint)</slot>
+ </slots>
 </ui>

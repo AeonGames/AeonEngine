@@ -20,6 +20,7 @@ limitations under the License.
 #include <memory>
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
+#include "models/NodeModel.h"
 
 namespace AeonGames
 {
@@ -35,10 +36,12 @@ namespace AeonGames
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
         void on_customContextMenuRequested ( const QPoint& aPoint );
+        void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
     private:
-        QList<QAction *> mNodeAddActions{};
         SceneModel mSceneModel{};
+        NodeModel mNodeModel{};
         EngineWindow* mEngineWindow{};
+        QList<QAction *> mNodeAddActions{};
     };
 }
 #endif

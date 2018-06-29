@@ -25,6 +25,27 @@ namespace AeonGames
 
     MeshNode::~MeshNode() = default;
 
+    static const std::array<Node::PropertyDescriptor, 1> PropertyDescriptors
+    {
+        {
+            {"Mesh"_crc32, "Mesh", ""}
+        }
+    };
+
+    size_t MeshNode::GetPropertyCount() const
+    {
+        return Node::GetPropertyCount() + PropertyDescriptors.size();
+    }
+
+    const Node::PropertyDescriptor& MeshNode::GetPropertyDescriptor ( size_t aIndex ) const
+    {
+        if ( aIndex < Node::GetPropertyCount() )
+        {
+            return Node::GetPropertyDescriptor ( aIndex );
+        }
+        return PropertyDescriptors[aIndex - Node::GetPropertyCount()];
+    }
+
     void MeshNode::SetProperty ( uint32_t aPropertyId, const void* aProperty )
     {
         ///@ I'll come back to this one later
@@ -33,8 +54,11 @@ namespace AeonGames
         case "Mesh"_crc32:
             mMesh = reinterpret_cast<Mesh*> ( const_cast<void*> ( aProperty ) );
             break;
+        default:
+            Node::SetProperty ( aPropertyId, aProperty );
         }
     }
+
     void MeshNode::GetProperty ( uint32_t aPropertyId, void** aProperty ) const
     {
         switch ( aPropertyId )
@@ -42,6 +66,8 @@ namespace AeonGames
         case "Mesh"_crc32:
             ( *aProperty ) = mMesh;
             break;
+        default:
+            Node::GetProperty ( aPropertyId, aProperty );
         }
     }
 }

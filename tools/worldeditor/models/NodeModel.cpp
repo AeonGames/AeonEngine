@@ -34,22 +34,58 @@ namespace AeonGames
 
     QVariant NodeModel::headerData ( int section, Qt::Orientation orientation, int role ) const
     {
+        if ( ( orientation == Qt::Horizontal ) && ( role == Qt::DisplayRole ) )
+        {
+            switch ( section )
+            {
+            case 0:
+                return QString ( "Property" );
+            case 1:
+                return QString ( "Value" );
+            default:
+                return QVariant();
+            }
+        }
         return QVariant();
     }
 
     QModelIndex NodeModel::index ( int row, int column, const QModelIndex & parent ) const
     {
+        if ( !mNode )
+        {
+            return QModelIndex();
+        }
+        if ( !parent.isValid() )
+        {
+            if ( ( row >= 0 ) && ( row < static_cast<int> ( mNode->GetPropertyCount() ) ) )
+            {
+                return createIndex ( row, column );
+            }
+        }
+        else
+        {
+            ///@todo implement sub-properties
+        }
         return QModelIndex();
     }
 
     QModelIndex NodeModel::parent ( const QModelIndex & index ) const
     {
+        ///@todo implement sub-properties
         return QModelIndex();
     }
 
     int NodeModel::rowCount ( const QModelIndex & index ) const
     {
-        return 0;
+        if ( !mNode )
+        {
+            return 0;
+        }
+        if ( index.isValid() )
+        {
+            ///@todo implement sub-properties
+        }
+        return static_cast<int> ( mNode->GetPropertyCount() );
     }
 
     int NodeModel::columnCount ( const QModelIndex & index ) const
@@ -59,26 +95,77 @@ namespace AeonGames
 
     bool NodeModel::hasChildren ( const QModelIndex & index ) const
     {
-        return false;
+        if ( !mNode )
+        {
+            return false;
+        }
+        if ( index.isValid() )
+        {
+            ///@todo implement sub-properties
+            return false;
+        }
+        return ( mNode->GetPropertyCount() );
     }
 
     QVariant NodeModel::data ( const QModelIndex & index, int role ) const
     {
+        if ( !mNode )
+        {
+            return QVariant();
+        }
+        if ( role == Qt::DisplayRole )
+        {
+            if ( index.isValid() )
+            {
+                switch ( index.column() )
+                {
+                case 0:
+                    return QString ( mNode->GetPropertyDescriptor ( index.row() ).mName );
+                    break;
+                case 1:
+                    return QString ( "Not Yet!" );
+                    break;
+                }
+            }
+        }
+        else if ( role == Qt::EditRole )
+        {
+            if ( index.isValid() && ( index.column() == 1 ) )
+            {
+                return QString ( "Not Yet!" );
+            }
+        }
         return QVariant();
     }
 
     Qt::ItemFlags NodeModel::flags ( const QModelIndex & index ) const
     {
+        if ( index.isValid() && ( index.column() == 1 ) )
+        {
+            return QAbstractItemModel::flags ( index ) | Qt::ItemIsEditable;
+        }
         return QAbstractItemModel::flags ( index );
     }
 
     bool NodeModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
+        if ( !mNode )
+        {
+            return false;
+        }
+        if ( ( role == Qt::EditRole ) && index.isValid() && ( index.column() == 1 ) )
+        {
+            /** @todo parse value as expected by the property and call mNode->SetProperty. */
+            emit dataChanged ( index, index );
+            return true;
+        }
         return false;
     }
 
     void NodeModel::SetNode ( Node* aNode )
     {
+        beginResetModel();
         mNode = aNode;
+        endResetModel();
     }
 }
