@@ -50,11 +50,52 @@ namespace AeonGames
             Visible,
             FlagCount
         };
-        struct PropertyDescriptor
+        class PropertyDescriptor
         {
-            const size_t mId{};
+        public:
+            PropertyDescriptor (
+                const size_t aId,
+                const char*  aName,
+                const char*  aTupleFormat,
+                std::initializer_list<PropertyDescriptor> aSubProperties = {}
+            ) :
+                mId{aId},
+                mName{aName},
+                mTupleFormat{aTupleFormat},
+                mParent{},
+                mSubProperties{std::move ( aSubProperties ) }
+            {
+                for ( auto& i : mSubProperties )
+                {
+                    i.mParent = this;
+                }
+            }
+#if 0
+            /// @todo Implement these for proper parent assignment
+            PropertyDescriptor ( const PropertyDescriptor& ) = delete;
+            PropertyDescriptor& operator= ( const PropertyDescriptor& ) = delete;
+            /// @todo Implement these just for fun (and completeness)
+            PropertyDescriptor ( PropertyDescriptor&& ) = delete;
+            PropertyDescriptor& operator= ( PropertyDescriptor&& ) = delete;
+#endif
+            const size_t GetId() const
+            {
+                return mId;
+            }
+            const char*  GetName() const
+            {
+                return mName;
+            }
+            const char*  GetTupleFormat() const
+            {
+                return mTupleFormat;
+            }
+        private:
+            const size_t mId {};
             const char*  mName{};
             const char*  mTupleFormat{};
+            PropertyDescriptor* mParent{};
+            std::vector<PropertyDescriptor> mSubProperties{};
         };
         DLL Node ( uint32_t aFlags = AllBits );
         DLL virtual ~Node();

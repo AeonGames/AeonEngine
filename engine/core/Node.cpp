@@ -525,8 +525,66 @@ namespace AeonGames
 
     static Node::PropertyDescriptor PropertyDescriptors [] =
     {
-        {"LocalTransform"_crc32, "Local Transform", "10f"},
-        {"GlobalTransform"_crc32, "Global Transform", "10f"}
+        {
+            "LocalTransform"_crc32, "Local Transform", "10f",
+            {
+                {
+                    "LocalScale"_crc32, "Scale", "3f",
+                    {
+                        {"LocalScaleX"_crc32, "X", "f"},
+                        {"LocalScaleY"_crc32, "Y", "f"},
+                        {"LocalScaleZ"_crc32, "Z", "f"}
+                    }
+                },
+                {
+                    "LocalRotation"_crc32, "Rotation", "4f",
+                    {
+                        {"LocalRotationW"_crc32, "W", "f"},
+                        {"LocalRotationX"_crc32, "X", "f"},
+                        {"LocalRotationY"_crc32, "Y", "f"},
+                        {"LocalRotationZ"_crc32, "Z", "f"}
+                    }
+                },
+                {
+                    "LocalTranslation"_crc32, "Translation", "3f",
+                    {
+                        {"LocalTranslationX"_crc32, "X", "f"},
+                        {"LocalTranslationY"_crc32, "Y", "f"},
+                        {"LocalTranslationZ"_crc32, "Z", "f"}
+                    }
+                },
+            }
+        },
+        {
+            "GlobalTransform"_crc32, "Global Transform", "10f",
+            {
+                {
+                    "GlobalScale"_crc32, "Scale", "3f",
+                    {
+                        {"GlobalScaleX"_crc32, "X", "f"},
+                        {"GlobalScaleY"_crc32, "Y", "f"},
+                        {"GlobalScaleZ"_crc32, "Z", "f"}
+                    }
+                },
+                {
+                    "GlobalRotation"_crc32, "Rotation", "4f",
+                    {
+                        {"GlobalRotationW"_crc32, "W", "f"},
+                        {"GlobalRotationX"_crc32, "X", "f"},
+                        {"GlobalRotationY"_crc32, "Y", "f"},
+                        {"GlobalRotationZ"_crc32, "Z", "f"}
+                    }
+                },
+                {
+                    "GlobalTranslation"_crc32, "Translation", "3f",
+                    {
+                        {"GlobalTranslationX"_crc32, "X", "f"},
+                        {"GlobalTranslationY"_crc32, "Y", "f"},
+                        {"GlobalTranslationZ"_crc32, "Z", "f"}
+                    }
+                },
+            }
+        },
     };
 
     size_t Node::GetPropertyCount() const
