@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/Vector3.h"
 #include <cassert>
 #include <cmath>
+#include <cstring>
 
 namespace AeonGames
 {
