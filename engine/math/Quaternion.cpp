@@ -29,6 +29,11 @@ namespace AeonGames
     {
     }
 
+    Quaternion::Quaternion ( const float* aData ) :
+        mQuaternion{aData[0], aData[1], aData[2], aData[3]}
+    {
+    }
+
     Quaternion::~Quaternion()
         = default;
     Matrix4x4 Quaternion::GetMatrix4x4() const
@@ -66,6 +71,12 @@ namespace AeonGames
             0.0f,
             // Fourth row
             0, 0, 0, 1};
+    }
+
+    Quaternion& Quaternion::operator= ( const float* aLhs )
+    {
+        memcpy ( mQuaternion, aLhs, sizeof ( float ) * 4 );
+        return *this;
     }
 
     Quaternion& Quaternion::operator*= ( const Quaternion& lhs )
@@ -209,5 +220,9 @@ namespace AeonGames
             mQuaternion[3] *= oneoverlength;
         }
         return *this;
+    }
+    void Quaternion::Get ( float* aData ) const
+    {
+        memcpy ( aData, mQuaternion, sizeof ( float ) * 4 );
     }
 }

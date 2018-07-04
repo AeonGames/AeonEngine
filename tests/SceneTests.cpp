@@ -16,6 +16,7 @@ limitations under the License.
 #include <cstring>
 #include <memory>
 #include "gtest/gtest.h"
+#include "aeongames/CRC.h"
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Memory.h"
@@ -23,13 +24,6 @@ limitations under the License.
 using namespace ::testing;
 namespace AeonGames
 {
-    class TestNode : public Node
-    {
-    public:
-        ~TestNode() = default;
-    private:
-    };
-
     class SceneTest : public ::testing::Test
     {
     protected:
@@ -73,20 +67,20 @@ namespace AeonGames
                                           /\   /\  /\   /\
                                           g h i  j k l  m n
         */
-        TestNode a{};
-        TestNode b{};
-        TestNode c{};
-        TestNode d{};
-        TestNode e{};
-        TestNode f{};
-        TestNode g{};
-        TestNode h{};
-        TestNode i{};
-        TestNode j{};
-        TestNode k{};
-        TestNode l{};
-        TestNode m{};
-        TestNode n{};
+        Node a{};
+        Node b{};
+        Node c{};
+        Node d{};
+        Node e{};
+        Node f{};
+        Node g{};
+        Node h{};
+        Node i{};
+        Node j{};
+        Node k{};
+        Node l{};
+        Node m{};
+        Node n{};
         Scene mScene{};
     };
 
@@ -205,7 +199,7 @@ namespace AeonGames
     TEST_F ( SceneTest, AddSynchsLocalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{2, 4, 6}};
-        TestNode node;
+        Node node;
         node.SetGlobalTransform ( transform );
         transform.SetTranslation ( {1, 2, 3} );
         mScene[0].SetLocalTransform ( transform );
@@ -240,20 +234,19 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, DefaultIndexIsInvalid )
     {
-        TestNode node;
+        Node node;
         EXPECT_THROW ( node.GetIndex(), std::runtime_error );
     }
     TEST_F ( SceneTest, IndicesAreContiguous )
     {
-        TestNode node1;
-        TestNode node2;
-        TestNode node3;
-        TestNode node;
+        Node node1;
+        Node node2;
+        Node node3;
+        Node node;
         node.Add ( &node1 );
         node.Add ( &node2 );
         node.Add ( &node3 );
         size_t count = node.GetChildrenCount();
-        std::cout << count << std::endl;
         for ( size_t i = 0; i < count; ++i )
         {
             EXPECT_EQ ( node.GetChild ( i )->GetIndex(), i );
@@ -261,10 +254,10 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterRemovingFirstNode )
     {
-        TestNode node1;
-        TestNode node2;
-        TestNode node3;
-        TestNode node;
+        Node node1;
+        Node node2;
+        Node node3;
+        Node node;
         node.Add ( &node1 );
         node.Add ( &node2 );
         node.Add ( &node3 );
@@ -278,10 +271,10 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterRemovingMiddleNode )
     {
-        TestNode node1;
-        TestNode node2;
-        TestNode node3;
-        TestNode node;
+        Node node1;
+        Node node2;
+        Node node3;
+        Node node;
         node.Add ( &node1 );
         node.Add ( &node2 );
         node.Add ( &node3 );
@@ -295,10 +288,10 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterInsertingNodeOnFront )
     {
-        TestNode node1;
-        TestNode node2;
-        TestNode node3;
-        TestNode node;
+        Node node1;
+        Node node2;
+        Node node3;
+        Node node;
         node.Add ( &node1 );
         node.Add ( &node2 );
         node.Insert ( 0, &node3 );
@@ -311,10 +304,10 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterInsertingNodeAtMiddle )
     {
-        TestNode node1;
-        TestNode node2;
-        TestNode node3;
-        TestNode node;
+        Node node1;
+        Node node2;
+        Node node3;
+        Node node;
         node.Add ( &node1 );
         node.Add ( &node2 );
         node.Insert ( 0, &node3 );
@@ -336,5 +329,146 @@ namespace AeonGames
         std::string serialized = mScene.Serialize ( true );
         EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONSCE" );
         EXPECT_EQ ( serialized[7], 0 );
+    }
+    TEST ( Node, GetLocalTransformPropertyDescriptor )
+    {
+        Node node;
+        float result[10] {};
+        float value[10] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+        const Node::PropertyDescriptor& local_transform_descriptor = node.GetPropertyDescriptor ( 0 );
+        EXPECT_EQ ( local_transform_descriptor.GetName(), "Local Transform" );
+        EXPECT_EQ ( local_transform_descriptor.GetId(), "LocalTransform"_crc32 );
+        EXPECT_EQ ( local_transform_descriptor.GetFormat(), "10f" );
+        local_transform_descriptor.Set ( &node, value );
+        local_transform_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 10; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetLocalTransformScalePropertyDescriptor )
+    {
+        Node node;
+        float result[3] {};
+        float value[3] {0.0f, 1.0f, 2.0f};
+        const Node::PropertyDescriptor& local_transform_scale_descriptor = node.GetPropertyDescriptor ( 0 ).GetSubProperties() [0];
+        EXPECT_EQ ( local_transform_scale_descriptor.GetName(), "Scale" );
+        EXPECT_EQ ( local_transform_scale_descriptor.GetId(), "LocalScale"_crc32 );
+        EXPECT_EQ ( local_transform_scale_descriptor.GetFormat(), "3f" );
+        local_transform_scale_descriptor.Set ( &node, value );
+        local_transform_scale_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 3; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetLocalTransformScaleXPropertyDescriptor )
+    {
+        Node node;
+        float result{};
+        float value{3.14f};
+        const Node::PropertyDescriptor& local_transform_scale_x_descriptor = node.GetPropertyDescriptor ( 0 ).GetSubProperties() [0].GetSubProperties() [0];
+        EXPECT_EQ ( local_transform_scale_x_descriptor.GetName(), "X" );
+        EXPECT_EQ ( local_transform_scale_x_descriptor.GetId(), "LocalScaleX"_crc32 );
+        EXPECT_EQ ( local_transform_scale_x_descriptor.GetFormat(), "f" );
+        local_transform_scale_x_descriptor.Set ( &node, &value );
+        local_transform_scale_x_descriptor.Get ( &node, &result );
+        EXPECT_EQ ( result , 3.14f );
+    }
+    TEST ( Node, GetLocalRotationTranslationPropertyDescriptor )
+    {
+        Node node;
+        float result[4] {};
+        float value[4] {0.0f, 1.0f, 2.0f, 3.0f};
+        const Node::PropertyDescriptor& local_transform_rotation_descriptor = node.GetPropertyDescriptor ( 0 ).GetSubProperties() [1];
+        EXPECT_EQ ( local_transform_rotation_descriptor.GetName(), "Rotation" );
+        EXPECT_EQ ( local_transform_rotation_descriptor.GetId(), "LocalRotation"_crc32 );
+        EXPECT_EQ ( local_transform_rotation_descriptor.GetFormat(), "4f" );
+        local_transform_rotation_descriptor.Set ( &node, value );
+        local_transform_rotation_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 4; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetLocalTransformTranslationPropertyDescriptor )
+    {
+        Node node;
+        float result[3] {};
+        float value[3] {0.0f, 1.0f, 2.0f};
+        const Node::PropertyDescriptor& local_transform_translation_descriptor = node.GetPropertyDescriptor ( 0 ).GetSubProperties() [2];
+        EXPECT_EQ ( local_transform_translation_descriptor.GetName(), "Translation" );
+        EXPECT_EQ ( local_transform_translation_descriptor.GetId(), "LocalTranslation"_crc32 );
+        EXPECT_EQ ( local_transform_translation_descriptor.GetFormat(), "3f" );
+        local_transform_translation_descriptor.Set ( &node, value );
+        local_transform_translation_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 3; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetGlobalTransformPropertyDescriptor )
+    {
+        Node node;
+        float result[10] {};
+        float value[10] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+        const Node::PropertyDescriptor& global_transform_descriptor = node.GetPropertyDescriptor ( 1 );
+        EXPECT_EQ ( global_transform_descriptor.GetName(), "Global Transform" );
+        EXPECT_EQ ( global_transform_descriptor.GetId(), "GlobalTransform"_crc32 );
+        EXPECT_EQ ( global_transform_descriptor.GetFormat(), "10f" );
+        global_transform_descriptor.Set ( &node, value );
+        global_transform_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 10; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetGlobalTransformScalePropertyDescriptor )
+    {
+        Node node;
+        float result[3] {};
+        float value[3] {0.0f, 1.0f, 2.0f};
+        const Node::PropertyDescriptor& global_transform_scale_descriptor = node.GetPropertyDescriptor ( 1 ).GetSubProperties() [0];
+        EXPECT_EQ ( global_transform_scale_descriptor.GetName(), "Scale" );
+        EXPECT_EQ ( global_transform_scale_descriptor.GetId(), "GlobalScale"_crc32 );
+        EXPECT_EQ ( global_transform_scale_descriptor.GetFormat(), "3f" );
+        global_transform_scale_descriptor.Set ( &node, value );
+        global_transform_scale_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 3; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetGlobalRotationTranslationPropertyDescriptor )
+    {
+        Node node;
+        float result[4] {};
+        float value[4] {0.0f, 1.0f, 2.0f, 3.0f};
+        const Node::PropertyDescriptor& global_transform_rotation_descriptor = node.GetPropertyDescriptor ( 1 ).GetSubProperties() [1];
+        EXPECT_EQ ( global_transform_rotation_descriptor.GetName(), "Rotation" );
+        EXPECT_EQ ( global_transform_rotation_descriptor.GetId(), "GlobalRotation"_crc32 );
+        EXPECT_EQ ( global_transform_rotation_descriptor.GetFormat(), "4f" );
+        global_transform_rotation_descriptor.Set ( &node, value );
+        global_transform_rotation_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 4; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
+    }
+    TEST ( Node, GetGlobalTransformTranslationPropertyDescriptor )
+    {
+        Node node;
+        float result[3] {};
+        float value[3] {0.0f, 1.0f, 2.0f};
+        const Node::PropertyDescriptor& global_transform_translation_descriptor = node.GetPropertyDescriptor ( 1 ).GetSubProperties() [2];
+        EXPECT_EQ ( global_transform_translation_descriptor.GetName(), "Translation" );
+        EXPECT_EQ ( global_transform_translation_descriptor.GetId(), "GlobalTranslation"_crc32 );
+        EXPECT_EQ ( global_transform_translation_descriptor.GetFormat(), "3f" );
+        global_transform_translation_descriptor.Set ( &node, value );
+        global_transform_translation_descriptor.Get ( &node, result );
+        for ( size_t i = 0; i < 3; ++i )
+        {
+            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+        }
     }
 }

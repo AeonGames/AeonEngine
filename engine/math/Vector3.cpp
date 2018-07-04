@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -98,6 +98,11 @@ namespace AeonGames
     Vector3::~Vector3()
         = default;
 
+    void Vector3::Get ( float* aData ) const
+    {
+        memcpy ( aData, mVector, sizeof ( float ) * 3 );
+    }
+
     const float* const Vector3::GetVector3() const
     {
         return mVector;
@@ -137,6 +142,12 @@ namespace AeonGames
     {
         assert ( aIndex < 3 );
         return mVector[aIndex];
+    }
+
+    Vector3& Vector3::operator= ( const float* aLhs )
+    {
+        SetVector3 ( aLhs );
+        return *this;
     }
 
     Vector3& Vector3::operator -= ( const Vector3& aLhs )

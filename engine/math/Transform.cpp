@@ -29,6 +29,18 @@ namespace AeonGames
     {
     }
 
+    Transform::Transform ( const float* aData ) :
+        mScale{ aData }, mRotation{ aData + 3 }, mTranslation{aData + 7}
+    {
+    }
+
+    void Transform::Get ( float* aData ) const
+    {
+        mScale.Get ( aData );
+        mRotation.Get ( aData + 3 );
+        mTranslation.Get ( aData + 7 );
+    }
+
     Transform::~Transform()
         = default;
 

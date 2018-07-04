@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,11 +35,14 @@ namespace AeonGames
         ///@brief Default constructor.
         DLL Quaternion();
         DLL Quaternion ( float w, float x, float y, float z );
+        DLL Quaternion ( const float* aData );
+        DLL void Get ( float* aData ) const;
         /// destructor.
         DLL ~Quaternion();
         DLL Matrix4x4 GetMatrix4x4() const;
         /*! \name Operators */
         //@{
+        DLL Quaternion& operator= ( const float* aLhs );
         DLL Quaternion& operator*= ( const Quaternion& lhs );
         DLL float operator[] ( const size_t aIndex ) const;
         DLL float& operator [] ( const size_t aIndex );

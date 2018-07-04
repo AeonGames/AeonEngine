@@ -34,6 +34,7 @@ set(TEST_SRCS
     CRCTests.cpp
     SceneTests.cpp
     MaterialTests.cpp
+    TransformTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
