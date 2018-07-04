@@ -34,7 +34,6 @@ namespace AeonGames
         memcpy ( mVector, aVector, sizeof ( float ) * 3 );
     }
 
-
     Vector3::Vector3 ( const void* const aVector, const uint32_t aStride )
     {
         SetVector3 ( aVector, aStride );
