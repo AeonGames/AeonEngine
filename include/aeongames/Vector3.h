@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ namespace AeonGames
         DLL Vector3 ( float aX, float aY, float aZ );
         /// destructor.
         DLL ~Vector3();
+        DLL void Get ( float* aData ) const;
         DLL const float* const GetVector3() const;
         DLL const float& GetX() const;
         DLL const float& GetY() const;
@@ -57,6 +58,7 @@ namespace AeonGames
         DLL float GetDistanceToPlane ( const Plane& aPlane ) const;
         /*! \name Operators */
         //@{
+        DLL Vector3& operator= ( const float* aLhs );
         DLL Vector3& operator-= ( const Vector3& aLhs );
         DLL Vector3& operator+= ( const Vector3& aLhs );
         DLL Vector3& operator*= ( const float aLhs );
