@@ -27,7 +27,7 @@ namespace AeonGames
 
     static Node::PropertyDescriptor PropertyDescriptors[] =
     {
-        {"Mesh"_crc32, "Mesh", "", [] ( Node * aNode, const void* aTuple ) {}, [] ( const Node * aNode, void* aTuple ) {}}
+        {"Mesh", "Mesh", "", [] ( Node * aNode, const void* aTuple ) {}, [] ( const Node * aNode, void* aTuple ) {}}
     };
 
     size_t MeshNode::GetPropertyCount() const

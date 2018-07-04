@@ -120,7 +120,7 @@ namespace AeonGames
                 switch ( index.column() )
                 {
                 case 0:
-                    return QString ( mNode->GetPropertyDescriptor ( index.row() ).GetName().c_str() );
+                    return QString ( mNode->GetPropertyDescriptor ( index.row() ).GetDisplayName().c_str() );
                     break;
                 case 1:
                     return QString ( "Not Yet!" );
