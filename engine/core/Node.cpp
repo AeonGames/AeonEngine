@@ -460,17 +460,17 @@ namespace AeonGames
     static Node::PropertyDescriptor PropertyDescriptors [] =
     {
         {
-            "LocalTransform"_crc32, "Local Transform", "10f",
+            "LocalTransform", "Local Transform", "10f",
             [] ( Node * aNode, const void* aTuple ) {aNode->SetLocalTransform ( reinterpret_cast<const float*> ( aTuple ) );},
             [] ( const Node * aNode, void* aTuple ) {aNode->GetLocalTransform().Get ( reinterpret_cast<float*> ( aTuple ) );},
             {
                 {
-                    "LocalScale"_crc32, "Scale", "3f",
+                    "LocalScale", "Scale", "3f",
                     [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); transform.SetScale ( reinterpret_cast<const float*> ( aTuple ) ); aNode->SetLocalTransform ( transform );},
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetLocalTransform().GetScale().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "LocalScaleX"_crc32, "X", "f",
+                            "LocalScaleX", "X", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Vector3 scale = transform.GetScale(); scale[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetScale ( scale ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -478,7 +478,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalScaleY"_crc32, "Y", "f",
+                            "LocalScaleY", "Y", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Vector3 scale = transform.GetScale(); scale[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetScale ( scale ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -486,7 +486,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalScaleZ"_crc32, "Z", "f",
+                            "LocalScaleZ", "Z", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Vector3 scale = transform.GetScale(); scale[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetScale ( scale ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -496,12 +496,12 @@ namespace AeonGames
                     }
                 },
                 {
-                    "LocalRotation"_crc32, "Rotation", "4f",
+                    "LocalRotation", "Rotation", "4f",
                     [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); transform.SetRotation ( reinterpret_cast<const float*> ( aTuple ) ); aNode->SetLocalTransform ( transform );},
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetLocalTransform().GetRotation().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "LocalRotationW"_crc32, "W", "f",
+                            "LocalRotationW", "W", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -509,7 +509,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalRotationX"_crc32, "X", "f",
+                            "LocalRotationX", "X", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -517,7 +517,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalRotationY"_crc32, "Y", "f",
+                            "LocalRotationY", "Y", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -525,7 +525,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalRotationZ"_crc32, "Z", "f",
+                            "LocalRotationZ", "Z", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[3] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -535,12 +535,12 @@ namespace AeonGames
                     }
                 },
                 {
-                    "LocalTranslation"_crc32, "Translation", "3f",
+                    "LocalTranslation", "Translation", "3f",
                     [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); transform.SetTranslation ( reinterpret_cast<const float*> ( aTuple ) ); aNode->SetLocalTransform ( transform );},
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetLocalTransform().GetTranslation().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "LocalTranslationX"_crc32, "X", "f",
+                            "LocalTranslationX", "X", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Vector3 translation = transform.GetTranslation(); translation[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetTranslation ( translation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -548,7 +548,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalTranslationY"_crc32, "Y", "f",
+                            "LocalTranslationY", "Y", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Vector3 translation = transform.GetTranslation(); translation[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetTranslation ( translation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -556,7 +556,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "LocalTranslationZ"_crc32, "Z", "f",
+                            "LocalTranslationZ", "Z", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Vector3 translation = transform.GetTranslation(); translation[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetTranslation ( translation ); aNode->SetLocalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -568,17 +568,17 @@ namespace AeonGames
             }
         },
         {
-            "GlobalTransform"_crc32, "Global Transform", "10f",
+            "GlobalTransform", "Global Transform", "10f",
             [] ( Node * aNode, const void* aTuple ) {aNode->SetGlobalTransform ( reinterpret_cast<const float*> ( aTuple ) );},
             [] ( const Node * aNode, void* aTuple ) {aNode->GetGlobalTransform().Get ( reinterpret_cast<float*> ( aTuple ) );},
             {
                 {
-                    "GlobalScale"_crc32, "Scale", "3f",
+                    "GlobalScale", "Scale", "3f",
                     [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); transform.SetScale ( reinterpret_cast<const float*> ( aTuple ) ); aNode->SetGlobalTransform ( transform );},
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetGlobalTransform().GetScale().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "GlobalScaleX"_crc32, "X", "f",
+                            "GlobalScaleX", "X", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Vector3 scale = transform.GetScale(); scale[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetScale ( scale ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -586,7 +586,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalScaleY"_crc32, "Y", "f",
+                            "GlobalScaleY", "Y", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Vector3 scale = transform.GetScale(); scale[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetScale ( scale ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -594,7 +594,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalScaleZ"_crc32, "Z", "f",
+                            "GlobalScaleZ", "Z", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Vector3 scale = transform.GetScale(); scale[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetScale ( scale ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -604,12 +604,12 @@ namespace AeonGames
                     }
                 },
                 {
-                    "GlobalRotation"_crc32, "Rotation", "4f",
+                    "GlobalRotation", "Rotation", "4f",
                     [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); transform.SetRotation ( reinterpret_cast<const float*> ( aTuple ) ); aNode->SetGlobalTransform ( transform );},
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetGlobalTransform().GetRotation().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "GlobalRotationW"_crc32, "W", "f",
+                            "GlobalRotationW", "W", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -617,7 +617,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalRotationX"_crc32, "X", "f",
+                            "GlobalRotationX", "X", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -625,7 +625,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalRotationY"_crc32, "Y", "f",
+                            "GlobalRotationY", "Y", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -633,7 +633,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalRotationZ"_crc32, "Z", "f",
+                            "GlobalRotationZ", "Z", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[3] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -643,12 +643,12 @@ namespace AeonGames
                     }
                 },
                 {
-                    "GlobalTranslation"_crc32, "Translation", "3f",
+                    "GlobalTranslation", "Translation", "3f",
                     [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); transform.SetTranslation ( reinterpret_cast<const float*> ( aTuple ) ); aNode->SetGlobalTransform ( transform );},
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetGlobalTransform().GetTranslation().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "GlobalTranslationX"_crc32, "X", "f",
+                            "GlobalTranslationX", "X", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Vector3 translation = transform.GetTranslation(); translation[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetTranslation ( translation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -656,7 +656,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalTranslationY"_crc32, "Y", "f",
+                            "GlobalTranslationY", "Y", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Vector3 translation = transform.GetTranslation(); translation[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetTranslation ( translation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {
@@ -664,7 +664,7 @@ namespace AeonGames
                             }
                         },
                         {
-                            "GlobalTranslationZ"_crc32, "Z", "f",
+                            "GlobalTranslationZ", "Z", "f",
                             [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Vector3 translation = transform.GetTranslation(); translation[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetTranslation ( translation ); aNode->SetGlobalTransform ( transform );},
                             [] ( const Node * aNode, void* aTuple )
                             {

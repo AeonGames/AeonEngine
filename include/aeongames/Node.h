@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Memory.h"
 #include "aeongames/DependencyMap.h"
+#include "aeongames/CRC.h"
 
 namespace AeonGames
 {
@@ -54,15 +55,16 @@ namespace AeonGames
         {
         public:
             PropertyDescriptor (
-                const size_t aId,
                 const std::string& aName,
+                const std::string& aDisplayName,
                 const std::string& aFormat,
                 const std::function<void ( Node*, const void* ) >& aSetter,
                 const std::function<void ( const Node*, void* ) >& aGetter,
                 std::initializer_list<PropertyDescriptor> aSubProperties = {}
             ) :
-                mId{aId},
+                mId{crc32i ( aName.c_str(), aName.size() ) },
                 mName{aName},
+                mDisplayName{aDisplayName},
                 mFormat{aFormat},
                 mSetter{aSetter},
                 mGetter{aGetter},
@@ -77,6 +79,7 @@ namespace AeonGames
             PropertyDescriptor ( const PropertyDescriptor& aPropertyDescriptor ) :
                 mId{aPropertyDescriptor.mId},
                 mName{aPropertyDescriptor.mName},
+                mDisplayName{aPropertyDescriptor.mDisplayName},
                 mFormat{aPropertyDescriptor.mFormat},
                 mSetter{aPropertyDescriptor.mSetter},
                 mGetter{aPropertyDescriptor.mGetter},
@@ -92,6 +95,7 @@ namespace AeonGames
             {
                 mId = aPropertyDescriptor.mId;
                 mName = aPropertyDescriptor.mName;
+                mDisplayName = aPropertyDescriptor.mDisplayName;
                 mFormat = aPropertyDescriptor.mFormat;
                 mSetter = aPropertyDescriptor.mSetter;
                 mGetter = aPropertyDescriptor.mGetter;
@@ -106,6 +110,7 @@ namespace AeonGames
             PropertyDescriptor ( const PropertyDescriptor&& aPropertyDescriptor ) :
                 mId{aPropertyDescriptor.mId},
                 mName{std::move ( aPropertyDescriptor.mName ) },
+                mDisplayName{std::move ( aPropertyDescriptor.mDisplayName ) },
                 mFormat{std::move ( aPropertyDescriptor.mFormat ) },
                 mSetter{std::move ( aPropertyDescriptor.mSetter ) },
                 mGetter{std::move ( aPropertyDescriptor.mGetter ) },
@@ -121,6 +126,7 @@ namespace AeonGames
             {
                 mId = aPropertyDescriptor.mId;
                 mName = std::move ( aPropertyDescriptor.mName );
+                mDisplayName = std::move ( aPropertyDescriptor.mDisplayName );
                 mFormat = std::move ( aPropertyDescriptor.mFormat );
                 mParent = aPropertyDescriptor.mParent;
                 mSubProperties = std::move ( aPropertyDescriptor.mSubProperties );
@@ -137,6 +143,10 @@ namespace AeonGames
             const std::string& GetName() const
             {
                 return mName;
+            }
+            const std::string& GetDisplayName() const
+            {
+                return mDisplayName;
             }
             const std::string& GetFormat() const
             {
@@ -157,6 +167,7 @@ namespace AeonGames
         private:
             size_t mId {};
             std::string  mName{};
+            std::string  mDisplayName{};
             std::string  mFormat{};
             std::function<void ( Node*, const void* ) > mSetter;
             std::function<void ( const Node*, void* ) > mGetter;
