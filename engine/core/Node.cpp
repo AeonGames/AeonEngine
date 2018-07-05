@@ -457,7 +457,7 @@ namespace AeonGames
         ( void ) aDelta;
     }
 
-    static Node::PropertyDescriptor PropertyDescriptors [] =
+    static Node::NodeProperty NodeProperties [] =
     {
         {
             "LocalTransform", "Local Transform", "10f",
@@ -679,12 +679,12 @@ namespace AeonGames
 
     size_t Node::GetPropertyCount() const
     {
-        return sizeof ( PropertyDescriptors ) / sizeof ( Node::PropertyDescriptor );
+        return sizeof ( NodeProperties ) / sizeof ( Node::NodeProperty );
     }
 
-    const Node::PropertyDescriptor& Node::GetPropertyDescriptor ( size_t aIndex ) const
+    const Node::NodeProperty& Node::GetProperty ( size_t aIndex ) const
     {
-        return PropertyDescriptors[aIndex];
+        return NodeProperties[aIndex];
     }
 
     FactoryImplementation ( Node );

@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/DependencyMap.h"
 #include "aeongames/CRC.h"
+#include "aeongames/Property.h"
 
 namespace AeonGames
 {
@@ -39,6 +40,7 @@ namespace AeonGames
     class Node
     {
     public:
+        using  NodeProperty = Property<Node>;
         enum FlagBits
         {
             EnabledBit = 1,
@@ -50,129 +52,6 @@ namespace AeonGames
             Enabled = 0,
             Visible,
             FlagCount
-        };
-        class PropertyDescriptor
-        {
-        public:
-            PropertyDescriptor (
-                const std::string& aName,
-                const std::string& aDisplayName,
-                const std::string& aFormat,
-                const std::function<void ( Node*, const void* ) >& aSetter,
-                const std::function<void ( const Node*, void* ) >& aGetter,
-                std::initializer_list<PropertyDescriptor> aSubProperties = {}
-            ) :
-                mId{crc32i ( aName.c_str(), aName.size() ) },
-                mName{aName},
-                mDisplayName{aDisplayName},
-                mFormat{aFormat},
-                mSetter{aSetter},
-                mGetter{aGetter},
-                mParent{},
-                mSubProperties{std::move ( aSubProperties ) }
-            {
-                for ( auto& i : mSubProperties )
-                {
-                    i.mParent = this;
-                }
-            }
-            PropertyDescriptor ( const PropertyDescriptor& aPropertyDescriptor ) :
-                mId{aPropertyDescriptor.mId},
-                mName{aPropertyDescriptor.mName},
-                mDisplayName{aPropertyDescriptor.mDisplayName},
-                mFormat{aPropertyDescriptor.mFormat},
-                mSetter{aPropertyDescriptor.mSetter},
-                mGetter{aPropertyDescriptor.mGetter},
-                mParent{aPropertyDescriptor.mParent},
-                mSubProperties{ aPropertyDescriptor.mSubProperties }
-            {
-                for ( auto& i : mSubProperties )
-                {
-                    i.mParent = this;
-                }
-            }
-            PropertyDescriptor& operator= ( const PropertyDescriptor& aPropertyDescriptor )
-            {
-                mId = aPropertyDescriptor.mId;
-                mName = aPropertyDescriptor.mName;
-                mDisplayName = aPropertyDescriptor.mDisplayName;
-                mFormat = aPropertyDescriptor.mFormat;
-                mSetter = aPropertyDescriptor.mSetter;
-                mGetter = aPropertyDescriptor.mGetter;
-                mParent = aPropertyDescriptor.mParent;
-                mSubProperties = aPropertyDescriptor.mSubProperties;
-                for ( auto& i : mSubProperties )
-                {
-                    i.mParent = this;
-                }
-                return *this;
-            }
-            PropertyDescriptor ( const PropertyDescriptor&& aPropertyDescriptor ) :
-                mId{aPropertyDescriptor.mId},
-                mName{std::move ( aPropertyDescriptor.mName ) },
-                mDisplayName{std::move ( aPropertyDescriptor.mDisplayName ) },
-                mFormat{std::move ( aPropertyDescriptor.mFormat ) },
-                mSetter{std::move ( aPropertyDescriptor.mSetter ) },
-                mGetter{std::move ( aPropertyDescriptor.mGetter ) },
-                mParent{aPropertyDescriptor.mParent},
-                mSubProperties{ std::move ( aPropertyDescriptor.mSubProperties ) }
-            {
-                for ( auto& i : mSubProperties )
-                {
-                    i.mParent = this;
-                }
-            }
-            PropertyDescriptor& operator= ( const PropertyDescriptor&& aPropertyDescriptor )
-            {
-                mId = aPropertyDescriptor.mId;
-                mName = std::move ( aPropertyDescriptor.mName );
-                mDisplayName = std::move ( aPropertyDescriptor.mDisplayName );
-                mFormat = std::move ( aPropertyDescriptor.mFormat );
-                mParent = aPropertyDescriptor.mParent;
-                mSubProperties = std::move ( aPropertyDescriptor.mSubProperties );
-                for ( auto& i : mSubProperties )
-                {
-                    i.mParent = this;
-                }
-                return *this;
-            }
-            const size_t GetId() const
-            {
-                return mId;
-            }
-            const std::string& GetName() const
-            {
-                return mName;
-            }
-            const std::string& GetDisplayName() const
-            {
-                return mDisplayName;
-            }
-            const std::string& GetFormat() const
-            {
-                return mFormat;
-            }
-            void Set ( Node* aNode, const void* aTuple ) const
-            {
-                mSetter ( aNode, aTuple );
-            }
-            void Get ( const Node* aNode, void* aTuple ) const
-            {
-                mGetter ( aNode, aTuple );
-            }
-            const std::vector<PropertyDescriptor>& GetSubProperties() const
-            {
-                return mSubProperties;
-            }
-        private:
-            size_t mId {};
-            std::string  mName{};
-            std::string  mDisplayName{};
-            std::string  mFormat{};
-            std::function<void ( Node*, const void* ) > mSetter;
-            std::function<void ( const Node*, void* ) > mGetter;
-            PropertyDescriptor* mParent{};
-            std::vector<PropertyDescriptor> mSubProperties{};
         };
         DLL Node ( uint32_t aFlags = AllBits );
         DLL virtual ~Node();
@@ -255,7 +134,7 @@ namespace AeonGames
         /** @name Properties */
         /** @{ */
         DLL virtual size_t GetPropertyCount() const;
-        DLL virtual const PropertyDescriptor& GetPropertyDescriptor ( size_t aIndex ) const;
+        DLL virtual const NodeProperty& GetProperty ( size_t aIndex ) const;
         /** @} */
     private:
         /** @name Abstract functions */
