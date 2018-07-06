@@ -122,5 +122,12 @@ namespace AeonGames
     static_assert ( popcount ( 0xd ) == 3, "Popcount Failure." );
     static_assert ( popcount ( 0xe ) == 3, "Popcount Failure." );
     static_assert ( popcount ( 0xf ) == 4, "Popcount Failure." );
+    template<class T, class U>
+    const T Concatenate ( const T& aFirst, U& aSecond )
+    {
+        T result ( aFirst.begin(), aFirst.end() );
+        result.insert ( result.end(), aSecond.begin(), aSecond.end() );
+        return result;
+    }
 }
 #endif

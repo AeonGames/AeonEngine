@@ -95,7 +95,17 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QTreeView" name="propertiesTreeView"/>
+           <widget class="QTreeView" name="propertiesTreeView">
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="indentation">
+             <number>10</number>
+            </property>
+            <property name="allColumnsShowFocus">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

@@ -40,7 +40,7 @@ namespace AeonGames
     class Node
     {
     public:
-        using  NodeProperty = Property<Node>;
+        using  Property = Property<Node>;
         enum FlagBits
         {
             EnabledBit = 1,
@@ -133,8 +133,8 @@ namespace AeonGames
         DLL size_t GetIndex() const;
         /** @name Properties */
         /** @{ */
-        DLL virtual size_t GetPropertyCount() const;
-        DLL virtual const NodeProperty& GetProperty ( size_t aIndex ) const;
+        DLL static const std::vector<std::reference_wrapper<Property>>& Properties();
+        DLL virtual const std::vector<std::reference_wrapper<Property>>& GetProperties() const;
         /** @} */
     private:
         /** @name Abstract functions */

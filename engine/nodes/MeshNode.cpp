@@ -15,7 +15,8 @@ limitations under the License.
 */
 #include "MeshNode.h"
 #include "aeongames/Mesh.h"
-#include "aeongames/CRC.h"
+#include "aeongames/Utilities.h"
+
 namespace AeonGames
 {
     MeshNode::MeshNode()
@@ -25,22 +26,15 @@ namespace AeonGames
 
     MeshNode::~MeshNode() = default;
 
-    static Node::NodeProperty Properties[] =
+    static std::vector<Node::Property> MeshNodeProperties
     {
         {"Mesh", "Mesh", "", [] ( Node * aNode, const void* aTuple ) {}, [] ( const Node * aNode, void* aTuple ) {}}
     };
 
-    size_t MeshNode::GetPropertyCount() const
-    {
-        return Node::GetPropertyCount() + ( sizeof ( Properties ) / sizeof ( Node::NodeProperty ) );
-    }
+    static const std::vector<std::reference_wrapper<Node::Property>> MeshNodePropertyRefs ( Concatenate ( Node::Properties(), MeshNodeProperties ) );
 
-    const Node::NodeProperty& MeshNode::GetProperty ( size_t aIndex ) const
+    const std::vector<std::reference_wrapper<Node::Property>>& MeshNode::GetProperties() const
     {
-        if ( aIndex < Node::GetPropertyCount() )
-        {
-            return Node::GetProperty ( aIndex );
-        }
-        return Properties[aIndex - Node::GetPropertyCount()];
+        return MeshNodePropertyRefs;
     }
 }

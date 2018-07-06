@@ -24,8 +24,7 @@ namespace AeonGames
     public:
         MeshNode();
         ~MeshNode() final;
-        size_t GetPropertyCount() const final;
-        const NodeProperty& GetProperty ( size_t aIndex ) const final;
+        const std::vector<std::reference_wrapper<Node::Property>>& GetProperties() const final;
     private:
         Mesh* mMesh{nullptr};
     };
