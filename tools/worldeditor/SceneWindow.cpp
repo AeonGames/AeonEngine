@@ -38,6 +38,7 @@ namespace AeonGames
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
         propertiesTreeView->setModel ( &mNodeModel );
+        actionAddNode->setIcon ( QIcon ( ":/icons/icon_node" ) );
         sceneTreeView->addAction ( actionAddNode );
         sceneTreeView->addAction ( actionRemoveNode );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );

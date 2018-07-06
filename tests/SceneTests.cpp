@@ -330,12 +330,12 @@ namespace AeonGames
         EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONSCE" );
         EXPECT_EQ ( serialized[7], 0 );
     }
-    TEST ( Node, GetLocalTransformNodeProperty )
+    TEST ( Node, GetLocalTransformProperty )
     {
         Node node;
         float result[10] {};
         float value[10] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
-        const Node::NodeProperty& local_transform_descriptor = node.GetProperty ( 0 );
+        const Node::Property& local_transform_descriptor = node.GetProperties() [ 0 ].get();
         EXPECT_EQ ( local_transform_descriptor.GetDisplayName(), "Local Transform" );
         EXPECT_EQ ( local_transform_descriptor.GetName(), "LocalTransform" );
         EXPECT_EQ ( local_transform_descriptor.GetId(), "LocalTransform"_crc32 );
@@ -347,12 +347,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetLocalTransformScaleNodeProperty )
+    TEST ( Node, GetLocalTransformScaleProperty )
     {
         Node node;
         float result[3] {};
         float value[3] {0.0f, 1.0f, 2.0f};
-        const Node::NodeProperty& local_transform_scale_descriptor = node.GetProperty ( 0 ).GetSubProperties() [0];
+        const Node::Property& local_transform_scale_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [0];
         EXPECT_EQ ( local_transform_scale_descriptor.GetDisplayName(), "Scale" );
         EXPECT_EQ ( local_transform_scale_descriptor.GetName(), "LocalScale" );
         EXPECT_EQ ( local_transform_scale_descriptor.GetId(), "LocalScale"_crc32 );
@@ -364,12 +364,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetLocalTransformScaleXNodeProperty )
+    TEST ( Node, GetLocalTransformScaleXProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_scale_x_descriptor = node.GetProperty ( 0 ).GetSubProperties() [0].GetSubProperties() [0];
+        const Node::Property& local_transform_scale_x_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [0].GetSubProperties() [0];
         EXPECT_EQ ( local_transform_scale_x_descriptor.GetDisplayName(), "X" );
         EXPECT_EQ ( local_transform_scale_x_descriptor.GetName(), "LocalScaleX" );
         EXPECT_EQ ( local_transform_scale_x_descriptor.GetId(), "LocalScaleX"_crc32 );
@@ -378,12 +378,12 @@ namespace AeonGames
         local_transform_scale_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformScaleYNodeProperty )
+    TEST ( Node, GetLocalTransformScaleYProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_scale_y_descriptor = node.GetProperty ( 0 ).GetSubProperties() [0].GetSubProperties() [1];
+        const Node::Property& local_transform_scale_y_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [0].GetSubProperties() [1];
         EXPECT_EQ ( local_transform_scale_y_descriptor.GetDisplayName(), "Y" );
         EXPECT_EQ ( local_transform_scale_y_descriptor.GetName(), "LocalScaleY" );
         EXPECT_EQ ( local_transform_scale_y_descriptor.GetId(), "LocalScaleY"_crc32 );
@@ -392,12 +392,12 @@ namespace AeonGames
         local_transform_scale_y_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformScaleZNodeProperty )
+    TEST ( Node, GetLocalTransformScaleZProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_scale_z_descriptor = node.GetProperty ( 0 ).GetSubProperties() [0].GetSubProperties() [2];
+        const Node::Property& local_transform_scale_z_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [0].GetSubProperties() [2];
         EXPECT_EQ ( local_transform_scale_z_descriptor.GetDisplayName(), "Z" );
         EXPECT_EQ ( local_transform_scale_z_descriptor.GetName(), "LocalScaleZ" );
         EXPECT_EQ ( local_transform_scale_z_descriptor.GetId(), "LocalScaleZ"_crc32 );
@@ -406,12 +406,12 @@ namespace AeonGames
         local_transform_scale_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformRotationWNodeProperty )
+    TEST ( Node, GetLocalTransformRotationWProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_x_descriptor = node.GetProperty ( 0 ).GetSubProperties() [1].GetSubProperties() [0];
+        const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [0];
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "W" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "LocalRotationW" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "LocalRotationW"_crc32 );
@@ -420,12 +420,12 @@ namespace AeonGames
         local_transform_rotation_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformRotationXNodeProperty )
+    TEST ( Node, GetLocalTransformRotationXProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_x_descriptor = node.GetProperty ( 0 ).GetSubProperties() [1].GetSubProperties() [1];
+        const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [1];
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "X" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "LocalRotationX" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "LocalRotationX"_crc32 );
@@ -434,12 +434,12 @@ namespace AeonGames
         local_transform_rotation_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformRotationYNodeProperty )
+    TEST ( Node, GetLocalTransformRotationYProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_y_descriptor = node.GetProperty ( 0 ).GetSubProperties() [1].GetSubProperties() [2];
+        const Node::Property& local_transform_rotation_y_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [2];
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetDisplayName(), "Y" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetName(), "LocalRotationY" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetId(), "LocalRotationY"_crc32 );
@@ -448,12 +448,12 @@ namespace AeonGames
         local_transform_rotation_y_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformRotationZNodeProperty )
+    TEST ( Node, GetLocalTransformRotationZProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_z_descriptor = node.GetProperty ( 0 ).GetSubProperties() [1].GetSubProperties() [3];
+        const Node::Property& local_transform_rotation_z_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [3];
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetDisplayName(), "Z" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetName(), "LocalRotationZ" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetId(), "LocalRotationZ"_crc32 );
@@ -462,12 +462,12 @@ namespace AeonGames
         local_transform_rotation_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformTranslationXNodeProperty )
+    TEST ( Node, GetLocalTransformTranslationXProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_translation_x_descriptor = node.GetProperty ( 0 ).GetSubProperties() [2].GetSubProperties() [0];
+        const Node::Property& local_transform_translation_x_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [2].GetSubProperties() [0];
         EXPECT_EQ ( local_transform_translation_x_descriptor.GetDisplayName(), "X" );
         EXPECT_EQ ( local_transform_translation_x_descriptor.GetName(), "LocalTranslationX" );
         EXPECT_EQ ( local_transform_translation_x_descriptor.GetId(), "LocalTranslationX"_crc32 );
@@ -476,12 +476,12 @@ namespace AeonGames
         local_transform_translation_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformTranslationYNodeProperty )
+    TEST ( Node, GetLocalTransformTranslationYProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_translation_y_descriptor = node.GetProperty ( 0 ).GetSubProperties() [2].GetSubProperties() [1];
+        const Node::Property& local_transform_translation_y_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [2].GetSubProperties() [1];
         EXPECT_EQ ( local_transform_translation_y_descriptor.GetDisplayName(), "Y" );
         EXPECT_EQ ( local_transform_translation_y_descriptor.GetName(), "LocalTranslationY" );
         EXPECT_EQ ( local_transform_translation_y_descriptor.GetId(), "LocalTranslationY"_crc32 );
@@ -490,12 +490,12 @@ namespace AeonGames
         local_transform_translation_y_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalTransformTranslationZNodeProperty )
+    TEST ( Node, GetLocalTransformTranslationZProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_translation_z_descriptor = node.GetProperty ( 0 ).GetSubProperties() [2].GetSubProperties() [2];
+        const Node::Property& local_transform_translation_z_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [2].GetSubProperties() [2];
         EXPECT_EQ ( local_transform_translation_z_descriptor.GetDisplayName(), "Z" );
         EXPECT_EQ ( local_transform_translation_z_descriptor.GetName(), "LocalTranslationZ" );
         EXPECT_EQ ( local_transform_translation_z_descriptor.GetId(), "LocalTranslationZ"_crc32 );
@@ -504,12 +504,12 @@ namespace AeonGames
         local_transform_translation_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetLocalRotationTranslationNodeProperty )
+    TEST ( Node, GetLocalRotationTranslationProperty )
     {
         Node node;
         float result[4] {};
         float value[4] {0.0f, 1.0f, 2.0f, 3.0f};
-        const Node::NodeProperty& local_transform_rotation_descriptor = node.GetProperty ( 0 ).GetSubProperties() [1];
+        const Node::Property& local_transform_rotation_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1];
         EXPECT_EQ ( local_transform_rotation_descriptor.GetDisplayName(), "Rotation" );
         EXPECT_EQ ( local_transform_rotation_descriptor.GetName(), "LocalRotation" );
         EXPECT_EQ ( local_transform_rotation_descriptor.GetId(), "LocalRotation"_crc32 );
@@ -521,12 +521,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetLocalTransformTranslationNodeProperty )
+    TEST ( Node, GetLocalTransformTranslationProperty )
     {
         Node node;
         float result[3] {};
         float value[3] {0.0f, 1.0f, 2.0f};
-        const Node::NodeProperty& local_transform_translation_descriptor = node.GetProperty ( 0 ).GetSubProperties() [2];
+        const Node::Property& local_transform_translation_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [2];
         EXPECT_EQ ( local_transform_translation_descriptor.GetDisplayName(), "Translation" );
         EXPECT_EQ ( local_transform_translation_descriptor.GetName(), "LocalTranslation" );
         EXPECT_EQ ( local_transform_translation_descriptor.GetId(), "LocalTranslation"_crc32 );
@@ -538,12 +538,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetGlobalTransformNodeProperty )
+    TEST ( Node, GetGlobalTransformProperty )
     {
         Node node;
         float result[10] {};
         float value[10] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
-        const Node::NodeProperty& global_transform_descriptor = node.GetProperty ( 1 );
+        const Node::Property& global_transform_descriptor = node.GetProperties() [ 1 ].get();
         EXPECT_EQ ( global_transform_descriptor.GetDisplayName(), "Global Transform" );
         EXPECT_EQ ( global_transform_descriptor.GetName(), "GlobalTransform" );
         EXPECT_EQ ( global_transform_descriptor.GetId(), "GlobalTransform"_crc32 );
@@ -555,12 +555,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetGlobalTransformScaleNodeProperty )
+    TEST ( Node, GetGlobalTransformScaleProperty )
     {
         Node node;
         float result[3] {};
         float value[3] {0.0f, 1.0f, 2.0f};
-        const Node::NodeProperty& global_transform_scale_descriptor = node.GetProperty ( 1 ).GetSubProperties() [0];
+        const Node::Property& global_transform_scale_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [0];
         EXPECT_EQ ( global_transform_scale_descriptor.GetDisplayName(), "Scale" );
         EXPECT_EQ ( global_transform_scale_descriptor.GetName(), "GlobalScale" );
         EXPECT_EQ ( global_transform_scale_descriptor.GetId(), "GlobalScale"_crc32 );
@@ -572,12 +572,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetGlobalRotationTranslationNodeProperty )
+    TEST ( Node, GetGlobalRotationTranslationProperty )
     {
         Node node;
         float result[4] {};
         float value[4] {0.0f, 1.0f, 2.0f, 3.0f};
-        const Node::NodeProperty& global_transform_rotation_descriptor = node.GetProperty ( 1 ).GetSubProperties() [1];
+        const Node::Property& global_transform_rotation_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1];
         EXPECT_EQ ( global_transform_rotation_descriptor.GetDisplayName(), "Rotation" );
         EXPECT_EQ ( global_transform_rotation_descriptor.GetName(), "GlobalRotation" );
         EXPECT_EQ ( global_transform_rotation_descriptor.GetId(), "GlobalRotation"_crc32 );
@@ -589,12 +589,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetGlobalTransformTranslationNodeProperty )
+    TEST ( Node, GetGlobalTransformTranslationProperty )
     {
         Node node;
         float result[3] {};
         float value[3] {0.0f, 1.0f, 2.0f};
-        const Node::NodeProperty& global_transform_translation_descriptor = node.GetProperty ( 1 ).GetSubProperties() [2];
+        const Node::Property& global_transform_translation_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [2];
         EXPECT_EQ ( global_transform_translation_descriptor.GetDisplayName(), "Translation" );
         EXPECT_EQ ( global_transform_translation_descriptor.GetName(), "GlobalTranslation" );
         EXPECT_EQ ( global_transform_translation_descriptor.GetId(), "GlobalTranslation"_crc32 );
@@ -606,12 +606,12 @@ namespace AeonGames
             EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
         }
     }
-    TEST ( Node, GetGlobalTransformScaleXNodeProperty )
+    TEST ( Node, GetGlobalTransformScaleXProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_scale_x_descriptor = node.GetProperty ( 1 ).GetSubProperties() [0].GetSubProperties() [0];
+        const Node::Property& local_transform_scale_x_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [0].GetSubProperties() [0];
         EXPECT_EQ ( local_transform_scale_x_descriptor.GetDisplayName(), "X" );
         EXPECT_EQ ( local_transform_scale_x_descriptor.GetName(), "GlobalScaleX" );
         EXPECT_EQ ( local_transform_scale_x_descriptor.GetId(), "GlobalScaleX"_crc32 );
@@ -620,12 +620,12 @@ namespace AeonGames
         local_transform_scale_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformScaleYNodeProperty )
+    TEST ( Node, GetGlobalTransformScaleYProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_scale_y_descriptor = node.GetProperty ( 1 ).GetSubProperties() [0].GetSubProperties() [1];
+        const Node::Property& local_transform_scale_y_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [0].GetSubProperties() [1];
         EXPECT_EQ ( local_transform_scale_y_descriptor.GetDisplayName(), "Y" );
         EXPECT_EQ ( local_transform_scale_y_descriptor.GetName(), "GlobalScaleY" );
         EXPECT_EQ ( local_transform_scale_y_descriptor.GetId(), "GlobalScaleY"_crc32 );
@@ -634,12 +634,12 @@ namespace AeonGames
         local_transform_scale_y_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformScaleZNodeProperty )
+    TEST ( Node, GetGlobalTransformScaleZProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_scale_z_descriptor = node.GetProperty ( 1 ).GetSubProperties() [0].GetSubProperties() [2];
+        const Node::Property& local_transform_scale_z_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [0].GetSubProperties() [2];
         EXPECT_EQ ( local_transform_scale_z_descriptor.GetDisplayName(), "Z" );
         EXPECT_EQ ( local_transform_scale_z_descriptor.GetName(), "GlobalScaleZ" );
         EXPECT_EQ ( local_transform_scale_z_descriptor.GetId(), "GlobalScaleZ"_crc32 );
@@ -648,12 +648,12 @@ namespace AeonGames
         local_transform_scale_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformRotationWNodeProperty )
+    TEST ( Node, GetGlobalTransformRotationWProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_x_descriptor = node.GetProperty ( 1 ).GetSubProperties() [1].GetSubProperties() [0];
+        const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [0];
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "W" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "GlobalRotationW" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "GlobalRotationW"_crc32 );
@@ -662,12 +662,12 @@ namespace AeonGames
         local_transform_rotation_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformRotationXNodeProperty )
+    TEST ( Node, GetGlobalTransformRotationXProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_x_descriptor = node.GetProperty ( 1 ).GetSubProperties() [1].GetSubProperties() [1];
+        const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [1];
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "X" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "GlobalRotationX" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "GlobalRotationX"_crc32 );
@@ -676,12 +676,12 @@ namespace AeonGames
         local_transform_rotation_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformRotationYNodeProperty )
+    TEST ( Node, GetGlobalTransformRotationYProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_y_descriptor = node.GetProperty ( 1 ).GetSubProperties() [1].GetSubProperties() [2];
+        const Node::Property& local_transform_rotation_y_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [2];
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetDisplayName(), "Y" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetName(), "GlobalRotationY" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetId(), "GlobalRotationY"_crc32 );
@@ -690,12 +690,12 @@ namespace AeonGames
         local_transform_rotation_y_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformRotationZNodeProperty )
+    TEST ( Node, GetGlobalTransformRotationZProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_rotation_z_descriptor = node.GetProperty ( 1 ).GetSubProperties() [1].GetSubProperties() [3];
+        const Node::Property& local_transform_rotation_z_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [3];
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetDisplayName(), "Z" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetName(), "GlobalRotationZ" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetId(), "GlobalRotationZ"_crc32 );
@@ -704,12 +704,12 @@ namespace AeonGames
         local_transform_rotation_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformTranslationXNodeProperty )
+    TEST ( Node, GetGlobalTransformTranslationXProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_translation_x_descriptor = node.GetProperty ( 1 ).GetSubProperties() [2].GetSubProperties() [0];
+        const Node::Property& local_transform_translation_x_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [2].GetSubProperties() [0];
         EXPECT_EQ ( local_transform_translation_x_descriptor.GetDisplayName(), "X" );
         EXPECT_EQ ( local_transform_translation_x_descriptor.GetName(), "GlobalTranslationX" );
         EXPECT_EQ ( local_transform_translation_x_descriptor.GetId(), "GlobalTranslationX"_crc32 );
@@ -718,12 +718,12 @@ namespace AeonGames
         local_transform_translation_x_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformTranslationYNodeProperty )
+    TEST ( Node, GetGlobalTransformTranslationYProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_translation_y_descriptor = node.GetProperty ( 1 ).GetSubProperties() [2].GetSubProperties() [1];
+        const Node::Property& local_transform_translation_y_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [2].GetSubProperties() [1];
         EXPECT_EQ ( local_transform_translation_y_descriptor.GetDisplayName(), "Y" );
         EXPECT_EQ ( local_transform_translation_y_descriptor.GetName(), "GlobalTranslationY" );
         EXPECT_EQ ( local_transform_translation_y_descriptor.GetId(), "GlobalTranslationY"_crc32 );
@@ -732,12 +732,12 @@ namespace AeonGames
         local_transform_translation_y_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result , 3.14f );
     }
-    TEST ( Node, GetGlobalTransformTranslationZNodeProperty )
+    TEST ( Node, GetGlobalTransformTranslationZProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::NodeProperty& local_transform_translation_z_descriptor = node.GetProperty ( 1 ).GetSubProperties() [2].GetSubProperties() [2];
+        const Node::Property& local_transform_translation_z_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [2].GetSubProperties() [2];
         EXPECT_EQ ( local_transform_translation_z_descriptor.GetDisplayName(), "Z" );
         EXPECT_EQ ( local_transform_translation_z_descriptor.GetName(), "GlobalTranslationZ" );
         EXPECT_EQ ( local_transform_translation_z_descriptor.GetId(), "GlobalTranslationZ"_crc32 );

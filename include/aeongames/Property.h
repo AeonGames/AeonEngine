@@ -133,9 +133,27 @@ namespace AeonGames
         {
             mGetter ( aInstance, aTuple );
         }
+        const Property* GetParent() const
+        {
+            return mParent;
+        }
         const std::vector<Property>& GetSubProperties() const
         {
             return mSubProperties;
+        }
+        size_t GetIndex() const
+        {
+            auto parent = mParent;
+            if ( parent )
+            {
+                auto index = std::find_if ( parent->GetSubProperties().begin(), parent->GetSubProperties().end(),
+                                            [this] ( const Property & property )
+                {
+                    return &property == this;
+                } );
+                return index - parent->GetSubProperties().begin();
+            }
+            throw std::runtime_error ( "Property has no parent and thus no assigned index." );
         }
     private:
         size_t mId {};

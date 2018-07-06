@@ -44,6 +44,7 @@ namespace AeonGames
         void SetNode ( Node* aNode );
     private:
         Node* mNode{};
+        const std::vector<std::reference_wrapper<Node::Property>>* mNodeProperties{};
     };
 }
 #endif

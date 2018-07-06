@@ -457,7 +457,7 @@ namespace AeonGames
         ( void ) aDelta;
     }
 
-    static Node::NodeProperty NodeProperties [] =
+    static std::vector<Node::Property> NodeProperties
     {
         {
             "LocalTransform", "Local Transform", "10f",
@@ -677,14 +677,15 @@ namespace AeonGames
         }
     };
 
-    size_t Node::GetPropertyCount() const
-    {
-        return sizeof ( NodeProperties ) / sizeof ( Node::NodeProperty );
-    }
+    static const std::vector<std::reference_wrapper<Node::Property>> NodePropertyRefs ( NodeProperties.begin(), NodeProperties.end() );
 
-    const Node::NodeProperty& Node::GetProperty ( size_t aIndex ) const
+    const std::vector<std::reference_wrapper<Node::Property>>& Node::Properties()
     {
-        return NodeProperties[aIndex];
+        return NodePropertyRefs;
+    }
+    const std::vector<std::reference_wrapper<Node::Property>>& Node::GetProperties() const
+    {
+        return NodePropertyRefs;
     }
 
     FactoryImplementation ( Node );

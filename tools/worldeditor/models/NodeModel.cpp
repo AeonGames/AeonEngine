@@ -57,21 +57,36 @@ namespace AeonGames
         }
         if ( !parent.isValid() )
         {
-            if ( ( row >= 0 ) && ( row < static_cast<int> ( mNode->GetPropertyCount() ) ) )
+            if ( ( row >= 0 ) && ( row < static_cast<int> ( mNodeProperties->size() ) ) )
             {
-                return createIndex ( row, column );
+                return createIndex ( row, column, &mNodeProperties->at ( row ).get() );
             }
         }
         else
         {
-            ///@todo implement sub-properties
+            const Node::Property* parent_property = reinterpret_cast<Node::Property*> ( parent.internalPointer() );
+            if ( ( row >= 0 ) && ( row < static_cast<int> ( parent_property->GetSubProperties().size() ) ) )
+            {
+                const Node::Property* index_property = &parent_property->GetSubProperties() [row];
+                return createIndex ( row, column, const_cast<Node::Property*> ( index_property ) );
+            }
         }
         return QModelIndex();
     }
 
     QModelIndex NodeModel::parent ( const QModelIndex & index ) const
     {
-        ///@todo implement sub-properties
+        const Node::Property* index_property{};
+        const Node::Property* parent_property{};
+        if ( index.isValid() )
+        {
+            index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
+            parent_property = index_property->GetParent();
+            if ( parent_property )
+            {
+                return createIndex ( static_cast<int> ( index_property->GetIndex() ), 0, const_cast<Node::Property*> ( parent_property ) );
+            }
+        }
         return QModelIndex();
     }
 
@@ -83,9 +98,9 @@ namespace AeonGames
         }
         if ( index.isValid() )
         {
-            ///@todo implement sub-properties
+            return static_cast<int> ( reinterpret_cast<Node::Property*> ( index.internalPointer() )->GetSubProperties().size() );
         }
-        return static_cast<int> ( mNode->GetPropertyCount() );
+        return static_cast<int> ( mNodeProperties->size() );
     }
 
     int NodeModel::columnCount ( const QModelIndex & index ) const
@@ -101,10 +116,9 @@ namespace AeonGames
         }
         if ( index.isValid() )
         {
-            ///@todo implement sub-properties
-            return false;
+            return reinterpret_cast<Node::Property*> ( index.internalPointer() )->GetSubProperties().size();
         }
-        return ( mNode->GetPropertyCount() );
+        return ( mNodeProperties->size() );
     }
 
     QVariant NodeModel::data ( const QModelIndex & index, int role ) const
@@ -120,8 +134,11 @@ namespace AeonGames
                 switch ( index.column() )
                 {
                 case 0:
-                    return QString ( mNode->GetProperty ( index.row() ).GetDisplayName().c_str() );
-                    break;
+                {
+                    const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
+                    return QString ( index_property->GetDisplayName().c_str() );
+                }
+                break;
                 case 1:
                     return QString ( "Not Yet!" );
                     break;
@@ -166,6 +183,7 @@ namespace AeonGames
     {
         beginResetModel();
         mNode = aNode;
+        mNodeProperties = &aNode->GetProperties();
         endResetModel();
     }
 }
