@@ -25,6 +25,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
 )
 set(TEST_SRCS
     Main.cpp
@@ -35,6 +36,7 @@ set(TEST_SRCS
     SceneTests.cpp
     MaterialTests.cpp
     TransformTests.cpp
+    PropertyTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})

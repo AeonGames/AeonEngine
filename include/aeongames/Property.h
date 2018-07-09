@@ -19,6 +19,8 @@ limitations under the License.
 #include <string>
 #include <cstdint>
 #include <functional>
+#include <sstream>
+#include <algorithm>
 #include "aeongames/CRC.h"
 
 namespace AeonGames
@@ -36,6 +38,7 @@ namespace AeonGames
             std::initializer_list<Property> aSubProperties = {}
         ) :
             mId{crc32i ( aName.c_str(), aName.size() ) },
+            mBufferSize{},
             mName{aName},
             mDisplayName{aDisplayName},
             mFormat{aFormat},
@@ -48,9 +51,72 @@ namespace AeonGames
             {
                 i.mParent = this;
             }
+            size_t cursor = 0;
+            size_t advance = 0;
+            size_t size_multiplier = 1;
+            while ( cursor < mFormat.size() )
+            {
+                switch ( mFormat[cursor] )
+                {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    size_multiplier = std::stoi ( mFormat.substr ( cursor ), &advance, 10 );
+                    cursor += advance;
+                    break;
+                case 'c':  //char string of length 1
+                case 'b':  //signed char    integer
+                case 'B':  //unsigned char  integer
+                case '?':  //Bool  bool
+                    mBufferSize += sizeof ( uint8_t ) * size_multiplier;
+                    size_multiplier = 1;
+                    ++cursor;
+                    break;
+
+                case 'h': //short   integer
+                case 'H': //unsigned short  integer
+                    mBufferSize += sizeof ( uint16_t ) * size_multiplier;
+                    size_multiplier = 1;
+                    ++cursor;
+                    break;
+
+                case 'i': //int integer
+                case 'I': //unsigned int
+                case 'l': //long integer
+                case 'L': //unsigned long integer
+                case 'f': //float float
+                    mBufferSize += sizeof ( uint32_t ) * size_multiplier;
+                    size_multiplier = 1;
+                    ++cursor;
+                    break;
+
+                case 'q': //long long integer
+                case 'Q': //unsigned long long integer
+                case 'd': //double float
+                    mBufferSize += sizeof ( uint64_t ) * size_multiplier;
+                    size_multiplier = 1;
+                    ++cursor;
+                    break;
+                default:
+                {
+                    // Lets be pedantic
+                    std::ostringstream stream;
+                    stream << "Invalid '" << mFormat[cursor] << "' character in format.";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+                }
+            }
         }
         Property ( const Property& aProperty ) :
             mId{aProperty.mId},
+            mBufferSize{aProperty.mBufferSize},
             mName{aProperty.mName},
             mDisplayName{aProperty.mDisplayName},
             mFormat{aProperty.mFormat},
@@ -67,6 +133,7 @@ namespace AeonGames
         Property& operator= ( const Property& aProperty )
         {
             mId = aProperty.mId;
+            mBufferSize = aProperty.mBufferSize;
             mName = aProperty.mName;
             mDisplayName = aProperty.mDisplayName;
             mFormat = aProperty.mFormat;
@@ -82,6 +149,7 @@ namespace AeonGames
         }
         Property ( const Property&& aProperty ) :
             mId{aProperty.mId},
+            mBufferSize{aProperty.mBufferSize},
             mName{std::move ( aProperty.mName ) },
             mDisplayName{std::move ( aProperty.mDisplayName ) },
             mFormat{std::move ( aProperty.mFormat ) },
@@ -98,6 +166,7 @@ namespace AeonGames
         Property& operator= ( const Property&& aProperty )
         {
             mId = aProperty.mId;
+            mBufferSize = aProperty.mBufferSize;
             mName = std::move ( aProperty.mName );
             mDisplayName = std::move ( aProperty.mDisplayName );
             mFormat = std::move ( aProperty.mFormat );
@@ -112,6 +181,10 @@ namespace AeonGames
         const size_t GetId() const
         {
             return mId;
+        }
+        size_t GetBufferSize() const
+        {
+            return mBufferSize;
         }
         const std::string& GetName() const
         {
@@ -157,6 +230,7 @@ namespace AeonGames
         }
     private:
         size_t mId {};
+        size_t mBufferSize{};
         std::string  mName{};
         std::string  mDisplayName{};
         std::string  mFormat{};
