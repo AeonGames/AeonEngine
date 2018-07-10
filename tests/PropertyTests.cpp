@@ -30,25 +30,70 @@ namespace AeonGames
     public:
         RuntimeClass() = default;
         ~RuntimeClass() = default;
-#if 0
-        MOCK_METHOD1 ( SetterOneValue, void ( size_t ) );
-        MOCK_METHOD2 ( SetterTwoValues, void ( size_t, size_t ) );
-        MOCK_CONST_METHOD0 ( GetterOneValue, size_t() );
-        MOCK_CONST_METHOD0 ( GetterTwoValues, size_t() );
-#endif
+        float FirstFloat{};
+        float SecondFloat{};
     };
 
     TEST ( Property, OneFloat )
     {
-        Property<RuntimeClass> property ( "FloatValue", "Float Values", "f", [] ( RuntimeClass * aRuntimeClass, const void* aTuple ) {}, [] ( const RuntimeClass * aRuntimeClass, void* aTuple ) {} );
+        RuntimeClass runtime_class;
+        float value{};
+        Property<RuntimeClass> property ( "FloatValue", "Float Values", "f",
+                                          [] ( RuntimeClass * aRuntimeClass, const void* aTuple )
+        {
+            aRuntimeClass->FirstFloat = *reinterpret_cast<const float*> ( aTuple );
+        },
+        [] ( const RuntimeClass * aRuntimeClass, void* aTuple )
+        {
+            *reinterpret_cast<float*> ( aTuple ) = aRuntimeClass->FirstFloat;
+        } );
         EXPECT_EQ ( property.GetBufferSize(), sizeof ( float ) );
+        property.SetByString ( &runtime_class, "3.1415" );
+        EXPECT_EQ ( runtime_class.FirstFloat, 3.1415f );
+        property.Get ( &runtime_class, &value );
+        EXPECT_EQ ( runtime_class.FirstFloat, value );
     }
     TEST ( Property, TwoFloats )
     {
-        Property<RuntimeClass> propertyff ( "FloatValuesA", "Float Values A", "ff", [] ( RuntimeClass * aRuntimeClass, const void* aTuple ) {}, [] ( const RuntimeClass * aRuntimeClass, void* aTuple ) {} );
+        RuntimeClass runtime_class;
+        float value[2] {};
+        Property<RuntimeClass> propertyff ( "FloatValuesA", "Float Values A", "ff",
+                                            [] ( RuntimeClass * aRuntimeClass, const void* aTuple )
+        {
+            aRuntimeClass->FirstFloat = reinterpret_cast<const float*> ( aTuple ) [0];
+            aRuntimeClass->SecondFloat = reinterpret_cast<const float*> ( aTuple ) [1];
+        },
+        [] ( const RuntimeClass * aRuntimeClass, void* aTuple )
+        {
+            reinterpret_cast<float*> ( aTuple ) [0] = aRuntimeClass->FirstFloat;
+            reinterpret_cast<float*> ( aTuple ) [1] = aRuntimeClass->SecondFloat;
+        } );
         EXPECT_EQ ( propertyff.GetBufferSize(), sizeof ( float ) * 2 );
-        Property<RuntimeClass> property2f ( "FloatValuesB", "Float Values B", "2f", [] ( RuntimeClass * aRuntimeClass, const void* aTuple ) {}, [] ( const RuntimeClass * aRuntimeClass, void* aTuple ) {} );
-        EXPECT_EQ ( propertyff.GetBufferSize(), sizeof ( float ) * 2 );
+        propertyff.SetByString ( &runtime_class, "3.1415 19.1277" );
+        EXPECT_EQ ( runtime_class.FirstFloat, 3.1415f );
+        EXPECT_EQ ( runtime_class.SecondFloat, 19.1277f );
+        propertyff.Get ( &runtime_class, value );
+        EXPECT_EQ ( runtime_class.FirstFloat, value[0] );
+        EXPECT_EQ ( runtime_class.SecondFloat, value[1] );
+
+        Property<RuntimeClass> property2f ( "FloatValuesB", "Float Values B", "2f",
+                                            [] ( RuntimeClass * aRuntimeClass, const void* aTuple )
+        {
+            aRuntimeClass->FirstFloat = reinterpret_cast<const float*> ( aTuple ) [0];
+            aRuntimeClass->SecondFloat = reinterpret_cast<const float*> ( aTuple ) [1];
+        },
+        [] ( const RuntimeClass * aRuntimeClass, void* aTuple )
+        {
+            reinterpret_cast<float*> ( aTuple ) [0] = aRuntimeClass->FirstFloat;
+            reinterpret_cast<float*> ( aTuple ) [1] = aRuntimeClass->SecondFloat;
+        } );
+        EXPECT_EQ ( property2f.GetBufferSize(), sizeof ( float ) * 2 );
+        property2f.SetByString ( &runtime_class, "3.1415 19.1277" );
+        EXPECT_EQ ( runtime_class.FirstFloat, 3.1415f );
+        EXPECT_EQ ( runtime_class.SecondFloat, 19.1277f );
+        property2f.Get ( &runtime_class, value );
+        EXPECT_EQ ( runtime_class.FirstFloat, value[0] );
+        EXPECT_EQ ( runtime_class.SecondFloat, value[1] );
     }
     TEST ( Property, AllTypes )
     {
