@@ -29,7 +29,6 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <iostream>
-#include <regex>
 #if defined(__unix__) || defined(__MINGW32__)
 #include "sys/stat.h"
 #endif
