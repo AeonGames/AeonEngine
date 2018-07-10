@@ -40,7 +40,7 @@ namespace AeonGames
     class Node
     {
     public:
-        using  Property = Property<Node>;
+        using Property = Property<Node>;
         enum FlagBits
         {
             EnabledBit = 1,
