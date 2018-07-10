@@ -87,6 +87,7 @@ namespace AeonGames
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #else
+        ( void ) mDeviceContext;
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ),
                          static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
