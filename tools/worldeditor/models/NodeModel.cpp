@@ -140,8 +140,8 @@ namespace AeonGames
                 }
                 break;
                 case 1:
-                    return QString ( "Not Yet!" );
-                    break;
+                    const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
+                    return QString ( index_property->GetAsString ( mNode ).c_str() );
                 }
             }
         }
@@ -149,7 +149,8 @@ namespace AeonGames
         {
             if ( index.isValid() && ( index.column() == 1 ) )
             {
-                return QString ( "Not Yet!" );
+                const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
+                return QString ( index_property->GetAsString ( mNode ).c_str() );
             }
         }
         return QVariant();
@@ -170,9 +171,10 @@ namespace AeonGames
         {
             return false;
         }
-        if ( ( role == Qt::EditRole ) && index.isValid() && ( index.column() == 1 ) )
+        const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
+        if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
-            /** @todo parse value as expected by the property and call mNode->SetProperty. */
+            index_property->SetByString ( mNode, value.toString().toStdString() );
             emit dataChanged ( index, index );
             return true;
         }

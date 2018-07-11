@@ -304,7 +304,8 @@ namespace AeonGames
             std::vector<uint8_t> tuple ( mBufferSize, 0 );
             mGetter ( aInstance, tuple.data() );
             uint8_t* read_cursor = tuple.data();
-            std::string result{};
+            std::ostringstream result;
+            result.unsetf ( std::ios_base::floatfield | std::ios_base::showpoint );
             size_t needs_separator = 0;
             IterateFormat ( [&read_cursor, &result, &needs_separator] ( size_t aMultiplier, uint8_t aType )
             {
@@ -313,57 +314,59 @@ namespace AeonGames
                     switch ( aType )
                     {
                     case 'c':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<char*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<char*> ( read_cursor );
                         read_cursor += sizeof ( char );
                         break;
                     case 'b':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<int8_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<int8_t*> ( read_cursor );
                         read_cursor += sizeof ( int8_t );
                         break;
                     case 'B':
                     case '?':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<uint8_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<uint8_t*> ( read_cursor );
                         read_cursor += sizeof ( uint8_t );
                         break;
                     case 'h':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<int16_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<int16_t*> ( read_cursor );
                         read_cursor += sizeof ( int16_t );
                         break;
                     case 'H':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<uint16_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<uint16_t*> ( read_cursor );
                         read_cursor += sizeof ( uint16_t );
                         break;
                     case 'i':
                     case 'l':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<int32_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<int32_t*> ( read_cursor );
                         read_cursor += sizeof ( int32_t );
                         break;
                     case 'I':
                     case 'L':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<uint32_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<uint32_t*> ( read_cursor );
                         read_cursor += sizeof ( uint32_t );
                         break;
                     case 'f':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<float*> ( read_cursor ) );
+                    {
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<float*> ( read_cursor );
                         read_cursor += sizeof ( float );
-                        break;
+                    }
+                    break;
                     case 'q':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<int64_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<int64_t*> ( read_cursor );
                         read_cursor += sizeof ( int64_t );
                         break;
                     case 'Q':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<uint64_t*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<uint64_t*> ( read_cursor );
                         read_cursor += sizeof ( uint64_t );
                         break;
                     case 'd':
-                        result += ( needs_separator++ ? " " : "" ) + std::to_string ( *reinterpret_cast<double*> ( read_cursor ) );
+                        result << ( needs_separator++ ? " " : "" ) << *reinterpret_cast<double*> ( read_cursor );
                         read_cursor += sizeof ( double );
                         break;
                     }
                 }
                 return true;
             } );
-            return result;
+            return result.str();
         }
         const Property* GetParent() const
         {
