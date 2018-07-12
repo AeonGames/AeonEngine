@@ -222,8 +222,59 @@ namespace AeonGames
         }
         return *this;
     }
+
     void Quaternion::Get ( float* aData ) const
     {
         memcpy ( aData, mQuaternion, sizeof ( float ) * 4 );
+    }
+
+    Vector3 Quaternion::GetEuler() const
+    {
+        double sqw = mQuaternion[0] * mQuaternion[0];
+        double sqx = mQuaternion[1] * mQuaternion[1];
+        double sqy = mQuaternion[2] * mQuaternion[2];
+        double sqz = mQuaternion[3] * mQuaternion[3];
+        double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+        double test = mQuaternion[1] * mQuaternion[2] + mQuaternion[3] * mQuaternion[0];
+        if ( test > 0.499 * unit )
+        {
+            // singularity at north pole
+            return Vector3 (
+                       ( 2 * std::atan2 ( mQuaternion[1], mQuaternion[0] ) ) * ( 180 / M_PI ),
+                       ( M_PI / 2 ) * ( 180 / M_PI ),
+                       0 );
+        }
+        if ( test < -0.499 * unit )
+        {
+            // singularity at south pole
+            return Vector3 (
+                       ( -2 * std::atan2 ( mQuaternion[1], mQuaternion[0] ) ) * ( 180 / M_PI ),
+                       ( -M_PI / 2 ) * ( 180 / M_PI ),
+                       0 );
+        }
+        return Vector3 (
+                   std::atan2 ( 2 * mQuaternion[2] * mQuaternion[0] - 2 * mQuaternion[1] * mQuaternion[3], sqx - sqy - sqz + sqw ) * ( 180 / M_PI ),
+                   std::asin ( 2 * test / unit ) * ( 180 / M_PI ),
+                   std::atan2 ( 2 * mQuaternion[1] * mQuaternion[0] - 2 * mQuaternion[2] * mQuaternion[3] , -sqx + sqy - sqz + sqw ) * ( 180 / M_PI ) );
+    }
+
+    void Quaternion::SetEuler ( const Vector3& aEuler )
+    {
+        // Euler must be given in Degrees
+        double rad_heading_over_2 = ( ( M_PI / 180 ) * aEuler[0] ) / 2;
+        double rad_attitude_over_2 = ( ( M_PI / 180 ) * aEuler[1] ) / 2;
+        double rad_bank_over_2 = ( ( M_PI / 180 ) * aEuler[2] ) / 2;
+        double c1 = std::cos ( rad_heading_over_2 );
+        double s1 = std::sin ( rad_heading_over_2 );
+        double c2 = std::cos ( rad_attitude_over_2 );
+        double s2 = std::sin ( rad_attitude_over_2 );
+        double c3 = std::cos ( rad_bank_over_2 );
+        double s3 = std::sin ( rad_bank_over_2 );
+        double c1c2 = c1 * c2;
+        double s1s2 = s1 * s2;
+        mQuaternion[0] = c1c2 * c3 - s1s2 * s3;
+        mQuaternion[1] = c1c2 * s3 + s1s2 * c3;
+        mQuaternion[2] = s1 * c2 * c3 + c1 * s2 * s3;
+        mQuaternion[3] = c1 * s2 * c3 - s1 * c2 * s3;
     }
 }
