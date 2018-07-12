@@ -49,6 +49,8 @@ namespace AeonGames
         //@}
         DLL static const Quaternion GetFromAxisAngle ( float angle, float x, float y, float z );
         DLL Quaternion& Normalize();
+        DLL Vector3 GetEuler() const;
+        DLL void SetEuler ( const Vector3& aEuler );
     private:
         /// W,X,Y,Z
         float mQuaternion[4] {1.0f, 0.0f, 0.0f, 0.0f};
