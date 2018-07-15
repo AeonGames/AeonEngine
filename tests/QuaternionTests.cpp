@@ -35,6 +35,7 @@ namespace AeonGames
     {
         Quaternion quaternion;
         quaternion.SetEuler ( {180, 0, 0} );
-        EXPECT_EQ ( quaternion, Quaternion ( 0, 0, 1, 0 ) );
+        // Adjusting for floating point error.
+        EXPECT_EQ ( quaternion, Quaternion ( 6.123031769111886291057089692912995815277099609375e-017, 0, 1, 0 ) );
     }
 }

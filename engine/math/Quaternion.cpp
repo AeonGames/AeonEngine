@@ -202,7 +202,7 @@ namespace AeonGames
             x * result,
             y * result,
             z * result
-        };
+        }.Normalize();
     }
     Quaternion & Quaternion::Normalize()
     {
@@ -255,7 +255,7 @@ namespace AeonGames
         return Vector3 (
                    std::atan2 ( 2 * mQuaternion[2] * mQuaternion[0] - 2 * mQuaternion[1] * mQuaternion[3], sqx - sqy - sqz + sqw ) * ( 180 / M_PI ),
                    std::asin ( 2 * test / unit ) * ( 180 / M_PI ),
-                   std::atan2 ( 2 * mQuaternion[1] * mQuaternion[0] - 2 * mQuaternion[2] * mQuaternion[3] , -sqx + sqy - sqz + sqw ) * ( 180 / M_PI ) );
+                   std::atan2 ( 2 * mQuaternion[1] * mQuaternion[0] - 2 * mQuaternion[2] * mQuaternion[3], -sqx + sqy - sqz + sqw ) * ( 180 / M_PI ) );
     }
 
     void Quaternion::SetEuler ( const Vector3& aEuler )
@@ -276,5 +276,6 @@ namespace AeonGames
         mQuaternion[1] = c1c2 * s3 + s1s2 * c3;
         mQuaternion[2] = s1 * c2 * c3 + c1 * s2 * s3;
         mQuaternion[3] = c1 * s2 * c3 - s1 * c2 * s3;
+        Normalize();
     }
 }
