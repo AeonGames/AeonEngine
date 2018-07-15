@@ -31,7 +31,7 @@ namespace AeonGames
         transform.Get ( result );
         for ( size_t i = 0; i < 10.0f; ++i )
         {
-            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+            EXPECT_EQ ( result[i], static_cast<float> ( i ) );
         }
     }
     TEST ( Transform, Set )
@@ -43,7 +43,7 @@ namespace AeonGames
         transform.Get ( result );
         for ( size_t i = 0; i < 10.0f; ++i )
         {
-            EXPECT_EQ ( result[i] , static_cast<float> ( i ) );
+            EXPECT_EQ ( result[i], static_cast<float> ( i ) );
         }
     }
 }
