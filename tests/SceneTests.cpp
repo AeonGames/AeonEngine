@@ -333,18 +333,18 @@ namespace AeonGames
     TEST ( Node, GetLocalTransformProperty )
     {
         Node node;
-        float result[10] {};
-        float value[10] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+        float result[9] {};
+        float value[9] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
         const Node::Property& local_transform_descriptor = node.GetProperties() [ 0 ].get();
         EXPECT_EQ ( local_transform_descriptor.GetDisplayName(), "Local Transform" );
         EXPECT_EQ ( local_transform_descriptor.GetName(), "LocalTransform" );
         EXPECT_EQ ( local_transform_descriptor.GetId(), "LocalTransform"_crc32 );
-        EXPECT_EQ ( local_transform_descriptor.GetFormat(), "10f" );
+        EXPECT_EQ ( local_transform_descriptor.GetFormat(), "9f" );
         local_transform_descriptor.Set ( &node, value );
         local_transform_descriptor.Get ( &node, result );
-        for ( size_t i = 0; i < 10; ++i )
+        for ( size_t i = 0; i < 9; ++i )
         {
-            EXPECT_EQ ( result[i], static_cast<float> ( i ) );
+            EXPECT_NEAR ( result[i], static_cast<float> ( i ), 1.0e-6f );
         }
     }
     TEST ( Node, GetLocalTransformScaleProperty )
@@ -406,61 +406,47 @@ namespace AeonGames
         local_transform_scale_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result, 3.14f );
     }
-    TEST ( Node, GetLocalTransformRotationWProperty )
+    TEST ( Node, GetLocalTransformRotationPitchProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
         const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [0];
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "W" );
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "LocalRotationW" );
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "LocalRotationW"_crc32 );
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetFormat(), "f" );
-        local_transform_rotation_x_descriptor.Set ( &node, &value );
-        local_transform_rotation_x_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
-    }
-    TEST ( Node, GetLocalTransformRotationXProperty )
-    {
-        Node node;
-        float result{};
-        float value{3.14f};
-        const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [1];
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "X" );
+        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "Pitch" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "LocalRotationX" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "LocalRotationX"_crc32 );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetFormat(), "f" );
         local_transform_rotation_x_descriptor.Set ( &node, &value );
         local_transform_rotation_x_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
+        EXPECT_NEAR ( result, 3.14f, 1.0e-6f );
     }
-    TEST ( Node, GetLocalTransformRotationYProperty )
+    TEST ( Node, GetLocalTransformRotationRollProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::Property& local_transform_rotation_y_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [2];
-        EXPECT_EQ ( local_transform_rotation_y_descriptor.GetDisplayName(), "Y" );
+        const Node::Property& local_transform_rotation_y_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [1];
+        EXPECT_EQ ( local_transform_rotation_y_descriptor.GetDisplayName(), "Roll" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetName(), "LocalRotationY" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetId(), "LocalRotationY"_crc32 );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetFormat(), "f" );
         local_transform_rotation_y_descriptor.Set ( &node, &value );
         local_transform_rotation_y_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
+        EXPECT_NEAR ( result, 3.14f, 1.0e-6f );
     }
-    TEST ( Node, GetLocalTransformRotationZProperty )
+    TEST ( Node, GetLocalTransformRotationYawProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::Property& local_transform_rotation_z_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [3];
-        EXPECT_EQ ( local_transform_rotation_z_descriptor.GetDisplayName(), "Z" );
+        const Node::Property& local_transform_rotation_z_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1].GetSubProperties() [2];
+        EXPECT_EQ ( local_transform_rotation_z_descriptor.GetDisplayName(), "Yaw" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetName(), "LocalRotationZ" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetId(), "LocalRotationZ"_crc32 );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetFormat(), "f" );
         local_transform_rotation_z_descriptor.Set ( &node, &value );
         local_transform_rotation_z_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
+        EXPECT_NEAR ( result, 3.14f, 1.0e-6f );
     }
     TEST ( Node, GetLocalTransformTranslationXProperty )
     {
@@ -541,18 +527,18 @@ namespace AeonGames
     TEST ( Node, GetGlobalTransformProperty )
     {
         Node node;
-        float result[10] {};
-        float value[10] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+        float result[9] {};
+        float value[9] {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
         const Node::Property& global_transform_descriptor = node.GetProperties() [ 1 ].get();
         EXPECT_EQ ( global_transform_descriptor.GetDisplayName(), "Global Transform" );
         EXPECT_EQ ( global_transform_descriptor.GetName(), "GlobalTransform" );
         EXPECT_EQ ( global_transform_descriptor.GetId(), "GlobalTransform"_crc32 );
-        EXPECT_EQ ( global_transform_descriptor.GetFormat(), "10f" );
+        EXPECT_EQ ( global_transform_descriptor.GetFormat(), "9f" );
         global_transform_descriptor.Set ( &node, value );
         global_transform_descriptor.Get ( &node, result );
-        for ( size_t i = 0; i < 10; ++i )
+        for ( size_t i = 0; i < 9; ++i )
         {
-            EXPECT_EQ ( result[i], static_cast<float> ( i ) );
+            EXPECT_NEAR ( result[i], static_cast<float> ( i ), 1.0e-6f );
         }
     }
     TEST ( Node, GetGlobalTransformScaleProperty )
@@ -648,61 +634,47 @@ namespace AeonGames
         local_transform_scale_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result, 3.14f );
     }
-    TEST ( Node, GetGlobalTransformRotationWProperty )
+    TEST ( Node, GetGlobalTransformRotationPitchProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
         const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [0];
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "W" );
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "GlobalRotationW" );
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "GlobalRotationW"_crc32 );
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetFormat(), "f" );
-        local_transform_rotation_x_descriptor.Set ( &node, &value );
-        local_transform_rotation_x_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
-    }
-    TEST ( Node, GetGlobalTransformRotationXProperty )
-    {
-        Node node;
-        float result{};
-        float value{3.14f};
-        const Node::Property& local_transform_rotation_x_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [1];
-        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "X" );
+        EXPECT_EQ ( local_transform_rotation_x_descriptor.GetDisplayName(), "Pitch" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetName(), "GlobalRotationX" );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetId(), "GlobalRotationX"_crc32 );
         EXPECT_EQ ( local_transform_rotation_x_descriptor.GetFormat(), "f" );
         local_transform_rotation_x_descriptor.Set ( &node, &value );
         local_transform_rotation_x_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
+        EXPECT_NEAR ( result, 3.14f, 1.0e-6f );
     }
-    TEST ( Node, GetGlobalTransformRotationYProperty )
+    TEST ( Node, GetGlobalTransformRotationRollProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::Property& local_transform_rotation_y_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [2];
-        EXPECT_EQ ( local_transform_rotation_y_descriptor.GetDisplayName(), "Y" );
+        const Node::Property& local_transform_rotation_y_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [1];
+        EXPECT_EQ ( local_transform_rotation_y_descriptor.GetDisplayName(), "Roll" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetName(), "GlobalRotationY" );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetId(), "GlobalRotationY"_crc32 );
         EXPECT_EQ ( local_transform_rotation_y_descriptor.GetFormat(), "f" );
         local_transform_rotation_y_descriptor.Set ( &node, &value );
         local_transform_rotation_y_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
+        EXPECT_NEAR ( result, 3.14f, 1.0e-6f );
     }
-    TEST ( Node, GetGlobalTransformRotationZProperty )
+    TEST ( Node, GetGlobalTransformRotationYawProperty )
     {
         Node node;
         float result{};
         float value{3.14f};
-        const Node::Property& local_transform_rotation_z_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [3];
-        EXPECT_EQ ( local_transform_rotation_z_descriptor.GetDisplayName(), "Z" );
+        const Node::Property& local_transform_rotation_z_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1].GetSubProperties() [2];
+        EXPECT_EQ ( local_transform_rotation_z_descriptor.GetDisplayName(), "Yaw" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetName(), "GlobalRotationZ" );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetId(), "GlobalRotationZ"_crc32 );
         EXPECT_EQ ( local_transform_rotation_z_descriptor.GetFormat(), "f" );
         local_transform_rotation_z_descriptor.Set ( &node, &value );
         local_transform_rotation_z_descriptor.Get ( &node, &result );
-        EXPECT_EQ ( result, 3.14f );
+        EXPECT_NEAR ( result, 3.14f, 1.0e-6f );
     }
     TEST ( Node, GetGlobalTransformTranslationXProperty )
     {
