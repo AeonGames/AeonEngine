@@ -334,39 +334,6 @@ namespace AeonGames
         }
     }
 
-    const uint32_t& VulkanWindow::GetActiveImageIndex() const
-    {
-        return mActiveImageIndex;
-    }
-
-    const VkFramebuffer & VulkanWindow::GetActiveFrameBuffer() const
-    {
-        return mVkFramebuffers[mActiveImageIndex];
-    }
-
-    void VulkanWindow::AcquireNextImage()
-    {
-        if ( VkResult result = vkAcquireNextImageKHR (
-                                   mVulkanRenderer.GetDevice(),
-                                   mVkSwapchainKHR,
-                                   UINT64_MAX, VK_NULL_HANDLE,
-                                   mVulkanRenderer.GetFence(),
-                                   const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
-        }
-    }
-
-    const VkViewport & VulkanWindow::GetViewport() const
-    {
-        return mVkViewport;
-    }
-
-    const VkRect2D & VulkanWindow::GetScissor() const
-    {
-        return mVkScissor;
-    }
-
     void VulkanWindow::Initialize()
     {
         InitializeSurface();
@@ -400,8 +367,8 @@ namespace AeonGames
     void VulkanWindow::ResizeViewport ( uint32_t aWidth, uint32_t aHeight )
     {
         if ( ( aWidth && aHeight ) &&
-             ( mVkSurfaceCapabilitiesKHR.currentExtent.width != aWidth ||
-               mVkSurfaceCapabilitiesKHR.currentExtent.height != aHeight ) )
+             ( mVkScissor.extent.width != aWidth ||
+               mVkScissor.extent.height != aHeight ) )
         {
             if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) )
             {
@@ -475,10 +442,10 @@ namespace AeonGames
             std::cout << GetVulkanResultString ( result ) << "  Error Code: " << result << " at " << __func__ << " line " << __LINE__ << " " << std::endl;
         }
 
-        vkCmdSetViewport ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &GetViewport() );
-        vkCmdSetScissor ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &GetScissor() );
+        vkCmdSetViewport ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mVkViewport );
+        vkCmdSetScissor ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mVkScissor );
 
-        VkRect2D render_area{ { 0, 0 }, { GetWidth(), GetHeight() } };
+        VkRect2D render_area{ { 0, 0 }, { mVkScissor.extent.width, mVkScissor.extent.height } };
         /* [1] is depth/stencil [0] is color.*/
         std::array<VkClearValue, 2> clear_values{ { { {{0}} }, { {{0}} } } };
         clear_values[0].color.float32[0] = 0.5f;
@@ -491,7 +458,7 @@ namespace AeonGames
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_begin_info.renderPass = mVulkanRenderer.GetRenderPass();
-        render_pass_begin_info.framebuffer = GetActiveFrameBuffer();
+        render_pass_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
         render_pass_begin_info.renderArea = render_area;
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
@@ -524,8 +491,8 @@ namespace AeonGames
         present_info.waitSemaphoreCount = 1;
         present_info.pWaitSemaphores = &mVulkanRenderer.GetSignalSemaphore();
         present_info.swapchainCount = 1;
-        present_info.pSwapchains = &GetSwapchain();
-        present_info.pImageIndices = &GetActiveImageIndex();
+        present_info.pSwapchains = &mVkSwapchainKHR;
+        present_info.pImageIndices = &mActiveImageIndex;
         present_info.pResults = result_array.data();
         if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer.GetQueue(), &present_info ) )
         {
@@ -593,26 +560,12 @@ namespace AeonGames
         }
     }
 
-    const VkSwapchainKHR& VulkanWindow::GetSwapchain() const
-    {
-        return mVkSwapchainKHR;
-    }
-
-    uint32_t VulkanWindow::GetWidth() const
-    {
-        return mVkSurfaceCapabilitiesKHR.currentExtent.width;
-    }
-
-    uint32_t VulkanWindow::GetHeight() const
-    {
-        return mVkSurfaceCapabilitiesKHR.currentExtent.height;
-    }
-
     void VulkanWindow::FinalizeSurface()
     {
         if ( mVkSurfaceKHR != VK_NULL_HANDLE )
         {
             vkDestroySurfaceKHR ( mVulkanRenderer.GetInstance(), mVkSurfaceKHR, nullptr );
+            mVkSurfaceKHR = VK_NULL_HANDLE;
         }
     }
 
@@ -621,6 +574,7 @@ namespace AeonGames
         if ( mVkSwapchainKHR != VK_NULL_HANDLE )
         {
             vkDestroySwapchainKHR ( mVulkanRenderer.GetDevice(), mVkSwapchainKHR, nullptr );
+            mVkSwapchainKHR = VK_NULL_HANDLE;
         }
     }
 
@@ -631,6 +585,7 @@ namespace AeonGames
             if ( i != VK_NULL_HANDLE )
             {
                 vkDestroyImageView ( mVulkanRenderer.GetDevice(), i, nullptr );
+                i = VK_NULL_HANDLE;
             }
         }
     }
@@ -640,15 +595,18 @@ namespace AeonGames
         if ( mVkDepthStencilImageView != VK_NULL_HANDLE )
         {
             vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageView, nullptr );
+            mVkDepthStencilImageView = VK_NULL_HANDLE;
         }
         if ( mVkDepthStencilImageMemory != VK_NULL_HANDLE )
         {
             vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageMemory, nullptr );
+            mVkDepthStencilImageMemory = VK_NULL_HANDLE;
         }
 
         if ( mVkDepthStencilImage != VK_NULL_HANDLE )
         {
             vkDestroyImage ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage, nullptr );
+            mVkDepthStencilImage = VK_NULL_HANDLE;
         }
     }
 
@@ -659,6 +617,7 @@ namespace AeonGames
             if ( i != VK_NULL_HANDLE )
             {
                 vkDestroyFramebuffer ( mVulkanRenderer.GetDevice(), i, nullptr );
+                i = VK_NULL_HANDLE;
             }
         }
     }
