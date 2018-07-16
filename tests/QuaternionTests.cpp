@@ -29,13 +29,16 @@ namespace AeonGames
     {
         Quaternion quaternion{0, 0, 1, 0};
         Vector3 euler = quaternion.GetEuler();
-        EXPECT_EQ ( euler, Vector3 ( 180, 0, 0 ) );
+        EXPECT_EQ ( euler, Vector3 ( 0, 180, 0 ) );
     }
     TEST ( Quaternion, SetEuler )
     {
         Quaternion quaternion;
-        quaternion.SetEuler ( {180, 0, 0} );
+        quaternion.SetEuler ( {0, 180, 0} );
         // Adjusting for floating point error.
-        EXPECT_EQ ( quaternion, Quaternion ( 6.123031769111886291057089692912995815277099609375e-017, 0, 1, 0 ) );
+        EXPECT_NEAR ( quaternion[0], 0, 1.0e-6f );
+        EXPECT_NEAR ( quaternion[1], 0, 1.0e-6f );
+        EXPECT_NEAR ( quaternion[2], 1, 1.0e-6f );
+        EXPECT_NEAR ( quaternion[3], 0, 1.0e-6f );
     }
 }

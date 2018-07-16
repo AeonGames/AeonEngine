@@ -204,6 +204,12 @@ namespace AeonGames
             z * result
         }.Normalize();
     }
+
+    const Quaternion Quaternion::GetFromEuler ( const Vector3& aEuler )
+    {
+        return Quaternion{}.SetEuler ( aEuler );
+    }
+
     Quaternion & Quaternion::Normalize()
     {
         float length = sqrtf (
@@ -240,42 +246,43 @@ namespace AeonGames
         {
             // singularity at north pole
             return Vector3 (
-                       ( 2 * std::atan2 ( mQuaternion[1], mQuaternion[0] ) ) * ( 180 / M_PI ),
-                       ( M_PI / 2 ) * ( 180 / M_PI ),
-                       0 );
+                       0.0f,
+                       static_cast<float> ( ( 2.0  * std::atan2 ( mQuaternion[1], mQuaternion[0] ) ) * ( 180.0 / M_PI ) ),
+                       static_cast<float> ( ( M_PI / 2 ) * ( 180 / M_PI ) ) );
         }
         if ( test < -0.499 * unit )
         {
             // singularity at south pole
             return Vector3 (
-                       ( -2 * std::atan2 ( mQuaternion[1], mQuaternion[0] ) ) * ( 180 / M_PI ),
-                       ( -M_PI / 2 ) * ( 180 / M_PI ),
-                       0 );
+                       0.0f,
+                       static_cast<float> ( ( -2 * std::atan2 ( mQuaternion[1], mQuaternion[0] ) ) * ( 180 / M_PI ) ),
+                       static_cast<float> ( ( -M_PI / 2 ) * ( 180 / M_PI ) ) );
         }
         return Vector3 (
-                   std::atan2 ( 2 * mQuaternion[2] * mQuaternion[0] - 2 * mQuaternion[1] * mQuaternion[3], sqx - sqy - sqz + sqw ) * ( 180 / M_PI ),
-                   std::asin ( 2 * test / unit ) * ( 180 / M_PI ),
-                   std::atan2 ( 2 * mQuaternion[1] * mQuaternion[0] - 2 * mQuaternion[2] * mQuaternion[3], -sqx + sqy - sqz + sqw ) * ( 180 / M_PI ) );
+                   static_cast<float> ( std::atan2 ( 2 * mQuaternion[1] * mQuaternion[0] - 2 * mQuaternion[2] * mQuaternion[3], -sqx + sqy - sqz + sqw ) * ( 180 / M_PI ) ),
+                   static_cast<float> ( std::atan2 ( 2 * mQuaternion[2] * mQuaternion[0] - 2 * mQuaternion[1] * mQuaternion[3], sqx - sqy - sqz + sqw ) * ( 180 / M_PI ) ),
+                   static_cast<float> ( std::asin ( 2 * test / unit ) * ( 180 / M_PI ) ) );
     }
 
-    void Quaternion::SetEuler ( const Vector3& aEuler )
+    Quaternion& Quaternion::SetEuler ( const Vector3& aEuler )
     {
         // Euler must be given in Degrees
-        double rad_heading_over_2 = ( ( M_PI / 180 ) * aEuler[0] ) / 2;
-        double rad_attitude_over_2 = ( ( M_PI / 180 ) * aEuler[1] ) / 2;
-        double rad_bank_over_2 = ( ( M_PI / 180 ) * aEuler[2] ) / 2;
-        double c1 = std::cos ( rad_heading_over_2 );
-        double s1 = std::sin ( rad_heading_over_2 );
-        double c2 = std::cos ( rad_attitude_over_2 );
-        double s2 = std::sin ( rad_attitude_over_2 );
-        double c3 = std::cos ( rad_bank_over_2 );
-        double s3 = std::sin ( rad_bank_over_2 );
+        double rad_pitch_over_2 = ( ( M_PI / 180 ) * aEuler[0] ) / 2;
+        double rad_roll_over_2 = ( ( M_PI / 180 ) * aEuler[1] ) / 2;
+        double rad_yaw_over_2 = ( ( M_PI / 180 ) * aEuler[2] ) / 2;
+        double c3 = std::cos ( rad_pitch_over_2 );
+        double s3 = std::sin ( rad_pitch_over_2 );
+        double c1 = std::cos ( rad_roll_over_2 );
+        double s1 = std::sin ( rad_roll_over_2 );
+        double c2 = std::cos ( rad_yaw_over_2 );
+        double s2 = std::sin ( rad_yaw_over_2 );
         double c1c2 = c1 * c2;
         double s1s2 = s1 * s2;
-        mQuaternion[0] = c1c2 * c3 - s1s2 * s3;
-        mQuaternion[1] = c1c2 * s3 + s1s2 * c3;
-        mQuaternion[2] = s1 * c2 * c3 + c1 * s2 * s3;
-        mQuaternion[3] = c1 * s2 * c3 - s1 * c2 * s3;
+        mQuaternion[0] = static_cast<float> ( c1c2 * c3 - s1s2 * s3 );
+        mQuaternion[1] = static_cast<float> ( c1c2 * s3 + s1s2 * c3 );
+        mQuaternion[2] = static_cast<float> ( s1 * c2 * c3 + c1 * s2 * s3 );
+        mQuaternion[3] = static_cast<float> ( c1 * s2 * c3 - s1 * c2 * s3 );
         Normalize();
+        return *this;
     }
 }

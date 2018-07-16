@@ -507,18 +507,18 @@ namespace AeonGames
     TEST ( Node, GetLocalRotationTranslationProperty )
     {
         Node node;
-        float result[4] {};
-        float value[4] {0.0f, 1.0f, 2.0f, 3.0f};
+        float result[3] {};
+        float value[3] {0.0f, 1.0f, 2.0f};
         const Node::Property& local_transform_rotation_descriptor = node.GetProperties() [ 0 ].get().GetSubProperties() [1];
         EXPECT_EQ ( local_transform_rotation_descriptor.GetDisplayName(), "Rotation" );
         EXPECT_EQ ( local_transform_rotation_descriptor.GetName(), "LocalRotation" );
         EXPECT_EQ ( local_transform_rotation_descriptor.GetId(), "LocalRotation"_crc32 );
-        EXPECT_EQ ( local_transform_rotation_descriptor.GetFormat(), "4f" );
+        EXPECT_EQ ( local_transform_rotation_descriptor.GetFormat(), "3f" );
         local_transform_rotation_descriptor.Set ( &node, value );
         local_transform_rotation_descriptor.Get ( &node, result );
-        for ( size_t i = 0; i < 4; ++i )
+        for ( size_t i = 0; i < 3; ++i )
         {
-            EXPECT_EQ ( result[i], static_cast<float> ( i ) );
+            EXPECT_NEAR ( result[i], static_cast<float> ( i ), 1.0e-6f );
         }
     }
     TEST ( Node, GetLocalTransformTranslationProperty )
@@ -575,18 +575,18 @@ namespace AeonGames
     TEST ( Node, GetGlobalRotationTranslationProperty )
     {
         Node node;
-        float result[4] {};
-        float value[4] {0.0f, 1.0f, 2.0f, 3.0f};
+        float result[3] {};
+        float value[3] {0.0f, 1.0f, 2.0f};
         const Node::Property& global_transform_rotation_descriptor = node.GetProperties() [ 1 ].get().GetSubProperties() [1];
         EXPECT_EQ ( global_transform_rotation_descriptor.GetDisplayName(), "Rotation" );
         EXPECT_EQ ( global_transform_rotation_descriptor.GetName(), "GlobalRotation" );
         EXPECT_EQ ( global_transform_rotation_descriptor.GetId(), "GlobalRotation"_crc32 );
-        EXPECT_EQ ( global_transform_rotation_descriptor.GetFormat(), "4f" );
+        EXPECT_EQ ( global_transform_rotation_descriptor.GetFormat(), "3f" );
         global_transform_rotation_descriptor.Set ( &node, value );
         global_transform_rotation_descriptor.Get ( &node, result );
-        for ( size_t i = 0; i < 4; ++i )
+        for ( size_t i = 0; i < 3; ++i )
         {
-            EXPECT_EQ ( result[i], static_cast<float> ( i ) );
+            EXPECT_NEAR ( result[i], static_cast<float> ( i ), 1.0e-6f );
         }
     }
     TEST ( Node, GetGlobalTransformTranslationProperty )
