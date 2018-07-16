@@ -202,12 +202,12 @@ namespace AeonGames
             x * result,
             y * result,
             z * result
-        }.Normalize();
+        } .Normalize();
     }
 
     const Quaternion Quaternion::GetFromEuler ( const Vector3& aEuler )
     {
-        return Quaternion{}.SetEuler ( aEuler );
+        return Quaternion{} .SetEuler ( aEuler );
     }
 
     Quaternion & Quaternion::Normalize()

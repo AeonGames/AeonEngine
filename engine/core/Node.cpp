@@ -460,9 +460,19 @@ namespace AeonGames
     static std::vector<Node::Property> NodeProperties
     {
         {
-            "LocalTransform", "Local Transform", "10f",
-            [] ( Node * aNode, const void* aTuple ) {aNode->SetLocalTransform ( reinterpret_cast<const float*> ( aTuple ) );},
-            [] ( const Node * aNode, void* aTuple ) {aNode->GetLocalTransform().Get ( reinterpret_cast<float*> ( aTuple ) );},
+            "LocalTransform", "Local Transform", "9f",
+            [] ( Node * aNode, const void* aTuple )
+            {
+                const float* pointer = reinterpret_cast<const float*> ( aTuple );
+                aNode->SetLocalTransform ( Transform ( pointer, Quaternion::GetFromEuler ( pointer + 3 ), pointer + 6 ) );
+            },
+            [] ( const Node * aNode, void* aTuple )
+            {
+                float* pointer = reinterpret_cast<float*> ( aTuple );
+                aNode->GetLocalTransform().GetScale().Get ( pointer );
+                aNode->GetLocalTransform().GetRotation().GetEuler().Get ( pointer + 3 );
+                aNode->GetLocalTransform().GetTranslation().Get ( pointer + 6 );
+            },
             {
                 {
                     "LocalScale", "Scale", "3f",
@@ -506,35 +516,48 @@ namespace AeonGames
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetLocalTransform().GetRotation().GetEuler().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "LocalRotationW", "W", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
+                            "LocalRotationX", "Pitch", "f",
+                            [] ( Node * aNode, const void* aTuple )
+                            {
+                                Transform transform = aNode->GetLocalTransform();
+                                Vector3 rotation = transform.GetRotation().GetEuler();
+                                rotation[0] = *reinterpret_cast<const float*> ( aTuple );
+                                transform.SetRotation ( Quaternion::GetFromEuler ( rotation ) );
+                                aNode->SetLocalTransform ( transform );
+                            },
                             [] ( const Node * aNode, void* aTuple )
                             {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation() [0];
+                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation().GetEuler() [0];
                             }
                         },
                         {
-                            "LocalRotationX", "X", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
+                            "LocalRotationY", "Roll", "f",
+                            [] ( Node * aNode, const void* aTuple )
+                            {
+                                Transform transform = aNode->GetLocalTransform();
+                                Vector3 rotation = transform.GetRotation().GetEuler();
+                                rotation[1] = *reinterpret_cast<const float*> ( aTuple );
+                                transform.SetRotation ( Quaternion::GetFromEuler ( rotation ) );
+                                aNode->SetLocalTransform ( transform );
+                            },
                             [] ( const Node * aNode, void* aTuple )
                             {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation() [1];
+                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation().GetEuler() [1];
                             }
                         },
                         {
-                            "LocalRotationY", "Y", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
+                            "LocalRotationZ", "Yaw", "f",
+                            [] ( Node * aNode, const void* aTuple )
+                            {
+                                Transform transform = aNode->GetLocalTransform();
+                                Vector3 rotation = transform.GetRotation().GetEuler();
+                                rotation[2] = *reinterpret_cast<const float*> ( aTuple );
+                                transform.SetRotation ( Quaternion::GetFromEuler ( rotation ) );
+                                aNode->SetLocalTransform ( transform );
+                            },
                             [] ( const Node * aNode, void* aTuple )
                             {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation() [2];
-                            }
-                        },
-                        {
-                            "LocalRotationZ", "Z", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetLocalTransform(); Quaternion rotation = transform.GetRotation(); rotation[3] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetLocalTransform ( transform );},
-                            [] ( const Node * aNode, void* aTuple )
-                            {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation() [3];
+                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetLocalTransform().GetRotation().GetEuler() [2];
                             }
                         }
                     }
@@ -573,9 +596,19 @@ namespace AeonGames
             }
         },
         {
-            "GlobalTransform", "Global Transform", "10f",
-            [] ( Node * aNode, const void* aTuple ) {aNode->SetGlobalTransform ( reinterpret_cast<const float*> ( aTuple ) );},
-            [] ( const Node * aNode, void* aTuple ) {aNode->GetGlobalTransform().Get ( reinterpret_cast<float*> ( aTuple ) );},
+            "GlobalTransform", "Global Transform", "9f",
+            [] ( Node * aNode, const void* aTuple )
+            {
+                const float* pointer = reinterpret_cast<const float*> ( aTuple );
+                aNode->SetGlobalTransform ( Transform ( pointer, Quaternion::GetFromEuler ( pointer + 3 ), pointer + 6 ) );
+            },
+            [] ( const Node * aNode, void* aTuple )
+            {
+                float* pointer = reinterpret_cast<float*> ( aTuple );
+                aNode->GetGlobalTransform().GetScale().Get ( pointer );
+                aNode->GetGlobalTransform().GetRotation().GetEuler().Get ( pointer + 3 );
+                aNode->GetGlobalTransform().GetTranslation().Get ( pointer + 6 );
+            },
             {
                 {
                     "GlobalScale", "Scale", "3f",
@@ -619,35 +652,48 @@ namespace AeonGames
                     [] ( const Node * aNode, void* aTuple ) {aNode->GetGlobalTransform().GetRotation().GetEuler().Get ( reinterpret_cast<float*> ( aTuple ) );},
                     {
                         {
-                            "GlobalRotationW", "W", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[0] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
+                            "GlobalRotationX", "Pitch", "f",
+                            [] ( Node * aNode, const void* aTuple )
+                            {
+                                Transform transform = aNode->GetLocalTransform();
+                                Vector3 rotation = transform.GetRotation().GetEuler();
+                                rotation[0] = *reinterpret_cast<const float*> ( aTuple );
+                                transform.SetRotation ( Quaternion::GetFromEuler ( rotation ) );
+                                aNode->SetGlobalTransform ( transform );
+                            },
                             [] ( const Node * aNode, void* aTuple )
                             {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation() [0];
+                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation().GetEuler() [0];
                             }
                         },
                         {
-                            "GlobalRotationX", "X", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[1] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
+                            "GlobalRotationY", "Roll", "f",
+                            [] ( Node * aNode, const void* aTuple )
+                            {
+                                Transform transform = aNode->GetLocalTransform();
+                                Vector3 rotation = transform.GetRotation().GetEuler();
+                                rotation[1] = *reinterpret_cast<const float*> ( aTuple );
+                                transform.SetRotation ( Quaternion::GetFromEuler ( rotation ) );
+                                aNode->SetGlobalTransform ( transform );
+                            },
                             [] ( const Node * aNode, void* aTuple )
                             {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation() [1];
+                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation().GetEuler() [1];
                             }
                         },
                         {
-                            "GlobalRotationY", "Y", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[2] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
+                            "GlobalRotationZ", "Yaw", "f",
+                            [] ( Node * aNode, const void* aTuple )
+                            {
+                                Transform transform = aNode->GetLocalTransform();
+                                Vector3 rotation = transform.GetRotation().GetEuler();
+                                rotation[2] = *reinterpret_cast<const float*> ( aTuple );
+                                transform.SetRotation ( Quaternion::GetFromEuler ( rotation ) );
+                                aNode->SetGlobalTransform ( transform );
+                            },
                             [] ( const Node * aNode, void* aTuple )
                             {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation() [2];
-                            }
-                        },
-                        {
-                            "GlobalRotationZ", "Z", "f",
-                            [] ( Node * aNode, const void* aTuple ) {Transform transform = aNode->GetGlobalTransform(); Quaternion rotation = transform.GetRotation(); rotation[3] = *reinterpret_cast<const float*> ( aTuple ); transform.SetRotation ( rotation ); aNode->SetGlobalTransform ( transform );},
-                            [] ( const Node * aNode, void* aTuple )
-                            {
-                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation() [3];
+                                *reinterpret_cast<float*> ( aTuple )  = aNode->GetGlobalTransform().GetRotation().GetEuler() [2];
                             }
                         }
                     }
