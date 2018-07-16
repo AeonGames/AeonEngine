@@ -58,16 +58,6 @@ namespace AeonGames
         void FinalizeDescriptorPool();
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
-
-        const VkSwapchainKHR& GetSwapchain() const;
-        uint32_t GetWidth() const;
-        uint32_t GetHeight() const;
-        const uint32_t& GetActiveImageIndex() const;
-        const VkFramebuffer& GetActiveFrameBuffer() const;
-        void AcquireNextImage();
-        const VkViewport& GetViewport() const;
-        const VkRect2D& GetScissor() const;
-
         void* mWindowId{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;

@@ -88,9 +88,8 @@ namespace AeonGames
 
     EngineWindow::~EngineWindow()
     {
-        // Force model deletion
-        stop();
         mWindow.reset();
+        stop();
     }
 
     void EngineWindow::stop()
@@ -161,7 +160,7 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        if ( aResizeEvent->size().width() && aResizeEvent->size().height() )
+        if ( mWindow && aResizeEvent->size().width() && aResizeEvent->size().height() )
         {
             mWindow->ResizeViewport ( aResizeEvent->size().width(), aResizeEvent->size().height() );
             static const QMatrix4x4 flipMatrix (
