@@ -56,7 +56,7 @@ namespace AeonGames
         return mWindowId;
     }
 
-    void OpenGLWindow::ResizeViewport ( uint32_t aWidth, uint32_t aHeight )
+    void OpenGLWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         if ( aWidth && aHeight )
         {
@@ -71,7 +71,7 @@ namespace AeonGames
                              static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
 #endif
-            glViewport ( 0, 0, aWidth, aHeight );
+            glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }

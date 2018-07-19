@@ -28,7 +28,7 @@ namespace AeonGames
     {
     public:
         DLL virtual ~Window() = 0;
-        virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         ///@name Render Functions
         ///@{
         virtual void BeginRender() const = 0;
