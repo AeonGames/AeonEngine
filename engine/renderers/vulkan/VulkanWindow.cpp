@@ -24,6 +24,7 @@ limitations under the License.
 #include <algorithm>
 #include <array>
 #include <utility>
+#include <cstring>
 #include "aeongames/Frustum.h"
 #include "aeongames/Material.h"
 #include "aeongames/Pipeline.h"
@@ -69,20 +70,6 @@ namespace AeonGames
     void VulkanWindow::InitializeSurface()
     {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
-        RECT rect;
-        GetClientRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
-        mVkViewport.x = 0.0f;
-        mVkViewport.y = 0.0f;
-        mVkViewport.width = static_cast<float> ( rect.right );
-        mVkViewport.height = static_cast<float> ( rect.bottom );
-        mVkViewport.minDepth = 0.0f;
-        mVkViewport.maxDepth = 1.0f;
-
-        mVkScissor.offset.x = 0;
-        mVkScissor.offset.y = 0;
-        mVkScissor.extent.width = rect.right;
-        mVkScissor.extent.height = rect.bottom;
-
         VkWin32SurfaceCreateInfoKHR win32_surface_create_info_khr {};
         win32_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         win32_surface_create_info_khr.hwnd = reinterpret_cast<HWND> ( mWindowId );
@@ -364,31 +351,25 @@ namespace AeonGames
         FinalizeSurface();
     }
 
-    void VulkanWindow::ResizeViewport ( uint32_t aWidth, uint32_t aHeight )
+    void VulkanWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
-        if ( ( aWidth && aHeight ) &&
-             ( mVkScissor.extent.width != aWidth ||
-               mVkScissor.extent.height != aHeight ) )
+        VkSurfaceCapabilitiesKHR surface_capabilities{};
+        VkResult result {vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_capabilities ) };
+        if ( !result && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) )
         {
-            if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) )
+            if ( ( result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) ) )
             {
                 std::ostringstream stream;
                 stream << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
-            if ( VkResult result = vkDeviceWaitIdle ( mVulkanRenderer.GetDevice() ) )
+            if ( ( result = vkDeviceWaitIdle ( mVulkanRenderer.GetDevice() ) ) )
             {
                 std::ostringstream stream;
                 stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
                 throw std::runtime_error ( stream.str().c_str() );
             }
-
-            mVkViewport.width = static_cast<float> ( aWidth );
-            mVkViewport.height = static_cast<float> ( aHeight );
-            mVkScissor.extent.width = aWidth;
-            mVkScissor.extent.height = aHeight;
-
             FinalizeFrameBuffers();
             FinalizeDepthStencil();
             FinalizeImageViews();
@@ -397,6 +378,14 @@ namespace AeonGames
             InitializeDepthStencil();
             InitializeFrameBuffers();
         }
+        mVkViewport.x = static_cast<float> ( aX );
+        mVkViewport.y = static_cast<float> ( aY );
+        mVkViewport.width = static_cast<float> ( aWidth );
+        mVkViewport.height = static_cast<float> ( aHeight );
+        mVkScissor.offset.x = aX;
+        mVkScissor.offset.y = aY;
+        mVkScissor.extent.width = aWidth;
+        mVkScissor.extent.height = aHeight;
     }
 
     void VulkanWindow::BeginRender() const
@@ -445,8 +434,8 @@ namespace AeonGames
         vkCmdSetViewport ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mVkViewport );
         vkCmdSetScissor ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mVkScissor );
 
-        VkRect2D render_area{ { 0, 0 }, { mVkScissor.extent.width, mVkScissor.extent.height } };
-        /* [1] is depth/stencil [0] is color.*/
+        /* [0] is color, [1] is depth/stencil.*/
+        /**@todo Allow for changing the clear values.*/
         std::array<VkClearValue, 2> clear_values{ { { {{0}} }, { {{0}} } } };
         clear_values[0].color.float32[0] = 0.5f;
         clear_values[0].color.float32[1] = 0.5f;
@@ -459,7 +448,7 @@ namespace AeonGames
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_begin_info.renderPass = mVulkanRenderer.GetRenderPass();
         render_pass_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
-        render_pass_begin_info.renderArea = render_area;
+        render_pass_begin_info.renderArea = mVkScissor;
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVulkanRenderer.GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
