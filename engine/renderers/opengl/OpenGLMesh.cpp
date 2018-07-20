@@ -39,8 +39,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMesh::OpenGLMesh ( const Mesh& aMesh, const std::shared_ptr<const OpenGLRenderer>& aOpenGLRenderer ) :
-        mMesh ( aMesh )
+    OpenGLMesh::OpenGLMesh ( const Mesh& aMesh, const OpenGLRenderer& aOpenGLRenderer ) : mMesh ( aMesh ), mOpenGLRenderer ( aOpenGLRenderer )
     {
         try
         {

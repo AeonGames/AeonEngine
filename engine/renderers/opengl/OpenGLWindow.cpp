@@ -32,7 +32,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLWindow::OpenGLWindow ( void* aWindowId, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer ) :
+    OpenGLWindow::OpenGLWindow ( void* aWindowId, const OpenGLRenderer&  aOpenGLRenderer ) :
         mOpenGLRenderer ( aOpenGLRenderer ), mWindowId ( aWindowId )
     {
         try
@@ -62,7 +62,7 @@ namespace AeonGames
         {
 #ifdef WIN32
             HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
-            wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+            wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
             ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
@@ -84,7 +84,7 @@ namespace AeonGames
             throw std::runtime_error ( "BeginRender call without a previous EndRender call." );
         }
         mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );
-        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #else
         ( void ) mDeviceContext;
@@ -192,10 +192,6 @@ namespace AeonGames
 
     void OpenGLWindow::Initialize()
     {
-        if ( !mOpenGLRenderer )
-        {
-            throw std::runtime_error ( "Pointer to OpenGL Renderer is nullptr." );
-        }
 #if _WIN32
         HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
         PIXELFORMATDESCRIPTOR pfd{};
@@ -208,7 +204,7 @@ namespace AeonGames
         pfd.iLayerType = PFD_MAIN_PLANE;
         int pf = ChoosePixelFormat ( hdc, &pfd );
         SetPixelFormat ( hdc, pf, &pfd );
-        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer->GetOpenGLContext() ) );
+        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
         ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
         RECT rect;
         GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );

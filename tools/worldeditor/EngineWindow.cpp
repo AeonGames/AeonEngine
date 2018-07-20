@@ -174,7 +174,7 @@ namespace AeonGames
             mProjectionMatrix.frustum ( -half_radius, half_radius, 0.5, -0.5, 1, 1600 );
             mProjectionMatrix = mProjectionMatrix * flipMatrix;
             mWindow->SetProjectionMatrix ( mProjectionMatrix.constData() );
-            // Calculate frustum half vertical angle (for fitting models into frustum)
+            // Calculate frustum half vertical angle (for fitting nodes into frustum)
             float v1[2] = { 1, 0 };
             float v2[2] = { 1, half_radius };
             float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );

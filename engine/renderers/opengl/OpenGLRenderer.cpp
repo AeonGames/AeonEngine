@@ -41,12 +41,12 @@ namespace AeonGames
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<OpenGLWindow> ( aWindowId, shared_from_this() );
+        return std::make_unique<OpenGLWindow> ( aWindowId, *this );
     }
 
     void OpenGLRenderer::LoadRenderMesh ( const Mesh & aMesh ) const
     {
-        aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, shared_from_this() ) );
+        aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, *this ) );
     }
 
     void OpenGLRenderer::UnloadRenderMesh ( const Mesh & aMesh ) const
@@ -56,7 +56,7 @@ namespace AeonGames
 
     void OpenGLRenderer::LoadRenderPipeline ( const Pipeline & aPipeline ) const
     {
-        aPipeline.SetRenderPipeline ( std::make_unique<OpenGLPipeline> ( aPipeline, shared_from_this() ) );
+        aPipeline.SetRenderPipeline ( std::make_unique<OpenGLPipeline> ( aPipeline, *this ) );
     }
 
     void OpenGLRenderer::UnloadRenderPipeline ( const Pipeline & aPipeline ) const

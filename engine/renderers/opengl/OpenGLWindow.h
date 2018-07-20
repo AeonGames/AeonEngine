@@ -29,7 +29,7 @@ namespace AeonGames
     class OpenGLWindow : public Window
     {
     public:
-        OpenGLWindow ( void* aWindowId, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer );
+        OpenGLWindow ( void* aWindowId, const OpenGLRenderer&  aOpenGLRenderer );
         ~OpenGLWindow() final;
         void* GetWindowId() const;
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
@@ -47,7 +47,7 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
+        const OpenGLRenderer& mOpenGLRenderer;
         void* mWindowId{};
         mutable void* mDeviceContext{};
         GLuint mMatricesBuffer{};

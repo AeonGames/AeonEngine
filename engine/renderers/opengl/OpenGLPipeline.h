@@ -28,7 +28,7 @@ namespace AeonGames
     class OpenGLPipeline : public Pipeline::IRenderPipeline
     {
     public:
-        OpenGLPipeline ( const Pipeline& aPipeline, const std::shared_ptr<const OpenGLRenderer>&  aOpenGLRenderer );
+        OpenGLPipeline ( const Pipeline& aPipeline, const OpenGLRenderer&  aOpenGLRenderer );
         ~OpenGLPipeline() final;
         void Use ( const OpenGLMaterial& aMaterial ) const;
         GLenum GetTopology() const;
@@ -36,7 +36,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         const Pipeline& mPipeline;
-        std::shared_ptr<const OpenGLRenderer> mOpenGLRenderer;
+        const OpenGLRenderer& mOpenGLRenderer;
         uint32_t mProgramId{};
     };
 }
