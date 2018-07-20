@@ -32,7 +32,7 @@ namespace AeonGames
     class OpenGLPipeline;
     class OpenGLModel;
     class OpenGLMaterial;
-    class OpenGLRenderer : public Renderer, public std::enable_shared_from_this<OpenGLRenderer>
+    class OpenGLRenderer : public Renderer
     {
     public:
         OpenGLRenderer();
