@@ -18,11 +18,13 @@ package AeonGames;
 import "transform.proto";
 
 message NodeBuffer {
+    string name = 1;
+    string type = 2;
     oneof transform {
-        TransformBuffer local = 1;
-        TransformBuffer global = 2;
+        TransformBuffer local = 3;
+        TransformBuffer global = 4;
     }
-    repeated NodeBuffer node = 3;
+    repeated NodeBuffer node = 5;
 }
 
 message SceneBuffer{
