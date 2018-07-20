@@ -26,7 +26,6 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Memory.h"
-#include "aeongames/DependencyMap.h"
 #include "aeongames/CRC.h"
 #include "aeongames/Property.h"
 

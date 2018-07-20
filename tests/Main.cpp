@@ -16,9 +16,19 @@ limitations under the License.
 
 #include <iostream>
 #include "gtest/gtest.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include <google/protobuf/stubs/common.h>
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 int main ( int argc, char **argv )
 {
     testing::InitGoogleTest ( &argc, argv );
-    return RUN_ALL_TESTS();
+    int result = RUN_ALL_TESTS();
+    google::protobuf::ShutdownProtobufLibrary();
+    return result;
 }
