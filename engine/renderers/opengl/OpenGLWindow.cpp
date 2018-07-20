@@ -66,9 +66,9 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
 #else
-            glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+            glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                              reinterpret_cast<::Window> ( mWindowId ),
-                             static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
+                             static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
 #endif
             glViewport ( aX, aY, aWidth, aHeight );
@@ -88,9 +88,9 @@ namespace AeonGames
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #else
         ( void ) mDeviceContext;
-        glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+        glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ),
-                         static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) );
+                         static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
 
@@ -125,7 +125,7 @@ namespace AeonGames
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
         mDeviceContext = nullptr;
 #else
-        glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+        glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ) );
 #endif
     }
@@ -212,19 +212,19 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 #else
         XWindowAttributes x_window_attributes {};
-        XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+        XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                                reinterpret_cast<::Window> ( mWindowId ), &x_window_attributes );
         std::cout << "Visual " << x_window_attributes.visual <<
-                  " Default " << DefaultVisual ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
-                          DefaultScreen ( static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ) ) ) << std::endl;
+                  " Default " << DefaultVisual ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
+                          DefaultScreen ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ) ) ) << std::endl;
         XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
         {
             std::cout << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
             return 0;
         } );
-        if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer->GetWindowId() ),
+        if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                                 reinterpret_cast<::Window> ( mWindowId ),
-                                static_cast<GLXContext> ( mOpenGLRenderer->GetOpenGLContext() ) ) )
+                                static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
         {
             std::ostringstream stream;
             stream << "Failed to make OpenGL current to XWindow. Error: ";
