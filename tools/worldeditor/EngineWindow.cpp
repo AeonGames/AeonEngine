@@ -162,8 +162,8 @@ namespace AeonGames
     {
         if ( mWindow && aResizeEvent->size().width() && aResizeEvent->size().height() )
         {
-            QMargins frame_margins{frameMargins() };
-            mWindow->ResizeViewport ( frame_margins.left(), frame_margins.top(), aResizeEvent->size().width(), aResizeEvent->size().height() );
+            QRect rect{ geometry() };
+            mWindow->ResizeViewport ( rect.x(), rect.y(), rect.width(), rect.height() );
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 1.0f, 0.0f,
