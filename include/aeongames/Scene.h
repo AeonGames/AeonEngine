@@ -70,7 +70,7 @@ namespace AeonGames
         DLL void RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
         /** @copydoc Node::RecursiveTraverseDFSPostOrder(std::function<void(const Node*&) > aAction)*/
         DLL void RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction );
-        DLL std::string Serialize ( bool aAsBinary ) const;
+        DLL std::string Serialize ( bool aAsBinary = true ) const;
         // Deleted Methods (avoid copy and copy construction)
         Scene& operator= ( const Scene& ) = delete;
         Scene ( const Scene& ) = delete;

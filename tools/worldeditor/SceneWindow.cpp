@@ -17,6 +17,7 @@ limitations under the License.
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
 #include <QMenu>
+#include <fstream>
 #include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
@@ -38,9 +39,6 @@ namespace AeonGames
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
         propertiesTreeView->setModel ( &mNodeModel );
-        actionAddNode->setIcon ( QIcon ( ":/icons/icon_node" ) );
-        sceneTreeView->addAction ( actionAddNode );
-        sceneTreeView->addAction ( actionRemoveNode );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
         EnumerateNodeConstructors ( [this] ( const std::string & aNodeConstructor )
         {
@@ -63,13 +61,6 @@ namespace AeonGames
     SceneWindow::~SceneWindow()
         = default;
 
-    void SceneWindow::on_actionAddNode_triggered()
-    {
-        QModelIndex index = sceneTreeView->currentIndex();
-        mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index );
-        sceneTreeView->expand ( index );
-    }
-
     void SceneWindow::on_actionRemoveNode_triggered()
     {
         QModelIndex index = sceneTreeView->currentIndex();
@@ -80,7 +71,6 @@ namespace AeonGames
     {
         QList<QAction *> actions;
         QModelIndex index = sceneTreeView->indexAt ( aPoint );
-        actions.append ( actionAddNode );
         actions.append ( mNodeAddActions );
         if ( index.isValid() )
         {
@@ -100,5 +90,15 @@ namespace AeonGames
             }
         }
         mNodeModel.SetNode ( nullptr );
+    }
+    void SceneWindow::Open ( const std::string& mFilename )
+    {
+    }
+    void SceneWindow::Save ( const std::string& mFilename ) const
+    {
+        std::string scene = mSceneModel.GetScene().Serialize ( false );
+        std::ofstream scene_file ( mFilename, std::ifstream::out );
+        scene_file.write ( scene.data(), scene.size() );
+        scene_file.close();
     }
 }

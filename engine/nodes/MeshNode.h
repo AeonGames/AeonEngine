@@ -18,12 +18,14 @@ limitations under the License.
 #include "aeongames/Node.h"
 namespace AeonGames
 {
+    class NodeBuffer;
     class Mesh;
     class MeshNode : public Node
     {
     public:
         MeshNode();
         ~MeshNode() final;
+        const std::string& GetType() const final;
         const std::vector<std::reference_wrapper<Node::Property>>& GetProperties() const final;
     private:
         Mesh* mMesh{nullptr};

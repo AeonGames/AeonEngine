@@ -30,6 +30,15 @@ limitations under the License.
 #include "aeongames/AABB.h"
 #include "Factory.h"
 #include "aeongames/CRC.h"
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "scene.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
@@ -175,6 +184,28 @@ namespace AeonGames
     const std::string& Node::GetName() const
     {
         return mName;
+    }
+
+    const std::string& Node::GetType() const
+    {
+        const static std::string type ( "Node" );
+        return type;
+    }
+
+    void Node::Serialize ( NodeBuffer* aNodeBuffer ) const
+    {
+        *aNodeBuffer->mutable_name() = GetName();
+        *aNodeBuffer->mutable_type() = GetType();
+        aNodeBuffer->mutable_local()->mutable_scale()->set_x ( GetLocalTransform().GetScale() [0] );
+        aNodeBuffer->mutable_local()->mutable_scale()->set_y ( GetLocalTransform().GetScale() [1] );
+        aNodeBuffer->mutable_local()->mutable_scale()->set_z ( GetLocalTransform().GetScale() [2] );
+        aNodeBuffer->mutable_local()->mutable_rotation()->set_w ( GetLocalTransform().GetRotation() [0] );
+        aNodeBuffer->mutable_local()->mutable_rotation()->set_x ( GetLocalTransform().GetRotation() [1] );
+        aNodeBuffer->mutable_local()->mutable_rotation()->set_y ( GetLocalTransform().GetRotation() [2] );
+        aNodeBuffer->mutable_local()->mutable_rotation()->set_z ( GetLocalTransform().GetRotation() [3] );
+        aNodeBuffer->mutable_local()->mutable_translation()->set_x ( GetLocalTransform().GetTranslation() [0] );
+        aNodeBuffer->mutable_local()->mutable_translation()->set_y ( GetLocalTransform().GetTranslation() [1] );
+        aNodeBuffer->mutable_local()->mutable_translation()->set_z ( GetLocalTransform().GetTranslation() [2] );
     }
 
     bool Node::Insert ( size_t aIndex, Node* aNode )
