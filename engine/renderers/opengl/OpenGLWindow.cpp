@@ -208,7 +208,7 @@ namespace AeonGames
         ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
         RECT rect;
         GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
-        glViewport ( 0, 0, rect.right, rect.bottom );
+        glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
 #else
         XWindowAttributes x_window_attributes {};
@@ -226,9 +226,7 @@ namespace AeonGames
                                 reinterpret_cast<::Window> ( mWindowId ),
                                 static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
         {
-            std::ostringstream stream;
-            stream << "Failed to make OpenGL current to XWindow. Error: ";
-            throw std::runtime_error ( stream.str().c_str() );
+            throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
         XSetErrorHandler ( nullptr );
 #endif
