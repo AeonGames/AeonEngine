@@ -31,6 +31,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class NodeBuffer;
     class Renderer;
     class Scene;
     class ModelInstance;
@@ -56,6 +57,8 @@ namespace AeonGames
         DLL virtual ~Node();
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
+        DLL virtual const std::string& GetType() const;
+        DLL virtual void Serialize ( NodeBuffer* aNodeBuffer ) const;
         /** Enables or disables a set of node flags.
         @param aFlagBits Flag bits to enable/disable.
         @param aEnabled true to enable, false to disable.

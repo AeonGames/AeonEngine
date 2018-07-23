@@ -54,9 +54,9 @@ namespace AeonGames
     void MainWindow::on_actionOpen_triggered()
     {
         QString filename = QFileDialog::getOpenFileName ( this,
-                           tr ( "Open Model" ),
+                           tr ( "Open Scene" ),
                            tr ( "" ),
-                           tr ( "Model Files (*.mdl *.txt)" ) );
+                           tr ( "Scene Files (*.scn *.txt)" ) );
         if ( ! ( filename.isEmpty() || filename.isNull() ) )
         {
             QFileInfo fileinfo ( filename );
@@ -69,6 +69,28 @@ namespace AeonGames
             mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
             ///@todo implement Open Scene
             //sceneWindow->setModel ( fileinfo.absoluteFilePath() );
+        }
+    }
+    void MainWindow::on_actionSave_triggered()
+    {
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->currentSubWindow ();
+        if ( !mdiSubWindow )
+        {
+            return;
+        }
+        QString filename = QFileDialog::getSaveFileName ( this,
+                           tr ( "Save Scene" ),
+                           tr ( "" ),
+                           tr ( "Scene Files (*.scn *.txt)" ) );
+        if ( ! ( filename.isEmpty() || filename.isNull() ) )
+        {
+            QFileInfo fileinfo ( filename );
+            SceneWindow* sceneWindow = reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() );
+            if ( sceneWindow )
+            {
+                sceneWindow->Save ( filename.toStdString() );
+            }
         }
     }
 }

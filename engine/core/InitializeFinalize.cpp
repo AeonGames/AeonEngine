@@ -16,6 +16,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/Plugin.h"
+#include "aeongames/Node.h"
 #include "ProtoBufHelpers.h"
 #include <iostream>
 #include <cstdlib>
@@ -117,6 +118,12 @@ namespace AeonGames
             std::cout << "Warning: " << e.what() << std::endl;
         }
         std::cout << "PATH: " << gPath << std::endl;
+
+        RegisterNodeConstructor ( "Node", []()
+        {
+            return std::make_unique<AeonGames::Node>();
+        } );
+
         gPlugInCache.reserve ( gConfigurationBuffer.plugin_size() );
         for ( auto& i : gConfigurationBuffer.plugin() )
         {
@@ -140,6 +147,7 @@ namespace AeonGames
             dlclose ( std::get<0> ( i ) );
 #endif
         }
+        UnregisterNodeConstructor ( "Node" );
         google::protobuf::ShutdownProtobufLibrary();
         gInitialized = false;
     }

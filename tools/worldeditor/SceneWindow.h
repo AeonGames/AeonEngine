@@ -32,8 +32,9 @@ namespace AeonGames
     public:
         SceneWindow ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
         virtual ~SceneWindow();
+        void Open ( const std::string& mFilename );
+        void Save ( const std::string& mFilename ) const;
     private slots:
-        void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
         void on_customContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );

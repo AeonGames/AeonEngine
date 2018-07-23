@@ -271,6 +271,7 @@ namespace AeonGames
     std::string Scene::Serialize ( bool aAsBinary ) const
     {
         static SceneBuffer scene_buffer;
+        *scene_buffer.mutable_name() = mName;
         std::unordered_map<const Node*, NodeBuffer*> node_map;
         LoopTraverseDFSPreOrder (
             [&node_map] ( const Node & node )
@@ -285,16 +286,7 @@ namespace AeonGames
             {
                 node_buffer = scene_buffer.add_node();
             }
-            node_buffer->mutable_local()->mutable_scale()->set_x ( node.GetLocalTransform().GetScale() [0] );
-            node_buffer->mutable_local()->mutable_scale()->set_y ( node.GetLocalTransform().GetScale() [1] );
-            node_buffer->mutable_local()->mutable_scale()->set_z ( node.GetLocalTransform().GetScale() [2] );
-            node_buffer->mutable_local()->mutable_rotation()->set_w ( node.GetLocalTransform().GetRotation() [0] );
-            node_buffer->mutable_local()->mutable_rotation()->set_x ( node.GetLocalTransform().GetRotation() [1] );
-            node_buffer->mutable_local()->mutable_rotation()->set_y ( node.GetLocalTransform().GetRotation() [2] );
-            node_buffer->mutable_local()->mutable_rotation()->set_z ( node.GetLocalTransform().GetRotation() [3] );
-            node_buffer->mutable_local()->mutable_translation()->set_x ( node.GetLocalTransform().GetTranslation() [0] );
-            node_buffer->mutable_local()->mutable_translation()->set_y ( node.GetLocalTransform().GetTranslation() [1] );
-            node_buffer->mutable_local()->mutable_translation()->set_z ( node.GetLocalTransform().GetTranslation() [2] );
+            node.Serialize ( node_buffer );
             node_map.emplace ( std::make_pair ( &node, node_buffer ) );
         } );
         std::stringstream serialization;

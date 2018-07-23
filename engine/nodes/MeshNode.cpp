@@ -16,6 +16,15 @@ limitations under the License.
 #include "MeshNode.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "scene.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
@@ -36,5 +45,11 @@ namespace AeonGames
     const std::vector<std::reference_wrapper<Node::Property>>& MeshNode::GetProperties() const
     {
         return MeshNodePropertyRefs;
+    }
+
+    const std::string& MeshNode::GetType() const
+    {
+        const static std::string type ( "Mesh" );
+        return type;
     }
 }

@@ -115,14 +115,6 @@
     </widget>
    </item>
   </layout>
-  <action name="actionAddNode">
-   <property name="text">
-    <string>Add node</string>
-   </property>
-   <property name="toolTip">
-    <string>Add a child node to this scene or node</string>
-   </property>
-  </action>
   <action name="actionRemoveNode">
    <property name="text">
     <string>Remove node</string>
