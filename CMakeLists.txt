@@ -71,8 +71,8 @@ find_package(Portaudio)
 find_package(OggVorbis)
 include(AeonEngineFunctions)
 include(FindProtobufExp)
-find_package(PythonInterp 3)
 include(FindPythonModule)
+find_package(PythonInterp 3)
 if(PYTHONINTERP_FOUND)
     find_python_module(autopep8)
 endif()
@@ -196,13 +196,13 @@ else()
         COMMAND
             ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt -exec ${SED_EXECUTABLE} -i 's/[ \\t]*$$//' {} \\$<SEMICOLON>
         COMMAND
-            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\"
+            ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\"
         COMMAND
-            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\"
+            ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\"
         COMMAND
-            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm\"
+            ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm\"
         COMMAND
-            ${AUTOPEP8_EXECUTABLE} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_model_mdl\"
+            ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8} --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_model_mdl\"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting Code.")
 endif()
