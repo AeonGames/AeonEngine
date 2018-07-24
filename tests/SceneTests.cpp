@@ -49,6 +49,20 @@ namespace AeonGames
             e.Add ( &l );
             f.Add ( &m );
             f.Add ( &n );
+            a.SetName ( "a" );
+            b.SetName ( "b" );
+            c.SetName ( "c" );
+            d.SetName ( "d" );
+            e.SetName ( "e" );
+            f.SetName ( "f" );
+            g.SetName ( "g" );
+            h.SetName ( "h" );
+            i.SetName ( "i" );
+            j.SetName ( "j" );
+            k.SetName ( "k" );
+            l.SetName ( "l" );
+            m.SetName ( "m" );
+            n.SetName ( "n" );
         }
         virtual void TearDown()
         {
@@ -717,5 +731,27 @@ namespace AeonGames
         local_transform_translation_z_descriptor.Set ( &node, &value );
         local_transform_translation_z_descriptor.Get ( &node, &result );
         EXPECT_EQ ( result, 3.14f );
+    }
+    TEST ( Scene, StoreDispose )
+    {
+        Scene scene;
+        Node* node = scene.StoreNode ( std::make_unique<Node>() );
+        EXPECT_NE ( node, nullptr );
+        std::unique_ptr<Node> unique_ptr_node = scene.DisposeNode ( node );
+        EXPECT_EQ ( unique_ptr_node.get(), node );
+    }
+    TEST_F ( SceneTest, SerializeDeserializeText )
+    {
+        std::string serialized = mScene.Serialize ( false );
+        Scene scene;
+        scene.Deserialize ( serialized );
+        EXPECT_EQ ( scene.Serialize ( false ), serialized );
+    }
+    TEST_F ( SceneTest, SerializeDeserializeBinary )
+    {
+        std::string serialized = mScene.Serialize ();
+        Scene scene;
+        scene.Deserialize ( serialized );
+        EXPECT_EQ ( scene.Serialize(), serialized );
     }
 }

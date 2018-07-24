@@ -31,6 +31,7 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/AABB.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {

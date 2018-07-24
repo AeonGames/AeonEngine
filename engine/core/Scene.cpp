@@ -17,6 +17,7 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/Renderer.h"
+#include "ProtoBufHelpers.h"
 #include <cstring>
 #include <cassert>
 #include <algorithm>
@@ -286,7 +287,7 @@ namespace AeonGames
             {
                 node_buffer = scene_buffer.add_node();
             }
-            node.Serialize ( node_buffer );
+            node.Serialize ( *node_buffer );
             node_map.emplace ( std::make_pair ( &node, node_buffer ) );
         } );
         std::stringstream serialization;
@@ -305,5 +306,57 @@ namespace AeonGames
         }
         scene_buffer.Clear();
         return serialization.str();
+    }
+    void Scene::Deserialize ( const std::string& aSerializedScene )
+    {
+        static SceneBuffer scene_buffer;
+        LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCE" );
+        mName = scene_buffer.name();
+
+        std::unordered_map<const NodeBuffer*, std::tuple<const NodeBuffer*, int, Node*>> node_map;
+        for ( auto &i : scene_buffer.node() )
+        {
+            const NodeBuffer* node = &i;
+            node_map[node] = {nullptr, 0, StoreNode ( ConstructNode ( node->type() ) ) };
+            Add ( std::get<2> ( node_map[node] ) );
+            std::get<2> ( node_map[node] )->Deserialize ( *node );
+            while ( node )
+            {
+                if ( std::get<1> ( node_map[node] ) < node->node().size() )
+                {
+                    const NodeBuffer* prev = node;
+                    node = &node->node ( std::get<1> ( node_map[node] ) );
+                    node_map[node] = {prev, 0, StoreNode ( ConstructNode ( node->type() ) ) };
+                    std::get<2> ( node_map[prev] )->Add ( std::get<2> ( node_map[node] ) );
+                    std::get<2> ( node_map[node] )->Deserialize ( *node );
+                    ++std::get<1> ( node_map[prev] );
+                }
+                else
+                {
+                    std::get<1> ( node_map[node] ) = 0;
+                    node = std::get<0> ( node_map[node] );
+                }
+            }
+        }
+        scene_buffer.Clear();
+    }
+    Node* Scene::StoreNode ( std::unique_ptr<Node> aNode )
+    {
+        mNodeStorage.emplace_back ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() );
+        return mNodeStorage.back().get();
+    }
+    std::unique_ptr<Node> Scene::DisposeNode ( const Node* aNode )
+    {
+        std::unique_ptr<Node> result{};
+        auto i = std::find_if ( mNodeStorage.begin(), mNodeStorage.end(), [aNode] ( const std::unique_ptr<Node>& node )
+        {
+            return aNode == node.get();
+        } );
+        if ( i != mNodeStorage.end() )
+        {
+            result = std::move ( *i );
+            mNodeStorage.erase ( std::remove ( i, mNodeStorage.end(), *i ), mNodeStorage.end() );
+        }
+        return result;
     }
 }

@@ -93,10 +93,16 @@ namespace AeonGames
     }
     void SceneWindow::Open ( const std::string& mFilename )
     {
+        std::ifstream file;
+        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+        file.open ( mFilename, std::ifstream::in | std::ifstream::binary );
+        std::string buffer ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
+        file.close();
+        mSceneModel.Deserialize ( buffer );
     }
     void SceneWindow::Save ( const std::string& mFilename ) const
     {
-        std::string scene = mSceneModel.GetScene().Serialize ( false );
+        std::string scene = mSceneModel.Serialize ( false );
         std::ofstream scene_file ( mFilename, std::ifstream::out );
         scene_file.write ( scene.data(), scene.size() );
         scene_file.close();
