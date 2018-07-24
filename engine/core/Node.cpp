@@ -192,20 +192,71 @@ namespace AeonGames
         return type;
     }
 
-    void Node::Serialize ( NodeBuffer* aNodeBuffer ) const
+    void Node::Serialize ( NodeBuffer& aNodeBuffer ) const
     {
-        *aNodeBuffer->mutable_name() = GetName();
-        *aNodeBuffer->mutable_type() = GetType();
-        aNodeBuffer->mutable_local()->mutable_scale()->set_x ( GetLocalTransform().GetScale() [0] );
-        aNodeBuffer->mutable_local()->mutable_scale()->set_y ( GetLocalTransform().GetScale() [1] );
-        aNodeBuffer->mutable_local()->mutable_scale()->set_z ( GetLocalTransform().GetScale() [2] );
-        aNodeBuffer->mutable_local()->mutable_rotation()->set_w ( GetLocalTransform().GetRotation() [0] );
-        aNodeBuffer->mutable_local()->mutable_rotation()->set_x ( GetLocalTransform().GetRotation() [1] );
-        aNodeBuffer->mutable_local()->mutable_rotation()->set_y ( GetLocalTransform().GetRotation() [2] );
-        aNodeBuffer->mutable_local()->mutable_rotation()->set_z ( GetLocalTransform().GetRotation() [3] );
-        aNodeBuffer->mutable_local()->mutable_translation()->set_x ( GetLocalTransform().GetTranslation() [0] );
-        aNodeBuffer->mutable_local()->mutable_translation()->set_y ( GetLocalTransform().GetTranslation() [1] );
-        aNodeBuffer->mutable_local()->mutable_translation()->set_z ( GetLocalTransform().GetTranslation() [2] );
+        *aNodeBuffer.mutable_name() = GetName();
+        *aNodeBuffer.mutable_type() = GetType();
+        aNodeBuffer.mutable_local()->mutable_scale()->set_x ( GetLocalTransform().GetScale() [0] );
+        aNodeBuffer.mutable_local()->mutable_scale()->set_y ( GetLocalTransform().GetScale() [1] );
+        aNodeBuffer.mutable_local()->mutable_scale()->set_z ( GetLocalTransform().GetScale() [2] );
+        aNodeBuffer.mutable_local()->mutable_rotation()->set_w ( GetLocalTransform().GetRotation() [0] );
+        aNodeBuffer.mutable_local()->mutable_rotation()->set_x ( GetLocalTransform().GetRotation() [1] );
+        aNodeBuffer.mutable_local()->mutable_rotation()->set_y ( GetLocalTransform().GetRotation() [2] );
+        aNodeBuffer.mutable_local()->mutable_rotation()->set_z ( GetLocalTransform().GetRotation() [3] );
+        aNodeBuffer.mutable_local()->mutable_translation()->set_x ( GetLocalTransform().GetTranslation() [0] );
+        aNodeBuffer.mutable_local()->mutable_translation()->set_y ( GetLocalTransform().GetTranslation() [1] );
+        aNodeBuffer.mutable_local()->mutable_translation()->set_z ( GetLocalTransform().GetTranslation() [2] );
+    }
+
+    void Node::Deserialize ( const NodeBuffer& aNodeBuffer )
+    {
+        SetName ( aNodeBuffer.name() );
+        if ( aNodeBuffer.has_local() )
+        {
+            SetLocalTransform (
+            {
+                {
+                    aNodeBuffer.local().scale().x(),
+                    aNodeBuffer.local().scale().y(),
+                    aNodeBuffer.local().scale().z()
+                },
+                {
+                    aNodeBuffer.local().rotation().w(),
+                    aNodeBuffer.local().rotation().x(),
+                    aNodeBuffer.local().rotation().y(),
+                    aNodeBuffer.local().rotation().z()
+                },
+                {
+                    aNodeBuffer.local().translation().x(),
+                    aNodeBuffer.local().translation().y(),
+                    aNodeBuffer.local().translation().z()
+                }
+            }
+            );
+        }
+        else if ( aNodeBuffer.has_global() )
+        {
+            SetGlobalTransform (
+            {
+                {
+                    aNodeBuffer.global().scale().x(),
+                    aNodeBuffer.global().scale().y(),
+                    aNodeBuffer.global().scale().z()
+                },
+                {
+                    aNodeBuffer.global().rotation().w(),
+                    aNodeBuffer.global().rotation().x(),
+                    aNodeBuffer.global().rotation().y(),
+                    aNodeBuffer.global().rotation().z()
+                },
+                {
+                    aNodeBuffer.global().translation().x(),
+                    aNodeBuffer.global().translation().y(),
+                    aNodeBuffer.global().translation().z()
+                }
+            }
+            );
+        }
     }
 
     bool Node::Insert ( size_t aIndex, Node* aNode )

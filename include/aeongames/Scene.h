@@ -71,14 +71,27 @@ namespace AeonGames
         /** @copydoc Node::RecursiveTraverseDFSPostOrder(std::function<void(const Node*&) > aAction)*/
         DLL void RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction );
         DLL std::string Serialize ( bool aAsBinary = true ) const;
+        DLL void Deserialize ( const std::string& aSerializedScene );
+        DLL Node* StoreNode ( std::unique_ptr<Node> aNode );
+        DLL std::unique_ptr<Node> DisposeNode ( const Node* aNode );
         // Deleted Methods (avoid copy and copy construction)
         Scene& operator= ( const Scene& ) = delete;
         Scene ( const Scene& ) = delete;
     private:
         friend class Node;
-        std::string mName;
-        std::vector<Node*> mNodes;
+        std::string mName{};
+        /// Child Nodes
+        std::vector<Node*> mNodes{};
+        /** Local Node Storage
+         * This is a storage space for nodes
+         * owned by the scene, such as deserialized
+         * nodes as well as any nodes requested from
+         * the scene, or moved to the scene.
+         * It does not necesarily contains a pointer to all
+         * nodes in the tree, nor does a pointer existing
+         * here means it exists as part of the tree.
+        */
+        std::vector<std::unique_ptr<Node>> mNodeStorage{};
     };
 }
 #endif
-

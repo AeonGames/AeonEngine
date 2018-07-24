@@ -294,13 +294,11 @@ namespace AeonGames
         beginInsertRows ( parent, row, row );
         if ( parent.isValid() )
         {
-            mNodes.emplace_back ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() );
-            reinterpret_cast<Node*> ( parent.internalPointer() )->Insert ( row, mNodes.back().get() );
+            reinterpret_cast<Node*> ( parent.internalPointer() )->Insert ( row, mScene.StoreNode ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() ) );
         }
         else
         {
-            mNodes.emplace_back ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() );
-            mScene.Insert ( row, mNodes.back().get() );
+            mScene.Insert ( row, mScene.StoreNode ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() ) );
         }
         endInsertRows();
     }
@@ -312,21 +310,27 @@ namespace AeonGames
         {
             Node* node = reinterpret_cast<Node*> ( parent.internalPointer() )->GetChild ( row );
             reinterpret_cast<Node*> ( parent.internalPointer() )->RemoveByIndex ( row );
-            mNodes.erase ( std::remove_if ( mNodes.begin(), mNodes.end(), [node] ( const std::unique_ptr<Node>& aNode )
-            {
-                return aNode.get() == node;
-            } ), mNodes.end() );
+            mScene.DisposeNode ( node );
         }
         else
         {
             Node* node = mScene.GetChild ( row );
             mScene.RemoveByIndex ( row );
-            mNodes.erase ( std::remove_if ( mNodes.begin(), mNodes.end(), [node] ( const std::unique_ptr<Node>& aNode )
-            {
-                return aNode.get() == node;
-            } ), mNodes.end() );
+            mScene.DisposeNode ( node );
         }
         endRemoveRows();
+    }
+
+    std::string SceneModel::Serialize ( bool aAsBinary ) const
+    {
+        return mScene.Serialize ( aAsBinary );
+    }
+
+    void SceneModel::Deserialize ( const std::string& aSerializedScene )
+    {
+        beginResetModel();
+        mScene.Deserialize ( aSerializedScene );
+        endResetModel();
     }
 
     const Scene& SceneModel::GetScene() const

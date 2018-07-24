@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Memory.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
@@ -48,10 +49,11 @@ namespace AeonGames
         //@}
         void InsertNode ( int row, const QModelIndex & parent = QModelIndex(), std::unique_ptr<Node> aNode = {} );
         void RemoveNode ( int row, const QModelIndex & parent = QModelIndex() );
+        std::string Serialize ( bool aAsBinary = true ) const;
+        void Deserialize ( const std::string& aSerializedScene );
         const Scene& GetScene() const;
     private:
         Scene mScene{};
-        std::vector<std::unique_ptr<Node>> mNodes;
     };
 }
 #endif

@@ -27,6 +27,7 @@ limitations under the License.
 
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 #include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
