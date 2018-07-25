@@ -317,7 +317,7 @@ namespace AeonGames
         for ( auto &i : scene_buffer.node() )
         {
             const NodeBuffer* node = &i;
-            node_map[node] = {nullptr, 0, StoreNode ( ConstructNode ( node->type() ) ) };
+            node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {nullptr, 0, StoreNode ( ConstructNode ( node->type() ) ) };
             Add ( std::get<2> ( node_map[node] ) );
             std::get<2> ( node_map[node] )->Deserialize ( *node );
             while ( node )
@@ -326,7 +326,7 @@ namespace AeonGames
                 {
                     const NodeBuffer* prev = node;
                     node = &node->node ( std::get<1> ( node_map[node] ) );
-                    node_map[node] = {prev, 0, StoreNode ( ConstructNode ( node->type() ) ) };
+                    node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {prev, 0, StoreNode ( ConstructNode ( node->type() ) ) };
                     std::get<2> ( node_map[prev] )->Add ( std::get<2> ( node_map[node] ) );
                     std::get<2> ( node_map[node] )->Deserialize ( *node );
                     ++std::get<1> ( node_map[prev] );
