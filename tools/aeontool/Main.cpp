@@ -31,6 +31,7 @@ limitations under the License.
 #include <cstdint>
 #include "Convert.h"
 #include "PipelineTool.h"
+#include "Pack.h"
 
 int main ( int argc, char *argv[] )
 {
@@ -39,6 +40,7 @@ int main ( int argc, char *argv[] )
     {
         { "convert", [] { return std::make_unique<AeonGames::Convert>(); } },
         { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
+        { "pack", [] { return std::make_unique<AeonGames::Pack>(); } }
     };
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
