@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h)
-set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp)
+set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h Pack.h)
+set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp Pack.cpp)
 
 include_directories(
  ${PROTOBUF_INCLUDE_DIR}
@@ -23,7 +23,7 @@ include_directories(
 )
 
 add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
-target_link_libraries(aeontool ProtoBufClasses AeonEngine)
+target_link_libraries(aeontool ProtoBufClasses AeonEngine ${ZLIB_LIBRARIES})
 if(MSVC)
     set_target_properties(aeontool PROPERTIES
         COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
@@ -34,4 +34,3 @@ elseif(UNIX)
     set_target_properties(aeontool PROPERTIES
         COMPILE_FLAGS "-Wall")
 endif()
-
