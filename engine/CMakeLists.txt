@@ -59,7 +59,9 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h
+)
 
 set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.h
@@ -113,6 +115,7 @@ set(ENGINE_CORE_SOURCES
     core/CRC.cpp
     core/Scene.cpp
     core/Node.cpp
+    core/Package.cpp
     )
 
 set(ENGINE_MATH_SOURCES
@@ -153,17 +156,17 @@ if(MSVC)
         COMPILE_FLAGS "-FIaeongames/ProtoBufClasses.h -WX -D_CRT_SECURE_NO_WARNINGS")
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX")
-    target_link_libraries(AeonEngine ProtoBufClasses)
+    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses)
 elseif(MINGW OR MSYS)
     set_target_properties(ProtoBufClasses PROPERTIES
         COMPILE_FLAGS "-include aeongames/ProtoBufClasses.h -Wall -Werror -Wfatal-errors")
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-Wall -Werror -Wfatal-errors -DNOMINMAX")
-    target_link_libraries(AeonEngine ${PROTOBUF_LIBRARIES} ProtoBufClasses)
+    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ${PROTOBUF_LIBRARIES} ProtoBufClasses)
 elseif(UNIX)
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
-    target_link_libraries(AeonEngine ProtoBufClasses dl)
+    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses dl)
 endif()
 
 if(USE_CLANG_TIDY)

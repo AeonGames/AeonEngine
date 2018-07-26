@@ -38,7 +38,7 @@ extern "C"
     PLUGIN PluginModuleInterface PMI =
     {
         "OpenGL Renderer",
-        "Implements an OpenGL 3.2 Renderer",
+        "Implements an OpenGL 4.5 Renderer",
         OpenGLStartUp,
         OpenGLShutdown
     };
