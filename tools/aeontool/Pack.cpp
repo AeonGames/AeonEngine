@@ -164,19 +164,19 @@ namespace AeonGames
                 else if ( S_ISREG ( file_stat.st_mode ) )
                 {
                     std::string filepath = path + directory_entry->d_name;
-                    uint32_t filepathcrc = CRC32 ( reinterpret_cast<const uint8_t*> ( filepath.c_str() ), static_cast<uint32_t> ( filepath.length() ) );
-                    string_table[filepathcrc] = filepath;
-                    directory[filepathcrc].path = filepathcrc;
-                    directory[filepathcrc].uncompressed_size = file_stat.st_size; //(wfd.nFileSizeHigh * (MAXDWORD+1)) + wfd.nFileSizeLow;
-                    directory[filepathcrc].compressed_size = directory[filepathcrc].uncompressed_size;
-                    directory[filepathcrc].extension_offset = filepath.rfind ( '.' );
-                    if ( directory[filepathcrc].extension_offset != std::string::npos )
+                    uint32_t filepathcrc = crc32i ( filepath.c_str(), filepath.length() );
+                    mStringTable[filepathcrc] = filepath;
+                    mDirectory[filepathcrc].path = filepathcrc;
+                    mDirectory[filepathcrc].uncompressed_size = file_stat.st_size; //(wfd.nFileSizeHigh * (MAXDWORD+1)) + wfd.nFileSizeLow;
+                    mDirectory[filepathcrc].compressed_size = mDirectory[filepathcrc].uncompressed_size;
+                    mDirectory[filepathcrc].extension_offset = filepath.rfind ( '.' );
+                    if ( mDirectory[filepathcrc].extension_offset != std::string::npos )
                     {
-                        ++directory[filepathcrc].extension_offset;
+                        ++mDirectory[filepathcrc].extension_offset;
                     }
                     else
                     {
-                        directory[filepathcrc].extension_offset = 0;
+                        mDirectory[filepathcrc].extension_offset = 0;
                     }
                 }
             }
@@ -312,7 +312,7 @@ namespace AeonGames
         sprintf ( path_buffer, "%s", mInputPath.c_str() );
         sprintf ( file_buffer, "%s", mInputPath.c_str() );
         path = dirname ( path_buffer );
-        file = mBaseName ( file_buffer );
+        file = basename ( file_buffer );
         if ( mOutputFile.empty() )
         {
             mOutputFile = path;
