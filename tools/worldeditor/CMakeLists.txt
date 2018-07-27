@@ -54,6 +54,7 @@ set(WORLDEDITOR_UI
     ui/SceneWindow.ui
     ui/RendererSelectDialog.ui
     ui/SettingsDialog.ui
+    ui/ResourcesDialog.ui
     )
 
 
