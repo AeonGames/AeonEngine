@@ -57,6 +57,7 @@ namespace AeonGames
         if ( !aBuffer && !aBufferSize )
         {
             throw std::runtime_error ( "Cannot initialize mesh object with null data." );
+            return;
         }
         try
         {

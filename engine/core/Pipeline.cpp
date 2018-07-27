@@ -91,6 +91,7 @@ namespace AeonGames
         if ( !aBuffer && !aBufferSize )
         {
             throw std::runtime_error ( "Cannot initialize pipeline object with null data." );
+            return;
         }
         try
         {
