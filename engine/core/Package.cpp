@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <cstring>
 #include <cstdio>
+#include <cstdlib>
 #include <cassert>
 #include "zlib.h"
 #include "aeongames/Package.h"
