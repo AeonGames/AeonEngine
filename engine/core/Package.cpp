@@ -18,6 +18,9 @@ limitations under the License.
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <iostream>
+#include <stdexcept>
+#include <sstream>
 #include "zlib.h"
 #include "aeongames/Package.h"
 #include "aeongames/CRC.h"
@@ -100,8 +103,19 @@ namespace AeonGames
         return 0;
     }
 
-    Package::Package() : mHeader{}, mHandle{}, mDirectory{}, mStringTable{}
+    Package::Package ( const std::string& aPath ) : mPath{aPath}, mHeader{}, mHandle{}, mDirectory{}, mStringTable{}
     {
+        struct stat path_stats {};
+        if ( ::stat ( mPath.c_str(), &path_stats ) != 0 )
+        {
+            std::ostringstream stream;
+            stream << "Path not found: ( " << mPath << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        if ( S_ISDIR ( path_stats.st_mode ) )
+        {
+            std::cout << mPath << " is a directory" << std::endl;
+        }
     }
 
     Package::~Package()
@@ -109,19 +123,22 @@ namespace AeonGames
         Close();
     }
 
-    bool Package::Open ( const char* filename )
+    void Package::Open()
     {
-        Close();
-        if ( ( mHandle = fopen ( filename, "rb" ) ) == nullptr )
+        if ( mHandle )
         {
-            //AEONGAMES_LOG_ERROR ( "Could not open file %s", filename );
-            return false;
+            throw std::runtime_error ( "File already open" );
+        }
+        if ( ( mHandle = fopen ( mPath.c_str(), "rb" ) ) == nullptr )
+        {
+            std::ostringstream stream;
+            stream << "Could not open file: ( " << mPath << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
         fread ( &mHeader, sizeof ( PKGHeader ), 1, mHandle );
         if ( strncmp ( mHeader.id, "AEONPKG\0", 8 ) != 0 )
         {
             Close();
-            return false;
         }
         mDirectory.resize ( mHeader.file_count );
         for ( uint32_t i = 0; i < mHeader.file_count; ++i )
@@ -131,7 +148,6 @@ namespace AeonGames
         mStringTable.resize ( mHeader.file_size - mHeader.string_table_offset );
         fseek ( mHandle, mHeader.string_table_offset, SEEK_SET );
         fread ( mStringTable.data(), sizeof ( uint8_t ), mHeader.file_size - mHeader.string_table_offset, mHandle );
-        return true;
     }
 
     void Package::Close()
@@ -221,7 +237,7 @@ namespace AeonGames
         return directory_entry;
     }
 
-    bool Package::LoadFile ( uint32_t crc, uint8_t* buffer, uint32_t buffer_size ) const
+    void Package::LoadFile ( uint32_t crc, uint8_t* buffer, uint32_t buffer_size ) const
     {
         PKGDirectoryEntry* directory_entry =
             reinterpret_cast<PKGDirectoryEntry*> (
@@ -232,37 +248,42 @@ namespace AeonGames
                           CompareDirectoryEntries ) );
         if ( directory_entry == nullptr )
         {
-            return false;
+            throw std::runtime_error ( "File not found." );
         }
         if ( directory_entry->uncompressed_size < buffer_size )
         {
-            //AEONGAMES_LOG_ERROR ( "Insuficient Buffer Size in %s line %i.", __FUNCTION__, __LINE__ );
-            return false;
+            throw std::runtime_error ( "Insuficient buffer size." );
         }
-        if ( !fseek ( mHandle, directory_entry->offset, SEEK_SET ) )
+        if ( fseek ( mHandle, directory_entry->offset, SEEK_SET ) != 0 )
         {
-            return false;
+            std::ostringstream stream;
+            stream << "fseek failed with errno: ( " << errno << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
         switch ( directory_entry->compression_type )
         {
         case NONE:
             if ( fread ( buffer, buffer_size, 1, mHandle ) == 0 )
             {
-                //AEONGAMES_LOG_ERROR ( "fread Failed in %s line %i.", __FUNCTION__, __LINE__ );
-                return false;
+                std::ostringstream stream;
+                stream << "fread failed with errno: ( " << errno << " )";
+                throw std::runtime_error ( stream.str().c_str() );
             }
             break;
         case ZLIB:
-            if ( read_inflated_data ( mHandle, buffer, buffer_size ) != Z_OK )
+            if ( int result = read_inflated_data ( mHandle, buffer, buffer_size ) )
             {
-                //AEONGAMES_LOG_ERROR ( "fread Failed in %s line %i.", __FUNCTION__, __LINE__ );
-                return false;
+                std::ostringstream stream;
+                stream << "read_inflated_data failed with error: ( " << result << " )";
+                throw std::runtime_error ( stream.str().c_str() );
             }
             break;
         default:
-            //AEONGAMES_LOG_ERROR ( "Unrecognized compression type, or type not supported: %i", directory_entry->compression_type );
-            return false;
+        {
+            std::ostringstream stream;
+            stream << "Unrecognized compression type, or type not supported: ( " << directory_entry->compression_type << " )";
+            throw std::runtime_error ( stream.str().c_str() );
         }
-        return true;
+        }
     }
 }
