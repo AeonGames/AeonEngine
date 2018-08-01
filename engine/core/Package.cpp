@@ -105,16 +105,18 @@ namespace AeonGames
 
     Package::Package ( const std::string& aPath ) : mPath{aPath}, mHeader{}, mHandle{}, mDirectory{}, mStringTable{}
     {
-        struct stat path_stats {};
-        if ( ::stat ( mPath.c_str(), &path_stats ) != 0 )
+        if ( std::experimental::filesystem::is_directory ( mPath ) )
         {
-            std::ostringstream stream;
-            stream << "Path not found: ( " << mPath << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        if ( S_ISDIR ( path_stats.st_mode ) )
-        {
-            std::cout << mPath << " is a directory" << std::endl;
+            std::cout << mPath << " is a directory." << std::endl;
+            for ( auto& i : std::experimental::filesystem::recursive_directory_iterator ( mPath ) )
+            {
+                if ( std::experimental::filesystem::is_directory ( i ) )
+                {
+                    // The following line should work but it does not on MinGW g++ 7.3.0
+                    //std::cout << std::experimental::filesystem::relative(i.path(),mPath) << std::endl;
+                    std::cout << i << std::endl;
+                }
+            }
         }
     }
 
@@ -129,7 +131,8 @@ namespace AeonGames
         {
             throw std::runtime_error ( "File already open" );
         }
-        if ( ( mHandle = fopen ( mPath.c_str(), "rb" ) ) == nullptr )
+        std::string path{mPath.string() };
+        if ( ( mHandle = fopen ( path.c_str(), "rb" ) ) == nullptr )
         {
             std::ostringstream stream;
             stream << "Could not open file: ( " << mPath << " )";

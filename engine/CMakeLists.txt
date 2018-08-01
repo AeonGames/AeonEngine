@@ -162,11 +162,11 @@ elseif(MINGW OR MSYS)
         COMPILE_FLAGS "-include aeongames/ProtoBufClasses.h -Wall -Werror -Wfatal-errors")
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-Wall -Werror -Wfatal-errors -DNOMINMAX")
-    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ${PROTOBUF_LIBRARIES} ProtoBufClasses)
+    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ${PROTOBUF_LIBRARIES} ProtoBufClasses stdc++fs)
 elseif(UNIX)
     set_target_properties(AeonEngine PROPERTIES
         COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
-    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses dl)
+    target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses dl stdc++fs)
 endif()
 
 if(USE_CLANG_TIDY)
