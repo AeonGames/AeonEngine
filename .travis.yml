@@ -16,9 +16,11 @@ before_install:
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
   - sudo apt-get -qq upgrade --allow-unauthenticated
-  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev
-  - sudo apt-get install -y gcc-5 g++-5
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev  
+  - sudo apt-get install -y build-essential software-properties-common
+  - sudo apt-get install -y gcc-snapshot
+  - sudo apt-get install -y gcc-8 g++-8
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 60 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 install:
   - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
   - tar -xzf v3.2.0.tar.gz
