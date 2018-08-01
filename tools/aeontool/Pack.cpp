@@ -167,7 +167,7 @@ namespace AeonGames
                     uint32_t filepathcrc = crc32i ( filepath.c_str(), filepath.length() );
                     mStringTable[filepathcrc] = filepath;
                     mDirectory[filepathcrc].path = filepathcrc;
-                    mDirectory[filepathcrc].uncompressed_size = file_stat.st_size; //(wfd.nFileSizeHigh * (MAXDWORD+1)) + wfd.nFileSizeLow;
+                    mDirectory[filepathcrc].uncompressed_size = file_stat.st_size;
                     mDirectory[filepathcrc].compressed_size = mDirectory[filepathcrc].uncompressed_size;
                     mDirectory[filepathcrc].extension_offset = filepath.rfind ( '.' );
                     if ( mDirectory[filepathcrc].extension_offset != std::string::npos )

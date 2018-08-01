@@ -16,7 +16,8 @@
                 "__MINGW32__",
                 "__MINGW64__",
                 "DLL=",
-                "QT_STATIC"
+                "QT_STATIC",
+                "SOURCE_PATH=@CMAKE_SOURCE_DIR@"
             ],
             "intelliSenseMode": "clang-x64",
             "browse": {

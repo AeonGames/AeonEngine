@@ -27,6 +27,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h
 )
 set(TEST_SRCS
     Main.cpp
@@ -39,6 +40,7 @@ set(TEST_SRCS
     TransformTests.cpp
     PropertyTests.cpp
     QuaternionTests.cpp
+    PackageTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
@@ -72,6 +74,9 @@ target_link_libraries(unit-tests AeonEngine ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES
 if(MSVC)
  # VCPKG compiles GTest/GMock DLLs.
  set_target_properties(unit-tests PROPERTIES
-  COMPILE_FLAGS "-DGTEST_LINKED_AS_SHARED_LIBRARY -D_CRT_SECURE_NO_WARNINGS -wd4251 -wd4275")
+  COMPILE_FLAGS "-DSOURCE_PATH=\"\\\"${CMAKE_SOURCE_DIR}\\\"\" -DGTEST_LINKED_AS_SHARED_LIBRARY -D_CRT_SECURE_NO_WARNINGS -wd4251 -wd4275")
+else()
+    set_target_properties(unit-tests PROPERTIES
+    COMPILE_FLAGS "-DSOURCE_PATH=\"\\\"${CMAKE_SOURCE_DIR}\\\"\"")
 endif()
 add_test(NAME unit-tests COMMAND unit-tests)
