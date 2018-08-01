@@ -21,6 +21,7 @@ limitations under the License.
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <regex>
 #include "zlib.h"
 #include "aeongames/Package.h"
 #include "aeongames/CRC.h"
@@ -103,18 +104,19 @@ namespace AeonGames
         return 0;
     }
 
-    Package::Package ( const std::string& aPath ) : mPath{aPath}, mHeader{}, mHandle{}, mDirectory{}, mStringTable{}
+    Package::Package ( const std::string& aPath ) : mPath{aPath}, mHeader{}, mHandle{}, mDirectory{}, mIndexTable{}
     {
-        if ( std::experimental::filesystem::is_directory ( mPath ) )
+        if ( std::filesystem::is_directory ( mPath ) )
         {
+            static const std::string format ( "/" );
+            static const std::regex separator ( "\\\\+" );
             std::cout << mPath << " is a directory." << std::endl;
-            for ( auto& i : std::experimental::filesystem::recursive_directory_iterator ( mPath ) )
+            for ( auto& i : std::filesystem::recursive_directory_iterator ( mPath ) )
             {
-                if ( std::experimental::filesystem::is_directory ( i ) )
+                if ( std::filesystem::is_regular_file ( i ) )
                 {
-                    // The following line should work but it does not on MinGW g++ 7.3.0
-                    //std::cout << std::experimental::filesystem::relative(i.path(),mPath) << std::endl;
-                    std::cout << i << std::endl;
+                    std::string location{std::regex_replace ( std::filesystem::relative ( i, mPath ).string(), separator, format ) };
+                    mIndexTable[crc32i ( location.data(), location.size() )] = location;
                 }
             }
         }
@@ -124,6 +126,12 @@ namespace AeonGames
     {
         Close();
     }
+
+    struct StringTableEntry
+    {
+        uint32_t CRC;     /// String CRC
+        uint32_t offset;  /// String Offset
+    };
 
     void Package::Open()
     {
@@ -148,9 +156,14 @@ namespace AeonGames
         {
             fread ( &mDirectory[i], sizeof ( PKGDirectoryEntry ), 1, mHandle );
         }
-        mStringTable.resize ( mHeader.file_size - mHeader.string_table_offset );
+        std::vector<uint8_t> string_table ( mHeader.file_size - mHeader.string_table_offset );
         fseek ( mHandle, mHeader.string_table_offset, SEEK_SET );
-        fread ( mStringTable.data(), sizeof ( uint8_t ), mHeader.file_size - mHeader.string_table_offset, mHandle );
+        fread ( string_table.data(), sizeof ( uint8_t ), mHeader.file_size - mHeader.string_table_offset, mHandle );
+        StringTableEntry* string_table_entry = reinterpret_cast<StringTableEntry*> ( string_table.data() + sizeof ( uint32_t ) );
+        for ( size_t i = 0; i < *reinterpret_cast<const uint32_t*> ( string_table.data() ); ++i )
+        {
+            mIndexTable[string_table_entry[i].CRC] = reinterpret_cast<const char*> ( string_table.data() ) + string_table_entry[i].offset;
+        }
     }
 
     void Package::Close()
@@ -161,16 +174,15 @@ namespace AeonGames
             mHandle = nullptr;
         }
         mDirectory.clear();
-        mStringTable.clear();
         memset ( &mHeader, 0, sizeof ( PKGHeader ) );
     }
 
-    uint32_t Package::GetFileCount() const
+    size_t Package::GetFileCount() const
     {
-        return mHeader.file_count;
+        return mIndexTable.size();
     }
 
-    uint32_t Package::GetFileSize ( uint32_t crc ) const
+    size_t Package::GetFileSize ( uint32_t crc ) const
     {
         PKGDirectoryEntry* directory_entry =
             reinterpret_cast<PKGDirectoryEntry*> (
@@ -190,42 +202,16 @@ namespace AeonGames
     {
         return ( index < mHeader.file_count ) ? &mDirectory[index] : nullptr;
     }
-
-    struct StringTableEntry
+    const std::string& Package::GetFilePath ( uint32_t crc ) const
     {
-        uint32_t CRC;     /// String CRC
-        uint32_t offset;  /// String Offset
-    };
-
-    static int CompareCRCs ( const void * A, const void * B )
-    {
-        const uint32_t a = *reinterpret_cast<const uint32_t*> ( A );
-        const StringTableEntry* b = reinterpret_cast<const StringTableEntry*> ( B );
-        if ( a > b->CRC )
+        auto it = mIndexTable.find ( crc );
+        if ( it == mIndexTable.end() )
         {
-            return 1;
+            std::ostringstream stream;
+            stream << "File ID not found: ( " << crc << " ) in " << mPath;
+            throw std::runtime_error ( stream.str().c_str() );
         }
-        else if ( a < b->CRC )
-        {
-            return -1;
-        }
-        return 0;
-    }
-
-    const char* Package::GetFilePath ( uint32_t crc ) const
-    {
-        StringTableEntry* entry =
-            reinterpret_cast<StringTableEntry*> (
-                bsearch ( &crc,
-                          mStringTable.data() + sizeof ( uint32_t ),
-                          *reinterpret_cast<const uint32_t*> ( mStringTable.data() ),
-                          sizeof ( StringTableEntry ),
-                          CompareCRCs ) );
-        if ( entry != NULL )
-        {
-            return reinterpret_cast<const char*> ( mStringTable.data() ) + entry->offset;
-        }
-        return nullptr;
+        return ( *it ).second;
     }
 
     const PKGDirectoryEntry* Package::ContainsFile ( uint32_t crc ) const

@@ -22,9 +22,10 @@ limitations under the License.
 #include <cstdint>
 #include <cstdio>
 #include <vector>
+#include <unordered_map>
 #include <string>
 //#if __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
+#include <filesystem>
 //#endif
 #include "aeongames/Platform.h"
 namespace AeonGames
@@ -73,9 +74,9 @@ namespace AeonGames
         /*! Closes a previously open package file. */
         DLL void Close();
         /*! Returns the uncompressed file size referenced by its CRC value. */
-        DLL uint32_t GetFileSize ( uint32_t crc ) const;
+        DLL size_t GetFileSize ( uint32_t crc ) const;
         /*! \return The amount of files contained in the package. */
-        DLL uint32_t GetFileCount() const;
+        DLL size_t GetFileCount() const;
         /*!
         \return a constant pointer to the directory entry struct if it exists.
         \todo Rename to GetFileDirectoryEntry
@@ -85,7 +86,7 @@ namespace AeonGames
         \param crc CRC to the file path to retrieve.
         \return File path.
         */
-        DLL const char* GetFilePath ( uint32_t crc ) const;
+        DLL const std::string& GetFilePath ( uint32_t crc ) const;
         /*!
         \param index Index of the directory entry to be retrieved
         \return A constant pointer to the directory entry struct if it exists, NULL otherwise.
@@ -93,18 +94,18 @@ namespace AeonGames
         DLL const PKGDirectoryEntry* GetFileByIndex ( uint32_t index ) const;
         /*! Loads a specific file referenced by its CRC into the provided buffer. */
         DLL void LoadFile ( uint32_t crc, uint8_t* buffer, uint32_t buffer_size ) const;
-        //STRING_TABLE_HANDLER_DEFINITIONS()
     private:
         /// Package Path @note may be a package file or a directory
         //const std::string mPath;
-        const std::experimental::filesystem::path mPath;
+        const std::filesystem::path mPath;
         /// File header
         PKGHeader mHeader;
         /// File Handle
         FILE* mHandle;
         /// Directory array
         std::vector<PKGDirectoryEntry> mDirectory{};
-        std::vector<uint8_t> mStringTable{};
+        //std::vector<uint8_t> mStringTable{};
+        std::unordered_map<uint32_t, std::string> mIndexTable;
     };
 }
 #endif
