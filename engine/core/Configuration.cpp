@@ -33,7 +33,7 @@ namespace AeonGames
             mConfigurationBuffer =
                 LoadProtoBufObject<ConfigurationBuffer> ( aFilename, "AEONCFG" );
         }
-        catch ( std::runtime_error e )
+        catch ( std::runtime_error& e )
         {
             std::cout << "Warning: " << e.what() << std::endl;
         }
