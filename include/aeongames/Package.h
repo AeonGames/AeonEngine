@@ -24,9 +24,7 @@ limitations under the License.
 #include <vector>
 #include <unordered_map>
 #include <string>
-//#if __has_include(<experimental/filesystem>)
 #include <filesystem>
-//#endif
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
@@ -68,43 +66,21 @@ namespace AeonGames
         DLL ~Package();
         Package ( const Package& ) = delete;
         Package& operator= ( const Package& ) = delete;
-        /*! Opens a Resource PKG file for reading,
-        loading of individual files contained in the package file is defered to the LoadFile function. */
-        DLL void Open();
-        /*! Closes a previously open package file. */
-        DLL void Close();
-        /*! Returns the uncompressed file size referenced by its CRC value. */
+        /*! Returns the file size referenced by its CRC value. */
         DLL size_t GetFileSize ( uint32_t crc ) const;
-        /*! \return The amount of files contained in the package. */
-        DLL size_t GetFileCount() const;
-        /*!
-        \return a constant pointer to the directory entry struct if it exists.
-        \todo Rename to GetFileDirectoryEntry
+        /*! Returns the file size referenced by its file name. */
+        DLL size_t GetFileSize ( const std::string& aFileName ) const;
+        /** Get the package index table
+         * @return const reference to the package's index table.
         */
-        DLL const PKGDirectoryEntry* ContainsFile ( uint32_t crc ) const;
-        /*!
-        \param crc CRC to the file path to retrieve.
-        \return File path.
-        */
-        DLL const std::string& GetFilePath ( uint32_t crc ) const;
-        /*!
-        \param index Index of the directory entry to be retrieved
-        \return A constant pointer to the directory entry struct if it exists, NULL otherwise.
-        */
-        DLL const PKGDirectoryEntry* GetFileByIndex ( uint32_t index ) const;
+        const std::unordered_map<uint32_t, std::string>& GetIndexTable() const;
         /*! Loads a specific file referenced by its CRC into the provided buffer. */
         DLL void LoadFile ( uint32_t crc, uint8_t* buffer, uint32_t buffer_size ) const;
+        /*! Loads a specific file referenced by its path into the provided buffer. */
+        DLL void LoadFile ( const std::string& aFileName, uint8_t* buffer, uint32_t buffer_size ) const;
     private:
         /// Package Path @note may be a package file or a directory
-        //const std::string mPath;
         const std::filesystem::path mPath;
-        /// File header
-        PKGHeader mHeader;
-        /// File Handle
-        FILE* mHandle;
-        /// Directory array
-        std::vector<PKGDirectoryEntry> mDirectory{};
-        //std::vector<uint8_t> mStringTable{};
         std::unordered_map<uint32_t, std::string> mIndexTable;
     };
 }

@@ -28,7 +28,7 @@ namespace AeonGames
         class T,
         class Hash = std::hash<Key>,
         class KeyEqual = std::equal_to<Key>,
-        class MapAllocator = std::allocator< std::pair<const Key, T>>,
+        class MapAllocator = std::allocator< std::pair<const Key, T> >,
         class VectorAllocator = std::allocator<Key>
         >
     class DependencyMap
