@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -28,6 +29,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+#if 0
 #define CHUNK 16384
     /* Decompress from file source to memory dest until stream ends or EOF.
        read_inflated_data() returns Z_OK on success, Z_MEM_ERROR if memory
@@ -80,31 +82,15 @@ namespace AeonGames
                 ( void ) inflateEnd ( &strm );
                 return ret;
             }
-
             /* done when inflate() says it's done */
         }
         while ( ret != Z_STREAM_END );
-
         /* clean up and return */
         ( void ) inflateEnd ( &strm );
         return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
     }
-    static int CompareDirectoryEntries ( const void * A, const void * B )
-    {
-        const uint32_t a = *reinterpret_cast<const uint32_t*> ( A );
-        const PKGDirectoryEntry* b = reinterpret_cast<const PKGDirectoryEntry*> ( B );
-        if ( a > b->path )
-        {
-            return 1;
-        }
-        else if ( a < b->path )
-        {
-            return -1;
-        }
-        return 0;
-    }
-
-    Package::Package ( const std::string& aPath ) : mPath{aPath}, mHeader{}, mHandle{}, mDirectory{}, mIndexTable{}
+#endif
+    Package::Package ( const std::string& aPath ) : mPath {aPath}, mIndexTable {}
     {
         if ( std::filesystem::is_directory ( mPath ) )
         {
@@ -124,155 +110,44 @@ namespace AeonGames
 
     Package::~Package()
     {
-        Close();
     }
-
-    struct StringTableEntry
+    const std::unordered_map<uint32_t, std::string>& Package::GetIndexTable() const
     {
-        uint32_t CRC;     /// String CRC
-        uint32_t offset;  /// String Offset
-    };
-
-    void Package::Open()
-    {
-        if ( mHandle )
-        {
-            throw std::runtime_error ( "File already open" );
-        }
-        std::string path{mPath.string() };
-        if ( ( mHandle = fopen ( path.c_str(), "rb" ) ) == nullptr )
-        {
-            std::ostringstream stream;
-            stream << "Could not open file: ( " << mPath << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        fread ( &mHeader, sizeof ( PKGHeader ), 1, mHandle );
-        if ( strncmp ( mHeader.id, "AEONPKG\0", 8 ) != 0 )
-        {
-            Close();
-        }
-        mDirectory.resize ( mHeader.file_count );
-        for ( uint32_t i = 0; i < mHeader.file_count; ++i )
-        {
-            fread ( &mDirectory[i], sizeof ( PKGDirectoryEntry ), 1, mHandle );
-        }
-        std::vector<uint8_t> string_table ( mHeader.file_size - mHeader.string_table_offset );
-        fseek ( mHandle, mHeader.string_table_offset, SEEK_SET );
-        fread ( string_table.data(), sizeof ( uint8_t ), mHeader.file_size - mHeader.string_table_offset, mHandle );
-        StringTableEntry* string_table_entry = reinterpret_cast<StringTableEntry*> ( string_table.data() + sizeof ( uint32_t ) );
-        for ( size_t i = 0; i < *reinterpret_cast<const uint32_t*> ( string_table.data() ); ++i )
-        {
-            mIndexTable[string_table_entry[i].CRC] = reinterpret_cast<const char*> ( string_table.data() ) + string_table_entry[i].offset;
-        }
+        return mIndexTable;
     }
-
-    void Package::Close()
-    {
-        if ( mHandle != nullptr )
-        {
-            fclose ( mHandle );
-            mHandle = nullptr;
-        }
-        mDirectory.clear();
-        memset ( &mHeader, 0, sizeof ( PKGHeader ) );
-    }
-
-    size_t Package::GetFileCount() const
-    {
-        return mIndexTable.size();
-    }
-
     size_t Package::GetFileSize ( uint32_t crc ) const
     {
-        PKGDirectoryEntry* directory_entry =
-            reinterpret_cast<PKGDirectoryEntry*> (
-                bsearch ( &crc,
-                          mDirectory.data(),
-                          mHeader.file_count,
-                          sizeof ( PKGDirectoryEntry ),
-                          CompareDirectoryEntries ) );
-        if ( directory_entry != nullptr )
+        if ( std::filesystem::is_directory ( mPath ) )
         {
-            return directory_entry->uncompressed_size;
+            auto it = mIndexTable.find ( crc );
+            if ( it != mIndexTable.end() )
+            {
+                return std::filesystem::file_size ( mPath / it->second );
+            }
         }
         return 0;
     }
-
-    const PKGDirectoryEntry* Package::GetFileByIndex ( uint32_t index ) const
+    size_t Package::GetFileSize ( const std::string& aFilename ) const
     {
-        return ( index < mHeader.file_count ) ? &mDirectory[index] : nullptr;
+        return GetFileSize ( crc32i ( aFilename.data(), aFilename.size() ) );
     }
-    const std::string& Package::GetFilePath ( uint32_t crc ) const
+    void Package::LoadFile ( const std::string& aFilename, uint8_t* buffer, uint32_t buffer_size ) const
     {
-        auto it = mIndexTable.find ( crc );
-        if ( it == mIndexTable.end() )
-        {
-            std::ostringstream stream;
-            stream << "File ID not found: ( " << crc << " ) in " << mPath;
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        return ( *it ).second;
+        LoadFile ( crc32i ( aFilename.data(), aFilename.size() ), buffer, buffer_size );
     }
-
-    const PKGDirectoryEntry* Package::ContainsFile ( uint32_t crc ) const
-    {
-        PKGDirectoryEntry* directory_entry =
-            reinterpret_cast<PKGDirectoryEntry*> (
-                bsearch ( &crc,
-                          mDirectory.data(),
-                          mHeader.file_count,
-                          sizeof ( PKGDirectoryEntry ),
-                          CompareDirectoryEntries ) );
-        return directory_entry;
-    }
-
     void Package::LoadFile ( uint32_t crc, uint8_t* buffer, uint32_t buffer_size ) const
     {
-        PKGDirectoryEntry* directory_entry =
-            reinterpret_cast<PKGDirectoryEntry*> (
-                bsearch ( &crc,
-                          mDirectory.data(),
-                          mHeader.file_count,
-                          sizeof ( PKGDirectoryEntry ),
-                          CompareDirectoryEntries ) );
-        if ( directory_entry == nullptr )
+        if ( std::filesystem::is_directory ( mPath ) )
         {
-            throw std::runtime_error ( "File not found." );
-        }
-        if ( directory_entry->uncompressed_size < buffer_size )
-        {
-            throw std::runtime_error ( "Insuficient buffer size." );
-        }
-        if ( fseek ( mHandle, directory_entry->offset, SEEK_SET ) != 0 )
-        {
-            std::ostringstream stream;
-            stream << "fseek failed with errno: ( " << errno << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        switch ( directory_entry->compression_type )
-        {
-        case NONE:
-            if ( fread ( buffer, buffer_size, 1, mHandle ) == 0 )
+            auto it = mIndexTable.find ( crc );
+            if ( it != mIndexTable.end() )
             {
-                std::ostringstream stream;
-                stream << "fread failed with errno: ( " << errno << " )";
-                throw std::runtime_error ( stream.str().c_str() );
+                std::ifstream file;
+                file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+                file.open ( mPath / it->second, std::ifstream::in | std::ifstream::binary );
+                file.read ( reinterpret_cast<char*> ( buffer ), buffer_size );
+                file.close();
             }
-            break;
-        case ZLIB:
-            if ( int result = read_inflated_data ( mHandle, buffer, buffer_size ) )
-            {
-                std::ostringstream stream;
-                stream << "read_inflated_data failed with error: ( " << result << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            break;
-        default:
-        {
-            std::ostringstream stream;
-            stream << "Unrecognized compression type, or type not supported: ( " << directory_entry->compression_type << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
         }
     }
 }

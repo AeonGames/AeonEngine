@@ -32,7 +32,7 @@ set(TESTED_SRCS
 set(TEST_SRCS
     Main.cpp
     DecoderTests.cpp
-    DependencyMapTests.cpp
+#   DependencyMapTests.cpp
     FlyWeightTests.cpp
     CRCTests.cpp
     SceneTests.cpp
