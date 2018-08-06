@@ -21,6 +21,15 @@ Ubuntu 14.04 and up:
 
 ## Install required Packages
     sudo apt-get install -y sed python python3 python-autopep8 python-pep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev astyle
+
+## Install GCC 8.x (required for c++17)
+    sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
+    sudo apt-get upgrade --allow-unauthenticated
+    sudo apt-get install -y build-essential software-properties-common
+    sudo apt-get install -y gcc-snapshot
+    sudo apt-get install -y gcc-8 g++-8
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 60 --slave /usr/bin/g++ g++ /usr/bin/g++-8
     
 ## Build and install libprotobuf-dev from source
     wget https://github.com/google/protobuf/archive/v3.1.0.tar.gz
@@ -67,7 +76,7 @@ Ubuntu 14.04 and up:
 ## Build
     make
 
-Visual Studio 2015 and up:
+Visual Studio 2017 (version 15.7 or later is required due to c++17's filesystem dependency) and up:
 -------------------
 
 Building with Visual Studio is somewhat more involved as all dependencies and tools need to be build first. The official way of doing this is to use [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg), however if you are proficient at building software you can build each dependency individually or you could just find official Windows distributions and install them. You can also pick and chose on what to build and what to install from a previously build distribution, in fact it is recommended to install the Qt5 sdk rather than build it if you want to save about 4+ hours of your life.
