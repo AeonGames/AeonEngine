@@ -96,7 +96,6 @@ namespace AeonGames
         {
             static const std::string format ( "/" );
             static const std::regex separator ( "\\\\+" );
-            std::cout << mPath << " is a directory." << std::endl;
             for ( auto& i : std::filesystem::recursive_directory_iterator ( mPath ) )
             {
                 if ( std::filesystem::is_regular_file ( i ) )
@@ -131,11 +130,11 @@ namespace AeonGames
     {
         return GetFileSize ( crc32i ( aFilename.data(), aFilename.size() ) );
     }
-    void Package::LoadFile ( const std::string& aFilename, uint8_t* buffer, uint32_t buffer_size ) const
+    void Package::LoadFile ( const std::string& aFilename, void* buffer, size_t buffer_size ) const
     {
         LoadFile ( crc32i ( aFilename.data(), aFilename.size() ), buffer, buffer_size );
     }
-    void Package::LoadFile ( uint32_t crc, uint8_t* buffer, uint32_t buffer_size ) const
+    void Package::LoadFile ( uint32_t crc, void* buffer, size_t buffer_size ) const
     {
         if ( std::filesystem::is_directory ( mPath ) )
         {
