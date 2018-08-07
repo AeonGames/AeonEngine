@@ -53,8 +53,8 @@ namespace AeonGames
         Package package ( "package" );
         EXPECT_EQ ( package.GetIndexTable().size(), 1 );
         EXPECT_EQ ( package.GetIndexTable().at ( "test.txt"_crc32 ), "test.txt" );
-        std::vector<char> contents ( package.GetFileSize ( "test.txt" ) );
-        package.LoadFile ( "test.txt", contents.data(), contents.size() );
+        std::vector<char> contents ( package.GetFileSize ( "test.txt" ) + 1, 0 );
+        package.LoadFile ( "test.txt", contents.data(), contents.size() - 1 );
         EXPECT_EQ ( std::string ( contents.data() ), "This is a test file for the Package class and can be safely deleted." );
     }
 }
