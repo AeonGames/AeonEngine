@@ -19,6 +19,8 @@ before_build:
     
     git checkout 2b60cb12c9dec496c96a725b4ce3e0fcf9a956d8
     
+    powershell -Command "(Get-Content ports\libpng\portfile.cmake) | ForEach-Object { $_ -replace \"libpng16/\", \"libpng16/older-releases/\" } | Set-Content ports\libpng\portfile.cmake"
+    
     .\bootstrap-vcpkg.bat
     
     .\vcpkg integrate install
