@@ -48,7 +48,7 @@ install:
   - sudo make -j4 install
   - sudo ldconfig
   - cd ..
-  - pushd
+  - pushd .
   - source /opt/qt57/bin/qt57-env.sh
   - cd /usr/src/gmock
   - cmake .
