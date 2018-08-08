@@ -13,13 +13,13 @@ before_build:
 
     set VCPKG_DEFAULT_TRIPLET=x64-windows
 
-    git clone https://github.com/Microsoft/vcpkg.git
+    git clone https://github.com/Kwizatz/vcpkg.git
     
     cd vcpkg
     
-    git checkout 2b60cb12c9dec496c96a725b4ce3e0fcf9a956d8
+    git checkout protobuf-c++17-iterator-fix-patch
     
-    powershell -Command "(Get-Content ports\libpng\portfile.cmake) | ForEach-Object { $_ -replace \"libpng16/\", \"libpng16/older-releases/\" } | Set-Content ports\libpng\portfile.cmake"
+    rem powershell -Command "(Get-Content ports\libpng\portfile.cmake) | ForEach-Object { $_ -replace \"libpng16/\", \"libpng16/older-releases/\" } | Set-Content ports\libpng\portfile.cmake"
     
     .\bootstrap-vcpkg.bat
     
