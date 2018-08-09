@@ -27,7 +27,10 @@ namespace AeonGames
         ~MeshNode() final;
         const std::string& GetType() const final;
         const std::vector<std::reference_wrapper<Node::Property>>& GetProperties() const final;
+        uint32_t GetMesh() const;
+        void SetMesh ( uint32_t aMeshId );
     private:
+        uint32_t mMeshId{};
         Mesh* mMesh{nullptr};
     };
 }

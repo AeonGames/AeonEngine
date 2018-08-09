@@ -28,16 +28,36 @@ limitations under the License.
 
 namespace AeonGames
 {
-    MeshNode::MeshNode()
+    MeshNode::MeshNode() : mMeshId{}
     {
         SetName ( "Mesh" );
     }
 
     MeshNode::~MeshNode() = default;
 
+    uint32_t MeshNode::GetMesh() const
+    {
+        return mMeshId;
+    }
+
+    void MeshNode::SetMesh ( uint32_t aMeshId )
+    {
+        mMeshId = aMeshId;
+    }
+
     static std::vector<Node::Property> MeshNodeProperties
     {
-        {"Mesh", "Mesh", "", [] ( Node * aNode, const void* aTuple ) {}, [] ( const Node * aNode, void* aTuple ) {}}
+        {
+            "Mesh", "Mesh", "I",
+            [] ( Node * aNode, const void* aTuple )
+            {
+                reinterpret_cast<MeshNode*> ( aNode )->SetMesh ( *reinterpret_cast<const uint32_t*> ( aTuple ) );
+            },
+            [] ( const Node * aNode, void* aTuple )
+            {
+                *reinterpret_cast<uint32_t*> ( aTuple ) = reinterpret_cast<const MeshNode*> ( aNode )->GetMesh();
+            }
+        }
     };
 
     static const std::vector<std::reference_wrapper<Node::Property>> MeshNodePropertyRefs ( Concatenate ( Node::Properties(), MeshNodeProperties ) );
