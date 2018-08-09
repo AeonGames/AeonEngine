@@ -48,12 +48,12 @@ install:
   - sudo make -j4 install
   - sudo ldconfig
   - cd ..
-  - pushd .
   - source /opt/qt57/bin/qt57-env.sh
+  - pushd .
   - cd /usr/src/gmock
-  - cmake .
-  - cp *.a /usr/lib/
-  - cp gtest/*.a /usr/lib/
+  - sudo cmake .
+  - sudo cp *.a /usr/lib/
+  - sudo cp gtest/*.a /usr/lib/
   - popd
 before_script:
   - source /opt/qt57/bin/qt57-env.sh
