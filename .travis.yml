@@ -52,6 +52,7 @@ install:
   - pushd .
   - cd /usr/src/gmock
   - sudo cmake .
+  - sudo make -j4
   - sudo cp *.a /usr/lib/
   - sudo cp gtest/*.a /usr/lib/
   - popd
