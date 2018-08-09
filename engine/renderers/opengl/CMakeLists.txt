@@ -47,7 +47,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLBuffer.h
     OpenGLMaterial.h
     OpenGLTexture.h
-    OpenGLModel.h
+    #OpenGLModel.h
     OpenGLSkeleton.h
     OpenGLMesh.h)
 
@@ -64,7 +64,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
     OpenGLTexture.cpp
-    OpenGLModel.cpp
+    #OpenGLModel.cpp
     OpenGLSkeleton.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp

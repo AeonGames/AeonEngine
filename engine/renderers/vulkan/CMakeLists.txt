@@ -28,7 +28,7 @@ set(VULKAN_RENDERER_HEADERS
     VulkanUtilities.h
     VulkanRenderer.h
     VulkanWindow.h
-    VulkanModel.h
+    #VulkanModel.h
     VulkanMesh.h
     VulkanPipeline.h
     VulkanMaterial.h
@@ -43,7 +43,7 @@ set(VULKAN_RENDERER_SOURCES
     VulkanUtilities.cpp
     VulkanRenderer.cpp
     VulkanWindow.cpp
-    VulkanModel.cpp
+    #VulkanModel.cpp
     VulkanMesh.cpp
     VulkanPipeline.cpp
     VulkanMaterial.cpp

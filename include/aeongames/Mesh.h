@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include "Memory.h"
 #include "aeongames/AABB.h"
+#include "aeongames/FlyWeight.h"
 
 namespace AeonGames
 {
