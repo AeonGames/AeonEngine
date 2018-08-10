@@ -107,7 +107,6 @@ set(ENGINE_CORE_SOURCES
     core/SoundSystem.cpp
     core/Utilities.cpp
     core/AeonEngine.cpp
-    core/InitializeFinalize.cpp
     core/LogLevel.cpp
     #core/Model.cpp
     #core/ModelInstance.cpp

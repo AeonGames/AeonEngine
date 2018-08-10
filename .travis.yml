@@ -50,6 +50,10 @@ install:
   - cd ..
   - source /opt/qt57/bin/qt57-env.sh
   - pushd .
+  - cd /usr/src/gtest
+  - sudo cmake .
+  - sudo make -j4
+  - sudo cp *.a /usr/lib/
   - cd /usr/src/gmock
   - sudo cmake .
   - sudo make -j4
