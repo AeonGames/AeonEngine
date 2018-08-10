@@ -22,6 +22,17 @@ before_install:
   - sudo apt-get install -y gcc-8 g++-8
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 60 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 install:
+  - pushd .
+  - cd /usr/src/gtest
+  - sudo cmake .
+  - sudo make -j4
+  - sudo cp *.a /usr/lib/
+  - cd /usr/src/gmock
+  - sudo cmake .
+  - sudo make -j4
+  - sudo cp *.a /usr/lib/
+  - sudo cp gtest/*.a /usr/lib/
+  - popd
   - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
   - tar -xzf v3.2.0.tar.gz
   - cd protobuf-3.2.0
@@ -49,17 +60,6 @@ install:
   - sudo ldconfig
   - cd ..
   - source /opt/qt57/bin/qt57-env.sh
-  - pushd .
-  - cd /usr/src/gtest
-  - sudo cmake .
-  - sudo make -j4
-  - sudo cp *.a /usr/lib/
-  - cd /usr/src/gmock
-  - sudo cmake .
-  - sudo make -j4
-  - sudo cp *.a /usr/lib/
-  - sudo cp gtest/*.a /usr/lib/
-  - popd
 before_script:
   - source /opt/qt57/bin/qt57-env.sh
   - cmake -G "Unix Makefiles" .
