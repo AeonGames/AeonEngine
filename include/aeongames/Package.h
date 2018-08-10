@@ -66,6 +66,9 @@ namespace AeonGames
         DLL ~Package();
         Package ( const Package& ) = delete;
         Package& operator= ( const Package& ) = delete;
+        Package ( Package&& aPackage );
+        Package& operator= ( Package&& ) = delete;
+        DLL const std::filesystem::path& GetPath() const;
         /*! Returns the file size referenced by its CRC value. */
         DLL size_t GetFileSize ( uint32_t crc ) const;
         /*! Returns the file size referenced by its file name. */

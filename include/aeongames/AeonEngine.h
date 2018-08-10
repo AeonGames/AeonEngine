@@ -18,35 +18,13 @@ limitations under the License.
 #include "Platform.h"
 #include "Memory.h"
 #include <string>
+#include <vector>
 
 namespace AeonGames
 {
     DLL bool Initialize();
     DLL void Finalize();
-    class Scene;
-    class AeonEngine
-    {
-    public:
-        /// Construct
-        DLL AeonEngine();
-        /// Destruct
-        DLL ~AeonEngine();
-        /// No Move
-        AeonEngine ( AeonEngine&& ) noexcept = delete;
-        AeonEngine& operator= ( AeonEngine&& ) noexcept = delete;
-        /// No Copy
-        AeonEngine ( const AeonEngine& ) = delete;
-        AeonEngine& operator= ( const AeonEngine& ) = delete;
-        /**
-        Advance the simulation a single step.
-        @param aDeltaTime Time delta to advance the simulation.
-        */
-        DLL void Step ( double aDeltaTime );
-        /**
-        Run standalone.
-        @return program return value.
-        */
-        DLL int Run();
-    };
+    DLL std::vector<std::string> GetResourcePath();
+    DLL void SetResourcePath ( const std::initializer_list<std::string>& aPath );
 }
 #endif

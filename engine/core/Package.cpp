@@ -107,8 +107,14 @@ namespace AeonGames
         }
     }
 
-    Package::~Package()
+    Package::~Package() {}
+    Package::Package ( Package&& aPackage ) :
+        mPath ( std::move ( aPackage.mPath ) ),
+        mIndexTable ( std::move ( aPackage.mIndexTable ) ) {}
+
+    const std::filesystem::path& Package::GetPath() const
     {
+        return mPath;
     }
     const std::unordered_map<uint32_t, std::string>& Package::GetIndexTable() const
     {
