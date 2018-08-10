@@ -24,11 +24,12 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
+#include "aeongames/AeonEngine.h"
 int main ( int argc, char **argv )
 {
     testing::InitGoogleTest ( &argc, argv );
+    AeonGames::Initialize();
     int result = RUN_ALL_TESTS();
-    google::protobuf::ShutdownProtobufLibrary();
+    AeonGames::Finalize();
     return result;
 }

@@ -1,4 +1,4 @@
-// Copyright 2016 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,22 @@
 
 syntax = "proto3";
 package AeonGames;
-
 message ConfigurationBuffer {
 	string PluginDirectory     = 1;
+	/* 	
+	So this causes an issue where
+	you cannot have packages before plugins
+	or plugins and packages intertwined.
+	While this is probably best for the computer,
+	seems prone to human error.
+	Protobuf upstream won't be adding
+	'repeated oneof' functionality,
+	so it may be a good idea to encapsulate these
+	into their own message object, Plugins and Packages,
+	this way at least users can see two distinct sections
+	on the file.
+	Then again I may just leave it as is.
+	*/
 	repeated string Plugin     = 2;
+	repeated string Package    = 3;
 }
