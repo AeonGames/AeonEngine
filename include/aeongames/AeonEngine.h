@@ -25,6 +25,14 @@ namespace AeonGames
     DLL bool Initialize();
     DLL void Finalize();
     DLL std::vector<std::string> GetResourcePath();
-    DLL void SetResourcePath ( const std::initializer_list<std::string>& aPath );
+    DLL void SetResourcePath ( const std::vector<std::string>& aPath );
+    /*! Returns the resource size referenced by its CRC value. */
+    DLL size_t GetResourceSize ( uint32_t crc );
+    /*! Returns the resource size referenced by its file name. */
+    DLL size_t GetResourceSize ( const std::string& aFileName );
+    /*! Loads a specific resource referenced by its CRC into the provided buffer. */
+    DLL void LoadResource ( uint32_t crc, void* buffer, size_t buffer_size );
+    /*! Loads a specific resource referenced by its path into the provided buffer. */
+    DLL void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size );
 }
 #endif

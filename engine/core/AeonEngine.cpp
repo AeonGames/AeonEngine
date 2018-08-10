@@ -42,11 +42,9 @@ namespace AeonGames
     static std::vector<std::tuple<void*, PluginModuleInterface*>> gPlugInCache;
 #endif
     static std::string gPlugInPath ( std::getenv ( "PATH" ) );
-    static std::vector<Package> gResourcePath{};
-
     static void LoadPlugin ( const std::string& aDir, const std::string& aFilename )
     {
-        std::cout << aFilename << std::endl;
+        std::cout << "Plugin: " << aFilename << std::endl;
 #if (defined WIN32)
         HMODULE plugin = LoadLibraryEx ( aFilename.c_str(), nullptr, 0 );
         if ( nullptr == plugin )
@@ -117,9 +115,8 @@ namespace AeonGames
         }
         catch ( std::runtime_error& e )
         {
-            std::cout << "Warning: " << e.what() << std::endl;
+            std::cerr << "Warning: " << e.what() << std::endl;
         }
-        std::cout << "PATH: " << gPlugInPath << std::endl;
 
         RegisterNodeConstructor ( "Node", []()
         {
@@ -131,6 +128,19 @@ namespace AeonGames
         {
             LoadPlugin ( gConfigurationBuffer.plugindirectory(), i );
         }
+
+        if ( gConfigurationBuffer.package().size() )
+        {
+            try
+            {
+                SetResourcePath ( {gConfigurationBuffer.package().begin(), gConfigurationBuffer.package().end() } );
+            }
+            catch ( std::runtime_error& e )
+            {
+                std::cerr << e.what() << std::endl;
+            }
+        }
+
         return gInitialized;
     }
 
@@ -154,6 +164,7 @@ namespace AeonGames
         gInitialized = false;
     }
 
+    static std::vector<Package> gResourcePath{};
     std::vector<std::string> GetResourcePath()
     {
         std::vector<std::string> path;
@@ -164,7 +175,7 @@ namespace AeonGames
         }
         return path;
     }
-    void SetResourcePath ( const std::initializer_list<std::string>& aPath )
+    void SetResourcePath ( const std::vector<std::string>& aPath )
     {
         gResourcePath.clear();
         gResourcePath.reserve ( aPath.size() );
@@ -184,9 +195,43 @@ namespace AeonGames
                 throw;
             }
         }
-        if ( stream.rdbuf()->in_avail() )
+        if ( stream.rdbuf()->in_avail() > 0 )
         {
             throw std::runtime_error ( stream.str().c_str() );
         }
+    }
+
+    size_t GetResourceSize ( uint32_t crc )
+    {
+        for ( auto &i : gResourcePath )
+        {
+            auto resource = i.GetIndexTable().find ( crc );
+            if ( resource != i.GetIndexTable().end() )
+            {
+                return i.GetFileSize ( crc );
+            }
+        }
+        return 0;
+    }
+    size_t GetResourceSize ( const std::string& aFileName )
+    {
+        return GetResourceSize ( crc32i ( aFileName.data(), aFileName.size() ) );
+    }
+    void LoadResource ( uint32_t crc, void* buffer, size_t buffer_size )
+    {
+        for ( auto &i : gResourcePath )
+        {
+            auto resource = i.GetIndexTable().find ( crc );
+            if ( resource != i.GetIndexTable().end() )
+            {
+                i.LoadFile ( crc, buffer, buffer_size );
+                return;
+            }
+        }
+        throw std::runtime_error ( "Resource not found." );
+    }
+    void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size )
+    {
+        LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
     }
 }

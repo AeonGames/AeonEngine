@@ -20,6 +20,7 @@ limitations under the License.
 #include <functional>
 #include <filesystem>
 #include <string>
+#include "aeongames/AeonEngine.h"
 #include "aeongames/Package.h"
 #include "aeongames/CRC.h"
 #include "gtest/gtest.h"
@@ -55,6 +56,20 @@ namespace AeonGames
         EXPECT_EQ ( package.GetIndexTable().at ( "test.txt"_crc32 ), "test.txt" );
         std::vector<char> contents ( package.GetFileSize ( "test.txt" ) + 1, 0 );
         package.LoadFile ( "test.txt", contents.data(), contents.size() - 1 );
+        EXPECT_EQ ( std::string ( contents.data() ), "This is a test file for the Package class and can be safely deleted." );
+    }
+    TEST_F ( PackageTest, GlobalResourcesByFilename )
+    {
+        SetResourcePath ( {"package"} );
+        std::vector<char> contents ( GetResourceSize ( "test.txt" ) + 1, 0 );
+        LoadResource ( "test.txt", contents.data(), contents.size() - 1 );
+        EXPECT_EQ ( std::string ( contents.data() ), "This is a test file for the Package class and can be safely deleted." );
+    }
+    TEST_F ( PackageTest, GlobalResourcesByCRC )
+    {
+        SetResourcePath ( {"package"} );
+        std::vector<char> contents ( GetResourceSize ( "test.txt" ) + 1, 0 );
+        LoadResource ( "test.txt"_crc32, contents.data(), contents.size() - 1 );
         EXPECT_EQ ( std::string ( contents.data() ), "This is a test file for the Package class and can be safely deleted." );
     }
 }
