@@ -383,10 +383,11 @@ namespace AeonGames
         mVkViewport.y = static_cast<float> ( aY );
         mVkViewport.width = static_cast<float> ( aWidth );
         mVkViewport.height = static_cast<float> ( aHeight );
-        mVkScissor.offset.x = aX;
-        mVkScissor.offset.y = aY;
-        mVkScissor.extent.width = aWidth;
-        mVkScissor.extent.height = aHeight;
+        // Clip Scissors to surface extents
+        mVkScissor.offset.x = ( aX < 0 ) ? 0 : aX;
+        mVkScissor.offset.y = ( aY < 0 ) ? 0 : aY;
+        mVkScissor.extent.width = ( aX + aWidth > mVkSurfaceCapabilitiesKHR.currentExtent.width ) ? mVkSurfaceCapabilitiesKHR.currentExtent.width : aX + aWidth;
+        mVkScissor.extent.height = ( aY + aHeight > mVkSurfaceCapabilitiesKHR.currentExtent.height ) ? mVkSurfaceCapabilitiesKHR.currentExtent.height : aY + aHeight;
     }
 
     void VulkanWindow::BeginRender() const
@@ -513,13 +514,12 @@ namespace AeonGames
                                  VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                  0, sizeof ( float ) * 16, ModelMatrix.GetMatrix4x4() );
             {
-                uint32_t offset = 0;
                 vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
                                           VK_PIPELINE_BIND_POINT_GRAPHICS,
                                           render_pipeline->GetPipelineLayout(),
                                           0,
                                           static_cast<uint32_t> ( descriptor_sets.size() ),
-                                          descriptor_sets.data(), 1, &offset );
+                                          descriptor_sets.data(), 0, nullptr );
             }
             {
                 const VkDeviceSize offset = 0;

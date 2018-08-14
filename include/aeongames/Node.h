@@ -31,8 +31,8 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Window;
     class NodeBuffer;
-    class Renderer;
     class Scene;
     class ModelInstance;
     class AABB;
@@ -139,11 +139,14 @@ namespace AeonGames
         DLL static const std::vector<std::reference_wrapper<Property>>& Properties();
         DLL virtual const std::vector<std::reference_wrapper<Property>>& GetProperties() const;
         /** @} */
-    private:
-        /** @name Abstract functions */
+        /** @name Abstract functions
+         *  @todo decide if these should be private or public.
+        */
         /** @{ */
         DLL virtual void Update ( const double delta );
+        DLL virtual void Render ( const Window& aWindow ) const;
         /** @} */
+    private:
         friend class Scene;
         std::string mName;
         Node* mParent;
@@ -158,11 +161,11 @@ namespace AeonGames
     /**@name Factory Functions */
     /*@{*/
     DLL std::unique_ptr<Node> ConstructNode ( const std::string& aIdentifier );
-    /** Registers a renderer loader for a specific identifier.*/
+    /** Registers a node loader for a specific identifier.*/
     DLL bool RegisterNodeConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Node>() >& aConstructor );
-    /** Unregisters a renderer loader for a specific identifier.*/
+    /** Unregisters a node loader for a specific identifier.*/
     DLL bool UnregisterNodeConstructor ( const std::string& aIdentifier );
-    /** Enumerates Node loader identifiers via an enumerator functor.*/
+    /** Enumerates node loader identifiers via an enumerator functor.*/
     DLL void EnumerateNodeConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
     /*@}*/
 }

@@ -218,6 +218,13 @@ namespace AeonGames
                         delta = 1.0 / 30.0;
                     }
                 }
+                if ( mScene )
+                {
+                    const_cast<Scene*> ( mScene )->LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
+                    {
+                        aNode.Update ( delta );
+                    } );
+                }
                 mWindow->BeginRender();
                 mWindow->Render ( Transform{},
                                   qWorldEditorApp->GetGridMesh(),
@@ -237,6 +244,9 @@ namespace AeonGames
                     {
                         if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
                         {
+                            // Call Node specific rendering function.
+                            aNode.Render ( *mWindow );
+                            // Render Node AABB
                             mWindow->Render ( aNode.GetGlobalTransform(),
                                               qWorldEditorApp->GetAABBWireMesh(),
                                               qWorldEditorApp->GetWirePipeline(),

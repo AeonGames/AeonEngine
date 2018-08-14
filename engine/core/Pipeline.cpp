@@ -20,6 +20,8 @@ limitations under the License.
 #include <regex>
 #include <array>
 #include <mutex>
+#include "aeongames/AeonEngine.h"
+#include "aeongames/ResourceCache.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #include "aeongames/Utilities.h"
@@ -66,6 +68,26 @@ namespace AeonGames
 
     Pipeline::Pipeline()
     {
+    }
+
+    Pipeline::Pipeline ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
+
+    const std::shared_ptr<Pipeline> Pipeline::GetPipeline ( uint32_t aId )
+    {
+        return Get<Pipeline> ( aId, aId );
     }
 
     DLL Pipeline::IRenderPipeline::~IRenderPipeline()

@@ -93,6 +93,7 @@ namespace AeonGames
         };
     public:
         DLL Material();
+        DLL Material ( uint32_t aId );
         DLL Material ( const std::string& aFilename );
         DLL Material ( const void* aBuffer, size_t aBufferSize );
         DLL Material ( const MaterialBuffer& aMaterialBuffer );

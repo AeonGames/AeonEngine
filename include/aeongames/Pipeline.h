@@ -72,6 +72,7 @@ namespace AeonGames
             DLL virtual ~IRenderPipeline() = 0;
         };
         DLL Pipeline();
+        DLL Pipeline ( uint32_t aId );
         DLL Pipeline ( const std::string& aFilename );
         DLL Pipeline ( const void* aBuffer, size_t aBufferSize );
         DLL ~Pipeline();
@@ -90,6 +91,7 @@ namespace AeonGames
         DLL const Topology GetTopology() const;
         DLL void SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const;
         DLL const IRenderPipeline* const GetRenderPipeline() const;
+        DLL static const std::shared_ptr<Pipeline> GetPipeline ( uint32_t aId );
     private:
         void Load ( const PipelineBuffer& aPipelineBuffer );
         Topology mTopology{};

@@ -57,6 +57,7 @@ namespace AeonGames
             DLL virtual ~IRenderMesh() = 0;
         };
         DLL Mesh ();
+        DLL Mesh ( uint32_t aId );
         DLL Mesh ( const std::string& aFilename );
         DLL Mesh ( const void* aBuffer, size_t aBufferSize );
         DLL ~Mesh();
@@ -74,6 +75,7 @@ namespace AeonGames
         DLL const std::string& GetIndexBuffer() const;
         DLL void SetRenderMesh ( std::unique_ptr<IRenderMesh> aRenderMesh ) const;
         DLL const IRenderMesh* const GetRenderMesh() const;
+        DLL static const std::shared_ptr<Mesh> GetMesh ( uint32_t aId );
     private:
         void Load ( const MeshBuffer& aMeshBuffer );
         AABB mAABB;
