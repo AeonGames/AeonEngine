@@ -32,9 +32,9 @@ namespace AeonGames
         return Decoder<Sound>::UnregisterDecoder ( aMagick );
     }
 
-    bool DecodeSound ( Sound& aSound, size_t aBufferSize, const void* aBuffer )
+    bool DecodeSound ( Sound& aSound, const void* aBuffer, size_t aBufferSize )
     {
-        return Decoder<Sound>::Decode ( aSound, aBufferSize, aBuffer );
+        return Decoder<Sound>::Decode ( aSound, aBuffer, aBufferSize );
     }
 
     bool DecodeSound ( Sound& aSound, const std::string& aFileName )

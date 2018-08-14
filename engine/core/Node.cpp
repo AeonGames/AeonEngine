@@ -31,6 +31,7 @@ limitations under the License.
 #include "Factory.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/Window.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -537,6 +538,11 @@ namespace AeonGames
     void Node::Update ( const double aDelta )
     {
         ( void ) aDelta;
+    }
+
+    void Node::Render ( const Window& aWindow ) const
+    {
+        ( void ) aWindow;
     }
 
     static std::vector<Node::Property> NodeProperties

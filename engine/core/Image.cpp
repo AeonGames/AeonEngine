@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include "aeongames/AeonEngine.h"
 #include "aeongames/Image.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ResourceCache.h"
@@ -43,6 +44,19 @@ namespace AeonGames
     }
 
     Image::Image() = default;
+
+    Image::Image ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        DecodeImage ( *this, buffer.data(), buffer.size() );
+    }
+
+    const std::shared_ptr<Image> Image::GetImage ( uint32_t aId )
+    {
+        return Get<Image> ( aId, aId );
+    }
+
     Image::Image ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) :
         mWidth{aWidth}, mHeight{aHeight}, mFormat{aFormat}, mType{aType}, mPixels ( aWidth * aHeight * GetPixelSize ( aFormat, aType ), 0 )
     {
@@ -146,9 +160,9 @@ namespace AeonGames
         return Decoder<Image>::UnregisterDecoder ( aMagick );
     }
 
-    bool DecodeImage ( Image& aImage, size_t aBufferSize, const void* aBuffer )
+    bool DecodeImage ( Image& aImage, const void* aBuffer, size_t aBufferSize )
     {
-        return Decoder<Image>::Decode ( aImage, aBufferSize, aBuffer );
+        return Decoder<Image>::Decode ( aImage, aBuffer, aBufferSize );
     }
 
     bool DecodeImage ( Image& aImage, const std::string& aFileName )

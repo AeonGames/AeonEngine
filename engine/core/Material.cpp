@@ -29,6 +29,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include "aeongames/AeonEngine.h"
 #include "aeongames/Material.h"
 #include "aeongames/Vector2.h"
 #include "aeongames/Vector3.h"
@@ -38,6 +39,21 @@ limitations under the License.
 namespace AeonGames
 {
     Material::Material() = default;
+
+    Material::Material ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
 
     Material::Material ( const std::string& aFilename )
     {

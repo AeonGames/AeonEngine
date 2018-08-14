@@ -15,8 +15,10 @@ limitations under the License.
 */
 #include "MeshNode.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/Pipeline.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/Window.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -43,10 +45,33 @@ namespace AeonGames
     void MeshNode::SetMesh ( uint32_t aMeshId )
     {
         mMeshId = aMeshId;
+        mMesh = Mesh::GetMesh ( mMeshId );
+    }
+
+    uint32_t MeshNode::GetPipeline() const
+    {
+        return mPipelineId;
+    }
+
+    void MeshNode::SetPipeline ( uint32_t aPipelineId )
+    {
+        mPipelineId = aPipelineId;
+        mPipeline = Pipeline::GetPipeline ( mPipelineId );
     }
 
     static std::vector<Node::Property> MeshNodeProperties
     {
+        {
+            "Pipeline", "Pipeline", "I",
+            [] ( Node * aNode, const void* aTuple )
+            {
+                reinterpret_cast<MeshNode*> ( aNode )->SetPipeline ( *reinterpret_cast<const uint32_t*> ( aTuple ) );
+            },
+            [] ( const Node * aNode, void* aTuple )
+            {
+                *reinterpret_cast<uint32_t*> ( aTuple ) = reinterpret_cast<const MeshNode*> ( aNode )->GetPipeline();
+            }
+        },
         {
             "Mesh", "Mesh", "I",
             [] ( Node * aNode, const void* aTuple )
@@ -71,5 +96,12 @@ namespace AeonGames
     {
         const static std::string type ( "Mesh" );
         return type;
+    }
+    void MeshNode::Render ( const Window& aWindow ) const
+    {
+        if ( mMesh && mPipeline )
+        {
+            aWindow.Render ( GetGlobalTransform(), *mMesh, *mPipeline );
+        }
     }
 }

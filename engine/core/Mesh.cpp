@@ -32,6 +32,8 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include "aeongames/AeonEngine.h"
+#include "aeongames/ResourceCache.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Mesh.h"
 
@@ -69,10 +71,29 @@ namespace AeonGames
             throw;
         }
     }
+    Mesh::Mesh ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
 
     Mesh::~Mesh() = default;
 
     DLL Mesh::IRenderMesh::~IRenderMesh() = default;
+
+    const std::shared_ptr<Mesh> Mesh::GetMesh ( uint32_t aId )
+    {
+        return Get<Mesh> ( aId, aId );
+    }
 
     const AABB& Mesh::GetAABB() const
     {

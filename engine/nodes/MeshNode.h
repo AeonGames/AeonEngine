@@ -20,6 +20,7 @@ namespace AeonGames
 {
     class NodeBuffer;
     class Mesh;
+    class Pipeline;
     class MeshNode : public Node
     {
     public:
@@ -27,11 +28,16 @@ namespace AeonGames
         ~MeshNode() final;
         const std::string& GetType() const final;
         const std::vector<std::reference_wrapper<Node::Property>>& GetProperties() const final;
+        uint32_t GetPipeline() const;
+        void SetPipeline ( uint32_t aPipelineId );
         uint32_t GetMesh() const;
         void SetMesh ( uint32_t aMeshId );
+        void Render ( const Window& aWindow ) const final;
     private:
+        uint32_t mPipelineId{};
+        std::shared_ptr<Pipeline> mPipeline{nullptr};
         uint32_t mMeshId{};
-        Mesh* mMesh{nullptr};
+        std::shared_ptr<Mesh> mMesh{nullptr};
     };
 }
 #endif

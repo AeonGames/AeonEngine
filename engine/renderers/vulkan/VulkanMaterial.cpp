@@ -54,7 +54,9 @@ namespace AeonGames
     }
 
     VulkanMaterial::~VulkanMaterial()
-        = default;
+    {
+        Finalize();
+    }
 
     void VulkanMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {

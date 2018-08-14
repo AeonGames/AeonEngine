@@ -41,10 +41,10 @@ namespace AeonGames
                                           ( std::istreambuf_iterator<char>() ) );
             file.close();
             //--------------------------------------------------------
-            return Decode ( aOutput, buffer.size(), buffer.data() );
+            return Decode ( aOutput, buffer.data(), buffer.size() );
         }
 
-        static bool Decode ( T& aOutput, size_t aBufferSize, const void* aBuffer )
+        static bool Decode ( T& aOutput, const void* aBuffer, size_t aBufferSize )
         {
             auto iterator = std::lower_bound ( Decoders.begin(), Decoders.end(), aBuffer,
                                                [] ( const std::tuple<std::string, std::function < bool ( T&, size_t, const void* ) >>& aTuple, const void* aBuffer )

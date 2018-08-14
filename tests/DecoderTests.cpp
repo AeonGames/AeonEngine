@@ -75,13 +75,13 @@ namespace AeonGames
         } ) );
 
         std::string output;
-        EXPECT_TRUE ( Decoder<std::string>::Decode ( output, strlen ( "C)XXXXXXXXX" ), "C)XXXXXXXXX" ) );
+        EXPECT_TRUE ( Decoder<std::string>::Decode ( output, "C)XXXXXXXXX", strlen ( "C)XXXXXXXXX" ) ) );
         EXPECT_TRUE ( output == "C Decoder" );
-        EXPECT_TRUE ( Decoder<std::string>::Decode ( output, strlen ( "A)XXXXXXXXX" ), "A)XXXXXXXXX" ) );
+        EXPECT_TRUE ( Decoder<std::string>::Decode ( output,  "A)XXXXXXXXX", strlen ( "A)XXXXXXXXX" ) ) );
         EXPECT_TRUE ( output == "A Decoder" );
-        EXPECT_TRUE ( Decoder<std::string>::Decode ( output, strlen ( "F)XXXXXXXXX" ), "F)XXXXXXXXX" ) );
+        EXPECT_TRUE ( Decoder<std::string>::Decode ( output,  "F)XXXXXXXXX", strlen ( "F)XXXXXXXXX" ) ) );
         EXPECT_TRUE ( output == "F Decoder" );
-        EXPECT_TRUE ( Decoder<std::string>::Decode ( output, strlen ( "E)XXXXXXXXX" ), "E)XXXXXXXXX" ) );
+        EXPECT_TRUE ( Decoder<std::string>::Decode ( output,  "E)XXXXXXXXX", strlen ( "E)XXXXXXXXX" ) ) );
         EXPECT_TRUE ( output == "E Decoder" );
 
         EXPECT_TRUE ( Decoder<std::string>::UnregisterDecoder ( "F)" ) );
