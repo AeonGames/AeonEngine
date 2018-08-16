@@ -26,16 +26,25 @@ namespace AeonGames
     class Pack : public Tool
     {
     public:
+        enum Action
+        {
+            None = 0,
+            Extract,
+            Compress,
+            Directory
+        };
         Pack();
         ~Pack();
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );
         bool ProcessDirectory ( const std::string& path );
+        int ExecCompress() const;
+        int ExecExtract() const;
+        int ExecDirectory() const;
         std::unordered_map<uint32_t, PKGDirectoryEntry> mDirectory;
         std::unordered_map<uint32_t, std::string> mStringTable;
-        bool mExtract;
-        bool mCompress;
+        Action mAction{};
         std::string mRootPath;
         std::string mBaseName;
         std::string mInputPath;

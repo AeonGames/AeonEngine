@@ -216,11 +216,15 @@ namespace AeonGames
                     }
                     else if ( strncmp ( &argv[i][2], "extract\0", 8 ) == 0 )
                     {
-                        mExtract = true;
+                        mAction = Action::Extract;
                     }
                     else if ( strncmp ( &argv[i][2], "compress\0", 9 ) == 0 )
                     {
-                        mCompress = true;
+                        mAction = Action::Compress;
+                    }
+                    else if ( strncmp ( &argv[i][2], "directory\0", 9 ) == 0 )
+                    {
+                        mAction = Action::Directory;
                     }
                 }
                 else
@@ -236,10 +240,13 @@ namespace AeonGames
                         mOutputFile = argv[i];
                         break;
                     case 'c':
-                        mCompress = true;
+                        mAction = Action::Compress;
                         break;
                     case 'e':
-                        mExtract = true;
+                        mAction = Action::Extract;
+                        break;
+                    case 'd':
+                        mAction = Action::Directory;
                         break;
                     }
                 }
@@ -259,6 +266,44 @@ namespace AeonGames
         mStringTable.clear();
         mDirectory.clear();
         ProcessArgs ( argc, argv );
+        switch ( mAction )
+        {
+        case Action::Compress:
+            return ExecCompress();
+        case Action::Extract:
+            return ExecExtract();
+        case Action::Directory:
+            return ExecDirectory();
+        default:
+            break;
+        }
+        return -1;
+    }
+    int Pack::ExecExtract() const
+    {
+        return 0;
+    }
+    int Pack::ExecDirectory() const
+    {
+        try
+        {
+            Package package{mInputPath};
+            for ( auto& i : package.GetIndexTable() )
+            {
+                std::cout << std::setfill ( '0' ) << std::setw ( 10 ) << /*std::hex <<*/ i.first << "\t" << i.second << std::endl;
+            }
+        }
+        catch ( std::runtime_error& e )
+        {
+            std::cout << e.what();
+            return -1;
+        }
+        return 0;
+    }
+    int Pack::ExecCompress() const
+    {
+#if 0
+// Commented out, this old file format might change in the future.
 #ifdef _WIN32
         DWORD file_attributes = GetFileAttributes ( mInputPath.c_str() );
         char drive[_MAX_DRIVE];
@@ -385,7 +430,7 @@ namespace AeonGames
             {
                 extension.clear();
             }
-            if ( ( mCompress ) && ( extension != "png" ) ) /* don't compress PNG files which are already compressed */
+            if ( ( mAction == Action::Compress ) && ( extension != "png" ) ) /* don't compress PNG files which are already compressed */
             {
                 i->second.compression_type = 1;
                 if ( write_deflated_data ( in, out, 5, i->second.compressed_size ) != Z_OK )
@@ -433,6 +478,7 @@ namespace AeonGames
             fwrite ( &i->second, sizeof ( PKGDirectoryEntry ), 1, out );
         }
         fclose ( out );
+#endif
         return 0;
     }
 }

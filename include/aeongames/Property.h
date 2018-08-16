@@ -239,55 +239,62 @@ namespace AeonGames
                     for ( size_t i = 0; i < aMultiplier; ++i )
                     {
                         ++sm_index;
-                        switch ( aType )
+                        try
                         {
-                        case 'c':
-                            *reinterpret_cast<char*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( char );
-                            break;
-                        case 'b':
-                            *reinterpret_cast<int8_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( int8_t );
-                            break;
-                        case 'B':
-                        case '?':
-                            *reinterpret_cast<uint8_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( uint8_t );
-                            break;
-                        case 'h':
-                            *reinterpret_cast<int16_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( int16_t );
-                            break;
-                        case 'H':
-                            *reinterpret_cast<uint16_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( uint16_t );
-                            break;
-                        case 'i':
-                        case 'l':
-                            *reinterpret_cast<int32_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( int32_t );
-                            break;
-                        case 'I':
-                        case 'L':
-                            *reinterpret_cast<uint32_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( uint32_t );
-                            break;
-                        case 'f':
-                            *reinterpret_cast<float*> ( write_cursor ) = std::stof ( sm[sm_index] );
-                            write_cursor += sizeof ( float );
-                            break;
-                        case 'q':
-                            *reinterpret_cast<int64_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( int64_t );
-                            break;
-                        case 'Q':
-                            *reinterpret_cast<uint64_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
-                            write_cursor += sizeof ( uint64_t );
-                            break;
-                        case 'd':
-                            *reinterpret_cast<double*> ( write_cursor ) = std::stod ( sm[sm_index] );
-                            write_cursor += sizeof ( double );
-                            break;
+                            switch ( aType )
+                            {
+                            case 'c':
+                                *reinterpret_cast<char*> ( write_cursor ) = std::stoi ( sm[sm_index] );
+                                write_cursor += sizeof ( char );
+                                break;
+                            case 'b':
+                                *reinterpret_cast<int8_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
+                                write_cursor += sizeof ( int8_t );
+                                break;
+                            case 'B':
+                            case '?':
+                                *reinterpret_cast<uint8_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
+                                write_cursor += sizeof ( uint8_t );
+                                break;
+                            case 'h':
+                                *reinterpret_cast<int16_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
+                                write_cursor += sizeof ( int16_t );
+                                break;
+                            case 'H':
+                                *reinterpret_cast<uint16_t*> ( write_cursor ) = std::stoi ( sm[sm_index] );
+                                write_cursor += sizeof ( uint16_t );
+                                break;
+                            case 'i':
+                            case 'l':
+                                *reinterpret_cast<int32_t*> ( write_cursor ) = std::stol ( sm[sm_index] );
+                                write_cursor += sizeof ( int32_t );
+                                break;
+                            case 'I':
+                            case 'L':
+                                *reinterpret_cast<uint32_t*> ( write_cursor ) = std::stoul ( sm[sm_index] );
+                                write_cursor += sizeof ( uint32_t );
+                                break;
+                            case 'f':
+                                *reinterpret_cast<float*> ( write_cursor ) = std::stof ( sm[sm_index] );
+                                write_cursor += sizeof ( float );
+                                break;
+                            case 'q':
+                                *reinterpret_cast<int64_t*> ( write_cursor ) = std::stoll ( sm[sm_index] );
+                                write_cursor += sizeof ( int64_t );
+                                break;
+                            case 'Q':
+                                *reinterpret_cast<uint64_t*> ( write_cursor ) = std::stoull ( sm[sm_index] );
+                                write_cursor += sizeof ( uint64_t );
+                                break;
+                            case 'd':
+                                *reinterpret_cast<double*> ( write_cursor ) = std::stod ( sm[sm_index] );
+                                write_cursor += sizeof ( double );
+                                break;
+                            }
+                        }
+                        catch ( std::out_of_range& e )
+                        {
+                            throw std::runtime_error ( e.what() );
                         }
                     }
                     return true;

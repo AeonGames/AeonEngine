@@ -8,8 +8,8 @@ vertex_shader {
   "const vec3 Ld = vec3( 1.0f, 0.38823529411f, 0.27843137254f );"
   "if ( length ( VertexNormal ) != 0 )\n"
   "{\n"
-  "vec3 tnorm = normalize ( NormalMatrix * VertexNormal );\n"
-  "vec4 eyeCoords = ModelViewMatrix * vec4 ( VertexPosition, 1.0 );\n"
+  "vec3 tnorm = normalize ( transpose(inverse(ViewMatrix * ModelMatrix)) * VertexNormal );\n"
+  "vec4 eyeCoords = ViewMatrix * ModelMatrix * vec4 ( VertexPosition, 1.0 );\n"
   "vec3 s = normalize ( -eyeCoords.xyz );\n"
   "LightIntensity = Ld * Kd * max ( dot ( s, tnorm ), 0.0 );\n"
   "}\n"
@@ -17,7 +17,7 @@ vertex_shader {
   "{\n"
   "LightIntensity = Ld;\n"
   "}\n"
-  "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
+  "gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(VertexPosition, 1.0);\n"
   "}\n"
 }
 fragment_shader {

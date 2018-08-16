@@ -28,14 +28,15 @@ default_material {
       }
     }
 }
+topology: TRIANGLE_LIST
 vertex_shader {
   code: "layout(location = 0) out vec3 LightIntensity;\n"
   "void main()\n"
   "{\n"
   "if ( length ( VertexNormal ) != 0 )\n"
   "{\n"
-  "vec3 tnorm = normalize ( NormalMatrix * VertexNormal );\n"
-  "vec4 eyeCoords = ModelViewMatrix * vec4 ( VertexPosition, 1.0 );\n"
+  "vec3 tnorm = normalize ( transpose(inverse(mat3(ViewMatrix) * mat3(ModelMatrix))) * VertexNormal );\n"
+  "vec4 eyeCoords = ViewMatrix * ModelMatrix * vec4 ( VertexPosition, 1.0 );\n"
   "vec3 s = normalize ( LightPosition - eyeCoords.xyz );\n"
   "LightIntensity = Ld * Kd * max ( dot ( s, tnorm ), 0.0 );\n"
   "}\n"
@@ -43,7 +44,7 @@ vertex_shader {
   "{\n"
   "LightIntensity = Ld;\n"
   "}\n"
-  "gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);\n"
+  "gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(VertexPosition, 1.0);\n"
   "}\n"
 }
 fragment_shader {
