@@ -243,7 +243,7 @@ namespace AeonGames
         image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         image_create_info.queueFamilyIndexCount = 0;
         image_create_info.pQueueFamilyIndices = nullptr;
-        image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        image_create_info.initialLayout = VK_IMAGE_LAYOUT_GENERAL/*VK_IMAGE_LAYOUT_UNDEFINED*/;
         if ( VkResult result = vkCreateImage ( mVulkanRenderer.GetDevice(), &image_create_info, nullptr, &mVkDepthStencilImage ) )
         {
             std::ostringstream stream;
@@ -546,6 +546,22 @@ namespace AeonGames
                         aVertexStart,
                         aFirstInstance );
                 }
+            }
+        }
+        /* I think it may be a good idea to keep a global renderer to set these instead. */
+        else
+        {
+            if ( !render_pipeline )
+            {
+                mVulkanRenderer.LoadRenderPipeline ( aPipeline );
+            }
+            if ( !render_mesh )
+            {
+                mVulkanRenderer.LoadRenderMesh ( aMesh );
+            }
+            if ( !render_material )
+            {
+                mVulkanRenderer.LoadRenderMaterial ( *material );
             }
         }
     }

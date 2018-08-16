@@ -52,7 +52,7 @@ vertex_shader {
   "      ( skeleton[VertexWeightIndices[1]] * VertexWeights[1] * vec4 ( VertexPosition, 1 ) ) +\n"
   "      ( skeleton[VertexWeightIndices[2]] * VertexWeights[2] * vec4 ( VertexPosition, 1 ) ) +\n"
   "      ( skeleton[VertexWeightIndices[3]] * VertexWeights[3] * vec4 ( VertexPosition, 1 ) );\n"
-  "gl_Position = ProjectionMatrix * ViewMatrix /* ModelMatrix */* vec4(weighted_position.xyz, 1.0);\n"
+  "gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(weighted_position.xyz, 1.0);\n"
   "CoordUV = VertexUV;\n"
   "}\n"
 }
