@@ -396,7 +396,7 @@ namespace AeonGames
         pipeline_multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         pipeline_multisample_state_create_info.pNext = nullptr;
         pipeline_multisample_state_create_info.flags = 0;
-        pipeline_multisample_state_create_info.sampleShadingEnable = VK_TRUE;
+        pipeline_multisample_state_create_info.sampleShadingEnable = VK_FALSE;
         pipeline_multisample_state_create_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
         pipeline_multisample_state_create_info.minSampleShading = 0.0f;
         pipeline_multisample_state_create_info.pSampleMask = nullptr;

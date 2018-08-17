@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <cstring>
 #include <sstream>
+#include <iostream>
 #include <limits>
 #include "VulkanRenderer.h"
 #include "VulkanBuffer.h"
@@ -186,6 +187,12 @@ namespace AeonGames
 
     void VulkanBuffer::Finalize()
     {
+        /** @todo waitting for the idle queue is only required if the buffer is under use.*/
+        if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) )
+        {
+            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+        }
+
         if ( mDeviceMemory != VK_NULL_HANDLE )
         {
             vkFreeMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, nullptr );
