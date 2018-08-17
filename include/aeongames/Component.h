@@ -31,7 +31,7 @@ namespace AeonGames
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
-        virtual ~Component() = 0;
+        DLL virtual ~Component() = 0;
     };
     /**@name Factory Functions */
     /*@{*/

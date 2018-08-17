@@ -18,6 +18,6 @@ limitations under the License.
 #include "aeongames/Component.h"
 namespace AeonGames
 {
-    DLL Component::~Component() = default;
+    Component::~Component() = default;
     FactoryImplementation ( Component );
 }
