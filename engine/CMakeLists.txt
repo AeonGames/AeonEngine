@@ -79,6 +79,8 @@ set(ENGINE_CORE_HEADERS
     include/Factory.h
     include/ProtoBufHelpers.h
     include/Configuration.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Component.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
@@ -114,6 +116,7 @@ set(ENGINE_CORE_SOURCES
     core/CRC.cpp
     core/Scene.cpp
     core/Node.cpp
+    core/Component.cpp
     core/Package.cpp
     )
 

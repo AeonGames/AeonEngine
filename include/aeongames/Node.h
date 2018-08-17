@@ -28,6 +28,8 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/CRC.h"
 #include "aeongames/Property.h"
+#include "aeongames/Component.h"
+#include "aeongames/DependencyMap.h"
 
 namespace AeonGames
 {
@@ -36,7 +38,6 @@ namespace AeonGames
     class Scene;
     class ModelInstance;
     class AABB;
-    class Component;
     class Node
     {
     public:
@@ -139,9 +140,15 @@ namespace AeonGames
         DLL static const std::vector<std::reference_wrapper<Property>>& Properties();
         DLL virtual const std::vector<std::reference_wrapper<Property>>& GetProperties() const;
         /** @} */
+        /** @name Components */
+        /** @{ */
+        DLL void AddComponent ( Component& aComponent );
+        DLL void RemoveComponent ( Component& aComponent );
+        DLL Component* StoreComponent ( std::unique_ptr<Component> aComponent );
+        DLL std::unique_ptr<Component> DisposeComponent ( const Component* aComponent );
+        /** @} */
         /** @name Abstract functions
-         *  @todo decide if these should be private or public.
-        */
+         *  @todo decide if these should be private or public. */
         /** @{ */
         DLL virtual void Update ( const double delta );
         DLL virtual void Render ( const Window& aWindow ) const;
@@ -153,6 +160,16 @@ namespace AeonGames
         Transform mLocalTransform;
         Transform mGlobalTransform;
         std::vector<Node*> mNodes;
+        DependencyMap<uint32_t, Component*> mComponents{};
+        /** Local Component Storage
+         * This is a storage space for components
+         * owned by the node, such as deserialized
+         * components as well as any components requested from
+         * the node, or moved into the node.
+         * It does not necesarily contains a pointer to all
+         * components in the node, nor does a pointer existing
+         * here means it exists as part of the component dependency map. */
+        std::vector<std::unique_ptr<Component>> mComponentStorage{};
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<Node*>::size_type mIterator{ 0 };
