@@ -28,19 +28,24 @@ namespace AeonGames
         class T,
         class Hash = std::hash<Key>,
         class KeyEqual = std::equal_to<Key>,
-        class MapAllocator = std::allocator< std::pair<const Key, T> >,
-        class VectorAllocator = std::allocator<Key>
-        >
-    class DependencyMap
+        class MapAllocator = std::allocator< std::pair<const Key, typename std::tuple <
+                    Key,
+                    size_t,
+                    std::vector<Key, std::allocator<Key>>,
+                    T
+                    >>>,
+                class VectorAllocator = std::allocator<Key>
+                >
+                class DependencyMap
     {
         using GraphNode = typename std::tuple <
-                          Key,                               //-> Parent Iterator
-                          size_t,                            //-> Child Iterator
-                          std::vector<Key, VectorAllocator>, //-> Dependencies
-                          T                                  //-> Payload
-                          >;
+            Key,                               //-> Parent Iterator
+            size_t,                            //-> Child Iterator
+            std::vector<Key, VectorAllocator>, //-> Dependencies
+            T                                  //-> Payload
+            >;
 
-    public:
+public:
         using triple = typename std::tuple<Key, std::vector<Key>, T>;
         class iterator
         {
@@ -361,7 +366,7 @@ namespace AeonGames
         {
             return const_iterator{sorted.end(), &graph};
         }
-    private:
+private:
         std::unordered_map
         <
         Key,

@@ -89,8 +89,7 @@ namespace AeonGames
          * the scene, or moved to the scene.
          * It does not necesarily contains a pointer to all
          * nodes in the tree, nor does a pointer existing
-         * here means it exists as part of the tree.
-        */
+         * here means it exists as part of the tree. */
         std::vector<std::unique_ptr<Node>> mNodeStorage{};
     };
 }

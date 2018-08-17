@@ -535,14 +535,51 @@ namespace AeonGames
         }
     }
 
+    void Node::AddComponent ( Component& aComponent )
+    {
+        mComponents.Insert ( {aComponent.GetTypeId(), aComponent.GetDependencies(), &aComponent} );
+    }
+
+    void Node::RemoveComponent ( Component& aComponent )
+    {
+        mComponents.Erase ( aComponent.GetTypeId() );
+    }
+
+    Component* Node::StoreComponent ( std::unique_ptr<Component> aComponent )
+    {
+        mComponentStorage.emplace_back ( std::move ( aComponent ) );
+        return mComponentStorage.back().get();
+    }
+
+    std::unique_ptr<Component> Node::DisposeComponent ( const Component* aComponent )
+    {
+        std::unique_ptr<Component> result{};
+        auto i = std::find_if ( mComponentStorage.begin(), mComponentStorage.end(), [aComponent] ( const std::unique_ptr<Component>& component )
+        {
+            return aComponent == component.get();
+        } );
+        if ( i != mComponentStorage.end() )
+        {
+            result = std::move ( *i );
+            mComponentStorage.erase ( std::remove ( i, mComponentStorage.end(), *i ), mComponentStorage.end() );
+        }
+        return result;
+    }
+
     void Node::Update ( const double aDelta )
     {
-        ( void ) aDelta;
+        for ( auto& i : mComponents )
+        {
+            i->Update ( *this, aDelta );
+        }
     }
 
     void Node::Render ( const Window& aWindow ) const
     {
-        ( void ) aWindow;
+        for ( auto& i : mComponents )
+        {
+            i->Render ( *this, aWindow );
+        }
     }
 
     static std::vector<Node::Property> NodeProperties
