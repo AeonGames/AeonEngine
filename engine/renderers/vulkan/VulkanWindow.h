@@ -73,7 +73,7 @@ namespace AeonGames
         bool mHasStencil{ false };
         ::std::vector<VkFramebuffer> mVkFramebuffers{};
         uint32_t mActiveImageIndex{ UINT32_MAX };
-        VkViewport mVkViewport{};
+        VkViewport mVkViewport{0, 0, 0, 0, 0, 1};
         VkRect2D mVkScissor{};
         VkDescriptorPool mVkMatricesDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkMatricesDescriptorSet{ VK_NULL_HANDLE };
