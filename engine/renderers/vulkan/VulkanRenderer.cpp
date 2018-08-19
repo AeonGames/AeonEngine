@@ -205,7 +205,6 @@ namespace AeonGames
             VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
             VK_DEBUG_REPORT_ERROR_BIT_EXT |
             VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        mInstanceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
         mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
     }
@@ -240,6 +239,28 @@ namespace AeonGames
         application_info.apiVersion = 0;
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
         application_info.pApplicationName = "AeonEngine Vulkan Renderer";
+
+        {
+            uint32_t device_layer_count;
+            vkEnumerateInstanceLayerProperties ( &device_layer_count, nullptr );
+            std::vector<VkLayerProperties> device_layer_list ( device_layer_count );
+            vkEnumerateInstanceLayerProperties ( &device_layer_count, device_layer_list.data() );
+            std::cout << "VulkanRenderer Instance Layers" << std::endl;
+            for ( auto& i : device_layer_list )
+            {
+                std::cout << " " << i.layerName << ": " << i.description << std::endl;
+                {
+                    uint32_t instance_extension_layer_count;
+                    vkEnumerateInstanceExtensionProperties ( i.layerName, &instance_extension_layer_count, nullptr );
+                    std::vector<VkExtensionProperties> instance_extension_layer_list ( instance_extension_layer_count );
+                    vkEnumerateInstanceExtensionProperties ( i.layerName, &instance_extension_layer_count, instance_extension_layer_list.data() );
+                    for ( auto& j : instance_extension_layer_list )
+                    {
+                        std::cout << "\t" << j.extensionName << std::endl;
+                    }
+                }
+            }
+        }
 
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
@@ -326,30 +347,6 @@ namespace AeonGames
                 {
                     mDeviceExtensionNames.emplace_back ( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
                 }
-            }
-        }
-
-        {
-            uint32_t instance_layer_count;
-            vkEnumerateInstanceLayerProperties ( &instance_layer_count, nullptr );
-            std::vector<VkLayerProperties> instance_layer_list ( instance_layer_count );
-            vkEnumerateInstanceLayerProperties ( &instance_layer_count, instance_layer_list.data() );
-            std::cout << "VulkanRenderer Instance Layers" << std::endl;
-            for ( auto& i : instance_layer_list )
-            {
-                std::cout << " " << i.layerName << "\t|\t" << i.description << std::endl;
-            }
-        }
-
-        {
-            uint32_t device_layer_count;
-            vkEnumerateDeviceLayerProperties ( mVkPhysicalDevice, &device_layer_count, nullptr );
-            std::vector<VkLayerProperties> device_layer_list ( device_layer_count );
-            vkEnumerateInstanceLayerProperties ( &device_layer_count, device_layer_list.data() );
-            std::cout << "VulkanRenderer Device Layers" << std::endl;
-            for ( auto& i : device_layer_list )
-            {
-                std::cout << " " << i.layerName << "\t|\t" << i.description << std::endl;
             }
         }
 
