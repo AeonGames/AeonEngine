@@ -20,12 +20,12 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/Component.h"
 #include "MeshNode.h"
-#include "MeshComponent.h"
+#include "ModelComponent.h"
 #include <iostream>
 
 extern "C"
 {
-    bool AeonEngineNodesStartUp()
+    bool AeonEngineComponentsStartUp()
     {
         AeonGames::RegisterNodeConstructor ( "Mesh", []()
         {
@@ -33,12 +33,12 @@ extern "C"
         } );
         AeonGames::RegisterComponentConstructor ( "Mesh", []()
         {
-            return std::make_unique<AeonGames::MeshComponent>();
+            return std::make_unique<AeonGames::ModelComponent>();
         } );
         return true;
     }
 
-    void AeonEngineNodesShutdown()
+    void AeonEngineComponentsShutdown()
     {
         AeonGames::UnregisterNodeConstructor ( "Mesh" );
         AeonGames::UnregisterComponentConstructor ( "Mesh" );
@@ -46,9 +46,9 @@ extern "C"
 
     PLUGIN PluginModuleInterface PMI =
     {
-        "AeonEngine Nodes",
-        "Specialized Node Implementations",
-        AeonEngineNodesStartUp,
-        AeonEngineNodesShutdown
+        "AeonEngine Components",
+        "Default Component Implementations",
+        AeonEngineComponentsStartUp,
+        AeonEngineComponentsShutdown
     };
 }

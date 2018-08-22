@@ -20,6 +20,13 @@ limitations under the License.
 #include <functional>
 #include "aeongames/Platform.h"
 #include "aeongames/Memory.h"
+namespace google
+{
+    namespace protobuf
+    {
+        class Message;
+    }
+}
 namespace AeonGames
 {
     class Window;
@@ -31,6 +38,7 @@ namespace AeonGames
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
+        virtual const google::protobuf::Message* GetProperties() const = 0;
         DLL virtual ~Component() = 0;
     };
     /**@name Factory Functions */

@@ -13,30 +13,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_MESHCOMPONENT_H
-#define AEONGAMES_MESHCOMPONENT_H
+#ifndef AEONGAMES_MODELCOMPONENT_H
+#define AEONGAMES_MODELCOMPONENT_H
+#include <vector>
+#include <tuple>
 #include "aeongames/Component.h"
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "model.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 namespace AeonGames
 {
     class Mesh;
     class Pipeline;
-    class MeshComponent : public Component
+    class Material;
+    class ModelComponent : public Component
     {
     public:
-        ~MeshComponent() final;
+        ~ModelComponent() final;
         uint32_t GetTypeId() const final;
         std::vector<uint32_t> GetDependencies() const final;
-        uint32_t GetPipeline() const;
-        void SetPipeline ( uint32_t aPipelineId );
-        uint32_t GetMesh() const;
-        void SetMesh ( uint32_t aMeshId );
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
+        const google::protobuf::Message* GetProperties() const final;
     private:
-        uint32_t mPipelineId{};
-        std::shared_ptr<Pipeline> mPipeline{nullptr};
-        uint32_t mMeshId{};
-        std::shared_ptr<Mesh> mMesh{nullptr};
+        ModelBuffer mProperties{};
+        std::vector<std::tuple<
+        std::shared_ptr<Mesh>,
+            std::shared_ptr<Pipeline>,
+            std::shared_ptr<Material>>
+            > mMeshes{};
     };
 }
 #endif
