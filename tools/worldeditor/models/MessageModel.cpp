@@ -169,7 +169,7 @@ namespace AeonGames
         {
             return false;
         }
-        const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
+        //const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
         if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
             // Get index_field reflection and change data
