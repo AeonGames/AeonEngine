@@ -36,6 +36,7 @@ namespace AeonGames
     public:
         DLL Transform();
         DLL Transform ( const Vector3& aScale, const Quaternion& aRotation, const Vector3& aTranslation );
+        DLL Transform ( const Vector3& aScale, const Vector3& aRotation, const Vector3& aTranslation );
         DLL Transform ( const float* aData );
         DLL void Get ( float* aData ) const;
 

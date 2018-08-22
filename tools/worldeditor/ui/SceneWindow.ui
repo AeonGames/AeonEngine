@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>249</width>
-    <height>499</height>
+    <width>270</width>
+    <height>764</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -106,20 +106,177 @@
        <item>
         <widget class="QGroupBox" name="propertyGroupBox">
          <property name="title">
-          <string>Properties</string>
+          <string>Node Properties</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QVBoxLayout" name="nodePropertiesLayout">
           <item>
-           <widget class="QTreeView" name="propertiesTreeView">
-            <property name="alternatingRowColors">
-             <bool>true</bool>
+           <widget class="QGroupBox" name="localTransformGroupBox">
+            <property name="title">
+             <string>Local Transform</string>
             </property>
-            <property name="indentation">
-             <number>10</number>
+            <layout class="QGridLayout" name="localGridLayout">
+             <item row="0" column="2">
+              <widget class="QDoubleSpinBox" name="localScaleY">
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="localRotationLabel">
+               <property name="text">
+                <string>Rotation</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QDoubleSpinBox" name="localScaleZ">
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QDoubleSpinBox" name="localRotationYaw"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="QDoubleSpinBox" name="localRotationRoll"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="localRotationPitch"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="localScaleLabel">
+               <property name="text">
+                <string>Scale</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="localScaleX">
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="localTranslationLabel">
+               <property name="text">
+                <string>Translation</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="localTranslationX"/>
+             </item>
+             <item row="2" column="2">
+              <widget class="QDoubleSpinBox" name="localTranslationY"/>
+             </item>
+             <item row="2" column="3">
+              <widget class="QDoubleSpinBox" name="localTranslationZ"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="globalTransformGroupBox">
+            <property name="title">
+             <string>Global Transform</string>
             </property>
-            <property name="allColumnsShowFocus">
-             <bool>true</bool>
+            <layout class="QGridLayout" name="globalGridLayout">
+             <item row="0" column="2">
+              <widget class="QDoubleSpinBox" name="globalScaleY">
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="globalRotationLabel">
+               <property name="text">
+                <string>Rotation</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QDoubleSpinBox" name="globalScaleZ">
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QDoubleSpinBox" name="globalRotationYaw"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="QDoubleSpinBox" name="globalRotationRoll"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="globalRotationPitch"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="globalScaleLabel">
+               <property name="text">
+                <string>Scale</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="globalScaleX">
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="globalTranslationLabel">
+               <property name="text">
+                <string>Translation</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="globalTranslationX"/>
+             </item>
+             <item row="2" column="2">
+              <widget class="QDoubleSpinBox" name="globalTranslationY"/>
+             </item>
+             <item row="2" column="3">
+              <widget class="QDoubleSpinBox" name="globalTranslationZ"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="componentGroupBox">
+            <property name="title">
+             <string>Components</string>
             </property>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <widget class="QListView" name="nodeListView">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTreeView" name="componentTreeView">
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="indentation">
+                <number>10</number>
+               </property>
+               <property name="allColumnsShowFocus">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -130,7 +287,23 @@
     </widget>
    </item>
   </layout>
+  <action name="actionAddNode">
+   <property name="icon">
+    <iconset resource="../worldeditor_static.qrc">
+     <normaloff>:/icons/icon_add</normaloff>:/icons/icon_add</iconset>
+   </property>
+   <property name="text">
+    <string>Add node</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a child node to this scene or node</string>
+   </property>
+  </action>
   <action name="actionRemoveNode">
+   <property name="icon">
+    <iconset resource="../worldeditor_static.qrc">
+     <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
+   </property>
    <property name="text">
     <string>Remove node</string>
    </property>
@@ -138,7 +311,41 @@
     <string>Remove a child node from this scene or node</string>
    </property>
   </action>
+  <action name="actionRemoveComponent">
+   <property name="icon">
+    <iconset resource="../worldeditor_static.qrc">
+     <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
+   </property>
+   <property name="text">
+    <string>Remove component</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected component from node</string>
+   </property>
+  </action>
  </widget>
+ <tabstops>
+  <tabstop>sceneTreeView</tabstop>
+  <tabstop>localScaleX</tabstop>
+  <tabstop>localScaleY</tabstop>
+  <tabstop>localScaleZ</tabstop>
+  <tabstop>localRotationPitch</tabstop>
+  <tabstop>localRotationRoll</tabstop>
+  <tabstop>localRotationYaw</tabstop>
+  <tabstop>localTranslationX</tabstop>
+  <tabstop>localTranslationY</tabstop>
+  <tabstop>localTranslationZ</tabstop>
+  <tabstop>globalScaleX</tabstop>
+  <tabstop>globalScaleY</tabstop>
+  <tabstop>globalScaleZ</tabstop>
+  <tabstop>globalRotationPitch</tabstop>
+  <tabstop>globalRotationRoll</tabstop>
+  <tabstop>globalRotationYaw</tabstop>
+  <tabstop>globalTranslationX</tabstop>
+  <tabstop>globalTranslationY</tabstop>
+  <tabstop>globalTranslationZ</tabstop>
+  <tabstop>componentTreeView</tabstop>
+ </tabstops>
  <resources>
   <include location="../worldeditor_static.qrc"/>
  </resources>
@@ -147,14 +354,14 @@
    <sender>sceneTreeView</sender>
    <signal>customContextMenuRequested(QPoint)</signal>
    <receiver>SceneWindow</receiver>
-   <slot>on_customContextMenuRequested(QPoint)</slot>
+   <slot>on_sceneContextMenuRequested(QPoint)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>229</x>
-     <y>239</y>
+     <x>239</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>456</x>
+     <x>269</x>
      <y>328</y>
     </hint>
    </hints>
@@ -166,18 +373,359 @@
    <slot>on_sceneTreeViewClicked(QModelIndex)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>98</x>
-     <y>130</y>
+     <x>108</x>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
      <x>173</x>
-     <y>-12</y>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>nodeListView</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_nodeListViewClicked(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>158</x>
+     <y>525</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>173</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localScaleX</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>220</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>87</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localScaleY</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>220</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localScaleZ</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>220</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localRotationPitch</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localRotationRoll</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localRotationYaw</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localTranslationX</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>272</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localTranslationY</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>272</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localTranslationZ</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>272</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalScaleX</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>87</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalScaleY</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalScaleZ</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>331</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalRotationPitch</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>357</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalRotationRoll</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>357</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalRotationYaw</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>357</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalTranslationX</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>131</x>
+     <y>383</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalTranslationY</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>383</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalTranslationZ</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>383</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>nodeListView</sender>
+   <signal>customContextMenuRequested(QPoint)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_nodeContextMenuRequested(QPoint)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>91</x>
+     <y>497</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>129</x>
+     <y>-17</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>componentTreeView</sender>
+   <signal>customContextMenuRequested(QPoint)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_componentContextMenuRequested(QPoint)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>111</x>
+     <y>743</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>129</x>
+     <y>-17</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
+  <slot>on_localTransformChanged()</slot>
+  <slot>on_globalTransformChanged()</slot>
   <slot>on_sceneTreeViewClicked(QModelIndex)</slot>
-  <slot>on_customContextMenuRequested(QPoint)</slot>
+  <slot>on_nodeListViewClicked(QModelIndex)</slot>
+  <slot>on_sceneContextMenuRequested(QPoint)</slot>
+  <slot>on_nodeContextMenuRequested(QPoint)</slot>
+  <slot>on_componentContextMenuRequested(QPoint)</slot>
  </slots>
 </ui>

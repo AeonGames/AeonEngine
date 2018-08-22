@@ -28,7 +28,7 @@ limitations under the License.
 namespace AeonGames
 {
     NodeModel::NodeModel ( QObject *parent ) :
-        QAbstractItemModel ( parent ) {}
+        QAbstractListModel ( parent ) {}
 
     NodeModel::~NodeModel() = default;
 
@@ -39,9 +39,7 @@ namespace AeonGames
             switch ( section )
             {
             case 0:
-                return QString ( "Property" );
-            case 1:
-                return QString ( "Value" );
+                return QString ( "Component" );
             default:
                 return QVariant();
             }
@@ -49,143 +47,36 @@ namespace AeonGames
         return QVariant();
     }
 
-    QModelIndex NodeModel::index ( int row, int column, const QModelIndex & parent ) const
-    {
-        if ( !mNode )
-        {
-            return QModelIndex();
-        }
-        if ( !parent.isValid() )
-        {
-            if ( ( row >= 0 ) && ( row < static_cast<int> ( mNodeProperties->size() ) ) )
-            {
-                return createIndex ( row, column, &mNodeProperties->at ( row ).get() );
-            }
-        }
-        else
-        {
-            const Node::Property* parent_property = reinterpret_cast<Node::Property*> ( parent.internalPointer() );
-            if ( ( row >= 0 ) && ( row < static_cast<int> ( parent_property->GetSubProperties().size() ) ) )
-            {
-                const Node::Property* index_property = &parent_property->GetSubProperties() [row];
-                return createIndex ( row, column, const_cast<Node::Property*> ( index_property ) );
-            }
-        }
-        return QModelIndex();
-    }
-
-    QModelIndex NodeModel::parent ( const QModelIndex & index ) const
-    {
-        const Node::Property* index_property{};
-        const Node::Property* parent_property{};
-        if ( index.isValid() )
-        {
-            index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
-            parent_property = index_property->GetParent();
-            if ( parent_property )
-            {
-                return createIndex ( static_cast<int> ( index_property->GetIndex() ), 0, const_cast<Node::Property*> ( parent_property ) );
-            }
-        }
-        return QModelIndex();
-    }
-
     int NodeModel::rowCount ( const QModelIndex & index ) const
     {
-        if ( !mNode )
+        if ( !mNode || index.isValid() )
         {
             return 0;
         }
-        if ( index.isValid() )
-        {
-            return static_cast<int> ( reinterpret_cast<Node::Property*> ( index.internalPointer() )->GetSubProperties().size() );
-        }
-        return static_cast<int> ( mNodeProperties->size() );
-    }
-
-    int NodeModel::columnCount ( const QModelIndex & index ) const
-    {
-        return 2;
-    }
-
-    bool NodeModel::hasChildren ( const QModelIndex & index ) const
-    {
-        if ( !mNode )
-        {
-            return false;
-        }
-        if ( index.isValid() )
-        {
-            return reinterpret_cast<Node::Property*> ( index.internalPointer() )->GetSubProperties().size();
-        }
-        return ( mNodeProperties->size() );
+        return static_cast<int> ( mNode->GetComponents().Size() );
     }
 
     QVariant NodeModel::data ( const QModelIndex & index, int role ) const
     {
-        if ( !mNode )
+        if ( !mNode || !index.isValid() )
         {
             return QVariant();
         }
         if ( role == Qt::DisplayRole )
         {
-            if ( index.isValid() )
-            {
-                switch ( index.column() )
-                {
-                case 0:
-                {
-                    const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
-                    return QString ( index_property->GetDisplayName().c_str() );
-                }
-                break;
-                case 1:
-                    const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
-                    return QString ( index_property->GetAsString ( mNode ).c_str() );
-                }
-            }
-        }
-        else if ( role == Qt::EditRole )
-        {
-            if ( index.isValid() && ( index.column() == 1 ) )
-            {
-                const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
-                return QString ( index_property->GetAsString ( mNode ).c_str() );
-            }
+            ///@todo consider changing GetTypeName() to return const(expr) char*
+            return QString ( mNode->GetComponents() [index.row()]->GetTypeName().c_str() );
         }
         return QVariant();
     }
-
-    Qt::ItemFlags NodeModel::flags ( const QModelIndex & index ) const
-    {
-        if ( index.isValid() && ( index.column() == 1 ) )
-        {
-            return QAbstractItemModel::flags ( index ) | Qt::ItemIsEditable;
-        }
-        return QAbstractItemModel::flags ( index );
-    }
-
-    bool NodeModel::setData ( const QModelIndex & index, const QVariant & value, int role )
-    {
-        if ( !mNode )
-        {
-            return false;
-        }
-        const Node::Property* index_property = reinterpret_cast<Node::Property*> ( index.internalPointer() );
-        if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
-        {
-            index_property->SetByString ( mNode, value.toString().toStdString() );
-            emit dataChanged ( index, index );
-            return true;
-        }
-        return false;
-    }
-
     void NodeModel::SetNode ( Node* aNode )
     {
         beginResetModel();
         mNode = aNode;
-        mNodeProperties = &aNode->GetProperties();
         endResetModel();
+    }
+    const Node* NodeModel::GetNode () const
+    {
+        return mNode;
     }
 }

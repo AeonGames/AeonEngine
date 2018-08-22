@@ -1,9 +1,9 @@
 AEONMDL
 default_pipeline {
-    file: "game/shaders/simple_phong.txt"
+    file: "shaders/simple_phong.txt"
 }
 assembly {
     mesh {
-        file: "game/meshes/cube.txt"
+        file: "meshes/cube.txt"
     }
 }

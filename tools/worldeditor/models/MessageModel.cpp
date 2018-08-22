@@ -84,14 +84,15 @@ namespace AeonGames
     QModelIndex MessageModel::parent ( const QModelIndex & index ) const
     {
         const google::protobuf::FieldDescriptor* index_field{};
-        const google::protobuf::Descriptor* parent_field{};
+        const google::protobuf::Descriptor* parent_descriptor{};
         if ( index.isValid() )
         {
             index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
-            parent_field = index_field->containing_type();
-            if ( parent_field != mMessage->GetDescriptor() )
+            parent_descriptor = index_field->containing_type();
+            if ( parent_descriptor != mMessage->GetDescriptor() )
             {
-                return createIndex ( index_field->index(), 0, const_cast<google::protobuf::FieldDescriptor*> ( parent_field->containing_type()->field ( parent_field->index() ) ) );
+                const google::protobuf::Descriptor* grandparent_descriptor = ( parent_descriptor->containing_type() ) ? parent_descriptor->containing_type() : mMessage->GetDescriptor();
+                return createIndex ( index_field->index(), 0, const_cast<google::protobuf::FieldDescriptor*> ( grandparent_descriptor->field ( parent_descriptor->index() ) ) );
             }
         }
         return QModelIndex();
@@ -118,7 +119,7 @@ namespace AeonGames
 
     bool MessageModel::hasChildren ( const QModelIndex & index ) const
     {
-        return rowCount ( index ) != 0;
+        return rowCount ( index ) > 0;
     }
 
     QVariant MessageModel::data ( const QModelIndex & index, int role ) const
@@ -179,7 +180,7 @@ namespace AeonGames
         return false;
     }
 
-    void MessageModel::SetMessage ( google::protobuf::Message* aMessage )
+    void MessageModel::SetMessage ( const google::protobuf::Message* aMessage )
     {
         beginResetModel();
         mMessage = aMessage;

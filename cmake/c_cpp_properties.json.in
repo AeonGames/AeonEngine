@@ -4,7 +4,8 @@
             "name": "@CMAKE_SYSTEM_NAME@",
             "includePath": [
                 @INCLIST@,
-                "${workspaceRoot}/include"
+                "${workspaceRoot}/include",
+                "${workspaceRoot}/include/aeongames"
             ],
             "defines": [
                 "_DEBUG",
@@ -23,7 +24,8 @@
             "browse": {
                 "path": [
                     @INCLIST@,
-                    "${workspaceRoot}/include"
+                    "${workspaceRoot}/include",
+                    "${workspaceRoot}/include/aeongames"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

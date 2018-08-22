@@ -29,7 +29,7 @@ namespace AeonGames
         std::vector<size_t> result{11, 12, 13, 10, 2, 4, 5, 3, 1, 7, 9, 8, 6};
         DependencyMap<size_t, size_t> dependency_map;
         dependency_map.Reserve ( 15 );
-        dependency_map.Insert ( {6, {7}, 6} );
+        ASSERT_EQ ( dependency_map.Insert ( {6, {7}, 6} ), 0 );
         dependency_map.Insert ( {1, {2, 3}, 1} );
         dependency_map.Insert ( {3, {4, 5}, 3} );
         dependency_map.Insert ( {5, {4}, 5} );

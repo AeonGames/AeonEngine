@@ -58,7 +58,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
+    #${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h
 )
@@ -176,7 +176,7 @@ if(USE_CLANG_TIDY)
         CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};-fix;-header-filter=aeongames/;${CLANG_TIDY_CHECKS}")
 endif()
 
-add_subdirectory(nodes)
+add_subdirectory(components)
 add_subdirectory(renderers/opengl)
 add_subdirectory(renderers/vulkan)
 add_subdirectory(images)

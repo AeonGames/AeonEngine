@@ -19,12 +19,11 @@ import "transform.proto";
 
 message NodeBuffer {
     string name = 1;
-    string type = 2;
     oneof transform {
-        TransformBuffer local = 3;
-        TransformBuffer global = 4;
+        TransformBuffer local = 2;
+        TransformBuffer global = 3;
     }
-    repeated NodeBuffer node = 5;
+    repeated NodeBuffer node = 4;
 }
 
 message SceneBuffer{

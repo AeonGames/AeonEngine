@@ -19,7 +19,6 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/Node.h"
 #include "aeongames/Component.h"
-#include "MeshNode.h"
 #include "ModelComponent.h"
 #include <iostream>
 
@@ -27,11 +26,7 @@ extern "C"
 {
     bool AeonEngineComponentsStartUp()
     {
-        AeonGames::RegisterNodeConstructor ( "Mesh", []()
-        {
-            return std::make_unique<AeonGames::MeshNode>();
-        } );
-        AeonGames::RegisterComponentConstructor ( "Mesh", []()
+        AeonGames::RegisterComponentConstructor ( "Model", []()
         {
             return std::make_unique<AeonGames::ModelComponent>();
         } );
@@ -40,8 +35,7 @@ extern "C"
 
     void AeonEngineComponentsShutdown()
     {
-        AeonGames::UnregisterNodeConstructor ( "Mesh" );
-        AeonGames::UnregisterComponentConstructor ( "Mesh" );
+        AeonGames::UnregisterComponentConstructor ( "Model" );
     }
 
     PLUGIN PluginModuleInterface PMI =
