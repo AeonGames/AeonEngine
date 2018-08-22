@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,56 +21,25 @@ import "mesh.proto";
 import "skeleton.proto";
 import "animation.proto";
 
-message PipelineReferenceBuffer
+message ResourceReference
 {
-	oneof pipeline
+	oneof reference
     {
-        string         file             = 1;
-        PipelineBuffer buffer           = 2;
+        uint32         id               = 1;
+        string         path             = 2;
     }
 }
-message MaterialReferenceBuffer
-{
-	oneof material
-    {
-        string          file            = 1;
-        MaterialBuffer  buffer          = 2;
-    }
-}
-message MeshReferenceBuffer
-{
-    oneof mesh
-    {
-        string          file            = 1;
-        MeshBuffer      buffer          = 2;
-    }
-}
-message SkeletonReferenceBuffer
-{
-    oneof skeleton
-    {
-        string          file            = 1;
-        SkeletonBuffer  buffer          = 2;
-    }
-}
-message AnimationReferenceBuffer
-{
-    oneof animation
-    {
-        string          file            = 1;
-        AnimationBuffer buffer          = 2;
-    }
-}
+
 message AssemblyBuffer
 {
-	PipelineReferenceBuffer  pipeline    = 1;
-	MaterialReferenceBuffer  material    = 2;
-    MeshReferenceBuffer      mesh        = 3;
+    ResourceReference        mesh        = 1;
+	ResourceReference        pipeline    = 2;
+	ResourceReference        material    = 3;
 }
+
 message ModelBuffer {
-	PipelineReferenceBuffer           default_pipeline         = 1;
-	MaterialReferenceBuffer           default_material         = 2;
-    SkeletonReferenceBuffer           skeleton                 = 3;
-    repeated AssemblyBuffer           assembly                 = 4;
-    repeated AnimationReferenceBuffer animation                = 5;
+	ResourceReference           default_pipeline         = 1;
+	ResourceReference           default_material         = 2;
+    repeated AssemblyBuffer     assembly                 = 3;
+    repeated ResourceReference  animation                = 4;
 }

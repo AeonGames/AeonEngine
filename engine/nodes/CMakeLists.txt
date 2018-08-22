@@ -1,11 +1,11 @@
 set(NODES_HEADERS
     MeshNode.h
-    MeshComponent.h
+    ModelComponent.h
 )
 set(NODES_SOURCES
     Plugin.cpp
     MeshNode.cpp
-    MeshComponent.cpp
+    ModelComponent.cpp
 )
 add_library(AeonEngineNodes SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
