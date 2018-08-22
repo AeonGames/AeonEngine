@@ -27,7 +27,6 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Memory.h"
 #include "aeongames/CRC.h"
-#include "aeongames/Property.h"
 #include "aeongames/Component.h"
 #include "aeongames/DependencyMap.h"
 
@@ -36,12 +35,10 @@ namespace AeonGames
     class Window;
     class NodeBuffer;
     class Scene;
-    class ModelInstance;
     class AABB;
     class Node
     {
     public:
-        using Property = AeonGames::Property<Node>;
         enum FlagBits
         {
             EnabledBit = 1,
@@ -55,12 +52,11 @@ namespace AeonGames
             FlagCount
         };
         DLL Node ( uint32_t aFlags = AllBits );
-        DLL virtual ~Node();
+        DLL ~Node();
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
-        DLL virtual const std::string& GetType() const;
-        DLL virtual void Serialize ( NodeBuffer& aNodeBuffer ) const;
-        DLL virtual void Deserialize ( const NodeBuffer& aNodeBuffer );
+        DLL void Serialize ( NodeBuffer& aNodeBuffer ) const;
+        DLL void Deserialize ( const NodeBuffer& aNodeBuffer );
         /** Enables or disables a set of node flags.
         @param aFlagBits Flag bits to enable/disable.
         @param aEnabled true to enable, false to disable.
@@ -135,23 +131,19 @@ namespace AeonGames
         DLL Node& operator[] ( const std::size_t index );
         DLL Node* GetParent() const;
         DLL size_t GetIndex() const;
-        /** @name Properties */
-        /** @{ */
-        DLL static const std::vector<std::reference_wrapper<Property>>& Properties();
-        DLL virtual const std::vector<std::reference_wrapper<Property>>& GetProperties() const;
-        /** @} */
         /** @name Components */
         /** @{ */
-        DLL void AddComponent ( Component& aComponent );
+        DLL size_t AddComponent ( Component& aComponent );
         DLL void RemoveComponent ( Component& aComponent );
         DLL Component* StoreComponent ( std::unique_ptr<Component> aComponent );
         DLL std::unique_ptr<Component> DisposeComponent ( const Component* aComponent );
+        DLL const DependencyMap<uint32_t, Component*>& GetComponents() const;
         /** @} */
         /** @name Abstract functions
          *  @todo decide if these should be private or public. */
         /** @{ */
-        DLL virtual void Update ( const double delta );
-        DLL virtual void Render ( const Window& aWindow ) const;
+        DLL void Update ( const double delta );
+        DLL void Render ( const Window& aWindow ) const;
         /** @} */
     private:
         friend class Scene;
@@ -175,15 +167,5 @@ namespace AeonGames
         mutable std::vector<Node*>::size_type mIterator{ 0 };
         std::bitset<8> mFlags;
     };
-    /**@name Factory Functions */
-    /*@{*/
-    DLL std::unique_ptr<Node> ConstructNode ( const std::string& aIdentifier );
-    /** Registers a node loader for a specific identifier.*/
-    DLL bool RegisterNodeConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Node>() >& aConstructor );
-    /** Unregisters a node loader for a specific identifier.*/
-    DLL bool UnregisterNodeConstructor ( const std::string& aIdentifier );
-    /** Enumerates node loader identifiers via an enumerator functor.*/
-    DLL void EnumerateNodeConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
-    /*@}*/
 }
 #endif

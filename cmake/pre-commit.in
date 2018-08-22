@@ -12,15 +12,6 @@ YEAR=`date +"%Y"`
 FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(c|cpp|h|hpp)$"`
 PYTHON_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(py)$"`
 PROTO_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(proto)$"`
-for FILE in $FILES; do
-	${ASTYLE_EXECUTABLE} ${ASTYLE_OPTIONS} < $FILE | cmp -s $FILE -
-	if [ $? -ne 0 ]; then
-		echo "[!] $FILE does not respect coding style," >&2
-		echo "[!] please build the 'format-code' target." >&2
-		echo "[!] For example make format-code" >&2
-		exit 1
-	fi
-done
 
 EXIT_CODE=0
 for FILE in $FILES; do
@@ -64,3 +55,13 @@ if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] For example: /* Copyright (C) $YEAR */." >&2
     exit 1
 fi
+
+for FILE in $FILES; do
+	${ASTYLE_EXECUTABLE} --quiet ${ASTYLE_OPTIONS} $FILE
+	if [ $? -ne 0 ]; then
+		echo "[!] Formating $FILE failed," >&2
+		echo "[!] is astyle installed?." >&2
+		exit 1
+	fi
+	git add $FILE
+done

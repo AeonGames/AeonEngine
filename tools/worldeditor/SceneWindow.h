@@ -21,6 +21,7 @@ limitations under the License.
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
 #include "models/NodeModel.h"
+#include "models/MessageModel.h"
 
 namespace AeonGames
 {
@@ -35,14 +36,24 @@ namespace AeonGames
         void Open ( const std::string& mFilename );
         void Save ( const std::string& mFilename ) const;
     private slots:
+        void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
-        void on_customContextMenuRequested ( const QPoint& aPoint );
+        void on_actionRemoveComponent_triggered();
+        void on_sceneContextMenuRequested ( const QPoint& aPoint );
+        void on_nodeContextMenuRequested ( const QPoint& aPoint );
+        void on_componentContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
+        void on_nodeListViewClicked ( const QModelIndex& aModelIndex );
+        void on_localTransformChanged();
+        void on_globalTransformChanged();
     private:
+        void UpdateLocalTransformData ( const Node* aNode );
+        void UpdateGlobalTransformData ( const Node* aNode );
         SceneModel mSceneModel{};
         NodeModel mNodeModel{};
+        MessageModel mMessageModel{};
         EngineWindow* mEngineWindow{};
-        QList<QAction *> mNodeAddActions{};
+        QList<QAction *> mComponentAddActions{};
     };
 }
 #endif

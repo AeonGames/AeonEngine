@@ -34,6 +34,7 @@ namespace AeonGames
     class Component
     {
     public:
+        virtual const std::string& GetTypeName() const = 0;
         virtual uint32_t GetTypeId() const = 0;
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;

@@ -118,11 +118,6 @@ namespace AeonGames
             std::cerr << "Warning: " << e.what() << std::endl;
         }
 
-        RegisterNodeConstructor ( "Node", []()
-        {
-            return std::make_unique<AeonGames::Node>();
-        } );
-
         gPlugInCache.reserve ( gConfigurationBuffer.plugin_size() );
         for ( auto& i : gConfigurationBuffer.plugin() )
         {
@@ -159,7 +154,6 @@ namespace AeonGames
             dlclose ( std::get<0> ( i ) );
 #endif
         }
-        UnregisterNodeConstructor ( "Node" );
         google::protobuf::ShutdownProtobufLibrary();
         gInitialized = false;
     }

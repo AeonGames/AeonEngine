@@ -241,14 +241,14 @@ public:
             }
         }
 
-        void Insert ( const triple& item )
+        size_t Insert ( const triple& item )
         {
             // If the map is empty just insert the new node.
             if ( sorted.empty() && graph.empty() )
             {
                 graph[std::get<0> ( item )] = GraphNode{{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
                 sorted.emplace_back ( std::get<0> ( item ) );
-                return;
+                return 0;
             }
             // We'll move all dependencies and the new node to the start of the sorted vector.
             auto insertion_cursor = sorted.begin();
@@ -304,7 +304,7 @@ public:
             {
                 // Insert NEW node
                 graph[std::get<0> ( item )] = GraphNode{{}, 0, std::get<1> ( item ), std::get<2> ( item ) };
-                sorted.insert ( insertion_cursor, std::get<0> ( item ) );
+                return sorted.insert ( insertion_cursor, std::get<0> ( item ) ) - sorted.begin();
             }
             else
             {

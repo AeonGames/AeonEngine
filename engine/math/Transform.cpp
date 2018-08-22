@@ -29,6 +29,11 @@ namespace AeonGames
     {
     }
 
+    Transform::Transform ( const Vector3 & aScale, const Vector3 & aRotation, const Vector3 & aTranslation ) :
+        mScale{ aScale }, mRotation{ Quaternion::GetFromEuler ( aRotation ) }, mTranslation{aTranslation}
+    {
+    }
+
     Transform::Transform ( const float* aData ) :
         mScale{ aData }, mRotation{ aData + 3 }, mTranslation{aData + 7}
     {

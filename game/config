@@ -1,6 +1,6 @@
 AEONCFG
 PluginDirectory: ""
-Plugin: "AeonEngineNodes"
+Plugin: "AeonEngineComponents"
 Plugin: "OpenGLRenderer"
 Plugin: "VulkanRenderer"
 Plugin: "PngImage"

@@ -37,6 +37,7 @@ namespace AeonGames
     {
     public:
         ~ModelComponent() final;
+        const std::string& GetTypeName() const final;
         uint32_t GetTypeId() const final;
         std::vector<uint32_t> GetDependencies() const final;
         void Update ( Node& aNode, double aDelta ) final;

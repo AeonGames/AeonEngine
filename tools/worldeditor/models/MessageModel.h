@@ -45,9 +45,9 @@ namespace AeonGames
         Qt::ItemFlags flags ( const QModelIndex & index ) const override;
         bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
         //@}
-        void SetMessage ( google::protobuf::Message* aMessage );
+        void SetMessage ( const google::protobuf::Message* aMessage );
     private:
-        google::protobuf::Message* mMessage{};
+        const google::protobuf::Message* mMessage{};
     };
 }
 #endif

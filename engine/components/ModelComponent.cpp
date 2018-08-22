@@ -26,6 +26,12 @@ namespace AeonGames
 {
     ModelComponent::~ModelComponent() = default;
 
+    const std::string& ModelComponent::GetTypeName() const
+    {
+        static std::string type_name{"Model"};
+        return type_name;
+    }
+
     uint32_t ModelComponent::GetTypeId() const
     {
         return "Model"_crc32;
