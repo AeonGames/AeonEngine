@@ -6,14 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>270</width>
-    <height>764</height>
+    <width>452</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Scene</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <property name="windowIcon">
+   <iconset resource="../worldeditor_static.qrc">
+    <normaloff>:/icons/icon_app</normaloff>:/icons/icon_app</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="sceneLayout">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -40,35 +44,77 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="nodesWidget" native="true">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
+     <widget class="QWidget" name="scenegraphWidget" native="true">
+      <layout class="QVBoxLayout" name="sceneWidgetLayout">
        <item>
         <widget class="QGroupBox" name="sceneGroupBox">
          <property name="baseSize">
           <size>
-           <width>20</width>
-           <height>0</height>
+           <width>1</width>
+           <height>1</height>
           </size>
          </property>
          <property name="title">
           <string>Scenegraph</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <layout class="QHBoxLayout" name="sceneGroupLayout">
+            <item>
+             <widget class="QToolButton" name="addNodeToolButton">
+              <property name="toolTip">
+               <string>Add Node</string>
+              </property>
+              <property name="text">
+               <string>Add Node</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../worldeditor_static.qrc">
+                <normaloff>:/icons/icon_add</normaloff>:/icons/icon_add</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="removeNodeToolButton">
+              <property name="toolTip">
+               <string>Remove Node</string>
+              </property>
+              <property name="text">
+               <string>Remove Node</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../worldeditor_static.qrc">
+                <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
           <item>
            <widget class="QTreeView" name="sceneTreeView">
             <property name="contextMenuPolicy">
@@ -105,184 +151,415 @@
        </item>
        <item>
         <widget class="QGroupBox" name="propertyGroupBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Node Properties</string>
          </property>
          <layout class="QVBoxLayout" name="nodePropertiesLayout">
           <item>
-           <widget class="QGroupBox" name="localTransformGroupBox">
-            <property name="title">
-             <string>Local Transform</string>
+           <widget class="QTabWidget" name="tabWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
-            <layout class="QGridLayout" name="localGridLayout">
-             <item row="0" column="2">
-              <widget class="QDoubleSpinBox" name="localScaleY">
-               <property name="value">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="localRotationLabel">
-               <property name="text">
-                <string>Rotation</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <widget class="QDoubleSpinBox" name="localScaleZ">
-               <property name="value">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QDoubleSpinBox" name="localRotationYaw"/>
-             </item>
-             <item row="1" column="2">
-              <widget class="QDoubleSpinBox" name="localRotationRoll"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="localRotationPitch"/>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="localScaleLabel">
-               <property name="text">
-                <string>Scale</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="localScaleX">
-               <property name="value">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="localTranslationLabel">
-               <property name="text">
-                <string>Translation</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="localTranslationX"/>
-             </item>
-             <item row="2" column="2">
-              <widget class="QDoubleSpinBox" name="localTranslationY"/>
-             </item>
-             <item row="2" column="3">
-              <widget class="QDoubleSpinBox" name="localTranslationZ"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="globalTransformGroupBox">
-            <property name="title">
-             <string>Global Transform</string>
+            <property name="currentIndex">
+             <number>1</number>
             </property>
-            <layout class="QGridLayout" name="globalGridLayout">
-             <item row="0" column="2">
-              <widget class="QDoubleSpinBox" name="globalScaleY">
-               <property name="value">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="globalRotationLabel">
-               <property name="text">
-                <string>Rotation</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <widget class="QDoubleSpinBox" name="globalScaleZ">
-               <property name="value">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QDoubleSpinBox" name="globalRotationYaw"/>
-             </item>
-             <item row="1" column="2">
-              <widget class="QDoubleSpinBox" name="globalRotationRoll"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="globalRotationPitch"/>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="globalScaleLabel">
-               <property name="text">
-                <string>Scale</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="globalScaleX">
-               <property name="value">
-                <double>1.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="globalTranslationLabel">
-               <property name="text">
-                <string>Translation</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="globalTranslationX"/>
-             </item>
-             <item row="2" column="2">
-              <widget class="QDoubleSpinBox" name="globalTranslationY"/>
-             </item>
-             <item row="2" column="3">
-              <widget class="QDoubleSpinBox" name="globalTranslationZ"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="componentGroupBox">
-            <property name="title">
-             <string>Components</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_3">
-             <item>
-              <widget class="QListView" name="nodeListView">
-               <property name="contextMenuPolicy">
-                <enum>Qt::CustomContextMenu</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QTreeView" name="componentTreeView">
-               <property name="contextMenuPolicy">
-                <enum>Qt::CustomContextMenu</enum>
-               </property>
-               <property name="alternatingRowColors">
-                <bool>true</bool>
-               </property>
-               <property name="indentation">
-                <number>10</number>
-               </property>
-               <property name="allColumnsShowFocus">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
+            <widget class="QWidget" name="transformsTab">
+             <attribute name="title">
+              <string>Transforms</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_5">
+              <item>
+               <widget class="QGroupBox" name="localTransformGroupBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="title">
+                 <string>Local Transform</string>
+                </property>
+                <layout class="QGridLayout" name="localGridLayout">
+                 <item row="1" column="2">
+                  <widget class="QDoubleSpinBox" name="localRotationRoll">
+                   <property name="minimum">
+                    <double>-360.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>360.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="localTranslationLabel">
+                   <property name="text">
+                    <string>Translation</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QDoubleSpinBox" name="localTranslationX">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="3">
+                  <widget class="QDoubleSpinBox" name="localRotationYaw">
+                   <property name="minimum">
+                    <double>-360.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>360.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QDoubleSpinBox" name="localTranslationY">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QDoubleSpinBox" name="localScaleZ">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="localRotationLabel">
+                   <property name="text">
+                    <string>Rotation</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QDoubleSpinBox" name="localScaleY">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QDoubleSpinBox" name="localRotationPitch">
+                   <property name="minimum">
+                    <double>-360.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>360.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="3">
+                  <widget class="QDoubleSpinBox" name="localTranslationZ">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QDoubleSpinBox" name="localScaleX">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="localScaleLabel">
+                   <property name="text">
+                    <string>Scale</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="globalTransformGroupBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="title">
+                 <string>Global Transform</string>
+                </property>
+                <layout class="QGridLayout" name="globalGridLayout">
+                 <item row="0" column="2">
+                  <widget class="QDoubleSpinBox" name="globalScaleY">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="globalRotationLabel">
+                   <property name="text">
+                    <string>Rotation</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QDoubleSpinBox" name="globalScaleZ">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="3">
+                  <widget class="QDoubleSpinBox" name="globalRotationYaw">
+                   <property name="minimum">
+                    <double>-360.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>360.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QDoubleSpinBox" name="globalRotationRoll">
+                   <property name="minimum">
+                    <double>-360.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>360.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QDoubleSpinBox" name="globalRotationPitch">
+                   <property name="minimum">
+                    <double>-360.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>360.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="globalScaleLabel">
+                   <property name="text">
+                    <string>Scale</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QDoubleSpinBox" name="globalScaleX">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="globalTranslationLabel">
+                   <property name="text">
+                    <string>Translation</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QDoubleSpinBox" name="globalTranslationX">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QDoubleSpinBox" name="globalTranslationY">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="3">
+                  <widget class="QDoubleSpinBox" name="globalTranslationZ">
+                   <property name="minimum">
+                    <double>-9999.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>9999.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Expanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="componentsTab">
+             <attribute name="title">
+              <string>Components</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                 <widget class="QToolButton" name="addComponentToolButton">
+                  <property name="toolTip">
+                   <string>Add Component</string>
+                  </property>
+                  <property name="text">
+                   <string>Add Component</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="../worldeditor_static.qrc">
+                    <normaloff>:/icons/icon_add</normaloff>:/icons/icon_add</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>32</width>
+                    <height>32</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="removeComponentToolButton">
+                  <property name="toolTip">
+                   <string>Remove Component</string>
+                  </property>
+                  <property name="text">
+                   <string>Remove Component</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="../worldeditor_static.qrc">
+                    <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>32</width>
+                    <height>32</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QListView" name="nodeListView">
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTreeView" name="componentTreeView">
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="indentation">
+                 <number>10</number>
+                </property>
+                <property name="allColumnsShowFocus">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
         </widget>
        </item>
       </layout>
+      <zorder>propertyGroupBox</zorder>
+      <zorder>sceneGroupBox</zorder>
      </widget>
     </widget>
    </item>
@@ -344,7 +621,6 @@
   <tabstop>globalTranslationX</tabstop>
   <tabstop>globalTranslationY</tabstop>
   <tabstop>globalTranslationZ</tabstop>
-  <tabstop>componentTreeView</tabstop>
  </tabstops>
  <resources>
   <include location="../worldeditor_static.qrc"/>
@@ -389,8 +665,8 @@
    <slot>on_nodeListViewClicked(QModelIndex)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>158</x>
-     <y>525</y>
+     <x>113</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
      <x>173</x>
@@ -405,8 +681,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>220</y>
+     <x>215</x>
+     <y>389</y>
     </hint>
     <hint type="destinationlabel">
      <x>87</x>
@@ -421,8 +697,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>220</y>
+     <x>311</x>
+     <y>389</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -437,8 +713,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>220</y>
+     <x>407</x>
+     <y>389</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -453,8 +729,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>246</y>
+     <x>215</x>
+     <y>421</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -469,8 +745,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>246</y>
+     <x>311</x>
+     <y>421</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -485,8 +761,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>246</y>
+     <x>407</x>
+     <y>421</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -501,8 +777,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>272</y>
+     <x>215</x>
+     <y>453</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -517,8 +793,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>272</y>
+     <x>311</x>
+     <y>453</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -533,8 +809,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>272</y>
+     <x>407</x>
+     <y>453</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -549,8 +825,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>331</y>
+     <x>215</x>
+     <y>529</y>
     </hint>
     <hint type="destinationlabel">
      <x>87</x>
@@ -565,8 +841,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>331</y>
+     <x>311</x>
+     <y>529</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -581,8 +857,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>331</y>
+     <x>407</x>
+     <y>529</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -597,8 +873,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>357</y>
+     <x>215</x>
+     <y>561</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -613,8 +889,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>357</y>
+     <x>311</x>
+     <y>561</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -629,8 +905,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>357</y>
+     <x>407</x>
+     <y>561</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -645,8 +921,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>383</y>
+     <x>215</x>
+     <y>593</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -661,8 +937,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>383</y>
+     <x>311</x>
+     <y>593</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -677,8 +953,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>383</y>
+     <x>407</x>
+     <y>593</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -693,12 +969,12 @@
    <slot>on_nodeContextMenuRequested(QPoint)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>91</x>
-     <y>497</y>
+     <x>113</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
      <x>129</x>
-     <y>-17</y>
+     <y>0</y>
     </hint>
    </hints>
   </connection>
@@ -709,12 +985,12 @@
    <slot>on_componentContextMenuRequested(QPoint)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>111</x>
-     <y>743</y>
+     <x>113</x>
+     <y>560</y>
     </hint>
     <hint type="destinationlabel">
      <x>129</x>
-     <y>-17</y>
+     <y>0</y>
     </hint>
    </hints>
   </connection>
