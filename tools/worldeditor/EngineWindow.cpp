@@ -162,11 +162,19 @@ namespace AeonGames
     {
         if ( mWindow && aResizeEvent->size().width() && aResizeEvent->size().height() )
         {
+#ifdef Q_OS_WIN
+            // This is a workaround
             QMargins margins{QWindow::frameMargins() };
             mWindow->ResizeViewport (
                 margins.left(),
                 margins.top(),
                 aResizeEvent->size().width(), aResizeEvent->size().height() );
+#else
+            mWindow->ResizeViewport (
+                0,
+                0,
+                aResizeEvent->size().width(), aResizeEvent->size().height() );
+#endif
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 1.0f, 0.0f,

@@ -63,7 +63,6 @@ namespace AeonGames
             SceneWindow* sceneWindow;
             QMdiSubWindow*
             mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mdiArea ) );
-            mdiSubWindow->setContentsMargins ( 0, 0, 0, 0 );
             mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
             mdiSubWindow->setWindowTitle ( fileinfo.absoluteFilePath() );
             mdiSubWindow->showMaximized();

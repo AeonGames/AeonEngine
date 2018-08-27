@@ -31,11 +31,14 @@ namespace AeonGames
         Ui::SceneWindow()
     {
         setupUi ( this );
+        addNodeToolButton->setDefaultAction(actionAddNode);
+        removeNodeToolButton->setDefaultAction(actionRemoveNode);
+        removeComponentToolButton->setDefaultAction(actionRemoveComponent);
         mEngineWindow = new EngineWindow();
         QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, splitter );
         QSizePolicy size_policy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
-        size_policy.setHorizontalStretch ( 6 );
-        size_policy.setVerticalStretch ( 6 );
+        size_policy.setHorizontalStretch ( 1 );
+        size_policy.setVerticalStretch ( 1 );
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );

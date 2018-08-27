@@ -15,12 +15,6 @@
 syntax = "proto3";
 package AeonGames;
 
-import "pipeline.proto";
-import "material.proto";
-import "mesh.proto";
-import "skeleton.proto";
-import "animation.proto";
-
 message ResourceReference
 {
 	oneof reference
