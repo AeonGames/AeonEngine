@@ -92,7 +92,7 @@ namespace AeonGames
             if ( parent_descriptor != mMessage->GetDescriptor() )
             {
                 const google::protobuf::Descriptor* grandparent_descriptor = ( parent_descriptor->containing_type() ) ? parent_descriptor->containing_type() : mMessage->GetDescriptor();
-                return createIndex ( index_field->index(), 0, const_cast<google::protobuf::FieldDescriptor*> ( grandparent_descriptor->field ( parent_descriptor->index() ) ) );
+                return createIndex ( parent_descriptor->index(), 0, const_cast<google::protobuf::FieldDescriptor*> ( grandparent_descriptor->field ( parent_descriptor->index() ) ) );
             }
         }
         return QModelIndex();

@@ -34,6 +34,7 @@ set(WORLDEDITOR_HEADERS
     Debug.h
     WorldEditor.h
     GridSettings.h
+    MessageWrapper.h
     ${WORLDEDITOR_QT_HEADERS})
 
 set(WORLDEDITOR_SOURCES
@@ -49,6 +50,7 @@ set(WORLDEDITOR_SOURCES
     EngineWindow.cpp
     Debug.cpp
     GridSettings.cpp
+    MessageWrapper.cpp
     )
 
 set(WORLDEDITOR_UI
