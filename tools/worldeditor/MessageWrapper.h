@@ -33,17 +33,32 @@ namespace AeonGames
         class Field
         {
         public:
-            int GetIndex() const;
+            Field ( google::protobuf::Message* aMessage, const google::protobuf::FieldDescriptor* aFieldDescriptor, int aRepeatedIndex = 0, Field* aParent = nullptr );
+            Field ( const Field& aField );
+            Field& operator= ( const Field& aField );
+            Field ( const Field&& aField );
+            Field& operator= ( const Field&& aField );
+            int GetIndexAtParent() const;
+            int GetRepeatedIndex() const;
+            const google::protobuf::FieldDescriptor* GetFieldDescriptor() const;
+            const Field* GetParent() const;
+            const std::vector<Field>& GetChildren() const;
+        private:
+            // Member Variables
             const google::protobuf::FieldDescriptor* mFieldDescriptor{};
+            int mRepeatedIndex{};
             Field* mParent{};
             std::vector<Field> mChildren{};
         };
         MessageWrapper();
-        MessageWrapper ( const google::protobuf::Message* aMessage );
+        MessageWrapper ( google::protobuf::Message* aMessage );
         ~MessageWrapper();
-        void SetMessage ( const google::protobuf::Message* aMessage );
+        void SetMessage ( google::protobuf::Message* aMessage );
+        google::protobuf::Message* GetMessagePtr() const;
+        const std::vector<Field>& GetFields() const;
+        int GetFieldIndex ( const Field* aField ) const;
     private:
-        const google::protobuf::Message* mMessage{};
+        google::protobuf::Message* mMessage{};
         std::vector<Field> mFields{};
     };
 }

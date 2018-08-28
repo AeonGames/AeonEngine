@@ -59,8 +59,8 @@ namespace AeonGames
             }
         }
     }
-    const google::protobuf::Message* ModelComponent::GetProperties() const
+    google::protobuf::Message* ModelComponent::GetProperties() const
     {
-        return &mProperties;
+        return const_cast<ModelBuffer*> ( &mProperties );
     }
 }

@@ -17,7 +17,7 @@ limitations under the License.
 #ifndef AEONGAMES_MESSAGEMODEL_H
 #define AEONGAMES_MESSAGEMODEL_H
 #include <QAbstractItemModel>
-
+#include "../MessageWrapper.h"
 namespace google
 {
     namespace protobuf
@@ -45,9 +45,10 @@ namespace AeonGames
         Qt::ItemFlags flags ( const QModelIndex & index ) const override;
         bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
         //@}
-        void SetMessage ( const google::protobuf::Message* aMessage );
+        void SetMessage ( google::protobuf::Message* aMessage );
+        const MessageWrapper& GetMessageWrapper() const;
     private:
-        const google::protobuf::Message* mMessage{};
+        MessageWrapper mMessageWrapper{};
     };
 }
 #endif

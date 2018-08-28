@@ -26,25 +26,122 @@ limitations under the License.
 #include <algorithm>
 namespace AeonGames
 {
-    int MessageWrapper::Field::GetIndex() const
+    MessageWrapper::Field::Field ( google::protobuf::Message* aMessage, const google::protobuf::FieldDescriptor* aFieldDescriptor, int aRepeatedIndex, Field* aParent ) :
+        mFieldDescriptor{aFieldDescriptor}, mRepeatedIndex{aRepeatedIndex}, mParent{aParent}
+    {
+        if ( mFieldDescriptor->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
+        {
+            const google::protobuf::Descriptor* descriptor = mFieldDescriptor->message_type();
+            mChildren.reserve ( descriptor->field_count() );
+            const google::protobuf::Reflection* reflection = aMessage->GetReflection();
+            for ( int i = 0; i < descriptor->field_count(); ++i )
+            {
+                const google::protobuf::FieldDescriptor* field = descriptor->field ( i );
+                if ( !field->is_repeated() && reflection->HasField ( *aMessage, field ) )
+                {
+                    mChildren.emplace_back ( aMessage, field, 0, this );
+                }
+                else if ( field->is_repeated() && reflection->FieldSize ( *aMessage, field ) )
+                {
+                    for ( int j = 0; j < reflection->FieldSize ( *aMessage, field ); ++j )
+                    {
+                        mChildren.emplace_back ( aMessage, field, j, this );
+                    }
+                }
+            }
+        }
+    }
+
+    MessageWrapper::Field::Field ( const MessageWrapper::Field& aField ) :
+        mFieldDescriptor{aField.mFieldDescriptor},
+        mRepeatedIndex{aField.mRepeatedIndex},
+        mParent{aField.mParent},
+        mChildren{aField.mChildren}
+    {
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+    }
+    MessageWrapper::Field& MessageWrapper::Field::operator= ( const MessageWrapper::Field& aField )
+    {
+        mFieldDescriptor = aField.mFieldDescriptor;
+        mRepeatedIndex = aField.mRepeatedIndex;
+        mParent = aField.mParent;
+        mChildren = aField.mChildren;
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+        return *this;
+    }
+    MessageWrapper::Field::Field ( const MessageWrapper::Field&& aField ) :
+        mFieldDescriptor{aField.mFieldDescriptor},
+        mRepeatedIndex{aField.mRepeatedIndex},
+        mParent{aField.mParent},
+        mChildren{std::move ( aField.mChildren ) }
+    {
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+    }
+    MessageWrapper::Field& MessageWrapper::Field::operator= ( const MessageWrapper::Field&& aField )
+    {
+        mFieldDescriptor = aField.mFieldDescriptor;
+        mRepeatedIndex = aField.mRepeatedIndex;
+        mParent = aField.mParent;
+        mChildren = std::move ( aField.mChildren );
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+        return *this;
+    }
+
+    const google::protobuf::FieldDescriptor* MessageWrapper::Field::GetFieldDescriptor() const
+    {
+        return mFieldDescriptor;
+    }
+
+    int MessageWrapper::Field::GetRepeatedIndex() const
+    {
+        return mRepeatedIndex;
+    }
+
+    const MessageWrapper::Field* MessageWrapper::Field::GetParent() const
+    {
+        return mParent;
+    }
+
+    const std::vector<MessageWrapper::Field>& MessageWrapper::Field::GetChildren() const
+    {
+        return mChildren;
+    }
+
+    int MessageWrapper::Field::GetIndexAtParent() const
     {
         if ( mParent )
         {
-            return mChildren.end() - std::find_if ( mParent->mChildren.begin(), mParent->mChildren.end(), [this] ( const Field & aField )
+            return static_cast<int> ( mParent->mChildren.end() - std::find_if ( mParent->mChildren.begin(), mParent->mChildren.end(), [this] ( const Field & aField )
             {
                 return &aField == this;
-            } );
+            } ) );
         }
         return 0;
     }
     MessageWrapper::MessageWrapper() = default;
-    MessageWrapper::MessageWrapper ( const google::protobuf::Message* aMessage ) : mMessage{aMessage}
+    MessageWrapper::MessageWrapper ( google::protobuf::Message* aMessage ) : mMessage{aMessage}
     {
         SetMessage ( mMessage );
     }
     MessageWrapper::~MessageWrapper() = default;
-    void MessageWrapper::SetMessage ( const google::protobuf::Message* aMessage )
+    void MessageWrapper::SetMessage ( google::protobuf::Message* aMessage )
     {
+        if ( mMessage == aMessage )
+        {
+            return;
+        };
         mMessage = aMessage;
         mFields.clear();
         if ( !mMessage )
@@ -52,10 +149,39 @@ namespace AeonGames
             return;
         }
         mFields.reserve ( aMessage->GetDescriptor()->field_count() );
+        const google::protobuf::Reflection* reflection = mMessage->GetReflection();
         for ( int i = 0; i < aMessage->GetDescriptor()->field_count(); ++i )
         {
-            aMessage->GetDescriptor()->field ( i );
-            /**@todo Continue populating the field tree.*/
+            const google::protobuf::FieldDescriptor* field = aMessage->GetDescriptor()->field ( i );
+            if ( !field->is_repeated() && reflection->HasField ( *mMessage, field ) )
+            {
+                mFields.emplace_back ( mMessage, field );
+            }
+            else if ( field->is_repeated() && reflection->FieldSize ( *mMessage, field ) )
+            {
+                for ( int j = 0; j < reflection->FieldSize ( *mMessage, field ); ++j )
+                {
+                    mFields.emplace_back ( mMessage, field, j );
+                }
+            }
         }
+    }
+
+    int MessageWrapper::GetFieldIndex ( const MessageWrapper::Field* aField ) const
+    {
+        return static_cast<int> ( mFields.end() - std::find_if ( mFields.begin(), mFields.end(), [&aField] ( const Field & field )
+        {
+            return &field == aField;
+        } ) );
+    }
+
+    const std::vector<MessageWrapper::Field>& MessageWrapper::GetFields() const
+    {
+        return mFields;
+    }
+
+    google::protobuf::Message* MessageWrapper::GetMessagePtr() const
+    {
+        return mMessage;
     }
 }
