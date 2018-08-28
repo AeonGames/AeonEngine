@@ -42,7 +42,7 @@ namespace AeonGames
         std::vector<uint32_t> GetDependencies() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
-        const google::protobuf::Message* GetProperties() const final;
+        google::protobuf::Message* GetProperties() const final;
     private:
         ModelBuffer mProperties{};
         std::vector<std::tuple<

@@ -22,7 +22,17 @@ limitations under the License.
 #include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
+#include "MessageWrapper.h"
 #include "aeongames/Node.h"
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include <google/protobuf/message.h>
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
@@ -31,9 +41,9 @@ namespace AeonGames
         Ui::SceneWindow()
     {
         setupUi ( this );
-        addNodeToolButton->setDefaultAction(actionAddNode);
-        removeNodeToolButton->setDefaultAction(actionRemoveNode);
-        removeComponentToolButton->setDefaultAction(actionRemoveComponent);
+        addNodeToolButton->setDefaultAction ( actionAddNode );
+        removeNodeToolButton->setDefaultAction ( actionRemoveNode );
+        removeComponentToolButton->setDefaultAction ( actionRemoveComponent );
         mEngineWindow = new EngineWindow();
         QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, splitter );
         QSizePolicy size_policy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
@@ -119,7 +129,73 @@ namespace AeonGames
 
     void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
-        ///@todo Implement
+        QList<QAction *> actions;
+        QModelIndex index = componentTreeView->indexAt ( aPoint );
+        if ( index.isValid() && reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
+        {
+            /**@todo Actions to add fields to sub-fields */
+        }
+        else if ( !index.isValid() && mMessageModel.GetMessageWrapper().GetMessagePtr() )
+        {
+            google::protobuf::Message* message = mMessageModel.GetMessageWrapper().GetMessagePtr();
+            const google::protobuf::Reflection* reflection = message->GetReflection();
+            for ( int i = 0; i < message->GetDescriptor()->field_count(); ++i )
+            {
+                const google::protobuf::FieldDescriptor* field = message->GetDescriptor()->field ( i );
+                if ( ( !field->is_repeated() && !reflection->HasField ( *message, field ) ) || field->is_repeated() )
+                {
+                    QString text ( tr ( "Add " ) );
+                    text.append ( field->name().c_str() );
+                    text.append ( tr ( " field" ) );
+                    ///@todo This is a memory leak, fix it
+                    QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
+                    actions.append ( action );
+                    connect ( action, &QAction::triggered, this,
+                              [this, message, reflection, field]()
+                    {
+                        if ( !message || ! reflection || !field )
+                        {
+                            return;
+                        }
+                        switch ( field->cpp_type() )
+                        {
+                        case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
+                            reflection->AddDouble ( message, field, field->default_value_double() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
+                            reflection->AddFloat ( message, field, field->default_value_float() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
+                            reflection->AddInt64 ( message, field, field->default_value_int64() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
+                            reflection->AddUInt64 ( message, field, field->default_value_uint64() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
+                            reflection->AddInt32 ( message, field, field->default_value_int32() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
+                            reflection->AddBool ( message, field, field->default_value_bool() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
+                            reflection->AddString ( message, field, field->default_value_string() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE:
+                            reflection->AddMessage ( message, field );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
+                            reflection->AddUInt32 ( message, field, field->default_value_uint32() );
+                            break;
+                        case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
+                            reflection->AddEnum ( message, field, field->default_value_enum() );
+                            break;
+                        }
+                    } );
+                }
+            }
+        }
+        componentTreeView->setCurrentIndex ( index );
+        QMenu::exec ( actions, componentTreeView->mapToGlobal ( aPoint ) );
     }
 
     void SceneWindow::UpdateLocalTransformData ( const Node* aNode )

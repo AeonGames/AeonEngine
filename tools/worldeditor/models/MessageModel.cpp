@@ -59,15 +59,15 @@ namespace AeonGames
 
     QModelIndex MessageModel::index ( int row, int column, const QModelIndex & parent ) const
     {
-        if ( !mMessage )
+        if ( !mMessageWrapper.GetMessagePtr() )
         {
             return QModelIndex();
         }
         if ( !parent.isValid() )
         {
-            if ( ( row >= 0 ) && ( row < mMessage->GetDescriptor()->field_count() ) )
+            if ( ( row >= 0 ) && ( row < mMessageWrapper.GetFields().size() ) )
             {
-                return createIndex ( row, column, const_cast<google::protobuf::FieldDescriptor*> ( mMessage->GetDescriptor()->field ( row ) ) );
+                return createIndex ( row, column, const_cast<MessageWrapper::Field*> ( &mMessageWrapper.GetFields() [ row ] ) );
             }
         }
         else
@@ -83,16 +83,12 @@ namespace AeonGames
 
     QModelIndex MessageModel::parent ( const QModelIndex & index ) const
     {
-        const google::protobuf::FieldDescriptor* index_field{};
-        const google::protobuf::Descriptor* parent_descriptor{};
         if ( index.isValid() )
         {
-            index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
-            parent_descriptor = index_field->containing_type();
-            if ( parent_descriptor != mMessage->GetDescriptor() )
+            const MessageWrapper::Field* parent_field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetParent();
+            if ( parent_field )
             {
-                const google::protobuf::Descriptor* grandparent_descriptor = ( parent_descriptor->containing_type() ) ? parent_descriptor->containing_type() : mMessage->GetDescriptor();
-                return createIndex ( parent_descriptor->index(), 0, const_cast<google::protobuf::FieldDescriptor*> ( grandparent_descriptor->field ( parent_descriptor->index() ) ) );
+                return createIndex ( ( parent_field->GetParent() ) ? parent_field->GetIndexAtParent() : mMessageWrapper.GetFieldIndex ( parent_field ), 0, const_cast<MessageWrapper::Field*> ( parent_field ) );
             }
         }
         return QModelIndex();
@@ -100,16 +96,11 @@ namespace AeonGames
 
     int MessageModel::rowCount ( const QModelIndex & index ) const
     {
-        if ( !mMessage )
+        if ( mMessageWrapper.GetMessagePtr() && index.isValid() )
         {
-            return 0;
+            return reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetChildren().size();
         }
-        if ( index.isValid() )
-        {
-            const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
-            return ( index_field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE ) ? index_field->message_type()->field_count() : 0;
-        }
-        return mMessage->GetDescriptor()->field_count();
+        return 0;
     }
 
     int MessageModel::columnCount ( const QModelIndex & index ) const
@@ -124,13 +115,9 @@ namespace AeonGames
 
     QVariant MessageModel::data ( const QModelIndex & index, int role ) const
     {
-        if ( !mMessage )
+        if ( mMessageWrapper.GetMessagePtr() && index.isValid() )
         {
-            return QVariant();
-        }
-        if ( index.isValid() )
-        {
-            const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
+            const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor();
             if ( role == Qt::DisplayRole )
             {
                 switch ( index.column() )
@@ -166,24 +153,23 @@ namespace AeonGames
 
     bool MessageModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
-        if ( !mMessage )
+        if ( mMessageWrapper.GetMessagePtr() && ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
-            return false;
-        }
-        //const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( index.internalPointer() );
-        if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
-        {
-            // Get index_field reflection and change data
+            ///@todo Get index_field reflection and change data
             emit dataChanged ( index, index );
             return true;
         }
         return false;
     }
 
-    void MessageModel::SetMessage ( const google::protobuf::Message* aMessage )
+    void MessageModel::SetMessage ( google::protobuf::Message* aMessage )
     {
         beginResetModel();
-        mMessage = aMessage;
+        mMessageWrapper.SetMessage ( aMessage );
         endResetModel();
+    }
+    const MessageWrapper& MessageModel::GetMessageWrapper() const
+    {
+        return mMessageWrapper;
     }
 }
