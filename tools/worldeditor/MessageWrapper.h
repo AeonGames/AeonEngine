@@ -40,11 +40,12 @@ namespace AeonGames
             Field& operator= ( const Field&& aField );
             int GetIndexAtParent() const;
             int GetRepeatedIndex() const;
+            google::protobuf::Message* GetMessagePtr() const;
             const google::protobuf::FieldDescriptor* GetFieldDescriptor() const;
             const Field* GetParent() const;
             const std::vector<Field>& GetChildren() const;
         private:
-            // Member Variables
+            google::protobuf::Message* mMessage{};
             const google::protobuf::FieldDescriptor* mFieldDescriptor{};
             int mRepeatedIndex{};
             Field* mParent{};

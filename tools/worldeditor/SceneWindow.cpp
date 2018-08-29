@@ -142,7 +142,7 @@ namespace AeonGames
             for ( int i = 0; i < message->GetDescriptor()->field_count(); ++i )
             {
                 const google::protobuf::FieldDescriptor* field = message->GetDescriptor()->field ( i );
-                if ( ( !field->is_repeated() && !reflection->HasField ( *message, field ) ) || field->is_repeated() )
+                if ( !field->is_repeated() && !reflection->HasField ( *message, field ) )
                 {
                     QString text ( tr ( "Add " ) );
                     text.append ( field->name().c_str() );
@@ -160,34 +160,34 @@ namespace AeonGames
                         switch ( field->cpp_type() )
                         {
                         case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
-                            reflection->AddDouble ( message, field, field->default_value_double() );
+                            reflection->SetDouble ( message, field, field->default_value_double() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
-                            reflection->AddFloat ( message, field, field->default_value_float() );
+                            reflection->SetFloat ( message, field, field->default_value_float() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
-                            reflection->AddInt64 ( message, field, field->default_value_int64() );
+                            reflection->SetInt64 ( message, field, field->default_value_int64() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
-                            reflection->AddUInt64 ( message, field, field->default_value_uint64() );
+                            reflection->SetUInt64 ( message, field, field->default_value_uint64() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
-                            reflection->AddInt32 ( message, field, field->default_value_int32() );
+                            reflection->SetInt32 ( message, field, field->default_value_int32() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
-                            reflection->AddBool ( message, field, field->default_value_bool() );
+                            reflection->SetBool ( message, field, field->default_value_bool() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
-                            reflection->AddString ( message, field, field->default_value_string() );
+                            reflection->SetString ( message, field, field->default_value_string() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE:
-                            reflection->AddMessage ( message, field );
+                            reflection->MutableMessage ( message, field );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
-                            reflection->AddUInt32 ( message, field, field->default_value_uint32() );
+                            reflection->SetUInt32 ( message, field, field->default_value_uint32() );
                             break;
                         case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
-                            reflection->AddEnum ( message, field, field->default_value_enum() );
+                            reflection->SetEnum ( message, field, field->default_value_enum() );
                             break;
                         }
                     } );
@@ -333,8 +333,7 @@ namespace AeonGames
             if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
             {
                 mNodeModel.SetNode ( node );
-                // Select first component if any
-                mMessageModel.SetMessage ( ( mNodeModel.GetNode()->GetComponents().Size() > 0 ) ? mNodeModel.GetNode()->GetComponents() [aModelIndex.row()]->GetProperties() : nullptr );
+                mMessageModel.SetMessage ( nullptr );
                 UpdateLocalTransformData ( node );
                 UpdateGlobalTransformData ( node );
                 return;
