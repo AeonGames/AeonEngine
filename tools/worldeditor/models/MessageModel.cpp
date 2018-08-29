@@ -65,17 +65,17 @@ namespace AeonGames
         }
         if ( !parent.isValid() )
         {
-            if ( ( row >= 0 ) && ( row < static_cast<int>(mMessageWrapper.GetFields().size()) ) )
+            if ( ( row >= 0 ) && ( row < static_cast<int> ( mMessageWrapper.GetFields().size() ) ) )
             {
                 return createIndex ( row, column, const_cast<MessageWrapper::Field*> ( &mMessageWrapper.GetFields() [ row ] ) );
             }
         }
         else
         {
-            const google::protobuf::FieldDescriptor* parent_field = reinterpret_cast<const google::protobuf::FieldDescriptor*> ( parent.internalPointer() );
-            if ( ( row >= 0 ) && ( parent_field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE ) && ( row < parent_field->message_type()->field_count() ) )
+            const MessageWrapper::Field* parent_field = reinterpret_cast<const MessageWrapper::Field*> ( parent.internalPointer() );
+            if ( ( row >= 0 ) && ( row < static_cast<int> ( parent_field->GetChildren().size() ) ) )
             {
-                return createIndex ( row, column, const_cast<google::protobuf::FieldDescriptor*> ( parent_field->message_type()->field ( row ) ) );
+                return createIndex ( row, column, const_cast<MessageWrapper::Field*> ( &parent_field->GetChildren() [row] ) );
             }
         }
         return QModelIndex();
@@ -96,11 +96,11 @@ namespace AeonGames
 
     int MessageModel::rowCount ( const QModelIndex & index ) const
     {
-        if ( mMessageWrapper.GetMessagePtr() && index.isValid() )
+        if ( index.isValid() )
         {
-            return reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetChildren().size();
+            return static_cast<int> ( reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetChildren().size() );
         }
-        return 0;
+        return static_cast<int> ( mMessageWrapper.GetFields().size() );
     }
 
     int MessageModel::columnCount ( const QModelIndex & index ) const

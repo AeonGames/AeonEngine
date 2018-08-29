@@ -27,25 +27,26 @@ limitations under the License.
 namespace AeonGames
 {
     MessageWrapper::Field::Field ( google::protobuf::Message* aMessage, const google::protobuf::FieldDescriptor* aFieldDescriptor, int aRepeatedIndex, Field* aParent ) :
-        mFieldDescriptor{aFieldDescriptor}, mRepeatedIndex{aRepeatedIndex}, mParent{aParent}
+        mMessage{ aMessage }, mFieldDescriptor{aFieldDescriptor}, mRepeatedIndex{aRepeatedIndex}, mParent{aParent}
     {
-        if ( mFieldDescriptor->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
+        if ( mFieldDescriptor->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE )
         {
             const google::protobuf::Descriptor* descriptor = mFieldDescriptor->message_type();
             mChildren.reserve ( descriptor->field_count() );
-            const google::protobuf::Reflection* reflection = aMessage->GetReflection();
+            google::protobuf::Message* message = mMessage->GetReflection()->MutableMessage ( mMessage, mFieldDescriptor );
+            const google::protobuf::Reflection* reflection = message->GetReflection();
             for ( int i = 0; i < descriptor->field_count(); ++i )
             {
                 const google::protobuf::FieldDescriptor* field = descriptor->field ( i );
-                if ( !field->is_repeated() && reflection->HasField ( *aMessage, field ) )
+                if ( !field->is_repeated() && reflection->HasField ( *message, field ) )
                 {
-                    mChildren.emplace_back ( aMessage, field, 0, this );
+                    mChildren.emplace_back ( message, field, 0, this );
                 }
-                else if ( field->is_repeated() && reflection->FieldSize ( *aMessage, field ) )
+                else if ( field->is_repeated() && reflection->FieldSize ( *message, field ) )
                 {
-                    for ( int j = 0; j < reflection->FieldSize ( *aMessage, field ); ++j )
+                    for ( int j = 0; j < reflection->FieldSize ( *message, field ); ++j )
                     {
-                        mChildren.emplace_back ( aMessage, field, j, this );
+                        mChildren.emplace_back ( message, field, j, this );
                     }
                 }
             }
@@ -53,7 +54,8 @@ namespace AeonGames
     }
 
     MessageWrapper::Field::Field ( const MessageWrapper::Field& aField ) :
-        mFieldDescriptor{aField.mFieldDescriptor},
+        mMessage{ aField.mMessage },
+        mFieldDescriptor{ aField.mFieldDescriptor },
         mRepeatedIndex{aField.mRepeatedIndex},
         mParent{aField.mParent},
         mChildren{aField.mChildren}
@@ -65,6 +67,7 @@ namespace AeonGames
     }
     MessageWrapper::Field& MessageWrapper::Field::operator= ( const MessageWrapper::Field& aField )
     {
+        mMessage = aField.mMessage;
         mFieldDescriptor = aField.mFieldDescriptor;
         mRepeatedIndex = aField.mRepeatedIndex;
         mParent = aField.mParent;
@@ -76,7 +79,8 @@ namespace AeonGames
         return *this;
     }
     MessageWrapper::Field::Field ( const MessageWrapper::Field&& aField ) :
-        mFieldDescriptor{aField.mFieldDescriptor},
+        mMessage{ aField.mMessage },
+        mFieldDescriptor{ aField.mFieldDescriptor },
         mRepeatedIndex{aField.mRepeatedIndex},
         mParent{aField.mParent},
         mChildren{std::move ( aField.mChildren ) }
@@ -88,6 +92,7 @@ namespace AeonGames
     }
     MessageWrapper::Field& MessageWrapper::Field::operator= ( const MessageWrapper::Field&& aField )
     {
+        mMessage = aField.mMessage;
         mFieldDescriptor = aField.mFieldDescriptor;
         mRepeatedIndex = aField.mRepeatedIndex;
         mParent = aField.mParent;
@@ -97,6 +102,11 @@ namespace AeonGames
             i.mParent = this;
         }
         return *this;
+    }
+
+    google::protobuf::Message* MessageWrapper::Field::GetMessagePtr() const
+    {
+        return const_cast<google::protobuf::Message*> ( mMessage );
     }
 
     const google::protobuf::FieldDescriptor* MessageWrapper::Field::GetFieldDescriptor() const
@@ -138,10 +148,12 @@ namespace AeonGames
     MessageWrapper::~MessageWrapper() = default;
     void MessageWrapper::SetMessage ( google::protobuf::Message* aMessage )
     {
+#if 0
         if ( mMessage == aMessage )
         {
             return;
         };
+#endif
         mMessage = aMessage;
         mFields.clear();
         if ( !mMessage )
