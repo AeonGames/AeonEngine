@@ -65,7 +65,7 @@ namespace AeonGames
         }
         if ( !parent.isValid() )
         {
-            if ( ( row >= 0 ) && ( row < mMessageWrapper.GetFields().size() ) )
+            if ( ( row >= 0 ) && ( row < static_cast<int>(mMessageWrapper.GetFields().size()) ) )
             {
                 return createIndex ( row, column, const_cast<MessageWrapper::Field*> ( &mMessageWrapper.GetFields() [ row ] ) );
             }
