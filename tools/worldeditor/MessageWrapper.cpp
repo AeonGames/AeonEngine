@@ -33,7 +33,15 @@ namespace AeonGames
         {
             const google::protobuf::Descriptor* descriptor = mFieldDescriptor->message_type();
             mChildren.reserve ( descriptor->field_count() );
-            google::protobuf::Message* message = mMessage->GetReflection()->MutableMessage ( mMessage, mFieldDescriptor );
+            google::protobuf::Message* message;
+            if ( !mFieldDescriptor->is_repeated() )
+            {
+                message = mMessage->GetReflection()->MutableMessage ( mMessage, mFieldDescriptor );
+            }
+            else
+            {
+                message = mMessage->GetReflection()->MutableRepeatedMessage ( mMessage, mFieldDescriptor, mRepeatedIndex );
+            }
             const google::protobuf::Reflection* reflection = message->GetReflection();
             for ( int i = 0; i < descriptor->field_count(); ++i )
             {
@@ -127,6 +135,13 @@ namespace AeonGames
     const std::vector<MessageWrapper::Field>& MessageWrapper::Field::GetChildren() const
     {
         return mChildren;
+    }
+
+    std::string MessageWrapper::Field::GetPrintableName() const
+    {
+        std::string field_name{ mFieldDescriptor->name() };
+        std::replace ( field_name.begin(), field_name.end(), '_', ' ' );
+        return field_name;
     }
 
     int MessageWrapper::Field::GetIndexAtParent() const
