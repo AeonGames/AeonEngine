@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_MESSAGEWRAPPER_H
 #define AEONGAMES_MESSAGEWRAPPER_H
 #include <vector>
+#include <string>
 namespace google
 {
     namespace protobuf
@@ -40,6 +41,7 @@ namespace AeonGames
             Field& operator= ( const Field&& aField );
             int GetIndexAtParent() const;
             int GetRepeatedIndex() const;
+            std::string GetPrintableName() const;
             google::protobuf::Message* GetMessagePtr() const;
             const google::protobuf::FieldDescriptor* GetFieldDescriptor() const;
             const Field* GetParent() const;

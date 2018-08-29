@@ -116,6 +116,10 @@ namespace AeonGames
 
     void SceneWindow::on_nodeContextMenuRequested ( const QPoint& aPoint )
     {
+        if ( !sceneTreeView->currentIndex().isValid() )
+        {
+            return;
+        }
         QList<QAction *> actions;
         QModelIndex index = nodeListView->indexAt ( aPoint );
         actions.append ( mComponentAddActions );
@@ -124,78 +128,159 @@ namespace AeonGames
             actions.append ( actionRemoveComponent );
         }
         nodeListView->setCurrentIndex ( index );
-        QMenu::exec ( actions, nodeListView->mapToGlobal ( aPoint ) );
+        if ( actions.size() )
+        {
+            QMenu::exec ( actions, nodeListView->mapToGlobal ( aPoint ) );
+        }
     }
 
     void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
-        QList<QAction *> actions;
-        QModelIndex index = componentTreeView->indexAt ( aPoint );
-        if ( index.isValid() && reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
+        static QList<QAction *> actions{};
+        for ( auto& i : actions )
         {
-            /**@todo Actions to add fields to sub-fields */
+            delete ( i );
         }
-        else if ( !index.isValid() && mMessageModel.GetMessageWrapper().GetMessagePtr() )
+        actions.clear();
+        QModelIndex index = componentTreeView->indexAt ( aPoint );
+        google::protobuf::Message* message{mMessageModel.GetMessageWrapper().GetMessagePtr() };
+        const google::protobuf::Reflection* reflection{message->GetReflection() };
+        if ( index.isValid() )
         {
-            google::protobuf::Message* message = mMessageModel.GetMessageWrapper().GetMessagePtr();
-            const google::protobuf::Reflection* reflection = message->GetReflection();
-            for ( int i = 0; i < message->GetDescriptor()->field_count(); ++i )
+            if ( reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
             {
-                const google::protobuf::FieldDescriptor* field = message->GetDescriptor()->field ( i );
-                if ( !field->is_repeated() && !reflection->HasField ( *message, field ) )
+                MessageWrapper::Field* field = reinterpret_cast<MessageWrapper::Field*> ( index.internalPointer() );
+                if ( !field->GetFieldDescriptor()->is_repeated() )
                 {
-                    QString text ( tr ( "Add " ) );
-                    text.append ( field->name().c_str() );
-                    text.append ( tr ( " field" ) );
-                    ///@todo This is a memory leak, fix it
-                    QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
-                    actions.append ( action );
-                    connect ( action, &QAction::triggered, this,
-                              [this, message, reflection, field]()
-                    {
-                        if ( !message || ! reflection || !field )
-                        {
-                            return;
-                        }
-                        switch ( field->cpp_type() )
-                        {
-                        case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
-                            reflection->SetDouble ( message, field, field->default_value_double() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
-                            reflection->SetFloat ( message, field, field->default_value_float() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
-                            reflection->SetInt64 ( message, field, field->default_value_int64() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
-                            reflection->SetUInt64 ( message, field, field->default_value_uint64() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
-                            reflection->SetInt32 ( message, field, field->default_value_int32() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
-                            reflection->SetBool ( message, field, field->default_value_bool() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
-                            reflection->SetString ( message, field, field->default_value_string() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE:
-                            reflection->MutableMessage ( message, field );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
-                            reflection->SetUInt32 ( message, field, field->default_value_uint32() );
-                            break;
-                        case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
-                            reflection->SetEnum ( message, field, field->default_value_enum() );
-                            break;
-                        }
-                    } );
+                    message = field->GetMessagePtr()->GetReflection()->MutableMessage ( field->GetMessagePtr(), field->GetFieldDescriptor() );
                 }
+                else
+                {
+                    message = field->GetMessagePtr()->GetReflection()->MutableRepeatedMessage ( field->GetMessagePtr(), field->GetFieldDescriptor(), field->GetRepeatedIndex() );
+                }
+                reflection = message->GetReflection();
+            }
+            else
+            {
+                /* No Context menu for leaf nodes */
+                return;
+            }
+        }
+        if ( !message )
+        {
+            return;
+        }
+        for ( int i = 0; i < message->GetDescriptor()->field_count(); ++i )
+        {
+            const google::protobuf::FieldDescriptor* field = message->GetDescriptor()->field ( i );
+            if ( !field->is_repeated() && !reflection->HasField ( *message, field ) )
+            {
+                QString text ( tr ( "Add " ) );
+                std::string field_name{field->name() };
+                std::replace ( field_name.begin(), field_name.end(), '_', ' ' );
+                text.append ( field_name.c_str() );
+                text.append ( tr ( " field" ) );
+                QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
+                actions.append ( action );
+                connect ( action, &QAction::triggered, this,
+                          [this, message, reflection, field]()
+                {
+                    if ( !message || ! reflection || !field )
+                    {
+                        return;
+                    }
+                    switch ( field->cpp_type() )
+                    {
+                    case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
+                        reflection->SetDouble ( message, field, field->default_value_double() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
+                        reflection->SetFloat ( message, field, field->default_value_float() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
+                        reflection->SetInt64 ( message, field, field->default_value_int64() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
+                        reflection->SetUInt64 ( message, field, field->default_value_uint64() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
+                        reflection->SetInt32 ( message, field, field->default_value_int32() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
+                        reflection->SetBool ( message, field, field->default_value_bool() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
+                        reflection->SetString ( message, field, field->default_value_string() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE:
+                        reflection->MutableMessage ( message, field );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
+                        reflection->SetUInt32 ( message, field, field->default_value_uint32() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
+                        reflection->SetEnum ( message, field, field->default_value_enum() );
+                        break;
+                    }
+                    mMessageModel.SetMessage ( mMessageModel.GetMessageWrapper().GetMessagePtr() );
+                } );
+            }
+            else if ( field->is_repeated() )
+            {
+                QString text ( tr ( "Add " ) );
+                text.append ( field->name().c_str() );
+                text.append ( tr ( " field" ) );
+                QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
+                actions.append ( action );
+                connect ( action, &QAction::triggered, this,
+                          [this, message, reflection, field]()
+                {
+                    if ( !message || ! reflection || !field )
+                    {
+                        return;
+                    }
+                    switch ( field->cpp_type() )
+                    {
+                    case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
+                        reflection->AddDouble ( message, field, field->default_value_double() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
+                        reflection->AddFloat ( message, field, field->default_value_float() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
+                        reflection->AddInt64 ( message, field, field->default_value_int64() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
+                        reflection->AddUInt64 ( message, field, field->default_value_uint64() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
+                        reflection->AddInt32 ( message, field, field->default_value_int32() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
+                        reflection->AddBool ( message, field, field->default_value_bool() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
+                        reflection->AddString ( message, field, field->default_value_string() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE:
+                        reflection->AddMessage ( message, field );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
+                        reflection->AddUInt32 ( message, field, field->default_value_uint32() );
+                        break;
+                    case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
+                        reflection->AddEnum ( message, field, field->default_value_enum() );
+                        break;
+                    }
+                    mMessageModel.SetMessage ( mMessageModel.GetMessageWrapper().GetMessagePtr() );
+                } );
             }
         }
         componentTreeView->setCurrentIndex ( index );
-        QMenu::exec ( actions, componentTreeView->mapToGlobal ( aPoint ) );
+        if ( actions.size() )
+        {
+            QMenu::exec ( actions, componentTreeView->mapToGlobal ( aPoint ) );
+        }
     }
 
     void SceneWindow::UpdateLocalTransformData ( const Node* aNode )

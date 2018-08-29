@@ -117,14 +117,21 @@ namespace AeonGames
     {
         if ( mMessageWrapper.GetMessagePtr() && index.isValid() )
         {
-            const google::protobuf::FieldDescriptor* index_field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor();
+            const MessageWrapper::Field* field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() );
             if ( role == Qt::DisplayRole )
             {
                 switch ( index.column() )
                 {
                 case 0:
                 {
-                    return QString ( index_field->name().c_str() );
+                    std::string field_name{ field->GetPrintableName() };
+                    if ( field->GetFieldDescriptor()->is_repeated() )
+                    {
+                        field_name += "[";
+                        field_name += std::to_string ( field->GetRepeatedIndex() );
+                        field_name += "]";
+                    }
+                    return QString ( field_name.c_str() );
                 }
                 break;
                 case 1:
