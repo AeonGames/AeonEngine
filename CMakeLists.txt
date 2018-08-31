@@ -59,7 +59,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    list(APPEND CMAKE_CXX_FLAGS " -std:c++latest ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database")
@@ -88,7 +88,7 @@ find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
 
 find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
-    option(USE_CLANG_TIDY "Use clang-tidy (Requires CMake 3.6.0 or Higher)")
+    option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)")
     set(CLANG_TIDY_CHECKS "-checks=performance-*,modernize-*,-modernize-pass-by-value")
 endif()
 

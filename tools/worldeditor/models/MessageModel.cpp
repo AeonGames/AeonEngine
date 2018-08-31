@@ -105,6 +105,10 @@ namespace AeonGames
 
     int MessageModel::columnCount ( const QModelIndex & index ) const
     {
+        if ( index.isValid() && reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetChildren().size() )
+        {
+            return 1;
+        }
         return 2;
     }
 
@@ -118,40 +122,58 @@ namespace AeonGames
         if ( mMessageWrapper.GetMessagePtr() && index.isValid() )
         {
             const MessageWrapper::Field* field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() );
-            if ( role == Qt::DisplayRole )
-            {
+            if ( role == Qt::EditRole || role == Qt::DisplayRole )
                 switch ( index.column() )
                 {
                 case 0:
-                {
-                    std::string field_name{ field->GetPrintableName() };
-                    if ( field->GetFieldDescriptor()->is_repeated() )
+                    if ( role == Qt::DisplayRole )
                     {
-                        field_name += "[";
-                        field_name += std::to_string ( field->GetRepeatedIndex() );
-                        field_name += "]";
+                        std::string field_name{ field->GetPrintableName() };
+                        if ( field->GetFieldDescriptor()->is_repeated() )
+                        {
+                            field_name += "[";
+                            field_name += std::to_string ( field->GetRepeatedIndex() );
+                            field_name += "]";
+                        }
+                        return QString ( field_name.c_str() );
                     }
-                    return QString ( field_name.c_str() );
-                }
-                break;
+                    break;
                 case 1:
-                    return QString ( "Not Yet!" );
+                    if ( field->GetFieldDescriptor()->cpp_type() != google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE )
+                    {
+                        google::protobuf::Message* message = field->GetMessagePtr();
+                        const google::protobuf::Reflection* reflection = message->GetReflection();
+                        const google::protobuf::FieldDescriptor* field_descriptor = field->GetFieldDescriptor();
+                        switch ( field_descriptor->cpp_type() )
+                        {
+                        case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedDouble ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetDouble ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedFloat ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetFloat ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedInt64 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetInt64 ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedUInt64 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetUInt64 ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedInt32 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetInt32 ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedBool ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetBool ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
+                            return ( field_descriptor->is_repeated() ) ? QString ( reflection->GetRepeatedString ( *message, field_descriptor, field->GetRepeatedIndex() ).c_str() ) : QString ( reflection->GetString ( *message, field_descriptor ).c_str() );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedUInt32 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetUInt32 ( *message, field_descriptor ) );
+                        case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
+                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedEnumValue ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetEnumValue ( *message, field_descriptor ) );
+                        }
+                    }
                 }
-            }
-            else if ( role == Qt::EditRole )
-            {
-                if ( index.column() == 1  )
-                {
-                    return QString ( "Not Yet!" );
-                }
-            }
         }
         return QVariant();
     }
 
     Qt::ItemFlags MessageModel::flags ( const QModelIndex & index ) const
     {
-        if ( index.isValid() && ( index.column() == 1 ) )
+        if ( index.isValid() && ( index.column() == 1 ) && reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor()->cpp_type() != google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE )
         {
             return QAbstractItemModel::flags ( index ) | Qt::ItemIsEditable;
         }
@@ -162,7 +184,67 @@ namespace AeonGames
     {
         if ( mMessageWrapper.GetMessagePtr() && ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
-            ///@todo Get index_field reflection and change data
+            const MessageWrapper::Field* field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() );
+            google::protobuf::Message* message = field->GetMessagePtr();
+            const google::protobuf::Reflection* reflection = message->GetReflection();
+            const google::protobuf::FieldDescriptor* field_descriptor = field->GetFieldDescriptor();
+            switch ( field_descriptor->cpp_type() )
+            {
+            case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
+                if ( value.canConvert<double>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedDouble ( message, field_descriptor, field->GetRepeatedIndex(), value.toDouble() ) : reflection->SetDouble ( message, field_descriptor, value.toDouble() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
+                if ( value.canConvert<float>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedFloat ( message, field_descriptor, field->GetRepeatedIndex(), value.toFloat() ) : reflection->SetFloat ( message, field_descriptor, value.toFloat() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
+                if ( value.canConvert<int64_t>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedInt64 ( message, field_descriptor, field->GetRepeatedIndex(), value.toInt() ) : reflection->SetInt64 ( message, field_descriptor, value.toInt() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
+                if ( value.canConvert<uint64_t>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedUInt64 ( message, field_descriptor, field->GetRepeatedIndex(), value.toUInt() ) : reflection->SetUInt64 ( message, field_descriptor, value.toUInt() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
+                if ( value.canConvert<int32_t>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedInt32 ( message, field_descriptor, field->GetRepeatedIndex(), value.toInt() ) : reflection->SetInt32 ( message, field_descriptor, value.toInt() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
+                if ( value.canConvert<bool>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedBool ( message, field_descriptor, field->GetRepeatedIndex(), value.toBool() ) : reflection->SetBool ( message, field_descriptor, value.toBool() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
+                if ( value.canConvert<QString>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedString ( message, field_descriptor, field->GetRepeatedIndex(), value.toString().toStdString() ) : reflection->SetString ( message, field_descriptor, value.toString().toStdString() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
+                if ( value.canConvert<uint32_t>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedUInt32 ( message, field_descriptor, field->GetRepeatedIndex(), value.toUInt() ) : reflection->SetUInt32 ( message, field_descriptor, value.toUInt() );
+                }
+                break;
+            case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
+                if ( value.canConvert<uint32_t>() )
+                {
+                    ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedEnumValue ( message, field_descriptor, field->GetRepeatedIndex(), value.toUInt() ) : reflection->SetEnumValue ( message, field_descriptor, value.toUInt() );
+                }
+                break;
+            }
             emit dataChanged ( index, index );
             return true;
         }
