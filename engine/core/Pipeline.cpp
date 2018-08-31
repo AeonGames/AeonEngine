@@ -67,8 +67,7 @@ namespace AeonGames
     };
 
     Pipeline::Pipeline()
-    {
-    }
+        = default;
 
     Pipeline::Pipeline ( uint32_t aId )
     {
@@ -91,11 +90,10 @@ namespace AeonGames
     }
 
     DLL Pipeline::IRenderPipeline::~IRenderPipeline()
-    {
-    }
+        = default;
 
     Pipeline::Pipeline ( const std::string&  aFilename ) :
-        mTopology ( Topology::POINT_LIST ), mAttributes ( 0 ), mVertexShader(), mFragmentShader()
+        mTopology ( Topology::POINT_LIST ),  mVertexShader(), mFragmentShader()
     {
         try
         {

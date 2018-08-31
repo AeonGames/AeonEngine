@@ -47,7 +47,7 @@ namespace AeonGames
         {
         public:
             virtual void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) = 0;
-            virtual ~IRenderMaterial() {};
+            virtual ~IRenderMaterial() = default;;
         };
     private:
         class Property
