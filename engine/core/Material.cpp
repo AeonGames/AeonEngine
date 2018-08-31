@@ -17,7 +17,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <regex>
-#include <string.h>
+#include <cstring>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -285,7 +285,7 @@ namespace AeonGames
             reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [3] = aPropertyBuffer.vector4().w();
             break;
         case PropertyBuffer::DefaultValueCase::kTexture:
-            mImage = std::make_unique<Image>();
+            new ( &mImage ) std::unique_ptr<Image> ( std::make_unique<Image>() );
             if ( !DecodeImage ( *mImage, aPropertyBuffer.texture() ) )
             {
                 std::ostringstream stream;
@@ -320,6 +320,10 @@ namespace AeonGames
 
     Material::Property::~Property()
     {
+        if ( mType == Material::PropertyType::SAMPLER_2D )
+        {
+            ( &mImage )->std::unique_ptr<Image>::~unique_ptr<Image>();
+        }
     }
 
     Material::PropertyType Material::Property::GetType() const

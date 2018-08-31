@@ -107,9 +107,9 @@ namespace AeonGames
         }
     }
 
-    Package::~Package() {}
+    Package::~Package() = default;
     Package::Package ( Package&& aPackage ) :
-        mPath ( std::move ( aPackage.mPath ) ),
+        mPath ( aPackage.mPath ),
         mIndexTable ( std::move ( aPackage.mIndexTable ) ) {}
 
     const std::filesystem::path& Package::GetPath() const
