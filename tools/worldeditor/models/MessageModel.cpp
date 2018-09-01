@@ -147,23 +147,25 @@ namespace AeonGames
                         switch ( field_descriptor->cpp_type() )
                         {
                         case google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedDouble ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetDouble ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedDouble ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetDouble ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_FLOAT:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedFloat ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetFloat ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedFloat ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetFloat ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedInt64 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetInt64 ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedInt64 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetInt64 ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_UINT64:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedUInt64 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetUInt64 ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedUInt64 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetUInt64 ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedInt32 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetInt32 ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedInt32 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetInt32 ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_BOOL:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedBool ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetBool ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedBool ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetBool ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_STRING:
                             return ( field_descriptor->is_repeated() ) ? QString ( reflection->GetRepeatedString ( *message, field_descriptor, field->GetRepeatedIndex() ).c_str() ) : QString ( reflection->GetString ( *message, field_descriptor ).c_str() );
                         case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedUInt32 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetUInt32 ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedUInt32 ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetUInt32 ( *message, field_descriptor ) );
                         case google::protobuf::FieldDescriptor::CPPTYPE_ENUM:
-                            return ( field_descriptor->is_repeated() ) ? QVariant ( reflection->GetRepeatedEnumValue ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant ( reflection->GetEnumValue ( *message, field_descriptor ) );
+                            return ( field_descriptor->is_repeated() ) ? QVariant::fromValue ( reflection->GetRepeatedEnumValue ( *message, field_descriptor, field->GetRepeatedIndex() ) ) : QVariant::fromValue ( reflection->GetEnumValue ( *message, field_descriptor ) );
+                        default:
+                            return QVariant();
                         }
                     }
                 }
@@ -244,6 +246,8 @@ namespace AeonGames
                     ( field_descriptor->is_repeated() ) ? reflection->SetRepeatedEnumValue ( message, field_descriptor, field->GetRepeatedIndex(), value.toUInt() ) : reflection->SetEnumValue ( message, field_descriptor, value.toUInt() );
                 }
                 break;
+            default:
+                return false;
             }
             emit dataChanged ( index, index );
             return true;
