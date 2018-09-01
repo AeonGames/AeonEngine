@@ -136,12 +136,7 @@ namespace AeonGames
 
     void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
-        static QList<QAction *> actions{};
-        for ( auto& i : actions )
-        {
-            delete ( i );
-        }
-        actions.clear();
+        QList<QAction *> actions{};
         QModelIndex index = componentTreeView->indexAt ( aPoint );
         google::protobuf::Message* message{mMessageModel.GetMessageWrapper().GetMessagePtr() };
         const google::protobuf::Reflection* reflection{message->GetReflection() };
@@ -280,6 +275,10 @@ namespace AeonGames
         if ( actions.size() )
         {
             QMenu::exec ( actions, componentTreeView->mapToGlobal ( aPoint ) );
+        }
+        for ( auto& i : actions )
+        {
+            delete ( i );
         }
     }
 
