@@ -211,4 +211,44 @@ namespace AeonGames
     {
         return mMessage;
     }
+
+    MessageWrapper::Field& MessageWrapper::GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor )
+    {
+        auto field = std::find_if ( mFields.begin(), mFields.end(), [aFieldDescriptor] ( const MessageWrapper::Field & aField )
+        {
+            return aField.GetFieldDescriptor() == aFieldDescriptor;
+        } );
+        if ( field != mFields.end() )
+        {
+            return *field;
+        }
+        for ( int i = 0; i < mMessage->GetDescriptor()->field_count(); ++i )
+        {
+            if ( aFieldDescriptor == mMessage->GetDescriptor()->field ( i ) )
+            {
+                mFields.emplace_back ( mMessage, aFieldDescriptor );
+            }
+        }
+        throw std::runtime_error ( "Message type does not contain the requested field type." );
+    }
+
+    MessageWrapper::Field& MessageWrapper::Field::GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor )
+    {
+        auto field = std::find_if ( mChildren.begin(), mChildren.end(), [aFieldDescriptor] ( const MessageWrapper::Field & aField )
+        {
+            return aField.GetFieldDescriptor() == aFieldDescriptor;
+        } );
+        if ( field != mChildren.end() )
+        {
+            return *field;
+        }
+        for ( int i = 0; i < mMessage->GetDescriptor()->field_count(); ++i )
+        {
+            if ( aFieldDescriptor == mMessage->GetDescriptor()->field ( i ) )
+            {
+                mChildren.emplace_back ( mMessage, aFieldDescriptor, 0, this );
+            }
+        }
+        throw std::runtime_error ( "Message type does not contain the requested field type." );
+    }
 }
