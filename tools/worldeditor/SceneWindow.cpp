@@ -22,7 +22,7 @@ limitations under the License.
 #include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
-#include "MessageWrapper.h"
+#include "aeongames/MessageWrapper.h"
 #include "aeongames/Node.h"
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER

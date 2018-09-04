@@ -17,7 +17,7 @@ limitations under the License.
 #ifndef AEONGAMES_MESSAGEMODEL_H
 #define AEONGAMES_MESSAGEMODEL_H
 #include <QAbstractItemModel>
-#include "../MessageWrapper.h"
+#include "aeongames/MessageWrapper.h"
 namespace google
 {
     namespace protobuf
