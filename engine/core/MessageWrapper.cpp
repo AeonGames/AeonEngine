@@ -245,7 +245,10 @@ namespace AeonGames
             return *field;
         }
         const google::protobuf::Reflection* reflection = mMessage->GetReflection();
-        google::protobuf::Message* message = ( aFieldDescriptor->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE ) ? reflection->MutableMessage ( mMessage, aFieldDescriptor ) : mMessage;
+        google::protobuf::Message* message = ( aFieldDescriptor->cpp_type() ==
+                                               google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE ) ?
+                                             reflection->MutableMessage ( mMessage, aFieldDescriptor ) :
+                                             mMessage;
         for ( int i = 0; i < mMessage->GetDescriptor()->field_count(); ++i )
         {
             if ( aFieldDescriptor == mMessage->GetDescriptor()->field ( i ) )
