@@ -49,7 +49,31 @@ namespace AeonGames
             DLL const google::protobuf::FieldDescriptor* GetFieldDescriptor() const;
             DLL const Field* GetParent() const;
             DLL const std::vector<Field>& GetChildren() const;
+            /**@name Message Interface*/
+            /**{*/
+            DLL void SetInt32 ( int32_t aValue, int aIndex = 0 );
+            DLL void SetInt64 ( int64_t aValue, int aIndex = 0 );
+            DLL void SetUInt32 ( uint32_t aValue, int aIndex = 0 );
+            DLL void SetUInt64 ( uint64_t aValue, int aIndex = 0 );
+            DLL void SetFloat ( float aValue, int aIndex = 0 );
+            DLL void SetDouble ( double aValue, int aIndex = 0 );
+            DLL void SetBool ( bool aValue, int aIndex = 0 );
+            DLL void SetString (  const std::string & aValue, int aIndex = 0 );
+            DLL void SetEnum (  const google::protobuf::EnumValueDescriptor * aValue, int aIndex = 0 );
+            DLL void SetEnumValue (  int aValue, int aIndex = 0 );
+            DLL void AddInt32 (  int32_t aValue );
+            DLL void AddInt64 (  int64_t aValue );
+            DLL void AddUInt32 (  uint32_t aValue );
+            DLL void AddUInt64 (  uint64_t aValue );
+            DLL void AddFloat (  float aValue );
+            DLL void AddDouble (  double aValue );
+            DLL void AddBool (  bool aValue );
+            DLL void AddString (  const std::string & aValue );
+            DLL void AddEnum (  const google::protobuf::EnumValueDescriptor * aValue );
+            DLL void AddEnumValue (  int aValue );
+            DLL void AddMessage ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
             DLL Field& GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
+            /**}*/
         private:
             google::protobuf::Message* mMessage{};
             const google::protobuf::FieldDescriptor* mFieldDescriptor{};
