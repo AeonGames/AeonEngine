@@ -255,4 +255,45 @@ namespace AeonGames
         }
         throw std::runtime_error ( "Message type does not contain the requested field type." );
     }
+    void MessageWrapper::Field::SetInt32 ( int32_t aValue, int aIndex  )
+    {
+        if ( !mFieldDescriptor->is_repeated() )
+        {
+            mMessage->GetReflection()->SetInt32 ( mMessage, mFieldDescriptor, aValue );
+        }
+        else
+        {
+            mMessage->GetReflection()->SetRepeatedInt32 ( mMessage, mFieldDescriptor, aIndex, aValue );
+        }
+    }
+    void MessageWrapper::Field::SetInt64 ( int64_t aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetUInt32 ( uint32_t aValue, int aIndex  )
+    {
+        if ( !mFieldDescriptor->is_repeated() )
+        {
+            mMessage->GetReflection()->SetUInt32 ( mMessage, mFieldDescriptor, aValue );
+        }
+        else
+        {
+            mMessage->GetReflection()->SetRepeatedUInt32 ( mMessage, mFieldDescriptor, aIndex, aValue );
+        }
+    }
+    void MessageWrapper::Field::SetUInt64 ( uint64_t aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetFloat ( float aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetDouble ( double aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetBool ( bool aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetString (  const std::string & aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetEnum (  const google::protobuf::EnumValueDescriptor * aValue, int aIndex  ) {}
+    void MessageWrapper::Field::SetEnumValue (  int aValue, int aIndex  ) {}
+    void MessageWrapper::Field::AddInt32 (  int32_t aValue ) {}
+    void MessageWrapper::Field::AddInt64 (  int64_t aValue ) {}
+    void MessageWrapper::Field::AddUInt32 (  uint32_t aValue ) {}
+    void MessageWrapper::Field::AddUInt64 (  uint64_t aValue ) {}
+    void MessageWrapper::Field::AddFloat (  float aValue ) {}
+    void MessageWrapper::Field::AddDouble (  double aValue ) {}
+    void MessageWrapper::Field::AddBool (  bool aValue ) {}
+    void MessageWrapper::Field::AddString (  const std::string & aValue ) {}
+    void MessageWrapper::Field::AddEnum (  const google::protobuf::EnumValueDescriptor * aValue ) {}
+    void MessageWrapper::Field::AddEnumValue (  int aValue ) {}
+    void MessageWrapper::Field::AddMessage ( const google::protobuf::FieldDescriptor * aFieldDescriptor ) {}
 }
