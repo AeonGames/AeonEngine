@@ -17,6 +17,8 @@ limitations under the License.
 #define AEONGAMES_MESSAGEWRAPPER_H
 #include <vector>
 #include <string>
+#include "aeongames/Platform.h"
+
 namespace google
 {
     namespace protobuf
@@ -35,19 +37,19 @@ namespace AeonGames
         class Field
         {
         public:
-            Field ( google::protobuf::Message* aMessage, const google::protobuf::FieldDescriptor* aFieldDescriptor, int aRepeatedIndex = 0, Field* aParent = nullptr );
-            Field ( const Field& aField );
-            Field& operator= ( const Field& aField );
-            Field ( const Field&& aField );
-            Field& operator= ( const Field&& aField );
-            int GetIndexAtParent() const;
-            int GetRepeatedIndex() const;
-            std::string GetPrintableName() const;
-            google::protobuf::Message* GetMessagePtr() const;
-            const google::protobuf::FieldDescriptor* GetFieldDescriptor() const;
-            const Field* GetParent() const;
-            const std::vector<Field>& GetChildren() const;
-            Field& GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
+            DLL Field ( google::protobuf::Message* aMessage, const google::protobuf::FieldDescriptor* aFieldDescriptor, int aRepeatedIndex = 0, Field* aParent = nullptr );
+            DLL Field ( const Field& aField );
+            DLL Field& operator= ( const Field& aField );
+            DLL Field ( const Field&& aField );
+            DLL Field& operator= ( const Field&& aField );
+            DLL int GetIndexAtParent() const;
+            DLL int GetRepeatedIndex() const;
+            DLL std::string GetPrintableName() const;
+            DLL google::protobuf::Message* GetMessagePtr() const;
+            DLL const google::protobuf::FieldDescriptor* GetFieldDescriptor() const;
+            DLL const Field* GetParent() const;
+            DLL const std::vector<Field>& GetChildren() const;
+            DLL Field& GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
         private:
             google::protobuf::Message* mMessage{};
             const google::protobuf::FieldDescriptor* mFieldDescriptor{};
@@ -55,13 +57,13 @@ namespace AeonGames
             Field* mParent{};
             std::vector<Field> mChildren{};
         };
-        MessageWrapper();
-        MessageWrapper ( google::protobuf::Message* aMessage );
-        ~MessageWrapper();
-        void SetMessage ( google::protobuf::Message* aMessage );
-        google::protobuf::Message* GetMessagePtr() const;
-        const std::vector<Field>& GetFields() const;
-        int GetFieldIndex ( const Field* aField ) const;
+        DLL MessageWrapper();
+        DLL MessageWrapper ( google::protobuf::Message* aMessage );
+        DLL ~MessageWrapper();
+        DLL void SetMessage ( google::protobuf::Message* aMessage );
+        DLL google::protobuf::Message* GetMessagePtr() const;
+        DLL const std::vector<Field>& GetFields() const;
+        DLL int GetFieldIndex ( const Field* aField ) const;
         /**@name Message Interface*/
         /**{*/
 #if 0
@@ -87,7 +89,7 @@ namespace AeonGames
         Field& AddEnumValue ( const google::protobuf::FieldDescriptor * aFieldDescriptor, int aValue );
         Field& AddMessage ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
 #endif
-        Field& GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
+        DLL Field& GetField ( const google::protobuf::FieldDescriptor * aFieldDescriptor );
         /**}*/
     private:
         google::protobuf::Message* mMessage{};

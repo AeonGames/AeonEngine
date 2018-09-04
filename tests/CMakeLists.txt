@@ -20,6 +20,11 @@ include_directories(
     ${PROTOBUF_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/engine
 )
+
+PROTOBUF_GENERATE_CPP(PROTOBUF_SOURCES PROTOBUF_HEADERS
+    test.proto
+)
+
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/engine/include/Decoder.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
@@ -28,7 +33,9 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h
+    ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS}
 )
+
 set(TEST_SRCS
     Main.cpp
     DecoderTests.cpp
@@ -41,6 +48,7 @@ set(TEST_SRCS
     PropertyTests.cpp
     QuaternionTests.cpp
     PackageTests.cpp
+    MessageWrapperTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "MessageWrapper.h"
+#include "aeongames/MessageWrapper.h"
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -222,11 +222,13 @@ namespace AeonGames
         {
             return *field;
         }
+        const google::protobuf::Reflection* reflection = mMessage->GetReflection();
+        google::protobuf::Message* message = ( aFieldDescriptor->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE ) ? reflection->MutableMessage ( mMessage, aFieldDescriptor ) : mMessage;
         for ( int i = 0; i < mMessage->GetDescriptor()->field_count(); ++i )
         {
             if ( aFieldDescriptor == mMessage->GetDescriptor()->field ( i ) )
             {
-                mFields.emplace_back ( mMessage, aFieldDescriptor );
+                return mFields.emplace_back ( message, aFieldDescriptor );
             }
         }
         throw std::runtime_error ( "Message type does not contain the requested field type." );
@@ -242,11 +244,13 @@ namespace AeonGames
         {
             return *field;
         }
+        const google::protobuf::Reflection* reflection = mMessage->GetReflection();
+        google::protobuf::Message* message = ( aFieldDescriptor->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE ) ? reflection->MutableMessage ( mMessage, aFieldDescriptor ) : mMessage;
         for ( int i = 0; i < mMessage->GetDescriptor()->field_count(); ++i )
         {
             if ( aFieldDescriptor == mMessage->GetDescriptor()->field ( i ) )
             {
-                mChildren.emplace_back ( mMessage, aFieldDescriptor, 0, this );
+                return mChildren.emplace_back ( message, aFieldDescriptor, 0, this );
             }
         }
         throw std::runtime_error ( "Message type does not contain the requested field type." );
