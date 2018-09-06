@@ -80,7 +80,6 @@ set(ENGINE_CORE_HEADERS
     include/ProtoBufHelpers.h
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Component.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/MessageWrapper.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.h
@@ -118,7 +117,6 @@ set(ENGINE_CORE_SOURCES
     core/Scene.cpp
     core/Node.cpp
     core/Component.cpp
-    core/MessageWrapper.cpp
     core/Package.cpp
     )
 
