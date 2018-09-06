@@ -22,7 +22,6 @@ limitations under the License.
 #include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
-#include "MessageWrapper.h"
 #include "aeongames/Node.h"
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
@@ -136,15 +135,20 @@ namespace AeonGames
 
     void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
+        /**@todo    This function is WAY too big, the message model should provide
+         *          the list of actions to connect to the menu given the item at aPoint,
+         *          so this function should only retrieve the item, pass it on to mMessageModel
+         *          and use the action list to populate the menu, thats ALL.
+         *          So move all this mess into the message model class. **/
         QList<QAction *> actions{};
         QModelIndex index = componentTreeView->indexAt ( aPoint );
-        google::protobuf::Message* message{mMessageModel.GetMessageWrapper().GetMessagePtr() };
+        google::protobuf::Message* message{mMessageModel.GetMessagePtr() };
         const google::protobuf::Reflection* reflection{message->GetReflection() };
         if ( index.isValid() )
         {
-            if ( reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
+            if ( reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() )->GetFieldDescriptor()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE )
             {
-                MessageWrapper::Field* field = reinterpret_cast<MessageWrapper::Field*> ( index.internalPointer() );
+                MessageModel::Field* field = reinterpret_cast<MessageModel::Field*> ( index.internalPointer() );
                 if ( !field->GetFieldDescriptor()->is_repeated() )
                 {
                     message = field->GetMessagePtr()->GetReflection()->MutableMessage ( field->GetMessagePtr(), field->GetFieldDescriptor() );
@@ -217,7 +221,7 @@ namespace AeonGames
                         reflection->SetEnum ( message, field, field->default_value_enum() );
                         break;
                     }
-                    mMessageModel.SetMessage ( mMessageModel.GetMessageWrapper().GetMessagePtr() );
+                    mMessageModel.SetMessage ( mMessageModel.GetMessagePtr() );
                 } );
             }
             else if ( field->is_repeated() )
@@ -267,7 +271,7 @@ namespace AeonGames
                         reflection->AddEnum ( message, field, field->default_value_enum() );
                         break;
                     }
-                    mMessageModel.SetMessage ( mMessageModel.GetMessageWrapper().GetMessagePtr() );
+                    mMessageModel.SetMessage ( mMessageModel.GetMessagePtr() );
                 } );
             }
         }
