@@ -19,6 +19,8 @@ limitations under the License.
 #include <QMenu>
 #include <fstream>
 #include <iostream>
+#include <array>
+#include <tuple>
 #include "WorldEditor.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
@@ -288,7 +290,24 @@ namespace AeonGames
 
     void SceneWindow::UpdateLocalTransformData ( const Node* aNode )
     {
-        ///@todo Calling blockSignals on the parent doesn't block children
+        static std::array<std::tuple<QWidget*, bool>, 9> widgets
+        {
+            {
+                {localScaleX, {}},
+                {localScaleY, {}},
+                {localScaleZ, {}},
+                {localRotationPitch, {}},
+                {localRotationRoll, {}},
+                {localRotationYaw, {}},
+                {localTranslationX, {}},
+                {localTranslationY, {}},
+                {localTranslationZ, {}}
+            }
+        };
+        for ( auto& i : widgets )
+        {
+            std::get<1> ( i ) = std::get<0> ( i )->blockSignals ( true );
+        }
         bool signals_blocked = blockSignals ( true );
         if ( aNode )
         {
@@ -315,13 +334,32 @@ namespace AeonGames
             localTranslationY->setValue ( 0 );
             localTranslationZ->setValue ( 0 );
         }
-        blockSignals ( signals_blocked );
+        for ( auto& i : widgets )
+        {
+            std::get<0> ( i )->blockSignals ( std::get<1> ( i ) );
+        }
     }
 
     void SceneWindow::UpdateGlobalTransformData ( const Node* aNode )
     {
-        ///@todo Calling blockSignals on the parent doesn't block children
-        bool signals_blocked = blockSignals ( true );
+        static std::array<std::tuple<QWidget*, bool>, 9> widgets
+        {
+            {
+                {globalScaleX, {}},
+                {globalScaleY, {}},
+                {globalScaleZ, {}},
+                {globalRotationPitch, {}},
+                {globalRotationRoll, {}},
+                {globalRotationYaw, {}},
+                {globalTranslationX, {}},
+                {globalTranslationY, {}},
+                {globalTranslationZ, {}}
+            }
+        };
+        for ( auto& i : widgets )
+        {
+            std::get<1> ( i ) = std::get<0> ( i )->blockSignals ( true );
+        }
         if ( aNode )
         {
             const Transform& global = aNode->GetGlobalTransform();
@@ -347,7 +385,10 @@ namespace AeonGames
             globalTranslationY->setValue ( 0 );
             globalTranslationZ->setValue ( 0 );
         }
-        blockSignals ( signals_blocked );
+        for ( auto& i : widgets )
+        {
+            std::get<0> ( i )->blockSignals ( std::get<1> ( i ) );
+        }
     }
 
     void SceneWindow::on_localTransformChanged()
