@@ -21,7 +21,6 @@ limitations under the License.
 #include <QByteArray>
 #include <QXmlStreamWriter>
 #include <QTextStream>
-#include "MessageModel.h"
 
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
@@ -32,9 +31,140 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "MessageModel.h"
 
 namespace AeonGames
 {
+    MessageModel::Field::Field ( google::protobuf::Message* aMessage, const google::protobuf::FieldDescriptor* aFieldDescriptor, int aRepeatedIndex, Field* aParent ) :
+        mMessage{ aMessage }, mFieldDescriptor{aFieldDescriptor}, mRepeatedIndex{aRepeatedIndex}, mParent{aParent}
+    {
+        if ( mFieldDescriptor->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE )
+        {
+            const google::protobuf::Descriptor* descriptor = mFieldDescriptor->message_type();
+            mChildren.reserve ( descriptor->field_count() );
+            google::protobuf::Message* message;
+            if ( !mFieldDescriptor->is_repeated() )
+            {
+                message = mMessage->GetReflection()->MutableMessage ( mMessage, mFieldDescriptor );
+            }
+            else
+            {
+                message = mMessage->GetReflection()->MutableRepeatedMessage ( mMessage, mFieldDescriptor, mRepeatedIndex );
+            }
+            const google::protobuf::Reflection* reflection = message->GetReflection();
+            for ( int i = 0; i < descriptor->field_count(); ++i )
+            {
+                const google::protobuf::FieldDescriptor* field = descriptor->field ( i );
+                if ( !field->is_repeated() && reflection->HasField ( *message, field ) )
+                {
+                    mChildren.emplace_back ( message, field, 0, this );
+                }
+                else if ( field->is_repeated() && reflection->FieldSize ( *message, field ) )
+                {
+                    for ( int j = 0; j < reflection->FieldSize ( *message, field ); ++j )
+                    {
+                        mChildren.emplace_back ( message, field, j, this );
+                    }
+                }
+            }
+        }
+    }
+
+    MessageModel::Field::Field ( const MessageModel::Field& aField ) :
+        mMessage{ aField.mMessage },
+        mFieldDescriptor{ aField.mFieldDescriptor },
+        mRepeatedIndex{aField.mRepeatedIndex},
+        mParent{aField.mParent},
+        mChildren{aField.mChildren}
+    {
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+    }
+    MessageModel::Field& MessageModel::Field::operator= ( const MessageModel::Field& aField )
+    {
+        mMessage = aField.mMessage;
+        mFieldDescriptor = aField.mFieldDescriptor;
+        mRepeatedIndex = aField.mRepeatedIndex;
+        mParent = aField.mParent;
+        mChildren = aField.mChildren;
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+        return *this;
+    }
+    MessageModel::Field::Field ( const MessageModel::Field&& aField ) :
+        mMessage{ aField.mMessage },
+        mFieldDescriptor{ aField.mFieldDescriptor },
+        mRepeatedIndex{aField.mRepeatedIndex},
+        mParent{aField.mParent},
+        mChildren{std::move ( aField.mChildren ) }
+    {
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+    }
+    MessageModel::Field& MessageModel::Field::operator= ( const MessageModel::Field&& aField )
+    {
+        mMessage = aField.mMessage;
+        mFieldDescriptor = aField.mFieldDescriptor;
+        mRepeatedIndex = aField.mRepeatedIndex;
+        mParent = aField.mParent;
+        mChildren = std::move ( aField.mChildren );
+        for ( auto& i : mChildren )
+        {
+            i.mParent = this;
+        }
+        return *this;
+    }
+
+    google::protobuf::Message* MessageModel::Field::GetMessagePtr() const
+    {
+        return const_cast<google::protobuf::Message*> ( mMessage );
+    }
+
+    const google::protobuf::FieldDescriptor* MessageModel::Field::GetFieldDescriptor() const
+    {
+        return mFieldDescriptor;
+    }
+
+    int MessageModel::Field::GetRepeatedIndex() const
+    {
+        return mRepeatedIndex;
+    }
+
+    const MessageModel::Field* MessageModel::Field::GetParent() const
+    {
+        return mParent;
+    }
+
+    const std::vector<MessageModel::Field>& MessageModel::Field::GetChildren() const
+    {
+        return mChildren;
+    }
+
+    std::string MessageModel::Field::GetPrintableName() const
+    {
+        std::string field_name{ mFieldDescriptor->name() };
+        std::replace ( field_name.begin(), field_name.end(), '_', ' ' );
+        return field_name;
+    }
+
+    int MessageModel::Field::GetIndexAtParent() const
+    {
+        if ( mParent )
+        {
+            return static_cast<int> ( mParent->mChildren.end() - std::find_if ( mParent->mChildren.begin(), mParent->mChildren.end(), [this] ( const Field & aField )
+            {
+                return &aField == this;
+            } ) );
+        }
+        return 0;
+    }
+
     MessageModel::MessageModel ( QObject *parent ) :
         QAbstractItemModel ( parent ) {}
 
@@ -59,23 +189,23 @@ namespace AeonGames
 
     QModelIndex MessageModel::index ( int row, int column, const QModelIndex & parent ) const
     {
-        if ( !mMessageWrapper.GetMessagePtr() )
+        if ( !GetMessagePtr() )
         {
             return QModelIndex();
         }
         if ( !parent.isValid() )
         {
-            if ( ( row >= 0 ) && ( row < static_cast<int> ( mMessageWrapper.GetFields().size() ) ) )
+            if ( ( row >= 0 ) && ( row < static_cast<int> ( GetFields().size() ) ) )
             {
-                return createIndex ( row, column, const_cast<MessageWrapper::Field*> ( &mMessageWrapper.GetFields() [ row ] ) );
+                return createIndex ( row, column, const_cast<MessageModel::Field*> ( &GetFields() [ row ] ) );
             }
         }
         else
         {
-            const MessageWrapper::Field* parent_field = reinterpret_cast<const MessageWrapper::Field*> ( parent.internalPointer() );
+            const MessageModel::Field* parent_field = reinterpret_cast<const MessageModel::Field*> ( parent.internalPointer() );
             if ( ( row >= 0 ) && ( row < static_cast<int> ( parent_field->GetChildren().size() ) ) )
             {
-                return createIndex ( row, column, const_cast<MessageWrapper::Field*> ( &parent_field->GetChildren() [row] ) );
+                return createIndex ( row, column, const_cast<MessageModel::Field*> ( &parent_field->GetChildren() [row] ) );
             }
         }
         return QModelIndex();
@@ -85,10 +215,10 @@ namespace AeonGames
     {
         if ( index.isValid() )
         {
-            const MessageWrapper::Field* parent_field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetParent();
+            const MessageModel::Field* parent_field = reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() )->GetParent();
             if ( parent_field )
             {
-                return createIndex ( ( parent_field->GetParent() ) ? parent_field->GetIndexAtParent() : mMessageWrapper.GetFieldIndex ( parent_field ), 0, const_cast<MessageWrapper::Field*> ( parent_field ) );
+                return createIndex ( ( parent_field->GetParent() ) ? parent_field->GetIndexAtParent() : GetFieldIndex ( parent_field ), 0, const_cast<MessageModel::Field*> ( parent_field ) );
             }
         }
         return QModelIndex();
@@ -98,14 +228,14 @@ namespace AeonGames
     {
         if ( index.isValid() )
         {
-            return static_cast<int> ( reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetChildren().size() );
+            return static_cast<int> ( reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() )->GetChildren().size() );
         }
-        return static_cast<int> ( mMessageWrapper.GetFields().size() );
+        return static_cast<int> ( GetFields().size() );
     }
 
     int MessageModel::columnCount ( const QModelIndex & index ) const
     {
-        if ( index.isValid() && reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetChildren().size() )
+        if ( index.isValid() && reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() )->GetChildren().size() )
         {
             return 1;
         }
@@ -119,9 +249,9 @@ namespace AeonGames
 
     QVariant MessageModel::data ( const QModelIndex & index, int role ) const
     {
-        if ( mMessageWrapper.GetMessagePtr() && index.isValid() )
+        if ( GetMessagePtr() && index.isValid() )
         {
-            const MessageWrapper::Field* field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() );
+            const MessageModel::Field* field = reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() );
             if ( role == Qt::EditRole || role == Qt::DisplayRole )
                 switch ( index.column() )
                 {
@@ -175,7 +305,7 @@ namespace AeonGames
 
     Qt::ItemFlags MessageModel::flags ( const QModelIndex & index ) const
     {
-        if ( index.isValid() && ( index.column() == 1 ) && reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() )->GetFieldDescriptor()->cpp_type() != google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE )
+        if ( index.isValid() && ( index.column() == 1 ) && reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() )->GetFieldDescriptor()->cpp_type() != google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE )
         {
             return QAbstractItemModel::flags ( index ) | Qt::ItemIsEditable;
         }
@@ -184,9 +314,9 @@ namespace AeonGames
 
     bool MessageModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
-        if ( mMessageWrapper.GetMessagePtr() && ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
+        if ( GetMessagePtr() && ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
-            const MessageWrapper::Field* field = reinterpret_cast<const MessageWrapper::Field*> ( index.internalPointer() );
+            const MessageModel::Field* field = reinterpret_cast<const MessageModel::Field*> ( index.internalPointer() );
             google::protobuf::Message* message = field->GetMessagePtr();
             const google::protobuf::Reflection* reflection = message->GetReflection();
             const google::protobuf::FieldDescriptor* field_descriptor = field->GetFieldDescriptor();
@@ -255,14 +385,52 @@ namespace AeonGames
         return false;
     }
 
+
     void MessageModel::SetMessage ( google::protobuf::Message* aMessage )
     {
         beginResetModel();
-        mMessageWrapper.SetMessage ( aMessage );
+        mMessage = aMessage;
+        mFields.clear();
+        if ( !mMessage )
+        {
+            endResetModel();
+            return;
+        }
+        mFields.reserve ( aMessage->GetDescriptor()->field_count() );
+        const google::protobuf::Reflection* reflection = mMessage->GetReflection();
+        for ( int i = 0; i < aMessage->GetDescriptor()->field_count(); ++i )
+        {
+            const google::protobuf::FieldDescriptor* field = aMessage->GetDescriptor()->field ( i );
+            if ( !field->is_repeated() && reflection->HasField ( *mMessage, field ) )
+            {
+                mFields.emplace_back ( mMessage, field );
+            }
+            else if ( field->is_repeated() && reflection->FieldSize ( *mMessage, field ) )
+            {
+                for ( int j = 0; j < reflection->FieldSize ( *mMessage, field ); ++j )
+                {
+                    mFields.emplace_back ( mMessage, field, j );
+                }
+            }
+        }
         endResetModel();
     }
-    const MessageWrapper& MessageModel::GetMessageWrapper() const
+
+    int MessageModel::GetFieldIndex ( const MessageModel::Field* aField ) const
     {
-        return mMessageWrapper;
+        return static_cast<int> ( mFields.end() - std::find_if ( mFields.begin(), mFields.end(), [&aField] ( const Field & field )
+        {
+            return &field == aField;
+        } ) );
+    }
+
+    const std::vector<MessageModel::Field>& MessageModel::GetFields() const
+    {
+        return mFields;
+    }
+
+    google::protobuf::Message* MessageModel::GetMessagePtr() const
+    {
+        return mMessage;
     }
 }
