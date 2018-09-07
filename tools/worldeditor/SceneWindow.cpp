@@ -308,7 +308,6 @@ namespace AeonGames
         {
             std::get<1> ( i ) = std::get<0> ( i )->blockSignals ( true );
         }
-        bool signals_blocked = blockSignals ( true );
         if ( aNode )
         {
             const Transform& local = aNode->GetLocalTransform();
