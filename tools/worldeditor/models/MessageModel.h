@@ -17,6 +17,8 @@ limitations under the License.
 #ifndef AEONGAMES_MESSAGEMODEL_H
 #define AEONGAMES_MESSAGEMODEL_H
 #include <QAbstractItemModel>
+#include <QList>
+#include <QAction>
 
 namespace google
 {
@@ -73,6 +75,7 @@ namespace AeonGames
         google::protobuf::Message* GetMessagePtr() const;
         const std::vector<Field>& GetFields() const;
         int GetFieldIndex ( const Field* aField ) const;
+        QList<QAction *> GetMenuActions ( const QModelIndex & index );
     private:
         google::protobuf::Message* mMessage{};
         std::vector<Field> mFields{};
