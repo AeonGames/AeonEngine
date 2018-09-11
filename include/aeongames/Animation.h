@@ -22,17 +22,25 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class AnimationBuffer;
     class Animation
     {
     public:
-        Animation ( const std::string& aFilename );
-        ~Animation();
+        DLL Animation();
+        DLL Animation ( uint32_t aId );
+        DLL Animation ( const std::string& aFilename );
+        DLL Animation ( const void* aBuffer, size_t aBufferSize );
+        DLL ~Animation();
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
+        DLL void Unload ();
         DLL uint32_t GetFrameRate() const;
         DLL double GetDuration() const;
         DLL const Transform GetTransform ( size_t aBoneIndex, double aTime ) const;
+        DLL static const std::shared_ptr<Animation> GetAnimation ( uint32_t aId );
+        DLL static const std::shared_ptr<Animation> GetAnimation ( const std::string& aPath );
     private:
-        void Initialize();
-        void Finalize();
+        void Load ( const AnimationBuffer& aAnimationBuffer );
         std::string mFilename;
         uint32_t mVersion;
         uint32_t mFrameRate;

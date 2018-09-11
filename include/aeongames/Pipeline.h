@@ -92,6 +92,7 @@ namespace AeonGames
         DLL void SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const;
         DLL const IRenderPipeline* const GetRenderPipeline() const;
         DLL static const std::shared_ptr<Pipeline> GetPipeline ( uint32_t aId );
+        DLL static const std::shared_ptr<Pipeline> GetPipeline ( const std::string& aPath );
     private:
         void Load ( const PipelineBuffer& aPipelineBuffer );
         Topology mTopology{};

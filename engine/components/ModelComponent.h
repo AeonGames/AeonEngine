@@ -33,9 +33,13 @@ namespace AeonGames
     class Mesh;
     class Pipeline;
     class Material;
+    class Skeleton;
+    class Animation;
     class ModelComponent : public Component
     {
     public:
+        /** @name Component Overrides */
+        ///@{
         ~ModelComponent() final;
         const std::string& GetTypeName() const final;
         uint32_t GetTypeId() const final;
@@ -43,13 +47,16 @@ namespace AeonGames
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
         google::protobuf::Message* GetProperties() const final;
+        ///@}
     private:
         ModelBuffer mProperties{};
+        std::shared_ptr<Skeleton> mSkeleton;
         std::vector<std::tuple<
         std::shared_ptr<Mesh>,
             std::shared_ptr<Pipeline>,
             std::shared_ptr<Material>>
             > mMeshes{};
+        std::vector<std::shared_ptr<const Animation>> mAnimations;
     };
 }
 #endif
