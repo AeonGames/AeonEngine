@@ -76,6 +76,7 @@ namespace AeonGames
         DLL void SetRenderMesh ( std::unique_ptr<IRenderMesh> aRenderMesh ) const;
         DLL const IRenderMesh* const GetRenderMesh() const;
         DLL static const std::shared_ptr<Mesh> GetMesh ( uint32_t aId );
+        DLL static const std::shared_ptr<Mesh> GetMesh ( const std::string& aPath );
     private:
         void Load ( const MeshBuffer& aMeshBuffer );
         AABB mAABB;

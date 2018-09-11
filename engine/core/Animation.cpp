@@ -21,6 +21,7 @@ limitations under the License.
 #include <cassert>
 #include <cstring>
 #include <cmath>
+#include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -32,30 +33,131 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include "aeongames/CRC.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Animation.h"
+#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
-    Animation::Animation ( const std::string&  aFilename )
-        :
-        mFilename ( aFilename )
+
+    Animation::Animation()
+        = default;
+
+    Animation::Animation ( uint32_t aId )
     {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
         try
         {
-            Initialize();
+            Load ( buffer.data(), buffer.size() );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
 
-    Animation::~Animation()
+    Animation::Animation ( const std::string&  aFilename )
     {
-        Finalize();
+        try
+        {
+            Load ( aFilename );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
     }
+
+    Animation::Animation ( const void * aBuffer, size_t aBufferSize )
+    {
+        if ( !aBuffer && !aBufferSize )
+        {
+            throw std::runtime_error ( "Cannot initialize Animation object with null data." );
+            return;
+        }
+        try
+        {
+            Load ( aBuffer, aBufferSize );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
+
+    void Animation::Load ( const std::string& aFilename )
+    {
+        static std::mutex m;
+        static AnimationBuffer skeleton_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<AnimationBuffer> ( skeleton_buffer, aFilename, "AEONANM" );
+        Load ( skeleton_buffer );
+        skeleton_buffer.Clear();
+    }
+
+    void Animation::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static std::mutex m;
+        static AnimationBuffer skeleton_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<AnimationBuffer> ( skeleton_buffer, aBuffer, aBufferSize, "AEONANM" );
+        Load ( skeleton_buffer );
+        skeleton_buffer.Clear();
+    }
+
+    void Animation::Load ( const AnimationBuffer& aAnimationBuffer )
+    {
+        mVersion = aAnimationBuffer.version();
+        mFrameRate = aAnimationBuffer.framerate();
+        mDuration = aAnimationBuffer.duration();
+        mFrames.reserve ( aAnimationBuffer.frame_size() );
+        for ( auto& frame : aAnimationBuffer.frame() )
+        {
+            mFrames.emplace_back();
+            mFrames.back().reserve ( frame.bone_size() );
+            for ( auto& joint : frame.bone() )
+            {
+                mFrames.back().emplace_back (
+                    Transform
+                {
+                    Vector3
+                    {
+                        joint.scale().x(),
+                        joint.scale().y(),
+                        joint.scale().z()
+                    },
+                    Quaternion
+                    {
+                        joint.rotation().w(),
+                        joint.rotation().x(),
+                        joint.rotation().y(),
+                        joint.rotation().z()
+                    },
+                    Vector3
+                    {
+                        joint.translation().x(),
+                        joint.translation().y(),
+                        joint.translation().z()
+                    }                   }
+                );
+            }
+        }
+    }
+
+    void Animation::Unload()
+    {
+        mVersion = 0;
+        mFrameRate = 0;
+        mDuration = 0;
+        mFrames.clear();
+    }
+
+    Animation::~Animation() = default;
 
     uint32_t Animation::GetFrameRate() const
     {
@@ -87,49 +189,14 @@ namespace AeonGames
         return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
     }
 
-    void Animation::Initialize()
+    const std::shared_ptr<Animation> Animation::GetAnimation ( uint32_t aId )
     {
-        static AnimationBuffer animation_buffer;
-        LoadProtoBufObject<AnimationBuffer> ( animation_buffer, mFilename, "AEONANM" );
-        mVersion = animation_buffer.version();
-        mFrameRate = animation_buffer.framerate();
-        mDuration = animation_buffer.duration();
-        mFrames.reserve ( animation_buffer.frame_size() );
-        for ( auto& frame : animation_buffer.frame() )
-        {
-            mFrames.emplace_back();
-            mFrames.back().reserve ( frame.bone_size() );
-            for ( auto& joint : frame.bone() )
-            {
-                mFrames.back().emplace_back (
-                    Transform
-                {
-                    Vector3
-                    {
-                        joint.scale().x(),
-                        joint.scale().y(),
-                        joint.scale().z()
-                    },
-                    Quaternion
-                    {
-                        joint.rotation().w(),
-                        joint.rotation().x(),
-                        joint.rotation().y(),
-                        joint.rotation().z()
-                    },
-                    Vector3
-                    {
-                        joint.translation().x(),
-                        joint.translation().y(),
-                        joint.translation().z()
-                    }                   }
-                );
-            }
-        }
-        animation_buffer.Clear();
+        return Get<Animation> ( aId, aId );
     }
 
-    void Animation::Finalize()
+    const std::shared_ptr<Animation> Animation::GetAnimation ( const std::string& aPath )
     {
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Animation::GetAnimation ( id );
     }
 }

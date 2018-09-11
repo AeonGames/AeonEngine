@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Utilities.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
+#include "aeongames/CRC.h"
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -83,15 +84,6 @@ namespace AeonGames
             throw;
         }
     }
-
-    const std::shared_ptr<Pipeline> Pipeline::GetPipeline ( uint32_t aId )
-    {
-        return Get<Pipeline> ( aId, aId );
-    }
-
-    DLL Pipeline::IRenderPipeline::~IRenderPipeline()
-        = default;
-
     Pipeline::Pipeline ( const std::string&  aFilename ) :
         mTopology ( Topology::POINT_LIST ),  mVertexShader(), mFragmentShader()
     {
@@ -123,6 +115,20 @@ namespace AeonGames
             throw;
         }
     }
+
+    const std::shared_ptr<Pipeline> Pipeline::GetPipeline ( uint32_t aId )
+    {
+        return Get<Pipeline> ( aId, aId );
+    }
+
+    const std::shared_ptr<Pipeline> Pipeline::GetPipeline ( const std::string& aPath )
+    {
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Pipeline::GetPipeline ( id );
+    }
+
+    DLL Pipeline::IRenderPipeline::~IRenderPipeline()
+        = default;
 
     Pipeline::~Pipeline()
         = default;

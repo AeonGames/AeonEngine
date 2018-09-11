@@ -35,6 +35,8 @@ limitations under the License.
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
 #include "aeongames/Image.h"
+#include "aeongames/CRC.h"
+#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
@@ -597,5 +599,14 @@ namespace AeonGames
             }
         }
         return sampler_count;
+    }
+    const std::shared_ptr<Material> Material::GetMaterial ( uint32_t aId )
+    {
+        return Get<Material> ( aId, aId );
+    }
+    const std::shared_ptr<Material> Material::GetMaterial ( const std::string& aPath )
+    {
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Material::GetMaterial ( id );
     }
 }

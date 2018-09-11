@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -31,8 +32,10 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include "aeongames/CRC.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Skeleton.h"
+#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
@@ -56,36 +59,83 @@ namespace AeonGames
         return mParent;
     }
 
-    Skeleton::Skeleton ( const std::string& aFilename )
-        :
-        mFilename ( aFilename )
+
+    Skeleton::Skeleton()
+        = default;
+
+    Skeleton::Skeleton ( uint32_t aId )
     {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
         try
         {
-            Initialize();
+            Load ( buffer.data(), buffer.size() );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
             throw;
         }
     }
-    Skeleton::~Skeleton()
+
+    Skeleton::Skeleton ( const std::string&  aFilename )
     {
-        Finalize();
+        try
+        {
+            Load ( aFilename );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
     }
 
-    const std::vector<Skeleton::Joint>& Skeleton::GetJoints() const
+    Skeleton::Skeleton ( const void * aBuffer, size_t aBufferSize )
     {
-        return mJoints;
+        if ( !aBuffer && !aBufferSize )
+        {
+            throw std::runtime_error ( "Cannot initialize Skeleton object with null data." );
+            return;
+        }
+        try
+        {
+            Load ( aBuffer, aBufferSize );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
     }
 
-    void Skeleton::Initialize()
+
+    Skeleton::~Skeleton() = default;
+
+    void Skeleton::Load ( const std::string& aFilename )
     {
+        static std::mutex m;
         static SkeletonBuffer skeleton_buffer;
-        LoadProtoBufObject<SkeletonBuffer> ( skeleton_buffer, mFilename, "AEONSKL" );
-        mJoints.reserve ( skeleton_buffer.joint_size() );
-        for ( auto& joint : skeleton_buffer.joint() )
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<SkeletonBuffer> ( skeleton_buffer, aFilename, "AEONSKL" );
+        Load ( skeleton_buffer );
+        skeleton_buffer.Clear();
+    }
+
+    void Skeleton::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static std::mutex m;
+        static SkeletonBuffer skeleton_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<SkeletonBuffer> ( skeleton_buffer, aBuffer, aBufferSize, "AEONSKL" );
+        Load ( skeleton_buffer );
+        skeleton_buffer.Clear();
+    }
+
+    void Skeleton::Load ( const SkeletonBuffer& aSkeletonBuffer )
+    {
+        mJoints.reserve ( aSkeletonBuffer.joint_size() );
+        for ( auto& joint : aSkeletonBuffer.joint() )
         {
             mJoints.emplace_back (
                 ( joint.parentindex() < 0 ) ? nullptr : &mJoints[joint.parentindex()],
@@ -135,10 +185,26 @@ namespace AeonGames
             },
             joint.name() );
         }
-        skeleton_buffer.Clear();
     }
 
-    void Skeleton::Finalize()
+    void Skeleton::Unload()
     {
+        mJoints.clear();
+    }
+
+    const std::vector<Skeleton::Joint>& Skeleton::GetJoints() const
+    {
+        return mJoints;
+    }
+
+    const std::shared_ptr<Skeleton> Skeleton::GetSkeleton ( uint32_t aId )
+    {
+        return Get<Skeleton> ( aId, aId );
+    }
+
+    const std::shared_ptr<Skeleton> Skeleton::GetSkeleton ( const std::string& aPath )
+    {
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Skeleton::GetSkeleton ( id );
     }
 }

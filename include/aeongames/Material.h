@@ -119,6 +119,8 @@ namespace AeonGames
         DLL void Set ( const std::string& aName, const Vector3& aValue );
         DLL void Set ( const std::string& aName, const Vector4& aValue );
         ///@}
+        DLL static const std::shared_ptr<Material> GetMaterial ( uint32_t aId );
+        DLL static const std::shared_ptr<Material> GetMaterial ( const std::string& aPath );
     private:
         std::vector<Property> mProperties{};
         std::vector<uint8_t> mPropertyBlock{};

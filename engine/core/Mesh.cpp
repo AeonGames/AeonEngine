@@ -36,6 +36,7 @@ limitations under the License.
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/CRC.h"
 
 namespace AeonGames
 {
@@ -93,6 +94,12 @@ namespace AeonGames
     const std::shared_ptr<Mesh> Mesh::GetMesh ( uint32_t aId )
     {
         return Get<Mesh> ( aId, aId );
+    }
+
+    const std::shared_ptr<Mesh> Mesh::GetMesh ( const std::string& aPath )
+    {
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Mesh::GetMesh ( id );
     }
 
     const AABB& Mesh::GetAABB() const
