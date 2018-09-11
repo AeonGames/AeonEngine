@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,11 @@
 syntax = "proto3";
 package AeonGames;
 
-import "vector2.proto";
-import "vector3.proto";
-import "vector4.proto";
-import "reference.proto";
-
-message PropertyBuffer {
-	string uniform_name = 1;
-	string display_name = 2;
-	oneof default_value
-	{
-		float      scalar_float = 3;
-		uint32     scalar_uint  = 4;
-		sint32      scalar_int  = 5;
-		Vector2Buffer   vector2 = 6;
-		Vector3Buffer   vector3 = 7;
-		Vector4Buffer   vector4 = 8;
-		ReferenceBuffer texture = 9;
-	}
+message ReferenceBuffer
+{
+	oneof reference
+    {
+        uint32         id               = 1;
+        string         path             = 2;
+    }
 }

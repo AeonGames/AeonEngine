@@ -15,25 +15,19 @@
 syntax = "proto3";
 package AeonGames;
 
-message ResourceReference
-{
-	oneof reference
-    {
-        uint32         id               = 1;
-        string         path             = 2;
-    }
-}
+import "reference.proto";
 
 message AssemblyBuffer
 {
-    ResourceReference        mesh        = 1;
-	ResourceReference        pipeline    = 2;
-	ResourceReference        material    = 3;
+    ReferenceBuffer        mesh        = 1;
+	ReferenceBuffer        pipeline    = 2;
+	ReferenceBuffer        material    = 3;
 }
 
 message ModelBuffer {
-	ResourceReference           default_pipeline         = 1;
-	ResourceReference           default_material         = 2;
-    repeated AssemblyBuffer     assembly                 = 3;
-    repeated ResourceReference  animation                = 4;
+	ReferenceBuffer             default_pipeline         = 1;
+	ReferenceBuffer             default_material         = 2;
+    ReferenceBuffer             skeleton                 = 3;
+    repeated AssemblyBuffer     assembly                 = 4;
+    repeated ReferenceBuffer    animation                = 5;
 }

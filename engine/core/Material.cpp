@@ -286,10 +286,11 @@ namespace AeonGames
             break;
         case PropertyBuffer::DefaultValueCase::kTexture:
             new ( &mImage ) std::unique_ptr<Image> ( std::make_unique<Image>() );
-            if ( !DecodeImage ( *mImage, aPropertyBuffer.texture() ) )
+            // This will fail, change to use resources.
+            if ( !DecodeImage ( *mImage, aPropertyBuffer.texture().path() ) )
             {
                 std::ostringstream stream;
-                stream << "Unable to load image " << aPropertyBuffer.texture();
+                stream << "Unable to load image " << aPropertyBuffer.texture().path();
                 throw std::runtime_error ( stream.str().c_str() );
             }
             break;
