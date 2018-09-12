@@ -94,7 +94,9 @@ set(ENGINE_CORE_HEADERS
     #${CMAKE_SOURCE_DIR}/include/aeongames/ModelInstance.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
+)
 
 set(ENGINE_CORE_SOURCES
     core/Configuration.cpp
@@ -119,6 +121,7 @@ set(ENGINE_CORE_SOURCES
     core/Node.cpp
     core/Component.cpp
     core/Package.cpp
+    core/ProtoBufUtils.cpp
     )
 
 set(ENGINE_MATH_SOURCES
@@ -135,7 +138,9 @@ set(ENGINE_MATH_SOURCES
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
 source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
 source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
-source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS} ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
+source_group("protobuf" FILES 
+    ${PROTOBUF_SOURCES}
+    ${PROTOBUF_HEADERS})
 
 set(ENGINE_SOURCES  ${ENGINE_CORE_SOURCES}
                     ${ENGINE_RENDERER_SOURCES}
@@ -149,7 +154,10 @@ if(MSVC)
     set_source_files_properties(${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
 endif()
 
-add_library(ProtoBufClasses SHARED ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+add_library(ProtoBufClasses SHARED 
+    ${PROTOBUF_SOURCES}
+    ${PROTOBUF_HEADERS}
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
 add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
 target_link_libraries(ProtoBufClasses ${PROTOBUF_LIBRARIES})
