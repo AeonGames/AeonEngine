@@ -21,6 +21,7 @@ limitations under the License.
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
 #include "aeongames/CRC.h"
 
@@ -62,125 +63,55 @@ namespace AeonGames
         ( void ) aDelta;
 
         /** @todo We don't want the following code to run as part of the game loop.*/
-        std::shared_ptr<Pipeline> default_pipeline;
-        std::shared_ptr<Material> default_material;
+        std::shared_ptr<Pipeline> default_pipeline{};
+        std::shared_ptr<Material> default_material{};
 
         // Default Pipeline ---------------------------------------------------------------------
         if ( mProperties.has_default_pipeline() )
         {
-            switch ( mProperties.default_pipeline().reference_case() )
-            {
-            case ReferenceBuffer::kPath:
-                default_pipeline = Pipeline::GetPipeline ( mProperties.default_pipeline().path() );
-                break;
-            case ReferenceBuffer::kId:
-                default_pipeline = Pipeline::GetPipeline ( mProperties.default_pipeline().id() );
-                break;
-            default:
-                break;
-            }
+            default_pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( mProperties.default_pipeline() ) );
         }
 
         // Default Material ---------------------------------------------------------------------
         if ( mProperties.has_default_material() )
         {
-            switch ( mProperties.default_material().reference_case() )
-            {
-            case ReferenceBuffer::kPath:
-                default_material = Material::GetMaterial ( mProperties.default_material().path() );
-                break;
-            case ReferenceBuffer::kId:
-                default_material = Material::GetMaterial ( mProperties.default_material().id() );
-                break;
-            default:
-                break;
-            }
+            default_material = Material::GetMaterial ( GetReferenceBufferId ( mProperties.default_material() ) );
         }
 
         // Skeleton -----------------------------------------------------------------------------
         if ( mProperties.has_skeleton() )
         {
-            switch ( mProperties.skeleton().reference_case() )
-            {
-            case ReferenceBuffer::kPath:
-                mSkeleton = Skeleton::GetSkeleton ( mProperties.skeleton().path() );
-                break;
-            case ReferenceBuffer::kId:
-                mSkeleton = Skeleton::GetSkeleton ( mProperties.skeleton().id() );
-                break;
-            default:
-                break;
-            }
+            mSkeleton = Skeleton::GetSkeleton ( GetReferenceBufferId ( mProperties.skeleton() ) );
         }
         // Meshes -----------------------------------------------------------------------------
         mMeshes.reserve ( mProperties.assembly_size() );
-        for ( int i = 0; i < mProperties.assembly_size(); ++i )
+        for ( auto& assembly : mProperties.assembly() )
         {
             std::shared_ptr<Mesh> mesh{};
             std::shared_ptr<Pipeline> pipeline{default_pipeline};
             std::shared_ptr<Material> material{default_material};
 
-            if ( mProperties.assembly ( i ).has_mesh() )
+            if ( assembly.has_mesh() )
             {
-                switch ( mProperties.assembly ( i ).mesh().reference_case() )
-                {
-                case ReferenceBuffer::kPath:
-                    mesh = Mesh::GetMesh ( mProperties.assembly ( i ).mesh().path() );
-                    break;
-                case ReferenceBuffer::kId:
-                    mesh = Mesh::GetMesh ( mProperties.assembly ( i ).mesh().id() );
-                    break;
-                default:
-                    break;
-                }
+                mesh = Mesh::GetMesh ( GetReferenceBufferId ( assembly.mesh() ) );
             }
 
-            if ( mProperties.assembly ( i ).has_pipeline() )
+            if ( assembly.has_pipeline() )
             {
-                switch ( mProperties.assembly ( i ).pipeline().reference_case() )
-                {
-                case ReferenceBuffer::kPath:
-                    pipeline = Pipeline::GetPipeline ( mProperties.assembly ( i ).pipeline().path() );
-                    break;
-                case ReferenceBuffer::kId:
-                    pipeline = Pipeline::GetPipeline ( mProperties.assembly ( i ).pipeline().id() );
-                    break;
-                default:
-                    break;
-                }
+                pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( assembly.pipeline() ) );
             }
 
-            if ( mProperties.assembly ( i ).has_material() )
+            if ( assembly.has_material() )
             {
-                switch ( mProperties.assembly ( i ).material().reference_case() )
-                {
-                case ReferenceBuffer::kPath:
-                    material = Material::GetMaterial ( mProperties.assembly ( i ).material().path() );
-                    break;
-                case ReferenceBuffer::kId:
-                    material = Material::GetMaterial ( mProperties.assembly ( i ).material().id() );
-                    break;
-                default:
-                    break;
-                }
+                material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
             }
             mMeshes.emplace_back ( mesh, pipeline, material );
         }
-
+        // Animations -----------------------------------------------------------------------------
         mAnimations.reserve ( mProperties.animation_size() );
         for ( auto& animation : mProperties.animation() )
         {
-            switch ( animation.reference_case() )
-            {
-            case ReferenceBuffer::kPath:
-                mAnimations.emplace_back ( Animation::GetAnimation ( animation.path() ) );
-                break;
-            case ReferenceBuffer::kId:
-                mAnimations.emplace_back ( Animation::GetAnimation ( animation.id() ) );
-                break;
-            default:
-                break;
-            }
+            mAnimations.emplace_back ( Animation::GetAnimation ( GetReferenceBufferId ( animation ) ) );
         }
     }
 
