@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,142 +14,186 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/Model.h"
+#include "aeongames/Node.h"
+#include "aeongames/Mesh.h"
+#include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
+#include "aeongames/Skeleton.h"
+#include "aeongames/Animation.h"
 #include "aeongames/Utilities.h"
 #include "ProtoBufHelpers.h"
+#include "aeongames/ProtoBufUtils.h"
+#include "aeongames/Window.h"
+#include "aeongames/CRC.h"
+#include "aeongames/AeonEngine.h"
+#include "aeongames/ResourceCache.h"
 #include "aeongames/ProtoBufClasses.h"
-#include <cassert>
-
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
 #endif
+#include "reference.pb.h"
 #include "model.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "aeongames/ResourceCache.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Skeleton.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Renderer.h"
 
 namespace AeonGames
 {
-    Model::Model ( const std::string& aFilename ) : mFilename ( aFilename )
+    Model::Model()
+        = default;
+    Model::~Model()
+        = default;
+
+    Model::Model ( uint32_t aId )
     {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
         try
         {
-            Initialize();
+            Load ( buffer.data(), buffer.size() );
         }
         catch ( ... )
         {
-            Finalize();
+            Unload();
+            throw;
+        }
+    }
+    Model::Model ( const std::string&  aFilename )
+    {
+        try
+        {
+            Load ( aFilename );
+        }
+        catch ( ... )
+        {
+            Unload();
             throw;
         }
     }
 
-    Model::~Model()
-        = default;
-
-    const std::string & Model::GetFilename() const
+    Model::Model ( const void * aBuffer, size_t aBufferSize )
     {
-        return mFilename;
+        if ( !aBuffer && !aBufferSize )
+        {
+            throw std::runtime_error ( "Cannot initialize model object with null data." );
+            return;
+        }
+        try
+        {
+            Load ( aBuffer, aBufferSize );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
     }
 
-    const std::vector<std::tuple<
-    std::shared_ptr<Pipeline>,
-        std::shared_ptr<Material>,
-        std::shared_ptr<Mesh>>>& Model::GetMeshes() const
+    const std::shared_ptr<Model> Model::GetModel ( uint32_t aId )
     {
-        return mMeshes;
+        return Get<Model> ( aId, aId );
     }
 
-    const AABB& Model::GetCenterRadii() const
+    const std::shared_ptr<Model> Model::GetModel ( const std::string& aPath )
     {
-        return mCenterRadii;
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Model::GetModel ( id );
     }
 
-    const std::shared_ptr<Skeleton>& Model::GetSkeleton() const
+    void Model::Load ( const std::string& aFilename )
     {
-        return mSkeleton;
+        static std::mutex m;
+        static ModelBuffer pipeline_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<ModelBuffer> ( pipeline_buffer, aFilename, "AEONMDL" );
+        Load ( pipeline_buffer );
+        pipeline_buffer.Clear();
+    }
+
+    void Model::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static std::mutex m;
+        static ModelBuffer pipeline_buffer;
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject<ModelBuffer> ( pipeline_buffer, aBuffer, aBufferSize, "AEONMDL" );
+        Load ( pipeline_buffer );
+        pipeline_buffer.Clear();
+    }
+
+    void Model::Load ( const ModelBuffer& aModelBuffer )
+    {
+        std::shared_ptr<Pipeline> default_pipeline{};
+        std::shared_ptr<Material> default_material{};
+
+        // Default Pipeline ---------------------------------------------------------------------
+        if ( aModelBuffer.has_default_pipeline() )
+        {
+            default_pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( aModelBuffer.default_pipeline() ) );
+        }
+
+        // Default Material ---------------------------------------------------------------------
+        if ( aModelBuffer.has_default_material() )
+        {
+            default_material = Material::GetMaterial ( GetReferenceBufferId ( aModelBuffer.default_material() ) );
+        }
+
+        // Skeleton -----------------------------------------------------------------------------
+        if ( aModelBuffer.has_skeleton() )
+        {
+            mSkeleton = Skeleton::GetSkeleton ( GetReferenceBufferId ( aModelBuffer.skeleton() ) );
+        }
+        // Meshes -----------------------------------------------------------------------------
+        mAssemblies.reserve ( aModelBuffer.assembly_size() );
+        for ( auto& assembly : aModelBuffer.assembly() )
+        {
+            std::shared_ptr<Mesh> mesh{};
+            std::shared_ptr<Pipeline> pipeline{default_pipeline};
+            std::shared_ptr<Material> material{default_material};
+
+            if ( assembly.has_mesh() )
+            {
+                mesh = Mesh::GetMesh ( GetReferenceBufferId ( assembly.mesh() ) );
+            }
+
+            if ( assembly.has_pipeline() )
+            {
+                pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( assembly.pipeline() ) );
+            }
+
+            if ( assembly.has_material() )
+            {
+                material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
+            }
+            mAssemblies.emplace_back ( mesh, pipeline, material );
+        }
+        // Animations -----------------------------------------------------------------------------
+        mAnimations.reserve ( aModelBuffer.animation_size() );
+        for ( auto& animation : aModelBuffer.animation() )
+        {
+            mAnimations.emplace_back ( Animation::GetAnimation ( GetReferenceBufferId ( animation ) ) );
+        }
+    }
+
+    void Model::Unload()
+    {
+        mSkeleton.reset();
+        mAssemblies.clear();
+        mAnimations.clear();
+    }
+
+    const std::vector<Model::Assembly>& Model::GetAssemblies() const
+    {
+        return mAssemblies;
+    }
+
+    const Skeleton* Model::GetSkeleton() const
+    {
+        return mSkeleton.get();
     }
 
     const std::vector<std::shared_ptr<const Animation>>& Model::GetAnimations() const
     {
         return mAnimations;
-    }
-
-    void Model::Initialize()
-    {
-        static ModelBuffer model_buffer;
-        std::shared_ptr<Pipeline> default_pipeline;
-        std::shared_ptr<Material> default_material;
-        LoadProtoBufObject<ModelBuffer> ( model_buffer, mFilename, "AEONMDL" );
-        if ( model_buffer.has_default_pipeline() )
-        {
-            if ( !model_buffer.default_pipeline().has_buffer() )
-            {
-                default_pipeline = Get<Pipeline> ( model_buffer.default_pipeline().file(),
-                                                   model_buffer.default_pipeline().file() );
-            }
-        }
-        if ( model_buffer.has_default_material() )
-        {
-            if ( !model_buffer.default_material().has_buffer() )
-            {
-                default_material = Get<Material> ( model_buffer.default_pipeline().file(),
-                                                   model_buffer.default_material().file() );
-            }
-        }
-        if ( model_buffer.has_skeleton() )
-        {
-            if ( !model_buffer.skeleton().has_buffer() )
-            {
-                mSkeleton = Get<Skeleton> ( model_buffer.skeleton().file(),
-                                            model_buffer.skeleton().file() );
-            }
-        }
-        mMeshes.reserve ( model_buffer.assembly_size() );
-        mCenterRadii = {};
-        for ( int i = 0; i < model_buffer.assembly_size(); ++i )
-        {
-            std::shared_ptr<Pipeline> pipeline = ( model_buffer.assembly ( i ).has_pipeline() ) ?
-                                                 Get<Pipeline> ( model_buffer.assembly ( i ).pipeline().file(),
-                                                         model_buffer.assembly ( i ).pipeline().file() ) : default_pipeline;
-            std::shared_ptr<Material> material = ( model_buffer.assembly ( i ).has_material() ) ?
-                                                 Get<Material> ( model_buffer.assembly ( i ).material().file(),
-                                                         model_buffer.assembly ( i ).material().file() ) : default_material;
-
-            if ( !model_buffer.assembly ( i ).mesh().has_buffer() )
-            {
-                mMeshes.emplace_back ( pipeline, material, Get<Mesh> ( model_buffer.assembly ( i ).mesh().file(),
-                                       model_buffer.assembly ( i ).mesh().file() ) );
-            }
-            mCenterRadii += std::get<2> ( mMeshes.back() )->GetAABB();
-        }
-
-        if ( model_buffer.animation_size() )
-        {
-            mAnimations.reserve ( model_buffer.animation_size() );
-            for ( auto& animation : model_buffer.animation() )
-            {
-                if ( !animation.has_buffer() )
-                {
-                    mAnimations.emplace_back ( Get<Animation> ( animation.file(), animation.file() ) );
-                }
-                else
-                {
-                    throw std::runtime_error ( "Embeded animation buffers in model files not implemented yet." );
-                }
-            }
-        }
-
-        model_buffer.Clear();
-    }
-
-    void Model::Finalize()
-    {
     }
 }

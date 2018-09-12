@@ -14,28 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 /** \File Implements the interface for the Portaudio plugin.*/
-#include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
-#include "aeongames/Memory.h"
-#include "aeongames/Node.h"
 #include "aeongames/Component.h"
-#include "ModelComponent.h"
+#include "ModelController.h"
 #include <iostream>
 
 extern "C"
 {
     bool AeonEngineComponentsStartUp()
     {
-        AeonGames::RegisterComponentConstructor ( "Model", []()
+        AeonGames::RegisterComponentConstructor ( "Model Controller", []()
         {
-            return std::make_unique<AeonGames::ModelComponent>();
+            return std::make_unique<AeonGames::ModelController>();
         } );
         return true;
     }
 
     void AeonEngineComponentsShutdown()
     {
-        AeonGames::UnregisterComponentConstructor ( "Model" );
+        AeonGames::UnregisterComponentConstructor ( "Model Controller" );
     }
 
     PLUGIN PluginModuleInterface PMI =
