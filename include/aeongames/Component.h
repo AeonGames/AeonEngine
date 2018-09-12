@@ -39,7 +39,10 @@ namespace AeonGames
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
-        virtual google::protobuf::Message* GetProperties() const = 0;
+        /** If any changes to the properties message need to be processed or executed do so. */
+        virtual void CommitPropertyChanges () = 0;
+        virtual google::protobuf::Message* GetProperties() = 0;
+        virtual const google::protobuf::Message* GetProperties() const = 0;
         DLL virtual ~Component() = 0;
     };
     /**@name Factory Functions */

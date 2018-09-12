@@ -1,9 +1,9 @@
 set(NODES_HEADERS
-    ModelComponent.h
+    ModelController.h
 )
 set(NODES_SOURCES
     Plugin.cpp
-    ModelComponent.cpp
+    ModelController.cpp
 )
 add_library(AeonEngineComponents SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
