@@ -15,6 +15,7 @@
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     models
                     ${CMAKE_SOURCE_DIR}/include
+                    ${PROTOBUF_INCLUDE_DIR}
                     ${Qt5Core_INCLUDE_DIRS}
                     ${Qt5Gui_INCLUDE_DIRS}
                     ${Qt5Widgets_INCLUDE_DIRS})
