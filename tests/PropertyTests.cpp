@@ -16,7 +16,6 @@ limitations under the License.
 
 #include <iostream>
 #include <cstdint>
-#include <functional>
 #include <string>
 #include "aeongames/Property.h"
 #include "gtest/gtest.h"
@@ -25,79 +24,36 @@ limitations under the License.
 using namespace ::testing;
 namespace AeonGames
 {
-    class RuntimeClass
+    TEST ( Property, Constructor )
     {
-    public:
-        RuntimeClass() = default;
-        ~RuntimeClass() = default;
-        float FirstFloat{};
-        float SecondFloat{};
-    };
-
-    TEST ( Property, OneFloat )
-    {
-        RuntimeClass runtime_class;
-        float value{};
-        Property<RuntimeClass> property ( "FloatValue", "Float Values", "f",
-                                          [] ( RuntimeClass * aRuntimeClass, const void* aTuple )
-        {
-            aRuntimeClass->FirstFloat = *reinterpret_cast<const float*> ( aTuple );
-        },
-        [] ( const RuntimeClass * aRuntimeClass, void* aTuple )
-        {
-            *reinterpret_cast<float*> ( aTuple ) = aRuntimeClass->FirstFloat;
-        } );
-        EXPECT_EQ ( property.GetBufferSize(), sizeof ( float ) );
-        property.SetByString ( &runtime_class, "3.1415" );
-        EXPECT_EQ ( runtime_class.FirstFloat, 3.1415f );
-        property.Get ( &runtime_class, &value );
-        EXPECT_EQ ( runtime_class.FirstFloat, value );
+        Property<sizeof ( std::string ) > property ( "test", std::string{} );
+        EXPECT_TRUE ( property.HasType<std::string>() );
+        EXPECT_FALSE ( property.HasType<int>() );
+        EXPECT_EQ ( property.Get<std::string>(), "" );
+        property.Get<std::string>() = "String";
+        EXPECT_EQ ( property.Get<std::string>(), "String" );
+        EXPECT_EQ ( property.GetName(), "test" );
     }
-    TEST ( Property, TwoFloats )
+    TEST ( Property, CopyConstructor )
     {
-        RuntimeClass runtime_class;
-        float value[2] {};
-        Property<RuntimeClass> propertyff ( "FloatValuesA", "Float Values A", "ff",
-                                            [] ( RuntimeClass * aRuntimeClass, const void* aTuple )
-        {
-            aRuntimeClass->FirstFloat = reinterpret_cast<const float*> ( aTuple ) [0];
-            aRuntimeClass->SecondFloat = reinterpret_cast<const float*> ( aTuple ) [1];
-        },
-        [] ( const RuntimeClass * aRuntimeClass, void* aTuple )
-        {
-            reinterpret_cast<float*> ( aTuple ) [0] = aRuntimeClass->FirstFloat;
-            reinterpret_cast<float*> ( aTuple ) [1] = aRuntimeClass->SecondFloat;
-        } );
-        EXPECT_EQ ( propertyff.GetBufferSize(), sizeof ( float ) * 2 );
-        propertyff.SetByString ( &runtime_class, "3.1415 19.1277" );
-        EXPECT_EQ ( runtime_class.FirstFloat, 3.1415f );
-        EXPECT_EQ ( runtime_class.SecondFloat, 19.1277f );
-        propertyff.Get ( &runtime_class, value );
-        EXPECT_EQ ( runtime_class.FirstFloat, value[0] );
-        EXPECT_EQ ( runtime_class.SecondFloat, value[1] );
-
-        Property<RuntimeClass> property2f ( "FloatValuesB", "Float Values B", "2f",
-                                            [] ( RuntimeClass * aRuntimeClass, const void* aTuple )
-        {
-            aRuntimeClass->FirstFloat = reinterpret_cast<const float*> ( aTuple ) [0];
-            aRuntimeClass->SecondFloat = reinterpret_cast<const float*> ( aTuple ) [1];
-        },
-        [] ( const RuntimeClass * aRuntimeClass, void* aTuple )
-        {
-            reinterpret_cast<float*> ( aTuple ) [0] = aRuntimeClass->FirstFloat;
-            reinterpret_cast<float*> ( aTuple ) [1] = aRuntimeClass->SecondFloat;
-        } );
-        EXPECT_EQ ( property2f.GetBufferSize(), sizeof ( float ) * 2 );
-        property2f.SetByString ( &runtime_class, "3.1415 19.1277" );
-        EXPECT_EQ ( runtime_class.FirstFloat, 3.1415f );
-        EXPECT_EQ ( runtime_class.SecondFloat, 19.1277f );
-        property2f.Get ( &runtime_class, value );
-        EXPECT_EQ ( runtime_class.FirstFloat, value[0] );
-        EXPECT_EQ ( runtime_class.SecondFloat, value[1] );
+        Property<sizeof ( std::string ) > original ( "test", std::string{"Copy"} );
+        Property<sizeof ( std::string ) > property{original};
+        EXPECT_TRUE ( property.HasType<std::string>() );
+        EXPECT_FALSE ( property.HasType<int>() );
+        EXPECT_EQ ( property.Get<std::string>(), "Copy" );
+        property.Get<std::string>() = "String";
+        EXPECT_EQ ( property.Get<std::string>(), "String" );
+        EXPECT_EQ ( property.GetName(), "test" );
     }
-    TEST ( Property, AllTypes )
+    TEST ( Property, MoveConstructor )
     {
-        Property<RuntimeClass> propertyff ( "AllTypes", "All Types", "cbB?hHiIlLfqQd", [] ( RuntimeClass * aRuntimeClass, const void* aTuple ) {}, [] ( const RuntimeClass * aRuntimeClass, void* aTuple ) {} );
-        EXPECT_EQ ( propertyff.GetBufferSize(), sizeof ( uint8_t ) * 4 + sizeof ( uint16_t ) * 2 + sizeof ( uint32_t ) * 5 + sizeof ( uint64_t ) * 3 );
+        Property<sizeof ( std::string ) > original ( "test", std::string{"Move"} );
+        Property<sizeof ( std::string ) > property{std::move ( original ) };
+        EXPECT_TRUE ( property.HasType<std::string>() );
+        EXPECT_FALSE ( property.HasType<int>() );
+        EXPECT_EQ ( property.Get<std::string>(), "Move" );
+        property.Get<std::string>() = "String";
+        EXPECT_EQ ( property.Get<std::string>(), "String" );
+        EXPECT_EQ ( property.GetName(), "test" );
     }
 }
