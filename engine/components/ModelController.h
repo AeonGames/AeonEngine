@@ -19,7 +19,6 @@ limitations under the License.
 #include <tuple>
 #include <array>
 #include "aeongames/Component.h"
-#include "aeongames/Property.h"
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -46,11 +45,14 @@ namespace AeonGames
         /**@copydoc Component::EnumerateProperties */
         bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const final;
         /**@copydoc Component::SetProperty */
-        void SetProperty ( const char* aName, const std::any& aValue ) final;
+        void SetProperty ( const char* aName, const TypedPointer& aValue ) final;
         /**@copydoc Component::GetProperty */
-        const std::any GetProperty ( const char* aName ) const final;
+        const TypedPointer GetProperty ( const char* aName ) const final;
+        /**@copydoc Component::SetProperty */
+        void SetProperty ( size_t aIndex, const TypedPointer& aValue ) final;
+        /**@copydoc Component::GetProperty */
+        const TypedPointer GetProperty ( size_t aIndex ) const final;
         // To be removed -----------------
-        void CommitPropertyChanges() final;
         const google::protobuf::Message* GetProperties() const final;
         google::protobuf::Message* GetProperties() final;
         // To be removed -----------------
@@ -58,7 +60,7 @@ namespace AeonGames
         ///@}
     private:
         std::shared_ptr<Model> mModel{};
-        std::array<Property<32>, 2> mProperties
+        std::array<Property<32>, 3> mProperties
         {
             {
                 {
@@ -68,6 +70,10 @@ namespace AeonGames
                 {
                     "Active Animation",
                     size_t{}
+                },
+                {
+                    "Animation Delta",
+                    double{}
                 }
             }
         };

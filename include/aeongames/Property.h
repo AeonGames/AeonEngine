@@ -18,12 +18,70 @@ limitations under the License.
 #include <cstdint>
 #include <array>
 #include <typeinfo>
+#include <iostream>
+
 namespace AeonGames
 {
+    class TypedPointer
+    {
+    public:
+        TypedPointer() = default;
+        template<typename T> TypedPointer ( const T& t ) : mTypeId{TypeId<T>}, mPointer{&t} {}
+        template<typename T> TypedPointer ( T&& t ) : mTypeId{TypeId<T>}, mPointer{&t} {}
+        template<typename T> TypedPointer ( T* t ) : mTypeId{TypeId<T>}, mPointer{t} {}
+        template<typename T> TypedPointer& operator= ( T* t )
+        {
+            mTypeId = TypeId<T>;
+            mPointer = t;
+            return *this;
+        }
+        template<typename T> const T* Get() const
+        {
+            if ( !mTypeId || !mPointer )
+            {
+                return nullptr;
+            }
+            if ( mTypeId().hash_code() != typeid ( T ).hash_code() )
+            {
+                throw std::runtime_error ( "Bad AeonGames::TypedPointer Cast." );
+            }
+            return reinterpret_cast<const T*> ( mPointer );
+        }
+        template<typename T> T* Get()
+        {
+            // EC++ Item 3
+            return const_cast<T*> ( static_cast<const TypedPointer*> ( this )->Get<T>() );
+        }
+        const void* Get() const
+        {
+            return mPointer;
+        }
+        void* Get()
+        {
+            // EC++ Item 3
+            return const_cast<void*> ( static_cast<const TypedPointer*> ( this )->Get() );
+        }
+        const std::type_info& GetTypeInfo() const
+        {
+            if ( !mTypeId || !mPointer )
+            {
+                return typeid ( nullptr );
+            }
+            return mTypeId();
+        }
+    private:
+        const std::type_info& ( *mTypeId ) () {};
+        void* mPointer{};
+        template<typename T> static const std::type_info& TypeId()
+        {
+            return typeid ( T );
+        }
+    };
+
     template<std::size_t max_size>
     class Property
     {
-        enum class Operation {Copy, Move, Destroy, TypeId};
+        enum class Operation {Copy, Move, Assign, Retrieve, Destroy, TypeId};
     public:
         template<typename T> Property ( const char* aName, const T& t ) :
             mName{aName},
@@ -55,20 +113,26 @@ namespace AeonGames
             mManager ( Operation::Move, mData.data(), aProperty.mData.data() );
         }
 
-        template<typename T> void Set ( const T& t )
+        void Set ( const TypedPointer& aValue )
         {
-            ( *reinterpret_cast<T*> ( mData.data() ) ) = t;
+            if ( GetTypeInfo().hash_code() != aValue.GetTypeInfo().hash_code() )
+            {
+                throw std::runtime_error ( "AeonGames::Property::Set called with different types." );
+            }
+            mManager ( Operation::Assign, mData.data(), aValue.Get() );
         }
 
-        template<typename T> const T& Get() const
+        const TypedPointer Get() const
         {
-            return *reinterpret_cast<const T*> ( mData.data() );
+            TypedPointer pointer;
+            mManager ( Operation::Retrieve, &pointer, mData.data() );
+            return pointer;
         }
 
-        template<typename T> T& Get()
+        TypedPointer Get()
         {
             // EC++ Item 3
-            return const_cast<T&> ( static_cast<const Property&> ( *this ).Get<T>() );
+            return static_cast<const Property&> ( *this ).Get();
         }
         ~Property()
         {
@@ -99,6 +163,12 @@ namespace AeonGames
                 break;
             case Operation::Move:
                 new ( dst ) T{std::move ( *reinterpret_cast<const T*> ( src ) ) };
+                break;
+            case Operation::Assign:
+                *reinterpret_cast<T*> ( dst ) = *reinterpret_cast<const T*> ( src );
+                break;
+            case Operation::Retrieve:
+                *reinterpret_cast<TypedPointer*> ( dst ) = reinterpret_cast<T*> ( const_cast<void*> ( src ) );
                 break;
             case Operation::Destroy:
                 reinterpret_cast<T*> ( dst )->T::~T();
