@@ -45,6 +45,10 @@ namespace AeonGames
         void Render ( const Node& aNode, const Window& aWindow ) const final;
         /**@copydoc Component::EnumerateProperties */
         bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const final;
+        /**@copydoc Component::SetProperty */
+        void SetProperty ( const char* aName, const std::any& aValue ) final;
+        /**@copydoc Component::GetProperty */
+        const std::any GetProperty ( const char* aName ) const final;
         // To be removed -----------------
         void CommitPropertyChanges() final;
         const google::protobuf::Message* GetProperties() const final;

@@ -74,7 +74,6 @@ namespace AeonGames
             *aPropertyCount = 0;
             return true;
         }
-        ///@todo Fill Records
         size_t i{0};
         for ( ; i < *aPropertyCount || i < mProperties.size(); ++i )
         {
@@ -83,6 +82,23 @@ namespace AeonGames
         }
         *aPropertyCount = i;
         return true;
+    }
+
+    void ModelController::SetProperty ( const char* aName, const std::any& aValue )
+    {
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const Property<32>&aProperty )
+        {
+            return strcmp ( aProperty.GetName(), aProperty.GetName() ) == 0;
+        } );
+        if ( i != mProperties.end() )
+        {
+            ///@todo Set the value
+        }
+    }
+    const std::any ModelController::GetProperty ( const char* aName ) const
+    {
+        ///@todo Return the value
+        return std::any{};
     }
 
     void ModelController::CommitPropertyChanges()
