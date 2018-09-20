@@ -58,6 +58,8 @@ namespace AeonGames
             and on return the variable is overwritten with the number of structures actually written to aRecords.
          */
         virtual bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const = 0;
+        virtual void SetProperty ( const char* aName, const std::any& aValue ) = 0;
+        virtual const std::any GetProperty ( const char* aName ) const = 0;
         /*@}*/
         /** If any changes to the properties message need to be processed or executed do so. */
         virtual void CommitPropertyChanges () = 0;

@@ -122,7 +122,7 @@ add_executable(worldeditor
     ${WORLDEDITOR_RESOURCES}
 )
 
-if(UNIX)
+if(UNIX OR MINGW OR MSYS)
     set_target_properties(worldeditor PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif()
 
