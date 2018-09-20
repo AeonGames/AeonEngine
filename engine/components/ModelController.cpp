@@ -41,10 +41,9 @@ namespace AeonGames
 {
     ModelController::~ModelController() = default;
 
-    const std::string& ModelController::GetTypeName() const
+    const char* ModelController::GetTypeName() const
     {
-        static std::string type_name{"ModelController"};
-        return type_name;
+        return "ModelController";
     }
 
     uint32_t ModelController::GetTypeId() const
@@ -64,11 +63,33 @@ namespace AeonGames
         ( void ) aDelta;
     }
 
+    bool ModelController::EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const
+    {
+        if ( !aPropertyCount )
+        {
+            return false;
+        }
+        else if ( !aRecords )
+        {
+            *aPropertyCount = 0;
+            return true;
+        }
+        ///@todo Fill Records
+        size_t i{0};
+        for ( ; i < *aPropertyCount || i < mProperties.size(); ++i )
+        {
+            aRecords[i].Name = mProperties[i].GetName();
+            aRecords[i].TypeIndex = std::type_index{mProperties[i].GetTypeInfo() };
+        }
+        *aPropertyCount = i;
+        return true;
+    }
+
     void ModelController::CommitPropertyChanges()
     {
-        if ( mProperties.has_model() )
+        if ( mModelControllerBuffer.has_model() )
         {
-            std::shared_ptr<Model> model{Model::GetModel ( GetReferenceBufferId ( mProperties.model() ) ) };
+            std::shared_ptr<Model> model{Model::GetModel ( GetReferenceBufferId ( mModelControllerBuffer.model() ) ) };
             if ( model != mModel )
             {
                 mModel = model;
@@ -97,10 +118,10 @@ namespace AeonGames
 
     const google::protobuf::Message* ModelController::GetProperties() const
     {
-        return &mProperties;
+        return &mModelControllerBuffer;
     }
     google::protobuf::Message* ModelController::GetProperties()
     {
-        return &mProperties;
+        return &mModelControllerBuffer;
     }
 }

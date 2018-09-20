@@ -132,6 +132,10 @@ if(DOXYGEN_EXECUTABLE)
     configure_file("${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in" "Doxyfile" @ONLY)
 endif()
 
+# Do NOT commit the following 3 lines, this is a workaround for protobuf, but ALL C++17 warnings must be addressed.
+if(MSVC)
+    add_definitions(-D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+endif()
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)

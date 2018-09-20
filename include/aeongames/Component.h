@@ -18,6 +18,9 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <functional>
+#include <typeinfo>
+#include <typeindex>
+#include <any>
 #include "aeongames/Platform.h"
 #include "aeongames/Memory.h"
 namespace google
@@ -34,11 +37,28 @@ namespace AeonGames
     class Component
     {
     public:
-        virtual const std::string& GetTypeName() const = 0;
+        struct PropertyRecord
+        {
+            const char* Name{};
+            std::type_index TypeIndex{typeid ( nullptr ) };
+        };
+        virtual const char* GetTypeName() const = 0;
         virtual uint32_t GetTypeId() const = 0;
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
+        /**@name Property Interface */
+        /*@{*/
+        /** Query available properties in the component.
+            @param aPropertyCount is a pointer to a size_t related to the number of property records available or queried.
+            @param aRecords Properties is either nullptr or a pointer to an array of PropertyRecord structures.
+            @return true on success, false on error.
+            @note If aRecords is nullptr, then the number of properties available is returned in aPropertyCount. Otherwise,
+            aPropertyCount must point to a variable set by the user to the number of elements in the aRecords array,
+            and on return the variable is overwritten with the number of structures actually written to aRecords.
+         */
+        virtual bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const = 0;
+        /*@}*/
         /** If any changes to the properties message need to be processed or executed do so. */
         virtual void CommitPropertyChanges () = 0;
         virtual google::protobuf::Message* GetProperties() = 0;
