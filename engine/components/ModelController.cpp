@@ -25,7 +25,6 @@ limitations under the License.
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
 #include "aeongames/CRC.h"
-
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -84,37 +83,55 @@ namespace AeonGames
         return true;
     }
 
-    void ModelController::SetProperty ( const char* aName, const std::any& aValue )
+    void ModelController::SetProperty ( const char* aName, const TypedPointer& aValue )
     {
-        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const Property<32>&aProperty )
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const Property<32>& aProperty )
         {
-            return strcmp ( aProperty.GetName(), aProperty.GetName() ) == 0;
+            return strcmp ( aProperty.GetName(), aName ) == 0;
         } );
         if ( i != mProperties.end() )
         {
-            ///@todo Set the value
+            i->Set ( aValue );
+            if ( strcmp ( aName, "Model" ) == 0 )
+            {
+                std::shared_ptr<Model> model{Model::GetModel ( *i->Get().Get<std::string>() ) };
+                if ( model != mModel )
+                {
+                    mModel = model;
+                }
+            }
         }
     }
-    const std::any ModelController::GetProperty ( const char* aName ) const
+
+    const TypedPointer ModelController::GetProperty ( const char* aName ) const
     {
-        ///@todo Return the value
-        return std::any{};
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const Property<32>& aProperty )
+        {
+            return strcmp ( aProperty.GetName(), aName ) == 0;
+        } );
+        if ( i != mProperties.end() )
+        {
+            return i->Get();
+        }
+        return TypedPointer{};
     }
 
-    void ModelController::CommitPropertyChanges()
+    void ModelController::SetProperty ( size_t aIndex, const TypedPointer& aValue )
     {
-        if ( mModelControllerBuffer.has_model() )
+        mProperties[aIndex].Set ( aValue );
+        if ( strcmp ( mProperties[aIndex].GetName(), "Model" ) == 0 )
         {
-            std::shared_ptr<Model> model{Model::GetModel ( GetReferenceBufferId ( mModelControllerBuffer.model() ) ) };
+            std::shared_ptr<Model> model{Model::GetModel ( *mProperties[aIndex].Get().Get<std::string>() ) };
             if ( model != mModel )
             {
                 mModel = model;
             }
         }
-        else
-        {
-            mModel.reset();
-        }
+    }
+
+    const TypedPointer ModelController::GetProperty ( size_t aIndex ) const
+    {
+        return mProperties[aIndex].Get();
     }
 
     void ModelController::Render ( const Node& aNode, const Window& aWindow ) const
