@@ -17,7 +17,9 @@ limitations under the License.
 #define AEONGAMES_MODELCONTROLLER_H
 #include <vector>
 #include <tuple>
+#include <array>
 #include "aeongames/Component.h"
+#include "aeongames/Property.h"
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -36,19 +38,36 @@ namespace AeonGames
     public:
         /** @name Component Overrides */
         ///@{
-        ~ModelController() final;
-        const std::string& GetTypeName() const final;
+        const char* GetTypeName() const final;
         uint32_t GetTypeId() const final;
         std::vector<uint32_t> GetDependencies() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
+        /**@copydoc Component::EnumerateProperties */
+        bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const final;
+        // To be removed -----------------
         void CommitPropertyChanges() final;
         const google::protobuf::Message* GetProperties() const final;
         google::protobuf::Message* GetProperties() final;
+        // To be removed -----------------
+        ~ModelController() final;
         ///@}
     private:
         std::shared_ptr<Model> mModel{};
-        ModelControllerBuffer mProperties{};
+        std::array<Property<32>, 2> mProperties
+        {
+            {
+                {
+                    "Model",
+                    std::string{}
+                },
+                {
+                    "Active Animation",
+                    size_t{}
+                }
+            }
+        };
+        ModelControllerBuffer mModelControllerBuffer{};
     };
 }
 #endif

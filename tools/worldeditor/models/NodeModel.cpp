@@ -64,8 +64,7 @@ namespace AeonGames
         }
         if ( role == Qt::DisplayRole )
         {
-            ///@todo consider changing GetTypeName() to return const(expr) char*
-            return QString ( mNode->GetComponents() [index.row()]->GetTypeName().c_str() );
+            return QString ( mNode->GetComponents() [index.row()]->GetTypeName() );
         }
         return QVariant();
     }

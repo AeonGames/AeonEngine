@@ -82,6 +82,10 @@ namespace AeonGames
         {
             return mName;
         }
+        const std::type_info& GetTypeInfo() const
+        {
+            return mManager ( Operation::TypeId, nullptr, nullptr );
+        }
     private:
         const char* mName{};
         const std::type_info& ( *mManager ) ( Operation, void*, const void* ) {};
