@@ -37,6 +37,7 @@ namespace AeonGames
         //@}
         void SetNode ( Node* aNode );
         const Node* GetNode () const;
+        Node* GetNode ();
     private:
         Node* mNode{};
     };

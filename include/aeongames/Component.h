@@ -87,8 +87,6 @@ namespace AeonGames
         */
         virtual const TypedPointer GetProperty ( size_t aIndex ) const = 0;
         /*@}*/
-        virtual google::protobuf::Message* GetProperties() = 0;
-        virtual const google::protobuf::Message* GetProperties() const = 0;
         DLL virtual ~Component() = 0;
     };
     /**@name Factory Functions */

@@ -19,10 +19,9 @@ limitations under the License.
 #include <QAbstractItemModel>
 #include <QList>
 #include <QAction>
-
+#include "aeongames/Component.h"
 namespace AeonGames
 {
-    class Component;
     class ComponentModel : public QAbstractItemModel
     {
         Q_OBJECT
@@ -44,6 +43,7 @@ namespace AeonGames
         void SetComponent ( Component* aComponent );
     private:
         Component* mComponent{};
+        std::vector<Component::PropertyRecord> mPropertyManifest{};
     };
 }
 #endif

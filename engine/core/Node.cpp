@@ -579,4 +579,29 @@ namespace AeonGames
     {
         return mComponents;
     }
+
+    const Component* Node::GetComponentByIndex ( size_t aIndex ) const
+    {
+        return mComponents[aIndex];
+    }
+
+    Component* Node::GetComponentByIndex ( size_t aIndex )
+    {
+        return const_cast<Component*> ( static_cast<const Node*> ( this )->GetComponentByIndex ( aIndex ) );
+    }
+
+    const Component* Node::GetComponentById ( uint32_t aId ) const
+    {
+        auto i = mComponents.Find ( aId );
+        if ( i != mComponents.end() )
+        {
+            return *i;
+        }
+        return nullptr;
+    }
+
+    Component* Node::GetComponentById ( uint32_t aId )
+    {
+        return const_cast<Component*> ( static_cast<const Node*> ( this )->GetComponentById ( aId ) );
+    }
 }

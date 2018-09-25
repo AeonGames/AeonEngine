@@ -51,6 +51,10 @@ namespace AeonGames
 
     QModelIndex ComponentModel::index ( int row, int column, const QModelIndex & parent ) const
     {
+        if ( row < static_cast<int> ( mPropertyManifest.size() ) )
+        {
+            return createIndex ( row, column, nullptr );
+        }
         return QModelIndex();
     }
 
@@ -61,7 +65,7 @@ namespace AeonGames
 
     int ComponentModel::rowCount ( const QModelIndex & index ) const
     {
-        return 0;
+        return static_cast<int> ( mPropertyManifest.size() );
     }
 
     int ComponentModel::columnCount ( const QModelIndex & index ) const
@@ -71,11 +75,26 @@ namespace AeonGames
 
     bool ComponentModel::hasChildren ( const QModelIndex & index ) const
     {
-        return rowCount ( index ) > 0;
+        return false;
     }
 
     QVariant ComponentModel::data ( const QModelIndex & index, int role ) const
     {
+        if ( index.isValid() )
+        {
+            if ( role == Qt::EditRole || role == Qt::DisplayRole )
+                switch ( index.column() )
+                {
+                case 0:
+                    if ( role == Qt::DisplayRole )
+                    {
+                        return QString ( mPropertyManifest[index.row()].Name );
+                    }
+                    break;
+                case 1:
+                    return QString ( "Not yet" );
+                }
+        }
         return QVariant();
     }
 
@@ -102,6 +121,14 @@ namespace AeonGames
     {
         beginResetModel();
         mComponent = aComponent;
+        mPropertyManifest.clear();
+        if ( mComponent )
+        {
+            size_t property_count;
+            mComponent->EnumerateProperties ( &property_count, nullptr );
+            mPropertyManifest.resize ( property_count );
+            mComponent->EnumerateProperties ( &property_count, mPropertyManifest.data() );
+        }
         endResetModel();
     }
 }

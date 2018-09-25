@@ -21,7 +21,7 @@ limitations under the License.
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
 #include "models/NodeModel.h"
-#include "models/MessageModel.h"
+#include "models/ComponentModel.h"
 
 namespace AeonGames
 {
@@ -51,7 +51,7 @@ namespace AeonGames
         void UpdateGlobalTransformData ( const Node* aNode );
         SceneModel mSceneModel{};
         NodeModel mNodeModel{};
-        MessageModel mMessageModel{};
+        ComponentModel mComponentModel{};
         EngineWindow* mEngineWindow{};
         QList<QAction *> mComponentAddActions{};
     };

@@ -54,7 +54,7 @@ namespace AeonGames
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
         nodeListView->setModel ( &mNodeModel );
-        componentTreeView->setModel ( &mMessageModel );
+        componentTreeView->setModel ( &mComponentModel );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
         EnumerateComponentConstructors ( [this] ( const std::string & aComponentConstructor )
         {
@@ -72,7 +72,7 @@ namespace AeonGames
                 {
                     Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
                     mNodeModel.SetNode ( node );
-                    mMessageModel.SetMessage ( node->GetComponents() [node->AddComponent ( *node->StoreComponent ( ConstructComponent ( aComponentConstructor ) ) )]->GetProperties() );
+                    mComponentModel.SetComponent ( node->GetComponentByIndex ( node->AddComponent ( *node->StoreComponent ( ConstructComponent ( aComponentConstructor ) ) ) ) );
                 }
             } );
             return true;
@@ -137,6 +137,7 @@ namespace AeonGames
 
     void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
+#if 0
         QModelIndex index = componentTreeView->indexAt ( aPoint );
         QList<QAction *> actions = mMessageModel.GetMenuActions ( index );
         componentTreeView->setCurrentIndex ( index );
@@ -148,6 +149,7 @@ namespace AeonGames
         {
             delete ( i );
         }
+#endif
     }
 
     void SceneWindow::UpdateLocalTransformData ( const Node* aNode )
@@ -323,14 +325,14 @@ namespace AeonGames
             if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
             {
                 mNodeModel.SetNode ( node );
-                mMessageModel.SetMessage ( nullptr );
+                mComponentModel.SetComponent ( nullptr );
                 UpdateLocalTransformData ( node );
                 UpdateGlobalTransformData ( node );
                 return;
             }
         }
         mNodeModel.SetNode ( nullptr );
-        mMessageModel.SetMessage ( nullptr );
+        mComponentModel.SetComponent ( nullptr );
         UpdateLocalTransformData ( nullptr );
         UpdateGlobalTransformData ( nullptr );
     }
@@ -339,10 +341,10 @@ namespace AeonGames
     {
         if ( aModelIndex.isValid() && mNodeModel.GetNode() )
         {
-            mMessageModel.SetMessage ( mNodeModel.GetNode()->GetComponents() [aModelIndex.row()]->GetProperties() );
+            mComponentModel.SetComponent ( mNodeModel.GetNode()->GetComponentByIndex ( aModelIndex.row() ) );
             return;
         }
-        mMessageModel.SetMessage ( nullptr );
+        mComponentModel.SetComponent ( nullptr );
     }
 
     void SceneWindow::Open ( const std::string& mFilename )

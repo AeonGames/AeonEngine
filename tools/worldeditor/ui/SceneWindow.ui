@@ -546,10 +546,16 @@
                  <bool>true</bool>
                 </property>
                 <property name="indentation">
-                 <number>10</number>
+                 <number>0</number>
+                </property>
+                <property name="rootIsDecorated">
+                 <bool>false</bool>
                 </property>
                 <property name="allColumnsShowFocus">
                  <bool>true</bool>
+                </property>
+                <property name="expandsOnDoubleClick">
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
