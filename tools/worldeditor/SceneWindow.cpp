@@ -342,9 +342,11 @@ namespace AeonGames
         if ( aModelIndex.isValid() && mNodeModel.GetNode() )
         {
             mComponentModel.SetComponent ( mNodeModel.GetNode()->GetComponentByIndex ( aModelIndex.row() ) );
-            return;
         }
-        mComponentModel.SetComponent ( nullptr );
+        else
+        {
+            mComponentModel.SetComponent ( nullptr );
+        }
     }
 
     void SceneWindow::Open ( const std::string& mFilename )
