@@ -46,8 +46,9 @@ namespace AeonGames
         ~ModelController() final;
         ///@}
     private:
+        using ModelProperty = Property<sizeof ( std::string ) >;
         std::shared_ptr<Model> mModel{};
-        std::array<Property<32>, 3> mProperties
+        std::array<ModelProperty, 3> mProperties
         {
             {
                 {

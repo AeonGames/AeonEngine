@@ -65,7 +65,12 @@ namespace AeonGames
 
     int ComponentModel::rowCount ( const QModelIndex & index ) const
     {
-        return static_cast<int> ( mPropertyManifest.size() );
+        if ( !index.isValid() )
+        {
+            return static_cast<int> ( mPropertyManifest.size() );
+        }
+        // Only root may have children/rows
+        return 0;
     }
 
     int ComponentModel::columnCount ( const QModelIndex & index ) const
@@ -75,7 +80,7 @@ namespace AeonGames
 
     bool ComponentModel::hasChildren ( const QModelIndex & index ) const
     {
-        return false;
+        return rowCount() > 0;
     }
 
     QVariant ComponentModel::data ( const QModelIndex & index, int role ) const

@@ -76,7 +76,7 @@ namespace AeonGames
 
     void ModelController::SetProperty ( const char* aName, const TypedPointer& aValue )
     {
-        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const Property<32>& aProperty )
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const ModelProperty & aProperty )
         {
             return strcmp ( aProperty.GetName(), aName ) == 0;
         } );
@@ -96,7 +96,7 @@ namespace AeonGames
 
     const TypedPointer ModelController::GetProperty ( const char* aName ) const
     {
-        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const Property<32>& aProperty )
+        auto i = std::find_if ( mProperties.begin(), mProperties.end(), [aName] ( const ModelProperty & aProperty )
         {
             return strcmp ( aProperty.GetName(), aName ) == 0;
         } );
