@@ -16,7 +16,7 @@ before_install:
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo apt-get update
   - sudo apt-get upgrade --allow-unauthenticated
-  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev google-mock 
+  - sudo apt-get install -y sed python python3 python-autopep8 python3-pep8 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng12-dev vim-common qt57-meta-full git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev google-mock libprotobuf-dev protobuf-compiler 
   # mesa-vulkan-drivers vulkan-utils libvulkan1
   - sudo apt-get install -y build-essential software-properties-common
   - sudo apt-get install -y gcc-snapshot
@@ -35,14 +35,6 @@ install:
   #- sudo cp *.a /usr/lib/
   #- sudo cp gtest/*.a /usr/lib/
   #- popd
-  - wget https://github.com/google/protobuf/archive/v3.2.0.tar.gz
-  - tar -xzf v3.2.0.tar.gz
-  - cd protobuf-3.2.0
-  - ./autogen.sh
-  - ./configure
-  - make
-  - sudo make install
-  - cd ..
   - wget https://vulkan.lunarg.com/sdk/download/1.0.54.0/linux/vulkansdk-linux-x86_64-1.0.54.0.run
   - chmod a+x vulkansdk-linux-x86_64-1.0.54.0.run
   - sudo ./vulkansdk-linux-x86_64-1.0.54.0.run
@@ -61,7 +53,6 @@ install:
   - sudo make -j4 install
   - sudo ldconfig
   - cd ..
-  - source /opt/qt57/bin/qt57-env.sh
 before_script:
   - source /opt/qt57/bin/qt57-env.sh
   - cmake -G "Unix Makefiles" .
