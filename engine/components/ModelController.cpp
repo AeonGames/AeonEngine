@@ -25,16 +25,6 @@ limitations under the License.
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
 #include "aeongames/CRC.h"
-#include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4251 )
-#endif
-#include "reference.pb.h"
-#include "model.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 
 namespace AeonGames
 {
@@ -70,7 +60,7 @@ namespace AeonGames
         }
         else if ( !aRecords )
         {
-            *aPropertyCount = 0;
+            *aPropertyCount = mProperties.size();
             return true;
         }
         size_t i{0};
@@ -147,14 +137,5 @@ namespace AeonGames
                 }
             }
         }
-    }
-
-    const google::protobuf::Message* ModelController::GetProperties() const
-    {
-        return &mModelControllerBuffer;
-    }
-    google::protobuf::Message* ModelController::GetProperties()
-    {
-        return &mModelControllerBuffer;
     }
 }

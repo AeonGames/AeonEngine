@@ -138,6 +138,10 @@ namespace AeonGames
         DLL Component* StoreComponent ( std::unique_ptr<Component> aComponent );
         DLL std::unique_ptr<Component> DisposeComponent ( const Component* aComponent );
         DLL const DependencyMap<uint32_t, Component*>& GetComponents() const;
+        DLL const Component* GetComponentByIndex ( size_t aIndex ) const;
+        DLL Component* GetComponentByIndex ( size_t aIndex );
+        DLL const Component* GetComponentById ( uint32_t aId ) const;
+        DLL Component* GetComponentById ( uint32_t aId );
         /** @} */
         /** @name Abstract functions
          *  @todo decide if these should be private or public. */

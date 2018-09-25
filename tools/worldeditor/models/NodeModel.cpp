@@ -78,4 +78,8 @@ namespace AeonGames
     {
         return mNode;
     }
+    Node* NodeModel::GetNode ()
+    {
+        return const_cast<Node*> ( static_cast<const NodeModel*> ( this )->GetNode() );
+    }
 }

@@ -19,15 +19,6 @@ limitations under the License.
 #include <tuple>
 #include <array>
 #include "aeongames/Component.h"
-#include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4251 )
-#endif
-#include "modelcontroller.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 
 namespace AeonGames
 {
@@ -52,10 +43,6 @@ namespace AeonGames
         void SetProperty ( size_t aIndex, const TypedPointer& aValue ) final;
         /**@copydoc Component::GetProperty */
         const TypedPointer GetProperty ( size_t aIndex ) const final;
-        // To be removed -----------------
-        const google::protobuf::Message* GetProperties() const final;
-        google::protobuf::Message* GetProperties() final;
-        // To be removed -----------------
         ~ModelController() final;
         ///@}
     private:
@@ -77,7 +64,6 @@ namespace AeonGames
                 }
             }
         };
-        ModelControllerBuffer mModelControllerBuffer{};
     };
 }
 #endif

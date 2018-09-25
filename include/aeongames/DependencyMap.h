@@ -327,6 +327,11 @@ public:
             return std::get<3> ( graph.at ( sorted[index] ) );
         }
 
+        T& operator[] ( const std::size_t index )
+        {
+            return const_cast<T&> ( static_cast<const DependencyMap<Key, T, Hash, KeyEqual, MapAllocator, VectorAllocator>*> ( this )->operator[] ( index ) );
+        }
+
         const std::size_t Size() const
         {
             return sorted.size();
