@@ -54,7 +54,7 @@ namespace AeonGames
 
     const std::shared_ptr<Image> Image::GetImage ( uint32_t aId )
     {
-        return Get<Image> ( aId, aId );
+        return ResourceCache<uint32_t, Image>::Get ( aId, aId );
     }
 
     Image::Image ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) :

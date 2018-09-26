@@ -354,8 +354,9 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, SerializeDeserializeText )
     {
-        std::string serialized = mScene.Serialize ( false );
         Scene scene;
+        std::string serialized = mScene.Serialize ( false );
+        std::cout << serialized << std::endl;
         scene.Deserialize ( serialized );
         EXPECT_EQ ( scene.Serialize ( false ), serialized );
     }

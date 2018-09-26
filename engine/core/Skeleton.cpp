@@ -199,7 +199,7 @@ namespace AeonGames
 
     const std::shared_ptr<Skeleton> Skeleton::GetSkeleton ( uint32_t aId )
     {
-        return Get<Skeleton> ( aId, aId );
+        return ResourceCache<uint32_t, Skeleton>::Get ( aId, aId );
     }
 
     const std::shared_ptr<Skeleton> Skeleton::GetSkeleton ( const std::string& aPath )

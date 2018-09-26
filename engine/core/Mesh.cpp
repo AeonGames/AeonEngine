@@ -93,7 +93,7 @@ namespace AeonGames
 
     const std::shared_ptr<Mesh> Mesh::GetMesh ( uint32_t aId )
     {
-        return Get<Mesh> ( aId, aId );
+        return ResourceCache<uint32_t, Mesh>::Get ( aId, aId );
     }
 
     const std::shared_ptr<Mesh> Mesh::GetMesh ( const std::string& aPath )

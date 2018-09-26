@@ -256,7 +256,6 @@ namespace AeonGames
 
     void SceneWindow::on_localTransformChanged()
     {
-        std::cout << __func__ << std::endl;
         QModelIndex index = sceneTreeView->currentIndex();
         if ( index.isValid() )
         {
@@ -288,7 +287,6 @@ namespace AeonGames
 
     void SceneWindow::on_globalTransformChanged()
     {
-        std::cout << __func__ << std::endl;
         QModelIndex index = sceneTreeView->currentIndex();
         if ( index.isValid() )
         {

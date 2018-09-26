@@ -33,36 +33,14 @@ namespace AeonGames
         std::vector<uint32_t> GetDependencies() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
-        /**@copydoc Component::EnumerateProperties */
-        bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const final;
-        /**@copydoc Component::SetProperty */
-        void SetProperty ( const char* aName, const PropertyRef& aValue ) final;
-        /**@copydoc Component::GetProperty */
-        const PropertyRef& GetProperty ( const char* aName ) const final;
-        /**@copydoc Component::SetProperty */
-        void SetProperty ( size_t aIndex, const PropertyRef& aValue ) final;
-        /**@copydoc Component::GetProperty */
-        const PropertyRef& GetProperty ( size_t aIndex ) const final;
+        /**@copydoc Component::GetProperties */
+        std::vector<PropertyRef> GetProperties() const final;
         ~ModelController() final;
         ///@}
     private:
         std::shared_ptr<Model> mModel{};
         size_t mActiveAnimation{};
         double mAnimationDelta{};
-        std::array<PropertyRef, 3> mPropertyRefs
-        {
-            {
-                {
-                    "Model", mModel
-                },
-                {
-                    "Active Animation", mActiveAnimation
-                },
-                {
-                    "Animation Delta", mAnimationDelta
-                }
-            }
-        };
     };
 }
 #endif

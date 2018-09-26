@@ -30,6 +30,8 @@ namespace AeonGames
     DLL size_t GetResourceSize ( uint32_t crc );
     /*! Returns the resource size referenced by its file name. */
     DLL size_t GetResourceSize ( const std::string& aFileName );
+    /*! Returns the resource path referenced by its id. */
+    DLL std::string GetResourcePath ( uint32_t crc );
     /*! Loads a specific resource referenced by its CRC into the provided buffer. */
     DLL void LoadResource ( uint32_t crc, void* buffer, size_t buffer_size );
     /*! Loads a specific resource referenced by its path into the provided buffer. */
