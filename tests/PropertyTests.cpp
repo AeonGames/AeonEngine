@@ -24,65 +24,6 @@ limitations under the License.
 using namespace ::testing;
 namespace AeonGames
 {
-    TEST ( Property, Constructor )
-    {
-        Property<sizeof ( std::string ) > property ( "test", std::string{} );
-        EXPECT_TRUE ( property.HasType<std::string>() );
-        EXPECT_FALSE ( property.HasType<int>() );
-        EXPECT_EQ ( *property.Get().Get<std::string>(), "" );
-        *property.Get().Get<std::string>() = "String";
-        EXPECT_EQ ( *property.Get().Get<std::string>(), "String" );
-        EXPECT_EQ ( property.GetName(), "test" );
-    }
-    TEST ( Property, CopyConstructor )
-    {
-        Property<sizeof ( std::string ) > original ( "test", std::string{"Copy"} );
-        Property<sizeof ( std::string ) > property{original};
-        EXPECT_TRUE ( property.HasType<std::string>() );
-        EXPECT_FALSE ( property.HasType<int>() );
-        EXPECT_EQ ( *property.Get().Get<std::string>(), "Copy" );
-        *property.Get().Get<std::string>() = "String";
-        EXPECT_EQ ( *property.Get().Get<std::string>(), "String" );
-        EXPECT_EQ ( property.GetName(), "test" );
-    }
-    TEST ( Property, MoveConstructor )
-    {
-        Property<sizeof ( std::string ) > original ( "test", std::string{"Move"} );
-        Property<sizeof ( std::string ) > property{std::move ( original ) };
-        EXPECT_TRUE ( property.HasType<std::string>() );
-        EXPECT_FALSE ( property.HasType<int>() );
-        EXPECT_EQ ( *property.Get().Get<std::string>(), "Move" );
-        *property.Get().Get<std::string>() = "String";
-        EXPECT_EQ ( *property.Get().Get<std::string>(), "String" );
-        EXPECT_EQ ( property.GetName(), "test" );
-    }
-    TEST ( Property, TypedPointer )
-    {
-        Property<sizeof ( std::string ) > property ( "test", std::string{} );
-        std::string str ( "Test" );
-        property.Set ( &str );
-        TypedPointer pointer = property.Get();
-        std::cout << *pointer.Get<std::string>() << std::endl;
-        EXPECT_EQ ( *pointer.Get<std::string>(), str );
-    }
-    TEST ( Property, TypedPointerCopy )
-    {
-        Property<sizeof ( std::string ) > property ( "test", std::string{} );
-        std::string str ( "Test" );
-        property.Set ( str );
-        TypedPointer pointer = property.Get();
-        std::cout << *pointer.Get<std::string>() << std::endl;
-        EXPECT_EQ ( *pointer.Get<std::string>(), str );
-    }
-    TEST ( Property, TypedPointerMove )
-    {
-        Property<sizeof ( std::string ) > property ( "test", std::string{} );
-        property.Set ( std::string ( "Test" ) );
-        TypedPointer pointer = property.Get();
-        std::cout << *pointer.Get<std::string>() << std::endl;
-        EXPECT_EQ ( *pointer.Get<std::string>(), "Test" );
-    }
-
     TEST ( PropertyRef, Constructor )
     {
         std::string string{""};

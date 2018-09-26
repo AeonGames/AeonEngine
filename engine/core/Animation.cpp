@@ -191,7 +191,7 @@ namespace AeonGames
 
     const std::shared_ptr<Animation> Animation::GetAnimation ( uint32_t aId )
     {
-        return Get<Animation> ( aId, aId );
+        return ResourceCache<uint32_t, Animation>::Get ( aId, aId );
     }
 
     const std::shared_ptr<Animation> Animation::GetAnimation ( const std::string& aPath )

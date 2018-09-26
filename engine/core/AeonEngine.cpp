@@ -207,6 +207,20 @@ namespace AeonGames
         }
         return 0;
     }
+
+    std::string GetResourcePath ( uint32_t crc )
+    {
+        for ( auto &i : gResourcePath )
+        {
+            auto resource = i.GetIndexTable().find ( crc );
+            if ( resource != i.GetIndexTable().end() )
+            {
+                return resource->second;
+            }
+        }
+        return std::string{};
+    }
+
     size_t GetResourceSize ( const std::string& aFileName )
     {
         return GetResourceSize ( crc32i ( aFileName.data(), aFileName.size() ) );

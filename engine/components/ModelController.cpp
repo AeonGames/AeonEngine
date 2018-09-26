@@ -53,76 +53,22 @@ namespace AeonGames
         ( void ) aDelta;
     }
 
-    bool ModelController::EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const
+    std::vector<PropertyRef> ModelController::GetProperties() const
     {
-        if ( !aPropertyCount )
+        return std::vector<PropertyRef>
         {
-            return false;
-        }
-        else if ( !aRecords )
-        {
-            *aPropertyCount = mPropertyRefs.size();
-            return true;
-        }
-        size_t i{0};
-        for ( ; i < *aPropertyCount || i < mPropertyRefs.size(); ++i )
-        {
-            aRecords[i].Name = mPropertyRefs[i].GetName();
-            aRecords[i].TypeIndex = std::type_index{mPropertyRefs[i].GetTypeInfo() };
-        }
-        *aPropertyCount = i;
-        return true;
-    }
-
-    void ModelController::SetProperty ( const char* aName, const PropertyRef& aValue )
-    {
-        auto i = std::find_if ( mPropertyRefs.begin(), mPropertyRefs.end(), [aName] ( const PropertyRef & aProperty )
-        {
-            return strcmp ( aProperty.GetName(), aName ) == 0;
-        } );
-        if ( i != mPropertyRefs.end() )
-        {
-            i->Set ( aValue );
-            if ( strcmp ( aName, "Model" ) == 0 )
             {
-                std::shared_ptr<Model> model{Model::GetModel ( i->Get<std::string>() ) };
-                if ( model != mModel )
                 {
-                    mModel = model;
+                    "Model", mModel
+                },
+                {
+                    "Active Animation", mActiveAnimation
+                },
+                {
+                    "Animation Delta", mAnimationDelta
                 }
             }
-        }
-    }
-
-    const PropertyRef& ModelController::GetProperty ( const char* aName ) const
-    {
-        auto i = std::find_if ( mPropertyRefs.begin(), mPropertyRefs.end(), [aName] ( const PropertyRef & aProperty )
-        {
-            return strcmp ( aProperty.GetName(), aName ) == 0;
-        } );
-        if ( i != mPropertyRefs.end() )
-        {
-            return *i;
-        }
-        throw std::runtime_error ( "Property Not Found." );
-    }
-
-    void ModelController::SetProperty ( size_t aIndex, const PropertyRef& aValue )
-    {
-        mPropertyRefs[aIndex].Set ( aValue );
-        if ( strcmp ( mPropertyRefs[aIndex].GetName(), "Model" ) == 0 )
-        {
-            std::shared_ptr<Model> model{Model::GetModel ( mPropertyRefs[aIndex].Get<std::string>() ) };
-            if ( model != mModel )
-            {
-                mModel = model;
-            }
-        }
-    }
-
-    const PropertyRef& ModelController::GetProperty ( size_t aIndex ) const
-    {
-        return mPropertyRefs[aIndex];
+        };
     }
 
     void ModelController::Render ( const Node& aNode, const Window& aWindow ) const

@@ -47,6 +47,8 @@ namespace AeonGames
         DLL const std::vector<std::shared_ptr<const Animation>>& GetAnimations() const;
         DLL static const std::shared_ptr<Model> GetModel ( uint32_t aId );
         DLL static const std::shared_ptr<Model> GetModel ( const std::string& aPath );
+        DLL static uint32_t GetId ( const std::shared_ptr<Model>& aModel );
+        DLL static const std::string GetPath ( const std::shared_ptr<Model>& aModel );
     private:
         void Load ( const ModelBuffer& aModelBuffer );
         std::shared_ptr<Skeleton> mSkeleton;

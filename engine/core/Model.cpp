@@ -90,17 +90,6 @@ namespace AeonGames
         }
     }
 
-    const std::shared_ptr<Model> Model::GetModel ( uint32_t aId )
-    {
-        return Get<Model> ( aId, aId );
-    }
-
-    const std::shared_ptr<Model> Model::GetModel ( const std::string& aPath )
-    {
-        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
-        return Model::GetModel ( id );
-    }
-
     void Model::Load ( const std::string& aFilename )
     {
         static std::mutex m;
@@ -196,4 +185,24 @@ namespace AeonGames
     {
         return mAnimations;
     }
+
+    // Statics -----------------------------------------------------------------
+    const std::shared_ptr<Model> Model::GetModel ( uint32_t aId )
+    {
+        return ResourceCache<uint32_t, Model>::Get ( aId, aId );
+    }
+    const std::shared_ptr<Model> Model::GetModel ( const std::string& aPath )
+    {
+        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
+        return Model::GetModel ( id );
+    }
+    uint32_t Model::GetId ( const std::shared_ptr<Model>& aModel )
+    {
+        return ResourceCache<uint32_t, Model>::GetKey ( aModel );
+    }
+    const std::string Model::GetPath ( const std::shared_ptr<Model>& aModel )
+    {
+        return GetResourcePath ( GetId ( aModel ) );
+    }
+    // -------------------------------------------------------------------------
 }

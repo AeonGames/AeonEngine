@@ -602,7 +602,7 @@ namespace AeonGames
     }
     const std::shared_ptr<Material> Material::GetMaterial ( uint32_t aId )
     {
-        return Get<Material> ( aId, aId );
+        return ResourceCache<uint32_t, Material>::Get ( aId, aId );
     }
     const std::shared_ptr<Material> Material::GetMaterial ( const std::string& aPath )
     {

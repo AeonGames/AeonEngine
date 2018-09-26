@@ -118,7 +118,7 @@ namespace AeonGames
 
     const std::shared_ptr<Pipeline> Pipeline::GetPipeline ( uint32_t aId )
     {
-        return Get<Pipeline> ( aId, aId );
+        return ResourceCache<uint32_t, Pipeline>::Get ( aId, aId );
     }
 
     const std::shared_ptr<Pipeline> Pipeline::GetPipeline ( const std::string& aPath )

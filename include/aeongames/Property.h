@@ -20,6 +20,7 @@ limitations under the License.
 #include <typeinfo>
 #include <iostream>
 #include <functional>
+#include <type_traits>
 
 namespace AeonGames
 {
@@ -30,10 +31,14 @@ namespace AeonGames
         ///@{
         PropertyRef() = delete;
         template<typename T>
-        PropertyRef ( const char* aName, T& aRef ) noexcept : mName{aName}, mPointer{std::addressof ( aRef ) }, mTypeId{TypeId<T>} {}
+        PropertyRef ( const char* aName, T& aRef ) noexcept :
+            mName{aName},
+              mPointer{ const_cast<typename std::remove_const<T>::type*> ( std::addressof ( aRef ) ) },
+        mTypeId{TypeId<T>} {}
         template<typename T>
         PropertyRef ( T&& ) = delete;
         PropertyRef ( const PropertyRef& ) noexcept = default;
+        PropertyRef ( PropertyRef&& ) noexcept = default;
         ///@}
         /// @name Assignment
         ///@{
@@ -86,7 +91,7 @@ namespace AeonGames
             return typeid ( T );
         }
     };
-
+#if 0
     class TypedPointer
     {
     public:
@@ -244,5 +249,6 @@ namespace AeonGames
             return typeid ( T );
         }
     };
+#endif
 }
 #endif
