@@ -82,4 +82,34 @@ namespace AeonGames
         std::cout << *pointer.Get<std::string>() << std::endl;
         EXPECT_EQ ( *pointer.Get<std::string>(), "Test" );
     }
+
+    TEST ( PropertyRef, Constructor )
+    {
+        std::string string{""};
+        PropertyRef property{"reference", string};
+        EXPECT_TRUE ( property.HasType<std::string>() );
+        EXPECT_FALSE ( property.HasType<int>() );
+        EXPECT_EQ ( property.Get<std::string>(), "" );
+        property.Get<std::string>() = "String";
+        EXPECT_EQ ( property.Get<std::string>(), "String" );
+        EXPECT_EQ ( property.GetName(), "reference" );
+    }
+
+    TEST ( PropertyRef, ModifyFromConstReference )
+    {
+        std::string string{""};
+        const PropertyRef property{"reference", string};
+        EXPECT_EQ ( property.Get<std::string>(), "" );
+        property.Get<std::string>() = "String";
+        EXPECT_EQ ( property.Get<std::string>(), "String" );
+    }
+
+    TEST ( PropertyRef, ModifyFromConstReferenceUsingSet )
+    {
+        std::string string{""};
+        const PropertyRef property{"reference", string};
+        EXPECT_EQ ( property.Get<std::string>(), "" );
+        property.Set ( std::string{"String"} );
+        EXPECT_EQ ( property.Get<std::string>(), "String" );
+    }
 }

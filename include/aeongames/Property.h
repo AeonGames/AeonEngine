@@ -19,9 +19,74 @@ limitations under the License.
 #include <array>
 #include <typeinfo>
 #include <iostream>
+#include <functional>
 
 namespace AeonGames
 {
+    class PropertyRef
+    {
+    public:
+        /// @name Construction/Copy/Destruction
+        ///@{
+        PropertyRef() = delete;
+        template<typename T>
+        PropertyRef ( const char* aName, T& aRef ) noexcept : mName{aName}, mPointer{std::addressof ( aRef ) }, mTypeId{TypeId<T>} {}
+        template<typename T>
+        PropertyRef ( T&& ) = delete;
+        PropertyRef ( const PropertyRef& ) noexcept = default;
+        ///@}
+        /// @name Assignment
+        ///@{
+        PropertyRef& operator= ( const PropertyRef& ) noexcept = default;
+        ///@}
+        /// @name Access
+        ///@{
+        template<typename T>
+        T& Get() const
+        {
+            if ( GetTypeInfo().hash_code() != typeid ( T ).hash_code() )
+            {
+                throw std::runtime_error ( "PropertyRef Invalid cast." );
+            }
+            return *reinterpret_cast<T*> ( mPointer );
+        }
+        template<typename T>
+        void Set ( const T& aRef ) const
+        {
+            if ( GetTypeInfo().hash_code() != typeid ( T ).hash_code() )
+            {
+                throw std::runtime_error ( "PropertyRef Invalid cast." );
+            }
+            *reinterpret_cast<T*> ( mPointer ) = aRef;
+        }
+        ///@}
+
+        template<typename T>
+        bool HasType() const
+        {
+            return GetTypeInfo().hash_code() == typeid ( T ).hash_code();
+        }
+
+        const std::type_info& GetTypeInfo() const
+        {
+            return mTypeId();
+        }
+
+        const char* GetName() const
+        {
+            return mName;
+        }
+
+    private:
+        const char* mName{};
+        void* mPointer;
+        const std::type_info& ( *mTypeId ) () {};
+        template<typename T> static const std::type_info& TypeId()
+        {
+            return typeid ( T );
+        }
+    };
+
     class TypedPointer
     {
     public:
