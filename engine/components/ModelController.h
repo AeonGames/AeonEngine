@@ -38,11 +38,11 @@ namespace AeonGames
         /**@copydoc Component::SetProperty */
         void SetProperty ( const char* aName, const PropertyRef& aValue ) final;
         /**@copydoc Component::GetProperty */
-        const PropertyRef GetProperty ( const char* aName ) const final;
+        const PropertyRef& GetProperty ( const char* aName ) const final;
         /**@copydoc Component::SetProperty */
         void SetProperty ( size_t aIndex, const PropertyRef& aValue ) final;
         /**@copydoc Component::GetProperty */
-        const PropertyRef GetProperty ( size_t aIndex ) const final;
+        const PropertyRef& GetProperty ( size_t aIndex ) const final;
         ~ModelController() final;
         ///@}
     private:
