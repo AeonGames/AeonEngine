@@ -36,32 +36,30 @@ namespace AeonGames
         /**@copydoc Component::EnumerateProperties */
         bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const final;
         /**@copydoc Component::SetProperty */
-        void SetProperty ( const char* aName, const TypedPointer& aValue ) final;
+        void SetProperty ( const char* aName, const PropertyRef& aValue ) final;
         /**@copydoc Component::GetProperty */
-        const TypedPointer GetProperty ( const char* aName ) const final;
+        const PropertyRef GetProperty ( const char* aName ) const final;
         /**@copydoc Component::SetProperty */
-        void SetProperty ( size_t aIndex, const TypedPointer& aValue ) final;
+        void SetProperty ( size_t aIndex, const PropertyRef& aValue ) final;
         /**@copydoc Component::GetProperty */
-        const TypedPointer GetProperty ( size_t aIndex ) const final;
+        const PropertyRef GetProperty ( size_t aIndex ) const final;
         ~ModelController() final;
         ///@}
     private:
-        using ModelProperty = Property<sizeof ( std::string ) >;
         std::shared_ptr<Model> mModel{};
-        std::array<ModelProperty, 3> mProperties
+        size_t mActiveAnimation{};
+        double mAnimationDelta{};
+        std::array<PropertyRef, 3> mPropertyRefs
         {
             {
                 {
-                    "Model",
-                    std::string{}
+                    "Model", mModel
                 },
                 {
-                    "Active Animation",
-                    size_t{}
+                    "Active Animation", mActiveAnimation
                 },
                 {
-                    "Animation Delta",
-                    double{}
+                    "Animation Delta", mAnimationDelta
                 }
             }
         };

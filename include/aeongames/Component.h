@@ -60,32 +60,32 @@ namespace AeonGames
         virtual bool EnumerateProperties ( size_t* aPropertyCount, PropertyRecord* aRecords ) const = 0;
         /** Set a property value given its name.
          * @param aName Name of the property to set, posible values can be queried with EnumerateProperties.
-         * @param aValue TypedPointer to the value to set, the type of the pointer and the property must match.
+         * @param aValue PropertyRef to the value to set, the type of the pointer and the property must match.
          * @note The Set family of functions are the prefered way to set component property values
          * as it allows the component to react to a change right away. Avoid retrieving the pointer with a Get function
          * and then dereference the pointer from there to set the value.
         */
-        virtual void SetProperty ( const char* aName, const TypedPointer& aValue ) = 0;
+        virtual void SetProperty ( const char* aName, const PropertyRef& aValue ) = 0;
         /** Get a pointer to a property value given its name.
          * @param aName Name of the property to get, posible values can be queried with EnumerateProperties.
-         * @return const TypedPointer to the value, the returned object is deliveraly const to prevent direct modifications.
+         * @return const PropertyRef to the value, the returned object is deliveraly const to prevent direct modifications.
          * @note The Get family of functions are meant for read only operations on the referenced data.
         */
-        virtual const TypedPointer GetProperty ( const char* aName ) const = 0;
+        virtual const PropertyRef GetProperty ( const char* aName ) const = 0;
         /** Set a property value given its internal index.
          * @param aIndex Index of the property to set, this matches the index in the property manifest queried with EnumerateProperties.
-         * @param aValue TypedPointer to the value to set, the type of the pointer and the property must match.
+         * @param aValue PropertyRef to the value to set, the type of the pointer and the property must match.
          * @note The Set family of functions are the prefered way to set component property values
          * as it allows the component to react to a change right away. Avoid retrieving the pointer with a Get function
          * and then dereference the pointer from there to set the value.
         */
-        virtual void SetProperty ( size_t aIndex, const TypedPointer& aValue ) = 0;
+        virtual void SetProperty ( size_t aIndex, const PropertyRef& aValue ) = 0;
         /** Get a pointer to a property value given its internal index.
          * @param aIndex Index of the property to get, this matches the index in the property manifest queried with EnumerateProperties.
-         * @return const TypedPointer to the value, the returned object is deliveraly const to prevent direct modifications.
+         * @return const PropertyRef to the value, the returned object is deliveraly const to prevent direct modifications.
          * @note The Get family of functions are meant for read only operations on the referenced data.
         */
-        virtual const TypedPointer GetProperty ( size_t aIndex ) const = 0;
+        virtual const PropertyRef GetProperty ( size_t aIndex ) const = 0;
         /*@}*/
         DLL virtual ~Component() = 0;
     };
