@@ -94,7 +94,7 @@ namespace AeonGames
         }
     }
 
-    const PropertyRef ModelController::GetProperty ( const char* aName ) const
+    const PropertyRef& ModelController::GetProperty ( const char* aName ) const
     {
         auto i = std::find_if ( mPropertyRefs.begin(), mPropertyRefs.end(), [aName] ( const PropertyRef & aProperty )
         {
@@ -120,7 +120,7 @@ namespace AeonGames
         }
     }
 
-    const PropertyRef ModelController::GetProperty ( size_t aIndex ) const
+    const PropertyRef& ModelController::GetProperty ( size_t aIndex ) const
     {
         return mPropertyRefs[aIndex];
     }

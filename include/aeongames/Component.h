@@ -71,7 +71,7 @@ namespace AeonGames
          * @return const PropertyRef to the value, the returned object is deliveraly const to prevent direct modifications.
          * @note The Get family of functions are meant for read only operations on the referenced data.
         */
-        virtual const PropertyRef GetProperty ( const char* aName ) const = 0;
+        virtual const PropertyRef& GetProperty ( const char* aName ) const = 0;
         /** Set a property value given its internal index.
          * @param aIndex Index of the property to set, this matches the index in the property manifest queried with EnumerateProperties.
          * @param aValue PropertyRef to the value to set, the type of the pointer and the property must match.
@@ -85,7 +85,7 @@ namespace AeonGames
          * @return const PropertyRef to the value, the returned object is deliveraly const to prevent direct modifications.
          * @note The Get family of functions are meant for read only operations on the referenced data.
         */
-        virtual const PropertyRef GetProperty ( size_t aIndex ) const = 0;
+        virtual const PropertyRef& GetProperty ( size_t aIndex ) const = 0;
         /*@}*/
         DLL virtual ~Component() = 0;
     };
