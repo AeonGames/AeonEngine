@@ -90,7 +90,7 @@ namespace AeonGames
             typeid ( size_t ).hash_code(),
             [] ( const PropertyRef & aRef ) -> QVariant
             {
-                return aRef.Get<size_t>();
+                return QVariant ( static_cast<qulonglong> ( aRef.Get<size_t>() ) );
             }
         },
         {
