@@ -57,7 +57,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database"
 
 set(Portaudio_FIND_QUIETLY ON)
 
+find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
+find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
+find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
+
 find_package(Git)
+
+find_package(PkgConfig)
+if(PKG_CONFIG_FOUND AND BASH_EXECUTABLE AND MSYS)
+    # In order to properly use pkg-config 
+    # in a msys2 environment we need to jump
+    # through some hoops.
+    # CMake seems to call pkg-config without
+    # any of the bash environment set up,
+    # so we need to set the proper pkg config path
+    # inside the cmake process address space.
+    execute_process(
+        COMMAND ${BASH_EXECUTABLE} --login -c "echo $PKG_CONFIG_PATH"
+        OUTPUT_VARIABLE PKG_CONFIG_PATH)
+    set(ENV{PKG_CONFIG_PATH} ${PKG_CONFIG_PATH})
+endif()
+
 find_package(ZLIB)
 find_package(Threads)
 find_package(Vulkan)
@@ -74,10 +95,6 @@ if(PYTHONINTERP_FOUND)
     find_python_module(autopep8)
 endif()
 
-find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
-find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
-
-find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
 if(CLANG_TIDY_EXECUTABLE)
     option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)")
     set(CLANG_TIDY_CHECKS "-checks=performance-*,modernize-*,-modernize-pass-by-value")
@@ -369,7 +386,6 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
     set(INCLIST "\"${INCLIST}\"")
     string(REPLACE ";" "\",\n\"" INCLIST "${INCLIST}")
 
-    find_program (BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
     find_program (GDB_EXECUTABLE gdb HINTS ENV MINGW_PREFIX MSYS2_PATH)
     set(DEBUG_PATH "${CMAKE_BINARY_DIR}/bin")
     if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
