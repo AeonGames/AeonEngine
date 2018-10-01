@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanTexture::VulkanTexture ( const Image& aImage, const std::shared_ptr<const VulkanRenderer>&  aVulkanRenderer ) :
+    VulkanTexture::VulkanTexture ( const Image& aImage, const VulkanRenderer&  aVulkanRenderer ) :
         mVulkanRenderer (  aVulkanRenderer  ), mImage (  aImage ),
         mVkImage ( VK_NULL_HANDLE ),
         mImageMemory ( VK_NULL_HANDLE )
@@ -73,7 +73,7 @@ namespace AeonGames
         sampler_create_info.maxLod = 1.0f;
         sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
         sampler_create_info.unnormalizedCoordinates = VK_FALSE;
-        if ( VkResult result = vkCreateSampler ( mVulkanRenderer->GetDevice(), &sampler_create_info, nullptr, &mVkDescriptorImageInfo.sampler ) )
+        if ( VkResult result = vkCreateSampler ( mVulkanRenderer.GetDevice(), &sampler_create_info, nullptr, &mVkDescriptorImageInfo.sampler ) )
         {
             std::ostringstream stream;
             stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -85,7 +85,7 @@ namespace AeonGames
     {
         if ( mVkDescriptorImageInfo.sampler != VK_NULL_HANDLE )
         {
-            vkDestroySampler ( mVulkanRenderer->GetDevice(), mVkDescriptorImageInfo.sampler, nullptr );
+            vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkDescriptorImageInfo.sampler, nullptr );
             mVkDescriptorImageInfo.sampler = VK_NULL_HANDLE;
         }
         FinalizeImageView();
@@ -101,7 +101,7 @@ namespace AeonGames
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
         image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
         VkFormatProperties format_properties{};
-        vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer->GetPhysicalDevice(), image_create_info.format, &format_properties );
+        vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer.GetPhysicalDevice(), image_create_info.format, &format_properties );
         image_create_info.extent.width = mImage.Width();
         image_create_info.extent.height = mImage.Height();
         image_create_info.extent.depth = 1;
@@ -114,7 +114,7 @@ namespace AeonGames
         image_create_info.queueFamilyIndexCount = 0;
         image_create_info.pQueueFamilyIndices = nullptr;
         image_create_info.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-        if ( VkResult result = vkCreateImage ( mVulkanRenderer->GetDevice(), &image_create_info, nullptr, &mVkImage ) )
+        if ( VkResult result = vkCreateImage ( mVulkanRenderer.GetDevice(), &image_create_info, nullptr, &mVkImage ) )
         {
             std::ostringstream stream;
             stream << "Image creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -122,24 +122,24 @@ namespace AeonGames
         }
 
         VkMemoryRequirements memory_requirements{};
-        vkGetImageMemoryRequirements ( mVulkanRenderer->GetDevice(), mVkImage, &memory_requirements );
+        vkGetImageMemoryRequirements ( mVulkanRenderer.GetDevice(), mVkImage, &memory_requirements );
         VkMemoryAllocateInfo memory_allocate_info{};
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memory_allocate_info.pNext = nullptr;
         memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = mVulkanRenderer->FindMemoryTypeIndex ( memory_requirements.memoryTypeBits,
+        memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits,
                                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
         if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
             throw std::runtime_error ( "Unable to find a suitable memory type index" );
         }
-        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &mImageMemory ) )
+        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mImageMemory ) )
         {
             std::ostringstream stream;
             stream << "Image Memory Allocation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        if ( VkResult result = vkBindImageMemory ( mVulkanRenderer->GetDevice(), mVkImage, mImageMemory, 0 ) )
+        if ( VkResult result = vkBindImageMemory ( mVulkanRenderer.GetDevice(), mVkImage, mImageMemory, 0 ) )
         {
             std::ostringstream stream;
             stream << "Bind Image Memory failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -163,27 +163,27 @@ namespace AeonGames
         buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if ( VkResult result = vkCreateBuffer ( mVulkanRenderer->GetDevice(), &buffer_create_info, nullptr, &image_buffer ) )
+        if ( VkResult result = vkCreateBuffer ( mVulkanRenderer.GetDevice(), &buffer_create_info, nullptr, &image_buffer ) )
         {
             std::ostringstream stream;
             stream << "Create Buffer failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        vkGetBufferMemoryRequirements ( mVulkanRenderer->GetDevice(), image_buffer, &memory_requirements );
+        vkGetBufferMemoryRequirements ( mVulkanRenderer.GetDevice(), image_buffer, &memory_requirements );
 
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = mVulkanRenderer->FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+        memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 
-        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer->GetDevice(), &memory_allocate_info, nullptr, &image_buffer_memory ) )
+        if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &image_buffer_memory ) )
         {
             std::ostringstream stream;
             stream << "Allocate Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer->GetDevice(), image_buffer, image_buffer_memory, 0 ) )
+        if ( VkResult result = vkBindBufferMemory ( mVulkanRenderer.GetDevice(), image_buffer, image_buffer_memory, 0 ) )
         {
             std::ostringstream stream;
             stream << "Bind Buffer Memory failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -191,7 +191,7 @@ namespace AeonGames
         }
 
         void* image_memory = nullptr;
-        if ( VkResult result = vkMapMemory ( mVulkanRenderer->GetDevice(), image_buffer_memory, 0, VK_WHOLE_SIZE, 0, &image_memory ) )
+        if ( VkResult result = vkMapMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory, 0, VK_WHOLE_SIZE, 0, &image_memory ) )
         {
             std::ostringstream stream;
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -208,7 +208,7 @@ namespace AeonGames
                 // Is this a temporary fix?
                 /** @note This code and the one bellow for RGB is too redundant,
                     I do not want to have to add more and more cases for each format,
-                    specially when Vulkan is so picky about what formats it supports
+                    specially when Vulkan is so picky about what format it supports
                     and which one it doesn't.
                     So, perhaps support only RGBA and let the Image class
                     handle any conversions?
@@ -258,10 +258,10 @@ namespace AeonGames
                 }
             }
         }
-        vkUnmapMemory ( mVulkanRenderer->GetDevice(), image_buffer_memory );
+        vkUnmapMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory );
         //--------------------------------------------------------
         // Transition Image Layout
-        VkCommandBuffer command_buffer = mVulkanRenderer->BeginSingleTimeCommands();
+        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
         VkImageMemoryBarrier image_memory_barrier{};
         image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
@@ -308,21 +308,21 @@ namespace AeonGames
             0, nullptr,
             1, &image_memory_barrier
         );
-        mVulkanRenderer->EndSingleTimeCommands ( command_buffer );
-        vkDestroyBuffer ( mVulkanRenderer->GetDevice(), image_buffer, nullptr );
-        vkFreeMemory ( mVulkanRenderer->GetDevice(), image_buffer_memory, nullptr );
+        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
+        vkDestroyBuffer ( mVulkanRenderer.GetDevice(), image_buffer, nullptr );
+        vkFreeMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory, nullptr );
     }
 
     void VulkanTexture::FinalizeImage()
     {
         if ( mVkImage != VK_NULL_HANDLE )
         {
-            vkDestroyImage ( mVulkanRenderer->GetDevice(), mVkImage, nullptr );
+            vkDestroyImage ( mVulkanRenderer.GetDevice(), mVkImage, nullptr );
             mVkImage = VK_NULL_HANDLE;
         }
         if ( mImageMemory != VK_NULL_HANDLE )
         {
-            vkFreeMemory ( mVulkanRenderer->GetDevice(), mImageMemory, nullptr );
+            vkFreeMemory ( mVulkanRenderer.GetDevice(), mImageMemory, nullptr );
             mImageMemory = VK_NULL_HANDLE;
         }
     }
@@ -339,7 +339,7 @@ namespace AeonGames
         image_view_create_info.subresourceRange.levelCount = 1;
         image_view_create_info.subresourceRange.baseArrayLayer = 0;
         image_view_create_info.subresourceRange.layerCount = 1;
-        if ( VkResult result = vkCreateImageView ( mVulkanRenderer->GetDevice(), &image_view_create_info, nullptr, &mVkDescriptorImageInfo.imageView ) )
+        if ( VkResult result = vkCreateImageView ( mVulkanRenderer.GetDevice(), &image_view_create_info, nullptr, &mVkDescriptorImageInfo.imageView ) )
         {
             std::ostringstream stream;
             stream << "Create Image View failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -351,7 +351,7 @@ namespace AeonGames
     {
         if ( mVkDescriptorImageInfo.imageView != VK_NULL_HANDLE )
         {
-            vkDestroyImageView ( mVulkanRenderer->GetDevice(), mVkDescriptorImageInfo.imageView, nullptr );
+            vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDescriptorImageInfo.imageView, nullptr );
             mVkDescriptorImageInfo.imageView = VK_NULL_HANDLE;
         }
     }

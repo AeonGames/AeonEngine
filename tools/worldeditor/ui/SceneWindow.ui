@@ -59,63 +59,6 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <layout class="QHBoxLayout" name="sceneGroupLayout">
-            <item>
-             <widget class="QToolButton" name="addNodeToolButton">
-              <property name="toolTip">
-               <string>Add Node</string>
-              </property>
-              <property name="text">
-               <string>Add Node</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../worldeditor_static.qrc">
-                <normaloff>:/icons/icon_add</normaloff>:/icons/icon_add</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>32</width>
-                <height>32</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="removeNodeToolButton">
-              <property name="toolTip">
-               <string>Remove Node</string>
-              </property>
-              <property name="text">
-               <string>Remove Node</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../worldeditor_static.qrc">
-                <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>32</width>
-                <height>32</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
            <widget class="QTreeView" name="sceneTreeView">
             <property name="contextMenuPolicy">
              <enum>Qt::CustomContextMenu</enum>
@@ -471,63 +414,6 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout">
-                <item>
-                 <widget class="QToolButton" name="addComponentToolButton">
-                  <property name="toolTip">
-                   <string>Add Component</string>
-                  </property>
-                  <property name="text">
-                   <string>Add Component</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="../worldeditor_static.qrc">
-                    <normaloff>:/icons/icon_add</normaloff>:/icons/icon_add</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>32</width>
-                    <height>32</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="removeComponentToolButton">
-                  <property name="toolTip">
-                   <string>Remove Component</string>
-                  </property>
-                  <property name="text">
-                   <string>Remove Component</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="../worldeditor_static.qrc">
-                    <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>32</width>
-                    <height>32</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
                <widget class="QListView" name="nodeListView">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
@@ -690,8 +576,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>215</x>
-     <y>389</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>87</x>
@@ -706,8 +592,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>311</x>
-     <y>389</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -722,8 +608,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>389</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -738,8 +624,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>215</x>
-     <y>421</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -754,8 +640,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>311</x>
-     <y>421</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -770,8 +656,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>421</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -786,8 +672,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>215</x>
-     <y>453</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -802,8 +688,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>311</x>
-     <y>453</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -818,8 +704,8 @@
    <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>453</y>
+     <x>129</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -834,8 +720,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>215</x>
-     <y>529</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>87</x>
@@ -850,8 +736,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>311</x>
-     <y>529</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -866,8 +752,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>529</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -882,8 +768,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>215</x>
-     <y>561</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -898,8 +784,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>311</x>
-     <y>561</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -914,8 +800,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>561</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -930,8 +816,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>215</x>
-     <y>593</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -946,8 +832,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>311</x>
-     <y>593</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -962,8 +848,8 @@
    <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>593</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
      <x>136</x>
@@ -980,22 +866,6 @@
     <hint type="sourcelabel">
      <x>113</x>
      <y>379</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>129</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>componentTreeView</sender>
-   <signal>customContextMenuRequested(QPoint)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_componentContextMenuRequested(QPoint)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>113</x>
-     <y>560</y>
     </hint>
     <hint type="destinationlabel">
      <x>129</x>

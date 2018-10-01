@@ -42,9 +42,6 @@ namespace AeonGames
         Ui::SceneWindow()
     {
         setupUi ( this );
-        addNodeToolButton->setDefaultAction ( actionAddNode );
-        removeNodeToolButton->setDefaultAction ( actionRemoveNode );
-        removeComponentToolButton->setDefaultAction ( actionRemoveComponent );
         mEngineWindow = new EngineWindow();
         QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, splitter );
         QSizePolicy size_policy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
@@ -133,23 +130,6 @@ namespace AeonGames
         {
             QMenu::exec ( actions, nodeListView->mapToGlobal ( aPoint ) );
         }
-    }
-
-    void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
-    {
-#if 0
-        QModelIndex index = componentTreeView->indexAt ( aPoint );
-        QList<QAction *> actions = mMessageModel.GetMenuActions ( index );
-        componentTreeView->setCurrentIndex ( index );
-        if ( actions.size() )
-        {
-            QMenu::exec ( actions, componentTreeView->mapToGlobal ( aPoint ) );
-        }
-        for ( auto& i : actions )
-        {
-            delete ( i );
-        }
-#endif
     }
 
     void SceneWindow::UpdateLocalTransformData ( const Node* aNode )
