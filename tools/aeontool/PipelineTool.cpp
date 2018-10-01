@@ -97,7 +97,12 @@ namespace AeonGames
     int PipelineTool::operator() ( int argc, char** argv )
     {
         ProcessArgs ( argc, argv );
-        Pipeline pipeline ( mInputFile );
+        std::ifstream file;
+        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+        file.open ( mInputFile, std::ifstream::in | std::ifstream::binary );
+        std::vector<uint8_t> buffer ( ( std::istreambuf_iterator<char> ( file ) ), ( std::istreambuf_iterator<char>() ) );
+        file.close();
+        Pipeline pipeline ( buffer.data(), buffer.size() );
         {
             std::ofstream shader_file ( mOutputFile + ".vert", std::ifstream::out );
             shader_file << pipeline.GetVertexShaderSource() << std::endl;

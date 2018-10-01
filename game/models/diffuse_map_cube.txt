@@ -1,15 +1,15 @@
 AEONMDL
 default_pipeline {
-    file: "game/shaders/diffuse_map_phong.txt"
+    path: "shaders/diffuse_map_phong.txt"
 }
 default_material {
-    file: "game/materials/orange.txt"
+    path: "materials/orange.txt"
 }
 assembly {
     mesh {
-        file: "game/meshes/cube.txt"
+        path: "meshes/cube.txt"
     }
     material {
-        file: "game/materials/darkred.txt"
+        path: "materials/darkred.txt"
     }    
 }
