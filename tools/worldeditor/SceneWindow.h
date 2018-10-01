@@ -41,7 +41,6 @@ namespace AeonGames
         void on_actionRemoveComponent_triggered();
         void on_sceneContextMenuRequested ( const QPoint& aPoint );
         void on_nodeContextMenuRequested ( const QPoint& aPoint );
-        void on_componentContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
         void on_nodeListViewClicked ( const QModelIndex& aModelIndex );
         void on_localTransformChanged();

@@ -309,7 +309,6 @@ namespace AeonGames
 
     void EngineWindow::mouseMoveEvent ( QMouseEvent * event )
     {
-#if 1
         if ( event->buttons() & Qt::LeftButton )
         {
             QPoint movement = event->globalPos() - mLastCursorPosition;
@@ -318,7 +317,6 @@ namespace AeonGames
             mCameraRotation = mCameraRotation * QQuaternion::fromAxisAndAngle ( 1, 0, 0, - ( static_cast<float> ( movement.y() ) / 2.0f ) );
             updateViewMatrix();
         }
-#endif
         event->accept();
     }
 

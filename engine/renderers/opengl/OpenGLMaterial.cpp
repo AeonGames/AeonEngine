@@ -73,6 +73,15 @@ namespace AeonGames
     void OpenGLMaterial::Initialize()
     {
         mPropertiesBuffer.Initialize ( static_cast<GLsizei> ( mMaterial.GetPropertyBlock().size() ), GL_DYNAMIC_DRAW, mMaterial.GetPropertyBlock().data() );
+        mTextures.reserve ( mMaterial.GetSamplerCount() );
+        for ( auto& i : mMaterial.GetProperties() )
+        {
+            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
+            {
+                /// @todo See if it makes sense to use a resource cache for PD textures.
+                mTextures.emplace_back ( std::make_shared<OpenGLTexture> ( *i.GetImage() ) );
+            }
+        }
     }
 
     void OpenGLMaterial::Finalize()

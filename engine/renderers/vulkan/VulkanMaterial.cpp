@@ -84,21 +84,15 @@ namespace AeonGames
         InitializeDescriptorPool();
         InitializePropertiesUniform();
         InitializeDescriptorSet();
-#if 0
         for ( auto& i : mMaterial.GetProperties() )
         {
-            switch ( i.GetType() )
+            if ( i.GetType() == Material::SAMPLER_2D )
             {
-            case Material::SAMPLER_2D:
-                ///@todo to be reworked.
-                //mTextures.emplace_back ( Get<VulkanTexture> ( i.GetImage().get(), i.GetImage(), mVulkanRenderer ) );
-                break;
-            default:
-                break;
+                mTextures.emplace_back ( std::make_shared<VulkanTexture> ( *i.GetImage(), mVulkanRenderer ) );
             }
         }
-#endif
     }
+
     void VulkanMaterial::Finalize()
     {
         FinalizeDescriptorSet();
@@ -252,16 +246,17 @@ namespace AeonGames
         if ( mMaterial.GetPropertyBlock().size() )
         {
             write_descriptor_sets.emplace_back();
-            write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_sets.back().pNext = nullptr;
-            write_descriptor_sets.back().dstSet = mVkPropertiesDescriptorSet;
-            write_descriptor_sets.back().dstBinding = 0;
-            write_descriptor_sets.back().dstArrayElement = 0;
-            write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            write_descriptor_sets.back().descriptorCount = 1;
-            write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
-            write_descriptor_sets.back().pImageInfo = nullptr;
-            write_descriptor_sets.back().pTexelBufferView = nullptr;
+            auto& write_descriptor_set = write_descriptor_sets.back();
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_infos[0];
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
         }
 
         for ( uint32_t i = 0; i < mMaterial.GetSamplerCount(); ++i )
@@ -271,12 +266,13 @@ namespace AeonGames
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
             write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
-            write_descriptor_set.dstBinding = i; // this will probably break because of how the shader code is build.
+            ///@todo find a better way to calculate sampler binding, perhaps move samplers to their own descriptor set.
+            write_descriptor_set.dstBinding = static_cast<uint32_t> ( i + ( write_descriptor_sets.size() - 1 ) );
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             write_descriptor_set.descriptorCount = 1;
-            assert ( 0 && "TODO: Set pImageInfo" );
-            write_descriptor_set.pImageInfo = nullptr;//&mTextures[i]->GetDescriptorImageInfo();
+            write_descriptor_set.pBufferInfo = nullptr;
+            write_descriptor_set.pImageInfo = &mTextures[i]->GetDescriptorImageInfo();
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }

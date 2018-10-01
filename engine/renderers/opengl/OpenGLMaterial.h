@@ -38,7 +38,6 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         const Material& mMaterial;
-        //GLuint mPropertiesBuffer{};
         OpenGLBuffer mPropertiesBuffer{};
         std::vector<std::shared_ptr<OpenGLTexture>> mTextures;
     };
