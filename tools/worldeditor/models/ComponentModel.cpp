@@ -110,6 +110,7 @@ namespace AeonGames
                 }
                 catch ( std::runtime_error& e )
                 {
+                    std::cout << e.what() << std::endl;
                     return QVariant();
                 }
             }
@@ -172,6 +173,7 @@ namespace AeonGames
                 }
                 catch ( std::runtime_error& e )
                 {
+                    std::cout << e.what() << std::endl;
                     aRef.Get<std::shared_ptr<Model>>().reset();
                 }
             }

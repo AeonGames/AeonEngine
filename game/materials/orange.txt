@@ -20,5 +20,7 @@ property {
 property {
   uniform_name: "DiffuseMap"
   display_name: "Diffuse Map"
-  texture: "game/images/orange.png"
+  texture {
+	path: "images/orange.png"
+  }
 }

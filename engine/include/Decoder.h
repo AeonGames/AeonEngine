@@ -19,7 +19,8 @@ limitations under the License.
 #include <functional>
 #include <algorithm>
 #include <fstream>
-#include "aeongames/Memory.h"
+#include "aeongames/AeonEngine.h"
+#include "aeongames/CRC.h"
 #include <utility>
 #ifndef AEONGAMES_DECODER_H
 #define AEONGAMES_DECODER_H
@@ -29,19 +30,26 @@ namespace AeonGames
     class Decoder
     {
     public:
-        static bool Decode ( T& aOutput, const std::string& aFileName )
+        static bool Decode ( T& aOutput, uint32_t aId )
         {
             //--------------------------------------------------------
             // File loading code
-            std::ifstream file;
-            file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-            file.open ( aFileName, std::ios::binary );
-            std::vector<uint8_t> buffer ( (
-                                              std::istreambuf_iterator<char> ( file ) ),
-                                          ( std::istreambuf_iterator<char>() ) );
-            file.close();
+            //std::ifstream file;
+            //file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+            //file.open ( aFileName, std::ios::binary );
+            //std::vector<uint8_t> buffer ( (
+            //                                  std::istreambuf_iterator<char> ( file ) ),
+            //                              ( std::istreambuf_iterator<char>() ) );
+            //file.close();
             //--------------------------------------------------------
+            size_t buffer_size = GetResourceSize ( aId );
+            std::vector<uint8_t> buffer ( buffer_size );
+            LoadResource ( aId, buffer.data(), buffer.size() );
             return Decode ( aOutput, buffer.data(), buffer.size() );
+        }
+        static bool Decode ( T& aOutput, const std::string& aPath )
+        {
+            return Decode ( aOutput, crc32i ( aPath.data(), aPath.size() ) );
         }
 
         static bool Decode ( T& aOutput, const void* aBuffer, size_t aBufferSize )

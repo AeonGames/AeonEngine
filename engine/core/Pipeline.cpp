@@ -193,8 +193,8 @@ namespace AeonGames
         default:
             break;
         }
-        mVertexShader.append ( "#version 430\n" );
-        mFragmentShader.append ( "#version 430\n" );
+        mVertexShader.append ( "#version 450\n" );
+        mFragmentShader.append ( "#version 450\n" );
         /* Find out which attributes are being used and add them to the shader source */
         std::smatch attribute_matches;
         /**@note static const regex: construct once, use for ever.*/
@@ -284,11 +284,12 @@ namespace AeonGames
             mFragmentShader.append ( properties );
             mFragmentShader.append ( samplers );
         }
+        // Skeleton needs rework
         if ( mAttributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
         {
             std::string skeleton (
                 "#ifdef VULKAN\n"
-                "layout(set = 0, binding = 2, std140) uniform Skeleton{\n"
+                "layout(set = 2, binding = 2, std140) uniform Skeleton{\n"
                 "#else\n"
                 "layout(std140, binding = 2) uniform Skeleton{\n"
                 "#endif\n"

@@ -158,8 +158,10 @@ namespace AeonGames
             return Material::PropertyType::FLOAT_VEC3;
         case PropertyBuffer::DefaultValueCase::kVector4:
             return Material::PropertyType::FLOAT_VEC4;
-        default:
-            break;
+        case PropertyBuffer::DefaultValueCase::kTexture:
+            return Material::PropertyType::SAMPLER_2D;
+        case PropertyBuffer::DefaultValueCase::DEFAULT_VALUE_NOT_SET:
+            return Material::PropertyType::UNKNOWN;
         }
         return Material::PropertyType::UNKNOWN;
     }
@@ -288,11 +290,14 @@ namespace AeonGames
             break;
         case PropertyBuffer::DefaultValueCase::kTexture:
             new ( &mImage ) std::unique_ptr<Image> ( std::make_unique<Image>() );
-            // This will fail, change to use resources.
-            if ( !DecodeImage ( *mImage, aPropertyBuffer.texture().path() ) )
+            try
+            {
+                DecodeImage ( *mImage, aPropertyBuffer.texture().path() );
+            }
+            catch ( std::runtime_error& e )
             {
                 std::ostringstream stream;
-                stream << "Unable to load image " << aPropertyBuffer.texture().path();
+                stream << e.what() << " Unable to load image " << aPropertyBuffer.texture().path();
                 throw std::runtime_error ( stream.str().c_str() );
             }
             break;
@@ -532,10 +537,14 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         mImage = std::make_unique<Image>();
-        if ( !DecodeImage ( *mImage, aFileName ) )
+        try
+        {
+            DecodeImage ( *mImage, aFileName );
+        }
+        catch ( std::runtime_error& e )
         {
             std::ostringstream stream;
-            stream << "Unable to load image " << aFileName;
+            stream << e.what() << " Unable to load image " << aFileName;
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
