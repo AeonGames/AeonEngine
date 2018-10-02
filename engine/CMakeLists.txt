@@ -108,7 +108,6 @@ set(ENGINE_CORE_SOURCES
     core/Mesh.cpp
     core/Skeleton.cpp
     core/Animation.cpp
-    core/Renderer.cpp
     core/SoundSystem.cpp
     core/Utilities.cpp
     core/AeonEngine.cpp

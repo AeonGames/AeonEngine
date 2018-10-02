@@ -17,6 +17,7 @@ limitations under the License.
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/AeonEngine.h"
 #include "RendererSelectDialog.h"
 #include <QMessageBox>
 #include <QFile>
@@ -24,10 +25,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const Renderer* WorldEditor::GetRenderer() const
-    {
-        return mRenderer.get();
-    }
     const GridSettings& WorldEditor::GetGridSettings() const
     {
         return mGridSettings;
@@ -95,7 +92,7 @@ namespace AeonGames
         }
         if ( renderer_list.size() == 1 )
         {
-            this->mRenderer = AeonGames::ConstructRenderer ( renderer_list.at ( 0 ).toStdString() );
+            AeonGames::SetRenderer ( renderer_list.at ( 0 ).toStdString() );
         }
         else
         {
@@ -103,11 +100,11 @@ namespace AeonGames
             select_renderer.SetRenderers ( renderer_list );
             if ( select_renderer.exec() == QDialog::Accepted )
             {
-                this->mRenderer = AeonGames::ConstructRenderer ( select_renderer.GetSelected().toStdString() );
+                AeonGames::SetRenderer ( select_renderer.GetSelected().toStdString() );
             }
         }
 
-        if ( mRenderer == nullptr )
+        if ( !GetRenderer() )
         {
             throw std::runtime_error ( "No renderer selected, cannot continue." );
         }
@@ -194,25 +191,25 @@ namespace AeonGames
         }
         LoadMesh ( mGridMesh, ":/meshes/grid.msh" );
         LoadMesh ( mAABBWireMesh, ":/meshes/aabb_wire.msh" );
-        mRenderer->LoadRenderMesh ( mGridMesh );
-        mRenderer->LoadRenderPipeline ( mGridPipeline );
-        mRenderer->LoadRenderMaterial ( mXGridMaterial );
-        mRenderer->LoadRenderMaterial ( mYGridMaterial );
+        GetRenderer()->LoadRenderMesh ( mGridMesh );
+        GetRenderer()->LoadRenderPipeline ( mGridPipeline );
+        GetRenderer()->LoadRenderMaterial ( mXGridMaterial );
+        GetRenderer()->LoadRenderMaterial ( mYGridMaterial );
 
-        mRenderer->LoadRenderMesh ( mAABBWireMesh );
-        mRenderer->LoadRenderPipeline ( mWirePipeline );
-        mRenderer->LoadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
+        GetRenderer()->LoadRenderMesh ( mAABBWireMesh );
+        GetRenderer()->LoadRenderPipeline ( mWirePipeline );
+        GetRenderer()->LoadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
     }
     WorldEditor::~WorldEditor()
     {
-        mRenderer->UnloadRenderMesh ( mGridMesh );
-        mRenderer->UnloadRenderPipeline ( mGridPipeline );
-        mRenderer->UnloadRenderMaterial ( mXGridMaterial );
-        mRenderer->UnloadRenderMaterial ( mYGridMaterial );
+        GetRenderer()->UnloadRenderMesh ( mGridMesh );
+        GetRenderer()->UnloadRenderPipeline ( mGridPipeline );
+        GetRenderer()->UnloadRenderMaterial ( mXGridMaterial );
+        GetRenderer()->UnloadRenderMaterial ( mYGridMaterial );
 
-        mRenderer->UnloadRenderMesh ( mAABBWireMesh );
-        mRenderer->UnloadRenderPipeline ( mWirePipeline );
-        mRenderer->UnloadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
+        GetRenderer()->UnloadRenderMesh ( mAABBWireMesh );
+        GetRenderer()->UnloadRenderPipeline ( mWirePipeline );
+        GetRenderer()->UnloadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
     }
 
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )

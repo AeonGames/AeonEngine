@@ -15,13 +15,15 @@ limitations under the License.
 */
 #ifndef AEONGAMES_AEONENGINE_H
 #define AEONGAMES_AEONENGINE_H
-#include "Platform.h"
-#include "Memory.h"
+#include <memory>
 #include <string>
 #include <vector>
+#include <functional>
+#include "Platform.h"
 
 namespace AeonGames
 {
+    class Renderer;
     DLL bool Initialize();
     DLL void Finalize();
     DLL std::vector<std::string> GetResourcePath();
@@ -36,5 +38,33 @@ namespace AeonGames
     DLL void LoadResource ( uint32_t crc, void* buffer, size_t buffer_size );
     /*! Loads a specific resource referenced by its path into the provided buffer. */
     DLL void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size );
+    /** @name Global Renderer
+     * The idea of having a global renderer as opposed to being able to construct
+     * multiple renderers at will as it used to be is to simplify renderer resource
+     * management, if generic classes can access the current renderer at creation,
+     * they can build their renderable counterparts right away, this way the end user
+     * needs not worry to initialize render resources and lazy loading of render resources
+     * at the render loop is avoided at runtime.
+     **/
+    ///@{
+    /** Retrieve a pointer to the current global renderer, may be null it not set.
+     * @return Pointer to the current global renderer.
+     */
+    DLL const Renderer* GetRenderer();
+    /** Builds and stores a renderer object given its implementation identifier.
+     * @param aIdentifier Implementation identifier for the renderer to construct,
+     * usually retrived with EnumerateRendererConstructors.
+     * @return A Pointer to the newly constructed renderer.
+     * @note Will throw a runtime_error exception if the renderer is already set.
+     * This may change in the future if a reason to reset or change the renderer at runtime arises.
+    */
+    DLL const Renderer* SetRenderer ( const std::string& aIdentifier );
+    /** Registers a renderer loader for a specific identifier.*/
+    DLL bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor );
+    /** Unregisters a renderer loader for a specific identifier.*/
+    DLL bool UnregisterRendererConstructor ( const std::string& aIdentifier );
+    /** Enumerates Renderer loader identifiers via an enumerator functor.*/
+    DLL void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
+    ///@}
 }
 #endif
