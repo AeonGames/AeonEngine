@@ -38,11 +38,9 @@ namespace AeonGames
         const Mesh& GetGridMesh() const;
         const Material& GetXGridMaterial() const;
         const Material& GetYGridMaterial() const;
-        const Renderer* GetRenderer() const;
         const Pipeline& GetWirePipeline() const;
         const Mesh& GetAABBWireMesh() const;
     private:
-        std::unique_ptr<Renderer> mRenderer;
         GridSettings mGridSettings{};
         Pipeline mGridPipeline{};
         Mesh mGridMesh{};

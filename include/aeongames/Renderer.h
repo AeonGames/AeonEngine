@@ -16,11 +16,11 @@ limitations under the License.
 #ifndef AEONGAMES_RENDERER_H
 #define AEONGAMES_RENDERER_H
 
-#include "Platform.h"
-#include "aeongames/Memory.h"
 #include <string>
-#include <functional>
-#include <utility>
+//#include <functional>
+//#include <utility>
+#include <memory>
+#include "Platform.h"
 
 namespace AeonGames
 {
@@ -60,18 +60,7 @@ namespace AeonGames
         virtual void UnloadRenderPipeline ( const Pipeline& aPipeline ) const = 0;
         virtual void LoadRenderMaterial ( const Material& aMaterial ) const = 0;
         virtual void UnloadRenderMaterial ( const Material& aMaterial ) const = 0;
-        virtual ~Renderer() = default;
+        DLL virtual ~Renderer() = 0;
     };
-
-    /**@name Factory Functions */
-    /*@{*/
-    DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier );
-    /** Registers a renderer loader for a specific identifier.*/
-    DLL bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor );
-    /** Unregisters a renderer loader for a specific identifier.*/
-    DLL bool UnregisterRendererConstructor ( const std::string& aIdentifier );
-    /** Enumerates Renderer loader identifiers via an enumerator functor.*/
-    DLL void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
-    /*@}*/
 }
 #endif

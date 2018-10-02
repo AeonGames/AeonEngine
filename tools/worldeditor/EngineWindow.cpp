@@ -70,7 +70,7 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-        mWindow = qWorldEditorApp->GetRenderer()->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
+        mWindow = GetRenderer()->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
         if ( !mWindow )
         {
             throw std::runtime_error ( "Window creation failed." );
@@ -236,36 +236,39 @@ namespace AeonGames
                         aNode.Update ( delta );
                     } );
                 }
-                mWindow->BeginRender();
-                mWindow->Render ( Transform{},
-                                  qWorldEditorApp->GetGridMesh(),
-                                  qWorldEditorApp->GetGridPipeline(),
-                                  &qWorldEditorApp->GetXGridMaterial(), 0, 2,
-                                  qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
-                mWindow->Render ( Transform{},
-                                  qWorldEditorApp->GetGridMesh(),
-                                  qWorldEditorApp->GetGridPipeline(),
-                                  &qWorldEditorApp->GetYGridMaterial(), 2, 2,
-                                  qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
-                if ( mScene )
+                if ( GetRenderer() )
                 {
-                    Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
-                    Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
-                    mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Node & aNode )
+                    mWindow->BeginRender();
+                    mWindow->Render ( Transform{},
+                                      qWorldEditorApp->GetGridMesh(),
+                                      qWorldEditorApp->GetGridPipeline(),
+                                      &qWorldEditorApp->GetXGridMaterial(), 0, 2,
+                                      qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
+                    mWindow->Render ( Transform{},
+                                      qWorldEditorApp->GetGridMesh(),
+                                      qWorldEditorApp->GetGridPipeline(),
+                                      &qWorldEditorApp->GetYGridMaterial(), 2, 2,
+                                      qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
+                    if ( mScene )
                     {
-                        if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
+                        Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
+                        Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
+                        mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Node & aNode )
                         {
-                            // Call Node specific rendering function.
-                            aNode.Render ( *mWindow );
-                            // Render Node AABB
-                            mWindow->Render ( aNode.GetGlobalTransform(),
-                                              qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline(),
-                                              &qWorldEditorApp->GetWirePipeline().GetDefaultMaterial() );
-                        }
-                    } );
+                            if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
+                            {
+                                // Call Node specific rendering function.
+                                aNode.Render ( *mWindow );
+                                // Render Node AABB
+                                mWindow->Render ( aNode.GetGlobalTransform(),
+                                                  qWorldEditorApp->GetAABBWireMesh(),
+                                                  qWorldEditorApp->GetWirePipeline(),
+                                                  &qWorldEditorApp->GetWirePipeline().GetDefaultMaterial() );
+                            }
+                        } );
+                    }
+                    mWindow->EndRender();
                 }
-                mWindow->EndRender();
                 return true;
             }
         default:

@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <iostream>
 #include <utility>
+#include <memory>
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/Node.h"
@@ -28,13 +29,15 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "aeongames/Memory.h"
 #include "aeongames/AeonEngine.h"
+#include "aeongames/Renderer.h"
 #include "aeongames/Package.h"
+#include "Factory.h"
 
 namespace AeonGames
 {
     static bool gInitialized = false;
+    static std::unique_ptr<Renderer> gRenderer{};
     static ConfigurationBuffer gConfigurationBuffer;
 #if defined(WIN32)
     static std::vector<std::tuple<HMODULE, PluginModuleInterface*>> gPlugInCache;
@@ -145,6 +148,9 @@ namespace AeonGames
         {
             return;
         }
+        /* The renderer code must reside in plugin address space,
+         so reset before unloading any plugins. */
+        gRenderer.reset();
         for ( auto& i : gPlugInCache )
         {
             std::get<1> ( i )->ShutDown();
@@ -241,5 +247,36 @@ namespace AeonGames
     void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size )
     {
         LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
+    }
+
+    // Renderer------------------------------------------------------------------------------
+    Renderer::~Renderer() //= default;
+    {
+        std::cout << __func__ << std::endl;
+    }
+    const Renderer* GetRenderer()
+    {
+        return gRenderer.get();
+    }
+    const Renderer* SetRenderer ( const std::string& aIdentifier )
+    {
+        if ( gRenderer )
+        {
+            throw std::runtime_error ( "Global renderer already set." );
+        }
+        gRenderer = Factory<Renderer>::Construct ( aIdentifier );
+        return gRenderer.get();
+    }
+    bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor )
+    {
+        return Factory<Renderer>::RegisterConstructor ( aIdentifier, aConstructor );
+    }
+    bool UnregisterRendererConstructor ( const std::string& aIdentifier )
+    {
+        return Factory<Renderer>::UnregisterConstructor ( aIdentifier );
+    }
+    void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
+    {
+        Factory<Renderer>::EnumerateConstructors ( aEnumerator );
     }
 }
