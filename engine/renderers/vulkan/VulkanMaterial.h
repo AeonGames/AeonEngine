@@ -35,7 +35,7 @@ namespace AeonGames
         void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
         const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
         const VkDescriptorSet GetPropertiesDescriptorSet() const;
-        const std::vector<std::shared_ptr<VulkanTexture>>& GetTextures() const;
+        const Material& GetMaterial() const;
     private:
         void Initialize();
         void Finalize();
@@ -53,7 +53,6 @@ namespace AeonGames
         VkDescriptorPool mVkPropertiesDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkPropertiesDescriptorSet{ VK_NULL_HANDLE };
         VulkanBuffer mPropertiesBuffer;
-        std::vector<std::shared_ptr<VulkanTexture>> mTextures;
     };
 }
 #endif

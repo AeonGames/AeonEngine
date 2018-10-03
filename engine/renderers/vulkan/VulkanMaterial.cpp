@@ -73,9 +73,9 @@ namespace AeonGames
         return mVkPropertiesDescriptorSet;
     }
 
-    const std::vector<std::shared_ptr<VulkanTexture>>& VulkanMaterial::GetTextures() const
+    const Material& VulkanMaterial::GetMaterial() const
     {
-        return mTextures;
+        return mMaterial;
     }
 
     void VulkanMaterial::Initialize()
@@ -88,7 +88,7 @@ namespace AeonGames
         {
             if ( i.GetType() == Material::SAMPLER_2D )
             {
-                mTextures.emplace_back ( std::make_shared<VulkanTexture> ( *i.GetImage(), mVulkanRenderer ) );
+                i.GetImage()->SetRenderImage ( std::make_unique<VulkanTexture> ( *i.GetImage(), mVulkanRenderer ) );
             }
         }
     }
@@ -259,20 +259,24 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
         }
 
-        for ( uint32_t i = 0; i < mMaterial.GetSamplerCount(); ++i )
+        uint32_t index{0};
+        for ( auto& i : mMaterial.GetProperties() )
         {
-            write_descriptor_sets.emplace_back();
-            auto& write_descriptor_set = write_descriptor_sets.back();
-            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
-            ///@todo find a better way to calculate sampler binding, perhaps move samplers to their own descriptor set.
-            write_descriptor_set.dstBinding = static_cast<uint32_t> ( i + ( write_descriptor_sets.size() - 1 ) );
-            write_descriptor_set.dstArrayElement = 0;
-            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            write_descriptor_set.descriptorCount = 1;
-            write_descriptor_set.pBufferInfo = nullptr;
-            write_descriptor_set.pImageInfo = &mTextures[i]->GetDescriptorImageInfo();
+            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
+            {
+                write_descriptor_sets.emplace_back();
+                auto& write_descriptor_set = write_descriptor_sets.back();
+                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set.pNext = nullptr;
+                write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
+                ///@todo find a better way to calculate sampler binding, perhaps move samplers to their own descriptor set.
+                write_descriptor_set.dstBinding = static_cast<uint32_t> ( ( write_descriptor_sets.size() - 1 ) + index++ );
+                write_descriptor_set.dstArrayElement = 0;
+                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write_descriptor_set.descriptorCount = 1;
+                write_descriptor_set.pBufferInfo = nullptr;
+                write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( i.GetImage()->GetRenderImage() )->GetDescriptorImageInfo();
+            }
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
