@@ -27,7 +27,6 @@ limitations under the License.
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLTexture.h"
-#include "OpenGLModel.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
