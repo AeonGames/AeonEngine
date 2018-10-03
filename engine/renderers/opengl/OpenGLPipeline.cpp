@@ -50,13 +50,18 @@ namespace AeonGames
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
-        for ( GLenum i = 0; i < aMaterial.GetTextures().size(); ++i )
+        GLenum index{0};
+        for ( auto& i : aMaterial.GetMaterial().GetProperties() )
         {
-            glActiveTexture ( GL_TEXTURE0 + i );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, aMaterial.GetTextures() [i]->GetTexture() );
-            OPENGL_CHECK_ERROR_NO_THROW;
+            if ( i.GetType() == Material::Material::PropertyType::SAMPLER_2D )
+            {
+                glActiveTexture ( GL_TEXTURE0 + index++ );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLTexture*> ( i.GetImage()->GetRenderImage() )->GetTexture() );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
         }
+
         glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBufferId() );
