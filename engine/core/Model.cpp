@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/Renderer.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -155,6 +156,12 @@ namespace AeonGames
                 material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
             }
             mAssemblies.emplace_back ( mesh, pipeline, material );
+            if ( GetRenderer() )
+            {
+                GetRenderer()->LoadRenderMesh ( *mesh );
+                GetRenderer()->LoadRenderPipeline ( *pipeline );
+                GetRenderer()->LoadRenderMaterial ( *material );
+            }
         }
         // Animations -----------------------------------------------------------------------------
         mAnimations.reserve ( aModelBuffer.animation_size() );

@@ -275,6 +275,10 @@ namespace AeonGames
                 write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write_descriptor_set.descriptorCount = 1;
                 write_descriptor_set.pBufferInfo = nullptr;
+                if ( !i.GetImage()->GetRenderImage() )
+                {
+                    i.GetImage()->SetRenderImage ( std::make_unique<VulkanTexture> ( *i.GetImage(), mVulkanRenderer ) );
+                }
                 write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( i.GetImage()->GetRenderImage() )->GetDescriptorImageInfo();
             }
         }
