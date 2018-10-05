@@ -24,6 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Image;
     class Mesh;
     class Pipeline;
     class Material;
