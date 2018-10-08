@@ -127,9 +127,6 @@ namespace AeonGames
         return Pipeline::GetPipeline ( id );
     }
 
-    DLL Pipeline::IRenderPipeline::~IRenderPipeline()
-        = default;
-
     Pipeline::~Pipeline()
         = default;
 
@@ -435,15 +432,5 @@ namespace AeonGames
     const Pipeline::Topology Pipeline::GetTopology() const
     {
         return mTopology;
-    }
-
-    void Pipeline::SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const
-    {
-        mRenderPipeline = std::move ( aRenderPipeline );
-    }
-
-    const Pipeline::IRenderPipeline* const Pipeline::GetRenderPipeline() const
-    {
-        return mRenderPipeline.get();
     }
 }

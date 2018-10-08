@@ -39,8 +39,8 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanMaterial::VulkanMaterial ( const Material& aMaterial, const VulkanRenderer&  aVulkanRenderer ) :
-        mVulkanRenderer ( aVulkanRenderer ),
-        mMaterial ( aMaterial ), mPropertiesBuffer ( mVulkanRenderer )
+        Material(), mVulkanRenderer ( aVulkanRenderer ),
+        mPropertiesBuffer ( mVulkanRenderer )
     {
         try
         {
@@ -58,10 +58,12 @@ namespace AeonGames
         Finalize();
     }
 
+#if 0
     void VulkanMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {
-        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : mMaterial.GetPropertyBlock().size() - aOffset, aValue );
+        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : GetPropertyBlock().size() - aOffset, aValue );
     }
+#endif
 
     const VkDescriptorSetLayout& VulkanMaterial::GetPropertiesDescriptorSetLayout() const
     {
@@ -73,24 +75,12 @@ namespace AeonGames
         return mVkPropertiesDescriptorSet;
     }
 
-    const Material& VulkanMaterial::GetMaterial() const
-    {
-        return mMaterial;
-    }
-
     void VulkanMaterial::Initialize()
     {
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
         InitializePropertiesUniform();
         InitializeDescriptorSet();
-        for ( auto& i : mMaterial.GetProperties() )
-        {
-            if ( i.GetType() == Material::SAMPLER_2D )
-            {
-                i.GetImage()->SetRenderImage ( std::make_unique<VulkanTexture> ( *i.GetImage(), mVulkanRenderer ) );
-            }
-        }
     }
 
     void VulkanMaterial::Finalize()
@@ -103,16 +93,16 @@ namespace AeonGames
 
     void VulkanMaterial::InitializeDescriptorSetLayout()
     {
-        if ( !mMaterial.GetProperties().size() )
+        if ( !GetProperties().size() )
         {
             // We don' need a layout.
             return;
         }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 1 + mMaterial.GetSamplerCount() );
+        descriptor_set_layout_bindings.reserve ( 1 + GetSamplerCount() );
         uint32_t binding = 0;
 
-        if ( mMaterial.GetPropertyBlock().size() )
+        if ( GetPropertyBlock().size() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = binding++;
@@ -123,7 +113,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
 
-        for ( auto& i : mMaterial.GetProperties() )
+        for ( auto& i : GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
             {
@@ -164,17 +154,17 @@ namespace AeonGames
     {
         std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
         descriptor_pool_sizes.reserve ( 2 );
-        if ( mMaterial.GetPropertyBlock().size() )
+        if ( GetPropertyBlock().size() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptor_pool_sizes.back().descriptorCount = 1;
         }
-        if ( mMaterial.GetSamplerCount() )
+        if ( GetSamplerCount() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptor_pool_sizes.back().descriptorCount = static_cast<uint32_t> ( mMaterial.GetSamplerCount() );
+            descriptor_pool_sizes.back().descriptorCount = static_cast<uint32_t> ( GetSamplerCount() );
         }
         if ( descriptor_pool_sizes.size() )
         {
@@ -205,13 +195,13 @@ namespace AeonGames
 
     void VulkanMaterial::InitializePropertiesUniform()
     {
-        if ( mMaterial.GetPropertyBlock().size() )
+        if ( GetPropertyBlock().size() )
         {
             mPropertiesBuffer.Initialize (
-                mMaterial.GetPropertyBlock().size(),
+                GetPropertyBlock().size(),
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                static_cast<const void*> ( mMaterial.GetPropertyBlock().data() ) );
+                static_cast<const void*> ( GetPropertyBlock().data() ) );
         }
     }
 
@@ -236,14 +226,14 @@ namespace AeonGames
         std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
         {
             {
-                VkDescriptorBufferInfo{mPropertiesBuffer.GetBuffer(), 0, mMaterial.GetPropertyBlock().size() }
+                VkDescriptorBufferInfo{mPropertiesBuffer.GetBuffer(), 0, GetPropertyBlock().size() }
             }
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( 1 + mMaterial.GetSamplerCount() );
+        write_descriptor_sets.reserve ( 1 + GetSamplerCount() );
 
-        if ( mMaterial.GetPropertyBlock().size() )
+        if ( GetPropertyBlock().size() )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
@@ -260,7 +250,7 @@ namespace AeonGames
         }
 
         uint32_t index{0};
-        for ( auto& i : mMaterial.GetProperties() )
+        for ( auto& i : GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
             {
@@ -275,11 +265,7 @@ namespace AeonGames
                 write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write_descriptor_set.descriptorCount = 1;
                 write_descriptor_set.pBufferInfo = nullptr;
-                if ( !i.GetImage()->GetRenderImage() )
-                {
-                    i.GetImage()->SetRenderImage ( std::make_unique<VulkanTexture> ( *i.GetImage(), mVulkanRenderer ) );
-                }
-                write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( i.GetImage()->GetRenderImage() )->GetDescriptorImageInfo();
+                write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( i.GetImage() )->GetDescriptorImageInfo();
             }
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );

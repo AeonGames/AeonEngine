@@ -23,8 +23,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture ( const Image& aImage ) :
-        mImage ( aImage  )
+    OpenGLTexture::OpenGLTexture() :
+        Image()
     {
         try
         {
@@ -50,13 +50,13 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       mImage.Width(),
-                       mImage.Height(),
+                       ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       Width(),
+                       Height(),
                        0,
-                       ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-                       mImage.Pixels() );
+                       ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       ( Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                       Pixels() );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
         OPENGL_CHECK_ERROR_THROW;
@@ -76,7 +76,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         mTexture = 0;
     }
-
+#if 0
     void OpenGLTexture::Update()
     {
         if ( glIsTexture ( mTexture ) == GL_FALSE )
@@ -85,15 +85,15 @@ namespace AeonGames
         }
         glTextureSubImage2D ( mTexture,
                               0,
-                              ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                              mImage.Width(),
-                              mImage.Height(),
+                              ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                              Width(),
+                              Height(),
                               0,
-                              ( mImage.Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                              ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-                              mImage.Pixels() );
+                              ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                              ( Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                              Pixels() );
     }
-
+#endif
     const uint32_t OpenGLTexture::GetTexture() const
     {
         return mTexture;

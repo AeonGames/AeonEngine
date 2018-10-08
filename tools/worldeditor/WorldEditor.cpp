@@ -191,6 +191,7 @@ namespace AeonGames
         }
         LoadMesh ( mGridMesh, ":/meshes/grid.msh" );
         LoadMesh ( mAABBWireMesh, ":/meshes/aabb_wire.msh" );
+#if 0
         GetRenderer()->LoadRenderMesh ( mGridMesh );
         GetRenderer()->LoadRenderPipeline ( mGridPipeline );
         GetRenderer()->LoadRenderMaterial ( mXGridMaterial );
@@ -199,9 +200,11 @@ namespace AeonGames
         GetRenderer()->LoadRenderMesh ( mAABBWireMesh );
         GetRenderer()->LoadRenderPipeline ( mWirePipeline );
         GetRenderer()->LoadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
+#endif
     }
     WorldEditor::~WorldEditor()
     {
+#if 0
         GetRenderer()->UnloadRenderMesh ( mGridMesh );
         GetRenderer()->UnloadRenderPipeline ( mGridPipeline );
         GetRenderer()->UnloadRenderMaterial ( mXGridMaterial );
@@ -210,6 +213,7 @@ namespace AeonGames
         GetRenderer()->UnloadRenderMesh ( mAABBWireMesh );
         GetRenderer()->UnloadRenderPipeline ( mWirePipeline );
         GetRenderer()->UnloadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
+#endif
     }
 
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )

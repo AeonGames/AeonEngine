@@ -156,12 +156,14 @@ namespace AeonGames
                 material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
             }
             mAssemblies.emplace_back ( mesh, pipeline, material );
+#if 0
             if ( GetRenderer() )
             {
                 GetRenderer()->LoadRenderMesh ( *mesh );
                 GetRenderer()->LoadRenderPipeline ( *pipeline );
                 GetRenderer()->LoadRenderMaterial ( *material );
             }
+#endif
         }
         // Animations -----------------------------------------------------------------------------
         mAnimations.reserve ( aModelBuffer.animation_size() );

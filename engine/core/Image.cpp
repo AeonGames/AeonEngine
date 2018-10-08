@@ -66,8 +66,6 @@ namespace AeonGames
         }
     }
 
-    DLL Image::IRenderImage::~IRenderImage() = default;
-
     void Image::Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
     {
         if ( mMapped )
@@ -138,16 +136,6 @@ namespace AeonGames
             throw std::runtime_error ( "Image memory is not mapped." );
         }
         mMapped = false;
-    }
-
-    void Image::SetRenderImage ( std::unique_ptr<IRenderImage> aRenderImage ) const
-    {
-        mRenderImage = std::move ( aRenderImage );
-    }
-
-    const Image::IRenderImage* Image::GetRenderImage() const
-    {
-        return mRenderImage.get();
     }
 
     bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Image&, size_t, const void* ) > & aDecoder )

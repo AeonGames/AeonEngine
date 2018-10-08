@@ -500,68 +500,46 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
-        const VulkanPipeline* render_pipeline = reinterpret_cast<const VulkanPipeline*> ( aPipeline.GetRenderPipeline() );
-        const VulkanMaterial* render_material = reinterpret_cast<const VulkanMaterial*> ( material->GetRenderMaterial() );
-        const VulkanMesh* render_mesh = reinterpret_cast<const VulkanMesh*> ( aMesh.GetRenderMesh() );
-        if ( render_pipeline && render_mesh && render_material )
+        const VulkanMaterial* material = reinterpret_cast<const VulkanMaterial*> ( ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial() );
+        std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, material->GetPropertiesDescriptorSet() }};
+        vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
+        Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
+        vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
+                             reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
+                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                             0, sizeof ( float ) * 16, ModelMatrix.GetMatrix4x4() );
         {
-            std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, render_material->GetPropertiesDescriptorSet() }};
-            vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline->GetPipeline() );
-            Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
-            vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
-                                 render_pipeline->GetPipelineLayout(),
-                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                 0, sizeof ( float ) * 16, ModelMatrix.GetMatrix4x4() );
-            {
-                vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          render_pipeline->GetPipelineLayout(),
-                                          0,
-                                          static_cast<uint32_t> ( descriptor_sets.size() ),
-                                          descriptor_sets.data(), 0, nullptr );
-            }
-            {
-                const VkDeviceSize offset = 0;
-                vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &render_mesh->GetBuffer(), &offset );
-                if ( aMesh.GetIndexCount() )
-                {
-                    vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
-                                           render_mesh->GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
-                                           GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMesh.GetIndexType() ) ) );
-                    vkCmdDrawIndexed (
-                        mVulkanRenderer.GetCommandBuffer(),
-                        ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                        aInstanceCount,
-                        aVertexStart,
-                        0,
-                        aFirstInstance );
-                }
-                else
-                {
-                    vkCmdDraw (
-                        mVulkanRenderer.GetCommandBuffer(),
-                        ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                        aInstanceCount,
-                        aVertexStart,
-                        aFirstInstance );
-                }
-            }
+            vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
+                                      0,
+                                      static_cast<uint32_t> ( descriptor_sets.size() ),
+                                      descriptor_sets.data(), 0, nullptr );
         }
-        /* I think it may be a good idea to keep a global renderer to set these instead. */
-        else
         {
-            if ( !render_pipeline )
+            const VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &reinterpret_cast<const VulkanMesh*> ( &aMesh )->GetBuffer(), &offset );
+            if ( aMesh.GetIndexCount() )
             {
-                mVulkanRenderer.LoadRenderPipeline ( aPipeline );
+                vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
+                                       reinterpret_cast<const VulkanMesh*> ( &aMesh )->GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
+                                       GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMesh.GetIndexType() ) ) );
+                vkCmdDrawIndexed (
+                    mVulkanRenderer.GetCommandBuffer(),
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                    aInstanceCount,
+                    aVertexStart,
+                    0,
+                    aFirstInstance );
             }
-            if ( !render_mesh )
+            else
             {
-                mVulkanRenderer.LoadRenderMesh ( aMesh );
-            }
-            if ( !render_material )
-            {
-                mVulkanRenderer.LoadRenderMaterial ( *material );
+                vkCmdDraw (
+                    mVulkanRenderer.GetCommandBuffer(),
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                    aInstanceCount,
+                    aVertexStart,
+                    aFirstInstance );
             }
         }
     }

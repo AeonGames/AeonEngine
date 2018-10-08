@@ -55,12 +55,11 @@ namespace AeonGames
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-        void LoadRenderMesh ( const Mesh& aMesh ) const final;
-        void UnloadRenderMesh ( const Mesh& aMesh ) const final;
-        void LoadRenderPipeline ( const Pipeline& aPipeline ) const final;
-        void UnloadRenderPipeline ( const Pipeline& aPipeline ) const final;
-        void LoadRenderMaterial ( const Material& aMaterial ) const final;
-        void UnloadRenderMaterial ( const Material& aMaterial ) const final;
+
+        std::unique_ptr<Mesh> CreateMesh() const final;
+        std::unique_ptr<Pipeline> CreatePipeline() const final;
+        std::unique_ptr<Material> CreateMaterial() const final;
+        std::unique_ptr<Image> CreateImage() const final;
     private:
         void InitializeInstance();
         void InitializeDevice();

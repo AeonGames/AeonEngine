@@ -18,24 +18,23 @@ limitations under the License.
 
 #include <exception>
 #include <string>
-#include "aeongames/Memory.h"
+#include <memory>
 #include "aeongames/Mesh.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLMesh : public Mesh::IRenderMesh
+    class OpenGLMesh : public Mesh
     {
     public:
-        OpenGLMesh ( const Mesh& aMesh, const OpenGLRenderer& aOpenGLRenderer );
+        OpenGLMesh ( const OpenGLRenderer& aOpenGLRenderer );
         ~OpenGLMesh() final;
-        uint32_t GetArray() const;
-        uint32_t GetVertexBuffer() const;
-        uint32_t GetIndexBuffer() const;
+        uint32_t GetArrayId() const;
+        uint32_t GetVertexBufferId() const;
+        uint32_t GetIndexBufferId() const;
     private:
         void Initialize();
         void Finalize();
-        const Mesh& mMesh;
         const OpenGLRenderer& mOpenGLRenderer;
         uint32_t mArray{};
         uint32_t mVertexBuffer{};

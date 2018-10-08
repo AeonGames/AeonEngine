@@ -26,18 +26,16 @@ namespace AeonGames
 {
     class OpenGLRenderer;
     class OpenGLTexture;
-    class OpenGLMaterial : public Material::IRenderMaterial
+    class OpenGLMaterial : public Material
     {
     public:
         OpenGLMaterial ( const Material& aMaterial );
         ~OpenGLMaterial() final;
-        void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
         GLuint GetPropertiesBufferId() const;
         const Material& GetMaterial() const;
     private:
         void Initialize();
         void Finalize();
-        const Material& mMaterial;
         OpenGLBuffer mPropertiesBuffer{};
     };
 }

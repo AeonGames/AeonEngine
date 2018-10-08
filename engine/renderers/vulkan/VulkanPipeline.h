@@ -30,10 +30,10 @@ namespace AeonGames
     class VulkanWindow;
     class VulkanTexture;
     class VulkanRenderer;
-    class VulkanPipeline : public Pipeline::IRenderPipeline
+    class VulkanPipeline : public Pipeline
     {
     public:
-        VulkanPipeline ( const Pipeline& aPipeline, const VulkanRenderer& aVulkanRenderer );
+        VulkanPipeline ( const VulkanRenderer& aVulkanRenderer );
         ~VulkanPipeline() final;
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
@@ -42,7 +42,6 @@ namespace AeonGames
         void Finalize();
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
-        const Pipeline& mPipeline;
         const VulkanRenderer& mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };

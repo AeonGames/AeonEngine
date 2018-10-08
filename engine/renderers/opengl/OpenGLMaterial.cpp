@@ -37,7 +37,7 @@ limitations under the License.
 namespace AeonGames
 {
     OpenGLMaterial::OpenGLMaterial ( const Material& aMaterial ) :
-        mMaterial ( aMaterial ), mPropertiesBuffer{}
+        Material(), mPropertiesBuffer{}
     {
         try
         {
@@ -55,32 +55,14 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
-    {
-        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : mMaterial.GetPropertyBlock().size() - aOffset, aValue );
-    }
-
     GLuint OpenGLMaterial::GetPropertiesBufferId() const
     {
         return mPropertiesBuffer.GetBufferId();
     }
 
-    const Material& OpenGLMaterial::GetMaterial() const
-    {
-        return mMaterial;
-    }
-
     void OpenGLMaterial::Initialize()
     {
-        mPropertiesBuffer.Initialize ( static_cast<GLsizei> ( mMaterial.GetPropertyBlock().size() ), GL_DYNAMIC_DRAW, mMaterial.GetPropertyBlock().data() );
-        for ( auto& i : mMaterial.GetProperties() )
-        {
-            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
-            {
-                /// @todo See if it makes sense to use a resource cache for PD textures.
-                i.GetImage()->SetRenderImage ( std::make_unique<OpenGLTexture> ( *i.GetImage() ) );
-            }
-        }
+        mPropertiesBuffer.Initialize ( static_cast<GLsizei> ( GetPropertyBlock().size() ), GL_DYNAMIC_DRAW, GetPropertyBlock().data() );
     }
 
     void OpenGLMaterial::Finalize()

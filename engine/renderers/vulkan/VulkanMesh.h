@@ -19,23 +19,22 @@ limitations under the License.
 #include <exception>
 #include <string>
 #include <vulkan/vulkan.h>
-#include "aeongames/Memory.h"
+#include <memory>
 #include "aeongames/Mesh.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanMesh : public Mesh::IRenderMesh
+    class VulkanMesh : public Mesh
     {
     public:
-        VulkanMesh ( const Mesh& aMesh, const VulkanRenderer&  aVulkanRenderer );
+        VulkanMesh ( const VulkanRenderer&  aVulkanRenderer );
         ~VulkanMesh();
         const VkBuffer& GetBuffer() const;
     private:
         void Initialize();
         void Finalize();
-        const Mesh& mMesh;
         const VulkanRenderer& mVulkanRenderer;
         VulkanBuffer mBuffer;
     };

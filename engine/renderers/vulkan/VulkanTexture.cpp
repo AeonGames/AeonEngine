@@ -26,8 +26,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanTexture::VulkanTexture ( const Image& aImage, const VulkanRenderer&  aVulkanRenderer ) :
-        mVulkanRenderer (  aVulkanRenderer  ), mImage (  aImage ),
+    VulkanTexture::VulkanTexture ( const VulkanRenderer&  aVulkanRenderer ) :
+        Image(), mVulkanRenderer (  aVulkanRenderer  ),
         mVkImage ( VK_NULL_HANDLE ),
         mImageMemory ( VK_NULL_HANDLE )
     {
@@ -102,8 +102,8 @@ namespace AeonGames
         image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
         VkFormatProperties format_properties{};
         vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer.GetPhysicalDevice(), image_create_info.format, &format_properties );
-        image_create_info.extent.width = mImage.Width();
-        image_create_info.extent.height = mImage.Height();
+        image_create_info.extent.width = Width();
+        image_create_info.extent.height = Height();
         image_create_info.extent.depth = 1;
         image_create_info.mipLevels = 1;
         image_create_info.arrayLayers = 1;
@@ -145,9 +145,9 @@ namespace AeonGames
             stream << "Bind Image Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        Update();
     }
 
+#if 0
     void VulkanTexture::Update()
     {
         // -----------------------------
@@ -312,6 +312,7 @@ namespace AeonGames
         vkDestroyBuffer ( mVulkanRenderer.GetDevice(), image_buffer, nullptr );
         vkFreeMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory, nullptr );
     }
+#endif
 
     void VulkanTexture::FinalizeImage()
     {

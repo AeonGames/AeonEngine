@@ -27,12 +27,11 @@ namespace AeonGames
 {
     class VulkanRenderer;
     class VulkanTexture;
-    class VulkanMaterial : public Material::IRenderMaterial
+    class VulkanMaterial : public Material
     {
     public:
         VulkanMaterial ( const Material& aMaterial, const VulkanRenderer&  aVulkanRenderer );
         ~VulkanMaterial() final;
-        void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) final;
         const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
         const VkDescriptorSet GetPropertiesDescriptorSet() const;
         const Material& GetMaterial() const;
@@ -48,7 +47,6 @@ namespace AeonGames
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
-        const Material& mMaterial;
         VkDescriptorSetLayout mVkPropertiesDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorPool mVkPropertiesDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkPropertiesDescriptorSet{ VK_NULL_HANDLE };

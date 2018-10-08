@@ -19,20 +19,19 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "aeongames/Memory.h"
+#include <memory>
 #include "aeongames/Image.h"
 
 namespace AeonGames
 {
     class Image;
     class VulkanRenderer;
-    class VulkanTexture : public Image::IRenderImage
+    class VulkanTexture : public Image
     {
     public:
-        VulkanTexture ( const Image& aImage, const VulkanRenderer&  aVulkanRenderer );
-        ~VulkanTexture();
+        VulkanTexture ( const VulkanRenderer&  aVulkanRenderer );
+        ~VulkanTexture() final;
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
-        void Update() final;
     private:
         void Initialize();
         void Finalize();
@@ -41,7 +40,6 @@ namespace AeonGames
         void InitializeImageView();
         void FinalizeImageView();
         const VulkanRenderer& mVulkanRenderer;
-        const Image& mImage;
         VkImage mVkImage{};
         VkDeviceMemory mImageMemory{};
         VkDescriptorImageInfo mVkDescriptorImageInfo{};
