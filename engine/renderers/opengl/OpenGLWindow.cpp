@@ -139,49 +139,28 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const Material* material = ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial();
-        const OpenGLPipeline* render_pipeline = reinterpret_cast<const OpenGLPipeline*> ( aPipeline.GetRenderPipeline() );
-        const OpenGLMaterial* render_material = reinterpret_cast<const OpenGLMaterial*> ( material->GetRenderMaterial() );
-        const OpenGLMesh* render_mesh = reinterpret_cast<const OpenGLMesh*> ( aMesh.GetRenderMesh() );
-        if ( render_pipeline && render_mesh && render_material )
-        {
-            render_pipeline->Use ( *render_material );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            Matrix4x4 model_matrix = aModelTransform.GetMatrix();
-            glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, model_matrix.GetMatrix4x4() );
-            OPENGL_CHECK_ERROR_NO_THROW;
+        const OpenGLMaterial* material = reinterpret_cast<const OpenGLMaterial*> ( ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial() );
+        reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->Use ( *material );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        Matrix4x4 model_matrix = aModelTransform.GetMatrix();
+        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, model_matrix.GetMatrix4x4() );
+        OPENGL_CHECK_ERROR_NO_THROW;
 
-            /// @todo Add some sort of way to make use of the aFirstInstance parameter
-            glBindVertexArray ( render_mesh->GetArray() );
+        /// @todo Add some sort of way to make use of the aFirstInstance parameter
+        glBindVertexArray ( reinterpret_cast<const OpenGLMesh*> ( &aMesh )->GetArrayId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( aMesh.GetIndexCount() )
+        {
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<const OpenGLMesh*> ( &aMesh )->GetIndexBufferId() );
             OPENGL_CHECK_ERROR_NO_THROW;
-            if ( aMesh.GetIndexCount() )
-            {
-                glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, render_mesh->GetIndexBuffer() );
-                OPENGL_CHECK_ERROR_NO_THROW;
-                glDrawElementsInstanced ( render_pipeline->GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                          0x1400 | aMesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            else
-            {
-                glDrawArraysInstanced ( render_pipeline->GetTopology(), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
+            glDrawElementsInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetGLTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                      0x1400 | aMesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            if ( !render_pipeline )
-            {
-                aPipeline.SetRenderPipeline ( std::make_unique<OpenGLPipeline> ( aPipeline, mOpenGLRenderer ) );
-            }
-            if ( !render_mesh )
-            {
-                aMesh.SetRenderMesh ( std::make_unique<OpenGLMesh> ( aMesh, mOpenGLRenderer ) );
-            }
-            if ( !render_material )
-            {
-                material->SetRenderMaterial ( std::make_unique<OpenGLMaterial> ( *material ) );
-            }
+            glDrawArraysInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetGLTopology(), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
     }
 

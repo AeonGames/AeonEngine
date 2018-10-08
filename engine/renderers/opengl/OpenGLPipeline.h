@@ -25,17 +25,16 @@ namespace AeonGames
     class OpenGLMaterial;
     class OpenGLRenderer;
     class OpenGLTexture;
-    class OpenGLPipeline : public Pipeline::IRenderPipeline
+    class OpenGLPipeline : public Pipeline
     {
     public:
-        OpenGLPipeline ( const Pipeline& aPipeline, const OpenGLRenderer&  aOpenGLRenderer );
+        OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer );
         ~OpenGLPipeline() final;
         void Use ( const OpenGLMaterial& aMaterial ) const;
-        GLenum GetTopology() const;
+        GLenum GetGLTopology() const;
     private:
         void Initialize();
         void Finalize();
-        const Pipeline& mPipeline;
         const OpenGLRenderer& mOpenGLRenderer;
         uint32_t mProgramId{};
     };

@@ -66,16 +66,11 @@ namespace AeonGames
             Vector4Byte,
             Vector4ByteNormalized,
         };
-        class IRenderPipeline
-        {
-        public:
-            DLL virtual ~IRenderPipeline() = 0;
-        };
         DLL Pipeline();
         DLL Pipeline ( uint32_t aId );
         DLL Pipeline ( const std::string& aFilename );
         DLL Pipeline ( const void* aBuffer, size_t aBufferSize );
-        DLL ~Pipeline();
+        DLL virtual ~Pipeline();
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void Unload ();
@@ -89,8 +84,6 @@ namespace AeonGames
         DLL uint32_t GetOffset ( AttributeBits aAttributeBit ) const;
         DLL const Material& GetDefaultMaterial() const;
         DLL const Topology GetTopology() const;
-        DLL void SetRenderPipeline ( std::unique_ptr<IRenderPipeline> aRenderPipeline ) const;
-        DLL const IRenderPipeline* const GetRenderPipeline() const;
         DLL static const std::shared_ptr<Pipeline> GetPipeline ( uint32_t aId );
         DLL static const std::shared_ptr<Pipeline> GetPipeline ( const std::string& aPath );
     private:
@@ -100,7 +93,6 @@ namespace AeonGames
         std::string mVertexShader{};
         std::string mFragmentShader{};
         Material mDefaultMaterial{};
-        mutable std::unique_ptr<IRenderPipeline> mRenderPipeline{};
     };
 }
 #endif

@@ -43,12 +43,6 @@ namespace AeonGames
             SAMPLER_2D,
             SAMPLER_CUBE,
         };
-        class IRenderMaterial
-        {
-        public:
-            virtual void Update ( const uint8_t* aValue, size_t aOffset = 0, size_t aSize = 0 ) = 0;
-            virtual ~IRenderMaterial() = default;;
-        };
     private:
         class Property
         {
@@ -99,15 +93,13 @@ namespace AeonGames
         DLL Material ( const MaterialBuffer& aMaterialBuffer );
         DLL Material ( const Material& aMaterial );
         DLL Material& operator = ( const Material& aMaterial );
-        DLL ~Material();
+        DLL virtual ~Material();
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void Load ( const MaterialBuffer& aMaterialBuffer );
         DLL void Unload();
         DLL const std::vector<Property>& GetProperties() const;
         DLL const std::vector<uint8_t>& GetPropertyBlock() const;
-        DLL void SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const;
-        DLL const IRenderMaterial* const GetRenderMaterial() const;
         DLL size_t GetSamplerCount() const;
         ///@}
         ///@name Property Setters
@@ -124,7 +116,6 @@ namespace AeonGames
     private:
         std::vector<Property> mProperties{};
         std::vector<uint8_t> mPropertyBlock{};
-        mutable std::unique_ptr<IRenderMaterial> mRenderMaterial{};
     };
 }
 #endif

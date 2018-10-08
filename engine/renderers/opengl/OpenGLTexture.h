@@ -18,25 +18,23 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "aeongames/Memory.h"
+#include <memory>
 #include "aeongames/Image.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLTexture : public Image::IRenderImage
+    class OpenGLTexture : public Image
     {
     public:
-        OpenGLTexture ( const Image& aImage );
+        OpenGLTexture();
         ~OpenGLTexture() final;
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/
         const uint32_t GetTexture() const;
-        void Update () final;
     private:
         void Initialize();
         void Finalize();
-        const Image& mImage;
         uint32_t mTexture{};
     };
 }

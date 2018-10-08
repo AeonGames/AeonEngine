@@ -29,8 +29,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMesh::VulkanMesh ( const Mesh& aMesh, const VulkanRenderer&  aVulkanRenderer ) :
-        mMesh ( aMesh ), mVulkanRenderer ( aVulkanRenderer ), mBuffer ( mVulkanRenderer )
+    VulkanMesh::VulkanMesh ( const VulkanRenderer&  aVulkanRenderer ) :
+        Mesh(), mVulkanRenderer ( aVulkanRenderer ), mBuffer ( mVulkanRenderer )
     {
         try
         {
@@ -54,72 +54,72 @@ namespace AeonGames
 
     void VulkanMesh::Initialize()
     {
-        const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * mMesh.GetVertexCount() );
-        const VkDeviceSize index_buffer_size = ( mMesh.GetIndexBuffer().length() *
-                                               ( ( mMesh.GetIndexType() == Mesh::BYTE || mMesh.GetIndexType() == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
+        const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * GetVertexCount() );
+        const VkDeviceSize index_buffer_size = ( GetIndexBuffer().length() *
+                                               ( ( GetIndexType() == Mesh::BYTE || GetIndexType() == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
         VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
-        VkBufferUsageFlags buffer_usage = ( ( mMesh.GetVertexCount() ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( mMesh.GetIndexCount() ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
+        VkBufferUsageFlags buffer_usage = ( ( GetVertexCount() ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( GetIndexCount() ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
         mBuffer.Initialize ( buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
         std::vector<uint8_t> buffer ( buffer_size );
-        if ( mMesh.GetVertexCount() )
+        if ( GetVertexCount() )
         {
             auto* vertices = reinterpret_cast<Vertex*> ( buffer.data() );
             memset ( vertices, 0, vertex_buffer_size );
             uintptr_t offset = 0;
-            for ( uint32_t j = 0; j < mMesh.GetVertexCount(); ++j )
+            for ( uint32_t j = 0; j < GetVertexCount(); ++j )
             {
-                if ( mMesh.GetVertexFlags() & Mesh::POSITION_BIT )
+                if ( GetVertexFlags() & Mesh::POSITION_BIT )
                 {
-                    memcpy ( vertices[j].position, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::position ) );
+                    memcpy ( vertices[j].position, GetVertexBuffer().data() + offset, sizeof ( Vertex::position ) );
                     offset += sizeof ( Vertex::position );
                 }
 
-                if ( mMesh.GetVertexFlags() & Mesh::NORMAL_BIT )
+                if ( GetVertexFlags() & Mesh::NORMAL_BIT )
                 {
-                    memcpy ( vertices[j].normal, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::normal ) );
+                    memcpy ( vertices[j].normal, GetVertexBuffer().data() + offset, sizeof ( Vertex::normal ) );
                     offset += sizeof ( Vertex::normal );
                 }
 
-                if ( mMesh.GetVertexFlags() & Mesh::TANGENT_BIT )
+                if ( GetVertexFlags() & Mesh::TANGENT_BIT )
                 {
-                    memcpy ( vertices[j].tangent, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::tangent ) );
+                    memcpy ( vertices[j].tangent, GetVertexBuffer().data() + offset, sizeof ( Vertex::tangent ) );
                     offset += sizeof ( Vertex::tangent );
                 }
 
-                if ( mMesh.GetVertexFlags() & Mesh::BITANGENT_BIT )
+                if ( GetVertexFlags() & Mesh::BITANGENT_BIT )
                 {
-                    memcpy ( vertices[j].bitangent, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::bitangent ) );
+                    memcpy ( vertices[j].bitangent, GetVertexBuffer().data() + offset, sizeof ( Vertex::bitangent ) );
                     offset += sizeof ( Vertex::bitangent );
                 }
 
-                if ( mMesh.GetVertexFlags() & Mesh::UV_BIT )
+                if ( GetVertexFlags() & Mesh::UV_BIT )
                 {
-                    memcpy ( vertices[j].uv, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::uv ) );
+                    memcpy ( vertices[j].uv, GetVertexBuffer().data() + offset, sizeof ( Vertex::uv ) );
                     offset += sizeof ( Vertex::uv );
                 }
 
-                if ( mMesh.GetVertexFlags() & Mesh::WEIGHT_BIT )
+                if ( GetVertexFlags() & Mesh::WEIGHT_BIT )
                 {
-                    memcpy ( vertices[j].weight_indices, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
+                    memcpy ( vertices[j].weight_indices, GetVertexBuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
                     offset += sizeof ( Vertex::weight_indices );
-                    memcpy ( vertices[j].weight_influences, mMesh.GetVertexBuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
+                    memcpy ( vertices[j].weight_influences, GetVertexBuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
                     offset += sizeof ( Vertex::weight_influences );
                 }
             }
         }
-        if ( mMesh.GetIndexCount() )
+        if ( GetIndexCount() )
         {
             void* data = buffer.data() + vertex_buffer_size;
-            if ( ! ( mMesh.GetIndexType() == Mesh::BYTE || mMesh.GetIndexType() == Mesh::UNSIGNED_BYTE ) )
+            if ( ! ( GetIndexType() == Mesh::BYTE || GetIndexType() == Mesh::UNSIGNED_BYTE ) )
             {
-                memcpy ( data, mMesh.GetIndexBuffer().data(), mMesh.GetIndexBuffer().size() );
+                memcpy ( data, GetIndexBuffer().data(), GetIndexBuffer().size() );
             }
             else
             {
                 /**@note upcast 16 bit indices.*/
-                for ( size_t j = 0; j < mMesh.GetIndexBuffer().size(); ++j )
+                for ( size_t j = 0; j < GetIndexBuffer().size(); ++j )
                 {
-                    reinterpret_cast<uint16_t*> ( data ) [j] = mMesh.GetIndexBuffer() [j];
+                    reinterpret_cast<uint16_t*> ( data ) [j] = GetIndexBuffer() [j];
                 }
             }
         }

@@ -32,8 +32,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const Pipeline& aPipeline, const VulkanRenderer& aVulkanRenderer ) :
-        mPipeline ( aPipeline  ),
+    VulkanPipeline::VulkanPipeline ( const VulkanRenderer& aVulkanRenderer ) :
+        Pipeline(),
         mVulkanRenderer ( aVulkanRenderer )
     {
         try
@@ -64,7 +64,7 @@ namespace AeonGames
 #if 0
     void VulkanPipeline::InitializeSkeletonUniform()
     {
-        if ( mPipeline.GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
+        if ( GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
         {
             mSkeletonBuffer.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
             auto* joint_array = static_cast<float*> ( mSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
@@ -91,7 +91,7 @@ namespace AeonGames
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 2 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
+        descriptor_set_layout_bindings.reserve ( 2 + GetDefaultMaterial().GetSamplerCount() );
         uint32_t binding = 0;
         // Properties binding
         if ( mPropertiesBuffer.GetSize() )
@@ -105,7 +105,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
         // Sampler bindings
-        for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
+        for ( auto& i : GetDefaultMaterial().GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
             {
@@ -170,13 +170,13 @@ namespace AeonGames
         {
             {
                 VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
-                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, mPipeline.GetDefaultMaterial().GetPropertyBlock().size() },
+                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, GetDefaultMaterial().GetPropertyBlock().size() },
                 VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
             }
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( 3 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
+        write_descriptor_sets.reserve ( 3 + GetDefaultMaterial().GetSamplerCount() );
         // Matrices
         write_descriptor_sets.emplace_back();
         write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -189,7 +189,7 @@ namespace AeonGames
         write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
         write_descriptor_sets.back().pImageInfo = nullptr;
         write_descriptor_sets.back().pTexelBufferView = nullptr;
-        if ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() )
+        if ( GetDefaultMaterial().GetPropertyBlock().size() )
         {
             write_descriptor_sets.emplace_back();
             write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -217,7 +217,7 @@ namespace AeonGames
             write_descriptor_sets.back().pImageInfo = nullptr;
             write_descriptor_sets.back().pTexelBufferView = nullptr;
         }
-        for ( uint32_t i = 0; i < mPipeline.GetDefaultMaterial().GetSamplerCount(); ++i )
+        for ( uint32_t i = 0; i < GetDefaultMaterial().GetSamplerCount(); ++i )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
@@ -242,13 +242,13 @@ namespace AeonGames
     void VulkanPipeline::Initialize()
     {
         CompilerLinker compiler_linker;
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, mPipeline.GetVertexShaderSource().c_str() );
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, mPipeline.GetFragmentShaderSource().c_str() );
+        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, GetVertexShaderSource().c_str() );
+        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, GetFragmentShaderSource().c_str() );
         if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
         {
             std::ostringstream stream;
-            stream << mPipeline.GetVertexShaderSource() << std::endl;
-            stream << mPipeline.GetFragmentShaderSource() << std::endl;
+            stream << GetVertexShaderSource() << std::endl;
+            stream << GetFragmentShaderSource() << std::endl;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
                    " Error:" << std::endl << compiler_linker.GetLog();
             throw std::runtime_error ( stream.str().c_str() );
@@ -300,15 +300,15 @@ namespace AeonGames
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        uint32_t attributes = mPipeline.GetAttributes();
+        uint32_t attributes = GetAttributes();
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
         for ( auto& i : vertex_input_attribute_descriptions )
         {
             uint32_t attribute_bit = ( 1 << ffs ( attributes ) );
-            i.location = mPipeline.GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
+            i.location = GetLocation ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             i.binding = 0;
-            i.format = GetVulkanFormat ( mPipeline.GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
-            i.offset = mPipeline.GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
+            i.format = GetVulkanFormat ( GetFormat ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) ) );
+            i.offset = GetOffset ( static_cast<Pipeline::AttributeBits> ( attribute_bit ) );
             attributes ^= attribute_bit;
         }
 
@@ -326,7 +326,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
 
-        switch ( mPipeline.GetTopology() )
+        switch ( GetTopology() )
         {
         case Pipeline::Topology::POINT_LIST:
             pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
@@ -531,16 +531,16 @@ namespace AeonGames
     }
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
-        if ( !mPipeline.GetDefaultMaterial().GetProperties().size() )
+        if ( !GetDefaultMaterial().GetProperties().size() )
         {
             // We don' need a layout.
             return;
         }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 1 + mPipeline.GetDefaultMaterial().GetSamplerCount() );
+        descriptor_set_layout_bindings.reserve ( 1 + GetDefaultMaterial().GetSamplerCount() );
         uint32_t binding = 0;
 
-        if ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() )
+        if ( GetDefaultMaterial().GetPropertyBlock().size() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = binding++;
@@ -551,7 +551,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
 
-        for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
+        for ( auto& i : GetDefaultMaterial().GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
             {

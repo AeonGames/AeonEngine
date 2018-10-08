@@ -32,6 +32,7 @@ limitations under the License.
 #include "VulkanMesh.h"
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
+#include "VulkanTexture.h"
 #include "VulkanUtilities.h"
 
 namespace AeonGames
@@ -598,36 +599,22 @@ namespace AeonGames
         return std::make_unique<VulkanWindow> ( aWindowId, *this );
     }
 
-    void VulkanRenderer::LoadRenderMesh ( const Mesh & aMesh ) const
+    std::unique_ptr<Mesh> VulkanRenderer::CreateMesh() const
     {
-        aMesh.SetRenderMesh ( std::make_unique<VulkanMesh> ( aMesh, *this ) );
+        return nullptr;
     }
-
-    void VulkanRenderer::UnloadRenderMesh ( const Mesh & aMesh ) const
+    std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline() const
     {
-        aMesh.SetRenderMesh ( nullptr );
+        return nullptr;
     }
-
-    void VulkanRenderer::LoadRenderPipeline ( const Pipeline & aPipeline ) const
+    std::unique_ptr<Material> VulkanRenderer::CreateMaterial() const
     {
-        aPipeline.SetRenderPipeline ( std::make_unique<VulkanPipeline> ( aPipeline, *this ) );
+        return nullptr;
     }
-
-    void VulkanRenderer::UnloadRenderPipeline ( const Pipeline & aPipeline ) const
+    std::unique_ptr<Image> VulkanRenderer::CreateImage() const
     {
-        aPipeline.SetRenderPipeline ( nullptr );
+        return nullptr;
     }
-
-    void VulkanRenderer::LoadRenderMaterial ( const Material & aMaterial ) const
-    {
-        aMaterial.SetRenderMaterial ( std::make_unique<VulkanMaterial> ( aMaterial, *this ) );
-    }
-
-    void VulkanRenderer::UnloadRenderMaterial ( const Material & aMaterial ) const
-    {
-        aMaterial.SetRenderMaterial ( nullptr );
-    }
-
     const VkDescriptorSetLayout& VulkanRenderer::GetMatrixDescriptorSetLayout() const
     {
         return mVkMatrixDescriptorSetLayout;

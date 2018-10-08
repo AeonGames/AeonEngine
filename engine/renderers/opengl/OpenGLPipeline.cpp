@@ -26,8 +26,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLPipeline::OpenGLPipeline ( const Pipeline& aPipeline, const OpenGLRenderer&  aOpenGLRenderer ) :
-        mPipeline ( aPipeline ),
+    OpenGLPipeline::OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer ) :
+        Pipeline(),
         mOpenGLRenderer ( aOpenGLRenderer )
     {
         try
@@ -57,7 +57,7 @@ namespace AeonGames
             {
                 glActiveTexture ( GL_TEXTURE0 + index++ );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLTexture*> ( i.GetImage()->GetRenderImage() )->GetTexture() );
+                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLTexture*> ( i.GetImage() )->GetTexture() );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
         }
@@ -68,9 +68,9 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    GLenum OpenGLPipeline::GetTopology() const
+    GLenum OpenGLPipeline::GetGLTopology() const
     {
-        switch ( mPipeline.GetTopology() )
+        switch ( GetTopology() )
         {
         case Pipeline::Topology::POINT_LIST:
             return GL_POINTS;
@@ -113,8 +113,8 @@ namespace AeonGames
         uint32_t vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const auto* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline.GetVertexShaderSource().c_str() );
-        auto vertex_shader_len = static_cast<GLint> ( mPipeline.GetVertexShaderSource().length() );
+        const auto* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( GetVertexShaderSource().c_str() );
+        auto vertex_shader_len = static_cast<GLint> ( GetVertexShaderSource().length() );
 
         glShaderSource (
             vertex_shader,
@@ -138,7 +138,7 @@ namespace AeonGames
             {
                 glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
                 OPENGL_CHECK_ERROR_THROW;
-                std::cout << mPipeline.GetVertexShaderSource() << std::endl;
+                std::cout << GetVertexShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
                 throw std::runtime_error ( log_string.c_str() );
             }
@@ -151,8 +151,8 @@ namespace AeonGames
         uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const auto* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( mPipeline.GetFragmentShaderSource().c_str() );
-        auto fragment_shader_len = static_cast<GLint> ( mPipeline.GetFragmentShaderSource().length() );
+        const auto* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( GetFragmentShaderSource().c_str() );
+        auto fragment_shader_len = static_cast<GLint> ( GetFragmentShaderSource().length() );
 
         glShaderSource ( fragment_shader, 1, &fragment_shader_source_ptr, &fragment_shader_len );
         OPENGL_CHECK_ERROR_THROW;
@@ -170,7 +170,7 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << mPipeline.GetFragmentShaderSource() << std::endl;
+                std::cout << GetFragmentShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
@@ -193,8 +193,8 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetProgramInfoLog ( mProgramId, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << mPipeline.GetVertexShaderSource() << std::endl;
-                std::cout << mPipeline.GetFragmentShaderSource() << std::endl;
+                std::cout << GetVertexShaderSource() << std::endl;
+                std::cout << GetFragmentShaderSource() << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
@@ -212,11 +212,11 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         // Properties
-        if ( mPipeline.GetDefaultMaterial().GetPropertyBlock().size() )
+        if ( GetDefaultMaterial().GetPropertyBlock().size() )
         {
 #if 1
             GLuint uniform = 0;
-            for ( auto& i : mPipeline.GetDefaultMaterial().GetProperties() )
+            for ( auto& i : GetDefaultMaterial().GetProperties() )
             {
                 if ( i.GetType() == Material::SAMPLER_2D )
                 {
@@ -228,7 +228,7 @@ namespace AeonGames
 #else
             // Keeping this code for reference
             GLuint uniform = 0;
-            for ( auto& i : mPipeline.GetDefaultMaterial().GetPropertyMetaData() )
+            for ( auto& i : GetDefaultMaterial().GetPropertyMetaData() )
             {
                 if ( i.GetType() == Property::SAMPLER_2D )
                 {

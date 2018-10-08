@@ -89,8 +89,6 @@ namespace AeonGames
 
     Mesh::~Mesh() = default;
 
-    DLL Mesh::IRenderMesh::~IRenderMesh() = default;
-
     const std::shared_ptr<Mesh> Mesh::GetMesh ( uint32_t aId )
     {
         return ResourceCache<uint32_t, Mesh>::Get ( aId, aId );
@@ -167,16 +165,6 @@ namespace AeonGames
                     mIndexCount = 0;
         mVertexBuffer.clear();
         mIndexBuffer.clear();
-    }
-
-    void Mesh::SetRenderMesh ( std::unique_ptr<IRenderMesh> aRenderMesh ) const
-    {
-        mRenderMesh = std::move ( aRenderMesh );
-    }
-
-    const Mesh::IRenderMesh* const Mesh::GetRenderMesh() const
-    {
-        return mRenderMesh.get();
     }
 
     uint32_t Mesh::GetStride () const

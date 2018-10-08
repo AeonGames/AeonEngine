@@ -98,8 +98,7 @@ namespace AeonGames
 
     Material::Material ( const Material& aMaterial ) :
         mProperties ( aMaterial.mProperties ),
-        mPropertyBlock ( aMaterial.mPropertyBlock ),
-        mRenderMaterial{}
+        mPropertyBlock ( aMaterial.mPropertyBlock )
     {
         for ( auto&i : mProperties )
         {
@@ -117,7 +116,6 @@ namespace AeonGames
                 i.mMaterial = this;
             }
             mPropertyBlock = aMaterial.mPropertyBlock;
-            mRenderMaterial.reset();
         }
         return *this;
     }
@@ -231,16 +229,6 @@ namespace AeonGames
     const std::vector<uint8_t>& Material::GetPropertyBlock() const
     {
         return mPropertyBlock;
-    }
-
-    void Material::SetRenderMaterial ( std::unique_ptr<IRenderMaterial> aRenderMaterial ) const
-    {
-        mRenderMaterial = std::move ( aRenderMaterial );
-    }
-
-    const Material::IRenderMaterial* const Material::GetRenderMaterial() const
-    {
-        return mRenderMaterial.get();
     }
 
     Material::Property::Property ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer ) :
@@ -395,10 +383,6 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), &aValue, sizeof ( uint32_t ) );
-        if ( mMaterial->mRenderMaterial )
-        {
-            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( uint32_t ) );
-        }
     }
     void Material::Set ( const std::string& aName, int32_t aValue )
     {
@@ -419,10 +403,6 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), &aValue, sizeof ( int32_t ) );
-        if ( mMaterial->mRenderMaterial )
-        {
-            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( int32_t ) );
-        }
     }
     void Material::Set ( const std::string& aName, float aValue )
     {
@@ -443,10 +423,6 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), &aValue, sizeof ( float ) );
-        if ( mMaterial->mRenderMaterial )
-        {
-            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) );
-        }
     }
     void Material::Set ( const std::string& aName, const Vector2& aValue )
     {
@@ -467,10 +443,6 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), aValue.GetVector(), sizeof ( float ) * 2 );
-        if ( mMaterial->mRenderMaterial )
-        {
-            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 2 );
-        }
     }
     void Material::Set ( const std::string& aName, const Vector3& aValue )
     {
@@ -491,10 +463,6 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), aValue.GetVector3(), sizeof ( float ) * 3 );
-        if ( mMaterial->mRenderMaterial )
-        {
-            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 3 );
-        }
     }
     void Material::Set ( const std::string& aName, const Vector4& aValue )
     {
@@ -515,10 +483,6 @@ namespace AeonGames
             throw std::runtime_error ( "Invalid Type." );
         }
         memcpy ( ( mMaterial->mPropertyBlock.data() + mOffset ), aValue.GetVector4(), sizeof ( float ) * 4 );
-        if ( mMaterial->mRenderMaterial )
-        {
-            mMaterial->mRenderMaterial->Update ( ( mMaterial->mPropertyBlock.data() + mOffset ), mOffset, sizeof ( float ) * 4 );
-        }
     }
 
     const Image* Material::Property::GetImage() const

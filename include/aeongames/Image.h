@@ -40,17 +40,10 @@ namespace AeonGames
             UNSIGNED_BYTE,
             UNSIGNED_SHORT
         };
-        class IRenderImage
-        {
-        public:
-            DLL virtual ~IRenderImage() = 0;
-            /** Trigger a full image update from the Image data. */
-            virtual void Update () = 0;
-        };
         DLL Image();
         DLL Image ( uint32_t aId );
         DLL Image ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr );
-        DLL ~Image();
+        DLL virtual ~Image();
         DLL void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr );
         DLL void Finalize();
         DLL uint32_t Width() const;
@@ -61,11 +54,8 @@ namespace AeonGames
         DLL const size_t PixelsSize() const;
         DLL void* Map();
         DLL void Unmap();
-        DLL void SetRenderImage ( std::unique_ptr<IRenderImage> aRenderImage ) const;
-        DLL const IRenderImage* GetRenderImage() const;
         DLL static const std::shared_ptr<Image> GetImage ( uint32_t aId );
     private:
-        mutable std::unique_ptr<IRenderImage>mRenderImage{};
         bool mMapped{false};
         uint32_t mWidth{};
         uint32_t mHeight{};
