@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 #include "OpenGLFunctions.h"
-#include "OpenGLTexture.h"
+#include "OpenGLImage.h"
 
 #include <utility>
 #include "aeongames/Image.h"
@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLTexture::OpenGLTexture() :
+    OpenGLImage::OpenGLImage() :
         Image()
     {
         try
@@ -37,12 +37,12 @@ namespace AeonGames
         }
     }
 
-    OpenGLTexture::~OpenGLTexture()
+    OpenGLImage::~OpenGLImage()
     {
         Finalize();
     }
 
-    void OpenGLTexture::Initialize()
+    void OpenGLImage::Initialize()
     {
         glGenTextures ( 1, &mTexture );
         OPENGL_CHECK_ERROR_THROW;
@@ -66,7 +66,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLTexture::Finalize()
+    void OpenGLImage::Finalize()
     {
         if ( glIsTexture ( mTexture ) == GL_TRUE )
         {
@@ -77,24 +77,24 @@ namespace AeonGames
         mTexture = 0;
     }
 #if 0
-    void OpenGLTexture::Update()
+    void OpenGLImage::Update()
     {
-        if ( glIsTexture ( mTexture ) == GL_FALSE )
+        if ( glIsImage ( mTexture ) == GL_FALSE )
         {
             return;
         }
-        glTextureSubImage2D ( mTexture,
-                              0,
-                              ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                              Width(),
-                              Height(),
-                              0,
-                              ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                              ( Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-                              Pixels() );
+        glImageSubImage2D ( mTexture,
+                            0,
+                            ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                            Width(),
+                            Height(),
+                            0,
+                            ( Format() == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                            ( Type() == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                            Pixels() );
     }
 #endif
-    const uint32_t OpenGLTexture::GetTexture() const
+    const uint32_t OpenGLImage::GetTextureId() const
     {
         return mTexture;
     }

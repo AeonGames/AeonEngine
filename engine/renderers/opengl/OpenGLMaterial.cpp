@@ -32,7 +32,7 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLMaterial.h"
-#include "OpenGLTexture.h"
+#include "OpenGLImage.h"
 
 namespace AeonGames
 {

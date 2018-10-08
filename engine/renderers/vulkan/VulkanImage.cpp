@@ -18,7 +18,7 @@ limitations under the License.
 #include <limits>
 #include <cstring>
 #include <utility>
-#include "VulkanTexture.h"
+#include "VulkanImage.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include "aeongames/Image.h"
@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanTexture::VulkanTexture ( const VulkanRenderer&  aVulkanRenderer ) :
+    VulkanImage::VulkanImage ( const VulkanRenderer&  aVulkanRenderer ) :
         Image(), mVulkanRenderer (  aVulkanRenderer  ),
         mVkImage ( VK_NULL_HANDLE ),
         mImageMemory ( VK_NULL_HANDLE )
@@ -45,12 +45,12 @@ namespace AeonGames
         }
     }
 
-    VulkanTexture::~VulkanTexture()
+    VulkanImage::~VulkanImage()
     {
         Finalize();
     }
 
-    void VulkanTexture::Initialize()
+    void VulkanImage::Initialize()
     {
         InitializeImage();
         InitializeImageView();
@@ -81,7 +81,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanTexture::Finalize()
+    void VulkanImage::Finalize()
     {
         if ( mVkDescriptorImageInfo.sampler != VK_NULL_HANDLE )
         {
@@ -92,7 +92,7 @@ namespace AeonGames
         FinalizeImage();
     }
 
-    void VulkanTexture::InitializeImage()
+    void VulkanImage::InitializeImage()
     {
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -148,7 +148,7 @@ namespace AeonGames
     }
 
 #if 0
-    void VulkanTexture::Update()
+    void VulkanImage::Update()
     {
         // -----------------------------
         // Write Memory
@@ -314,7 +314,7 @@ namespace AeonGames
     }
 #endif
 
-    void VulkanTexture::FinalizeImage()
+    void VulkanImage::FinalizeImage()
     {
         if ( mVkImage != VK_NULL_HANDLE )
         {
@@ -328,7 +328,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanTexture::InitializeImageView()
+    void VulkanImage::InitializeImageView()
     {
         VkImageViewCreateInfo image_view_create_info = {};
         image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -348,7 +348,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanTexture::FinalizeImageView()
+    void VulkanImage::FinalizeImageView()
     {
         if ( mVkDescriptorImageInfo.imageView != VK_NULL_HANDLE )
         {
@@ -357,7 +357,7 @@ namespace AeonGames
         }
     }
 
-    const VkDescriptorImageInfo& VulkanTexture::GetDescriptorImageInfo() const
+    const VkDescriptorImageInfo& VulkanImage::GetDescriptorImageInfo() const
     {
         return mVkDescriptorImageInfo;
     }

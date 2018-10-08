@@ -32,7 +32,7 @@ limitations under the License.
 #include "VulkanMesh.h"
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
-#include "VulkanTexture.h"
+#include "VulkanImage.h"
 #include "VulkanUtilities.h"
 
 namespace AeonGames

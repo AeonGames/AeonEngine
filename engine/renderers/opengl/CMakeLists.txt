@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,8 +46,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLPipeline.h
     OpenGLBuffer.h
     OpenGLMaterial.h
-    OpenGLTexture.h
-    #OpenGLModel.h
+    OpenGLImage.h
     OpenGLSkeleton.h
     OpenGLMesh.h)
 
@@ -63,8 +62,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLBuffer.cpp
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
-    OpenGLTexture.cpp
-    #OpenGLModel.cpp
+    OpenGLImage.cpp
     OpenGLSkeleton.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp

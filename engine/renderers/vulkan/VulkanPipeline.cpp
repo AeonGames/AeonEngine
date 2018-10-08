@@ -23,7 +23,7 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
 #include "VulkanPipeline.h"
-#include "VulkanTexture.h"
+#include "VulkanImage.h"
 #include "VulkanRenderer.h"
 #include "VulkanMaterial.h"
 #include "VulkanUtilities.h"
