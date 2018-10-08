@@ -21,7 +21,7 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
-#include "OpenGLTexture.h"
+#include "OpenGLImage.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
@@ -51,13 +51,13 @@ namespace AeonGames
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
         GLenum index{0};
-        for ( auto& i : aMaterial.GetMaterial().GetProperties() )
+        for ( auto& i : aMaterial.GetProperties() )
         {
             if ( i.GetType() == Material::Material::PropertyType::SAMPLER_2D )
             {
                 glActiveTexture ( GL_TEXTURE0 + index++ );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLTexture*> ( i.GetImage() )->GetTexture() );
+                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLImage*> ( i.GetImage() )->GetTextureId() );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
         }

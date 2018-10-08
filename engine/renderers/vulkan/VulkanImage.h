@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,29 +13,36 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLTEXTURE_H
-#define AEONGAMES_OPENGLTEXTURE_H
+#ifndef AEONGAMES_VULKANTEXTURE_H
+#define AEONGAMES_VULKANTEXTURE_H
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 #include <memory>
 #include "aeongames/Image.h"
 
 namespace AeonGames
 {
-    class OpenGLRenderer;
-    class OpenGLTexture : public Image
+    class Image;
+    class VulkanRenderer;
+    class VulkanImage : public Image
     {
     public:
-        OpenGLTexture();
-        ~OpenGLTexture() final;
-        /**@todo Determine if we want to keep the texture id exposed like this.
-            Maybe all we need is a Bind function.*/
-        const uint32_t GetTexture() const;
+        VulkanImage ( const VulkanRenderer&  aVulkanRenderer );
+        ~VulkanImage() final;
+        const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
         void Initialize();
         void Finalize();
-        uint32_t mTexture{};
+        void InitializeImage();
+        void FinalizeImage();
+        void InitializeImageView();
+        void FinalizeImageView();
+        const VulkanRenderer& mVulkanRenderer;
+        VkImage mVkImage{};
+        VkDeviceMemory mImageMemory{};
+        VkDescriptorImageInfo mVkDescriptorImageInfo{};
     };
 }
 #endif

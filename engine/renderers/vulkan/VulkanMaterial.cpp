@@ -32,7 +32,7 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "aeongames/ResourceCache.h"
 #include "VulkanMaterial.h"
-#include "VulkanTexture.h"
+#include "VulkanImage.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 
@@ -265,7 +265,7 @@ namespace AeonGames
                 write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write_descriptor_set.descriptorCount = 1;
                 write_descriptor_set.pBufferInfo = nullptr;
-                write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( i.GetImage() )->GetDescriptorImageInfo();
+                write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( i.GetImage() )->GetDescriptorImageInfo();
             }
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );

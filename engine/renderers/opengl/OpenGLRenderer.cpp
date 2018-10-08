@@ -18,7 +18,7 @@ limitations under the License.
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
-#include "OpenGLTexture.h"
+#include "OpenGLImage.h"
 
 namespace AeonGames
 {

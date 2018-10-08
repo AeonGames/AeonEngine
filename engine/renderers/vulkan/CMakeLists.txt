@@ -28,11 +28,10 @@ set(VULKAN_RENDERER_HEADERS
     VulkanUtilities.h
     VulkanRenderer.h
     VulkanWindow.h
-    #VulkanModel.h
     VulkanMesh.h
     VulkanPipeline.h
     VulkanMaterial.h
-    VulkanTexture.h
+    VulkanImage.h
     VulkanSkeleton.h
     VulkanBuffer.h
     VulkanStackBuffer.h
@@ -43,11 +42,10 @@ set(VULKAN_RENDERER_SOURCES
     VulkanUtilities.cpp
     VulkanRenderer.cpp
     VulkanWindow.cpp
-    #VulkanModel.cpp
     VulkanMesh.cpp
     VulkanPipeline.cpp
     VulkanMaterial.cpp
-    VulkanTexture.cpp
+    VulkanImage.cpp
     VulkanSkeleton.cpp
     VulkanBuffer.cpp
     VulkanStackBuffer.cpp
