@@ -29,7 +29,7 @@ namespace AeonGames
     class OpenGLMaterial : public Material
     {
     public:
-        OpenGLMaterial ( const Material& aMaterial );
+        OpenGLMaterial();
         ~OpenGLMaterial() final;
         GLuint GetPropertiesBufferId() const;
         const Material& GetMaterial() const;

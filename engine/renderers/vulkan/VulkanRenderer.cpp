@@ -601,19 +601,19 @@ namespace AeonGames
 
     std::unique_ptr<Mesh> VulkanRenderer::CreateMesh() const
     {
-        return nullptr;
+        return std::make_unique<VulkanMesh> ( *this );
     }
     std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline() const
     {
-        return nullptr;
+        return std::make_unique<VulkanPipeline> ( *this );
     }
     std::unique_ptr<Material> VulkanRenderer::CreateMaterial() const
     {
-        return nullptr;
+        return std::make_unique<VulkanMaterial> ( *this );
     }
     std::unique_ptr<Image> VulkanRenderer::CreateImage() const
     {
-        return nullptr;
+        return std::make_unique<VulkanImage> ( *this );
     }
     const VkDescriptorSetLayout& VulkanRenderer::GetMatrixDescriptorSetLayout() const
     {
