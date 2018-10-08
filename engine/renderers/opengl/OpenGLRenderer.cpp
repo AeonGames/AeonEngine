@@ -47,19 +47,19 @@ namespace AeonGames
 
     std::unique_ptr<Mesh> OpenGLRenderer::CreateMesh() const
     {
-        return nullptr;
+        return std::make_unique<OpenGLMesh> ( *this );
     }
     std::unique_ptr<Pipeline> OpenGLRenderer::CreatePipeline() const
     {
-        return nullptr;
+        return std::make_unique<OpenGLPipeline> ( *this );
     }
     std::unique_ptr<Material> OpenGLRenderer::CreateMaterial() const
     {
-        return nullptr;
+        return std::make_unique<OpenGLMaterial>();
     }
     std::unique_ptr<Image> OpenGLRenderer::CreateImage() const
     {
-        return nullptr;
+        return std::make_unique<OpenGLImage>();
     }
 
     void* OpenGLRenderer::GetOpenGLContext() const

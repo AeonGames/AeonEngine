@@ -38,7 +38,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const Material& aMaterial, const VulkanRenderer&  aVulkanRenderer ) :
+    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer ) :
         Material(), mVulkanRenderer ( aVulkanRenderer ),
         mPropertiesBuffer ( mVulkanRenderer )
     {

@@ -30,7 +30,7 @@ namespace AeonGames
     class VulkanMaterial : public Material
     {
     public:
-        VulkanMaterial ( const Material& aMaterial, const VulkanRenderer&  aVulkanRenderer );
+        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer );
         ~VulkanMaterial() final;
         const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
         const VkDescriptorSet GetPropertiesDescriptorSet() const;

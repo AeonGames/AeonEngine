@@ -36,7 +36,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial ( const Material& aMaterial ) :
+    OpenGLMaterial::OpenGLMaterial() :
         Material(), mPropertiesBuffer{}
     {
         try
