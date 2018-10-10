@@ -277,6 +277,7 @@ namespace AeonGames
             reinterpret_cast<float*> ( mMaterial->mPropertyBlock.data() + mOffset ) [3] = aPropertyBuffer.vector4().w();
             break;
         case PropertyBuffer::DefaultValueCase::kTexture:
+#if 0
             new ( &mImage ) std::unique_ptr<Image> ( std::make_unique<Image>() );
             try
             {
@@ -288,6 +289,7 @@ namespace AeonGames
                 stream << e.what() << " Unable to load image " << aPropertyBuffer.texture().path();
                 throw std::runtime_error ( stream.str().c_str() );
             }
+#endif
             break;
         default:
             throw std::runtime_error ( "Unknown Type." );
@@ -500,7 +502,8 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Invalid Type." );
         }
-        mImage = std::make_unique<Image>();
+        // TODO: Get Image from renderer
+        //mImage = std::make_unique<Image>();
         try
         {
             DecodeImage ( *mImage, aFileName );
