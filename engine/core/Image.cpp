@@ -17,6 +17,7 @@ limitations under the License.
 #include "aeongames/Image.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/CRC.h"
 #include "Decoder.h"
 #include <unordered_map>
 #include <utility>
@@ -24,19 +25,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    enum class ImageFormat : uint32_t
-    {
-        Unknown,
-        RGB,
-        RGBA
-    };
-    enum class ImageType : uint32_t
-    {
-        Unknown,
-        UNSIGNED_BYTE,
-        UNSIGNED_SHORT
-    };
-
+    Image::~Image() = default;
+#if 0
     static constexpr size_t GetPixelSize ( Image::ImageFormat aFormat, Image::ImageType aType )
     {
         return ( aFormat == Image::ImageFormat::Unknown || aType == Image::ImageType::Unknown ) ? 0 :
@@ -45,25 +35,16 @@ namespace AeonGames
 
     Image::Image() = default;
 
-    Image::Image ( uint32_t aId )
+    void Image::Load ( const std::string& aPath )
+    {
+        Load ( crc32i ( aPath.data(), aPath.size() ) );
+    }
+
+    void Image::Load ( uint32_t aId )
     {
         std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
         LoadResource ( aId, buffer.data(), buffer.size() );
         DecodeImage ( *this, buffer.data(), buffer.size() );
-    }
-
-    const std::shared_ptr<Image> Image::GetImage ( uint32_t aId )
-    {
-        return ResourceCache<uint32_t, Image>::Get ( aId, aId );
-    }
-
-    Image::Image ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) :
-        mWidth{aWidth}, mHeight{aHeight}, mFormat{aFormat}, mType{aType}, mPixels ( aWidth * aHeight * GetPixelSize ( aFormat, aType ), 0 )
-    {
-        if ( aPixels && mPixels.size() )
-        {
-            memcpy ( mPixels.data(), aPixels, mPixels.size() );
-        }
     }
 
     void Image::Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
@@ -137,6 +118,7 @@ namespace AeonGames
         }
         mMapped = false;
     }
+#endif
 
     bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Image&, size_t, const void* ) > & aDecoder )
     {

@@ -31,15 +31,25 @@ namespace AeonGames
     public:
         VulkanImage ( const VulkanRenderer&  aVulkanRenderer );
         ~VulkanImage() final;
+        void Load ( const std::string& aPath ) final;
+        void Load ( uint32_t aId ) final;
+        void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr ) final;
+        void BitBlit ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) final;
+        void Finalize() final;
+        uint32_t Width() const final;
+        uint32_t Height() const final;
+        ImageFormat Format() const final;
+        ImageType Type() const final;
+
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
-        void Initialize();
-        void Finalize();
-        void InitializeImage();
+        void InitializeImage ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType );
         void FinalizeImage();
         void InitializeImageView();
         void FinalizeImageView();
         const VulkanRenderer& mVulkanRenderer;
+        uint32_t mWidth{};
+        uint32_t mHeight{};
         VkImage mVkImage{};
         VkDeviceMemory mImageMemory{};
         VkDescriptorImageInfo mVkDescriptorImageInfo{};

@@ -114,21 +114,17 @@ namespace AeonGames
                 throw std::runtime_error ( "Error during read_image." );
             }
             // --------------------------------------
-            // This has to be changed to create a single buffer to which all row_pointers point at.
-            // See http://www.piko3d.com/tutorials/libpng-tutorial-loading-png-files-from-streams
-            /**@todo Add Map/Unmap functions to Image class.*/
             png_size_t rowbytes = png_get_rowbytes ( png_ptr, info_ptr );
             std::vector<uint8_t*> row_pointers ( sizeof ( png_bytep ) * height );
-            aImage.Initialize ( width, height, format, type );
-            uint8_t* data = static_cast<uint8_t*> ( aImage.Map() );
+            std::vector<uint8_t> pixels ( width * height * GetPixelSize ( format, type ) );
             for ( png_uint_32 y = 0; y < height; ++y )
             {
-                row_pointers[y] = data + ( rowbytes * y );
+                row_pointers[y] = pixels.data() + ( rowbytes * y );
             }
             // --------------------------------------
             png_read_image ( png_ptr, row_pointers.data() );
             png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) nullptr );
-            aImage.Unmap();
+            aImage.Initialize ( width, height, format, type, pixels.data() );
         }
         catch ( std::runtime_error& e )
         {

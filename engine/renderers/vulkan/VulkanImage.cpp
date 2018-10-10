@@ -21,28 +21,21 @@ limitations under the License.
 #include "VulkanImage.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
+#include "aeongames/AeonEngine.h"
+#include "aeongames/CRC.h"
 #include "aeongames/Image.h"
 #include "aeongames/Utilities.h"
 
 namespace AeonGames
 {
     VulkanImage::VulkanImage ( const VulkanRenderer&  aVulkanRenderer ) :
-        Image(), mVulkanRenderer (  aVulkanRenderer  ),
-        mVkImage ( VK_NULL_HANDLE ),
-        mImageMemory ( VK_NULL_HANDLE )
+        Image(), mVulkanRenderer (  aVulkanRenderer  ), mWidth{}, mHeight{},
+        mVkImage { VK_NULL_HANDLE },
+        mImageMemory { VK_NULL_HANDLE }
     {
         mVkDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         mVkDescriptorImageInfo.imageView = VK_NULL_HANDLE;
         mVkDescriptorImageInfo.sampler = VK_NULL_HANDLE;
-        try
-        {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
     }
 
     VulkanImage::~VulkanImage()
@@ -50,9 +43,22 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanImage::Initialize()
+    void VulkanImage::Load ( const std::string& aPath )
     {
-        InitializeImage();
+        Load ( crc32i ( aPath.data(), aPath.size() ) );
+    }
+    void VulkanImage::Load ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        DecodeImage ( *this, buffer.data(), buffer.size() );
+    }
+
+    void VulkanImage::Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    {
+        mWidth = aWidth;
+        mHeight = aHeight;
+        InitializeImage ( aWidth, aHeight, aFormat, aType );
         InitializeImageView();
         VkSamplerCreateInfo sampler_create_info{};
         sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -79,6 +85,30 @@ namespace AeonGames
             stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+        if ( aPixels )
+        {
+            BitBlit ( 0, 0, aWidth, aHeight, aFormat, aType, aPixels );
+        }
+    }
+
+    uint32_t VulkanImage::Width() const
+    {
+        return mWidth;
+    }
+
+    uint32_t VulkanImage::Height() const
+    {
+        return mHeight;
+    }
+
+    Image::ImageFormat VulkanImage::Format() const
+    {
+        return Image::ImageFormat::RGBA;
+    }
+
+    Image::ImageType VulkanImage::Type() const
+    {
+        return Image::ImageType::UNSIGNED_BYTE;
     }
 
     void VulkanImage::Finalize()
@@ -92,18 +122,18 @@ namespace AeonGames
         FinalizeImage();
     }
 
-    void VulkanImage::InitializeImage()
+    void VulkanImage::InitializeImage ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType )
     {
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_create_info.pNext = nullptr;
         image_create_info.flags = 0;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+        image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM; // This field contains both format and type, calculate rather than hardcode
         VkFormatProperties format_properties{};
         vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer.GetPhysicalDevice(), image_create_info.format, &format_properties );
-        image_create_info.extent.width = Width();
-        image_create_info.extent.height = Height();
+        image_create_info.extent.width = aWidth;
+        image_create_info.extent.height = aHeight;
         image_create_info.extent.depth = 1;
         image_create_info.mipLevels = 1;
         image_create_info.arrayLayers = 1;
@@ -147,8 +177,7 @@ namespace AeonGames
         }
     }
 
-#if 0
-    void VulkanImage::Update()
+    void VulkanImage::BitBlit ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
     {
         // -----------------------------
         // Write Memory
@@ -159,7 +188,7 @@ namespace AeonGames
 
         VkBufferCreateInfo buffer_create_info = {};
         buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.size = mImage.Width() * mImage.Height() * 4;
+        buffer_create_info.size = mWidth * mHeight * 4; /// @todo Use format and type as well as GetPixelSize()
         buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -197,11 +226,11 @@ namespace AeonGames
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        if ( mImage.Format() == Image::ImageFormat::RGBA )
+        if ( aFormat == Image::ImageFormat::RGBA )
         {
-            if ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE )
+            if ( aType == Image::ImageType::UNSIGNED_BYTE )
             {
-                memcpy ( image_memory, mImage.Pixels(), mImage.PixelsSize() );
+                memcpy ( image_memory, aPixels, aWidth * aHeight * GetPixelSize ( aFormat, aType ) );
             }
             else
             {
@@ -214,9 +243,9 @@ namespace AeonGames
                     handle any conversions?
                     We'll have to see when it comes to handling compressed and
                     "hardware accelerated" formats.*/
-                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage.Pixels() );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( aPixels );
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage.PixelsSize() / 2;
+                auto data_size = aWidth * aHeight * GetPixelSize ( aFormat, aType ) / 2;
                 for ( uint32_t i = 0; i < data_size; i += 4 )
                 {
                     write_pointer[i] = read_pointer[i] / 256;
@@ -228,11 +257,11 @@ namespace AeonGames
         }
         else
         {
-            if ( mImage.Type() == Image::ImageType::UNSIGNED_BYTE )
+            if ( aType == Image::ImageType::UNSIGNED_BYTE )
             {
-                const uint8_t* read_pointer = mImage.Pixels();
+                const uint8_t* read_pointer = aPixels;
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage.PixelsSize();
+                auto data_size = aWidth * aHeight * GetPixelSize ( aFormat, aType );
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
                     write_pointer[0] = read_pointer[i];
@@ -245,9 +274,9 @@ namespace AeonGames
             else
             {
                 // Is this a temporary fix?
-                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( mImage.Pixels() );
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( aPixels );
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
-                auto data_size = mImage.PixelsSize() / 2;
+                auto data_size = aWidth * aHeight * GetPixelSize ( aFormat, aType ) / 2;
                 for ( uint32_t i = 0; i < data_size; i += 3 )
                 {
                     write_pointer[0] = read_pointer[i] / 256;
@@ -292,8 +321,8 @@ namespace AeonGames
         buffer_image_copy.imageSubresource.mipLevel = 0;
         buffer_image_copy.imageSubresource.baseArrayLayer = 0;
         buffer_image_copy.imageSubresource.layerCount = 1;
-        buffer_image_copy.imageOffset = { 0, 0, 0 };
-        buffer_image_copy.imageExtent = { mImage.Width(), mImage.Height(), 1 };
+        buffer_image_copy.imageOffset = { aYOffset, aXOffset, 0 };
+        buffer_image_copy.imageExtent = { aWidth, aHeight, 1 };
         vkCmdCopyBufferToImage ( command_buffer, image_buffer, mVkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy );
 
         image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -312,7 +341,6 @@ namespace AeonGames
         vkDestroyBuffer ( mVulkanRenderer.GetDevice(), image_buffer, nullptr );
         vkFreeMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory, nullptr );
     }
-#endif
 
     void VulkanImage::FinalizeImage()
     {
