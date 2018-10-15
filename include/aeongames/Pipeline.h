@@ -25,6 +25,17 @@ limitations under the License.
 namespace AeonGames
 {
     class PipelineBuffer;
+#if 0
+    class Pipeline
+    {
+    public:
+        DLL virtual ~Pipeline() = 0;
+        virtual void Load ( const std::string& aFilename ) = 0;
+        virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
+        virtual void Load ( const PipelineBuffer& aPipelineBuffer ) = 0;
+        virtual void Unload() = 0;
+    };
+#else
     class Pipeline
     {
     public:
@@ -94,5 +105,6 @@ namespace AeonGames
         std::string mFragmentShader{};
         Material mDefaultMaterial{};
     };
+#endif
 }
 #endif

@@ -41,6 +41,9 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Pipeline::~Pipeline()
+        = default;
+#if 1
     static const std::array<const char*, 7> AttributeStrings
     {
         {
@@ -126,9 +129,6 @@ namespace AeonGames
         uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
         return Pipeline::GetPipeline ( id );
     }
-
-    Pipeline::~Pipeline()
-        = default;
 
     void Pipeline::Load ( const std::string& aFilename )
     {
@@ -433,4 +433,5 @@ namespace AeonGames
     {
         return mTopology;
     }
+#endif
 }

@@ -40,6 +40,9 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Material::~Material()
+        = default;
+#if 1
     Material::Material() = default;
 
     Material::Material ( uint32_t aId )
@@ -119,9 +122,6 @@ namespace AeonGames
         }
         return *this;
     }
-
-    Material::~Material()
-        = default;
 
     void Material::Load ( const std::string&  aFilename )
     {
@@ -585,4 +585,5 @@ namespace AeonGames
         uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
         return Material::GetMaterial ( id );
     }
+#endif
 }
