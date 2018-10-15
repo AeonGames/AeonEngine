@@ -28,6 +28,52 @@ namespace AeonGames
     class Vector4;
     class MaterialBuffer;
     class PropertyBuffer;
+#if 0
+    class Material
+    {
+    public:
+        DLL virtual ~Material() = 0;
+        ///@name Loaders
+        ///@{
+        virtual void Load ( const std::string& aFilename ) = 0;
+        virtual void Load ( const uint32_t aId ) = 0;
+        virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
+        virtual void Load ( const MaterialBuffer& aMaterialBuffer ) = 0;
+        virtual void Unload() = 0;
+        ///@}
+        ///@name Allocators
+        ///@{
+        virtual void AddUint ( const std::string& aName, uint32_t aValue ) = 0;
+        virtual void AddSint ( const std::string& aName, int32_t aValue ) = 0;
+        virtual void AddFloat ( const std::string& aName, float aValue ) = 0;
+        virtual void AddFloatVec2 ( const std::string& aName, const Vector2& aValue ) = 0;
+        virtual void AddFloatVec3 ( const std::string& aName, const Vector3& aValue ) = 0;
+        virtual void AddFloatVec4 ( const std::string& aName, const Vector4& aValue ) = 0;
+        virtual void AddSampler ( const std::string& aName, const std::string& aValue ) = 0;
+        virtual void Remove ( const std::string& aName ) = 0;
+        ///@}
+        ///@name Property Setters
+        ///@{
+        virtual void SetUint ( const std::string& aName, uint32_t aValue ) = 0;
+        virtual void SetSint ( const std::string& aName, int32_t aValue ) = 0;
+        virtual void SetFloat ( const std::string& aName, float aValue ) = 0;
+        virtual void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) = 0;
+        virtual void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) = 0;
+        virtual void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) = 0;
+        virtual void SetSampler ( const std::string& aName, const std::string& aValue ) = 0;
+        ///@}
+        ///@name Property Getters
+        ///@{
+        virtual uint32_t GetUint ( const std::string& aName ) = 0;
+        virtual int32_t GetSint ( const std::string& aName ) = 0;
+        virtual float GetFloat ( const std::string& aName ) = 0;
+        virtual Vector2 GetFloatVec2 ( const std::string& aName ) = 0;
+        virtual Vector2 GetFloatVec3 ( const std::string& aName ) = 0;
+        virtual Vector2 GetFloatVec4 ( const std::string& aName ) = 0;
+        virtual std::string GetSampler ( const std::string& aName ) = 0;
+        ///@}
+    };
+#else
     class Material
     {
     public:
@@ -117,5 +163,6 @@ namespace AeonGames
         std::vector<Property> mProperties{};
         std::vector<uint8_t> mPropertyBlock{};
     };
+#endif
 }
 #endif
