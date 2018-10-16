@@ -32,25 +32,75 @@ namespace AeonGames
     public:
         VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer );
         ~VulkanMaterial() final;
+        ///@name Loaders
+        ///@{
+        void Load ( const std::string& aFilename ) final;
+        void Load ( const uint32_t aId ) final;
+        void Load ( const void* aBuffer, size_t aBufferSize ) final;
+        void Load ( const MaterialBuffer& aMaterialBuffer ) final;
+        void Unload() final;
+        ///@}
+        ///@name Property Setters
+        ///@{
+        void SetUint ( const std::string& aName, uint32_t aValue ) final;
+        void SetSint ( const std::string& aName, int32_t aValue ) final;
+        void SetFloat ( const std::string& aName, float aValue ) final;
+        void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
+        void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
+        void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
+        void SetSampler ( const std::string& aName, const std::string& aValue ) final;
+        ///@}
+        ///@name Property Getters
+        ///@{
+        uint32_t GetUint ( const std::string& aName ) final;
+        int32_t GetSint ( const std::string& aName ) final;
+        float GetFloat ( const std::string& aName ) final;
+        Vector2 GetFloatVec2 ( const std::string& aName ) final;
+        Vector3 GetFloatVec3 ( const std::string& aName ) final;
+        Vector4 GetFloatVec4 ( const std::string& aName ) final;
+        std::string GetSampler ( const std::string& aName ) final;
+        ///@}
+
         const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
         const VkDescriptorSet GetPropertiesDescriptorSet() const;
         const Material& GetMaterial() const;
     private:
-        void Initialize();
-        void Finalize();
+        class UniformVariable
+        {
+        public:
+            UniformVariable ( const std::string& aName, uint32_t aType, uint32_t aOffset ) :
+                mName{aName},
+                mType{aType},
+                mOffset{aOffset} {}
+            const std::string& GetName() const
+            {
+                return mName;
+            }
+            uint32_t GetType()
+            {
+                return mType;
+            }
+            uint32_t GetOffset()
+            {
+                return mOffset;
+            }
+        private:
+            std::string mName{};
+            uint32_t mType{};
+            uint32_t mOffset{};
+        };
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
-        void InitializePropertiesUniform();
-        void FinalizePropertiesUniform();
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
         VkDescriptorSetLayout mVkPropertiesDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorPool mVkPropertiesDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkPropertiesDescriptorSet{ VK_NULL_HANDLE };
-        VulkanBuffer mPropertiesBuffer;
+        VulkanBuffer mUniformBuffer;
+        std::vector<UniformVariable> mVariables{};
     };
 }
 #endif

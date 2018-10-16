@@ -29,8 +29,12 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "aeongames/AeonEngine.h"
+#include "aeongames/CRC.h"
 #include "aeongames/Material.h"
-#include "aeongames/ResourceCache.h"
+#include "aeongames/Vector2.h"
+#include "aeongames/Vector3.h"
+#include "aeongames/Vector4.h"
 #include "VulkanMaterial.h"
 #include "VulkanImage.h"
 #include "VulkanRenderer.h"
@@ -39,29 +43,268 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer ) :
-        Material(), mVulkanRenderer ( aVulkanRenderer ),
-        mPropertiesBuffer ( mVulkanRenderer )
+        mVulkanRenderer { aVulkanRenderer },
+        mUniformBuffer { mVulkanRenderer }
     {
-        try
-        {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
     }
 
     VulkanMaterial::~VulkanMaterial()
     {
-        Finalize();
+        Unload();
+    }
+
+    void VulkanMaterial::Load ( const std::string& aFilename )
+    {
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+    }
+
+    void VulkanMaterial::Load ( const uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
+
+    void VulkanMaterial::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static MaterialBuffer material_buffer;
+        LoadProtoBufObject ( material_buffer, aBuffer, aBufferSize, "AEONMTL" );
+        Load ( material_buffer );
+        material_buffer.Clear();
+    }
+
+    void VulkanMaterial::Load ( const MaterialBuffer& aMaterialBuffer )
+    {
+        size_t size = 0;
+        size_t offset = 0;
+        mVariables.reserve ( aMaterialBuffer.property().size() );
+        for ( auto& i : aMaterialBuffer.property() )
+        {
+            switch ( i.value_case() )
+            {
+            case PropertyBuffer::ValueCase::kScalarFloat:
+                offset += ( offset % sizeof ( float ) ) ? sizeof ( float ) - ( offset % sizeof ( float ) ) : 0;
+                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
+                size += sizeof ( float );
+                break;
+            case PropertyBuffer::ValueCase::kScalarUint:
+                offset += ( offset % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( offset % sizeof ( uint32_t ) ) : 0;
+                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
+                size += sizeof ( uint32_t );
+                break;
+            case PropertyBuffer::ValueCase::kScalarInt:
+                offset += ( offset % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( offset % sizeof ( int32_t ) ) : 0;
+                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
+                size += sizeof ( int32_t );
+                break;
+            case PropertyBuffer::ValueCase::kVector2:
+                offset += ( offset % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( offset % ( sizeof ( float ) * 2 ) ) : 0;
+                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
+                size += sizeof ( float ) * 2;
+                break;
+            case PropertyBuffer::ValueCase::kVector3:
+                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 3;
+                break;
+            case PropertyBuffer::ValueCase::kVector4:
+                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 4;
+                break;
+            default:
+                break;
+            }
+            mVariables.emplace_back ( i.uniform_name(), i.value_case(), offset );
+        }
+
+        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+        if ( size )
+        {
+            mUniformBuffer.Initialize (
+                static_cast<VkDeviceSize> ( size ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+            uint8_t* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( 0, size ) );
+            for ( auto& i : mVariables )
+            {
+                auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),
+                                        [&i] ( const PropertyBuffer & property )
+                {
+                    return property.uniform_name() == i.GetName();
+                } );
+                if ( j != aMaterialBuffer.property().end() )
+                {
+                    switch ( i.GetType() )
+                    {
+                    case PropertyBuffer::ValueCase::kScalarFloat:
+                        ( *reinterpret_cast<float*> ( pointer + i.GetOffset() ) ) = j->scalar_float();
+                        break;
+                    case PropertyBuffer::ValueCase::kScalarUint:
+                        ( *reinterpret_cast<uint32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_uint();
+                        break;
+                    case PropertyBuffer::ValueCase::kScalarInt:
+                        ( *reinterpret_cast<int32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_int();
+                        break;
+                    case PropertyBuffer::ValueCase::kVector2:
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector2().x();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector2().y();
+                        break;
+                    case PropertyBuffer::ValueCase::kVector3:
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector3().x();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector3().y();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector3().z();
+                        break;
+                    case PropertyBuffer::ValueCase::kVector4:
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector4().x();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector4().y();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector4().z();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [3] = j->vector4().w();
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+            mUniformBuffer.Unmap();
+        }
+        InitializeDescriptorSetLayout();
+        InitializeDescriptorPool();
+        InitializeDescriptorSet();
+    }
+
+    void VulkanMaterial::Unload()
+    {
+        FinalizeDescriptorSet();
+        FinalizeDescriptorPool();
+        FinalizeDescriptorSetLayout();
+        mUniformBuffer.Finalize();
+    }
+
+    void VulkanMaterial::SetUint ( const std::string& aName, uint32_t aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aName] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == aName;
+        } );
+        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kScalarUint ) )
+        {
+            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &aValue );
+        }
+    }
+
+    void VulkanMaterial::SetSint ( const std::string& aName, int32_t aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aName] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == aName;
+        } );
+        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kScalarInt ) )
+        {
+            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &aValue );
+        }
+    }
+
+    void VulkanMaterial::SetFloat ( const std::string& aName, float aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aName] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == aName;
+        } );
+        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kScalarFloat ) )
+        {
+            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &aValue );
+        }
+    }
+
+    void VulkanMaterial::SetFloatVec2 ( const std::string& aName, const Vector2& aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aName] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == aName;
+        } );
+        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kVector2 ) )
+        {
+            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, aValue.GetVector() );
+        }
+    }
+
+    void VulkanMaterial::SetFloatVec3 ( const std::string& aName, const Vector3& aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aName] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == aName;
+        } );
+        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kVector3 ) )
+        {
+            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, aValue.GetVector3() );
+        }
+    }
+
+    void VulkanMaterial::SetFloatVec4 ( const std::string& aName, const Vector4& aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aName] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == aName;
+        } );
+        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kVector4 ) )
+        {
+            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, aValue.GetVector4() );
+        }
+    }
+
+    void VulkanMaterial::SetSampler ( const std::string& aName, const std::string& aValue )
+    {
+        ///@todo Reimplement samplers
+    }
+    uint32_t VulkanMaterial::GetUint ( const std::string& aName )
+    {
+        return 0;
+    }
+    int32_t VulkanMaterial::GetSint ( const std::string& aName )
+    {
+        return 0;
+    }
+    float VulkanMaterial::GetFloat ( const std::string& aName )
+    {
+        return 0.0f;
+    }
+    Vector2 VulkanMaterial::GetFloatVec2 ( const std::string& aName )
+    {
+        return Vector2{};
+    }
+    Vector3 VulkanMaterial::GetFloatVec3 ( const std::string& aName )
+    {
+        return Vector3{};
+    }
+    Vector4 VulkanMaterial::GetFloatVec4 ( const std::string& aName )
+    {
+        return Vector4{};
+    }
+    std::string VulkanMaterial::GetSampler ( const std::string& aName )
+    {
+        return std::string{};
     }
 
 #if 0
     void VulkanMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
     {
-        mPropertiesBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : GetPropertyBlock().size() - aOffset, aValue );
+        mUniformBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : GetPropertyBlock().size() - aOffset, aValue );
     }
 #endif
 
@@ -75,36 +318,18 @@ namespace AeonGames
         return mVkPropertiesDescriptorSet;
     }
 
-    void VulkanMaterial::Initialize()
-    {
-        InitializeDescriptorSetLayout();
-        InitializeDescriptorPool();
-        InitializePropertiesUniform();
-        InitializeDescriptorSet();
-    }
-
-    void VulkanMaterial::Finalize()
-    {
-        FinalizeDescriptorSet();
-        FinalizePropertiesUniform();
-        FinalizeDescriptorPool();
-        FinalizeDescriptorSetLayout();
-    }
-
     void VulkanMaterial::InitializeDescriptorSetLayout()
     {
-#if 0
-        if ( !GetProperties().size() )
+        if ( !mUniformBuffer.GetSize() )
         {
             // We don' need a layout.
             return;
         }
-#endif
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 1 /*+ GetSamplerCount()*/ );
         uint32_t binding = 0;
 
-        if ( mPropertiesBuffer.GetSize() )
+        if ( mUniformBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = binding++;
@@ -157,7 +382,7 @@ namespace AeonGames
     {
         std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
         descriptor_pool_sizes.reserve ( 2 );
-        if ( mPropertiesBuffer.GetSize() )
+        if ( mUniformBuffer.GetSize() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -198,24 +423,6 @@ namespace AeonGames
         }
     }
 
-    void VulkanMaterial::InitializePropertiesUniform()
-    {
-#if 0
-        if ( GetPropertyBlock().size() )
-        {
-            mPropertiesBuffer.Initialize (
-                GetPropertyBlock().size(),
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                static_cast<const void*> ( GetPropertyBlock().data() ) );
-        }
-#endif
-    }
-
-    void VulkanMaterial::FinalizePropertiesUniform()
-    {
-    }
-
     void VulkanMaterial::InitializeDescriptorSet()
     {
         std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkPropertiesDescriptorSetLayout } };
@@ -233,14 +440,14 @@ namespace AeonGames
         std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
         {
             {
-                //VkDescriptorBufferInfo{mPropertiesBuffer.GetBuffer(), 0, GetPropertyBlock().size() }
+                VkDescriptorBufferInfo{mUniformBuffer.GetBuffer(), 0, mUniformBuffer.GetSize() }
             }
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
         write_descriptor_sets.reserve ( 1 /*+ GetSamplerCount()*/ );
 
-        if ( mPropertiesBuffer.GetSize() )
+        if ( mUniformBuffer.GetSize() )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();

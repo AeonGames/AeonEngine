@@ -605,13 +605,11 @@ namespace AeonGames
     }
     std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline() const
     {
-        //return std::make_unique<VulkanPipeline> ( *this );
-        return nullptr;
+        return std::make_unique<VulkanPipeline> ( *this );
     }
     std::unique_ptr<Material> VulkanRenderer::CreateMaterial() const
     {
-        //return std::make_unique<VulkanMaterial> ( *this );
-        return nullptr;
+        return std::make_unique<VulkanMaterial> ( *this );
     }
     std::unique_ptr<Image> VulkanRenderer::CreateImage() const
     {

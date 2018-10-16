@@ -40,18 +40,7 @@ namespace AeonGames
         void Load ( const uint32_t aId ) final;
         void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const MaterialBuffer& aMaterialBuffer ) final;
-        void Unload() = 0;
-        ///@}
-        ///@name Allocators
-        ///@{
-        void AddUint ( const std::string& aName, uint32_t aValue ) final;
-        void AddSint ( const std::string& aName, int32_t aValue ) final;
-        void AddFloat ( const std::string& aName, float aValue ) final;
-        void AddFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
-        void AddFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
-        void AddFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
-        void AddSampler ( const std::string& aName, const std::string& aValue ) final;
-        void Remove ( const std::string& aName ) final;
+        void Unload() final;
         ///@}
         ///@name Property Setters
         ///@{
@@ -76,9 +65,32 @@ namespace AeonGames
         GLuint GetPropertiesBufferId() const;
         const Material& GetMaterial() const;
     private:
-        void Initialize();
-        void Finalize();
-        OpenGLBuffer mPropertiesBuffer{};
+        class UniformVariable
+        {
+        public:
+            UniformVariable ( const std::string& aName, uint32_t aType, uint32_t aOffset ) :
+                mName{aName},
+                mType{aType},
+                mOffset{aOffset} {}
+            const std::string& GetName() const
+            {
+                return mName;
+            }
+            uint32_t GetType()
+            {
+                return mType;
+            }
+            uint32_t GetOffset()
+            {
+                return mOffset;
+            }
+        private:
+            std::string mName{};
+            uint32_t mType{};
+            uint32_t mOffset{};
+        };
+        std::vector<UniformVariable> mVariables{};
+        OpenGLBuffer mUniformBuffer{};
     };
 }
 #endif

@@ -41,17 +41,6 @@ namespace AeonGames
         virtual void Load ( const MaterialBuffer& aMaterialBuffer ) = 0;
         virtual void Unload() = 0;
         ///@}
-        ///@name Allocators
-        ///@{
-        virtual void AddUint ( const std::string& aName, uint32_t aValue ) = 0;
-        virtual void AddSint ( const std::string& aName, int32_t aValue ) = 0;
-        virtual void AddFloat ( const std::string& aName, float aValue ) = 0;
-        virtual void AddFloatVec2 ( const std::string& aName, const Vector2& aValue ) = 0;
-        virtual void AddFloatVec3 ( const std::string& aName, const Vector3& aValue ) = 0;
-        virtual void AddFloatVec4 ( const std::string& aName, const Vector4& aValue ) = 0;
-        virtual void AddSampler ( const std::string& aName, const std::string& aValue ) = 0;
-        virtual void Remove ( const std::string& aName ) = 0;
-        ///@}
         ///@name Property Setters
         ///@{
         virtual void SetUint ( const std::string& aName, uint32_t aValue ) = 0;

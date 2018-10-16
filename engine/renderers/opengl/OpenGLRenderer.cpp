@@ -55,8 +55,7 @@ namespace AeonGames
     }
     std::unique_ptr<Material> OpenGLRenderer::CreateMaterial() const
     {
-        //return std::make_unique<OpenGLMaterial>();
-        return nullptr;
+        return std::make_unique<OpenGLMaterial>();
     }
     std::unique_ptr<Image> OpenGLRenderer::CreateImage() const
     {
