@@ -182,8 +182,8 @@ namespace AeonGames
             }
         }
         std::string transforms (
-            "layout(binding = 0, std140) uniform Matrices{\n"
-            "mat4 ModelMatrix;\n"
+            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
+            "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
@@ -194,33 +194,33 @@ namespace AeonGames
         {
             uint32_t sampler_binding = 0;
             std::string properties (
-                "layout(binding = 1,std140) uniform Properties{\n"
+                "layout(set = 1, binding = 0,std140) uniform Properties{\n"
             );
             std::string samplers ( "//----SAMPLERS-START----\n" );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
-                switch ( i.default_value_case() )
+                switch ( i.value_case() )
                 {
-                case PropertyBuffer::DefaultValueCase::kScalarFloat:
+                case PropertyBuffer::ValueCase::kScalarFloat:
                     properties += "float " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kScalarUint:
+                case PropertyBuffer::ValueCase::kScalarUint:
                     properties += "uint " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kScalarInt:
+                case PropertyBuffer::ValueCase::kScalarInt:
                     properties += "int " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kVector2:
+                case PropertyBuffer::ValueCase::kVector2:
                     properties += "vec2 " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kVector3:
+                case PropertyBuffer::ValueCase::kVector3:
                     properties += "vec3 " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kVector4:
+                case PropertyBuffer::ValueCase::kVector4:
                     properties += "vec4 " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kTexture:
-                    samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
+                case PropertyBuffer::ValueCase::kTexture:
+                    samplers += "layout(set = 1, binding = " + std::to_string ( sampler_binding + 1 ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
                     ++sampler_binding;
                     break;
                 default:
@@ -237,7 +237,7 @@ namespace AeonGames
         if ( attributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
         {
             std::string skeleton (
-                "layout(std140, binding = 2) uniform Skeleton{\n"
+                "layout(set = 2, binding = 2, std140) uniform Skeleton{\n"
                 "mat4 skeleton[256];\n"
                 "};\n"
             );
@@ -261,8 +261,8 @@ namespace AeonGames
     {
         std::string fragment_shader{"#version 450\n"};
         std::string transforms (
-            "layout(binding = 0, std140) uniform Matrices{\n"
-            "mat4 ModelMatrix;\n"
+            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
+            "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
@@ -274,33 +274,33 @@ namespace AeonGames
         {
             uint32_t sampler_binding = 0;
             std::string properties (
-                "layout(binding = 1,std140) uniform Properties{\n"
+                "layout(set = 1, binding = 0,std140) uniform Properties{\n"
             );
             std::string samplers ( "//----SAMPLERS-START----\n" );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
-                switch ( i.default_value_case() )
+                switch ( i.value_case() )
                 {
-                case PropertyBuffer::DefaultValueCase::kScalarFloat:
+                case PropertyBuffer::ValueCase::kScalarFloat:
                     properties += "float " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kScalarUint:
+                case PropertyBuffer::ValueCase::kScalarUint:
                     properties += "uint " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kScalarInt:
+                case PropertyBuffer::ValueCase::kScalarInt:
                     properties += "int " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kVector2:
+                case PropertyBuffer::ValueCase::kVector2:
                     properties += "vec2 " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kVector3:
+                case PropertyBuffer::ValueCase::kVector3:
                     properties += "vec3 " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kVector4:
+                case PropertyBuffer::ValueCase::kVector4:
                     properties += "vec4 " + i.uniform_name() + ";\n";
                     break;
-                case PropertyBuffer::DefaultValueCase::kTexture:
-                    samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
+                case PropertyBuffer::ValueCase::kTexture:
+                    samplers += "layout(set = 1, binding = " + std::to_string ( sampler_binding + 1 ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
                     ++sampler_binding;
                     break;
                 default:
