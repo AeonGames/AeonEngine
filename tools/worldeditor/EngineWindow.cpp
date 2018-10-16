@@ -263,7 +263,7 @@ namespace AeonGames
                                 mWindow->Render ( aNode.GetGlobalTransform(),
                                                   qWorldEditorApp->GetAABBWireMesh(),
                                                   qWorldEditorApp->GetWirePipeline(),
-                                                  &qWorldEditorApp->GetWirePipeline().GetDefaultMaterial() );
+                                                  qWorldEditorApp->GetWirePipeline().GetDefaultMaterial() );
                             }
                         } );
                     }

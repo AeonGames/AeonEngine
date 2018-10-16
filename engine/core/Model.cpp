@@ -119,13 +119,15 @@ namespace AeonGames
         // Default Pipeline ---------------------------------------------------------------------
         if ( aModelBuffer.has_default_pipeline() )
         {
-            default_pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( aModelBuffer.default_pipeline() ) );
+            assert ( 0 );
+            //default_pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( aModelBuffer.default_pipeline() ) );
         }
 
         // Default Material ---------------------------------------------------------------------
         if ( aModelBuffer.has_default_material() )
         {
-            default_material = Material::GetMaterial ( GetReferenceBufferId ( aModelBuffer.default_material() ) );
+            assert ( 0 );
+            //default_material = Material::GetMaterial ( GetReferenceBufferId ( aModelBuffer.default_material() ) );
         }
 
         // Skeleton -----------------------------------------------------------------------------
@@ -148,12 +150,14 @@ namespace AeonGames
 
             if ( assembly.has_pipeline() )
             {
-                pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( assembly.pipeline() ) );
+                assert ( 0 );
+                //pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( assembly.pipeline() ) );
             }
 
             if ( assembly.has_material() )
             {
-                material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
+                assert ( 0 );
+                //material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
             }
             mAssemblies.emplace_back ( mesh, pipeline, material );
 #if 0

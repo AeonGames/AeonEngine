@@ -42,11 +42,11 @@ namespace AeonGames
         const Mesh& GetAABBWireMesh() const;
     private:
         GridSettings mGridSettings{};
-        Pipeline mGridPipeline{};
+        std::unique_ptr<Pipeline> mGridPipeline{};
         Mesh mGridMesh{};
-        Material mXGridMaterial{};
-        Material mYGridMaterial{};
-        Pipeline mWirePipeline{};
+        std::unique_ptr<Material> mXGridMaterial{};
+        std::unique_ptr<Material> mYGridMaterial{};
+        std::unique_ptr<Pipeline> mWirePipeline{};
         Mesh mAABBWireMesh{};
     };
 }

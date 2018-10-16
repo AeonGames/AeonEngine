@@ -93,16 +93,18 @@ namespace AeonGames
 
     void VulkanMaterial::InitializeDescriptorSetLayout()
     {
+#if 0
         if ( !GetProperties().size() )
         {
             // We don' need a layout.
             return;
         }
+#endif
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 1 + GetSamplerCount() );
+        descriptor_set_layout_bindings.reserve ( 1 /*+ GetSamplerCount()*/ );
         uint32_t binding = 0;
 
-        if ( GetPropertyBlock().size() )
+        if ( mPropertiesBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
             descriptor_set_layout_bindings.back().binding = binding++;
@@ -112,7 +114,7 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
-
+#if 0
         for ( auto& i : GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
@@ -127,7 +129,8 @@ namespace AeonGames
                 descriptor_set_layout_binding.pImmutableSamplers = nullptr;
             }
         }
-        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+#endif
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
         descriptor_set_layout_create_info.flags = 0;
@@ -154,18 +157,20 @@ namespace AeonGames
     {
         std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
         descriptor_pool_sizes.reserve ( 2 );
-        if ( GetPropertyBlock().size() )
+        if ( mPropertiesBuffer.GetSize() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptor_pool_sizes.back().descriptorCount = 1;
         }
+#if 0
         if ( GetSamplerCount() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             descriptor_pool_sizes.back().descriptorCount = static_cast<uint32_t> ( GetSamplerCount() );
         }
+#endif
         if ( descriptor_pool_sizes.size() )
         {
             VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
@@ -195,6 +200,7 @@ namespace AeonGames
 
     void VulkanMaterial::InitializePropertiesUniform()
     {
+#if 0
         if ( GetPropertyBlock().size() )
         {
             mPropertiesBuffer.Initialize (
@@ -203,6 +209,7 @@ namespace AeonGames
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                 static_cast<const void*> ( GetPropertyBlock().data() ) );
         }
+#endif
     }
 
     void VulkanMaterial::FinalizePropertiesUniform()
@@ -226,14 +233,14 @@ namespace AeonGames
         std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
         {
             {
-                VkDescriptorBufferInfo{mPropertiesBuffer.GetBuffer(), 0, GetPropertyBlock().size() }
+                //VkDescriptorBufferInfo{mPropertiesBuffer.GetBuffer(), 0, GetPropertyBlock().size() }
             }
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( 1 + GetSamplerCount() );
+        write_descriptor_sets.reserve ( 1 /*+ GetSamplerCount()*/ );
 
-        if ( GetPropertyBlock().size() )
+        if ( mPropertiesBuffer.GetSize() )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
@@ -249,7 +256,8 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
         }
 
-        uint32_t index{0};
+#if 0
+        uint32_t index {0};
         for ( auto& i : GetProperties() )
         {
             if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
@@ -268,6 +276,7 @@ namespace AeonGames
                 write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( i.GetImage() )->GetDescriptorImageInfo();
             }
         }
+#endif
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 

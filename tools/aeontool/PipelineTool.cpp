@@ -102,6 +102,8 @@ namespace AeonGames
         file.open ( mInputFile, std::ifstream::in | std::ifstream::binary );
         std::vector<uint8_t> buffer ( ( std::istreambuf_iterator<char> ( file ) ), ( std::istreambuf_iterator<char>() ) );
         file.close();
+        assert ( 0 );
+#if 0
         Pipeline pipeline ( buffer.data(), buffer.size() );
         {
             std::ofstream shader_file ( mOutputFile + ".vert", std::ifstream::out );
@@ -113,6 +115,7 @@ namespace AeonGames
             shader_file << pipeline.GetFragmentShaderSource() << std::endl;
             shader_file.close();
         }
+#endif
         return 0;
     }
 }
