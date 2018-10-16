@@ -42,7 +42,7 @@ namespace AeonGames
 {
     Material::~Material()
         = default;
-#if 1
+#if 0
     Material::Material() = default;
 
     Material::Material ( uint32_t aId )

@@ -16,83 +16,54 @@ limitations under the License.
 #include <cassert>
 #include <utility>
 #include <vector>
-#include "aeongames/ResourceCache.h"
+#include <regex>
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
+#include "aeongames/CRC.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLImage.h"
 #include "OpenGLFunctions.h"
 
+#include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "pipeline.pb.h"
+#include "property.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 namespace AeonGames
 {
-    OpenGLPipeline::OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer ) :
-        Pipeline(),
-        mOpenGLRenderer ( aOpenGLRenderer )
+    static GLenum GetGLTopology ( PipelineBuffer_Topology aTopology )
     {
-        try
+        switch ( aTopology )
         {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
-    }
-
-    OpenGLPipeline::~OpenGLPipeline()
-    {
-        Finalize();
-    }
-
-    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial ) const
-    {
-        glUseProgram ( mProgramId );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        GLenum index{0};
-        for ( auto& i : aMaterial.GetProperties() )
-        {
-            if ( i.GetType() == Material::Material::PropertyType::SAMPLER_2D )
-            {
-                glActiveTexture ( GL_TEXTURE0 + index++ );
-                OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLImage*> ( i.GetImage() )->GetTextureId() );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-        }
-
-        glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-    }
-
-    GLenum OpenGLPipeline::GetGLTopology() const
-    {
-        switch ( GetTopology() )
-        {
-        case Pipeline::Topology::POINT_LIST:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_POINT_LIST:
             return GL_POINTS;
-        case Pipeline::Topology::LINE_STRIP:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_STRIP:
             return GL_LINE_STRIP;
-        case Pipeline::Topology::LINE_LIST:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_LIST:
             return GL_LINES;
-        case Pipeline::Topology::TRIANGLE_STRIP:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_STRIP:
             return GL_TRIANGLE_STRIP;
-        case Pipeline::Topology::TRIANGLE_FAN:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_FAN:
             return GL_TRIANGLE_FAN;
-        case Pipeline::Topology::TRIANGLE_LIST:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_LIST:
             return GL_TRIANGLES;
-        case Pipeline::Topology::LINE_LIST_WITH_ADJACENCY:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_LIST_WITH_ADJACENCY:
             return GL_LINES_ADJACENCY;
-        case Pipeline::Topology::LINE_STRIP_WITH_ADJACENCY:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_STRIP_WITH_ADJACENCY:
             return GL_LINE_STRIP_ADJACENCY;
-        case Pipeline::Topology::TRIANGLE_LIST_WITH_ADJACENCY:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
             return GL_TRIANGLES_ADJACENCY;
-        case Pipeline::Topology::TRIANGLE_STRIP_WITH_ADJACENCY:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
             return GL_TRIANGLE_STRIP_ADJACENCY;
-        case Pipeline::Topology::PATCH_LIST:
+        case PipelineBuffer_Topology::PipelineBuffer_Topology_PATCH_LIST:
             return GL_PATCHES;
         default:
             break;
@@ -100,8 +71,278 @@ namespace AeonGames
         return GL_POINTS;
     }
 
-    void OpenGLPipeline::Initialize()
+    OpenGLPipeline::OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer ) :
+        mOpenGLRenderer { aOpenGLRenderer }
     {
+    }
+
+    OpenGLPipeline::~OpenGLPipeline()
+    {
+        Unload();
+    }
+
+    const Material* OpenGLPipeline::GetDefaultMaterial() const
+    {
+        return nullptr;
+    }
+
+    void OpenGLPipeline::Load ( const std::string& aFilename )
+    {
+        Load ( crc32i ( aFilename.data(), aFilename.size() ) );
+    }
+    void OpenGLPipeline::Load ( uint32_t aId )
+    {
+
+    }
+    void OpenGLPipeline::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+
+    }
+
+    enum AttributeBits
+    {
+        VertexPositionBit = 0x1,
+        VertexNormalBit = 0x2,
+        VertexTangentBit = 0x4,
+        VertexBitangentBit = 0x8,
+        VertexUVBit = 0x10,
+        VertexWeightIndicesBit = 0x20,
+        VertexWeightsBit = 0x40,
+        VertexAllBits = VertexPositionBit |
+                        VertexNormalBit |
+                        VertexTangentBit |
+                        VertexBitangentBit |
+                        VertexUVBit |
+                        VertexWeightIndicesBit |
+                        VertexWeightsBit
+    };
+
+    enum AttributeFormat
+    {
+        Vector2Float,
+        Vector3Float,
+        Vector4Byte,
+        Vector4ByteNormalized,
+    };
+
+    static const std::array<const char*, 7> AttributeStrings
+    {
+        {
+            "VertexPosition",
+            "VertexNormal",
+            "VertexTangent",
+            "VertexBitangent",
+            "VertexUV",
+            "VertexWeightIndices",
+            "VertexWeights"
+        }
+    };
+
+    static const std::array<const char*, 7> AttributeTypes
+    {
+        {
+            "vec3",
+            "vec3",
+            "vec3",
+            "vec3",
+            "vec2",
+            "uvec4",
+            "vec4"
+        }
+    };
+
+    /**@note static const regex: construct once, use for ever.*/
+    static const std::regex attribute_regex (
+        "\\bVertexPosition\\b|"
+        "\\bVertexNormal\\b|"
+        "\\bVertexTangent\\b|"
+        "\\bVertexBitangent\\b|"
+        "\\bVertexUV\\b|"
+        "\\bVertexWeightIndices\\b|"
+        "\\bVertexWeights\\b" );
+
+    static std::string GetVertexShaderCode ( const PipelineBuffer& aPipelineBuffer )
+    {
+        std::string vertex_shader{ "#version 450\n" };
+        /* Find out which attributes are being used and add them to the shader source */
+        std::smatch attribute_matches;
+        uint32_t attributes{};
+        std::string code = aPipelineBuffer.vertex_shader().code();
+        while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
+        {
+            for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
+            {
+                if ( attribute_matches.str().substr ( 6 ) == AttributeStrings[i] + 6 )
+                {
+                    if ( ! ( attributes & ( 1 << i ) ) )
+                    {
+                        attributes |= ( 1 << i );
+                        vertex_shader.append ( "layout(location = " );
+                        vertex_shader.append ( std::to_string ( i ) );
+                        vertex_shader.append ( ") in " );
+                        vertex_shader.append ( AttributeTypes[i] );
+                        vertex_shader.append ( " " );
+                        vertex_shader.append ( AttributeStrings[i] );
+                        vertex_shader.append ( ";\n" );
+                    }
+                    break;
+                }
+            }
+            code = attribute_matches.suffix();
+        }
+        std::string transforms (
+            "layout(binding = 0, std140) uniform Matrices{\n"
+            "mat4 ModelMatrix;\n"
+            "mat4 ProjectionMatrix;\n"
+            "mat4 ViewMatrix;\n"
+            "};\n"
+        );
+        vertex_shader.append ( transforms );
+
+        if ( aPipelineBuffer.default_material().property().size() )
+        {
+            uint32_t sampler_binding = 0;
+            std::string properties (
+                "layout(binding = 1,std140) uniform Properties{\n"
+            );
+            std::string samplers ( "//----SAMPLERS-START----\n" );
+            for ( auto& i : aPipelineBuffer.default_material().property() )
+            {
+                switch ( i.default_value_case() )
+                {
+                case PropertyBuffer::DefaultValueCase::kScalarFloat:
+                    properties += "float " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kScalarUint:
+                    properties += "uint " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kScalarInt:
+                    properties += "int " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kVector2:
+                    properties += "vec2 " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kVector3:
+                    properties += "vec3 " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kVector4:
+                    properties += "vec4 " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kTexture:
+                    samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
+                    ++sampler_binding;
+                    break;
+                default:
+                    throw std::runtime_error ( "Unknown Type." );
+                }
+            }
+            properties.append ( "};\n" );
+            samplers.append ( "//----SAMPLERS-END----\n" );
+            vertex_shader.append ( properties );
+            vertex_shader.append ( samplers );
+        }
+
+        // Skeleton needs rework
+        if ( attributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        {
+            std::string skeleton (
+                "layout(std140, binding = 2) uniform Skeleton{\n"
+                "mat4 skeleton[256];\n"
+                "};\n"
+            );
+            vertex_shader.append ( skeleton );
+        }
+
+        switch ( aPipelineBuffer.vertex_shader().source_case() )
+        {
+        case ShaderBuffer::SourceCase::kCode:
+        {
+            vertex_shader.append ( aPipelineBuffer.vertex_shader().code() );
+        }
+        break;
+        default:
+            throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
+        }
+        return vertex_shader;
+    }
+
+    static std::string GetFragmentShaderCode ( const PipelineBuffer& aPipelineBuffer )
+    {
+        std::string fragment_shader{"#version 450\n"};
+        std::string transforms (
+            "layout(binding = 0, std140) uniform Matrices{\n"
+            "mat4 ModelMatrix;\n"
+            "mat4 ProjectionMatrix;\n"
+            "mat4 ViewMatrix;\n"
+            "};\n"
+        );
+
+        fragment_shader.append ( transforms );
+
+        if ( aPipelineBuffer.default_material().property().size() )
+        {
+            uint32_t sampler_binding = 0;
+            std::string properties (
+                "layout(binding = 1,std140) uniform Properties{\n"
+            );
+            std::string samplers ( "//----SAMPLERS-START----\n" );
+            for ( auto& i : aPipelineBuffer.default_material().property() )
+            {
+                switch ( i.default_value_case() )
+                {
+                case PropertyBuffer::DefaultValueCase::kScalarFloat:
+                    properties += "float " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kScalarUint:
+                    properties += "uint " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kScalarInt:
+                    properties += "int " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kVector2:
+                    properties += "vec2 " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kVector3:
+                    properties += "vec3 " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kVector4:
+                    properties += "vec4 " + i.uniform_name() + ";\n";
+                    break;
+                case PropertyBuffer::DefaultValueCase::kTexture:
+                    samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
+                    ++sampler_binding;
+                    break;
+                default:
+                    throw std::runtime_error ( "Unknown Type." );
+                }
+            }
+            properties.append ( "};\n" );
+            samplers.append ( "//----SAMPLERS-END----\n" );
+            fragment_shader.append ( properties );
+            fragment_shader.append ( samplers );
+        }
+        switch ( aPipelineBuffer.fragment_shader().source_case() )
+        {
+        case ShaderBuffer::SourceCase::kCode:
+            fragment_shader.append ( aPipelineBuffer.fragment_shader().code() );
+            break;
+        default:
+            throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
+        }
+        return fragment_shader;
+    }
+
+    void OpenGLPipeline::Load ( const PipelineBuffer& aPipelineBuffer )
+    {
+        if ( glIsProgram ( mProgramId ) )
+        {
+            throw std::runtime_error ( "OpenGL object already loaded." );
+        }
+
+        mTopology = GetGLTopology ( aPipelineBuffer.topology() );
+        std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
+        std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
+
         //--------------------------------------------------
         // Begin OpenGL Specific code
         //--------------------------------------------------
@@ -113,8 +354,8 @@ namespace AeonGames
         uint32_t vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const auto* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( GetVertexShaderSource().c_str() );
-        auto vertex_shader_len = static_cast<GLint> ( GetVertexShaderSource().length() );
+        const auto* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( vertex_shader_code.c_str() );
+        auto vertex_shader_len = static_cast<GLint> ( vertex_shader_code.length() );
 
         glShaderSource (
             vertex_shader,
@@ -138,7 +379,7 @@ namespace AeonGames
             {
                 glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
                 OPENGL_CHECK_ERROR_THROW;
-                std::cout << GetVertexShaderSource() << std::endl;
+                std::cout << vertex_shader_code << std::endl;
                 std::cout << log_string << std::endl;
                 throw std::runtime_error ( log_string.c_str() );
             }
@@ -151,8 +392,8 @@ namespace AeonGames
         uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
         OPENGL_CHECK_ERROR_THROW;
 
-        const auto* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( GetFragmentShaderSource().c_str() );
-        auto fragment_shader_len = static_cast<GLint> ( GetFragmentShaderSource().length() );
+        const auto* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( fragment_shader_code.c_str() );
+        auto fragment_shader_len = static_cast<GLint> ( fragment_shader_code.length() );
 
         glShaderSource ( fragment_shader, 1, &fragment_shader_source_ptr, &fragment_shader_len );
         OPENGL_CHECK_ERROR_THROW;
@@ -170,7 +411,7 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << GetFragmentShaderSource() << std::endl;
+                std::cout << fragment_shader_code << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
@@ -193,8 +434,8 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetProgramInfoLog ( mProgramId, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << GetVertexShaderSource() << std::endl;
-                std::cout << GetFragmentShaderSource() << std::endl;
+                std::cout << vertex_shader_code << std::endl;
+                std::cout << fragment_shader_code << std::endl;
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
@@ -210,8 +451,8 @@ namespace AeonGames
         /* We need to bind the program to set any samplers. */
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_THROW;
-
-        // Properties
+#if 0
+        // Samplers
         if ( GetDefaultMaterial().GetPropertyBlock().size() )
         {
 #if 1
@@ -240,10 +481,12 @@ namespace AeonGames
             }
 #endif
         }
+#endif
     }
 
-    void OpenGLPipeline::Finalize()
+    void OpenGLPipeline::Unload()
     {
+        mTopology = 0;
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsProgram ( mProgramId ) )
         {
@@ -253,5 +496,33 @@ namespace AeonGames
             mProgramId = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial ) const
+    {
+        glUseProgram ( mProgramId );
+        OPENGL_CHECK_ERROR_NO_THROW;
+#if 0
+        GLenum index {0};
+        for ( auto& i : aMaterial.GetProperties() )
+        {
+            if ( i.GetType() == Material::Material::PropertyType::SAMPLER_2D )
+            {
+                glActiveTexture ( GL_TEXTURE0 + index++ );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLImage*> ( i.GetImage() )->GetTextureId() );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+        }
+#endif
+        glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
+    GLenum OpenGLPipeline::GetTopology() const
+    {
+        return mTopology;
     }
 }

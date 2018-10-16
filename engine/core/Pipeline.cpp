@@ -43,7 +43,7 @@ namespace AeonGames
 {
     Pipeline::~Pipeline()
         = default;
-#if 1
+#if 0
     static const std::array<const char*, 7> AttributeStrings
     {
         {

@@ -28,7 +28,7 @@ namespace AeonGames
     class Vector4;
     class MaterialBuffer;
     class PropertyBuffer;
-#if 0
+#if 1
     class Material
     {
     public:
@@ -68,8 +68,8 @@ namespace AeonGames
         virtual int32_t GetSint ( const std::string& aName ) = 0;
         virtual float GetFloat ( const std::string& aName ) = 0;
         virtual Vector2 GetFloatVec2 ( const std::string& aName ) = 0;
-        virtual Vector2 GetFloatVec3 ( const std::string& aName ) = 0;
-        virtual Vector2 GetFloatVec4 ( const std::string& aName ) = 0;
+        virtual Vector3 GetFloatVec3 ( const std::string& aName ) = 0;
+        virtual Vector4 GetFloatVec4 ( const std::string& aName ) = 0;
         virtual std::string GetSampler ( const std::string& aName ) = 0;
         ///@}
     };

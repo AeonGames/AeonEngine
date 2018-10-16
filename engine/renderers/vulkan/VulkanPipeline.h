@@ -35,11 +35,18 @@ namespace AeonGames
     public:
         VulkanPipeline ( const VulkanRenderer& aVulkanRenderer );
         ~VulkanPipeline() final;
+        ///@name Overrides
+        ///@{
+        void Load ( const std::string& aFilename ) final;
+        void Load ( uint32_t aId ) final;
+        void Load ( const void* aBuffer, size_t aBufferSize ) final;
+        void Load ( const PipelineBuffer& aPipelineBuffer ) final;
+        void Unload() final;
+        const Material* GetDefaultMaterial() const final;
+        ///@}
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
     private:
-        void Initialize();
-        void Finalize();
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
         const VulkanRenderer& mVulkanRenderer;

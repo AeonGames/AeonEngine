@@ -139,7 +139,7 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const OpenGLMaterial* material = reinterpret_cast<const OpenGLMaterial*> ( ( aMaterial ) ? aMaterial : &aPipeline.GetDefaultMaterial() );
+        const OpenGLMaterial* material = reinterpret_cast<const OpenGLMaterial*> ( ( aMaterial ) ? aMaterial : aPipeline.GetDefaultMaterial() );
         reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->Use ( *material );
         OPENGL_CHECK_ERROR_NO_THROW;
         Matrix4x4 model_matrix = aModelTransform.GetMatrix();
@@ -153,13 +153,13 @@ namespace AeonGames
         {
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<const OpenGLMesh*> ( &aMesh )->GetIndexBufferId() );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glDrawElementsInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetGLTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+            glDrawElementsInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                                       0x1400 | aMesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            glDrawArraysInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetGLTopology(), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+            glDrawArraysInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetTopology(), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }

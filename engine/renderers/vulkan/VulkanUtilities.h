@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,20 +48,5 @@ namespace AeonGames
         const char *aLayerPrefix,
         const char *aMsg,
         void *aUserData );
-    inline VkFormat GetVulkanFormat ( Pipeline::AttributeFormat aFormat )
-    {
-        switch ( aFormat )
-        {
-        case Pipeline::Vector2Float:
-            return VK_FORMAT_R32G32_SFLOAT;
-        case Pipeline::Vector3Float:
-            return VK_FORMAT_R32G32B32_SFLOAT;
-        case Pipeline::Vector4Byte:
-            return VK_FORMAT_R8G8B8A8_UINT;
-        case Pipeline::Vector4ByteNormalized:
-            return VK_FORMAT_R8G8B8A8_UNORM;
-        }
-        return VK_FORMAT_UNDEFINED;
-    }
 }
 #endif

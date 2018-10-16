@@ -29,14 +29,24 @@ namespace AeonGames
     {
     public:
         OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer );
+        ///@name Overrides
+        ///@{
+        void Load ( const std::string& aFilename ) final;
+        void Load ( uint32_t aId ) final;
+        void Load ( const void* aBuffer, size_t aBufferSize ) final;
+        void Load ( const PipelineBuffer& aPipelineBuffer ) final;
+        void Unload() final;
+        const Material* GetDefaultMaterial() const final;
+        ///@}
         ~OpenGLPipeline() final;
         void Use ( const OpenGLMaterial& aMaterial ) const;
-        GLenum GetGLTopology() const;
+        GLenum GetTopology() const;
     private:
         void Initialize();
         void Finalize();
         const OpenGLRenderer& mOpenGLRenderer;
         uint32_t mProgramId{};
+        GLenum mTopology{};
     };
 }
 #endif

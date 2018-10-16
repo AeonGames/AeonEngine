@@ -31,7 +31,7 @@ namespace AeonGames
     }
     const Pipeline& WorldEditor::GetGridPipeline() const
     {
-        return mGridPipeline;
+        return *mGridPipeline;
     }
     const Mesh& WorldEditor::GetGridMesh() const
     {
@@ -39,22 +39,22 @@ namespace AeonGames
     }
     const Material& WorldEditor::GetXGridMaterial() const
     {
-        return mXGridMaterial;
+        return *mXGridMaterial;
     }
     const Material& WorldEditor::GetYGridMaterial() const
     {
-        return mYGridMaterial;
+        return *mYGridMaterial;
     }
     const Pipeline& WorldEditor::GetWirePipeline() const
     {
-        return mWirePipeline;
+        return *mWirePipeline;
     }
     const Mesh& WorldEditor::GetAABBWireMesh() const
     {
         return mAABBWireMesh;
     }
 
-    static void LoadPipeline ( Pipeline& aPipeline, const std::string& aFileName )
+    static void LoadPipeline ( Pipeline* aPipeline, const std::string& aFileName )
     {
         QFile pipeline_file ( aFileName.c_str() );
         if ( !pipeline_file.open ( QIODevice::ReadOnly ) )
@@ -62,7 +62,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open pipeline." );
         }
         QByteArray pipeline_byte_array = pipeline_file.readAll();
-        aPipeline.Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
+        aPipeline->Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
     }
 
     static void LoadMesh ( Mesh& aMesh, const std::string& aFileName )
@@ -110,9 +110,9 @@ namespace AeonGames
         }
 
         {
-            LoadPipeline ( mGridPipeline, ":/pipelines/grid.prg" );
-            LoadPipeline ( mWirePipeline, ":/pipelines/solid_wire.prg" );
-
+            LoadPipeline ( mGridPipeline.get(), ":/pipelines/grid.prg" );
+            LoadPipeline ( mWirePipeline.get(), ":/pipelines/solid_wire.prg" );
+#if 0
             mXGridMaterial = mGridPipeline.GetDefaultMaterial();
             mXGridMaterial.Set ( "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} );
             mXGridMaterial.Set ( "StartingPosition", Vector3{0.0f, - ( mGridSettings.height() / 2 ), 0.0f} );
@@ -188,6 +188,7 @@ namespace AeonGames
                 static_cast<float> ( mGridSettings.borderLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
             } );
+#endif
         }
         LoadMesh ( mGridMesh, ":/meshes/grid.msh" );
         LoadMesh ( mAABBWireMesh, ":/meshes/aabb_wire.msh" );

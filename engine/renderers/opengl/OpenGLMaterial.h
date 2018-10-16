@@ -20,6 +20,9 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Memory.h"
 #include "aeongames/Material.h"
+#include "aeongames/Vector2.h"
+#include "aeongames/Vector3.h"
+#include "aeongames/Vector4.h"
 #include "OpenGLBuffer.h"
 
 namespace AeonGames
@@ -31,6 +34,45 @@ namespace AeonGames
     public:
         OpenGLMaterial();
         ~OpenGLMaterial() final;
+        ///@name Loaders
+        ///@{
+        void Load ( const std::string& aFilename ) final;
+        void Load ( const uint32_t aId ) final;
+        void Load ( const void* aBuffer, size_t aBufferSize ) final;
+        void Load ( const MaterialBuffer& aMaterialBuffer ) final;
+        void Unload() = 0;
+        ///@}
+        ///@name Allocators
+        ///@{
+        void AddUint ( const std::string& aName, uint32_t aValue ) final;
+        void AddSint ( const std::string& aName, int32_t aValue ) final;
+        void AddFloat ( const std::string& aName, float aValue ) final;
+        void AddFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
+        void AddFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
+        void AddFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
+        void AddSampler ( const std::string& aName, const std::string& aValue ) final;
+        void Remove ( const std::string& aName ) final;
+        ///@}
+        ///@name Property Setters
+        ///@{
+        void SetUint ( const std::string& aName, uint32_t aValue ) final;
+        void SetSint ( const std::string& aName, int32_t aValue ) final;
+        void SetFloat ( const std::string& aName, float aValue ) final;
+        void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
+        void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
+        void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
+        void SetSampler ( const std::string& aName, const std::string& aValue ) final;
+        ///@}
+        ///@name Property Getters
+        ///@{
+        uint32_t GetUint ( const std::string& aName ) final;
+        int32_t GetSint ( const std::string& aName ) final;
+        float GetFloat ( const std::string& aName ) final;
+        Vector2 GetFloatVec2 ( const std::string& aName ) final;
+        Vector3 GetFloatVec3 ( const std::string& aName ) final;
+        Vector4 GetFloatVec4 ( const std::string& aName ) final;
+        std::string GetSampler ( const std::string& aName ) final;
+        ///@}
         GLuint GetPropertiesBufferId() const;
         const Material& GetMaterial() const;
     private:
