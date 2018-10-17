@@ -518,12 +518,13 @@ namespace AeonGames
         }
         {
             const VkDeviceSize offset = 0;
+            const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
             vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &reinterpret_cast<const VulkanMesh*> ( &aMesh )->GetBuffer(), &offset );
             if ( aMesh.GetIndexCount() )
             {
                 vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
                                        reinterpret_cast<const VulkanMesh*> ( &aMesh )->GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
-                                       GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMesh.GetIndexType() ) ) );
+                                       vulkan_mesh.GetIndexType() );
                 vkCmdDrawIndexed (
                     mVulkanRenderer.GetCommandBuffer(),
                     ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),

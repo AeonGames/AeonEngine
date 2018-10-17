@@ -139,6 +139,7 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
+        const OpenGLMesh& opengl_mesh{reinterpret_cast<const OpenGLMesh&> ( aMesh ) };
         const OpenGLMaterial* material = reinterpret_cast<const OpenGLMaterial*> ( ( aMaterial ) ? aMaterial : aPipeline.GetDefaultMaterial() );
         reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->Use ( *material );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -147,14 +148,14 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
-        glBindVertexArray ( reinterpret_cast<const OpenGLMesh*> ( &aMesh )->GetArrayId() );
+        glBindVertexArray ( opengl_mesh.GetArrayId() );
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( aMesh.GetIndexCount() )
         {
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<const OpenGLMesh*> ( &aMesh )->GetIndexBufferId() );
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, opengl_mesh.GetIndexBufferId() );
             OPENGL_CHECK_ERROR_NO_THROW;
             glDrawElementsInstanced ( reinterpret_cast<const OpenGLPipeline*> ( &aPipeline )->GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                      0x1400 | aMesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
+                                      opengl_mesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else

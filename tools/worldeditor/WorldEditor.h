@@ -43,11 +43,11 @@ namespace AeonGames
     private:
         GridSettings mGridSettings{};
         std::unique_ptr<Pipeline> mGridPipeline{};
-        Mesh mGridMesh{};
+        std::unique_ptr<Mesh> mGridMesh{};
         std::unique_ptr<Material> mXGridMaterial{};
         std::unique_ptr<Material> mYGridMaterial{};
         std::unique_ptr<Pipeline> mWirePipeline{};
-        Mesh mAABBWireMesh{};
+        std::unique_ptr<Mesh> mAABBWireMesh{};
     };
 }
 #endif

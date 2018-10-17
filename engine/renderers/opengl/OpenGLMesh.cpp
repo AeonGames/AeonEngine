@@ -32,47 +32,93 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
+#include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
 #include "OpenGLFunctions.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/CRC.h"
 #include "OpenGLMesh.h"
 
 namespace AeonGames
 {
-    OpenGLMesh::OpenGLMesh ( const OpenGLRenderer& aOpenGLRenderer ) : Mesh (), mOpenGLRenderer ( aOpenGLRenderer )
+    OpenGLMesh::OpenGLMesh ( const OpenGLRenderer& aOpenGLRenderer ) : mOpenGLRenderer { aOpenGLRenderer }
     {
-        try
-        {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
-    }
-    OpenGLMesh::~OpenGLMesh()
-    {
-        Finalize();
     }
 
-    uint32_t OpenGLMesh::GetArrayId() const
+    OpenGLMesh::~OpenGLMesh()
+    {
+        Unload();
+    }
+
+    GLuint OpenGLMesh::GetArrayId() const
     {
         return mArray;
     }
 
-    uint32_t OpenGLMesh::GetVertexBufferId() const
+    GLuint OpenGLMesh::GetVertexBufferId() const
     {
         return mVertexBuffer;
     }
 
-    uint32_t OpenGLMesh::GetIndexBufferId() const
+    GLuint OpenGLMesh::GetIndexBufferId() const
     {
         return mIndexBuffer;
     }
 
-    void OpenGLMesh::Initialize()
+    GLenum OpenGLMesh::GetIndexType() const
     {
+        return mIndexType;
+    }
+
+    void OpenGLMesh::Load ( const std::string& aFilename )
+    {
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+    }
+    void OpenGLMesh::Load ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
+    void OpenGLMesh::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static MeshBuffer mesh_buffer;
+        LoadProtoBufObject ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
+        Load ( mesh_buffer );
+        mesh_buffer.Clear();
+    }
+    void OpenGLMesh::Load ( const MeshBuffer& aMeshBuffer )
+    {
+        mAABB = AABB
+        {
+            {
+                aMeshBuffer.center().x(),
+                aMeshBuffer.center().y(),
+                aMeshBuffer.center().z()
+            },
+            {
+                aMeshBuffer.radii().x(),
+                aMeshBuffer.radii().y(),
+                aMeshBuffer.radii().z()
+            }
+        };
+
+        mVertexCount = aMeshBuffer.vertexcount();
+        mIndexCount = aMeshBuffer.indexcount();
+        mIndexType = 1400 | aMeshBuffer.indextype();
+        mVertexFlags = aMeshBuffer.vertexflags();
+
+        // OpenGL Specific Code:
+        ///@todo Use OpenGLBuffer class instead of raw GL ids
+
         glGenVertexArrays ( 1, &mArray );
         OPENGL_CHECK_ERROR_THROW;
         glBindVertexArray ( mArray );
@@ -81,81 +127,80 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_ARRAY_BUFFER, GetVertexBuffer().size(), GetVertexBuffer().data(), GL_STATIC_DRAW );
+        glBufferData ( GL_ARRAY_BUFFER, aMeshBuffer.vertexbuffer().size(), aMeshBuffer.vertexbuffer().data(), GL_STATIC_DRAW );
         OPENGL_CHECK_ERROR_THROW;
 
         uint8_t* offset = nullptr;
-        if ( GetVertexFlags() & Mesh::POSITION_BIT )
+        if ( mVertexFlags & Mesh::POSITION_BIT )
         {
             glEnableVertexAttribArray ( 0 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride(), offset );
+            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
 
-        if ( GetVertexFlags() & Mesh::NORMAL_BIT )
+        if ( mVertexFlags & Mesh::NORMAL_BIT )
         {
             glEnableVertexAttribArray ( 1 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride(), offset );
+            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
 
-        if ( GetVertexFlags() & Mesh::TANGENT_BIT )
+        if ( mVertexFlags & Mesh::TANGENT_BIT )
         {
             glEnableVertexAttribArray ( 2 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride(), offset );
+            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
 
-        if ( GetVertexFlags() & Mesh::BITANGENT_BIT )
+        if ( mVertexFlags & Mesh::BITANGENT_BIT )
         {
             glEnableVertexAttribArray ( 3 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride(), offset );
+            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
 
-        if ( GetVertexFlags() & Mesh::UV_BIT )
+        if ( mVertexFlags & Mesh::UV_BIT )
         {
             glEnableVertexAttribArray ( 4 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride(), offset );
+            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 2;
         }
 
-        if ( GetVertexFlags() & Mesh::WEIGHT_BIT )
+        if ( mVertexFlags & Mesh::WEIGHT_BIT )
         {
             glEnableVertexAttribArray ( 5 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride(), offset );
+            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
             glEnableVertexAttribArray ( 6 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride(), offset );
+            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mVertexFlags ), offset );
             OPENGL_CHECK_ERROR_THROW;
             //offset += sizeof ( uint8_t ) * 4;
         }
         //---Index Buffer---
-        if ( GetIndexCount() )
+        if ( mIndexCount )
         {
             glGenBuffers ( 1, &mIndexBuffer );
             OPENGL_CHECK_ERROR_THROW;
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
             OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, GetIndexBuffer().size(), GetIndexBuffer().data(), GL_STATIC_DRAW );
+            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, aMeshBuffer.indexbuffer().size(), aMeshBuffer.indexbuffer().data(), GL_STATIC_DRAW );
             OPENGL_CHECK_ERROR_THROW;
         }
     }
-
-    void OpenGLMesh::Finalize()
+    void OpenGLMesh::Unload ()
     {
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsVertexArray ( mArray ) )
@@ -182,5 +227,34 @@ namespace AeonGames
             mIndexBuffer = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    size_t OpenGLMesh::GetIndexSize () const
+    {
+        switch ( mIndexType )
+        {
+        case GL_UNSIGNED_BYTE:
+            return 1;
+        case GL_UNSIGNED_SHORT:
+            return 2;
+        case GL_UNSIGNED_INT:
+            return 4;
+        };
+        throw std::runtime_error ( "Invalid Index Type." );
+    }
+
+    size_t OpenGLMesh::GetIndexCount() const
+    {
+        return mIndexCount;
+    }
+
+    size_t OpenGLMesh::GetVertexCount() const
+    {
+        return mVertexCount;
+    }
+
+    const AABB& OpenGLMesh::GetAABB() const
+    {
+        return mAABB;
     }
 }

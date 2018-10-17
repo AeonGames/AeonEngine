@@ -20,6 +20,7 @@ limitations under the License.
 #include <string>
 #include <memory>
 #include "aeongames/Mesh.h"
+#include "aeongames/AABB.h"
 
 namespace AeonGames
 {
@@ -29,16 +30,32 @@ namespace AeonGames
     public:
         OpenGLMesh ( const OpenGLRenderer& aOpenGLRenderer );
         ~OpenGLMesh() final;
-        uint32_t GetArrayId() const;
-        uint32_t GetVertexBufferId() const;
-        uint32_t GetIndexBufferId() const;
+        void Load ( uint32_t aId ) final;
+        void Load ( const std::string& aFilename ) final;
+        void Load ( const void* aBuffer, size_t aBufferSize ) final;
+        void Load ( const MeshBuffer& aMeshBuffer ) final;
+        void Unload () final;
+        size_t GetIndexSize () const final;
+        size_t GetIndexCount() const final;
+        size_t GetVertexCount() const final;
+        const AABB& GetAABB() const final;
+        ///@name OpenGL Specific API
+        ///@{
+        GLenum GetIndexType() const;
+        GLuint GetArrayId() const;
+        GLuint GetVertexBufferId() const;
+        GLuint GetIndexBufferId() const;
+        ///@}
     private:
-        void Initialize();
-        void Finalize();
         const OpenGLRenderer& mOpenGLRenderer;
-        uint32_t mArray{};
-        uint32_t mVertexBuffer{};
-        uint32_t mIndexBuffer{};
+        AABB mAABB;
+        uint32_t mVertexFlags{};
+        uint32_t mVertexCount{};
+        uint32_t mIndexCount{};
+        GLenum mIndexType{};
+        GLuint mArray{};
+        GLuint mVertexBuffer{};
+        GLuint mIndexBuffer{};
     };
 }
 #endif

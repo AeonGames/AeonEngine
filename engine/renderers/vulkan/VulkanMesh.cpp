@@ -21,8 +21,19 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+#include "mesh.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+#include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
-#include "aeongames/Mesh.h"
+#include "aeongames/CRC.h"
 #include "VulkanRenderer.h"
 #include "VulkanMesh.h"
 #include "VulkanUtilities.h"
@@ -30,35 +41,77 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanMesh::VulkanMesh ( const VulkanRenderer&  aVulkanRenderer ) :
-        Mesh(), mVulkanRenderer ( aVulkanRenderer ), mBuffer ( mVulkanRenderer )
+        mVulkanRenderer ( aVulkanRenderer ), mBuffer ( mVulkanRenderer )
     {
-        try
-        {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
     }
     VulkanMesh::~VulkanMesh()
     {
-        Finalize();
+        Unload();
+    }
+
+    VkIndexType VulkanMesh::GetIndexType() const
+    {
+        return mIndexType;
     }
 
     const VkBuffer & VulkanMesh::GetBuffer() const
     {
         return mBuffer.GetBuffer();
     }
-
-    void VulkanMesh::Initialize()
+    void VulkanMesh::Load ( const std::string& aFilename )
     {
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+    }
+    void VulkanMesh::Load ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
+    void VulkanMesh::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static MeshBuffer mesh_buffer;
+        LoadProtoBufObject ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
+        Load ( mesh_buffer );
+        mesh_buffer.Clear();
+    }
+
+    void VulkanMesh::Load ( const MeshBuffer& aMeshBuffer )
+    {
+        mAABB = AABB
+        {
+            {
+                aMeshBuffer.center().x(),
+                aMeshBuffer.center().y(),
+                aMeshBuffer.center().z()
+            },
+            {
+                aMeshBuffer.radii().x(),
+                aMeshBuffer.radii().y(),
+                aMeshBuffer.radii().z()
+            }
+        };
+
+        mVertexCount = aMeshBuffer.vertexcount();
+        mIndexCount = aMeshBuffer.indexcount();
+        mIndexType =  GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMeshBuffer.indextype() ) );
+        mVertexFlags = aMeshBuffer.vertexflags();
+
+        // Vulkan Specific code
         const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * GetVertexCount() );
-        const VkDeviceSize index_buffer_size = ( GetIndexBuffer().length() *
-                                               ( ( GetIndexType() == Mesh::BYTE || GetIndexType() == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
+        // We need to expand 1 byte indices to 2 since they're not supported on Vulkan
+        const VkDeviceSize index_buffer_size = ( aMeshBuffer.indexbuffer().size() *
+                                               ( ( aMeshBuffer.indextype() == Mesh::BYTE || aMeshBuffer.indextype() == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
         VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
-        VkBufferUsageFlags buffer_usage = ( ( GetVertexCount() ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( GetIndexCount() ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
+        VkBufferUsageFlags buffer_usage = ( ( mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
         mBuffer.Initialize ( buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
         std::vector<uint8_t> buffer ( buffer_size );
         if ( GetVertexCount() )
@@ -68,66 +121,95 @@ namespace AeonGames
             uintptr_t offset = 0;
             for ( uint32_t j = 0; j < GetVertexCount(); ++j )
             {
-                if ( GetVertexFlags() & Mesh::POSITION_BIT )
+                if ( mVertexFlags & Mesh::POSITION_BIT )
                 {
-                    memcpy ( vertices[j].position, GetVertexBuffer().data() + offset, sizeof ( Vertex::position ) );
+                    memcpy ( vertices[j].position, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::position ) );
                     offset += sizeof ( Vertex::position );
                 }
 
-                if ( GetVertexFlags() & Mesh::NORMAL_BIT )
+                if ( mVertexFlags & Mesh::NORMAL_BIT )
                 {
-                    memcpy ( vertices[j].normal, GetVertexBuffer().data() + offset, sizeof ( Vertex::normal ) );
+                    memcpy ( vertices[j].normal, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::normal ) );
                     offset += sizeof ( Vertex::normal );
                 }
 
-                if ( GetVertexFlags() & Mesh::TANGENT_BIT )
+                if ( mVertexFlags & Mesh::TANGENT_BIT )
                 {
-                    memcpy ( vertices[j].tangent, GetVertexBuffer().data() + offset, sizeof ( Vertex::tangent ) );
+                    memcpy ( vertices[j].tangent, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::tangent ) );
                     offset += sizeof ( Vertex::tangent );
                 }
 
-                if ( GetVertexFlags() & Mesh::BITANGENT_BIT )
+                if ( mVertexFlags & Mesh::BITANGENT_BIT )
                 {
-                    memcpy ( vertices[j].bitangent, GetVertexBuffer().data() + offset, sizeof ( Vertex::bitangent ) );
+                    memcpy ( vertices[j].bitangent, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::bitangent ) );
                     offset += sizeof ( Vertex::bitangent );
                 }
 
-                if ( GetVertexFlags() & Mesh::UV_BIT )
+                if ( mVertexFlags & Mesh::UV_BIT )
                 {
-                    memcpy ( vertices[j].uv, GetVertexBuffer().data() + offset, sizeof ( Vertex::uv ) );
+                    memcpy ( vertices[j].uv, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::uv ) );
                     offset += sizeof ( Vertex::uv );
                 }
 
-                if ( GetVertexFlags() & Mesh::WEIGHT_BIT )
+                if ( mVertexFlags & Mesh::WEIGHT_BIT )
                 {
-                    memcpy ( vertices[j].weight_indices, GetVertexBuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
+                    memcpy ( vertices[j].weight_indices, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
                     offset += sizeof ( Vertex::weight_indices );
-                    memcpy ( vertices[j].weight_influences, GetVertexBuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
+                    memcpy ( vertices[j].weight_influences, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
                     offset += sizeof ( Vertex::weight_influences );
                 }
             }
         }
-        if ( GetIndexCount() )
+        if ( mIndexCount )
         {
             void* data = buffer.data() + vertex_buffer_size;
-            if ( ! ( GetIndexType() == Mesh::BYTE || GetIndexType() == Mesh::UNSIGNED_BYTE ) )
+            if ( ! ( aMeshBuffer.indextype() == Mesh::BYTE || aMeshBuffer.indextype() == Mesh::UNSIGNED_BYTE ) )
             {
-                memcpy ( data, GetIndexBuffer().data(), GetIndexBuffer().size() );
+                memcpy ( data, aMeshBuffer.indexbuffer().data(), aMeshBuffer.indexbuffer().size() );
             }
             else
             {
                 /**@note upcast 16 bit indices.*/
-                for ( size_t j = 0; j < GetIndexBuffer().size(); ++j )
+                for ( size_t j = 0; j < aMeshBuffer.indexbuffer().size(); ++j )
                 {
-                    reinterpret_cast<uint16_t*> ( data ) [j] = GetIndexBuffer() [j];
+                    reinterpret_cast<uint16_t*> ( data ) [j] = aMeshBuffer.indexbuffer() [j];
                 }
             }
         }
         mBuffer.WriteMemory ( 0, buffer.size(), buffer.data() );
     }
 
-    void VulkanMesh::Finalize()
+    void VulkanMesh::Unload ()
     {
+    }
+
+    size_t VulkanMesh::GetIndexCount() const
+    {
+        return mIndexCount;
+    }
+
+    size_t VulkanMesh::GetVertexCount() const
+    {
+        return mVertexCount;
+    }
+
+    const AABB& VulkanMesh::GetAABB() const
+    {
+        return mAABB;
+    }
+
+    size_t VulkanMesh::GetIndexSize () const
+    {
+        switch ( mIndexType )
+        {
+        case VK_INDEX_TYPE_UINT16:
+            return 2;
+        case VK_INDEX_TYPE_UINT32:
+            return 4;
+        default:
+            break;
+        };
+        throw std::runtime_error ( "Invalid Index Type." );
     }
 
     VkIndexType GetVulkanIndexType ( Mesh::IndexType aIndexType )

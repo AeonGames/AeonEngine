@@ -30,13 +30,27 @@ namespace AeonGames
     {
     public:
         VulkanMesh ( const VulkanRenderer&  aVulkanRenderer );
-        ~VulkanMesh();
+        ~VulkanMesh() final;
+        void Load ( uint32_t aId ) final;
+        void Load ( const std::string& aFilename ) final;
+        void Load ( const void* aBuffer, size_t aBufferSize ) final;
+        void Load ( const MeshBuffer& aMeshBuffer ) final;
+        void Unload () final;
+        size_t GetIndexSize () const final;
+        size_t GetIndexCount() const final;
+        size_t GetVertexCount() const final;
+        const AABB& GetAABB() const final;
+
+        VkIndexType GetIndexType() const;
         const VkBuffer& GetBuffer() const;
     private:
-        void Initialize();
-        void Finalize();
         const VulkanRenderer& mVulkanRenderer;
         VulkanBuffer mBuffer;
+        AABB mAABB{};
+        VkIndexType mIndexType{};
+        uint32_t mVertexFlags{};
+        uint32_t mVertexCount{};
+        uint32_t mIndexCount{};
     };
     VkIndexType GetVulkanIndexType ( Mesh::IndexType aIndexType );
 }

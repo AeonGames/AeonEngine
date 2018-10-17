@@ -601,7 +601,8 @@ namespace AeonGames
 
     std::unique_ptr<Mesh> VulkanRenderer::CreateMesh() const
     {
-        return std::make_unique<VulkanMesh> ( *this );
+        //return std::make_unique<VulkanMesh> ( *this );
+        return nullptr;
     }
     std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline() const
     {

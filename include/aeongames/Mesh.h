@@ -50,27 +50,24 @@ namespace AeonGames
             FOUR_BYTES = 0x09,
             DOUBLE = 0x0A
         };
-        DLL Mesh ();
-        DLL Mesh ( uint32_t aId );
-        DLL Mesh ( const std::string& aFilename );
-        DLL Mesh ( const void* aBuffer, size_t aBufferSize );
-        DLL virtual ~Mesh();
-        DLL void Load ( const std::string& aFilename );
-        DLL void Load ( const void* aBuffer, size_t aBufferSize );
-        DLL void Unload ();
+        DLL virtual ~Mesh() = 0;
+        virtual void Load ( uint32_t aId ) = 0;
+        virtual void Load ( const std::string& aFilename ) = 0;
+        virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
+        virtual void Load ( const MeshBuffer& aMeshBuffer ) = 0;
+        virtual void Unload () = 0;
+        virtual size_t GetIndexSize () const = 0;
+        virtual size_t GetIndexCount() const = 0;
+        virtual size_t GetVertexCount() const = 0;
+        virtual const AABB& GetAABB() const = 0;
+#if 0
         DLL uint32_t GetStride () const;
-        DLL uint32_t GetIndexSize () const;
-        DLL const AABB& GetAABB() const;
         DLL uint32_t GetVertexFlags() const;
-        DLL uint32_t GetVertexCount() const;
         DLL uint32_t GetIndexType() const;
         DLL uint32_t GetIndexCount() const;
         DLL const std::string& GetVertexBuffer() const;
         DLL const std::string& GetIndexBuffer() const;
-        DLL static const std::shared_ptr<Mesh> GetMesh ( uint32_t aId );
-        DLL static const std::shared_ptr<Mesh> GetMesh ( const std::string& aPath );
     private:
-        void Load ( const MeshBuffer& aMeshBuffer );
         AABB mAABB;
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};
@@ -78,6 +75,37 @@ namespace AeonGames
         uint32_t mIndexCount{};
         std::string mVertexBuffer;
         std::string mIndexBuffer;
+#endif
     };
+
+    inline size_t GetStride ( uint32_t aVertexFlags )
+    {
+        size_t stride = 0;
+        if ( aVertexFlags & Mesh::AttributeMask::POSITION_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aVertexFlags & Mesh::AttributeMask::NORMAL_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aVertexFlags & Mesh::AttributeMask::TANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aVertexFlags & Mesh::AttributeMask::BITANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( aVertexFlags & Mesh::AttributeMask::UV_BIT )
+        {
+            stride += sizeof ( float ) * 2;
+        }
+        if ( aVertexFlags & Mesh::AttributeMask::WEIGHT_BIT )
+        {
+            stride += sizeof ( uint8_t ) * 8;
+        }
+        return stride;
+    }
 }
 #endif

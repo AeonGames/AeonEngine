@@ -35,7 +35,7 @@ namespace AeonGames
     }
     const Mesh& WorldEditor::GetGridMesh() const
     {
-        return mGridMesh;
+        return *mGridMesh;
     }
     const Material& WorldEditor::GetXGridMaterial() const
     {
@@ -51,7 +51,7 @@ namespace AeonGames
     }
     const Mesh& WorldEditor::GetAABBWireMesh() const
     {
-        return mAABBWireMesh;
+        return *mAABBWireMesh;
     }
 
     static void LoadPipeline ( Pipeline* aPipeline, const std::string& aFileName )
@@ -190,8 +190,8 @@ namespace AeonGames
             } );
 #endif
         }
-        LoadMesh ( mGridMesh, ":/meshes/grid.msh" );
-        LoadMesh ( mAABBWireMesh, ":/meshes/aabb_wire.msh" );
+        LoadMesh ( *mGridMesh, ":/meshes/grid.msh" );
+        LoadMesh ( *mAABBWireMesh, ":/meshes/aabb_wire.msh" );
 #if 0
         GetRenderer()->LoadRenderMesh ( mGridMesh );
         GetRenderer()->LoadRenderPipeline ( mGridPipeline );

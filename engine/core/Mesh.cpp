@@ -40,7 +40,9 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Mesh::Mesh() : mAABB{}
+    Mesh::~Mesh() = default;
+#if 0
+    Mesh::Mesh() : mAABB {}
     {
     }
     Mesh::Mesh ( const std::string&  aFilename )
@@ -86,8 +88,6 @@ namespace AeonGames
             throw;
         }
     }
-
-    Mesh::~Mesh() = default;
 
     const std::shared_ptr<Mesh> Mesh::GetMesh ( uint32_t aId )
     {
@@ -246,4 +246,5 @@ namespace AeonGames
     {
         return mIndexBuffer;
     }
+#endif
 }
