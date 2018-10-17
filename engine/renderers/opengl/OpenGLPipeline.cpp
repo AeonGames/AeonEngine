@@ -17,14 +17,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 #include <regex>
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
 #include "aeongames/CRC.h"
-#include "OpenGLPipeline.h"
-#include "OpenGLMaterial.h"
-#include "OpenGLImage.h"
-#include "OpenGLFunctions.h"
-
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -36,6 +29,10 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "OpenGLPipeline.h"
+#include "OpenGLMaterial.h"
+#include "OpenGLImage.h"
+#include "OpenGLFunctions.h"
 
 namespace AeonGames
 {

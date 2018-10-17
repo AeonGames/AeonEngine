@@ -19,18 +19,7 @@ limitations under the License.
 #include <sstream>
 #include <fstream>
 #include <regex>
-#include <vulkan/vulkan.h>
 #include "aeongames/CRC.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "VulkanPipeline.h"
-#include "VulkanImage.h"
-#include "VulkanRenderer.h"
-#include "VulkanMaterial.h"
-#include "VulkanUtilities.h"
-#include "VulkanBuffer.h"
-#include "SPIR-V/CompilerLinker.h"
-
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -42,6 +31,14 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include <vulkan/vulkan.h>
+#include "VulkanPipeline.h"
+#include "VulkanImage.h"
+#include "VulkanRenderer.h"
+#include "VulkanMaterial.h"
+#include "VulkanUtilities.h"
+#include "VulkanBuffer.h"
+#include "SPIR-V/CompilerLinker.h"
 
 namespace AeonGames
 {
