@@ -40,6 +40,7 @@ message MeshBuffer {
     Vector3Buffer Radii    = 3;
     uint32 VertexFlags     = 4;
     uint32 VertexCount     = 5;
+    // TODO Change Index TYPE to be index SIZE, which is much more manageable
     uint32 IndexType       = 6;		
     uint32 IndexCount      = 7;
     bytes VertexBuffer     = 8;

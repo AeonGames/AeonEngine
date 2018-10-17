@@ -145,7 +145,8 @@ namespace AeonGames
 
             if ( assembly.has_mesh() )
             {
-                mesh = Mesh::GetMesh ( GetReferenceBufferId ( assembly.mesh() ) );
+                assert ( 0 );
+                //mesh = Mesh::GetMesh ( GetReferenceBufferId ( assembly.mesh() ) );
             }
 
             if ( assembly.has_pipeline() )

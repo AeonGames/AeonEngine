@@ -68,7 +68,7 @@ namespace AeonGames
         class UniformVariable
         {
         public:
-            UniformVariable ( const std::string& aName, uint32_t aType, uint32_t aOffset ) :
+            UniformVariable ( const std::string& aName, size_t aType, size_t aOffset ) :
                 mName{aName},
                 mType{aType},
                 mOffset{aOffset} {}
@@ -76,18 +76,18 @@ namespace AeonGames
             {
                 return mName;
             }
-            uint32_t GetType()
+            size_t GetType()
             {
                 return mType;
             }
-            uint32_t GetOffset()
+            size_t GetOffset()
             {
                 return mOffset;
             }
         private:
             std::string mName{};
-            uint32_t mType{};
-            uint32_t mOffset{};
+            size_t mType{};
+            size_t mOffset{};
         };
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
