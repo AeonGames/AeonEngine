@@ -35,9 +35,9 @@ namespace AeonGames
         void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const MeshBuffer& aMeshBuffer ) final;
         void Unload () final;
-        size_t GetIndexSize () const final;
-        size_t GetIndexCount() const final;
-        size_t GetVertexCount() const final;
+        uint32_t GetIndexSize () const final;
+        uint32_t GetIndexCount() const final;
+        uint32_t GetVertexCount() const final;
         const AABB& GetAABB() const final;
         ///@name OpenGL Specific API
         ///@{

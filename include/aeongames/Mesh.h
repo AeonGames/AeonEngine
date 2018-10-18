@@ -36,7 +36,7 @@ namespace AeonGames
         };
         enum IndexType
         {
-            /**@todo Refactor to make order better match sizes.
+            /**@todo Refactor to store index size rather than type.
                This will involve changing the exporter and the msh format specification.*/
             BYTE = 0x00,
             UNSIGNED_BYTE = 0x01,
@@ -56,31 +56,15 @@ namespace AeonGames
         virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
         virtual void Load ( const MeshBuffer& aMeshBuffer ) = 0;
         virtual void Unload () = 0;
-        virtual size_t GetIndexSize () const = 0;
-        virtual size_t GetIndexCount() const = 0;
-        virtual size_t GetVertexCount() const = 0;
+        virtual uint32_t GetIndexSize () const = 0;
+        virtual uint32_t GetIndexCount() const = 0;
+        virtual uint32_t GetVertexCount() const = 0;
         virtual const AABB& GetAABB() const = 0;
-#if 0
-        DLL uint32_t GetStride () const;
-        DLL uint32_t GetVertexFlags() const;
-        DLL uint32_t GetIndexType() const;
-        DLL uint32_t GetIndexCount() const;
-        DLL const std::string& GetVertexBuffer() const;
-        DLL const std::string& GetIndexBuffer() const;
-    private:
-        AABB mAABB;
-        uint32_t mVertexFlags{};
-        uint32_t mVertexCount{};
-        uint32_t mIndexType{};
-        uint32_t mIndexCount{};
-        std::string mVertexBuffer;
-        std::string mIndexBuffer;
-#endif
     };
 
-    inline size_t GetStride ( uint32_t aVertexFlags )
+    inline uint32_t GetStride ( uint32_t aVertexFlags )
     {
-        size_t stride = 0;
+        uint32_t stride = 0;
         if ( aVertexFlags & Mesh::AttributeMask::POSITION_BIT )
         {
             stride += sizeof ( float ) * 3;
