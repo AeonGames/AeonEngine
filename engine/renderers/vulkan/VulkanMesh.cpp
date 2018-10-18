@@ -183,12 +183,12 @@ namespace AeonGames
     {
     }
 
-    size_t VulkanMesh::GetIndexCount() const
+    uint32_t VulkanMesh::GetIndexCount() const
     {
         return mIndexCount;
     }
 
-    size_t VulkanMesh::GetVertexCount() const
+    uint32_t VulkanMesh::GetVertexCount() const
     {
         return mVertexCount;
     }
@@ -198,7 +198,7 @@ namespace AeonGames
         return mAABB;
     }
 
-    size_t VulkanMesh::GetIndexSize () const
+    uint32_t VulkanMesh::GetIndexSize () const
     {
         switch ( mIndexType )
         {

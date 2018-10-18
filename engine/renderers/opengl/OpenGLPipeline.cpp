@@ -17,6 +17,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 #include <regex>
+#include <array>
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"

@@ -35,7 +35,6 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
 #include "OpenGLFunctions.h"
-#include "aeongames/Mesh.h"
 #include "aeongames/CRC.h"
 #include "OpenGLMesh.h"
 
@@ -229,7 +228,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    size_t OpenGLMesh::GetIndexSize () const
+    uint32_t OpenGLMesh::GetIndexSize () const
     {
         switch ( mIndexType )
         {
@@ -243,12 +242,12 @@ namespace AeonGames
         throw std::runtime_error ( "Invalid Index Type." );
     }
 
-    size_t OpenGLMesh::GetIndexCount() const
+    uint32_t OpenGLMesh::GetIndexCount() const
     {
         return mIndexCount;
     }
 
-    size_t OpenGLMesh::GetVertexCount() const
+    uint32_t OpenGLMesh::GetVertexCount() const
     {
         return mVertexCount;
     }

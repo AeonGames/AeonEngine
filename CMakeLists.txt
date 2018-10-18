@@ -397,4 +397,11 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
     configure_file("${CMAKE_SOURCE_DIR}/cmake/settings.json.in" "${CMAKE_SOURCE_DIR}/.vscode/settings.json")
     configure_file("${CMAKE_SOURCE_DIR}/cmake/launch.json.in" "${CMAKE_SOURCE_DIR}/.vscode/launch.json")
     configure_file("${CMAKE_SOURCE_DIR}/cmake/c_cpp_properties.json.in" "${CMAKE_SOURCE_DIR}/.vscode/c_cpp_properties.json" @ONLY)
+    add_custom_target(fix-compile-commands
+        COMMAND
+            ${SED_EXECUTABLE} -i 's/\\/C\\//C:\\//g' ${CMAKE_BINARY_DIR}/compile_commands.json 
+        DEPENDS
+            ${CMAKE_BINARY_DIR}/compile_commands.json
+        COMMENT
+            "Fixing Compile Commands Database")
 endif()
