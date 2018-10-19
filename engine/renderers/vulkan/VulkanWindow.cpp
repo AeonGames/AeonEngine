@@ -500,8 +500,8 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const VulkanMaterial* material = reinterpret_cast<const VulkanMaterial*> ( ( aMaterial ) ? aMaterial : aPipeline.GetDefaultMaterial() );
-        std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, material->GetPropertiesDescriptorSet() }};
+        const VulkanMaterial& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( ( aMaterial ) ? *aMaterial : aPipeline.GetDefaultMaterial() );
+        std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, vulkan_material.GetPropertiesDescriptorSet() }};
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
         Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),

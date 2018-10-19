@@ -19,10 +19,10 @@ limitations under the License.
 #include <string>
 #include "OpenGLFunctions.h"
 #include "aeongames/Pipeline.h"
+#include "OpenGLMaterial.h"
 
 namespace AeonGames
 {
-    class OpenGLMaterial;
     class OpenGLRenderer;
     class OpenGLTexture;
     class OpenGLPipeline : public Pipeline
@@ -36,7 +36,7 @@ namespace AeonGames
         void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const PipelineBuffer& aPipelineBuffer ) final;
         void Unload() final;
-        const Material* GetDefaultMaterial() const final;
+        const OpenGLMaterial& GetDefaultMaterial() const final;
         ///@}
         ~OpenGLPipeline() final;
         void Use ( const OpenGLMaterial& aMaterial ) const;
@@ -47,6 +47,7 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         uint32_t mProgramId{};
         GLenum mTopology{};
+        OpenGLMaterial mDefaultMaterial{};
     };
 }
 #endif
