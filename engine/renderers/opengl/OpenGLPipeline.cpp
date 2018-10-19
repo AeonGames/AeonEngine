@@ -79,9 +79,9 @@ namespace AeonGames
         Unload();
     }
 
-    const Material* OpenGLPipeline::GetDefaultMaterial() const
+    const OpenGLMaterial& OpenGLPipeline::GetDefaultMaterial() const
     {
-        return nullptr;
+        return mDefaultMaterial;
     }
 
     void OpenGLPipeline::Load ( const std::string& aFilename )
@@ -338,6 +338,7 @@ namespace AeonGames
         }
 
         mTopology = GetGLTopology ( aPipelineBuffer.topology() );
+        mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
         std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
         std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
 

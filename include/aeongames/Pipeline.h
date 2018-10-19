@@ -24,6 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class MaterialBuffer;
     class PipelineBuffer;
 #if 1
     class Pipeline
@@ -35,7 +36,7 @@ namespace AeonGames
         virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
         virtual void Load ( const PipelineBuffer& aPipelineBuffer ) = 0;
         virtual void Unload() = 0;
-        virtual const Material* GetDefaultMaterial() const = 0;
+        virtual const Material& GetDefaultMaterial() const = 0;
     };
 #else
     class Pipeline

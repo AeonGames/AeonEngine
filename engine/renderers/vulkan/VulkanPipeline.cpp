@@ -19,6 +19,7 @@ limitations under the License.
 #include <sstream>
 #include <fstream>
 #include <regex>
+#include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
@@ -43,7 +44,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer& aVulkanRenderer ) :
-        mVulkanRenderer ( aVulkanRenderer )
+        mVulkanRenderer { aVulkanRenderer }, mDefaultMaterial {mVulkanRenderer}
     {
     }
 
@@ -52,9 +53,9 @@ namespace AeonGames
         Unload();
     }
 
-    const Material* VulkanPipeline::GetDefaultMaterial() const
+    const VulkanMaterial& VulkanPipeline::GetDefaultMaterial() const
     {
-        return nullptr;
+        return mDefaultMaterial;
     }
 
     const VkPipelineLayout VulkanPipeline::GetPipelineLayout() const
@@ -72,7 +73,17 @@ namespace AeonGames
     }
     void VulkanPipeline::Load ( uint32_t aId )
     {
-
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
     }
     void VulkanPipeline::Load ( const void* aBuffer, size_t aBufferSize ) {}
 
@@ -408,6 +419,7 @@ namespace AeonGames
 
     void VulkanPipeline::Load ( const PipelineBuffer& aPipelineBuffer )
     {
+        mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
         std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
         std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
 
@@ -639,6 +651,7 @@ namespace AeonGames
 
     void VulkanPipeline::Unload()
     {
+        mDefaultMaterial.Unload();
         if ( mVkPipeline != VK_NULL_HANDLE )
         {
             vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkPipeline, nullptr );
@@ -840,11 +853,6 @@ namespace AeonGames
 
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
-        if ( !GetDefaultMaterial() )
-        {
-            // We don' need a layout.
-            return;
-        }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 1 /*+ GetDefaultMaterial().GetSamplerCount()*/ );
         uint32_t binding = 0;

@@ -42,7 +42,7 @@ namespace AeonGames
         void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const PipelineBuffer& aPipelineBuffer ) final;
         void Unload() final;
-        const Material* GetDefaultMaterial() const final;
+        const VulkanMaterial& GetDefaultMaterial() const final;
         ///@}
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
@@ -50,6 +50,7 @@ namespace AeonGames
         void InitializeDescriptorSetLayout();
         void FinalizeDescriptorSetLayout();
         const VulkanRenderer& mVulkanRenderer;
+        VulkanMaterial mDefaultMaterial;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
         mVkShaderModules{ { VK_NULL_HANDLE } };
         /** Local DescriptorSetLayout,
