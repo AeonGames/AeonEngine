@@ -33,7 +33,17 @@ namespace AeonGames
     {
     public:
         OpenGLMaterial();
+        /// The Copy Contsructor is used for virtual copying.
+        OpenGLMaterial ( const OpenGLMaterial& aMaterial );
+        /// Assignment operator due to rule of zero/three/five.
+        OpenGLMaterial& operator= ( const OpenGLMaterial& aMaterial );
+        /// No move assignment allowed
+        OpenGLMaterial& operator = ( OpenGLMaterial&& ) = delete;
+        /// No move allowed
+        OpenGLMaterial ( OpenGLMaterial&& ) = delete;
         ~OpenGLMaterial() final;
+        /// @copydoc Material::Clone()
+        std::unique_ptr<Material> Clone() const final;
         ///@name Loaders
         ///@{
         void Load ( const std::string& aFilename ) final;

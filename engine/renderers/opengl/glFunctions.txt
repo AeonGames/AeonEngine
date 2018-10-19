@@ -138,6 +138,7 @@ glUnmapNamedBuffer
 glTextureSubImage2D
 #endif
 glGetTextureLevelParameteriv
+glCopyNamedBufferSubData
 #if 0
 // We're no longer using
 // GL_ARB_bindless_texture

@@ -38,6 +38,28 @@ limitations under the License.
 
 namespace AeonGames
 {
+    OpenGLMaterial::OpenGLMaterial() : mVariables{}, mUniformBuffer{}
+    {
+    }
+
+    OpenGLMaterial::OpenGLMaterial ( const OpenGLMaterial& aMaterial ) :
+        mVariables{aMaterial.mVariables},
+        mUniformBuffer{aMaterial.mUniformBuffer}
+    {
+    }
+
+    OpenGLMaterial& OpenGLMaterial::operator= ( const OpenGLMaterial& aMaterial )
+    {
+        mVariables = aMaterial.mVariables;
+        mUniformBuffer = aMaterial.mUniformBuffer;
+        return *this;
+    }
+
+    std::unique_ptr<Material> OpenGLMaterial::Clone() const
+    {
+        return std::make_unique<OpenGLMaterial> ( *this );
+    }
+
     void OpenGLMaterial::Load ( const std::string& aFilename )
     {
         Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
@@ -73,35 +95,30 @@ namespace AeonGames
         mVariables.reserve ( aMaterialBuffer.property().size() );
         for ( auto& i : aMaterialBuffer.property() )
         {
+            offset = size;
             switch ( i.value_case() )
             {
             case PropertyBuffer::ValueCase::kScalarFloat:
-                offset += ( offset % sizeof ( float ) ) ? sizeof ( float ) - ( offset % sizeof ( float ) ) : 0;
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
                 size += sizeof ( float );
                 break;
             case PropertyBuffer::ValueCase::kScalarUint:
-                offset += ( offset % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( offset % sizeof ( uint32_t ) ) : 0;
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
                 size += sizeof ( uint32_t );
                 break;
             case PropertyBuffer::ValueCase::kScalarInt:
-                offset += ( offset % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( offset % sizeof ( int32_t ) ) : 0;
                 size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
                 size += sizeof ( int32_t );
                 break;
             case PropertyBuffer::ValueCase::kVector2:
-                offset += ( offset % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( offset % ( sizeof ( float ) * 2 ) ) : 0;
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
                 size += sizeof ( float ) * 2;
                 break;
             case PropertyBuffer::ValueCase::kVector3:
-                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 3;
                 break;
             case PropertyBuffer::ValueCase::kVector4:
-                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 4;
                 break;
@@ -112,6 +129,7 @@ namespace AeonGames
         }
 
         size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+
         mUniformBuffer.Initialize ( static_cast<GLsizei> ( size ), GL_DYNAMIC_DRAW );
         uint8_t* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
         for ( auto& i : mVariables )
@@ -272,19 +290,6 @@ namespace AeonGames
     std::string OpenGLMaterial::GetSampler ( const std::string& aName )
     {
         return std::string{};
-    }
-
-    OpenGLMaterial::OpenGLMaterial() : mUniformBuffer{}
-    {
-        try
-        {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
     }
 
     OpenGLMaterial::~OpenGLMaterial()

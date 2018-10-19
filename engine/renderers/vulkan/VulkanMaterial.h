@@ -31,7 +31,18 @@ namespace AeonGames
     {
     public:
         VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer );
+        /// The Copy Contsructor is used for virtual copying.
+        VulkanMaterial ( const VulkanMaterial& aMaterial );
+        /// Assignment operator due to rule of zero/three/five.
+        VulkanMaterial& operator= ( const VulkanMaterial& aMaterial );
+        /// No move assignment allowed
+        VulkanMaterial& operator = ( VulkanMaterial&& ) = delete;
+        /// No move allowed
+        VulkanMaterial ( VulkanMaterial&& ) = delete;
+
         ~VulkanMaterial() final;
+        /// @copydoc Material::Clone()
+        std::unique_ptr<Material> Clone() const final;
         ///@name Loaders
         ///@{
         void Load ( const std::string& aFilename ) final;

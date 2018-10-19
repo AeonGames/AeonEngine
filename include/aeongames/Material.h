@@ -33,6 +33,8 @@ namespace AeonGames
     {
     public:
         DLL virtual ~Material() = 0;
+        /// Virtual Copy Constructor
+        virtual std::unique_ptr<Material> Clone() const = 0;
         ///@name Loaders
         ///@{
         virtual void Load ( const std::string& aFilename ) = 0;
