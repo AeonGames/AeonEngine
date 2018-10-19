@@ -23,8 +23,57 @@ limitations under the License.
 namespace AeonGames
 {
     OpenGLBuffer::OpenGLBuffer (  ) = default;
+    OpenGLBuffer::OpenGLBuffer ( const OpenGLBuffer& aBuffer ) :
+        mSize{aBuffer.mSize}, mUsage {aBuffer.mUsage}
+    {
+        if ( !mSize )
+        {
+            return;
+        }
+        glCreateBuffers ( 1, &mBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glNamedBufferData (  mBuffer,
+                             mSize,
+                             nullptr,
+                             mUsage );
+        OPENGL_CHECK_ERROR_THROW;
+        glCopyNamedBufferSubData (
+            aBuffer.mBuffer,
+            mBuffer,
+            0,
+            0,
+            mSize );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
+    OpenGLBuffer& OpenGLBuffer::operator= ( const OpenGLBuffer& aBuffer )
+    {
+        Finalize();
+        mSize = aBuffer.mSize;
+        mUsage = aBuffer.mUsage;
+        if ( !mSize )
+        {
+            return *this;
+        }
+        glCreateBuffers ( 1, &mBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glNamedBufferData (  mBuffer,
+                             mSize,
+                             nullptr,
+                             mUsage );
+        OPENGL_CHECK_ERROR_THROW;
+        glCopyNamedBufferSubData (
+            aBuffer.mBuffer,
+            mBuffer,
+            0,
+            0,
+            mSize );
+        OPENGL_CHECK_ERROR_THROW;
+        return *this;
+    }
+
     OpenGLBuffer::OpenGLBuffer ( const GLsizei aSize, const GLenum aUsage, const void *aData ) :
-        mSize ( aSize ), mUsage ( aUsage )
+        mSize{aSize}, mUsage {aUsage}
     {
         try
         {
@@ -115,6 +164,8 @@ namespace AeonGames
             glDeleteBuffers ( 1, &mBuffer );
             OPENGL_CHECK_ERROR_NO_THROW;
             mBuffer = 0;
+            mSize = 0;
+            mUsage = 0;
         }
     }
 }

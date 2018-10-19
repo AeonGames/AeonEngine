@@ -19,6 +19,7 @@ limitations under the License.
 #include <regex>
 #include <array>
 #include <utility>
+#include <cassert>
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -51,6 +52,31 @@ namespace AeonGames
     VulkanMaterial::~VulkanMaterial()
     {
         Unload();
+    }
+
+    VulkanMaterial::VulkanMaterial ( const VulkanMaterial& aMaterial ) :
+        mVulkanRenderer{aMaterial.mVulkanRenderer},
+        mUniformBuffer{aMaterial.mUniformBuffer},
+        mVariables{aMaterial.mVariables}
+    {
+        assert ( 0 && "Not yet fully implemented" );
+    }
+
+    VulkanMaterial& VulkanMaterial::operator= ( const VulkanMaterial& aMaterial )
+    {
+        if ( &mVulkanRenderer != &aMaterial.mVulkanRenderer )
+        {
+            throw std::runtime_error ( "Assigning materials from different renderer instances." );
+        }
+        mVariables = aMaterial.mVariables;
+        mUniformBuffer = aMaterial.mUniformBuffer;
+        assert ( 0 && "Not yet fully implemented" );
+        return *this;
+    }
+
+    std::unique_ptr<Material> VulkanMaterial::Clone() const
+    {
+        return std::make_unique<VulkanMaterial> ( *this );
     }
 
     void VulkanMaterial::Load ( const std::string& aFilename )
@@ -88,35 +114,30 @@ namespace AeonGames
         mVariables.reserve ( aMaterialBuffer.property().size() );
         for ( auto& i : aMaterialBuffer.property() )
         {
+            offset = size;
             switch ( i.value_case() )
             {
             case PropertyBuffer::ValueCase::kScalarFloat:
-                offset += ( offset % sizeof ( float ) ) ? sizeof ( float ) - ( offset % sizeof ( float ) ) : 0;
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
                 size += sizeof ( float );
                 break;
             case PropertyBuffer::ValueCase::kScalarUint:
-                offset += ( offset % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( offset % sizeof ( uint32_t ) ) : 0;
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
                 size += sizeof ( uint32_t );
                 break;
             case PropertyBuffer::ValueCase::kScalarInt:
-                offset += ( offset % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( offset % sizeof ( int32_t ) ) : 0;
                 size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
                 size += sizeof ( int32_t );
                 break;
             case PropertyBuffer::ValueCase::kVector2:
-                offset += ( offset % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( offset % ( sizeof ( float ) * 2 ) ) : 0;
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
                 size += sizeof ( float ) * 2;
                 break;
             case PropertyBuffer::ValueCase::kVector3:
-                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 3;
                 break;
             case PropertyBuffer::ValueCase::kVector4:
-                offset += ( offset % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( offset % ( sizeof ( float ) * 4 ) ) : 0;
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 4;
                 break;

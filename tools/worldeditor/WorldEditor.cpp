@@ -54,7 +54,7 @@ namespace AeonGames
         return *mAABBWireMesh;
     }
 
-    static void LoadPipeline ( Pipeline* aPipeline, const std::string& aFileName )
+    static void LoadPipeline ( Pipeline& aPipeline, const std::string& aFileName )
     {
         QFile pipeline_file ( aFileName.c_str() );
         if ( !pipeline_file.open ( QIODevice::ReadOnly ) )
@@ -62,7 +62,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open pipeline." );
         }
         QByteArray pipeline_byte_array = pipeline_file.readAll();
-        aPipeline->Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
+        aPipeline.Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
     }
 
     static void LoadMesh ( Mesh& aMesh, const std::string& aFileName )
@@ -110,40 +110,43 @@ namespace AeonGames
         }
 
         {
-            LoadPipeline ( mGridPipeline.get(), ":/pipelines/grid.prg" );
-            LoadPipeline ( mWirePipeline.get(), ":/pipelines/solid_wire.prg" );
-#if 0
-            mXGridMaterial = mGridPipeline.GetDefaultMaterial();
-            mXGridMaterial.Set ( "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} );
-            mXGridMaterial.Set ( "StartingPosition", Vector3{0.0f, - ( mGridSettings.height() / 2 ), 0.0f} );
-            mXGridMaterial.Set ( "Offset", Vector3{0.0f, ( mGridSettings.height() / static_cast<float> ( mGridSettings.horizontalSpacing() ) ), 0.0f} );
-            mXGridMaterial.Set ( "LineCount", mGridSettings.horizontalSpacing() + 1 );
-            mXGridMaterial.Set ( "OddLineColor",
-                                 Vector4
+            mGridPipeline = GetRenderer()->CreatePipeline();
+            mWirePipeline = GetRenderer()->CreatePipeline();
+
+            LoadPipeline ( *mGridPipeline, ":/pipelines/grid.prg" );
+            LoadPipeline ( *mWirePipeline, ":/pipelines/solid_wire.prg" );
+
+            mXGridMaterial = mGridPipeline->GetDefaultMaterial().Clone();
+            mXGridMaterial->SetFloatVec3 ( "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} );
+            mXGridMaterial->SetFloatVec3 ( "StartingPosition", Vector3{0.0f, - ( mGridSettings.height() / 2 ), 0.0f} );
+            mXGridMaterial->SetFloatVec3 ( "Offset", Vector3{0.0f, ( mGridSettings.height() / static_cast<float> ( mGridSettings.horizontalSpacing() ) ), 0.0f} );
+            mXGridMaterial->SetUint ( "LineCount", mGridSettings.horizontalSpacing() + 1 );
+            mXGridMaterial->SetFloatVec4 ( "OddLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.oddLineColor().redF() ),
                 static_cast<float> ( mGridSettings.oddLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.oddLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.oddLineColor().alphaF() )
             } );
-            mXGridMaterial.Set ( "EvenLineColor",
-                                 Vector4
+            mXGridMaterial->SetFloatVec4 ( "EvenLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.evenLineColor().redF() ),
                 static_cast<float> ( mGridSettings.evenLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.evenLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.evenLineColor().alphaF() )
             } );
-            mXGridMaterial.Set ( "CentralLineColor",
-                                 Vector4
+            mXGridMaterial->SetFloatVec4 ( "CentralLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.xLineColor().redF() ),
                 static_cast<float> ( mGridSettings.xLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.xLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.xLineColor().alphaF() )
             } );
-            mXGridMaterial.Set ( "BorderLineColor",
-                                 Vector4
+            mXGridMaterial->SetFloatVec4 ( "BorderLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.borderLineColor().redF() ),
                 static_cast<float> ( mGridSettings.borderLineColor().greenF() ),
@@ -151,70 +154,59 @@ namespace AeonGames
                 static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
             } );
 
-            mYGridMaterial = mGridPipeline.GetDefaultMaterial();
-            mYGridMaterial.Set ( "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} );
-            mYGridMaterial.Set ( "StartingPosition", Vector3{ - ( mGridSettings.width() / 2 ), 0.0f, 0.0f} );
-            mYGridMaterial.Set ( "Offset", Vector3{ ( mGridSettings.width() / static_cast<float> ( mGridSettings.verticalSpacing() ) ), 0.0f, 0.0f} );
-            mYGridMaterial.Set ( "LineCount", mGridSettings.verticalSpacing() + 1 );
-            mYGridMaterial.Set ( "OddLineColor",
-                                 Vector4
+            mYGridMaterial = mGridPipeline->GetDefaultMaterial().Clone();
+            mYGridMaterial->SetFloatVec3 ( "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} );
+            mYGridMaterial->SetFloatVec3 ( "StartingPosition", Vector3{ - ( mGridSettings.width() / 2 ), 0.0f, 0.0f} );
+            mYGridMaterial->SetFloatVec3 ( "Offset", Vector3{ ( mGridSettings.width() / static_cast<float> ( mGridSettings.verticalSpacing() ) ), 0.0f, 0.0f} );
+            mYGridMaterial->SetUint ( "LineCount", mGridSettings.verticalSpacing() + 1 );
+            mYGridMaterial->SetFloatVec4 ( "OddLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.oddLineColor().redF() ),
                 static_cast<float> ( mGridSettings.oddLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.oddLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.oddLineColor().alphaF() )
             } );
-            mYGridMaterial.Set ( "EvenLineColor",
-                                 Vector4
+            mYGridMaterial->SetFloatVec4 ( "EvenLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.evenLineColor().redF() ),
                 static_cast<float> ( mGridSettings.evenLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.evenLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.evenLineColor().alphaF() )
             } );
-            mYGridMaterial.Set ( "CentralLineColor",
-                                 Vector4
+            mYGridMaterial->SetFloatVec4 ( "CentralLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.yLineColor().redF() ),
                 static_cast<float> ( mGridSettings.yLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.yLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.yLineColor().alphaF() )
             } );
-            mYGridMaterial.Set ( "BorderLineColor",
-                                 Vector4
+            mYGridMaterial->SetFloatVec4 ( "BorderLineColor",
+                                           Vector4
             {
                 static_cast<float> ( mGridSettings.borderLineColor().redF() ),
                 static_cast<float> ( mGridSettings.borderLineColor().greenF() ),
                 static_cast<float> ( mGridSettings.borderLineColor().blueF() ),
                 static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
             } );
-#endif
         }
+
+        mGridMesh = GetRenderer()->CreateMesh();
+        mAABBWireMesh = GetRenderer()->CreateMesh();
         LoadMesh ( *mGridMesh, ":/meshes/grid.msh" );
         LoadMesh ( *mAABBWireMesh, ":/meshes/aabb_wire.msh" );
-#if 0
-        GetRenderer()->LoadRenderMesh ( mGridMesh );
-        GetRenderer()->LoadRenderPipeline ( mGridPipeline );
-        GetRenderer()->LoadRenderMaterial ( mXGridMaterial );
-        GetRenderer()->LoadRenderMaterial ( mYGridMaterial );
-
-        GetRenderer()->LoadRenderMesh ( mAABBWireMesh );
-        GetRenderer()->LoadRenderPipeline ( mWirePipeline );
-        GetRenderer()->LoadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
-#endif
     }
+
     WorldEditor::~WorldEditor()
     {
-#if 0
-        GetRenderer()->UnloadRenderMesh ( mGridMesh );
-        GetRenderer()->UnloadRenderPipeline ( mGridPipeline );
-        GetRenderer()->UnloadRenderMaterial ( mXGridMaterial );
-        GetRenderer()->UnloadRenderMaterial ( mYGridMaterial );
-
-        GetRenderer()->UnloadRenderMesh ( mAABBWireMesh );
-        GetRenderer()->UnloadRenderPipeline ( mWirePipeline );
-        GetRenderer()->UnloadRenderMaterial ( mWirePipeline.GetDefaultMaterial() );
-#endif
+        mGridMesh.reset();
+        mGridPipeline.reset();
+        mXGridMaterial.reset();
+        mYGridMaterial.reset();
+        mAABBWireMesh.reset();
+        mWirePipeline.reset();
     }
 
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )

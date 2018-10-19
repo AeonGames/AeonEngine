@@ -45,6 +45,72 @@ namespace AeonGames
         Finalize();
     }
 
+    void VulkanBuffer::CopyBuffer ( const VkBuffer& aBuffer )
+    {
+        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        command_buffer_allocate_info.commandPool = mVulkanRenderer.GetCommandPool();
+        command_buffer_allocate_info.commandBufferCount = 1;
+
+        VkCommandBuffer command_buffer;
+        vkAllocateCommandBuffers ( mVulkanRenderer.GetDevice(), &command_buffer_allocate_info, &command_buffer );
+
+        VkCommandBufferBeginInfo begin_info = {};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer ( command_buffer, &begin_info );
+
+        VkBufferCopy copy_region = {};
+        copy_region.size = mSize;
+        copy_region.srcOffset  = copy_region.dstOffset = 0;
+        vkCmdCopyBuffer ( command_buffer, aBuffer, mBuffer, 1, &copy_region );
+
+        vkEndCommandBuffer ( command_buffer );
+
+        VkSubmitInfo submit_info = {};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &command_buffer;
+        vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, VK_NULL_HANDLE );
+        vkQueueWaitIdle ( mVulkanRenderer.GetQueue() );
+        vkFreeCommandBuffers ( mVulkanRenderer.GetDevice(), mVulkanRenderer.GetCommandPool(), 1, &command_buffer );
+    }
+
+    VulkanBuffer::VulkanBuffer ( const VulkanBuffer& aBuffer ) :
+        mVulkanRenderer { aBuffer.mVulkanRenderer },
+        mSize{aBuffer.mSize},
+        mUsage{aBuffer.mUsage},
+        mProperties{aBuffer.mProperties}
+    {
+        Initialize ( nullptr );
+        if ( !mSize )
+        {
+            return;
+        }
+        CopyBuffer ( aBuffer.mBuffer );
+    }
+
+    VulkanBuffer& VulkanBuffer::operator= ( const VulkanBuffer& aBuffer )
+    {
+        if ( &mVulkanRenderer != &aBuffer.mVulkanRenderer )
+        {
+            throw std::runtime_error ( "Assigning buffers from different renderer instances." );
+        }
+        Finalize();
+        mSize = aBuffer.mSize;
+        mUsage = aBuffer.mUsage;
+        mProperties = aBuffer.mProperties;
+        if ( !mSize )
+        {
+            return *this;
+        }
+        Initialize ( nullptr );
+        CopyBuffer ( aBuffer.mBuffer );
+        return *this;
+    }
+
     void VulkanBuffer::Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void * aData )
     {
         if ( mDeviceMemory != VK_NULL_HANDLE || mBuffer != VK_NULL_HANDLE )
@@ -181,8 +247,10 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
         vkBindBufferMemory ( mVulkanRenderer.GetDevice(), mBuffer, mDeviceMemory, 0 );
-
-        WriteMemory ( 0, mSize, aData );
+        if ( aData )
+        {
+            WriteMemory ( 0, mSize, aData );
+        }
     }
 
     void VulkanBuffer::Finalize()

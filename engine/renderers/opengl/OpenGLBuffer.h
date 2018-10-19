@@ -24,6 +24,15 @@ namespace AeonGames
     {
     public:
         OpenGLBuffer ();
+        /// Copy contsructor.
+        OpenGLBuffer ( const OpenGLBuffer& aBuffer );
+        /// No move allowed
+        OpenGLBuffer ( OpenGLBuffer&& );
+        /// Assignment operator due to rule of zero/three/five.
+        OpenGLBuffer& operator= ( const OpenGLBuffer& aBuffer );
+        /// No move assignment allowed
+        OpenGLBuffer& operator = ( OpenGLBuffer&& ) = delete;
+
         OpenGLBuffer ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         ~OpenGLBuffer();
         void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
@@ -36,9 +45,9 @@ namespace AeonGames
         GLuint GetBufferId() const;
     private:
         void Initialize ( const void *aData );
-        GLuint mBuffer{};
         GLsizei mSize{};
         GLenum mUsage{};
+        GLuint mBuffer{};
     };
 }
 #endif

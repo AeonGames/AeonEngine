@@ -18,6 +18,7 @@ limitations under the License.
 #include <vector>
 #include <regex>
 #include <array>
+#include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
@@ -90,11 +91,24 @@ namespace AeonGames
     }
     void OpenGLPipeline::Load ( uint32_t aId )
     {
-
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
     }
     void OpenGLPipeline::Load ( const void* aBuffer, size_t aBufferSize )
     {
-
+        static PipelineBuffer pipeline_buffer;
+        LoadProtoBufObject ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
+        Load ( pipeline_buffer );
+        pipeline_buffer.Clear();
     }
 
     enum AttributeBits
