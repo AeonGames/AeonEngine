@@ -85,7 +85,13 @@ namespace AeonGames
             throw;
         }
     }
-    void VulkanPipeline::Load ( const void* aBuffer, size_t aBufferSize ) {}
+    void VulkanPipeline::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        static PipelineBuffer pipeline_buffer;
+        LoadProtoBufObject ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
+        Load ( pipeline_buffer );
+        pipeline_buffer.Clear();
+    }
 
     enum AttributeBits
     {

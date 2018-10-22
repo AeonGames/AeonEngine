@@ -27,7 +27,10 @@ namespace AeonGames
     {
     }
     VulkanBuffer::VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData ) :
-        mVulkanRenderer ( aVulkanRenderer ), mSize ( aSize ), mUsage ( aUsage ), mProperties ( aProperties )
+        mVulkanRenderer { aVulkanRenderer },
+        mSize { aSize },
+        mUsage { aUsage },
+        mProperties { aProperties }
     {
         try
         {

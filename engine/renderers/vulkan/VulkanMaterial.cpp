@@ -59,7 +59,9 @@ namespace AeonGames
         mUniformBuffer{aMaterial.mUniformBuffer},
         mVariables{aMaterial.mVariables}
     {
-        assert ( 0 && "Not yet fully implemented" );
+        InitializeDescriptorSetLayout();
+        InitializeDescriptorPool();
+        InitializeDescriptorSet();
     }
 
     VulkanMaterial& VulkanMaterial::operator= ( const VulkanMaterial& aMaterial )
@@ -70,7 +72,9 @@ namespace AeonGames
         }
         mVariables = aMaterial.mVariables;
         mUniformBuffer = aMaterial.mUniformBuffer;
-        assert ( 0 && "Not yet fully implemented" );
+        InitializeDescriptorSetLayout();
+        InitializeDescriptorPool();
+        InitializeDescriptorSet();
         return *this;
     }
 
@@ -513,5 +517,7 @@ namespace AeonGames
 
     void VulkanMaterial::FinalizeDescriptorSet()
     {
+        vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorPool, 1, &mVkPropertiesDescriptorSet );
+        mVkPropertiesDescriptorSet = VK_NULL_HANDLE;
     }
 }
