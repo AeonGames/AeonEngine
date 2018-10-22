@@ -102,7 +102,10 @@ namespace AeonGames
 
         mVertexCount = aMeshBuffer.vertexcount();
         mIndexCount = aMeshBuffer.indexcount();
-        mIndexType =  GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMeshBuffer.indextype() ) );
+        if ( aMeshBuffer.indextype() != MeshBuffer::IndexTypeEnum::MeshBuffer_IndexTypeEnum_UNKNOWN_INDEX_TYPE )
+        {
+            mIndexType = GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMeshBuffer.indextype() ) );
+        }
         mVertexFlags = aMeshBuffer.vertexflags();
 
         // Vulkan Specific code
