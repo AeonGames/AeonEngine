@@ -297,7 +297,7 @@ namespace AeonGames
 
     OpenGLMaterial::~OpenGLMaterial()
     {
-        Finalize();
+        Unload();
     }
 
     GLuint OpenGLMaterial::GetPropertiesBufferId() const
