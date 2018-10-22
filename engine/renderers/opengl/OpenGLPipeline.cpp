@@ -509,6 +509,7 @@ namespace AeonGames
             mProgramId = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
+        mDefaultMaterial.Unload();
     }
 
     void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial ) const
