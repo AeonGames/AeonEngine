@@ -47,11 +47,10 @@ namespace AeonGames
         const VulkanRenderer& mVulkanRenderer;
         VulkanBuffer mBuffer;
         AABB mAABB{};
-        VkIndexType mIndexType{};
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};
+        uint32_t mIndexSize{};
         uint32_t mIndexCount{};
     };
-    VkIndexType GetVulkanIndexType ( Mesh::IndexType aIndexType );
 }
 #endif

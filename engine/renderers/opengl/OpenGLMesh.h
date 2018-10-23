@@ -52,7 +52,7 @@ namespace AeonGames
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};
         uint32_t mIndexCount{};
-        GLenum mIndexType{};
+        uint32_t mIndexSize{};
         GLuint mArray{};
         GLuint mVertexBuffer{};
         GLuint mIndexBuffer{};

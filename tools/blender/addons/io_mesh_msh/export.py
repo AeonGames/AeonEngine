@@ -34,19 +34,6 @@ ATTR_BITANGENT_MASK = 0b1000
 ATTR_UV_MASK = 0b10000
 ATTR_WEIGHT_MASK = 0b100000
 
-BYTE = 0x00
-UNSIGNED_BYTE = 0x01
-SHORT = 0x02
-UNSIGNED_SHORT = 0x03
-INT = 0x04
-UNSIGNED_INT = 0x05
-FLOAT = 0x06
-TWO_BYTES = 0x07
-THREE_BYTES = 0x08
-FOUR_BYTES = 0x09
-DOUBLE = 0x0A
-
-
 class MSHExporterCommon():
 
     def __init__(self, filepath):
@@ -319,17 +306,18 @@ class MSHExporterCommon():
 
         index_struct = None
         # Write indices -----------------------------------
+        # TODO: Allow for zero index meshes.
         mesh_buffer.IndexCount = len(self.indices)
 
         # Save memory space by using best fitting type for indices.
         if len(self.vertices) < 0x100:
-            mesh_buffer.IndexType = UNSIGNED_BYTE
+            mesh_buffer.IndexSize = 1
             index_struct = struct.Struct('B')
         elif len(self.vertices) < 0x10000:
-            mesh_buffer.IndexType = UNSIGNED_SHORT
+            mesh_buffer.IndexSize = 2
             index_struct = struct.Struct('H')
         else:
-            mesh_buffer.IndexType = UNSIGNED_INT
+            mesh_buffer.IndexSize = 4
             index_struct = struct.Struct('I')
 
         print("Writting", mesh_buffer.IndexCount, "indices.")

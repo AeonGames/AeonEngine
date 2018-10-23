@@ -9,7 +9,7 @@ Radii {
 }
 VertexFlags: 1
 VertexCount: 8
-IndexType: 1
+IndexSize: 1
 IndexCount: 36
 VertexBuffer: 
 "( 0.5 0.5 -0.5 )"
