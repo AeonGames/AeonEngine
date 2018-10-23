@@ -28,20 +28,12 @@ message MeshBuffer {
         UV_BIT = 16;
         WEIGHT_BIT = 32;
     }
-    enum IndexTypeEnum
-    {
-        UNKNOWN_INDEX_TYPE = 0;
-        UNSIGNED_BYTE = 0x01;
-        UNSIGNED_SHORT = 0x03;
-        UNSIGNED_INT = 0x05;
-    }
 	uint32 Version         = 1;
     Vector3Buffer Center   = 2;
     Vector3Buffer Radii    = 3;
     uint32 VertexFlags     = 4;
     uint32 VertexCount     = 5;
-    // TODO Change Index TYPE to be index SIZE, which is much more manageable
-    uint32 IndexType       = 6;		
+    uint32 IndexSize       = 6;		
     uint32 IndexCount      = 7;
     bytes VertexBuffer     = 8;
     bytes IndexBuffer      = 9;

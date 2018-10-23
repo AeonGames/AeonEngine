@@ -66,7 +66,16 @@ namespace AeonGames
 
     GLenum OpenGLMesh::GetIndexType() const
     {
-        return mIndexType;
+        switch ( mIndexSize )
+        {
+        case 1:
+            return GL_UNSIGNED_BYTE;
+        case 2:
+            return GL_UNSIGNED_SHORT;
+        case 4:
+            return GL_UNSIGNED_INT;
+        };
+        throw std::runtime_error ( "Invalid Index Size." );
     }
 
     void OpenGLMesh::Load ( const std::string& aFilename )
@@ -112,7 +121,7 @@ namespace AeonGames
 
         mVertexCount = aMeshBuffer.vertexcount();
         mIndexCount = aMeshBuffer.indexcount();
-        mIndexType = 1400 | aMeshBuffer.indextype();
+        mIndexSize = aMeshBuffer.indexsize();
         mVertexFlags = aMeshBuffer.vertexflags();
 
         // OpenGL Specific Code:
@@ -230,16 +239,7 @@ namespace AeonGames
 
     uint32_t OpenGLMesh::GetIndexSize () const
     {
-        switch ( mIndexType )
-        {
-        case GL_UNSIGNED_BYTE:
-            return 1;
-        case GL_UNSIGNED_SHORT:
-            return 2;
-        case GL_UNSIGNED_INT:
-            return 4;
-        };
-        throw std::runtime_error ( "Invalid Index Type." );
+        return mIndexSize;
     }
 
     uint32_t OpenGLMesh::GetIndexCount() const

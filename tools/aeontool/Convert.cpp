@@ -274,20 +274,19 @@ namespace AeonGames
                 {
                     stream << "\"";
                 }
-                switch ( mMeshBuffer.indextype() )
+                switch ( mMeshBuffer.indexsize() )
                 {
-                case MeshBuffer_IndexTypeEnum_UNSIGNED_BYTE:
+                case 1:
                     stream << static_cast<uint32_t> ( cursor8[i] );
                     break;
-                case MeshBuffer_IndexTypeEnum_UNSIGNED_SHORT:
+                case 2:
                     stream << static_cast<uint32_t> ( cursor16[i] );
                     break;
-                case MeshBuffer_IndexTypeEnum_UNSIGNED_INT:
+                case 4:
                     stream << cursor32[i];
                     break;
                 default:
-                    // I am deprecating any index types not supported by the official exporter.
-                    throw std::runtime_error ( "Unknown or deprecated index buffer type." );
+                    throw std::runtime_error ( "Invalid index size." );
                 }
                 if ( ( i + 1 ) % 3 == 0 )
                 {
@@ -404,17 +403,17 @@ namespace AeonGames
                 uint8_t uint8_t_value;
                 uint16_t uint16_t_value;
                 uint32_t uint32_t_value;
-                switch ( aMeshBuffer.indextype() )
+                switch ( aMeshBuffer.indexsize() )
                 {
-                case MeshBuffer_IndexTypeEnum_UNSIGNED_BYTE:
+                case 1:
                     uint8_t_value = static_cast<uint8_t> ( std::stoi ( match_results[1] ) );
                     index_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
                     break;
-                case MeshBuffer_IndexTypeEnum_UNSIGNED_SHORT:
+                case 2:
                     uint16_t_value = static_cast<uint16_t> ( std::stoi ( match_results[1] ) );
                     index_buffer.append ( reinterpret_cast<char*> ( &uint16_t_value ), sizeof ( uint16_t ) );
                     break;
-                case MeshBuffer_IndexTypeEnum_UNSIGNED_INT:
+                case 4:
                     uint32_t_value = static_cast<uint32_t> ( std::stoi ( match_results[1] ) );
                     index_buffer.append ( reinterpret_cast<char*> ( &uint32_t_value ), sizeof ( uint32_t ) );
                     break;
@@ -583,10 +582,7 @@ namespace AeonGames
                     }
                     /* Presume raw buffer data if the lenght of the index buffer
                     string exactly maches the string length. */
-                    if ( ( mesh_buffer.indexcount() *
-                           ( ( mesh_buffer.indextype() == MeshBuffer_IndexTypeEnum_UNSIGNED_BYTE ) ? 1 :
-                             ( mesh_buffer.indextype() == MeshBuffer_IndexTypeEnum_UNSIGNED_SHORT ) ? 2 : 4 ) )
-                         != mesh_buffer.vertexbuffer().size() )
+                    if ( ( mesh_buffer.indexcount() * mesh_buffer.indexsize() ) != mesh_buffer.indexbuffer().size() )
                     {
                         mesh_buffer.set_indexbuffer ( ParseIndexBuffer ( mesh_buffer ) );
                     }

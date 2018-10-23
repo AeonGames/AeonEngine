@@ -51,7 +51,17 @@ namespace AeonGames
 
     VkIndexType VulkanMesh::GetIndexType() const
     {
-        return mIndexType;
+        switch ( mIndexSize )
+        {
+        case 1:
+        case 2:
+            return VK_INDEX_TYPE_UINT16;
+        case 4:
+            return VK_INDEX_TYPE_UINT32;
+        default:
+            break;
+        };
+        throw std::runtime_error ( "Invalid Index Size." );
     }
 
     const VkBuffer & VulkanMesh::GetBuffer() const
@@ -102,17 +112,13 @@ namespace AeonGames
 
         mVertexCount = aMeshBuffer.vertexcount();
         mIndexCount = aMeshBuffer.indexcount();
-        if ( aMeshBuffer.indextype() != MeshBuffer::IndexTypeEnum::MeshBuffer_IndexTypeEnum_UNKNOWN_INDEX_TYPE )
-        {
-            mIndexType = GetVulkanIndexType ( static_cast<AeonGames::Mesh::IndexType> ( aMeshBuffer.indextype() ) );
-        }
+        mIndexSize = aMeshBuffer.indexsize();
         mVertexFlags = aMeshBuffer.vertexflags();
 
         // Vulkan Specific code
         const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * GetVertexCount() );
         // We need to expand 1 byte indices to 2 since they're not supported on Vulkan
-        const VkDeviceSize index_buffer_size = ( aMeshBuffer.indexbuffer().size() *
-                                               ( ( aMeshBuffer.indextype() == Mesh::BYTE || aMeshBuffer.indextype() == Mesh::UNSIGNED_BYTE ) ? 2 : 1 ) );
+        const VkDeviceSize index_buffer_size = aMeshBuffer.indexbuffer().size() * ( ( aMeshBuffer.indexsize() == 1 ) ? 2 : 1 );
         VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
         VkBufferUsageFlags buffer_usage = ( ( mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
         mBuffer.Initialize ( buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
@@ -166,13 +172,13 @@ namespace AeonGames
         if ( mIndexCount )
         {
             void* data = buffer.data() + vertex_buffer_size;
-            if ( ! ( aMeshBuffer.indextype() == Mesh::BYTE || aMeshBuffer.indextype() == Mesh::UNSIGNED_BYTE ) )
+            if ( aMeshBuffer.indexsize() != 1 )
             {
                 memcpy ( data, aMeshBuffer.indexbuffer().data(), aMeshBuffer.indexbuffer().size() );
             }
             else
             {
-                /**@note upcast 16 bit indices.*/
+                /**@note upcast to 16 bit indices.*/
                 for ( size_t j = 0; j < aMeshBuffer.indexbuffer().size(); ++j )
                 {
                     reinterpret_cast<uint16_t*> ( data ) [j] = aMeshBuffer.indexbuffer() [j];
@@ -203,31 +209,6 @@ namespace AeonGames
 
     uint32_t VulkanMesh::GetIndexSize () const
     {
-        switch ( mIndexType )
-        {
-        case VK_INDEX_TYPE_UINT16:
-            return 2;
-        case VK_INDEX_TYPE_UINT32:
-            return 4;
-        default:
-            break;
-        };
-        throw std::runtime_error ( "Invalid Index Type." );
-    }
-
-    VkIndexType GetVulkanIndexType ( Mesh::IndexType aIndexType )
-    {
-        switch ( aIndexType )
-        {
-        /**@note BYTE has been upcasted*/
-        case Mesh::UNSIGNED_BYTE:
-        case Mesh::UNSIGNED_SHORT:
-            return VK_INDEX_TYPE_UINT16;
-        case Mesh::UNSIGNED_INT:
-            return VK_INDEX_TYPE_UINT32;
-        default:
-            throw std::runtime_error ( "Invalid Index Type." );
-        };
-        return VK_INDEX_TYPE_MAX_ENUM;
+        return mIndexSize;
     }
 }
