@@ -7,5 +7,6 @@
         "MSYSTEM": "MINGW64",
         "CHERE_INVOKING":"1"
     },
-    "clang.executable": "${CLANG_EXECUTABLE}"
+    "clang.executable": "${CLANG_EXECUTABLE}",
+    "cmake.cmakePath": "${CMAKE_COMMAND}"
 }

@@ -2,38 +2,17 @@
     "configurations": [
         {
             "name": "@CMAKE_SYSTEM_NAME@",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "@CMAKE_C_COMPILER@",
             "includePath": [
                 @INCLIST@,
-                "${workspaceRoot}/include",
-                "${workspaceRoot}/include/aeongames"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/engine/include"
             ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "WIN32",
-                "_WIN32",
-                "WINDOWS",
-                "__GNUC__",
-                "__MINGW32__",
-                "__MINGW64__",
-                "DLL=",
-                "QT_STATIC",
-                "SOURCE_PATH=@CMAKE_SOURCE_DIR@"
-            ],
-            "intelliSenseMode": "clang-x64",
-            "browse": {
-                "path": [
-                    @INCLIST@,
-                    "${workspaceRoot}/include",
-                    "${workspaceRoot}/include/aeongames"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "compileCommands": "@CMAKE_BINARY_DIR@/compile_commands.json",
-            "codegnuglobal.executable": "@GLOBAL_EXECUTABLE@",
-            "clang.executable": "@CLANG_EXECUTABLE@"
+            "defines": [],
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
-    "version": 3
+    "version": 4
 }
