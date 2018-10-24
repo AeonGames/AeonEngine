@@ -32,6 +32,11 @@ namespace AeonGames
             mStorage.emplace ( std::make_pair<> ( k, std::make_unique<T> ( args... ) ) );
             return mStorage[k].get();
         }
+        T* Store ( const K& k, std::unique_ptr<T>&& pointer )
+        {
+            mStorage.emplace ( std::make_pair<> ( k, std::move ( pointer ) ) );
+            return mStorage[k].get();
+        }
         std::unique_ptr<T> Dispose ( const K& k )
         {
             std::unique_ptr<T> result{};
