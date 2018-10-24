@@ -23,6 +23,7 @@ limitations under the License.
 #include <QTextStream>
 #include <QAction>
 #include <typeinfo>
+#include <cassert>
 
 #include "aeongames/Model.h"
 #include "ComponentModel.h"
