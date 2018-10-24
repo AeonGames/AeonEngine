@@ -48,4 +48,19 @@ namespace AeonGames
         EXPECT_EQ ( *ownership, "" );
         EXPECT_EQ ( archive.Get ( "Key" ), nullptr );
     }
+
+    TEST ( Archive, StoreExisting )
+    {
+        AeonGames::Archive<std::string, std::string> archive;
+        std::unique_ptr<std::string> existing = std::make_unique<std::string> ( "Test" );
+
+        std::string* value_stored = archive.Store ( "Key", std::move ( existing ) );
+        std::string* value_retrieved = archive.Get ( "Key" );
+        EXPECT_EQ ( *value_stored, "Test" );
+        EXPECT_EQ ( value_stored, value_retrieved );
+        EXPECT_EQ ( archive.GetKey ( value_stored ), "Key" );
+        existing = archive.Dispose ( "Key" );
+        EXPECT_EQ ( *existing, "Test" );
+        EXPECT_EQ ( archive.Get ( "Key" ), nullptr );
+    }
 }

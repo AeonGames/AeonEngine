@@ -200,6 +200,7 @@ namespace AeonGames
         return mAnimations;
     }
 
+#if 0
     // Statics -----------------------------------------------------------------
     const std::shared_ptr<Model> Model::GetModel ( uint32_t aId )
     {
@@ -219,4 +220,5 @@ namespace AeonGames
         return GetResourcePath ( GetId ( aModel ) );
     }
     // -------------------------------------------------------------------------
+#endif
 }

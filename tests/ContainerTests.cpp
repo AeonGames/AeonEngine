@@ -40,4 +40,13 @@ namespace AeonGames
         std::unique_ptr<std::string> ownership = container.Dispose ( value_stored );
         EXPECT_EQ ( *ownership, "" );
     }
+    TEST ( Container, ExistingAssignment )
+    {
+        AeonGames::Container<std::string> container;
+        std::unique_ptr<std::string> ownership = std::make_unique<std::string> ( "Test" );
+        std::string* value_stored = container.Store ( std::move ( ownership ) );
+        EXPECT_EQ ( *value_stored, "Test" );
+        ownership = container.Dispose ( value_stored );
+        EXPECT_EQ ( *ownership, "Test" );
+    }
 }

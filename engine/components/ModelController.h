@@ -38,7 +38,7 @@ namespace AeonGames
         ~ModelController() final;
         ///@}
     private:
-        std::shared_ptr<Model> mModel{};
+        Model* mModel{};
         size_t mActiveAnimation{};
         double mAnimationDelta{};
     };

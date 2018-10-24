@@ -22,6 +22,7 @@ limitations under the License.
 #include <QXmlStreamWriter>
 #include <QTextStream>
 #include <QAction>
+#include <typeinfo>
 
 #include "aeongames/Model.h"
 #include "ComponentModel.h"
@@ -106,7 +107,9 @@ namespace AeonGames
             {
                 try
                 {
-                    return ( Model::GetPath ( aRef.Get<std::shared_ptr<Model>>() ).c_str() );
+                    assert ( 0 );
+                    return QVariant();
+                    //return ( Model::GetPath ( aRef.Get<std::shared_ptr<Model>>() ).c_str() );
                 }
                 catch ( std::runtime_error& e )
                 {
@@ -164,12 +167,13 @@ namespace AeonGames
             }
         },
         {
-            typeid ( std::shared_ptr<Model> ).hash_code(),
+            typeid ( Model* ).hash_code(),
             [] ( const PropertyRef & aRef, const QVariant & aVariant )
             {
                 try
                 {
-                    aRef.Get<std::shared_ptr<Model>>() = Model::GetModel ( aVariant.toString().toStdString() );
+                    assert ( 0 );
+                    //aRef.Get<Model*>() = Model::GetModel ( aVariant.toString().toStdString() );
                 }
                 catch ( std::runtime_error& e )
                 {

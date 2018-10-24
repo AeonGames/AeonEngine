@@ -32,6 +32,11 @@ namespace AeonGames
             mStorage.emplace_back ( std::make_unique<T> ( args... ) );
             return mStorage.back().get();
         }
+        T* Store ( std::unique_ptr<T>&& value )
+        {
+            mStorage.emplace_back ( std::move ( value ) );
+            return mStorage.back().get();
+        }
         std::unique_ptr<T> Dispose ( const T* t )
         {
             std::unique_ptr<T> result{};
