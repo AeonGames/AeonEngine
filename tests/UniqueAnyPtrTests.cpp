@@ -17,23 +17,25 @@ limitations under the License.
 #include <iostream>
 #include <cstdint>
 #include <string>
-#include "aeongames/UniqueResource.h"
+#include "aeongames/UniqueAnyPtr.h"
 #include "gtest/gtest.h"
 
 using namespace ::testing;
 namespace AeonGames
 {
-    TEST ( UniqueResource, Constructor )
+    TEST ( UniqueAnyPtr, Constructor )
     {
-        UniqueResource resource1{new std::string{"Resource 1"}};
-        UniqueResource resource2{std::make_unique<std::string> ( "Resource 2" ) };
-        UniqueResource resource3{std::move ( resource2 ) };
+        UniqueAnyPtr resource1{new std::string{"Resource 1"}};
+        UniqueAnyPtr resource2{std::make_unique<std::string> ( "Resource 2" ) };
+        UniqueAnyPtr resource3{std::move ( resource2 ) };
+        UniqueAnyPtr resource4{MakeUniqueAny<std::string> ( "Resource 4" ) };
     }
 
-    TEST ( UniqueResource, Assignment )
+    TEST ( UniqueAnyPtr, Assignment )
     {
-        UniqueResource resource1 = new std::string{"Resource 1"};
-        UniqueResource resource2 = std::make_unique<std::string> ( "Resource 2" );
-        UniqueResource resource3 = std::move ( resource2 );
+        UniqueAnyPtr resource1 = new std::string{"Resource 1"};
+        UniqueAnyPtr resource2 = std::make_unique<std::string> ( "Resource 2" );
+        UniqueAnyPtr resource3 = std::move ( resource2 );
+        UniqueAnyPtr resource4 = MakeUniqueAny<std::string> ( "Resource 4" );
     }
 }
