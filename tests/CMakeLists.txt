@@ -47,6 +47,7 @@ set(TEST_SRCS
     QuaternionTests.cpp
     PackageTests.cpp
     ResourceCacheTests.cpp
+    UniqueResourceTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
