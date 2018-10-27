@@ -36,6 +36,20 @@ namespace AeonGames
         EXPECT_EQ ( *ownership, "Value" );
         EXPECT_EQ ( archive.Get ( "Key" ), nullptr );
     }
+
+    TEST ( ArchiveAny, HappyPath )
+    {
+        AeonGames::ArchiveAny<std::string> archive;
+        std::string* value_stored = archive.Store<std::string> ( "Key", "Value" );
+        std::string* value_retrieved = archive.Get<std::string> ( "Key" );
+        EXPECT_EQ ( *value_stored, "Value" );
+        EXPECT_EQ ( archive.GetKey ( value_stored ), "Key" );
+        EXPECT_EQ ( value_stored, value_retrieved );
+        std::unique_ptr<std::string> ownership = archive.Dispose<std::string> ( "Key" );
+        EXPECT_EQ ( *ownership, "Value" );
+        EXPECT_EQ ( archive.Get<std::string> ( "Key" ), nullptr );
+    }
+
     TEST ( Archive, NoArgs )
     {
         AeonGames::Archive<std::string, std::string> archive;
@@ -47,6 +61,19 @@ namespace AeonGames
         std::unique_ptr<std::string> ownership = archive.Dispose ( "Key" );
         EXPECT_EQ ( *ownership, "" );
         EXPECT_EQ ( archive.Get ( "Key" ), nullptr );
+    }
+
+    TEST ( ArchiveAny, NoArgs )
+    {
+        AeonGames::ArchiveAny<std::string> archive;
+        std::string* value_stored = archive.Store<std::string> ( "Key" );
+        std::string* value_retrieved = archive.Get<std::string> ( "Key" );
+        EXPECT_EQ ( *value_stored, "" );
+        EXPECT_EQ ( value_stored, value_retrieved );
+        EXPECT_EQ ( archive.GetKey ( value_stored ), "Key" );
+        std::unique_ptr<std::string> ownership = archive.Dispose<std::string> ( "Key" );
+        EXPECT_EQ ( *ownership, "" );
+        EXPECT_EQ ( archive.Get<std::string> ( "Key" ), nullptr );
     }
 
     TEST ( Archive, StoreExisting )
@@ -62,5 +89,20 @@ namespace AeonGames
         existing = archive.Dispose ( "Key" );
         EXPECT_EQ ( *existing, "Test" );
         EXPECT_EQ ( archive.Get ( "Key" ), nullptr );
+    }
+
+    TEST ( ArchiveAny, StoreExisting )
+    {
+        AeonGames::ArchiveAny<std::string> archive;
+        std::unique_ptr<std::string> existing = std::make_unique<std::string> ( "Test" );
+
+        std::string* value_stored = archive.Store ( "Key", std::move ( existing ) );
+        std::string* value_retrieved = archive.Get<std::string> ( "Key" );
+        EXPECT_EQ ( *value_stored, "Test" );
+        EXPECT_EQ ( value_stored, value_retrieved );
+        EXPECT_EQ ( archive.GetKey ( value_stored ), "Key" );
+        existing = archive.Dispose<std::string> ( "Key" );
+        EXPECT_EQ ( *existing, "Test" );
+        EXPECT_EQ ( archive.Get<std::string> ( "Key" ), nullptr );
     }
 }
