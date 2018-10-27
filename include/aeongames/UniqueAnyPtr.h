@@ -78,6 +78,11 @@ namespace AeonGames
             };
         }
 
+        const void* GetRaw() const
+        {
+            return mPointer;
+        }
+
         template<class T> T* Get() const
         {
             if ( !HasType<T>() )

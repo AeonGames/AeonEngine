@@ -31,6 +31,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Archive.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Container.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.h
 )
 set(TEST_SRCS
     Main.cpp
@@ -47,7 +48,7 @@ set(TEST_SRCS
     QuaternionTests.cpp
     PackageTests.cpp
     ResourceCacheTests.cpp
-    UniqueResourceTests.cpp
+    UniqueAnyPtrTests.cpp
 )
 
 source_group("Tested" FILES ${TESTED_SRCS})
