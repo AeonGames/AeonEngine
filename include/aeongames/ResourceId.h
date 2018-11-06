@@ -26,10 +26,14 @@ namespace AeonGames
     class ResourceId
     {
     public:
+        ResourceId() = default;
+        ResourceId ( const ResourceId& ) = default;
         ResourceId ( uint32_t aType, uint32_t aPath ) :
             mType{aType}, mPath{aPath} {}
         ResourceId ( const std::string& aType, const std::string& aPath ) :
             mType{crc32i ( aType.data(), aType.length() ) }, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
+        ResourceId ( const std::string& aType, uint32_t aPath ) :
+            mType{crc32i ( aType.data(), aType.length() ) }, mPath{aPath} {}
         ~ResourceId() = default;
         uint32_t GetType() const
         {

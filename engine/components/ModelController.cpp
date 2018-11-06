@@ -76,6 +76,8 @@ namespace AeonGames
         /** @todo Incorporate use of skeleton and animations back */
         if ( mModel )
         {
+            /** @todo Implement ResourceId casting to pointer. */
+#if 0
             for ( auto& i : mModel->GetAssemblies() )
             {
                 if ( std::get<0> ( i ) && std::get<1> ( i ) )
@@ -83,6 +85,7 @@ namespace AeonGames
                     aWindow.Render ( aNode.GetGlobalTransform(), *std::get<0> ( i ), *std::get<1> ( i ), std::get<2> ( i ).get() );
                 }
             }
+#endif
         }
     }
 }
