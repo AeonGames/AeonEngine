@@ -51,21 +51,6 @@ namespace AeonGames
         virtual uint32_t Height() const = 0;
         virtual ImageFormat Format() const = 0;
         virtual ImageType Type() const = 0;
-#if 0
-        virtual const uint8_t* Pixels() const = 0;
-        virtual const size_t PixelsSize() const = 0;
-        virtual void* Map() = 0;
-        virtual void Unmap() = 0;
-#endif
-#if 0
-    private:
-        bool mMapped{false};
-        uint32_t mWidth{};
-        uint32_t mHeight{};
-        ImageFormat mFormat{ImageFormat::Unknown};
-        ImageType mType{ImageType::Unknown};
-        std::vector<uint8_t> mPixels{};
-#endif
     };
     /**@name Decoder Functions */
     /*@{*/

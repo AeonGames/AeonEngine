@@ -48,6 +48,7 @@ set(TEST_SRCS
     QuaternionTests.cpp
     PackageTests.cpp
     ResourceCacheTests.cpp
+    ResourceIdTests.cpp
     UniqueAnyPtrTests.cpp
 )
 
