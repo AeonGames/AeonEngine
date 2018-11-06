@@ -133,7 +133,7 @@ namespace AeonGames
         // Skeleton -----------------------------------------------------------------------------
         if ( aModelBuffer.has_skeleton() )
         {
-            mSkeleton = Skeleton::GetSkeleton ( GetReferenceBufferId ( aModelBuffer.skeleton() ) );
+            mSkeleton = ResourceId{ "Skeleton"_crc32, GetReferenceBufferId ( aModelBuffer.skeleton() ) };
         }
         // Meshes -----------------------------------------------------------------------------
         mAssemblies.reserve ( aModelBuffer.assembly_size() );
@@ -160,27 +160,22 @@ namespace AeonGames
                 assert ( 0 );
                 //material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
             }
-            mAssemblies.emplace_back ( mesh, pipeline, material );
-#if 0
-            if ( GetRenderer() )
-            {
-                GetRenderer()->LoadRenderMesh ( *mesh );
-                GetRenderer()->LoadRenderPipeline ( *pipeline );
-                GetRenderer()->LoadRenderMaterial ( *material );
-            }
-#endif
+            mAssemblies.emplace_back (
+                ResourceId{"Mesh"_crc32, GetReferenceBufferId ( assembly.mesh() ) },
+                ResourceId{"Pipeline"_crc32, GetReferenceBufferId ( assembly.pipeline() ) },
+                ResourceId{"Material"_crc32, GetReferenceBufferId ( assembly.material() ) } );
         }
         // Animations -----------------------------------------------------------------------------
         mAnimations.reserve ( aModelBuffer.animation_size() );
         for ( auto& animation : aModelBuffer.animation() )
         {
-            mAnimations.emplace_back ( Animation::GetAnimation ( GetReferenceBufferId ( animation ) ) );
+            mAnimations.emplace_back ( ResourceId{"Animation"_crc32, GetReferenceBufferId ( animation ) } );
         }
     }
 
     void Model::Unload()
     {
-        mSkeleton.reset();
+        /**@todo refcount Resource Id's? */
         mAssemblies.clear();
         mAnimations.clear();
     }
@@ -192,33 +187,13 @@ namespace AeonGames
 
     const Skeleton* Model::GetSkeleton() const
     {
-        return mSkeleton.get();
+        /** @todo implement resource id to pointer */
+        assert ( 0 && "Implement resource id to pointer." );
+        return nullptr;
     }
 
-    const std::vector<std::shared_ptr<const Animation>>& Model::GetAnimations() const
+    const std::vector<ResourceId>& Model::GetAnimations() const
     {
         return mAnimations;
     }
-
-#if 0
-    // Statics -----------------------------------------------------------------
-    const std::shared_ptr<Model> Model::GetModel ( uint32_t aId )
-    {
-        return ResourceCache<uint32_t, Model>::Get ( aId, aId );
-    }
-    const std::shared_ptr<Model> Model::GetModel ( const std::string& aPath )
-    {
-        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
-        return Model::GetModel ( id );
-    }
-    uint32_t Model::GetId ( const std::shared_ptr<Model>& aModel )
-    {
-        return ResourceCache<uint32_t, Model>::GetKey ( aModel );
-    }
-    const std::string Model::GetPath ( const std::shared_ptr<Model>& aModel )
-    {
-        return GetResourcePath ( GetId ( aModel ) );
-    }
-    // -------------------------------------------------------------------------
-#endif
 }
