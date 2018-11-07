@@ -38,8 +38,14 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMaterial::OpenGLMaterial() : mVariables{}, mUniformBuffer{}
+    OpenGLMaterial::OpenGLMaterial ( uint32_t aPath ) :
+        mVariables{},
+        mUniformBuffer{}
     {
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
     }
 
     OpenGLMaterial::OpenGLMaterial ( const OpenGLMaterial& aMaterial ) :
@@ -261,9 +267,9 @@ namespace AeonGames
         }
     }
 
-    void OpenGLMaterial::SetSampler ( const std::string& aName, const std::string& aValue )
+    void OpenGLMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
-        ///@todo reimplement samplers
+        mSamplers[aName] = aValue;
     }
 
     uint32_t OpenGLMaterial::GetUint ( const std::string& aName )
@@ -290,9 +296,14 @@ namespace AeonGames
     {
         return Vector4{};
     }
-    std::string OpenGLMaterial::GetSampler ( const std::string& aName )
+    ResourceId OpenGLMaterial::GetSampler ( const std::string& aName )
     {
-        return std::string{};
+        auto i = mSamplers.find ( aName );
+        if ( i != mSamplers.end() )
+        {
+            return i->second;
+        }
+        return ResourceId{"Image"_crc32, 0};
     }
 
     OpenGLMaterial::~OpenGLMaterial()

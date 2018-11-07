@@ -55,10 +55,10 @@ namespace AeonGames
         virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
 #endif
         ///@}
-        virtual std::unique_ptr<Mesh> CreateMesh() const = 0;
-        virtual std::unique_ptr<Pipeline> CreatePipeline() const = 0;
-        virtual std::unique_ptr<Material> CreateMaterial() const = 0;
-        virtual std::unique_ptr<Image> CreateImage() const = 0;
+        virtual std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath = 0 ) const = 0;
+        virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
+        virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) const = 0;
+        virtual std::unique_ptr<Image> CreateImage ( uint32_t aPath = 0 ) const = 0;
         DLL virtual ~Renderer() = 0;
     };
 }

@@ -43,9 +43,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const VulkanRenderer& aVulkanRenderer ) :
+    VulkanPipeline::VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, uint32_t aPath ) :
         mVulkanRenderer { aVulkanRenderer }, mDefaultMaterial {mVulkanRenderer}
     {
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
     }
 
     VulkanPipeline::~VulkanPipeline()

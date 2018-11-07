@@ -18,7 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "aeongames/Memory.h"
+#include <memory>
 #include "aeongames/Material.h"
 #include "aeongames/Vector2.h"
 #include "aeongames/Vector3.h"
@@ -32,7 +32,7 @@ namespace AeonGames
     class OpenGLMaterial : public Material
     {
     public:
-        OpenGLMaterial();
+        OpenGLMaterial ( uint32_t aPath = 0 );
         /// The Copy Contsructor is used for virtual copying.
         OpenGLMaterial ( const OpenGLMaterial& aMaterial );
         /// Assignment operator due to rule of zero/three/five.
@@ -60,7 +60,7 @@ namespace AeonGames
         void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
         void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
         void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
-        void SetSampler ( const std::string& aName, const std::string& aValue ) final;
+        void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
         ///@}
         ///@name Property Getters
         ///@{
@@ -70,7 +70,7 @@ namespace AeonGames
         Vector2 GetFloatVec2 ( const std::string& aName ) final;
         Vector3 GetFloatVec3 ( const std::string& aName ) final;
         Vector4 GetFloatVec4 ( const std::string& aName ) final;
-        std::string GetSampler ( const std::string& aName ) final;
+        ResourceId GetSampler ( const std::string& aName ) final;
         ///@}
         GLuint GetPropertiesBufferId() const;
         const Material& GetMaterial() const;
@@ -100,6 +100,7 @@ namespace AeonGames
             size_t mOffset{};
         };
         std::vector<UniformVariable> mVariables{};
+        std::unordered_map<std::string, ResourceId> mSamplers{};
         OpenGLBuffer mUniformBuffer{};
     };
 }

@@ -31,7 +31,12 @@ limitations under the License.
 #endif
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/Image.h"
+#include "aeongames/Mesh.h"
+#include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
 #include "aeongames/Package.h"
+#include "aeongames/ResourceFactory.h"
 #include "Factory.h"
 
 namespace AeonGames
@@ -264,19 +269,45 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Global renderer already set." );
         }
-        gRenderer = Factory<Renderer>::Construct ( aIdentifier );
+        gRenderer = Factory<std::string, Renderer>::Construct ( aIdentifier );
+
+        // Register default resource constructors related to renderer
+        RegisterResourceConstructor ( "Image"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            return GetRenderer()->CreateImage ( aPath );
+        } );
+
+        RegisterResourceConstructor ( "Mesh"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            return GetRenderer()->CreateMesh ( aPath );
+        } );
+
+        RegisterResourceConstructor ( "Pipeline"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            return GetRenderer()->CreatePipeline ( aPath );
+        } );
+
+        RegisterResourceConstructor ( "Material"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            return GetRenderer()->CreateMaterial ( aPath );
+        } );
+
         return gRenderer.get();
     }
     bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor )
     {
-        return Factory<Renderer>::RegisterConstructor ( aIdentifier, aConstructor );
+        return Factory<std::string, Renderer>::RegisterConstructor ( aIdentifier, aConstructor );
     }
     bool UnregisterRendererConstructor ( const std::string& aIdentifier )
     {
-        return Factory<Renderer>::UnregisterConstructor ( aIdentifier );
+        return Factory<std::string, Renderer>::UnregisterConstructor ( aIdentifier );
     }
     void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
     {
-        Factory<Renderer>::EnumerateConstructors ( aEnumerator );
+        Factory<std::string, Renderer>::EnumerateConstructors ( aEnumerator );
     }
 }

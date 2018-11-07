@@ -25,7 +25,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLImage::OpenGLImage() = default;
+    OpenGLImage::OpenGLImage ( uint32_t aPath )
+    {
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
+    }
 
     OpenGLImage::~OpenGLImage()
     {

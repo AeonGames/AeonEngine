@@ -41,10 +41,10 @@ namespace AeonGames
         void* GetWindowId() const;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
 
-        std::unique_ptr<Mesh> CreateMesh() const final;
-        std::unique_ptr<Pipeline> CreatePipeline() const final;
-        std::unique_ptr<Material> CreateMaterial() const final;
-        std::unique_ptr<Image> CreateImage() const final;
+        std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
+        std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
+        std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
+        std::unique_ptr<Image> CreateImage ( uint32_t aPath ) const final;
     private:
         void Initialize();
         void Finalize();

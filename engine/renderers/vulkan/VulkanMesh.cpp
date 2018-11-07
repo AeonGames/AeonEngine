@@ -40,9 +40,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMesh::VulkanMesh ( const VulkanRenderer&  aVulkanRenderer ) :
+    VulkanMesh::VulkanMesh ( const VulkanRenderer&  aVulkanRenderer, uint32_t aId ) :
         mVulkanRenderer ( aVulkanRenderer ), mBuffer ( mVulkanRenderer )
     {
+        if ( aId )
+        {
+            Load ( aId );
+        }
     }
     VulkanMesh::~VulkanMesh()
     {
