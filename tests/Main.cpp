@@ -28,8 +28,8 @@ limitations under the License.
 int main ( int argc, char **argv )
 {
     testing::InitGoogleTest ( &argc, argv );
-    AeonGames::Initialize();
+    AeonGames::InitializeGlobalEnvironment();
     int result = RUN_ALL_TESTS();
-    AeonGames::Finalize();
+    AeonGames::FinalizeGlobalEnvironment();
     return result;
 }

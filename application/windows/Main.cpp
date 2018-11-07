@@ -20,8 +20,8 @@ limitations under the License.
 
 int WINAPI ENTRYPOINT WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
-    AeonGames::Initialize();
-    AeonGames::Finalize();
+    AeonGames::InitializeGlobalEnvironment();
+    AeonGames::FinalizeGlobalEnvironment();
     return 0;
 }
 
