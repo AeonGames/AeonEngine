@@ -104,7 +104,7 @@ namespace AeonGames
         }
     }
 
-    bool Initialize()
+    bool InitializeGlobalEnvironment()
     {
         if ( gInitialized )
         {
@@ -142,7 +142,7 @@ namespace AeonGames
         return gInitialized;
     }
 
-    void Finalize()
+    void FinalizeGlobalEnvironment()
     {
         if ( !gInitialized )
         {

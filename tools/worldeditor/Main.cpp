@@ -68,7 +68,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
 #endif
-    if ( !AeonGames::Initialize() )
+    if ( !AeonGames::InitializeGlobalEnvironment() )
     {
         return -1;
     }
@@ -95,7 +95,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
                                 QMessageBox::Ok );
         retval = -1;
     }
-    AeonGames::Finalize();
+    AeonGames::FinalizeGlobalEnvironment();
 #ifdef _MSC_VER
 #if 0
     if ( gAllocationLog )

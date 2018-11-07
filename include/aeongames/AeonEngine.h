@@ -24,8 +24,8 @@ limitations under the License.
 namespace AeonGames
 {
     class Renderer;
-    DLL bool Initialize();
-    DLL void Finalize();
+    DLL bool InitializeGlobalEnvironment();
+    DLL void FinalizeGlobalEnvironment();
     DLL std::vector<std::string> GetResourcePath();
     DLL void SetResourcePath ( const std::vector<std::string>& aPath );
     /*! Returns the resource size referenced by its CRC value. */
