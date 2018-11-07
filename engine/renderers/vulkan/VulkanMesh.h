@@ -29,7 +29,7 @@ namespace AeonGames
     class VulkanMesh : public Mesh
     {
     public:
-        VulkanMesh ( const VulkanRenderer&  aVulkanRenderer );
+        VulkanMesh ( const VulkanRenderer&  aVulkanRenderer, uint32_t aId = 0 );
         ~VulkanMesh() final;
         void Load ( uint32_t aId ) final;
         void Load ( const std::string& aFilename ) final;

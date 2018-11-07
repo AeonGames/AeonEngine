@@ -27,7 +27,7 @@ namespace AeonGames
     class OpenGLImage : public Image
     {
     public:
-        OpenGLImage();
+        OpenGLImage ( uint32_t aPath = 0 );
         ~OpenGLImage() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
@@ -38,12 +38,6 @@ namespace AeonGames
         uint32_t Height() const final;
         ImageFormat Format() const final;
         ImageType Type() const final;
-#if 0
-        const uint8_t* Pixels() const final;
-        const size_t PixelsSize() const final;
-        void* Map() final;
-        void Unmap() final;
-#endif
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/
         const uint32_t GetTextureId() const;

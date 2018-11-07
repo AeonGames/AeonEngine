@@ -45,24 +45,24 @@ namespace AeonGames
         return std::make_unique<OpenGLWindow> ( aWindowId, *this );
     }
 
-    std::unique_ptr<Mesh> OpenGLRenderer::CreateMesh() const
+    std::unique_ptr<Mesh> OpenGLRenderer::CreateMesh ( uint32_t aPath ) const
     {
-        return std::make_unique<OpenGLMesh> ( *this );
+        return std::make_unique<OpenGLMesh> ( aPath );
     }
 
-    std::unique_ptr<Pipeline> OpenGLRenderer::CreatePipeline() const
+    std::unique_ptr<Pipeline> OpenGLRenderer::CreatePipeline ( uint32_t aPath ) const
     {
-        return std::make_unique<OpenGLPipeline> ( *this );
+        return std::make_unique<OpenGLPipeline> ( aPath );
     }
 
-    std::unique_ptr<Material> OpenGLRenderer::CreateMaterial() const
+    std::unique_ptr<Material> OpenGLRenderer::CreateMaterial ( uint32_t aPath ) const
     {
-        return std::make_unique<OpenGLMaterial>();
+        return std::make_unique<OpenGLMaterial> ( aPath );
     }
 
-    std::unique_ptr<Image> OpenGLRenderer::CreateImage() const
+    std::unique_ptr<Image> OpenGLRenderer::CreateImage ( uint32_t aPath ) const
     {
-        return std::make_unique<OpenGLImage>();
+        return std::make_unique<OpenGLImage> ( aPath );
     }
 
     void* OpenGLRenderer::GetOpenGLContext() const

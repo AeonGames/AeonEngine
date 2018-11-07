@@ -16,34 +16,35 @@ limitations under the License.
 #include <unordered_map>
 #include <string>
 #include <functional>
-#include "aeongames/Memory.h"
+#include <memory>
 #include <utility>
+#include "aeongames/UniqueAnyPtr.h"
 
 #define FactoryImplementation(X) \
     std::unique_ptr<X> Construct##X ( const std::string& aIdentifier )\
     { \
-        return Factory<X>::Construct ( aIdentifier ); \
+        return Factory<std::string,X>::Construct ( aIdentifier ); \
     } \
     bool Register##X##Constructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ) \
     { \
-        return Factory<X>::RegisterConstructor ( aIdentifier, aConstructor );\
+        return Factory<std::string,X>::RegisterConstructor ( aIdentifier, aConstructor );\
     }\
     bool Unregister##X##Constructor ( const std::string& aIdentifier )\
     {\
-        return Factory<X>::UnregisterConstructor ( aIdentifier );\
+        return Factory<std::string,X>::UnregisterConstructor ( aIdentifier );\
     }\
     void Enumerate##X##Constructors ( const std::function<bool ( const std::string& ) >& aEnumerator )\
     {\
-        Factory<X>::EnumerateConstructors ( aEnumerator );\
+        Factory<std::string,X>::EnumerateConstructors ( aEnumerator );\
     }
 
 namespace AeonGames
 {
-    template<class T, typename... Args>
+    template<class K, class T, typename... Args>
     class Factory
     {
     public:
-        static std::unique_ptr<T> Construct ( const std::string& aIdentifier, Args&&... args )
+        static std::unique_ptr<T> Construct ( const K& aIdentifier, Args&&... args )
         {
             auto it = Constructors.find ( aIdentifier );
             if ( it != Constructors.end() )
@@ -52,7 +53,7 @@ namespace AeonGames
             }
             return nullptr;
         }
-        static bool RegisterConstructor ( const std::string& aIdentifier, const std::function < std::unique_ptr<T> ( Args&&... args ) > & aConstructor )
+        static bool RegisterConstructor ( const K& aIdentifier, const std::function < std::unique_ptr<T> ( Args&&... args ) > & aConstructor )
         {
             if ( Constructors.find ( aIdentifier ) == Constructors.end() )
             {
@@ -61,7 +62,7 @@ namespace AeonGames
             }
             return false;
         }
-        static bool UnregisterConstructor ( const std::string& aIdentifier )
+        static bool UnregisterConstructor ( const K& aIdentifier )
         {
             auto it = Constructors.find ( aIdentifier );
             if ( it != Constructors.end() )
@@ -71,7 +72,7 @@ namespace AeonGames
             }
             return false;
         }
-        static void EnumerateConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
+        static void EnumerateConstructors ( const std::function<bool ( const K& ) >& aEnumerator )
         {
             for ( auto& i : Constructors )
             {
@@ -82,8 +83,8 @@ namespace AeonGames
             }
         }
     private:
-        static std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Constructors;
+        static std::unordered_map < K, std::function < std::unique_ptr<T> ( Args&&... args ) >> Constructors;
     };
-    template<class T, typename... Args>
-    std::unordered_map < std::string, std::function < std::unique_ptr<T> ( Args&&... args ) >> Factory<T, Args...>::Constructors;
+    template<class K, class T, typename... Args>
+    std::unordered_map < K, std::function < std::unique_ptr<T> ( Args&&... args ) >> Factory<K, T, Args...>::Constructors;
 }

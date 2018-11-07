@@ -17,8 +17,9 @@ limitations under the License.
 #define AEONGAMES_MATERIAL_H
 #include <string>
 #include <vector>
+#include <memory>
 #include "aeongames/Platform.h"
-#include "aeongames/Memory.h"
+#include "aeongames/ResourceId.h"
 
 namespace AeonGames
 {
@@ -51,7 +52,7 @@ namespace AeonGames
         virtual void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) = 0;
         virtual void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) = 0;
         virtual void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) = 0;
-        virtual void SetSampler ( const std::string& aName, const std::string& aValue ) = 0;
+        virtual void SetSampler ( const std::string& aName, const ResourceId& aValue ) = 0;
         ///@}
         ///@name Property Getters
         ///@{
@@ -61,7 +62,7 @@ namespace AeonGames
         virtual Vector2 GetFloatVec2 ( const std::string& aName ) = 0;
         virtual Vector3 GetFloatVec3 ( const std::string& aName ) = 0;
         virtual Vector4 GetFloatVec4 ( const std::string& aName ) = 0;
-        virtual std::string GetSampler ( const std::string& aName ) = 0;
+        virtual ResourceId GetSampler ( const std::string& aName ) = 0;
         ///@}
     };
 #else

@@ -48,6 +48,26 @@ namespace AeonGames
 
     Model::Model ( uint32_t aId )
     {
+        Load ( aId );
+    }
+
+    Model::Model ( const std::string&  aFilename )
+    {
+        Load ( aFilename );
+    }
+
+    Model::Model ( const void * aBuffer, size_t aBufferSize )
+    {
+        Load ( aBuffer, aBufferSize );
+    }
+
+    void Model::Load ( const std::string& aFilename )
+    {
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+    }
+
+    void Model::Load ( uint32_t aId )
+    {
         std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
         LoadResource ( aId, buffer.data(), buffer.size() );
         try
@@ -59,46 +79,6 @@ namespace AeonGames
             Unload();
             throw;
         }
-    }
-    Model::Model ( const std::string&  aFilename )
-    {
-        try
-        {
-            Load ( aFilename );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    Model::Model ( const void * aBuffer, size_t aBufferSize )
-    {
-        if ( !aBuffer && !aBufferSize )
-        {
-            throw std::runtime_error ( "Cannot initialize model object with null data." );
-            return;
-        }
-        try
-        {
-            Load ( aBuffer, aBufferSize );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    void Model::Load ( const std::string& aFilename )
-    {
-        static std::mutex m;
-        static ModelBuffer pipeline_buffer;
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<ModelBuffer> ( pipeline_buffer, aFilename, "AEONMDL" );
-        Load ( pipeline_buffer );
-        pipeline_buffer.Clear();
     }
 
     void Model::Load ( const void* aBuffer, size_t aBufferSize )

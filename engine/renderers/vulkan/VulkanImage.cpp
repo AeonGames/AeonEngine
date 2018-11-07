@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanImage::VulkanImage ( const VulkanRenderer&  aVulkanRenderer ) :
+    VulkanImage::VulkanImage ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
         Image(), mVulkanRenderer (  aVulkanRenderer  ), mWidth{}, mHeight{},
         mVkImage { VK_NULL_HANDLE },
         mImageMemory { VK_NULL_HANDLE }
@@ -36,6 +36,10 @@ namespace AeonGames
         mVkDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         mVkDescriptorImageInfo.imageView = VK_NULL_HANDLE;
         mVkDescriptorImageInfo.sampler = VK_NULL_HANDLE;
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
     }
 
     VulkanImage::~VulkanImage()

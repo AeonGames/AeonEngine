@@ -30,7 +30,7 @@ namespace AeonGames
     class VulkanMaterial : public Material
     {
     public:
-        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer );
+        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath = 0 );
         /// The Copy Contsructor is used for virtual copying.
         VulkanMaterial ( const VulkanMaterial& aMaterial );
         /// Assignment operator due to rule of zero/three/five.
@@ -59,7 +59,7 @@ namespace AeonGames
         void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
         void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
         void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
-        void SetSampler ( const std::string& aName, const std::string& aValue ) final;
+        void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
         ///@}
         ///@name Property Getters
         ///@{
@@ -69,7 +69,7 @@ namespace AeonGames
         Vector2 GetFloatVec2 ( const std::string& aName ) final;
         Vector3 GetFloatVec3 ( const std::string& aName ) final;
         Vector4 GetFloatVec4 ( const std::string& aName ) final;
-        std::string GetSampler ( const std::string& aName ) final;
+        ResourceId GetSampler ( const std::string& aName ) final;
         ///@}
 
         const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
@@ -112,6 +112,7 @@ namespace AeonGames
         VkDescriptorSet mVkPropertiesDescriptorSet{ VK_NULL_HANDLE };
         VulkanBuffer mUniformBuffer;
         std::vector<UniformVariable> mVariables{};
+        std::unordered_map<std::string, ResourceId> mSamplers{};
     };
 }
 #endif

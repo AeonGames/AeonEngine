@@ -28,7 +28,7 @@ namespace AeonGames
     class OpenGLPipeline : public Pipeline
     {
     public:
-        OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer );
+        OpenGLPipeline ( uint32_t aPath = 0 );
         ///@name Overrides
         ///@{
         void Load ( const std::string& aFilename ) final;
@@ -44,7 +44,6 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        const OpenGLRenderer& mOpenGLRenderer;
         uint32_t mProgramId{};
         GLenum mTopology{};
         OpenGLMaterial mDefaultMaterial{};

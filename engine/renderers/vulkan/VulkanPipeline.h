@@ -33,7 +33,7 @@ namespace AeonGames
     class VulkanPipeline : public Pipeline
     {
     public:
-        VulkanPipeline ( const VulkanRenderer& aVulkanRenderer );
+        VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, uint32_t aPath = 0 );
         ~VulkanPipeline() final;
         ///@name Overrides
         ///@{

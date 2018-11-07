@@ -20,9 +20,11 @@ limitations under the License.
 #include <string>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
+#include "aeongames/Archive.h"
 
 namespace AeonGames
 {
+    using ResourceArchive = ArchiveAny<uint32_t>;
     class ResourceId
     {
     public:

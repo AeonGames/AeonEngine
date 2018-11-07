@@ -599,24 +599,24 @@ namespace AeonGames
         return std::make_unique<VulkanWindow> ( aWindowId, *this );
     }
 
-    std::unique_ptr<Mesh> VulkanRenderer::CreateMesh() const
+    std::unique_ptr<Mesh> VulkanRenderer::CreateMesh ( uint32_t aPath ) const
     {
-        return std::make_unique<VulkanMesh> ( *this );
+        return std::make_unique<VulkanMesh> ( *this, aPath );
     }
 
-    std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline() const
+    std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline ( uint32_t aPath ) const
     {
-        return std::make_unique<VulkanPipeline> ( *this );
+        return std::make_unique<VulkanPipeline> ( *this, aPath );
     }
 
-    std::unique_ptr<Material> VulkanRenderer::CreateMaterial() const
+    std::unique_ptr<Material> VulkanRenderer::CreateMaterial ( uint32_t aPath ) const
     {
-        return std::make_unique<VulkanMaterial> ( *this );
+        return std::make_unique<VulkanMaterial> ( *this, aPath );
     }
 
-    std::unique_ptr<Image> VulkanRenderer::CreateImage() const
+    std::unique_ptr<Image> VulkanRenderer::CreateImage ( uint32_t aPath ) const
     {
-        return std::make_unique<VulkanImage> ( *this );
+        return std::make_unique<VulkanImage> ( *this, aPath );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetMatrixDescriptorSetLayout() const

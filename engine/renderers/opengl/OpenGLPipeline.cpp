@@ -70,9 +70,12 @@ namespace AeonGames
         return GL_POINTS;
     }
 
-    OpenGLPipeline::OpenGLPipeline ( const OpenGLRenderer&  aOpenGLRenderer ) :
-        mOpenGLRenderer { aOpenGLRenderer }
+    OpenGLPipeline::OpenGLPipeline ( uint32_t aPath )
     {
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
     }
 
     OpenGLPipeline::~OpenGLPipeline()

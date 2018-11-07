@@ -28,7 +28,7 @@ namespace AeonGames
     class OpenGLMesh : public Mesh
     {
     public:
-        OpenGLMesh ( const OpenGLRenderer& aOpenGLRenderer );
+        OpenGLMesh ( uint32_t aPath = 0 );
         ~OpenGLMesh() final;
         void Load ( uint32_t aId ) final;
         void Load ( const std::string& aFilename ) final;
@@ -47,7 +47,6 @@ namespace AeonGames
         GLuint GetIndexBufferId() const;
         ///@}
     private:
-        const OpenGLRenderer& mOpenGLRenderer;
         AABB mAABB;
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};

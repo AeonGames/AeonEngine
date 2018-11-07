@@ -29,7 +29,7 @@ namespace AeonGames
     class VulkanImage : public Image
     {
     public:
-        VulkanImage ( const VulkanRenderer&  aVulkanRenderer );
+        VulkanImage ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath = 0 );
         ~VulkanImage() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;

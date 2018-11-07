@@ -24,6 +24,7 @@ namespace AeonGames
     {
     public:
         UniqueAnyPtr() noexcept = default;
+        UniqueAnyPtr ( std::nullptr_t ) noexcept {};
         UniqueAnyPtr ( const UniqueAnyPtr& aUniqueResource ) = delete;
         UniqueAnyPtr& operator= ( const UniqueAnyPtr& aUniqueResource ) = delete;
         UniqueAnyPtr ( UniqueAnyPtr&& aUniqueResource ) noexcept :

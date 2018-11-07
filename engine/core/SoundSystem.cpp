@@ -20,20 +20,5 @@ limitations under the License.
 
 namespace AeonGames
 {
-    std::unique_ptr<SoundSystem> GetSoundSystem ( const std::string& aIdentifier )
-    {
-        return Factory<SoundSystem>::Construct ( aIdentifier );
-    }
-    bool RegisterSoundSystemConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<SoundSystem>() >& aConstructor )
-    {
-        return Factory<SoundSystem>::RegisterConstructor ( aIdentifier, aConstructor );
-    }
-    bool UnregisterSoundSystemConstructor ( const std::string& aIdentifier )
-    {
-        return Factory<SoundSystem>::UnregisterConstructor ( aIdentifier );
-    }
-    void EnumerateSoundSystemConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
-    {
-        Factory<SoundSystem>::EnumerateConstructors ( aEnumerator );
-    }
+    FactoryImplementation ( SoundSystem );
 }

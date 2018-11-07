@@ -40,8 +40,12 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLMesh::OpenGLMesh ( const OpenGLRenderer& aOpenGLRenderer ) : mOpenGLRenderer { aOpenGLRenderer }
+    OpenGLMesh::OpenGLMesh ( uint32_t aPath )
     {
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
     }
 
     OpenGLMesh::~OpenGLMesh()

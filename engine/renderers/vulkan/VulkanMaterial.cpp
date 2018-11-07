@@ -43,10 +43,14 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer ) :
+    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
         mVulkanRenderer { aVulkanRenderer },
         mUniformBuffer { mVulkanRenderer }
     {
+        if ( aPath )
+        {
+            Load ( aPath );
+        }
     }
 
     VulkanMaterial::~VulkanMaterial()
@@ -296,9 +300,9 @@ namespace AeonGames
         }
     }
 
-    void VulkanMaterial::SetSampler ( const std::string& aName, const std::string& aValue )
+    void VulkanMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
-        ///@todo Reimplement samplers
+        mSamplers[aName] = aValue;
     }
     uint32_t VulkanMaterial::GetUint ( const std::string& aName )
     {
@@ -324,17 +328,15 @@ namespace AeonGames
     {
         return Vector4{};
     }
-    std::string VulkanMaterial::GetSampler ( const std::string& aName )
+    ResourceId VulkanMaterial::GetSampler ( const std::string& aName )
     {
-        return std::string{};
+        auto i = mSamplers.find ( aName );
+        if ( i != mSamplers.end() )
+        {
+            return i->second;
+        }
+        return ResourceId{"Image"_crc32, 0};
     }
-
-#if 0
-    void VulkanMaterial::Update ( const uint8_t* aValue, size_t aOffset, size_t aSize )
-    {
-        mUniformBuffer.WriteMemory ( aOffset, ( aSize ) ? aSize : GetPropertyBlock().size() - aOffset, aValue );
-    }
-#endif
 
     const VkDescriptorSetLayout& VulkanMaterial::GetPropertiesDescriptorSetLayout() const
     {
