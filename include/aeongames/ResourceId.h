@@ -36,6 +36,8 @@ namespace AeonGames
             mType{crc32i ( aType.data(), aType.length() ) }, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
         ResourceId ( const std::string& aType, uint32_t aPath ) :
             mType{crc32i ( aType.data(), aType.length() ) }, mPath{aPath} {}
+        ResourceId ( uint32_t aType, const std::string& aPath ) :
+            mType{aType}, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
         ~ResourceId() = default;
         uint32_t GetType() const
         {

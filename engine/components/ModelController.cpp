@@ -74,7 +74,7 @@ namespace AeonGames
     void ModelController::Render ( const Node& aNode, const Window& aWindow ) const
     {
         /** @todo Incorporate use of skeleton and animations back */
-        if ( mModel )
+        if ( mModel.GetPath() )
         {
             /** @todo Implement ResourceId casting to pointer. */
 #if 0
