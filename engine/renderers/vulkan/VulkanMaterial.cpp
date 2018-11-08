@@ -21,6 +21,7 @@ limitations under the License.
 #include <utility>
 #include <cassert>
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -125,32 +126,32 @@ namespace AeonGames
             {
             case PropertyBuffer::ValueCase::kScalarFloat:
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float );
                 break;
             case PropertyBuffer::ValueCase::kScalarUint:
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( uint32_t );
                 break;
             case PropertyBuffer::ValueCase::kScalarInt:
-                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( int32_t );
                 break;
             case PropertyBuffer::ValueCase::kVector2:
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float ) * 2;
                 break;
             case PropertyBuffer::ValueCase::kVector3:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float ) * 3;
                 break;
             case PropertyBuffer::ValueCase::kVector4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float ) * 4;
                 break;
             default:
@@ -172,7 +173,7 @@ namespace AeonGames
                 auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),
                                         [&i] ( const PropertyBuffer & property )
                 {
-                    return property.uniform_name() == i.GetName();
+                    return property.name() == i.GetName();
                 } );
                 if ( j != aMaterialBuffer.property().end() )
                 {
@@ -208,6 +209,11 @@ namespace AeonGames
                 }
             }
             mUniformBuffer.Unmap();
+        }
+        mSamplers.reserve ( aMaterialBuffer.sampler().size() );
+        for ( auto& i : aMaterialBuffer.sampler() )
+        {
+            mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } );
         }
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
@@ -302,8 +308,17 @@ namespace AeonGames
 
     void VulkanMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
-        mSamplers[aName] = aValue;
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+        {
+            return std::get<0> ( aTuple ) == aName;
+        } );
+        if ( i != mSamplers.end() )
+        {
+            std::get<1> ( *i ) = aValue;
+        }
     }
+
     uint32_t VulkanMaterial::GetUint ( const std::string& aName )
     {
         return 0;
@@ -330,10 +345,14 @@ namespace AeonGames
     }
     ResourceId VulkanMaterial::GetSampler ( const std::string& aName )
     {
-        auto i = mSamplers.find ( aName );
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+        {
+            return std::get<0> ( aTuple ) == aName;
+        } );
         if ( i != mSamplers.end() )
         {
-            return i->second;
+            return std::get<1> ( *i );
         }
         return ResourceId{"Image"_crc32, 0};
     }
@@ -356,7 +375,7 @@ namespace AeonGames
             return;
         }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 1 /*+ GetSamplerCount()*/ );
+        descriptor_set_layout_bindings.reserve ( 1 + mSamplers.size() );
         uint32_t binding = 0;
 
         if ( mUniformBuffer.GetSize() )
@@ -369,22 +388,19 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
-#if 0
-        for ( auto& i : GetProperties() )
+
+        for ( size_t i = 0; i < mSamplers.size(); ++i )
         {
-            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
-            {
-                descriptor_set_layout_bindings.emplace_back();
-                auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
-                descriptor_set_layout_binding.binding = binding++;
-                descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                // Descriptor Count is the count of elements in an array.
-                descriptor_set_layout_binding.descriptorCount = 1;
-                descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-            }
+            descriptor_set_layout_bindings.emplace_back();
+            auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
+            descriptor_set_layout_binding.binding = binding++;
+            descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            // Descriptor Count is the count of elements in an array.
+            descriptor_set_layout_binding.descriptorCount = 1;
+            descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         }
-#endif
+
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
@@ -411,21 +427,19 @@ namespace AeonGames
     void VulkanMaterial::InitializeDescriptorPool()
     {
         std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
-        descriptor_pool_sizes.reserve ( 2 );
+        descriptor_pool_sizes.reserve ( ( mUniformBuffer.GetSize() ? 1 : 0 ) + ( mSamplers.size() ? 1 : 0 ) );
         if ( mUniformBuffer.GetSize() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptor_pool_sizes.back().descriptorCount = 1;
         }
-#if 0
-        if ( GetSamplerCount() )
+        if ( mSamplers.size() )
         {
             descriptor_pool_sizes.emplace_back();
             descriptor_pool_sizes.back().type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptor_pool_sizes.back().descriptorCount = static_cast<uint32_t> ( GetSamplerCount() );
+            descriptor_pool_sizes.back().descriptorCount = static_cast<uint32_t> ( mSamplers.size() );
         }
-#endif
         if ( descriptor_pool_sizes.size() )
         {
             VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
@@ -475,7 +489,7 @@ namespace AeonGames
         };
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( 1 /*+ GetSamplerCount()*/ );
+        write_descriptor_sets.reserve ( 1 + mSamplers.size() );
 
         if ( mUniformBuffer.GetSize() )
         {
@@ -493,27 +507,23 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
         }
 
-#if 0
-        uint32_t index {0};
-        for ( auto& i : GetProperties() )
+        for ( uint32_t index = 0; index < mSamplers.size(); ++index )
         {
-            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
-            {
-                write_descriptor_sets.emplace_back();
-                auto& write_descriptor_set = write_descriptor_sets.back();
-                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                write_descriptor_set.pNext = nullptr;
-                write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
-                ///@todo find a better way to calculate sampler binding, perhaps move samplers to their own descriptor set.
-                write_descriptor_set.dstBinding = static_cast<uint32_t> ( ( write_descriptor_sets.size() - 1 ) + index++ );
-                write_descriptor_set.dstArrayElement = 0;
-                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                write_descriptor_set.descriptorCount = 1;
-                write_descriptor_set.pBufferInfo = nullptr;
-                write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( i.GetImage() )->GetDescriptorImageInfo();
-            }
+            assert ( 0 && "No ResourceId to pointer cast yet, this wont work." );
+            write_descriptor_sets.emplace_back();
+            auto& write_descriptor_set = write_descriptor_sets.back();
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
+            ///@todo find a better way to calculate sampler binding, perhaps move samplers to their own descriptor set.
+            write_descriptor_set.dstBinding = static_cast<uint32_t> ( ( write_descriptor_sets.size() - 1 ) + index );
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = nullptr;
+            //write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( i->second )->GetDescriptorImageInfo();
+            write_descriptor_set.pImageInfo = nullptr;
         }
-#endif
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 

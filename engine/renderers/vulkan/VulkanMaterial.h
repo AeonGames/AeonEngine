@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <tuple>
 #include <vulkan/vulkan.h>
 #include "aeongames/Material.h"
 #include "aeongames/Memory.h"
@@ -112,7 +113,7 @@ namespace AeonGames
         VkDescriptorSet mVkPropertiesDescriptorSet{ VK_NULL_HANDLE };
         VulkanBuffer mUniformBuffer;
         std::vector<UniformVariable> mVariables{};
-        std::unordered_map<std::string, ResourceId> mSamplers{};
+        std::vector<std::tuple<std::string, ResourceId>> mSamplers{};
     };
 }
 #endif

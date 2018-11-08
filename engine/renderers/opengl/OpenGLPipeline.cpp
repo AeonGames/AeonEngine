@@ -216,43 +216,46 @@ namespace AeonGames
 
         if ( aPipelineBuffer.default_material().property().size() )
         {
-            uint32_t sampler_binding = 0;
             std::string properties (
                 "layout(binding = 1,std140) uniform Properties{\n"
             );
-            std::string samplers ( "//----SAMPLERS-START----\n" );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
                 switch ( i.value_case() )
                 {
                 case PropertyBuffer::ValueCase::kScalarFloat:
-                    properties += "float " + i.uniform_name() + ";\n";
+                    properties += "float " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kScalarUint:
-                    properties += "uint " + i.uniform_name() + ";\n";
+                    properties += "uint " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kScalarInt:
-                    properties += "int " + i.uniform_name() + ";\n";
+                    properties += "int " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kVector2:
-                    properties += "vec2 " + i.uniform_name() + ";\n";
+                    properties += "vec2 " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kVector3:
-                    properties += "vec3 " + i.uniform_name() + ";\n";
+                    properties += "vec3 " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kVector4:
-                    properties += "vec4 " + i.uniform_name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kTexture:
-                    samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
-                    ++sampler_binding;
+                    properties += "vec4 " + i.name() + ";\n";
                     break;
                 default:
                     throw std::runtime_error ( "Unknown Type." );
                 }
             }
             properties.append ( "};\n" );
+
+            uint32_t sampler_binding = 0;
+            std::string samplers ( "//----SAMPLERS-START----\n" );
+            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            {
+                samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                ++sampler_binding;
+            }
             samplers.append ( "//----SAMPLERS-END----\n" );
+
             vertex_shader.append ( properties );
             vertex_shader.append ( samplers );
         }
@@ -296,43 +299,46 @@ namespace AeonGames
 
         if ( aPipelineBuffer.default_material().property().size() )
         {
-            uint32_t sampler_binding = 0;
             std::string properties (
                 "layout(binding = 1,std140) uniform Properties{\n"
             );
-            std::string samplers ( "//----SAMPLERS-START----\n" );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
                 switch ( i.value_case() )
                 {
                 case PropertyBuffer::ValueCase::kScalarFloat:
-                    properties += "float " + i.uniform_name() + ";\n";
+                    properties += "float " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kScalarUint:
-                    properties += "uint " + i.uniform_name() + ";\n";
+                    properties += "uint " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kScalarInt:
-                    properties += "int " + i.uniform_name() + ";\n";
+                    properties += "int " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kVector2:
-                    properties += "vec2 " + i.uniform_name() + ";\n";
+                    properties += "vec2 " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kVector3:
-                    properties += "vec3 " + i.uniform_name() + ";\n";
+                    properties += "vec3 " + i.name() + ";\n";
                     break;
                 case PropertyBuffer::ValueCase::kVector4:
-                    properties += "vec4 " + i.uniform_name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kTexture:
-                    samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.uniform_name() + ";\n";
-                    ++sampler_binding;
+                    properties += "vec4 " + i.name() + ";\n";
                     break;
                 default:
                     throw std::runtime_error ( "Unknown Type." );
                 }
             }
             properties.append ( "};\n" );
+
+            uint32_t sampler_binding = 0;
+            std::string samplers ( "//----SAMPLERS-START----\n" );
+            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            {
+                samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                ++sampler_binding;
+            }
             samplers.append ( "//----SAMPLERS-END----\n" );
+
             fragment_shader.append ( properties );
             fragment_shader.append ( samplers );
         }

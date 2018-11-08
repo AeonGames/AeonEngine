@@ -19,6 +19,7 @@ limitations under the License.
 #include <regex>
 #include <utility>
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "aeongames/ResourceCache.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -104,32 +105,32 @@ namespace AeonGames
             {
             case PropertyBuffer::ValueCase::kScalarFloat:
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float );
                 break;
             case PropertyBuffer::ValueCase::kScalarUint:
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( uint32_t );
                 break;
             case PropertyBuffer::ValueCase::kScalarInt:
                 size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( int32_t );
                 break;
             case PropertyBuffer::ValueCase::kVector2:
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float ) * 2;
                 break;
             case PropertyBuffer::ValueCase::kVector3:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float ) * 3;
                 break;
             case PropertyBuffer::ValueCase::kVector4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.uniform_name(), i.value_case(), size );
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
                 size += sizeof ( float ) * 4;
                 break;
             default:
@@ -146,7 +147,7 @@ namespace AeonGames
             auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),
                                     [&i] ( const PropertyBuffer & property )
             {
-                return property.uniform_name() == i.GetName();
+                return property.name() == i.GetName();
             } );
             if ( j != aMaterialBuffer.property().end() )
             {
@@ -182,6 +183,11 @@ namespace AeonGames
             }
         }
         mUniformBuffer.Unmap();
+        mSamplers.reserve ( aMaterialBuffer.sampler().size() );
+        for ( auto& i : aMaterialBuffer.sampler() )
+        {
+            mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } );
+        }
     }
 
     void OpenGLMaterial::Unload()
@@ -269,7 +275,15 @@ namespace AeonGames
 
     void OpenGLMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
-        mSamplers[aName] = aValue;
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+        {
+            return std::get<0> ( aTuple ) == aName;
+        } );
+        if ( i != mSamplers.end() )
+        {
+            std::get<1> ( *i ) = aValue;
+        }
     }
 
     uint32_t OpenGLMaterial::GetUint ( const std::string& aName )
@@ -298,10 +312,14 @@ namespace AeonGames
     }
     ResourceId OpenGLMaterial::GetSampler ( const std::string& aName )
     {
-        auto i = mSamplers.find ( aName );
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+        {
+            return std::get<0> ( aTuple ) == aName;
+        } );
         if ( i != mSamplers.end() )
         {
-            return i->second;
+            return std::get<1> ( *i );
         }
         return ResourceId{"Image"_crc32, 0};
     }

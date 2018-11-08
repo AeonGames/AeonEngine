@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,20 +15,9 @@
 syntax = "proto3";
 package AeonGames;
 
-import "vector2.proto";
-import "vector3.proto";
-import "vector4.proto";
+import "reference.proto";
 
-// TODO Consider renaming to UniformVariableBuffer or similar, since that's what this really is
-message PropertyBuffer {
+message SamplerBuffer {
 	string name = 1;
-	oneof value
-	{
-		float      scalar_float = 2;
-		uint32     scalar_uint  = 3;
-		sint32      scalar_int  = 4;
-		Vector2Buffer   vector2 = 5;
-		Vector3Buffer   vector3 = 6;
-		Vector4Buffer   vector4 = 7;
-	}
+	ReferenceBuffer image = 2;
 }

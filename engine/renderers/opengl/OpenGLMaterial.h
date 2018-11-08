@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <tuple>
 #include <memory>
 #include "aeongames/Material.h"
 #include "aeongames/Vector2.h"
@@ -100,7 +101,7 @@ namespace AeonGames
             size_t mOffset{};
         };
         std::vector<UniformVariable> mVariables{};
-        std::unordered_map<std::string, ResourceId> mSamplers{};
+        std::vector<std::tuple<std::string, ResourceId>> mSamplers{};
         OpenGLBuffer mUniformBuffer{};
     };
 }
