@@ -20,7 +20,7 @@ limitations under the License.
 
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
-    AeonGames::Initialize();
-    AeonGames::Finalize();
+    AeonGames::InitializeGlobalEnvironment();
+    AeonGames::FinalizeGlobalEnvironment();
     return 0;
 }
