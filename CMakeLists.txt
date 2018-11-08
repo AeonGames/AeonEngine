@@ -241,6 +241,8 @@ add_custom_target(generate-python-protobuf-source
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/property.proto
     COMMAND
+        ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/sampler.proto
+    COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector2.proto
     COMMAND
         ${PROTOBUF_PROTOC_EXECUTABLE} --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules --proto_path ${CMAKE_SOURCE_DIR}/proto ${CMAKE_SOURCE_DIR}/proto/vector3.proto
@@ -262,6 +264,7 @@ add_custom_target(generate-python-protobuf-source
         ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
         ${CMAKE_SOURCE_DIR}/proto/material.proto
         ${CMAKE_SOURCE_DIR}/proto/property.proto
+        ${CMAKE_SOURCE_DIR}/proto/sampler.proto
         ${CMAKE_SOURCE_DIR}/proto/vector2.proto
         ${CMAKE_SOURCE_DIR}/proto/vector3.proto
         ${CMAKE_SOURCE_DIR}/proto/vector4.proto

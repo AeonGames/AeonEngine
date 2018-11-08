@@ -1,8 +1,7 @@
 AEONPRG
 default_material {
     property {
-      uniform_name: "LightPosition"
-      display_name: "Light position in eye coords"
+      name: "LightPosition"
       vector3 {
         x: 0
         y: 0
@@ -10,8 +9,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "Kd"
-      display_name: "Diffuse reflectivity"
+      name: "Kd"
       vector3 {
         x: 1
         y: 1
@@ -19,8 +17,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "Ld"
-      display_name: "Diffuse light intensity"
+      name: "Ld"
       vector3 {
         x: 0.5
         y: 0.5

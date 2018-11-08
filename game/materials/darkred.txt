@@ -1,7 +1,6 @@
 AEONMTL
 property {
-  uniform_name: "LightPosition"
-  display_name: "Light position in eye coords"
+  name: "LightPosition"
   vector3 {
     x: 0
     y: 0
@@ -9,8 +8,7 @@ property {
   }
 }
 property {
-  uniform_name: "Kd"
-  display_name: "Diffuse reflectivity"
+  name: "Kd"
   vector3 {
     x: 1
     y: 1
@@ -18,8 +16,7 @@ property {
   }
 }
 property {
-  uniform_name: "DiffuseMap"
-  display_name: "Diffuse Map"
+  name: "DiffuseMap"
   texture {
 	path: "images/darkred.png"
   }

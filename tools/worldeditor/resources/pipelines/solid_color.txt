@@ -1,8 +1,7 @@
 AEONPRG
 default_material {
     property {
-      uniform_name: "SolidColor"
-      display_name: "Solid Color"
+      name: "SolidColor"
       vector4 {
         x: 0.5
         y: 0.5

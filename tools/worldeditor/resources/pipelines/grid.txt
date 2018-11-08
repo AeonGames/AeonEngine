@@ -1,8 +1,7 @@
 AEONPRG
 default_material {
     property {
-      uniform_name: "OddLineColor"
-      display_name: "Odd Line Color"
+      name: "OddLineColor"
       vector4 {
         x: 0.0
         y: 0.0
@@ -11,8 +10,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "EvenLineColor"
-      display_name: "Even Line Color"
+      name: "EvenLineColor"
       vector4 {
         x: 0.0
         y: 0.0
@@ -21,8 +19,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "CentralLineColor"
-      display_name: "Central Line Color"
+      name: "CentralLineColor"
       vector4 {
         x: 0.0
         y: 0.0
@@ -31,8 +28,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "BorderLineColor"
-      display_name: "Border Line Color"
+      name: "BorderLineColor"
       vector4 {
         x: 0.0
         y: 0.0
@@ -41,8 +37,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "Scale"
-      display_name: "Scale"
+      name: "Scale"
       vector3 {
         x: 1
         y: 1
@@ -50,8 +45,7 @@ default_material {
       }  
     }
     property {
-      uniform_name: "StartingPosition"
-      display_name: "Starting Position"
+      name: "StartingPosition"
       vector3 {
         x: 0
         y: 0
@@ -59,8 +53,7 @@ default_material {
       }
     }  
       property {
-      uniform_name: "Offset"
-      display_name: "Offset"
+      name: "Offset"
       vector3 {
         x: 0
         y: 0.03225806451
@@ -68,8 +61,7 @@ default_material {
       }
     }
     property {
-      uniform_name: "LineCount"
-      display_name: "Line Count"
+      name: "LineCount"
       scalar_uint: 32
     }
 }
