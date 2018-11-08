@@ -19,6 +19,7 @@ limitations under the License.
 #include <tuple>
 #include <array>
 #include "aeongames/Component.h"
+#include "aeongames/ResourceId.h"
 
 namespace AeonGames
 {
@@ -38,7 +39,7 @@ namespace AeonGames
         ~ModelController() final;
         ///@}
     private:
-        Model* mModel{};
+        ResourceId mModel{};
         size_t mActiveAnimation{};
         double mAnimationDelta{};
     };

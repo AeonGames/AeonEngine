@@ -25,7 +25,7 @@ limitations under the License.
 #include <typeinfo>
 #include <cassert>
 
-#include "aeongames/Model.h"
+#include "aeongames/ResourceId.h"
 #include "ComponentModel.h"
 
 namespace AeonGames
@@ -103,14 +103,12 @@ namespace AeonGames
             }
         },
         {
-            typeid ( std::shared_ptr<Model> ).hash_code(),
+            typeid ( ResourceId ).hash_code(),
             [] ( const PropertyRef & aRef ) -> QVariant
             {
                 try
                 {
-                    assert ( 0 );
-                    return QVariant();
-                    //return ( Model::GetPath ( aRef.Get<std::shared_ptr<Model>>() ).c_str() );
+                    return ( QString::fromStdString ( GetResourcePath ( aRef.Get<ResourceId>().GetPath() ) ) );
                 }
                 catch ( std::runtime_error& e )
                 {
@@ -168,18 +166,16 @@ namespace AeonGames
             }
         },
         {
-            typeid ( Model* ).hash_code(),
+            typeid ( ResourceId ).hash_code(),
             [] ( const PropertyRef & aRef, const QVariant & aVariant )
             {
                 try
                 {
-                    assert ( 0 );
-                    //aRef.Get<Model*>() = Model::GetModel ( aVariant.toString().toStdString() );
+                    aRef.Get<ResourceId>() = ResourceId{"Model"_crc32, aVariant.toString().toStdString() };
                 }
                 catch ( std::runtime_error& e )
                 {
                     std::cout << e.what() << std::endl;
-                    aRef.Get<std::shared_ptr<Model>>().reset();
                 }
             }
         },
