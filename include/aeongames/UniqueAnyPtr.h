@@ -23,6 +23,8 @@ namespace AeonGames
     class UniqueAnyPtr
     {
     public:
+        /** @name Creation and Destruction. */
+        /**@{*/
         UniqueAnyPtr() noexcept = default;
         UniqueAnyPtr ( std::nullptr_t ) noexcept {};
         UniqueAnyPtr ( const UniqueAnyPtr& aUniqueResource ) = delete;
@@ -34,42 +36,17 @@ namespace AeonGames
             aUniqueResource.mPointer = nullptr;
             aUniqueResource.mManager = nullptr;
         }
-        UniqueAnyPtr& operator= ( UniqueAnyPtr&& aUniqueResource ) noexcept
-        {
-            mPointer = std::move ( aUniqueResource.mPointer );
-            mManager = std::move ( aUniqueResource.mManager );
-            aUniqueResource.mPointer = nullptr;
-            aUniqueResource.mManager = nullptr;
-            return *this;
-        }
 
         template<class T>
         UniqueAnyPtr ( std::unique_ptr<T>&& aUniquePointer ) noexcept :
             mPointer{aUniquePointer.release() },
                  mManager{Manager<T>}
         {}
-
-        template<class T>
-        UniqueAnyPtr& operator= ( std::unique_ptr<T>&& aUniquePointer ) noexcept
-        {
-            mPointer = aUniquePointer.release();
-            mManager = Manager<T>;
-            return *this;
-        }
-
         template<class T>
         UniqueAnyPtr ( T* aPointer ) noexcept :
             mPointer{aPointer},
                  mManager{Manager<T>}
         {}
-
-        template<class T>
-        UniqueAnyPtr& operator= ( T* aPointer ) noexcept
-        {
-            mPointer = aPointer;
-            mManager = mManager;
-            return *this;
-        }
 
         ~UniqueAnyPtr()
         {
@@ -78,6 +55,47 @@ namespace AeonGames
                 mManager ( mPointer );
             };
         }
+        /**@}*/
+
+        /** @name Assignment */
+        /**@{*/
+        UniqueAnyPtr& operator= ( UniqueAnyPtr&& aUniqueResource ) noexcept
+        {
+            if ( mManager )
+            {
+                mManager ( mPointer );
+            };
+            mPointer = std::move ( aUniqueResource.mPointer );
+            mManager = std::move ( aUniqueResource.mManager );
+            aUniqueResource.mPointer = nullptr;
+            aUniqueResource.mManager = nullptr;
+            return *this;
+        }
+
+        template<class T>
+        UniqueAnyPtr& operator= ( std::unique_ptr<T>&& aUniquePointer ) noexcept
+        {
+            if ( mManager )
+            {
+                mManager ( mPointer );
+            };
+            mPointer = aUniquePointer.release();
+            mManager = Manager<T>;
+            return *this;
+        }
+
+        template<class T>
+        UniqueAnyPtr& operator= ( T* aPointer ) noexcept
+        {
+            if ( mManager )
+            {
+                mManager ( mPointer );
+            };
+            mPointer = aPointer;
+            mManager = mManager;
+            return *this;
+        }
+        /**@{*/
 
         const void* GetRaw() const
         {
@@ -92,6 +110,7 @@ namespace AeonGames
             }
             return reinterpret_cast<T*> ( mPointer );
         }
+
         template<class T> T* Get()
         {
             // EC++ Item 3
