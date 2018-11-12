@@ -17,30 +17,35 @@ limitations under the License.
 #define AEONGAMES_UNIQUEANYPTR_H
 #include <memory>
 #include <typeinfo>
+#include <algorithm>
 
 namespace AeonGames
 {
     class UniqueAnyPtr
     {
+        void* mPointer{};
+        const std::type_info& ( *mManager ) ( void* aPointer ) {};
     public:
+        void Swap ( UniqueAnyPtr& aUniqueAnyPtr ) noexcept
+        {
+            std::swap ( mPointer, aUniqueAnyPtr.mPointer );
+            std::swap ( mManager, aUniqueAnyPtr.mManager );
+        }
         /** @name Creation and Destruction. */
         /**@{*/
         UniqueAnyPtr() noexcept = default;
         UniqueAnyPtr ( std::nullptr_t ) noexcept {};
         UniqueAnyPtr ( const UniqueAnyPtr& aUniqueResource ) = delete;
         UniqueAnyPtr& operator= ( const UniqueAnyPtr& aUniqueResource ) = delete;
-        UniqueAnyPtr ( UniqueAnyPtr&& aUniqueResource ) noexcept :
-            mPointer{std::move ( aUniqueResource.mPointer ) },
-                 mManager{std::move ( aUniqueResource.mManager ) }
+        UniqueAnyPtr ( UniqueAnyPtr&& aUniqueAnyPtr ) noexcept
         {
-            aUniqueResource.mPointer = nullptr;
-            aUniqueResource.mManager = nullptr;
+            aUniqueAnyPtr.Swap ( *this );
         }
 
         template<class T>
         UniqueAnyPtr ( std::unique_ptr<T>&& aUniquePointer ) noexcept :
-            mPointer{aUniquePointer.release() },
-                 mManager{Manager<T>}
+            mPointer{ aUniquePointer.release() },
+                  mManager{Manager<T>}
         {}
         template<class T>
         UniqueAnyPtr ( T* aPointer ) noexcept :
@@ -59,16 +64,9 @@ namespace AeonGames
 
         /** @name Assignment */
         /**@{*/
-        UniqueAnyPtr& operator= ( UniqueAnyPtr&& aUniqueResource ) noexcept
+        UniqueAnyPtr& operator= ( UniqueAnyPtr&& aUniqueAnyPtr ) noexcept
         {
-            if ( mManager )
-            {
-                mManager ( mPointer );
-            };
-            mPointer = std::move ( aUniqueResource.mPointer );
-            mManager = std::move ( aUniqueResource.mManager );
-            aUniqueResource.mPointer = nullptr;
-            aUniqueResource.mManager = nullptr;
+            aUniqueAnyPtr.Swap ( *this );
             return *this;
         }
 
@@ -136,12 +134,8 @@ namespace AeonGames
 
         void Reset()
         {
-            if ( mManager )
-            {
-                mManager ( mPointer );
-                mPointer = nullptr;
-                mManager = nullptr;
-            }
+            UniqueAnyPtr unique_any_ptr{nullptr};
+            unique_any_ptr.Swap ( *this );
         }
 
         const std::type_info& GetTypeInfo() const
@@ -160,8 +154,6 @@ namespace AeonGames
         }
 
     private:
-        void* mPointer{};
-        const std::type_info& ( *mManager ) ( void* aPointer ) {};
         template<typename T> static const std::type_info& Manager ( void* aPointer )
         {
             if ( aPointer )
