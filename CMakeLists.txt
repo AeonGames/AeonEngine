@@ -57,6 +57,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "Force compilation database"
 
 set(Portaudio_FIND_QUIETLY ON)
 
+find_program(XXD_EXECUTABLE xxd HINTS ENV MINGW_PREFIX MSYS2_PATH)
 find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
 find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
 find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
