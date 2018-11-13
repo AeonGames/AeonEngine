@@ -49,8 +49,6 @@ namespace AeonGames
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void Unload ();
         DLL const std::vector<Joint>& GetJoints() const;
-        DLL static const std::shared_ptr<Skeleton> GetSkeleton ( uint32_t aId );
-        DLL static const std::shared_ptr<Skeleton> GetSkeleton ( const std::string& aPath );
     private:
         void Load ( const SkeletonBuffer& aSkeletonBuffer );
         std::vector<Joint> mJoints;

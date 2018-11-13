@@ -17,22 +17,22 @@ limitations under the License.
 
 namespace AeonGames
 {
-    static std::unordered_map < uint32_t, std::function < UniqueAnyPtr ( uint32_t ) >> Constructors;
+    static std::unordered_map < uint32_t, std::pair<std::function < UniqueAnyPtr ( uint32_t ) >, UniqueAnyPtr>> Constructors;
 
     UniqueAnyPtr ConstructResource ( const ResourceId& aResourceId )
     {
         auto it = Constructors.find ( aResourceId.GetType() );
         if ( it != Constructors.end() )
         {
-            return it->second ( aResourceId.GetPath() );
+            return it->second.first ( aResourceId.GetPath() );
         }
         return nullptr;
     }
-    bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor )
+    bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor, UniqueAnyPtr&& aDefaultResource )
     {
         if ( Constructors.find ( aType ) == Constructors.end() )
         {
-            Constructors[aType] = aConstructor;
+            Constructors[aType] = std::make_pair ( aConstructor, std::move ( aDefaultResource ) );
             return true;
         }
         return false;
@@ -56,5 +56,16 @@ namespace AeonGames
                 return;
             }
         }
+    }
+
+    const UniqueAnyPtr& GetDefaultResource ( uint32_t aType )
+    {
+        static const UniqueAnyPtr unique_any_nullptr{nullptr};
+        auto it = Constructors.find ( aType );
+        if ( it != Constructors.end() )
+        {
+            return it->second.second;
+        }
+        return unique_any_nullptr;
     }
 }

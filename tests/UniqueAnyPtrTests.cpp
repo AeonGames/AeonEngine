@@ -29,6 +29,7 @@ namespace AeonGames
         UniqueAnyPtr resource2{std::make_unique<std::string> ( "Resource 2" ) };
         UniqueAnyPtr resource3{std::move ( resource2 ) };
         UniqueAnyPtr resource4{MakeUniqueAny<std::string> ( "Resource 4" ) };
+        UniqueAnyPtr resource5{std::string ( "Resource 5" ) };
     }
 
     TEST ( UniqueAnyPtr, Assignment )

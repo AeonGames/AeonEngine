@@ -24,7 +24,8 @@ limitations under the License.
 namespace AeonGames
 {
     DLL UniqueAnyPtr ConstructResource ( const ResourceId& aResourceId );
-    DLL bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor );
+    DLL const UniqueAnyPtr& GetDefaultResource ( uint32_t aType );
+    DLL bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor, UniqueAnyPtr&& aDefaultResource = nullptr );
     DLL bool UnregisterResourceConstructor ( uint32_t aType );
     DLL void EnumerateResourceConstructors ( const std::function<bool ( uint32_t ) >& aEnumerator );
 }
