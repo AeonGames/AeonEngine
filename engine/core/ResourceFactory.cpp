@@ -13,18 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <tuple>
 #include "aeongames/ResourceFactory.h"
+#include "aeongames/ResourceCache.h"
+#include "aeongames/ResourceId.h"
 
 namespace AeonGames
 {
-    static std::unordered_map < uint32_t, std::pair<std::function < UniqueAnyPtr ( uint32_t ) >, UniqueAnyPtr>> Constructors;
+    static std::unordered_map < uint32_t, std::tuple<std::function < UniqueAnyPtr ( uint32_t ) >, UniqueAnyPtr>> Constructors;
 
     UniqueAnyPtr ConstructResource ( const ResourceId& aResourceId )
     {
         auto it = Constructors.find ( aResourceId.GetType() );
         if ( it != Constructors.end() )
         {
-            return it->second.first ( aResourceId.GetPath() );
+            return std::get<0> ( it->second ) ( aResourceId.GetPath() );
         }
         return nullptr;
     }
@@ -64,7 +67,7 @@ namespace AeonGames
         auto it = Constructors.find ( aType );
         if ( it != Constructors.end() )
         {
-            return it->second.second;
+            return std::get<1> ( it->second );
         }
         return unique_any_nullptr;
     }
