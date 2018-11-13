@@ -121,6 +121,7 @@ set(ENGINE_CORE_SOURCES
     core/Component.cpp
     core/Package.cpp
     core/ResourceFactory.cpp
+    core/ResourceCache.cpp
     core/ProtoBufUtils.cpp
     )
 

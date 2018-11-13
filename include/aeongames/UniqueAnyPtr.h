@@ -44,13 +44,17 @@ namespace AeonGames
 
         template<class T>
         UniqueAnyPtr ( std::unique_ptr<T>&& aUniquePointer ) noexcept :
-            mPointer{ aUniquePointer.release() },
-                  mManager{Manager<T>}
+            mPointer{ aUniquePointer.release() }, mManager{Manager<T>}
         {}
+
         template<class T>
         UniqueAnyPtr ( T* aPointer ) noexcept :
-            mPointer{aPointer},
-                 mManager{Manager<T>}
+            mPointer{aPointer}, mManager{Manager<T>}
+        {}
+
+        template<class T>
+        UniqueAnyPtr ( T&& aValue ) noexcept :
+            mPointer{new T ( std::move ( aValue ) ) }, mManager{Manager<T>}
         {}
 
         ~UniqueAnyPtr()

@@ -188,15 +188,4 @@ namespace AeonGames
         }
         return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
     }
-
-    const std::shared_ptr<Animation> Animation::GetAnimation ( uint32_t aId )
-    {
-        return ResourceCache<uint32_t, Animation>::Get ( aId, aId );
-    }
-
-    const std::shared_ptr<Animation> Animation::GetAnimation ( const std::string& aPath )
-    {
-        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
-        return Animation::GetAnimation ( id );
-    }
 }

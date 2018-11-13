@@ -16,13 +16,16 @@ limitations under the License.
 #ifndef AEONGAMES_RESOURCECACHE_H
 #define AEONGAMES_RESOURCECACHE_H
 #include <iostream>
-#include "aeongames/Memory.h"
+#include <memory>
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <cstdint>
 #include <algorithm>
 #include <mutex>
+
+#include "aeongames/Platform.h"
+#include "aeongames/UniqueAnyPtr.h"
 
 namespace AeonGames
 {
@@ -47,7 +50,7 @@ namespace AeonGames
         }
         return iter->second.lock();
     }
-#endif
+//----------------------------------------------------------------------------------------
     /** Specialized resource cache class.
     *
     * We need a way to back track a key from a resource,
@@ -115,5 +118,10 @@ namespace AeonGames
     std::unordered_map<K, std::weak_ptr<B>> ResourceCache<K, B>::mCache;
     template<class K, class B>
     std::mutex ResourceCache<K, B>::mMutex;
+#endif
+    DLL void ClearAllResources();
+    DLL const UniqueAnyPtr& StoreResource ( uint32_t aKey, UniqueAnyPtr&& pointer );
+    DLL UniqueAnyPtr DisposeResource ( uint32_t aKey );
+    DLL const UniqueAnyPtr& GetResource ( uint32_t aKey );
 }
 #endif

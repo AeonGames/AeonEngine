@@ -37,8 +37,6 @@ namespace AeonGames
         DLL uint32_t GetFrameRate() const;
         DLL double GetDuration() const;
         DLL const Transform GetTransform ( size_t aBoneIndex, double aTime ) const;
-        DLL static const std::shared_ptr<Animation> GetAnimation ( uint32_t aId );
-        DLL static const std::shared_ptr<Animation> GetAnimation ( const std::string& aPath );
     private:
         void Load ( const AnimationBuffer& aAnimationBuffer );
         std::string mFilename;

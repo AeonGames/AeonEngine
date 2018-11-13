@@ -196,15 +196,4 @@ namespace AeonGames
     {
         return mJoints;
     }
-
-    const std::shared_ptr<Skeleton> Skeleton::GetSkeleton ( uint32_t aId )
-    {
-        return ResourceCache<uint32_t, Skeleton>::Get ( aId, aId );
-    }
-
-    const std::shared_ptr<Skeleton> Skeleton::GetSkeleton ( const std::string& aPath )
-    {
-        uint32_t id = crc32i ( aPath.c_str(), aPath.size() );
-        return Skeleton::GetSkeleton ( id );
-    }
 }

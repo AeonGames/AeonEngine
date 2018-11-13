@@ -27,9 +27,5 @@ namespace AeonGames
 {
     TEST ( ResourceCache, HappyPath )
     {
-        ResourceCache<size_t, std::string> cache;
-        std::shared_ptr<std::string> string_ptr = cache.Get ( 0, "Test!" );
-        EXPECT_EQ ( *string_ptr, "Test!" );
-        EXPECT_EQ ( cache.GetKey ( string_ptr ), 0 );
     }
 }
