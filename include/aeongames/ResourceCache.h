@@ -15,20 +15,14 @@ limitations under the License.
 */
 #ifndef AEONGAMES_RESOURCECACHE_H
 #define AEONGAMES_RESOURCECACHE_H
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <unordered_map>
-#include <string>
 #include <cstdint>
-#include <algorithm>
-#include <mutex>
-
+#include <functional>
 #include "aeongames/Platform.h"
 #include "aeongames/UniqueAnyPtr.h"
 
 namespace AeonGames
 {
+    class ResourceId;
 #if 0
     template<class B, class K, class D = B, typename... Args>
     const std::shared_ptr<B> Get ( const K& key, Args... args )
@@ -120,8 +114,10 @@ namespace AeonGames
     std::mutex ResourceCache<K, B>::mMutex;
 #endif
     DLL void ClearAllResources();
+    DLL void EnumerateResources ( const std::function<bool ( uint32_t, const UniqueAnyPtr& ) >& aEnumerator );
     DLL const UniqueAnyPtr& StoreResource ( uint32_t aKey, UniqueAnyPtr&& pointer );
     DLL UniqueAnyPtr DisposeResource ( uint32_t aKey );
     DLL const UniqueAnyPtr& GetResource ( uint32_t aKey );
+    DLL const UniqueAnyPtr& GetResource ( const ResourceId& aResourceId );
 }
 #endif

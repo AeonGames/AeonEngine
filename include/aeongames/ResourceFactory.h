@@ -17,12 +17,13 @@ limitations under the License.
 #define AEONGAMES_RESOURCEFACTORY_H
 
 #include <algorithm>
+#include <functional>
 #include "aeongames/Platform.h"
 #include "aeongames/UniqueAnyPtr.h"
-#include "aeongames/ResourceId.h"
 
 namespace AeonGames
 {
+    class ResourceId;
     DLL UniqueAnyPtr ConstructResource ( const ResourceId& aResourceId );
     DLL const UniqueAnyPtr& GetDefaultResource ( uint32_t aType );
     DLL bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor, UniqueAnyPtr&& aDefaultResource = nullptr );

@@ -20,11 +20,11 @@ limitations under the License.
 #include <string>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
-#include "aeongames/Archive.h"
+#include "aeongames/ResourceFactory.h"
+#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
-    using ResourceArchive = ArchiveAny<uint32_t>;
     class ResourceId
     {
     public:
@@ -39,14 +39,34 @@ namespace AeonGames
         ResourceId ( uint32_t aType, const std::string& aPath ) :
             mType{aType}, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
         ~ResourceId() = default;
+
         uint32_t GetType() const
         {
             return mType;
         }
+
         uint32_t GetPath() const
         {
             return mPath;
         }
+
+        template<typename T>
+        T* Cast() const
+        {
+            return GetResource ( *this ).Get<T>();
+        }
+
+        template<typename T>
+        T* Get() const
+        {
+            T* t = GetResource ( *this ).Get<T>();
+            if ( !t )
+            {
+                t = StoreResource ( mPath, ConstructResource ( *this ) ).Get<T>();
+            }
+            return t;
+        }
+
     private:
         uint32_t mType{};
         uint32_t mPath{};

@@ -13,7 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <unordered_map>
 #include "aeongames/ResourceCache.h"
+#include "aeongames/ResourceFactory.h"
+#include "aeongames/ResourceId.h"
 
 namespace AeonGames
 {
@@ -22,6 +25,17 @@ namespace AeonGames
     void ClearAllResources()
     {
         gResourceStore.clear();
+    }
+
+    void EnumerateResources ( const std::function<bool ( uint32_t, const UniqueAnyPtr& ) >& aEnumerator )
+    {
+        for ( auto& i : gResourceStore )
+        {
+            if ( !aEnumerator ( i.first, i.second ) )
+            {
+                return;
+            }
+        }
     }
 
     const UniqueAnyPtr& StoreResource ( uint32_t aKey, UniqueAnyPtr&& pointer )
@@ -51,5 +65,15 @@ namespace AeonGames
             return ( *i ).second;
         }
         return unique_nullptr;
+    }
+
+    const UniqueAnyPtr& GetResource ( const ResourceId& aResourceId )
+    {
+        auto i = gResourceStore.find ( aResourceId.GetPath() );
+        if ( i != gResourceStore.end() )
+        {
+            return ( *i ).second;
+        }
+        return GetDefaultResource ( aResourceId.GetType() );
     }
 }
