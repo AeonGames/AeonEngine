@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.10)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
   if(POLICY CMP0020)
@@ -63,6 +63,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON
 set(Portaudio_FIND_QUIETLY ON)
 
 find_program(XXD_EXECUTABLE xxd HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(AUTOPEP8_EXECUTABLE autopep8 HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
+             HINTS ENV MINGW_PREFIX MSYS2_PATH)
 find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
 find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
 find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
@@ -93,9 +96,6 @@ include(AeonEngineFunctions)
 include(FindProtobufExp)
 include(FindPythonModule)
 find_package(PythonInterp 3)
-if(PYTHONINTERP_FOUND)
-  find_python_module(autopep8)
-endif()
 
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)")
@@ -190,7 +190,7 @@ else()
 endif()
 
 #
-# Code Formating target
+# Code Formating on pre-commit hook
 #
 
 if(WIN32)
@@ -208,81 +208,6 @@ endif()
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in"
                "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
-
-if(MSVC)
-  # Look for more useful sed oneliners at
-  # http://sed.sourceforge.net/sed1line.txt
-  add_custom_target(
-    format-code
-    ${ASTYLE_EXECUTABLE}
-    --recursive
-    --options=${CMAKE_SOURCE_DIR}/astylerc
-    ${CMAKE_SOURCE_DIR}/*.cpp
-    ${CMAKE_SOURCE_DIR}/*.h
-    COMMAND
-      ${FIND_EXECUTABLE}
-      "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/\\t/    /g' {} $<SEMICOLON>"
-    COMMAND
-      ${FIND_EXECUTABLE}
-      "\"${CMAKE_SOURCE_DIR}\" -type f -name \"CMakeLists.txt\" -exec \"${SED_EXECUTABLE}\" -i 's/[ \\t]*$$//' {} $<SEMICOLON>"
-    COMMAND
-      ${PYTHON_EXECUTABLE}
-      "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\""
-    COMMAND
-      ${PYTHON_EXECUTABLE}
-      "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\""
-    COMMAND
-      ${PYTHON_EXECUTABLE}
-      "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm\""
-    COMMAND
-      ${PYTHON_EXECUTABLE}
-      "-m autopep8 --in-place --aggressive --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_model_mdl\""
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Formatting Code.")
-else()
-  find_program(AUTOPEP8_EXECUTABLE autopep8)
-  add_custom_target(
-    format-code
-    ${FIND_EXECUTABLE}
-    ${CMAKE_SOURCE_DIR}
-    -type
-    f
-    -regex
-    "'.*\\.\\(cpp\\|hpp\\|h\\|cc\\|cxx\\)'"
-    -exec
-    ${ASTYLE_EXECUTABLE}
-    --options=${CMAKE_SOURCE_DIR}/astylerc
-    {}
-    \\$<SEMICOLON>
-    COMMAND ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt
-            -exec ${SED_EXECUTABLE} -i 's/\\t/    /g' {} \\$<SEMICOLON>
-    COMMAND ${FIND_EXECUTABLE} ${CMAKE_SOURCE_DIR} -type f -name CMakeLists.txt
-            -exec ${SED_EXECUTABLE} -i 's/[ \\t]*$$//' {} \\$<SEMICOLON>
-    COMMAND
-      ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8}
-      --in-place
-      --aggressive
-      --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh\"
-    COMMAND
-      ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8}
-      --in-place
-      --aggressive
-      --aggressive -r
-                   \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl\"
-    COMMAND
-      ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8}
-      --in-place
-      --aggressive
-      --aggressive -r
-                   \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm\"
-    COMMAND
-      ${PYTHON_EXECUTABLE} ${PY_AUTOPEP8}
-      --in-place
-      --aggressive
-      --aggressive -r \"${CMAKE_SOURCE_DIR}/tools/blender/addons/io_model_mdl\"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Formatting Code.")
-endif()
 
 #
 # Protobuf Python source generation target
