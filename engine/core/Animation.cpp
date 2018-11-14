@@ -21,6 +21,7 @@ limitations under the License.
 #include <cassert>
 #include <cstring>
 #include <cmath>
+#include <mutex>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
