@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <mutex>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
