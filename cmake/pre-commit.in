@@ -13,6 +13,7 @@ FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(c
 PYTHON_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(py)$"`
 PROTO_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(proto)$"`
 TEXT_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(yml|txt)$"`
+CMAKE_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "(\.cmake|CMakeLists\.txt)$"`
 
 EXIT_CODE=0
 
@@ -26,6 +27,36 @@ for FILE in $TEXT_FILES; do
 done
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] sed failed when removing trailing spaces." >&2
+    exit 1
+fi
+
+# Format CMake Files only if the executable exists
+if [ -f "${CMAKE_FORMAT_EXECUTABLE}" ]; then
+	for FILE in $CMAKE_FILES; do
+		"${CMAKE_FORMAT_EXECUTABLE}" -i $FILE
+		if [ $? -ne 0 ]; then
+			echo "[!] $FILE" >&2
+			EXIT_CODE=1
+		fi
+	done
+fi
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "[!] cmake-format failed." >&2
+    exit 1
+fi
+
+# Format Python Files only if the executable exists
+if [ -f "${AUTOPEP8_EXECUTABLE}" ]; then
+	for FILE in $PYTHON_FILES; do
+		"${AUTOPEP8_EXECUTABLE}" --in-place --aggressive --aggressive $FILE
+		if [ $? -ne 0 ]; then
+			echo "[!] $FILE" >&2
+			EXIT_CODE=1
+		fi
+	done
+fi
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "[!] autopep8 failed." >&2
     exit 1
 fi
 
