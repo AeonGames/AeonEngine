@@ -51,15 +51,15 @@ namespace AeonGames
             1.0f, 0.0f, 0.0f
         };
         const QVector3D forward{ 0.0f, 1.0f, 0.0f };
-        void resizeEvent ( QResizeEvent *aResizeEvent ) override final;
-        void exposeEvent ( QExposeEvent *aExposeEvent ) override final;
-        void keyPressEvent ( QKeyEvent * event ) override final;
-        void keyReleaseEvent ( QKeyEvent * event ) override final;
-        void mouseMoveEvent ( QMouseEvent * event ) override final;
-        void mousePressEvent ( QMouseEvent * event ) override final;
-        void mouseReleaseEvent ( QMouseEvent * event ) override final;
-        void wheelEvent ( QWheelEvent *event ) override final;
-        bool event ( QEvent* aEvent ) override final;
+        void resizeEvent ( QResizeEvent *aResizeEvent ) final;
+        void exposeEvent ( QExposeEvent *aExposeEvent ) final;
+        void keyPressEvent ( QKeyEvent * event ) final;
+        void keyReleaseEvent ( QKeyEvent * event ) final;
+        void mouseMoveEvent ( QMouseEvent * event ) final;
+        void mousePressEvent ( QMouseEvent * event ) final;
+        void mouseReleaseEvent ( QMouseEvent * event ) final;
+        void wheelEvent ( QWheelEvent *event ) final;
+        bool event ( QEvent* aEvent ) final;
         void updateViewMatrix();
         const Scene* mScene{nullptr};
         QPoint mLastCursorPosition;
