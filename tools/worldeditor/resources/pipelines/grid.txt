@@ -42,7 +42,7 @@ default_material {
         x: 1
         y: 1
         z: 1
-      }  
+      }
     }
     property {
       name: "StartingPosition"
@@ -51,7 +51,7 @@ default_material {
         y: 0
         z: 0
       }
-    }  
+    }
       property {
       name: "Offset"
       vector3 {
@@ -82,7 +82,7 @@ vertex_shader {
 }
 
 fragment_shader {
-  code: 
+  code:
     "layout ( location = 0 ) out vec4 FragColor;\n"
     "layout ( location = 0 ) flat in uint instance_index;\n"
     "void main ( void )\n"

@@ -25,7 +25,7 @@ default_material {
 }
 topology: TRIANGLE_LIST
 vertex_shader {
-  code: 
+  code:
   "layout(location = 0) out vec3 LightIntensity;\n"
   "layout(location = 1) out vec2 CoordUV;\n"
   "void main()\n"
@@ -46,7 +46,7 @@ vertex_shader {
   "}\n"
 }
 fragment_shader {
-  code: 
+  code:
   "layout(location = 0) in vec3 LightIntensity;\n"
   "layout(location = 1) in vec2 CoordUV;\n"
   "layout ( location = 0 ) out vec4 FragColor;\n"

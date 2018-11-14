@@ -12,8 +12,23 @@ YEAR=`date +"%Y"`
 FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(c|cpp|h|hpp)$"`
 PYTHON_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(py)$"`
 PROTO_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(proto)$"`
+TEXT_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(yml|txt)$"`
 
 EXIT_CODE=0
+
+# Remove trailing spaces
+for FILE in $TEXT_FILES; do
+	"${SED_EXECUTABLE}" -i 's/[ \t]*$//' $FILE
+	if [ $? -ne 0 ]; then
+		echo "[!] $FILE" >&2
+        EXIT_CODE=1
+	fi
+done
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "[!] sed failed when removing trailing spaces." >&2
+    exit 1
+fi
+
 for FILE in $FILES; do
 	"${GREP_EXECUTABLE}" -qIl "Copyright (C) [0-9,-]*$YEAR" $FILE
 	if [ $? -ne 0 ]; then

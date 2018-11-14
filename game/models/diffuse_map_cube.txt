@@ -11,5 +11,5 @@ assembly {
     }
     material {
         path: "materials/darkred.txt"
-    }    
+    }
 }
