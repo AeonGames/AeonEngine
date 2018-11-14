@@ -38,13 +38,13 @@ exclude:
 
 disqus:
   shortname: aeonengine
-    
+
 allowsearch: true
 
 # google_analytics: UA-72862926-1
 
 share:
-#  twitter_username: 
+#  twitter_username:
 #  fb_appid: 000000000000
 
 enableTags: true
