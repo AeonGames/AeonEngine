@@ -12,7 +12,7 @@ YEAR=`date +"%Y"`
 FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(c|cpp|h|hpp)$"`
 PYTHON_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(py)$"`
 PROTO_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(proto)$"`
-TEXT_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(yml|txt)$"`
+TEXT_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(yml|txt|md)$"`
 CMAKE_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "(\.cmake|CMakeLists\.txt)$"`
 
 EXIT_CODE=0
