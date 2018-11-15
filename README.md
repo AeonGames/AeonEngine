@@ -80,7 +80,7 @@ if you run them from the debug environment they will be run through GDB, so you 
 
 ### Ubuntu 14.04 and up
 
-#### Install required Packages
+#### Install Packages
 
     sudo apt-get install -y sed python python3 python-autopep8 python-pep8 python3-pep8 tar wget cmake autoconf automake libtool curl make g++ unzip zlib1g-dev libpng12-dev vim-common qtbase5-dev astyle
 
@@ -192,30 +192,32 @@ or
 
 ## Unasked Questions Nevertheless Answered (UQNA)
 
-
 ### Why do you use protobuf for your data files?
 
-    Because I've always felt human readability is not worth the price you pay in performace.
+Because I've always felt human readability is not worth the price you pay in performace.
 
 ### Why do you keep PB plain text files around then?
 
-    They're easier to modify. The idea is that you convert them to binary once you're ready to ship.
+They're easier to modify. The idea is that you convert them to binary once you're ready to ship.
 
 ### You could do that with &lt;insert favorite human readable format, usually JSON&gt; which is nicer, so why don't you?
 
-    PB's text files are a build in feature, anything else would require a tool to either convert to it,
-    directly to binary protocol buffers or use a proprietary format.
-    That takes time and Google already solved the problem.
-    Do feel free to write your own convertion tool though.
+PB's text files are a build in feature, anything else would require a tool to either convert to it,
+directly to binary protocol buffers or use a proprietary format.
+That takes time and Google already solved the problem.
+Do feel free to write your own convertion tool though.
 
 ### Why are there so many "Linux Build Fix" commits?
 
-    I develop on Windows first and then make sure things work properly on Linux. Things sometimes break.
-    While I do not hold a particular preference towards Windows, there are some things that keep me working on it:
-    - Visual Studio's Debugger is the best there is. I do know how to use gdb, but I am not as proficient with it as with VS,
-        -and I am yet to find a graphical frontend I like for it-. I found [VS Code](https://code.visualstudio.com/),
-        which is great, in fact it is now the official development environment for the engine,
-        as it makes it the same on Windows (using [msys2 and mingw64](https://www.msys2.org/)) as it is on Linux.
-    - Most PC gamers game on Windows, that's probably not going to change anytime soon.
-    - Windows is the OS I spend most time on, I tend to use a lot of open source code that was born on Linux, but most of it has native Windows ports,
-        shout out to [MSYS2](https://www.msys2.org/), which completelly replaced [Cygwin](https://www.cygwin.com/) on my setup.
+I develop on Windows first and then make sure things work properly on Linux. Things sometimes break.
+While I do not hold a particular preference towards Windows, there are some things that keep me working on it:
+
+* Visual Studio's Debugger is the best there is. I do know how to use gdb, but I am not as proficient with it as with VS,
+    -and I am yet to find a graphical frontend I like for it-. (***UPDATE***) I found [VS Code](https://code.visualstudio.com/),
+    which is great, in fact it is now the official development environment for the engine,
+    as it makes it the same on Windows (using [msys2 and mingw64](https://www.msys2.org/)) as it is on Linux.
+
+* Most PC gamers game on Windows, that's probably not going to change anytime soon.
+
+* Windows is the OS I spend most time on, I tend to use a lot of open source code that was born on Linux, but most of it has native Windows ports,
+    shout out to [MSYS2](https://www.msys2.org/), which completelly replaced [Cygwin](https://www.cygwin.com/) on my setup.
