@@ -40,8 +40,14 @@ namespace AeonGames
 
     const UniqueAnyPtr& StoreResource ( uint32_t aKey, UniqueAnyPtr&& pointer )
     {
-        gResourceStore.emplace ( std::make_pair<> ( aKey, std::move ( pointer ) ) );
-        return gResourceStore[aKey];
+        static const UniqueAnyPtr unique_nullptr{nullptr};
+        // Don't store nullptrs
+        if ( pointer.GetRaw() )
+        {
+            gResourceStore.emplace ( std::make_pair<> ( aKey, std::move ( pointer ) ) );
+            return gResourceStore[aKey];
+        }
+        return unique_nullptr;
     }
 
     UniqueAnyPtr DisposeResource ( uint32_t aKey )

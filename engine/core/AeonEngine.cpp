@@ -35,6 +35,7 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
+#include "aeongames/Model.h"
 #include "aeongames/Package.h"
 #include "aeongames/ResourceFactory.h"
 #include "Factory.h"
@@ -144,6 +145,12 @@ namespace AeonGames
             }
         }
 
+        RegisterResourceConstructor ( "Model"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            return MakeUniqueAny<Model> ( aPath );
+        } );
+
         return gInitialized;
     }
 
@@ -153,6 +160,15 @@ namespace AeonGames
         {
             return;
         }
+        if ( gRenderer )
+        {
+            // Register default resource constructors related to renderer
+            UnregisterResourceConstructor ( "Image"_crc32 );
+            UnregisterResourceConstructor ( "Mesh"_crc32 );
+            UnregisterResourceConstructor ( "Pipeline"_crc32 );
+            UnregisterResourceConstructor ( "Material"_crc32 );
+        }
+        UnregisterResourceConstructor ( "Model"_crc32 );
         /* The renderer code must reside in plugin address space,
          so reset before unloading any plugins. */
         gRenderer.reset();
