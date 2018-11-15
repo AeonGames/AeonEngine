@@ -16,6 +16,68 @@ THIS IS A WORK IN PROGRESS.
 
 ## Building
 
+### Visual Studio Code with MSYS2 MinGW
+
+You do not need to install [Visual Studio Code](https://code.visualstudio.com/) just to build the project,
+but it is highly recomended that you do so if you intend on changing the code, or if you want to develop a game using MSYS2/MinGW.
+
+#### Install MSYS2
+
+Go to [MSYS2](https://www.msys2.org/) and install MSYS2, while the 32 bit version of the MinGW compiler should work,
+development is focused on 64 bit, so get that if you don't know what to chose.
+
+#### Install required Packages
+
+Bring up an MSYS2 bash terminal for MinGW and update all of your installed packages:
+
+    pacman -Syuu --no-confirm
+
+Follow the instructions, you may have to forcefully shut down the terminal and run the same command at least one time.
+After pacman reports no more updates, its time to install all our engine dependencies:
+
+    pacman -S --needed --noconfirm astyle git sed global mingw-w64-x86_64-make mingw-w64-x86_64-gdb mingw-w64-x86_64-cmake mingw-w64-x86_64-vulkan mingw-w64-x86_64-qt5 mingw-w64-x86_64-protobuf mingw-w64-x86_64-zlib mingw-w64-x86_64-libpng mingw-w64-x86_64-glslang mingw-w64-x86_64-portaudio mingw-w64-x86_64-libogg mingw-w64-x86_64-libvorbis mingw-w64-x86_64-python3 mingw-w64-x86_64-python3-pip mingw-w64-x86_64-python3-numpy
+
+#### Install autopep8 and cmake-format (optional, only if you want to create a pull request, or make changes to your own fork)
+
+The CMake script installs a git pre-commit hook to format code using astyle, autopep8 (for the Blender scripts) and cmake-format,
+so you will need these if you want to create any commits.
+
+    python3 -m pip install autopep8 cmake-format
+
+#### Clone this repo
+
+There is no master release branch, so master is development at the moment, so just grab master.
+
+    git clone https://github.com/AeonGames/AeonEngine.git
+
+#### Initial CMake configuration
+
+Create a build directory inside the repo, I use mingw64, but you can use anything you want, or build outside the repo.
+
+    cd AeonEngine
+    mkdir mingw64
+    cd mingw64
+
+Run CMake
+
+    cmake -G"MSYS Makefiles" ..
+
+#### Build
+
+Run Make
+
+    make
+
+If everything goes well you'll now have all binary targets build at ming64/bin.
+
+#### Visual Studio Code
+
+You can now use the "Open Folder" option in VS Code to open the topmost repo folder and then go to View->Terminal,
+where you'll get prompted to allow bash to run, accept and now you can issue your make commands directly from inside VS Code.
+
+You should be able to run the various executables directly from the terminal or from the debug environment,
+if you run them from the debug environment they will be run through GDB, so you can set breakpoints or issue commands from the Debug Console.
+
 ### Ubuntu 14.04 and up
 
 #### Install required Packages
@@ -65,7 +127,7 @@ THIS IS A WORK IN PROGRESS.
     ./vulkansdk-linux-x86_64-1.0.30.0.run
     echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.30.0/x86_64" >> ~/.bashrc
     echo "export VULKAN_SDK" >> ~/.bashrc
-    echo "export PATH=$PWD/VulkanSDK/1.0.30.0/bin:$PATH" >> ~/.bashrc   
+    echo "export PATH=$PWD/VulkanSDK/1.0.30.0/bin:$PATH" >> ~/.bashrc
     echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.30.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
     echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.30.0/etc/explicit_layer.d" >> ~/.bashrc
     source ~/.bashrc
@@ -89,32 +151,38 @@ Building with Visual Studio is somewhat more involved as all dependencies and to
 
 #### Install VCPKG
 
-    See [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) README.md for instructions, you can clone the repo anywhere, but I suggest c:\vcpkg to keep it global.
+See [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) README.md for instructions, you can clone the repo anywhere, but I suggest c:\vcpkg to keep it global.
 
 #### Install Engine dependencies
 
-    In a command prompt window move to the vcpkg root and run the following command:
+In a command prompt window move to the vcpkg root and run the following command:
+
     .\vcpkg install protobuf zlib libpng glslang spirv-tools
-    IF and only IF you have time to space and want to debug Qt5 issues, add qt5 to the list:
+
+IF and only IF you have time to space and want to debug Qt5 issues, add qt5 to the list:
+
     .\vcpkg install protobuf zlib libpng glslang spirv-tools qt5
 
 #### Install the Vulkan SDK
 
-    Download and install the Vulkan SDK from [the LunarG website](https://vulkan.lunarg.com/sdk/home).
-    The engine supports OpenGL rendering and use of one API or the other is optional, while you could eventually chose not to build either of the renderers, as it is right now, both must be build.
-    This is just an oversight rather than a strict policy, and support for disabling modules will be written in the future.
+Download and install the Vulkan SDK from [the LunarG website](https://vulkan.lunarg.com/sdk/home).
+The engine supports OpenGL rendering and use of one API or the other is optional, while you could eventually chose not to build either of the renderers, as it is right now,
+both of them must be built. This is just an oversight rather than a strict policy, and support for disabling modules will be written in the future.
 
 #### Install the Qt5 SDK (Only if you did not build Qt5 with VCPKG)
 
-    Download and install the [Qt5 SDK](https://www1.qt.io/download-open-source), you may install it anywhere you want, but in general it is a good idea to avoid paths with spaces in it.
+Download and install the [Qt5 SDK](https://www1.qt.io/download-open-source), you may install it anywhere you want, but in general it is a good idea to avoid paths with spaces in it.
 
 #### Generate solution and project files with CMake
 
-    If you're using the GUI, make sure that you add the CMAKE_TOOLCHAIN_FILE variable to point to the vcpkg.cmake file. And if you did not build the Qt SDK,
-    set the variable Qt5_DIR to <Qt5 SDK root>/lib/cmake/Qt5 before pressing the configure and generate buttons.
-    If you're generating them from the CLI, add the paths to the cmake command:
+If you're using the GUI, make sure that you add the CMAKE_TOOLCHAIN_FILE variable to point to the vcpkg.cmake file. And if you did not build the Qt SDK,
+set the variable Qt5_DIR to &lt;Qt5 SDK root&gt;/lib/cmake/Qt5 before pressing the configure and generate buttons.
+If you're generating them from the CLI, add the paths to the cmake command:
+
     cmake -DCMAKE_TOOLCHAIN_FILE:filepath=<VCPKG ROOT>/scripts/buildsystems/vcpkg.cmake -DQt5_DIR:path=<Qt SDK Root>/lib/cmake/Qt5 <PATH TO ENGINE SOURCE ROOT>
-    or
+
+or
+
     cmake -DCMAKE_TOOLCHAIN_FILE:filepath=<VCPKG ROOT>/scripts/buildsystems/vcpkg.cmake <PATH TO ENGINE SOURCE ROOT>
 
 ## In No Way Complete TODO List
@@ -149,5 +217,5 @@ Building with Visual Studio is somewhat more involved as all dependencies and to
         which is great, in fact it is now the official development environment for the engine,
         as it makes it the same on Windows (using [msys2 and mingw64](https://www.msys2.org/)) as it is on Linux.
     - Most PC gamers game on Windows, that's probably not going to change anytime soon.
-    - Windows is the OS I spend most time on, I tend to use a lot of open source code that was born on Linux, but most of it has native Windows ports, 
+    - Windows is the OS I spend most time on, I tend to use a lot of open source code that was born on Linux, but most of it has native Windows ports,
         shout out to [MSYS2](https://www.msys2.org/), which completelly replaced [Cygwin](https://www.cygwin.com/) on my setup.
