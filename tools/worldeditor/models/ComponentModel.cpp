@@ -26,6 +26,7 @@ limitations under the License.
 #include <cassert>
 
 #include "aeongames/ResourceId.h"
+#include "aeongames/Model.h"
 #include "ComponentModel.h"
 
 namespace AeonGames
@@ -171,7 +172,9 @@ namespace AeonGames
             {
                 try
                 {
+                    // Force Load if required
                     aRef.Get<ResourceId>() = ResourceId{"Model"_crc32, aVariant.toString().toStdString() };
+                    aRef.Get<ResourceId>().Store();
                 }
                 catch ( std::runtime_error& e )
                 {

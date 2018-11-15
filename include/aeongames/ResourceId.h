@@ -67,6 +67,23 @@ namespace AeonGames
             return t;
         }
 
+        void Store() const
+        {
+            // Don't store nullptrs
+            if ( !GetResource ( *this ).GetRaw() )
+            {
+                StoreResource ( mPath, ConstructResource ( *this ) );
+            }
+        }
+
+        void Dispose() const
+        {
+            if ( GetResource ( *this ).GetRaw() )
+            {
+                DisposeResource ( mPath );
+            }
+        }
+
     private:
         uint32_t mType{};
         uint32_t mPath{};
