@@ -85,72 +85,69 @@ namespace AeonGames
     void Model::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static std::mutex m;
-        static ModelBuffer pipeline_buffer;
+        static ModelBuffer model_buffer;
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<ModelBuffer> ( pipeline_buffer, aBuffer, aBufferSize, "AEONMDL" );
-        Load ( pipeline_buffer );
-        pipeline_buffer.Clear();
+        LoadProtoBufObject<ModelBuffer> ( model_buffer, aBuffer, aBufferSize, "AEONMDL" );
+        Load ( model_buffer );
+        model_buffer.Clear();
     }
 
     void Model::Load ( const ModelBuffer& aModelBuffer )
     {
-        std::shared_ptr<Pipeline> default_pipeline{};
-        std::shared_ptr<Material> default_material{};
+        ResourceId default_pipeline{};
+        ResourceId default_material{};
 
         // Default Pipeline ---------------------------------------------------------------------
         if ( aModelBuffer.has_default_pipeline() )
         {
-            assert ( 0 );
-            //default_pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( aModelBuffer.default_pipeline() ) );
+            default_pipeline = {"Pipeline"_crc32, GetReferenceBufferId ( aModelBuffer.default_pipeline() ) } ;
+            default_pipeline.Store();
         }
 
         // Default Material ---------------------------------------------------------------------
         if ( aModelBuffer.has_default_material() )
         {
-            assert ( 0 );
-            //default_material = Material::GetMaterial ( GetReferenceBufferId ( aModelBuffer.default_material() ) );
+            default_material = {"Material"_crc32, GetReferenceBufferId ( aModelBuffer.default_material() ) } ;
+            default_material.Store();
         }
 
         // Skeleton -----------------------------------------------------------------------------
         if ( aModelBuffer.has_skeleton() )
         {
-            mSkeleton = ResourceId{ "Skeleton"_crc32, GetReferenceBufferId ( aModelBuffer.skeleton() ) };
+            mSkeleton = { "Skeleton"_crc32, GetReferenceBufferId ( aModelBuffer.skeleton() ) };
         }
         // Meshes -----------------------------------------------------------------------------
         mAssemblies.reserve ( aModelBuffer.assembly_size() );
         for ( auto& assembly : aModelBuffer.assembly() )
         {
-            std::shared_ptr<Mesh> mesh{};
-            std::shared_ptr<Pipeline> pipeline{default_pipeline};
-            std::shared_ptr<Material> material{default_material};
+            ResourceId mesh{};
+            ResourceId pipeline{default_pipeline};
+            ResourceId material{default_material};
 
             if ( assembly.has_mesh() )
             {
-                assert ( 0 );
-                //mesh = Mesh::GetMesh ( GetReferenceBufferId ( assembly.mesh() ) );
+                mesh = {"Mesh"_crc32, GetReferenceBufferId ( assembly.mesh() ) } ;
+                mesh.Store();
             }
 
             if ( assembly.has_pipeline() )
             {
-                assert ( 0 );
-                //pipeline = Pipeline::GetPipeline ( GetReferenceBufferId ( assembly.pipeline() ) );
+                pipeline = {"Pipeline"_crc32, GetReferenceBufferId ( assembly.pipeline() ) } ;
+                pipeline.Store();
             }
 
             if ( assembly.has_material() )
             {
-                assert ( 0 );
-                //material = Material::GetMaterial ( GetReferenceBufferId ( assembly.material() ) );
+                material = {"Material"_crc32, GetReferenceBufferId ( assembly.material() ) } ;
+                material.Store();
             }
-            mAssemblies.emplace_back (
-                ResourceId{"Mesh"_crc32, GetReferenceBufferId ( assembly.mesh() ) },
-                ResourceId{"Pipeline"_crc32, GetReferenceBufferId ( assembly.pipeline() ) },
-                ResourceId{"Material"_crc32, GetReferenceBufferId ( assembly.material() ) } );
+            mAssemblies.emplace_back ( mesh, pipeline, material );
         }
         // Animations -----------------------------------------------------------------------------
         mAnimations.reserve ( aModelBuffer.animation_size() );
         for ( auto& animation : aModelBuffer.animation() )
         {
-            mAnimations.emplace_back ( ResourceId{"Animation"_crc32, GetReferenceBufferId ( animation ) } );
+            mAnimations.emplace_back ( ResourceId{"Animation"_crc32, GetReferenceBufferId ( animation ) } ).Store();
         }
     }
 

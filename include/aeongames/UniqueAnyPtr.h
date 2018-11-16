@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_UNIQUEANYPTR_H
 #define AEONGAMES_UNIQUEANYPTR_H
+#include <sstream>
 #include <memory>
 #include <typeinfo>
 #include <algorithm>
@@ -94,7 +95,7 @@ namespace AeonGames
                 mManager ( mPointer );
             };
             mPointer = aPointer;
-            mManager = mManager;
+            mManager = Manager<T>;
             return *this;
         }
         /**@{*/
@@ -106,9 +107,15 @@ namespace AeonGames
 
         template<class T> T* Get() const
         {
-            if ( !HasType<T>() )
+            if ( !mPointer )
             {
-                throw std::runtime_error ( "Unique resource of a different type" );
+                return nullptr;
+            }
+            else if ( !HasType<T>() )
+            {
+                std::ostringstream stream;
+                stream << "Unique Any Pointer of different type, Requested: " << typeid ( T ).name() << " Contained: " << GetTypeInfo().name();
+                throw std::runtime_error ( stream.str().c_str() );
             }
             return reinterpret_cast<T*> ( mPointer );
         }
@@ -119,16 +126,23 @@ namespace AeonGames
             return const_cast<T*> ( static_cast<const UniqueAnyPtr*> ( this )->Get<T>() );
         }
 
+        void* ReleaseRaw()
+        {
+            void* pointer = mPointer;
+            mPointer = nullptr;
+            mManager = nullptr;
+            return pointer;
+        }
+
         template<class T> T* Release()
         {
             if ( !HasType<T>() )
             {
-                throw std::runtime_error ( "Unique resource of a different type" );
+                std::ostringstream stream;
+                stream << "Unique Any Pointer of different type, Requested: " << typeid ( T ).name() << " Contained: " << GetTypeInfo().name();
+                throw std::runtime_error ( stream.str().c_str() );
             }
-            void* pointer = mPointer;
-            mPointer = nullptr;
-            mManager = nullptr;
-            return reinterpret_cast<T*> ( pointer );
+            return reinterpret_cast<T*> ( ReleaseRaw() );
         }
 
         template<class T> std::unique_ptr<T> UniquePointer()
