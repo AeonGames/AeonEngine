@@ -16,7 +16,6 @@ limitations under the License.
 #include <cassert>
 #include <utility>
 #include <vector>
-#include <sstream>
 #include <fstream>
 #include <regex>
 #include "aeongames/AeonEngine.h"

@@ -81,6 +81,7 @@ namespace AeonGames
 #ifdef _WIN32
         if ( mDeviceContext )
         {
+            EndRender();
             throw std::runtime_error ( "BeginRender call without a previous EndRender call." );
         }
         mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );

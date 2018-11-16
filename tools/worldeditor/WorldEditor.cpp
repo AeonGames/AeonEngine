@@ -209,6 +209,11 @@ namespace AeonGames
         mWirePipeline.reset();
     }
 
+    bool WorldEditor::IsBlocked() const
+    {
+        return mIsBlocked;
+    }
+
     bool WorldEditor::notify ( QObject *receiver, QEvent *event )
     {
         try
@@ -218,10 +223,14 @@ namespace AeonGames
         catch ( std::runtime_error& e )
         {
             std::cout << e.what();
+            mMutex.lock();
+            mIsBlocked = true;
             QMessageBox::critical ( nullptr, applicationName(),
                                     e.what(),
                                     QMessageBox::Ok,
                                     QMessageBox::Ok );
+            mIsBlocked = false;
+            mMutex.unlock();
             return false;
         }
     }

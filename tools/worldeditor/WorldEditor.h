@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_WORLDEDITOR_H
 #define AEONGAMES_WORLDEDITOR_H
 
+#include <QMutex>
 #include <QApplication>
 #include "GridSettings.h"
 #include "aeongames/Pipeline.h"
@@ -40,7 +41,10 @@ namespace AeonGames
         const Material& GetYGridMaterial() const;
         const Pipeline& GetWirePipeline() const;
         const Mesh& GetAABBWireMesh() const;
+        bool IsBlocked() const;
     private:
+        bool mIsBlocked{false};
+        QMutex mMutex{};
         GridSettings mGridSettings{};
         std::unique_ptr<Pipeline> mGridPipeline{};
         std::unique_ptr<Mesh> mGridMesh{};

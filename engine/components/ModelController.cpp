@@ -76,16 +76,13 @@ namespace AeonGames
         /** @todo Incorporate use of skeleton and animations back */
         if ( mModel.GetPath() )
         {
-            /** @todo Implement ResourceId casting to pointer. */
-#if 0
-            for ( auto& i : mModel->GetAssemblies() )
+            for ( auto& i : mModel.Cast<Model>()->GetAssemblies() )
             {
-                if ( std::get<0> ( i ) && std::get<1> ( i ) )
-                {
-                    aWindow.Render ( aNode.GetGlobalTransform(), *std::get<0> ( i ), *std::get<1> ( i ), std::get<2> ( i ).get() );
-                }
+                aWindow.Render ( aNode.GetGlobalTransform(),
+                                 *std::get<0> ( i ).Cast<Mesh>(),
+                                 *std::get<1> ( i ).Cast<Pipeline>(),
+                                 std::get<2> ( i ).Cast<Material>() );
             }
-#endif
         }
     }
 }

@@ -218,7 +218,7 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            if ( geometry().width() && geometry().height() )
+            if ( geometry().width() && geometry().height() && !qWorldEditorApp->IsBlocked() )
             {
                 double delta = 0.0;
                 if ( mStopWatch.isValid() )
