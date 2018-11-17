@@ -89,10 +89,6 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     catch ( std::runtime_error& e )
     {
         std::cout << e.what() << std::endl;
-        QMessageBox::critical ( nullptr, "AeonGames World Editor Error",
-                                e.what(),
-                                QMessageBox::Ok,
-                                QMessageBox::Ok );
         retval = -1;
     }
     AeonGames::FinalizeGlobalEnvironment();

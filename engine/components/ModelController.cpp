@@ -74,9 +74,9 @@ namespace AeonGames
     void ModelController::Render ( const Node& aNode, const Window& aWindow ) const
     {
         /** @todo Incorporate use of skeleton and animations back */
-        if ( mModel.GetPath() )
+        if ( auto model = mModel.Cast<Model>() )
         {
-            for ( auto& i : mModel.Cast<Model>()->GetAssemblies() )
+            for ( auto& i : model->GetAssemblies() )
             {
                 aWindow.Render ( aNode.GetGlobalTransform(),
                                  *std::get<0> ( i ).Cast<Mesh>(),

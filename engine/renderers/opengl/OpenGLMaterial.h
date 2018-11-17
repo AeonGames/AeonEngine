@@ -74,7 +74,7 @@ namespace AeonGames
         ResourceId GetSampler ( const std::string& aName ) final;
         ///@}
         GLuint GetPropertiesBufferId() const;
-        const Material& GetMaterial() const;
+        const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const;
     private:
         class UniformVariable
         {

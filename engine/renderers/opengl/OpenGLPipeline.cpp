@@ -473,35 +473,26 @@ namespace AeonGames
         /* We need to bind the program to set any samplers. */
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_THROW;
-#if 0
+
         // Samplers
-        if ( GetDefaultMaterial().GetPropertyBlock().size() )
-        {
 #if 1
-            GLuint uniform = 0;
-            for ( auto& i : GetDefaultMaterial().GetProperties() )
-            {
-                if ( i.GetType() == Material::SAMPLER_2D )
-                {
-                    glUniform1i ( uniform, uniform );
-                    OPENGL_CHECK_ERROR_THROW;
-                    uniform++;
-                }
-            }
+        for ( GLuint uniform = 0; uniform < GetDefaultMaterial().GetSamplers().size(); ++uniform )
+        {
+            glUniform1i ( uniform, uniform );
+            OPENGL_CHECK_ERROR_THROW;
+        }
 #else
-            // Keeping this code for reference
-            GLuint uniform = 0;
-            for ( auto& i : GetDefaultMaterial().GetPropertyMetaData() )
+        // Keeping this code for reference
+        GLuint uniform = 0;
+        for ( auto& i : GetDefaultMaterial().GetPropertyMetaData() )
+        {
+            if ( i.GetType() == Property::SAMPLER_2D )
             {
-                if ( i.GetType() == Property::SAMPLER_2D )
-                {
-                    auto location = glGetPropertyLocation ( mProgramId, i.GetName().c_str() );
-                    OPENGL_CHECK_ERROR_THROW;
-                    glProperty1i ( location, uniform++ );
-                    OPENGL_CHECK_ERROR_THROW;
-                }
+                auto location = glGetPropertyLocation ( mProgramId, i.GetName().c_str() );
+                OPENGL_CHECK_ERROR_THROW;
+                glProperty1i ( location, uniform++ );
+                OPENGL_CHECK_ERROR_THROW;
             }
-#endif
         }
 #endif
     }
@@ -525,19 +516,14 @@ namespace AeonGames
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
-#if 0
         GLenum index {0};
-        for ( auto& i : aMaterial.GetProperties() )
+        for ( auto& i : aMaterial.GetSamplers() )
         {
-            if ( i.GetType() == Material::Material::PropertyType::SAMPLER_2D )
-            {
-                glActiveTexture ( GL_TEXTURE0 + index++ );
-                OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<const OpenGLImage*> ( i.GetImage() )->GetTextureId() );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
+            glActiveTexture ( GL_TEXTURE0 + index++ );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLImage*> ( std::get<1> ( i ).Cast<Image>() )->GetTextureId() );
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
-#endif
         glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBufferId() );
