@@ -186,7 +186,7 @@ namespace AeonGames
         mSamplers.reserve ( aMaterialBuffer.sampler().size() );
         for ( auto& i : aMaterialBuffer.sampler() )
         {
-            mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } );
+            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
         }
     }
 
@@ -332,5 +332,10 @@ namespace AeonGames
     GLuint OpenGLMaterial::GetPropertiesBufferId() const
     {
         return mUniformBuffer.GetBufferId();
+    }
+
+    const std::vector<std::tuple<std::string, ResourceId>>& OpenGLMaterial::GetSamplers() const
+    {
+        return mSamplers;
     }
 }

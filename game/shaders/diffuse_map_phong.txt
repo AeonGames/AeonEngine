@@ -16,11 +16,11 @@ default_material {
         z: 1
       }
     }
-    property {
+    sampler {
       name: "DiffuseMap"
-      texture {
-		path: "images/orange.png"
-	  }
+      image {
+		    path: "images/orange.png"
+	    }
     }
 }
 topology: TRIANGLE_LIST
