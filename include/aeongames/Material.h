@@ -44,7 +44,7 @@ namespace AeonGames
         virtual void Load ( const MaterialBuffer& aMaterialBuffer ) = 0;
         virtual void Unload() = 0;
         ///@}
-        ///@name Property Setters
+        ///@name Property and Sampler Setters
         ///@{
         virtual void SetUint ( const std::string& aName, uint32_t aValue ) = 0;
         virtual void SetSint ( const std::string& aName, int32_t aValue ) = 0;
@@ -54,7 +54,7 @@ namespace AeonGames
         virtual void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) = 0;
         virtual void SetSampler ( const std::string& aName, const ResourceId& aValue ) = 0;
         ///@}
-        ///@name Property Getters
+        ///@name Property and Sampler Getters
         ///@{
         virtual uint32_t GetUint ( const std::string& aName ) = 0;
         virtual int32_t GetSint ( const std::string& aName ) = 0;
@@ -63,6 +63,7 @@ namespace AeonGames
         virtual Vector3 GetFloatVec3 ( const std::string& aName ) = 0;
         virtual Vector4 GetFloatVec4 ( const std::string& aName ) = 0;
         virtual ResourceId GetSampler ( const std::string& aName ) = 0;
+        virtual const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const = 0;
         ///@}
     };
 #else
