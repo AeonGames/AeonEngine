@@ -53,7 +53,7 @@ namespace AeonGames
         void Load ( const MaterialBuffer& aMaterialBuffer ) final;
         void Unload() final;
         ///@}
-        ///@name Property Setters
+        ///@name Property and Sampler Setters
         ///@{
         void SetUint ( const std::string& aName, uint32_t aValue ) final;
         void SetSint ( const std::string& aName, int32_t aValue ) final;
@@ -63,7 +63,7 @@ namespace AeonGames
         void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
         void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
         ///@}
-        ///@name Property Getters
+        ///@name Property and Sampler Getters
         ///@{
         uint32_t GetUint ( const std::string& aName ) final;
         int32_t GetSint ( const std::string& aName ) final;
@@ -72,9 +72,9 @@ namespace AeonGames
         Vector3 GetFloatVec3 ( const std::string& aName ) final;
         Vector4 GetFloatVec4 ( const std::string& aName ) final;
         ResourceId GetSampler ( const std::string& aName ) final;
+        const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const final;
         ///@}
         GLuint GetPropertiesBufferId() const;
-        const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const;
     private:
         class UniformVariable
         {

@@ -212,7 +212,7 @@ namespace AeonGames
         mSamplers.reserve ( aMaterialBuffer.sampler().size() );
         for ( auto& i : aMaterialBuffer.sampler() )
         {
-            mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } );
+            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
         }
         InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
@@ -375,12 +375,11 @@ namespace AeonGames
         }
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
         descriptor_set_layout_bindings.reserve ( 1 + mSamplers.size() );
-        uint32_t binding = 0;
 
         if ( mUniformBuffer.GetSize() )
         {
             descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = binding++;
+            descriptor_set_layout_bindings.back().binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 );
             descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
             descriptor_set_layout_bindings.back().descriptorCount = 1;
@@ -388,15 +387,15 @@ namespace AeonGames
             descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
         }
 
-        for ( size_t i = 0; i < mSamplers.size(); ++i )
+        for ( uint32_t i = 0; i < mSamplers.size(); ++i )
         {
             descriptor_set_layout_bindings.emplace_back();
             auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
-            descriptor_set_layout_binding.binding = binding++;
+            descriptor_set_layout_binding.binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 );
             descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             // Descriptor Count is the count of elements in an array.
             descriptor_set_layout_binding.descriptorCount = 1;
-            descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
             descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         }
 
@@ -497,7 +496,7 @@ namespace AeonGames
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
             write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
-            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstBinding = static_cast<uint32_t> ( write_descriptor_sets.size() - 1 );
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             write_descriptor_set.descriptorCount = 1;
@@ -508,20 +507,18 @@ namespace AeonGames
 
         for ( uint32_t index = 0; index < mSamplers.size(); ++index )
         {
-            assert ( 0 && "No ResourceId to pointer cast yet, this wont work." );
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
             write_descriptor_set.dstSet = mVkPropertiesDescriptorSet;
             ///@todo find a better way to calculate sampler binding, perhaps move samplers to their own descriptor set.
-            write_descriptor_set.dstBinding = static_cast<uint32_t> ( ( write_descriptor_sets.size() - 1 ) + index );
+            write_descriptor_set.dstBinding = static_cast<uint32_t> ( write_descriptor_sets.size() - 1  );
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             write_descriptor_set.descriptorCount = 1;
             write_descriptor_set.pBufferInfo = nullptr;
-            //write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( i->second )->GetDescriptorImageInfo();
-            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSamplers[index] ).Get<Image>() )->GetDescriptorImageInfo();
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
@@ -530,5 +527,10 @@ namespace AeonGames
     {
         vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorPool, 1, &mVkPropertiesDescriptorSet );
         mVkPropertiesDescriptorSet = VK_NULL_HANDLE;
+    }
+
+    const std::vector<std::tuple<std::string, ResourceId>>& VulkanMaterial::GetSamplers() const
+    {
+        return mSamplers;
     }
 }

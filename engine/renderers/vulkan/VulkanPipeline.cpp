@@ -240,11 +240,11 @@ namespace AeonGames
             }
             properties.append ( "};\n" );
 
-            uint32_t sampler_binding = 0;
+            uint32_t sampler_binding = 1;
             std::string samplers ( "//----SAMPLERS-START----\n" );
             for ( auto& i : aPipelineBuffer.default_material().sampler() )
             {
-                samplers += "layout(set = 1, binding = " + std::to_string ( sampler_binding + 1 ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                samplers += "layout(set = 1, binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding - 1 ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
             }
             samplers.append ( "//----SAMPLERS-END----\n" );
@@ -334,6 +334,7 @@ namespace AeonGames
 
             fragment_shader.append ( properties );
             fragment_shader.append ( samplers );
+            std::cout << fragment_shader << std::endl;
         }
         switch ( aPipelineBuffer.fragment_shader().source_case() )
         {
@@ -869,33 +870,28 @@ namespace AeonGames
     void VulkanPipeline::InitializeDescriptorSetLayout()
     {
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 1 /*+ GetDefaultMaterial().GetSamplerCount()*/ );
-        uint32_t binding = 0;
+        descriptor_set_layout_bindings.reserve ( 1 + GetDefaultMaterial().GetSamplers().size() );
 
         descriptor_set_layout_bindings.emplace_back();
-        descriptor_set_layout_bindings.back().binding = binding++;
+        descriptor_set_layout_bindings.back().binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 );
         descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
         descriptor_set_layout_bindings.back().descriptorCount = 1;
         descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
 
-#if 0
-        for ( auto& i : GetDefaultMaterial().GetProperties() )
+        for ( uint32_t i = 0; i < GetDefaultMaterial().GetSamplers().size(); ++i )
         {
-            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
-            {
-                descriptor_set_layout_bindings.emplace_back();
-                auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
-                descriptor_set_layout_binding.binding = binding++;
-                descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                // Descriptor Count is the count of elements in an array.
-                descriptor_set_layout_binding.descriptorCount = 1;
-                descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-            }
+            descriptor_set_layout_bindings.emplace_back();
+            auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
+            descriptor_set_layout_binding.binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 ); // @todo move to a different set.
+            descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            // Descriptor Count is the count of elements in an array.
+            descriptor_set_layout_binding.descriptorCount = 1;
+            descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+            descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         }
-#endif
+
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
