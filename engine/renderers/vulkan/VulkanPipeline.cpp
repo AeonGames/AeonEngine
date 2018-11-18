@@ -334,7 +334,6 @@ namespace AeonGames
 
             fragment_shader.append ( properties );
             fragment_shader.append ( samplers );
-            std::cout << fragment_shader << std::endl;
         }
         switch ( aPipelineBuffer.fragment_shader().source_case() )
         {
