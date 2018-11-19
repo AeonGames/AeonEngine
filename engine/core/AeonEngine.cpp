@@ -160,6 +160,7 @@ namespace AeonGames
         {
             return;
         }
+        ClearAllResources();
         if ( gRenderer )
         {
             // Register default resource constructors related to renderer
