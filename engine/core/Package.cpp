@@ -108,7 +108,7 @@ namespace AeonGames
     }
 
     Package::~Package() = default;
-    Package::Package ( Package&& aPackage ) :
+    Package::Package ( Package&& aPackage ) noexcept :
         mPath ( aPackage.mPath ),
         mIndexTable ( std::move ( aPackage.mIndexTable ) ) {}
 

@@ -166,7 +166,7 @@ namespace AeonGames
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 
-            uint8_t* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( 0, size ) );
+            auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( 0, size ) );
             for ( auto& i : mVariables )
             {
                 auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),
@@ -505,7 +505,7 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
         }
 
-        for ( uint32_t index = 0; index < mSamplers.size(); ++index )
+        for ( auto & mSampler : mSamplers )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
@@ -518,7 +518,7 @@ namespace AeonGames
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             write_descriptor_set.descriptorCount = 1;
             write_descriptor_set.pBufferInfo = nullptr;
-            write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSamplers[index] ).Get<Image>() )->GetDescriptorImageInfo();
+            write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSampler ).Get<Image>() )->GetDescriptorImageInfo();
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }

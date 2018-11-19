@@ -203,7 +203,7 @@ if(USE_CLANG_TIDY)
     AeonEngine
     PROPERTIES
       CXX_CLANG_TIDY
-      "${CLANG_TIDY_EXECUTABLE};-fix;-header-filter=aeongames/;${CLANG_TIDY_CHECKS}"
+      "${CLANG_TIDY_EXECUTABLE};-fix;-header-filter=${CMAKE_SOURCE_DIR}/include/aeongames;${CLANG_TIDY_CHECKS}"
     )
 endif()
 
