@@ -146,7 +146,7 @@ namespace AeonGames
         }
 
         RegisterResourceConstructor ( "Model"_crc32,
-                                      [] ( uint32_t aPath )
+                                      [] ( uint32_t aPath ) -> UniqueAnyPtr
         {
             return MakeUniqueAny<Model> ( aPath );
         } );

@@ -222,6 +222,10 @@ namespace AeonGames
     */
     template<class T> void LoadProtoBufObject ( T& t, const void * aData, size_t aSize, const std::string& aFormat )
     {
+        if ( !aData || aSize < 8 )
+        {
+            throw std::runtime_error ( "Not enough data or null pointer passed to LoadProtoBufObject." );
+        }
         if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) )
         {
             std::ostringstream stream;

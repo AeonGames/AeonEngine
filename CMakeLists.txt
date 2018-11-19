@@ -102,8 +102,9 @@ find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
 find_python_module(cmake-format)
 
 if(CLANG_TIDY_EXECUTABLE)
-  option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)")
+  option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)" OFF)
   set(CLANG_TIDY_CHECKS
+      "-warnings-as-errors=performance-*,modernize-*,-modernize-pass-by-value"
       "-checks=performance-*,modernize-*,-modernize-pass-by-value")
 endif()
 

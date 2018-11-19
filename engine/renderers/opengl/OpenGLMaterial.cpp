@@ -141,7 +141,7 @@ namespace AeonGames
         size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
 
         mUniformBuffer.Initialize ( static_cast<GLsizei> ( size ), GL_DYNAMIC_DRAW );
-        uint8_t* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
+        auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
         for ( auto& i : mVariables )
         {
             auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),

@@ -45,18 +45,15 @@ namespace AeonGames
 
         template<class T>
         UniqueAnyPtr ( std::unique_ptr<T>&& aUniquePointer ) noexcept :
-            mPointer{ aUniquePointer.release() }, mManager{Manager<T>}
-        {}
+            mPointer{ aUniquePointer.release() }, mManager{Manager<T>} {}
 
         template<class T>
         UniqueAnyPtr ( T* aPointer ) noexcept :
-            mPointer{aPointer}, mManager{Manager<T>}
-        {}
+            mPointer{reinterpret_cast<void*> ( aPointer ) }, mManager{Manager<T>} {}
 
         template<class T>
         UniqueAnyPtr ( T&& aValue ) noexcept :
-            mPointer{new T ( std::move ( aValue ) ) }, mManager{Manager<T>}
-        {}
+            mPointer{new T ( std::move ( aValue ) ) }, mManager{Manager<T>} {}
 
         ~UniqueAnyPtr()
         {
@@ -176,7 +173,7 @@ namespace AeonGames
         {
             if ( aPointer )
             {
-                std::default_delete<T>() ( reinterpret_cast<T*> ( aPointer ) );
+                delete reinterpret_cast<T*> ( aPointer );
             }
             return typeid ( T );
         }
