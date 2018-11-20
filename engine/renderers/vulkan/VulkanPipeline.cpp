@@ -198,19 +198,23 @@ namespace AeonGames
                 vertex_shader.append ( ";\n" );
             }
         }
+
+        uint32_t set_count = 0;
+
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
         );
+
         vertex_shader.append ( transforms );
 
         if ( aPipelineBuffer.default_material().property().size() )
         {
             std::string properties (
-                "layout(set = 1, binding = 0,std140) uniform Properties{\n"
+                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0,std140) uniform Properties{\n"
             );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
@@ -238,14 +242,18 @@ namespace AeonGames
                     throw std::runtime_error ( "Unknown Type." );
                 }
             }
+
             properties.append ( "};\n" );
 
-            uint32_t sampler_binding = 1;
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipelineBuffer.default_material().sampler() )
             {
-                samplers += "layout(set = 1, binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding - 1 ) + ") uniform sampler2D " + i.name() + ";\n";
-                ++sampler_binding;
+                uint32_t sampler_binding = 0;
+                for ( auto& i : aPipelineBuffer.default_material().sampler() )
+                {
+                    samplers += "layout(set = " + std::to_string ( set_count ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                    ++sampler_binding;
+                }
+                set_count += 1;
             }
             samplers.append ( "//----SAMPLERS-END----\n" );
 
@@ -279,10 +287,11 @@ namespace AeonGames
 
     static std::string GetFragmentShaderCode ( const PipelineBuffer& aPipelineBuffer )
     {
+        uint32_t set_count = 0;
         std::string fragment_shader{"#version 450\n"};
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = 0, binding = 0, std140) uniform Matrices{\n"
+            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
@@ -293,7 +302,7 @@ namespace AeonGames
         if ( aPipelineBuffer.default_material().property().size() )
         {
             std::string properties (
-                "layout(set = 1, binding = 0,std140) uniform Properties{\n"
+                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0,std140) uniform Properties{\n"
             );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
@@ -323,12 +332,15 @@ namespace AeonGames
             }
             properties.append ( "};\n" );
 
-            uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipelineBuffer.default_material().sampler() )
             {
-                samplers += "layout(set = 1, binding = " + std::to_string ( sampler_binding + 1 ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
-                ++sampler_binding;
+                uint32_t sampler_binding = 0;
+                for ( auto& i : aPipelineBuffer.default_material().sampler() )
+                {
+                    samplers += "layout(set = " + std::to_string ( set_count ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                    ++sampler_binding;
+                }
+                set_count += 1;
             }
             samplers.append ( "//----SAMPLERS-END----\n" );
 
@@ -374,21 +386,6 @@ namespace AeonGames
         }
         return 0;
     }
-
-#if 0
-    static uint32_t GetStride ( uint32_t aAttributes )
-    {
-        uint32_t stride = 0;
-        for ( uint32_t i = 0; i < ffs ( ~VertexAllBits ); ++i )
-        {
-            if ( aAttributes & ( 1 << i ) )
-            {
-                stride += GetSize ( static_cast<AttributeBits> ( 1 << i ) );
-            }
-        }
-        return stride;
-    }
-#endif
 
     static uint32_t GetOffset ( AttributeBits aAttributeBit )
     {
@@ -611,22 +608,25 @@ namespace AeonGames
         push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
         push_constant_ranges[0].offset = 0;
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
-        InitializeDescriptorSetLayout();
-        std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
-        descriptor_set_layouts.reserve ( 2 );
+
+        std::array<VkDescriptorSetLayout, 3> descriptor_set_layouts;
+
+        uint32_t descriptor_set_layout_count = 0;
+
         if ( mVulkanRenderer.GetMatrixDescriptorSetLayout() != VK_NULL_HANDLE )
         {
-            descriptor_set_layouts.emplace_back ( mVulkanRenderer.GetMatrixDescriptorSetLayout() );
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetMatrixDescriptorSetLayout();
         }
-        if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
+        for ( auto& i : mDefaultMaterial.GetDescriptorSetLayouts() )
         {
-            descriptor_set_layouts.emplace_back ( mVkPropertiesDescriptorSetLayout );
+            descriptor_set_layouts[descriptor_set_layout_count++] = i;
         }
+
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
-        pipeline_layout_create_info.pSetLayouts = ( pipeline_layout_create_info.setLayoutCount ) ? descriptor_set_layouts.data() : nullptr;
+        pipeline_layout_create_info.setLayoutCount = descriptor_set_layout_count;
+        pipeline_layout_create_info.pSetLayouts = descriptor_set_layout_count ? descriptor_set_layouts.data() : nullptr;
         pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
         pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
@@ -685,9 +685,7 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-        FinalizeDescriptorSetLayout();
     }
-
 #if 0
     void VulkanPipeline::InitializeSkeletonUniform()
     {
@@ -714,203 +712,4 @@ namespace AeonGames
     {
     }
 #endif
-#if 0
-    void VulkanPipeline::InitializeDescriptorSetLayout()
-    {
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 2 + GetDefaultMaterial().GetSamplerCount() );
-        uint32_t binding = 0;
-        // Properties binding
-        if ( mPropertiesBuffer.GetSize() )
-        {
-            descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = binding++;
-            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-            descriptor_set_layout_bindings.back().descriptorCount = 1;
-            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
-            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
-        }
-        // Sampler bindings
-        for ( auto& i : GetDefaultMaterial().GetProperties() )
-        {
-            if ( i.GetType() == Material::PropertyType::SAMPLER_2D )
-            {
-                descriptor_set_layout_bindings.emplace_back();
-                auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
-                descriptor_set_layout_binding.binding = binding++;
-                // Descriptor Count is the count of elements in an array.
-                descriptor_set_layout_binding.descriptorCount = 1;
-                descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-                descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            }
-        }
-        // Skeleton binding
-        if ( mSkeletonBuffer.GetSize() )
-        {
-            descriptor_set_layout_bindings.emplace_back();
-            descriptor_set_layout_bindings.back().binding = binding++;
-            descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            descriptor_set_layout_bindings.back().descriptorCount = 1;
-            descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
-            descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
-        }
-        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
-        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_set_layout_create_info.pNext = nullptr;
-        descriptor_set_layout_create_info.flags = 0;
-        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
-        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
-        {
-            std::ostringstream stream;
-            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-    }
-
-    void VulkanPipeline::FinalizeDescriptorSetLayout()
-    {
-        if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
-        {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
-            mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
-        }
-    }
-    void VulkanPipeline::InitializeDescriptorSet()
-    {
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVkPropertiesDescriptorSetLayout } };
-        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
-        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mVkDescriptorSet ) )
-        {
-            std::ostringstream stream;
-            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        // We'll be moving this somewhere else.
-        std::array<VkDescriptorBufferInfo, 3> descriptor_buffer_infos =
-        {
-            {
-                VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32},
-                VkDescriptorBufferInfo{mProperties.GetBuffer(), 0, GetDefaultMaterial().GetPropertyBlock().size() },
-                VkDescriptorBufferInfo{mSkeleton.GetBuffer(),   0, 256 * 16 * sizeof ( float ) }
-            }
-        };
-
-        std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( 3 + GetDefaultMaterial().GetSamplerCount() );
-        // Matrices
-        write_descriptor_sets.emplace_back();
-        write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_sets.back().pNext = nullptr;
-        write_descriptor_sets.back().dstSet = mVkDescriptorSet;
-        write_descriptor_sets.back().dstBinding = 0;
-        write_descriptor_sets.back().dstArrayElement = 0;
-        write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_sets.back().descriptorCount = 1;
-        write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[0];
-        write_descriptor_sets.back().pImageInfo = nullptr;
-        write_descriptor_sets.back().pTexelBufferView = nullptr;
-        if ( GetDefaultMaterial().GetPropertyBlock().size() )
-        {
-            write_descriptor_sets.emplace_back();
-            write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_sets.back().pNext = nullptr;
-            write_descriptor_sets.back().dstSet = mVkDescriptorSet;
-            write_descriptor_sets.back().dstBinding = 1;
-            write_descriptor_sets.back().dstArrayElement = 0;
-            write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            write_descriptor_sets.back().descriptorCount = 1;
-            write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[1];
-            write_descriptor_sets.back().pImageInfo = nullptr;
-            write_descriptor_sets.back().pTexelBufferView = nullptr;
-        }
-        if ( mSkeleton.GetSize() )
-        {
-            write_descriptor_sets.emplace_back();
-            write_descriptor_sets.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_sets.back().pNext = nullptr;
-            write_descriptor_sets.back().dstSet = mVkDescriptorSet;
-            write_descriptor_sets.back().dstBinding = 2;
-            write_descriptor_sets.back().dstArrayElement = 0;
-            write_descriptor_sets.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            write_descriptor_sets.back().descriptorCount = 1;
-            write_descriptor_sets.back().pBufferInfo = &descriptor_buffer_infos[2];
-            write_descriptor_sets.back().pImageInfo = nullptr;
-            write_descriptor_sets.back().pTexelBufferView = nullptr;
-        }
-        for ( uint32_t i = 0; i < GetDefaultMaterial().GetSamplerCount(); ++i )
-        {
-            write_descriptor_sets.emplace_back();
-            auto& write_descriptor_set = write_descriptor_sets.back();
-            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mVkDescriptorSet;
-            write_descriptor_set.dstBinding = i; // this will probably break because of how the shader code is build.
-            write_descriptor_set.dstArrayElement = 0;
-            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            write_descriptor_set.descriptorCount = 1;
-            assert ( 0 && "TODO: Set pImageInfo" );
-            write_descriptor_set.pImageInfo = nullptr;//&mTextures[i]->GetDescriptorImageInfo();
-        }
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
-    }
-
-    void VulkanPipeline::FinalizeDescriptorSet()
-    {
-    }
-#endif
-
-    void VulkanPipeline::InitializeDescriptorSetLayout()
-    {
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-        descriptor_set_layout_bindings.reserve ( 1 + GetDefaultMaterial().GetSamplers().size() );
-
-        descriptor_set_layout_bindings.emplace_back();
-        descriptor_set_layout_bindings.back().binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 );
-        descriptor_set_layout_bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-        descriptor_set_layout_bindings.back().descriptorCount = 1;
-        descriptor_set_layout_bindings.back().stageFlags = VK_SHADER_STAGE_ALL;
-        descriptor_set_layout_bindings.back().pImmutableSamplers = nullptr;
-
-        for ( uint32_t i = 0; i < GetDefaultMaterial().GetSamplers().size(); ++i )
-        {
-            descriptor_set_layout_bindings.emplace_back();
-            auto& descriptor_set_layout_binding = descriptor_set_layout_bindings.back();
-            descriptor_set_layout_binding.binding = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() - 1 ); // @todo move to a different set.
-            descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            // Descriptor Count is the count of elements in an array.
-            descriptor_set_layout_binding.descriptorCount = 1;
-            descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
-            descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-        }
-
-        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
-        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_set_layout_create_info.pNext = nullptr;
-        descriptor_set_layout_create_info.flags = 0;
-        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
-        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkPropertiesDescriptorSetLayout ) )
-        {
-            std::ostringstream stream;
-            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-    }
-
-    void VulkanPipeline::FinalizeDescriptorSetLayout()
-    {
-        if ( mVkPropertiesDescriptorSetLayout != VK_NULL_HANDLE )
-        {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer.GetDevice(), mVkPropertiesDescriptorSetLayout, nullptr );
-            mVkPropertiesDescriptorSetLayout = VK_NULL_HANDLE;
-        }
-    }
 }

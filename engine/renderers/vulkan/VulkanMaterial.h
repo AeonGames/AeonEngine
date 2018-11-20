@@ -74,8 +74,8 @@ namespace AeonGames
         const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const final;
         ///@}
 
-        const VkDescriptorSetLayout& GetPropertiesDescriptorSetLayout() const;
-        const VkDescriptorSet GetPropertiesDescriptorSet() const;
+        const std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayouts() const;
+        const std::vector<VkDescriptorSet>& GetDescriptorSets() const;
         const Material& GetMaterial() const;
     private:
         class UniformVariable
@@ -109,9 +109,9 @@ namespace AeonGames
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
-        VkDescriptorSetLayout mVkPropertiesDescriptorSetLayout{ VK_NULL_HANDLE };
-        VkDescriptorPool mVkPropertiesDescriptorPool{ VK_NULL_HANDLE };
-        VkDescriptorSet mVkPropertiesDescriptorSet{ VK_NULL_HANDLE };
+        VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
+        std::vector<VkDescriptorSetLayout> mVkDescriptorSetLayouts{};
+        std::vector<VkDescriptorSet> mVkUniformDescriptorSets{};
         VulkanBuffer mUniformBuffer;
         std::vector<UniformVariable> mVariables{};
         std::vector<std::tuple<std::string, ResourceId>> mSamplers{};

@@ -25,6 +25,7 @@ limitations under the License.
 #include <array>
 #include <utility>
 #include <cstring>
+#include <cassert>
 #include "aeongames/Frustum.h"
 #include "aeongames/Material.h"
 #include "aeongames/Pipeline.h"
@@ -501,21 +502,26 @@ namespace AeonGames
                                 uint32_t aFirstInstance ) const
     {
         const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( ( aMaterial ) ? *aMaterial : aPipeline.GetDefaultMaterial() );
-        std::array<VkDescriptorSet, 2> descriptor_sets { { mVkMatricesDescriptorSet, vulkan_material.GetPropertiesDescriptorSet() }};
+        const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
+        assert ( material_descriptor_sets.size() < 3 );
+        // Up to 3 VkDescriptorSets?
+        std::array<VkDescriptorSet, 3> descriptor_sets { { mVkMatricesDescriptorSet }};
+        memcpy ( descriptor_sets.data() + 1, material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
+
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
         Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
                              reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                              0, sizeof ( float ) * 16, ModelMatrix.GetMatrix4x4() );
-        {
-            vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
-                                      0,
-                                      static_cast<uint32_t> ( descriptor_sets.size() ),
-                                      descriptor_sets.data(), 0, nullptr );
-        }
+
+        vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
+                                  0,
+                                  static_cast<uint32_t> ( material_descriptor_sets.size() + 1 ),
+                                  descriptor_sets.data(), 0, nullptr );
+
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
