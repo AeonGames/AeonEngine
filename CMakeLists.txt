@@ -62,7 +62,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON
 
 set(Portaudio_FIND_QUIETLY ON)
 
-find_program(XXD_EXECUTABLE xxd HINTS ENV MINGW_PREFIX MSYS2_PATH ChocolateyInstall)
+find_program(XXD_EXECUTABLE xxd
+             HINTS ENV
+                   MINGW_PREFIX
+                   MSYS2_PATH
+                   ChocolateyInstall)
 find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
 find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
 find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
@@ -95,14 +99,19 @@ include(FindPythonModule)
 find_package(PythonInterp 3)
 
 get_filename_component(PYTHON_PATH "${PYTHON_EXECUTABLE}" DIRECTORY)
-find_program(AUTOPEP8_EXECUTABLE autopep8 HINTS ENV MINGW_PREFIX MSYS2_PATH "${PYTHON_PATH}/Scripts")
+find_program(AUTOPEP8_EXECUTABLE autopep8
+             HINTS ENV
+                   MINGW_PREFIX
+                   MSYS2_PATH
+                   "${PYTHON_PATH}/Scripts")
 find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
              HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
 find_python_module(cmake-format)
 
 if(CLANG_TIDY_EXECUTABLE)
-  option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)" OFF)
+  option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
+         OFF)
   set(CLANG_TIDY_CHECKS
       "-warnings-as-errors=performance-*,modernize-*,-modernize-pass-by-value"
       "-checks=performance-*,modernize-*,-modernize-pass-by-value")
