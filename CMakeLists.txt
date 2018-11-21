@@ -107,8 +107,6 @@ find_program(AUTOPEP8_EXECUTABLE autopep8
 find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
              HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
-find_python_module(cmake-format)
-
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
          OFF)
@@ -289,6 +287,10 @@ add_custom_target(
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/scene.proto
+  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+          --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
+          --proto_path ${CMAKE_SOURCE_DIR}/proto
+                       ${CMAKE_SOURCE_DIR}/proto/reference.proto
   SOURCES ${CMAKE_SOURCE_DIR}/proto/mesh.proto
           ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
           ${CMAKE_SOURCE_DIR}/proto/animation.proto
@@ -304,6 +306,7 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/proto/geometry.proto
           ${CMAKE_SOURCE_DIR}/proto/transform.proto
           ${CMAKE_SOURCE_DIR}/proto/scene.proto
+          ${CMAKE_SOURCE_DIR}/proto/reference.proto
   COMMENT "Generating Protocol Buffers Python Code")
 
 #
@@ -346,10 +349,28 @@ add_custom_target(
 #
 # Blender Execution target
 #
-find_program(BLENDER_EXECUTABLE blender
+find_program(BLENDER_EXECUTABLE
+             NAMES blender blender.exe
              HINTS ENV ProgramFiles
              PATH_SUFFIXES "Blender Foundation/Blender")
 if(BLENDER_EXECUTABLE)
+  get_filename_component(BLENDER_PATH "${BLENDER_EXECUTABLE}" DIRECTORY)
+  execute_process(COMMAND "${BLENDER_EXECUTABLE}" --version
+                  OUTPUT_VARIABLE BLENDER_VERSION)
+  string(REGEX MATCH
+               "Blender [^ \\t]+"
+               BLENDER_VERSION
+               "${BLENDER_VERSION}")
+  string(REGEX
+         REPLACE "Blender ([^ ]+)"
+                 "\\1"
+                 BLENDER_VERSION
+                 "${BLENDER_VERSION}")
+  find_program(BLENDER_PYTHON_EXECUTABLE
+               NAMES python python.exe
+               PATHS "${BLENDER_PATH}/${BLENDER_VERSION}/python/bin"
+               NO_DEFAULT_PATH)
+
   # Right now this is just a shortcut to running Blender, it was supposed to set
   # everything up so exporters were registered and ready to run without making
   # changes to the Blender configuration, but that idea didn't work out in the

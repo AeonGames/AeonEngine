@@ -1,4 +1,4 @@
-Instalation
+Installation
 ===========
 
 In order to use the Blender addon exporters for AeonEngine, you need to install the python protobuffer library onto your Blender setup because it is a pain to have Blender use the local python instalation. Either way you need to build and install the PB library somewhere.
@@ -7,7 +7,7 @@ Specifically, you will need to install pip and then build and install the PB lib
 I may expand some more on this, but right now this is mostly something to look up when configuring an environment. The process is quite involved and I couldn't or haven't been able to easily automate it.
 
 1. Run as administrator or root a command line window or terminal.
-2. Add the directory containing the python executable from Blender into the PATH enviroment variable, this is usually Program Files -> Blender Foundation -> Blender Version -> python -> bin. (Only valid for Windows, Ubuntu 16.04 now uses the system's python, but you may have to install pip for python3 since the default is python 2.x).
+2. Add the directory containing the python executable from Blender into the PATH enviroment variable, this is usually Program Files -> Blender Foundation -> Blender -> &lt;Blender Version&gt; -> python -> bin. (Only valid for Windows, Ubuntu 16.04 now uses the system's python, but you may have to install pip for python3 since the default is python 2.x).
 3. Install pip using get-pip.py (https://pip.pypa.io/en/stable/installing/)
 4. IF installing from source:
     1. After building and/or installing protocol buffer, add the path to protoc to the PATH enviroment variable.
