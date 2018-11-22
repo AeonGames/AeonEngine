@@ -21,7 +21,7 @@ limitations under the License.
 #include <stdexcept>
 
 #ifdef WIN32
-#include "wglext.h"
+#include <GL/wglext.h>
 #define GLGETPROCADDRESS(glFunctionType,glFunction) \
     if(glFunction==nullptr) { \
         glFunction = (glFunctionType)wglGetProcAddress(#glFunction); \

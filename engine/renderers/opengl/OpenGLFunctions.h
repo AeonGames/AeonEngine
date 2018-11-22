@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,12 +27,12 @@ limitations under the License.
 #endif
 #include <Windows.h>
 #include <GL/gl.h>
-#include "glcorearb.h"
-#include "wglext.h"
+#include <GL/glcorearb.h>
+#include <GL/wglext.h>
 #else
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include "glcorearb.h"
+#include <GL/glcorearb.h>
 #endif // ANDROID
 #include <sstream>
 #include <iostream>
