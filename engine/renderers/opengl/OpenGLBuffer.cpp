@@ -123,6 +123,10 @@ namespace AeonGames
         return data;
     }
 
+    void* OpenGLBuffer::Map ( size_t aOffset, size_t aSize ) const
+    {
+        return MapRange ( aOffset, aSize, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT );
+    }
     void * OpenGLBuffer::MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const
     {
         void* data = glMapNamedBufferRange ( mBuffer, aOffset, aSize, aAccess );

@@ -177,7 +177,7 @@ namespace AeonGames
         }
     }
 
-    void * VulkanBuffer::Map ( const VkDeviceSize aOffset, const VkDeviceSize aSize ) const
+    void* VulkanBuffer::Map ( size_t aOffset, size_t aSize ) const
     {
         void* data = nullptr;
         if ( mProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT )
@@ -201,7 +201,7 @@ namespace AeonGames
         vkUnmapMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory );
     }
 
-    VkDeviceSize VulkanBuffer::GetSize() const
+    size_t VulkanBuffer::GetSize() const
     {
         return mSize;
     }

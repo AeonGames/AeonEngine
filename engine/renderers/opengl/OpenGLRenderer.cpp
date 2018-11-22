@@ -19,6 +19,7 @@ limitations under the License.
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLImage.h"
+#include "OpenGLBuffer.h"
 
 namespace AeonGames
 {
@@ -63,6 +64,11 @@ namespace AeonGames
     std::unique_ptr<Image> OpenGLRenderer::CreateImage ( uint32_t aPath ) const
     {
         return std::make_unique<OpenGLImage> ( aPath );
+    }
+
+    std::unique_ptr<RenderBuffer> OpenGLRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
+    {
+        return std::make_unique<OpenGLBuffer> ( aSize, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT, aData );
     }
 
     void* OpenGLRenderer::GetOpenGLContext() const

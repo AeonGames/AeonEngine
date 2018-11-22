@@ -60,6 +60,7 @@ namespace AeonGames
         std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
         std::unique_ptr<Image> CreateImage ( uint32_t aPath ) const final;
+        std::unique_ptr<RenderBuffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
     private:
         void InitializeInstance();
         void InitializeDevice();

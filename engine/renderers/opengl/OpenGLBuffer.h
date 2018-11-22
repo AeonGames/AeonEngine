@@ -17,10 +17,12 @@ limitations under the License.
 #define AEONGAMES_OPENGLBUFFER_H
 #include <cstddef>
 #include "OpenGLFunctions.h"
+#include "aeongames/RenderBuffer.h"
+
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLBuffer
+    class OpenGLBuffer : public RenderBuffer
     {
     public:
         OpenGLBuffer ();
@@ -40,9 +42,13 @@ namespace AeonGames
         void WriteMemory ( const GLintptr aOffset, const GLsizeiptr aSize, const void *aData = nullptr ) const ;
         void* Map ( const GLbitfield aAccess ) const;
         void* MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const;
-        void Unmap() const;
-        size_t GetSize() const;
         GLuint GetBufferId() const;
+        /**@ name Overriden Functions */
+        ///@{
+        void* Map ( const size_t aOffset, size_t aSize ) const final;
+        void Unmap() const final;
+        size_t GetSize() const final;
+        ///@}
     private:
         void Initialize ( const void *aData );
         GLsizei mSize{};

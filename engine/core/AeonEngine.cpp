@@ -31,6 +31,7 @@ limitations under the License.
 #endif
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/RenderBuffer.h"
 #include "aeongames/Image.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
@@ -273,6 +274,10 @@ namespace AeonGames
 
     // Renderer------------------------------------------------------------------------------
     Renderer::~Renderer() //= default;
+    {
+        std::cout << __func__ << std::endl;
+    }
+    RenderBuffer::~RenderBuffer() //= default;
     {
         std::cout << __func__ << std::endl;
     }
