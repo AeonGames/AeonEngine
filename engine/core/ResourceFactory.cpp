@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <tuple>
+#include <sstream>
+#include <exception>
 #include "aeongames/ResourceFactory.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/ResourceId.h"
@@ -29,7 +31,9 @@ namespace AeonGames
         {
             return std::get<0> ( it->second ) ( aResourceId.GetPath() );
         }
-        return nullptr;
+        std::ostringstream stream;
+        stream << "No constructor registered for type " << aResourceId.GetType();
+        throw std::runtime_error ( stream.str().c_str() );
     }
     bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor, UniqueAnyPtr&& aDefaultResource )
     {

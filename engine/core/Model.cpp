@@ -115,6 +115,7 @@ namespace AeonGames
         if ( aModelBuffer.has_skeleton() )
         {
             mSkeleton = { "Skeleton"_crc32, GetReferenceBufferId ( aModelBuffer.skeleton() ) };
+            mSkeleton.Store();
         }
         // Meshes -----------------------------------------------------------------------------
         mAssemblies.reserve ( aModelBuffer.assembly_size() );
