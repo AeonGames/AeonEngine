@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (C) 2009-2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2009-2018 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -1230,6 +1230,30 @@ inline float* RotateMatrixInertialSpace ( float* src, float* dst, float angle, f
     return Multiply3x3Matrix ( src, r, dst );
 }
 #endif
+
+inline float* Matrix3x3To4x4 ( const float* src, float* dst )
+{
+    dst[ 0] = src[ 0];
+    dst[ 1] = src[ 1];
+    dst[ 2] = src[ 2];
+    dst[ 3] = 0;
+
+    dst[ 4] = src[ 4];
+    dst[ 5] = src[ 5];
+    dst[ 6] = src[ 6];
+    dst[ 7] = 0;
+
+    dst[ 8] = src[ 8];
+    dst[ 9] = src[ 9];
+    dst[10] = src[10];
+    dst[11] = 0;
+
+    dst[12] = 0;
+    dst[13] = 0;
+    dst[14] = 0;
+    dst[15] = 1;
+    return dst;
+}
 /*! \brief Translates a 4x4 matrix using a vector relative from its current position using the object axis.
 
     This is a simplified matrix multiplication \f$A \times B\f$:
@@ -1280,25 +1304,10 @@ inline float* TranslateMatrixObjectSpace ( float* v, float* src, float* dst )
     // in theory src[3], src[7] and src[11] will always be zero and src[15] one, safe to asume so?
     result[15] = v[0] * src[ 3] + v[1] * src[ 7] + v[2] * src[11] + src[15];
 #else
-    result[ 0] = src[ 0];
-    result[ 1] = src[ 1];
-    result[ 2] = src[ 2];
-    result[ 3] = 0;
-
-    result[ 4] = src[ 4];
-    result[ 5] = src[ 5];
-    result[ 6] = src[ 6];
-    result[ 7] = 0;
-
-    result[ 8] = src[ 8];
-    result[ 9] = src[ 9];
-    result[10] = src[10];
-    result[11] = 0;
-
+    Matrix3x3To4x4 ( src, result );
     result[12] = src[ 0] * v[0] + src[ 4] * v[1] + src[ 8] * v[2] + src[12];
     result[13] = src[ 1] * v[0] + src[ 5] * v[1] + src[ 9] * v[2] + src[13];
     result[14] = src[ 2] * v[0] + src[ 6] * v[1] + src[10] * v[2] + src[14];
-    result[15] = 1;
 #endif
 
     memcpy ( dst, result, sizeof ( float ) * 16 );
@@ -1352,25 +1361,10 @@ inline float* TranslateMatrixInertialSpace ( float* v, float* src, float* dst )
     result[14] = src[14] + src[15] * v[ 2];
     result[15] = src[15];
 #else
-    result[ 0] = src[ 0];
-    result[ 1] = src[ 1];
-    result[ 2] = src[ 2];
-    result[ 3] = 0;
-
-    result[ 4] = src[ 4];
-    result[ 5] = src[ 5];
-    result[ 6] = src[ 6];
-    result[ 7] = 0;
-
-    result[ 8] = src[ 8];
-    result[ 9] = src[ 9];
-    result[10] = src[10];
-    result[11] = 0;
-
+    Matrix3x3To4x4 ( src, result );
     result[12] = src[12] + v[ 0];
     result[13] = src[13] + v[ 1];
     result[14] = src[14] + v[ 2];
-    result[15] = 1;
 #endif
     memcpy ( dst, result, sizeof ( float ) * 16 );
     return dst;
@@ -1483,29 +1477,6 @@ inline float* GetInvertedMatrixFromSRT ( const float* srt, float* M )
 #endif
 }
 
-/// Catmull-Rom spline interpolation
-inline float* Spline ( const float* p0, const float* p1, const float* p2, const float* p3, double interpolation, float* out )
-{
-    double i2 = interpolation * interpolation;
-    double i3 = i2 * interpolation;
-    double t0[3] =
-    {
-        ( p2[0] - p0[0] ) / 2.0,
-        ( p2[1] - p0[1] ) / 2.0,
-        ( p2[2] - p0[2] ) / 2.0
-    };
-
-    double t1[3] =
-    {
-        ( p3[0] - p1[0] ) / 2.0,
-        ( p3[1] - p1[1] ) / 2.0,
-        ( p3[2] - p1[2] ) / 2.0
-    };
-    out[0] = static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[0] + ( -2 * i3 + 3 * i2 ) * p2[0] + ( i3 - 2 * i2 + interpolation ) * t0[0] + ( i3 - i2 ) * t1[0] );
-    out[1] = static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[1] + ( -2 * i3 + 3 * i2 ) * p2[1] + ( i3 - 2 * i2 + interpolation ) * t0[1] + ( i3 - i2 ) * t1[1] );
-    out[2] = static_cast<float> ( ( 2 * i3 - 3 * i2 + 1 ) * p1[2] + ( -2 * i3 + 3 * i2 ) * p2[2] + ( i3 - 2 * i2 + interpolation ) * t0[2] + ( i3 - i2 ) * t1[2] );
-    return out;
-}
 // @}
 /*! \name Quaternion Functions \note The quaternion scalar is the first element in any quaternion array */
 // @{
@@ -1814,6 +1785,26 @@ inline void MultQuats4 ( float* q1, float* q2, float* out )
     out[3] = localout[3];
 }
 
+inline bool CapInterpolation ( const float* q1, const float* q2, double interpolation, float* out )
+{
+    if ( interpolation <= 0.0f )
+    {
+        out[1] = q1[1];
+        out[2] = q1[2];
+        out[3] = q1[3];
+        out[0] = q1[0];
+        return true;
+    }
+    else if ( interpolation >= 1.0f )
+    {
+        out[1] = q2[1];
+        out[2] = q2[2];
+        out[3] = q2[3];
+        out[0] = q2[0];
+        return true;
+    }
+    return false;
+}
 /*! \brief Linearly interpolate between two quaternions.
 
     Each element is interpolated as v' = v1+((v2-v1)*interpolation).
@@ -1829,20 +1820,8 @@ inline float* LerpQuats ( const float* q1, const float* q2, double interpolation
     float sign = 1.0;
     float dot = Dot4 ( q1, q2 );
 #endif
-    if ( interpolation <= 0.0f )
+    if ( CapInterpolation ( q1, q2, interpolation, out ) )
     {
-        out[1] = q1[1];
-        out[2] = q1[2];
-        out[3] = q1[3];
-        out[0] = q1[0];
-        return out;
-    }
-    else if ( interpolation >= 1.0f )
-    {
-        out[1] = q2[1];
-        out[2] = q2[2];
-        out[3] = q2[3];
-        out[0] = q2[0];
         return out;
     }
 #if 0
@@ -1885,20 +1864,8 @@ inline float* NlerpQuats ( const float* q1, const float* q2, double interp, floa
 */
 inline float* SlerpQuats ( float* q1, float* q2, float interpolation, float* out )
 {
-    if ( interpolation <= 0.0f )
+    if ( CapInterpolation ( q1, q2, interpolation, out ) )
     {
-        out[1] = q1[1];
-        out[2] = q1[2];
-        out[3] = q1[3];
-        out[0] = q1[0];
-        return out;
-    }
-    else if ( interpolation >= 1.0f )
-    {
-        out[1] = q2[1];
-        out[2] = q2[2];
-        out[3] = q2[3];
-        out[0] = q2[0];
         return out;
     }
     float dot = Dot4 ( q1, q2 );
