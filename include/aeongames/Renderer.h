@@ -17,10 +17,9 @@ limitations under the License.
 #define AEONGAMES_RENDERER_H
 
 #include <string>
-//#include <functional>
-//#include <utility>
 #include <memory>
 #include "Platform.h"
+#include "RenderBuffer.h"
 
 namespace AeonGames
 {
@@ -59,6 +58,7 @@ namespace AeonGames
         virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Image> CreateImage ( uint32_t aPath = 0 ) const = 0;
+        virtual std::unique_ptr<RenderBuffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const = 0;
         DLL virtual ~Renderer() = 0;
     };
 }
