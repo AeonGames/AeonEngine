@@ -35,16 +35,6 @@ before_build:
 
     set VULKAN_SDK=C:\VulkanSDK\1.0.54.0
 
-    mkdir C:\projects\aeonengine\include\GL
-
-    mkdir C:\projects\aeonengine\include\KHR
-    
-    curl -LfsS -o C:\projects\aeonengine\include\GL\glcorearb.h https://www.khronos.org/registry/OpenGL/api/GL/glcorearb.h
-
-    curl -LfsS -o C:\projects\aeonengine\include\GL\wglext.h https://www.khronos.org/registry/OpenGL/api/GL/wglext.h
-
-    curl -LfsS -o C:\projects\aeonengine\include\KHR\khrplatform.h https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h
-    
     mkdir build
 
     cd build
