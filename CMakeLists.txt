@@ -405,6 +405,7 @@ endif()
 # Generate VS Code Environment
 #
 if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
+  set(CODE_ZOOMLEVEL "0" CACHE string "window.zoomLevel for VS Code.")
   # TODO SOURCE_DIRECTORIES could be set and used to call add_subdirectory
   # directly from this top level
   set(SOURCE_DIRECTORIES ${CMAKE_SOURCE_DIR} application
