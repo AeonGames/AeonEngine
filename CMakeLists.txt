@@ -45,6 +45,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                         "RelWithDebInfo")
 endif()
 
+set(PROXY "" CACHE STRING "Proxy server string for downloads.")
+if(PROXY)
+    set(ENV{http_proxy} "${PROXY}")
+    set(ENV{https_proxy} "${PROXY}")
+    set(ENV{ftp_proxy} "${PROXY}")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -53,8 +60,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
   set(CMAKE_CXX_FLAGS_RELEASE
       "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer")
-  # elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC") set(CMAKE_CXX_FLAGS
-  # "${CMAKE_CXX_FLAGS} /std:c++latest")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON
