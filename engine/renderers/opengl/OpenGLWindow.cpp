@@ -82,7 +82,8 @@ namespace AeonGames
         if ( mDeviceContext )
         {
             EndRender();
-            throw std::runtime_error ( "BeginRender call without a previous EndRender call." );
+            std::cout << "BeginRender call without a previous EndRender call." << std::endl;
+            return;
         }
         mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
@@ -120,7 +121,8 @@ namespace AeonGames
 #if _WIN32
         if ( !mDeviceContext )
         {
-            throw std::runtime_error ( "EndRender call without a previous BeginRender call." );
+            std::cout << "EndRender call without a previous BeginRender call." << std::endl;
+            return;
         }
         SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
@@ -143,7 +145,10 @@ namespace AeonGames
     {
         const OpenGLMesh& opengl_mesh{reinterpret_cast<const OpenGLMesh&> ( aMesh ) };
         const OpenGLPipeline& opengl_pipeline{reinterpret_cast<const OpenGLPipeline&> ( aPipeline ) };
-        opengl_pipeline.Use ( reinterpret_cast<const OpenGLMaterial&> ( ( aMaterial ) ? *aMaterial : opengl_pipeline.GetDefaultMaterial() ) );
+        opengl_pipeline.Use (
+            reinterpret_cast<const OpenGLMaterial&> ( ( aMaterial ) ?
+                    *aMaterial : opengl_pipeline.GetDefaultMaterial() ),
+            reinterpret_cast<const OpenGLBuffer*> ( aSkeleton ) );
         OPENGL_CHECK_ERROR_NO_THROW;
         Matrix4x4 model_matrix = aModelTransform.GetMatrix();
         glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, model_matrix.GetMatrix4x4() );

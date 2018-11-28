@@ -111,7 +111,8 @@ namespace AeonGames
                 aWindow.Render ( aNode.GetGlobalTransform(),
                                  *std::get<0> ( i ).Cast<Mesh>(),
                                  *std::get<1> ( i ).Cast<Pipeline>(),
-                                 std::get<2> ( i ).Cast<Material>() );
+                                 std::get<2> ( i ).Cast<Material>(),
+                                 mSkeletonBuffer.get() );
             }
         }
     }

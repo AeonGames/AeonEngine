@@ -38,6 +38,7 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "aeongames/Model.h"
 #include "aeongames/Skeleton.h"
+#include "aeongames/Animation.h"
 #include "aeongames/Package.h"
 #include "aeongames/ResourceFactory.h"
 #include "Factory.h"
@@ -158,6 +159,11 @@ namespace AeonGames
         {
             return MakeUniqueAny<Skeleton> ( aPath );
         } );
+        RegisterResourceConstructor ( "Animation"_crc32,
+                                      [] ( uint32_t aPath ) -> UniqueAnyPtr
+        {
+            return MakeUniqueAny<Animation> ( aPath );
+        } );
 
         return gInitialized;
     }
@@ -177,6 +183,7 @@ namespace AeonGames
             UnregisterResourceConstructor ( "Pipeline"_crc32 );
             UnregisterResourceConstructor ( "Material"_crc32 );
         }
+        UnregisterResourceConstructor ( "Animation"_crc32 );
         UnregisterResourceConstructor ( "Skeleton"_crc32 );
         UnregisterResourceConstructor ( "Model"_crc32 );
         /* The renderer code must reside in plugin address space,

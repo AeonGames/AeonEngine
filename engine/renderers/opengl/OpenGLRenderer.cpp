@@ -68,7 +68,7 @@ namespace AeonGames
 
     std::unique_ptr<RenderBuffer> OpenGLRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
     {
-        return std::make_unique<OpenGLBuffer> ( static_cast<GLsizei> ( aSize ), GL_MAP_READ_BIT | GL_MAP_WRITE_BIT, aData );
+        return std::make_unique<OpenGLBuffer> ( static_cast<GLsizei> ( aSize ), GL_DYNAMIC_DRAW );
     }
 
     void* OpenGLRenderer::GetOpenGLContext() const

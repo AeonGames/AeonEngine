@@ -205,8 +205,11 @@ namespace AeonGames
             }
             code = attribute_matches.suffix();
         }
+
+        uint32_t uniform_block_binding{0};
+
         std::string transforms (
-            "layout(binding = 0, std140) uniform Matrices{\n"
+            "layout(binding = " + std::to_string ( uniform_block_binding++ ) + ", std140) uniform Matrices{\n"
             "mat4 ModelMatrix;\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
@@ -217,7 +220,7 @@ namespace AeonGames
         if ( aPipelineBuffer.default_material().property().size() )
         {
             std::string properties (
-                "layout(binding = 1,std140) uniform Properties{\n"
+                "layout(binding = " + std::to_string ( uniform_block_binding++ ) + ",std140) uniform Properties{\n"
             );
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
@@ -247,28 +250,27 @@ namespace AeonGames
             }
             properties.append ( "};\n" );
 
+            if ( attributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+            {
+                std::string skeleton (
+                    "layout(std140, binding = " + std::to_string ( uniform_block_binding++ ) + ") uniform Skeleton{\n"
+                    "mat4 skeleton[256];\n"
+                    "};\n"
+                );
+                vertex_shader.append ( skeleton );
+            }
+
             uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
             for ( auto& i : aPipelineBuffer.default_material().sampler() )
             {
-                samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                samplers += "layout(binding = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
             }
             samplers.append ( "//----SAMPLERS-END----\n" );
 
             vertex_shader.append ( properties );
             vertex_shader.append ( samplers );
-        }
-
-        // Skeleton needs rework
-        if ( attributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
-        {
-            std::string skeleton (
-                "layout(std140, binding = 2) uniform Skeleton{\n"
-                "mat4 skeleton[256];\n"
-                "};\n"
-            );
-            vertex_shader.append ( skeleton );
         }
 
         switch ( aPipelineBuffer.vertex_shader().source_case() )
@@ -512,22 +514,36 @@ namespace AeonGames
         mDefaultMaterial.Unload();
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial, const OpenGLBuffer* aSkeletonBuffer ) const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
-        GLenum index {0};
-        for ( auto& i : aMaterial.GetSamplers() )
+
+        for ( GLenum i = 0; i < aMaterial.GetSamplers().size(); ++i )
         {
-            glActiveTexture ( GL_TEXTURE0 + index++ );
+            glActiveTexture ( GL_TEXTURE0 + i );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLImage*> ( std::get<1> ( i ).Cast<Image>() )->GetTextureId() );
+            glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLImage*> ( std::get<1> ( aMaterial.GetSamplers() [i] ).Cast<Image>() )->GetTextureId() );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
-        glBindBuffer ( GL_UNIFORM_BUFFER, aMaterial.GetPropertiesBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 1, aMaterial.GetPropertiesBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
+
+        // Binding 0 is the matrix buffer.
+        GLuint index{1};
+        if ( GLuint buffer = aMaterial.GetPropertiesBufferId() )
+        {
+            glBindBuffer ( GL_UNIFORM_BUFFER, buffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBufferBase ( GL_UNIFORM_BUFFER, index++, buffer );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+
+        if ( aSkeletonBuffer != nullptr && aSkeletonBuffer->GetBufferId() )
+        {
+            glBindBuffer ( GL_UNIFORM_BUFFER, aSkeletonBuffer->GetBufferId() );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBufferBase ( GL_UNIFORM_BUFFER, index++, aSkeletonBuffer->GetBufferId() );
+            OPENGL_CHECK_ERROR_THROW;
+        }
     }
 
     GLenum OpenGLPipeline::GetTopology() const
