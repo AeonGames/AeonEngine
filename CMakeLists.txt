@@ -47,9 +47,9 @@ endif()
 
 set(PROXY "" CACHE STRING "Proxy server string for downloads.")
 if(PROXY)
-    set(ENV{http_proxy} "${PROXY}")
-    set(ENV{https_proxy} "${PROXY}")
-    set(ENV{ftp_proxy} "${PROXY}")
+  set(ENV{http_proxy} "${PROXY}")
+  set(ENV{https_proxy} "${PROXY}")
+  set(ENV{ftp_proxy} "${PROXY}")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)

@@ -242,12 +242,12 @@ namespace AeonGames
                     mWindow->Render ( Transform{},
                                       qWorldEditorApp->GetGridMesh(),
                                       qWorldEditorApp->GetGridPipeline(),
-                                      &qWorldEditorApp->GetXGridMaterial(), 0, 2,
+                                      &qWorldEditorApp->GetXGridMaterial(), nullptr, 0, 2,
                                       qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
                     mWindow->Render ( Transform{},
                                       qWorldEditorApp->GetGridMesh(),
                                       qWorldEditorApp->GetGridPipeline(),
-                                      &qWorldEditorApp->GetYGridMaterial(), 2, 2,
+                                      &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
                                       qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
                     if ( mScene )
                     {
