@@ -29,6 +29,25 @@ limitations under the License.
 
 namespace AeonGames
 {
+    ModelController::ModelController() :
+        /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
+        mSkeletonBuffer{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
+    {
+        const float identity[16] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        for ( size_t i = 0; i < 256; ++i )
+        {
+            float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+            memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
+            mSkeletonBuffer->Unmap();
+        }
+    }
+
     ModelController::~ModelController() = default;
 
     const char* ModelController::GetTypeName() const
@@ -51,10 +70,21 @@ namespace AeonGames
         /** @todo Add code to update animations. */
         ( void ) aNode;
         ( void ) aDelta;
+#if 0
+        if ( auto model = mModel.Cast<Model>() )
+        {
+            void* skeleton_buffer = mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() );
+            mSkeletonBuffer->Unmap();
+        }
+#endif
     }
 
     std::vector<PropertyRef> ModelController::GetProperties() const
     {
+        /** @todo This is not going to work,
+         * we need to know when a property is being set or retrieved.
+         * in this particular case, we need to know when model is set so we can
+         * change the skeleton acordingly. */
         return std::vector<PropertyRef>
         {
             {

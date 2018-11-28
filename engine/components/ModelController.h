@@ -18,6 +18,9 @@ limitations under the License.
 #include <vector>
 #include <tuple>
 #include <array>
+#include "aeongames/AeonEngine.h"
+#include "aeongames/Renderer.h"
+#include "aeongames/RenderBuffer.h"
 #include "aeongames/Component.h"
 #include "aeongames/ResourceId.h"
 
@@ -27,8 +30,10 @@ namespace AeonGames
     class ModelController : public Component
     {
     public:
+        ModelController();
         /** @name Component Overrides */
         ///@{
+        ~ModelController() final;
         const char* GetTypeName() const final;
         uint32_t GetTypeId() const final;
         std::vector<uint32_t> GetDependencies() const final;
@@ -36,12 +41,14 @@ namespace AeonGames
         void Render ( const Node& aNode, const Window& aWindow ) const final;
         /**@copydoc Component::GetProperties */
         std::vector<PropertyRef> GetProperties() const final;
-        ~ModelController() final;
         ///@}
     private:
+        // Properties
         ResourceId mModel{};
         size_t mActiveAnimation{};
         double mAnimationDelta{};
+        // Private Data
+        std::unique_ptr<RenderBuffer> mSkeletonBuffer{};
     };
 }
 #endif

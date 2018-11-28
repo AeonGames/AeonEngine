@@ -40,6 +40,11 @@ namespace AeonGames
             mType{aType}, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
         ~ResourceId() = default;
 
+        operator bool() const
+        {
+            return GetResource ( *this ).GetRaw() != nullptr;
+        }
+
         uint32_t GetType() const
         {
             return mType;
