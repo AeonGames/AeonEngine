@@ -39,7 +39,7 @@ namespace AeonGames
         const OpenGLMaterial& GetDefaultMaterial() const final;
         ///@}
         ~OpenGLPipeline() final;
-        void Use ( const OpenGLMaterial& aMaterial ) const;
+        void Use ( const OpenGLMaterial& aMaterial, const OpenGLBuffer* aSkeletonBuffer = nullptr ) const;
         GLenum GetTopology() const;
     private:
         void Initialize();
