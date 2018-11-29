@@ -35,7 +35,7 @@ namespace AeonGames
     {
     public:
         VulkanRenderer ( bool aValidate = true );
-        ~VulkanRenderer() override;
+        ~VulkanRenderer() final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
@@ -49,13 +49,18 @@ namespace AeonGames
         const VkCommandPool& GetCommandPool() const;
         const VkSemaphore& GetSignalSemaphore() const;
         const VkDescriptorSetLayout& GetMatrixDescriptorSetLayout() const;
+        const VkDescriptorSet& GetMatrixDescriptorSet() const;
+        const VkDescriptorSet& GetSkeletonDescriptorSet() const;
+        const VkDescriptorSetLayout& GetSkeletonDescriptorSetLayout() const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
-        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
+        void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix ) const;
+        void SetViewMatrix ( const Matrix4x4& aViewMatrix ) const;
 
+        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
         std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
@@ -79,8 +84,12 @@ namespace AeonGames
         void FinalizeRenderPass();
         void FinalizeCommandPool();
         void FinalizeDebug();
-        void InitializeMatrixDescriptorSetLayout();
-        void FinalizeMatrixDescriptorSetLayout();
+        void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
+        void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
+        void InitializeDescriptorPool();
+        void FinalizeDescriptorPool();
+        void InitializeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet, const VkDescriptorSetLayout& aVkDescriptorSetLayout, const VkDescriptorBufferInfo& aVkDescriptorBufferInfo );
+        void FinalizeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet );
         bool mValidate{ true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
@@ -96,13 +105,20 @@ namespace AeonGames
         VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
+
         VkDescriptorSetLayout mVkMatrixDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mVkSkeletonDescriptorSetLayout{ VK_NULL_HANDLE };
+
+        VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorSet mVkMatrixDescriptorSet{ VK_NULL_HANDLE };
+        VkDescriptorSet mVkSkeletonDescriptorSet{ VK_NULL_HANDLE };
+
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};
-        std::vector<const char*> mInstanceLayerNames;
-        std::vector<const char*> mInstanceExtensionNames;
-        std::vector<const char*> mDeviceLayerNames;
-        std::vector<const char*> mDeviceExtensionNames;
+        std::vector<const char*> mInstanceLayerNames{};
+        std::vector<const char*> mInstanceExtensionNames{};
+        std::vector<const char*> mDeviceLayerNames{};
+        std::vector<const char*> mDeviceExtensionNames{};
         // Instance Functions
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
@@ -115,6 +131,8 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT {VK_NULL_HANDLE };
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT { VK_NULL_HANDLE };
 #endif
+        VulkanBuffer mMatrices;
+        VulkanBuffer mSkeleton;
     };
 }
 #endif

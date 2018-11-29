@@ -38,7 +38,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
+    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate ), mMatrices ( *this ), mSkeleton ( *this )
     {
         try
         {
@@ -60,11 +60,38 @@ namespace AeonGames
             InitializeFence();
             InitializeRenderPass();
             InitializeCommandPool();
-            InitializeMatrixDescriptorSetLayout();
+
+            mMatrices.Initialize ( sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                   std::array<float, 32>
+            {
+                {
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f,
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f
+                }
+            } .data() );
+
+            mSkeleton.Initialize ( sizeof ( float ) * 16 * 256, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+            InitializeDescriptorPool();
+            InitializeDescriptorSetLayout ( mVkMatrixDescriptorSetLayout );
+            InitializeDescriptorSetLayout ( mVkSkeletonDescriptorSetLayout );
+            InitializeDescriptorSet ( mVkMatrixDescriptorSet, mVkMatrixDescriptorSetLayout, VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32} );
+            InitializeDescriptorSet ( mVkSkeletonDescriptorSet, mVkSkeletonDescriptorSetLayout, VkDescriptorBufferInfo{mSkeleton.GetBuffer(), 0, sizeof ( float ) * 16 * 256} );
         }
         catch ( ... )
         {
-            FinalizeMatrixDescriptorSetLayout();
+            FinalizeDescriptorSet ( mVkMatrixDescriptorSet );
+            FinalizeDescriptorSet ( mVkSkeletonDescriptorSet );
+            FinalizeDescriptorSetLayout ( mVkMatrixDescriptorSetLayout );
+            FinalizeDescriptorSetLayout ( mVkSkeletonDescriptorSetLayout );
+            FinalizeDescriptorPool();
+            mMatrices.Finalize();
             FinalizeCommandPool();
             FinalizeRenderPass();
             FinalizeFence();
@@ -79,7 +106,12 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
-        FinalizeMatrixDescriptorSetLayout();
+        FinalizeDescriptorSet ( mVkMatrixDescriptorSet );
+        FinalizeDescriptorSet ( mVkSkeletonDescriptorSet );
+        FinalizeDescriptorSetLayout ( mVkMatrixDescriptorSetLayout );
+        FinalizeDescriptorSetLayout ( mVkSkeletonDescriptorSetLayout );
+        FinalizeDescriptorPool();
+        mMatrices.Finalize();
         FinalizeCommandPool();
         FinalizeRenderPass();
         FinalizeFence();
@@ -632,8 +664,24 @@ namespace AeonGames
         return mVkMatrixDescriptorSetLayout;
     }
 
-    void VulkanRenderer::InitializeMatrixDescriptorSetLayout()
+    const VkDescriptorSet& VulkanRenderer::GetMatrixDescriptorSet() const
     {
+        return mVkMatrixDescriptorSet;
+    }
+
+    const VkDescriptorSetLayout& VulkanRenderer::GetSkeletonDescriptorSetLayout() const
+    {
+        return mVkSkeletonDescriptorSetLayout;
+    }
+
+    const VkDescriptorSet& VulkanRenderer::GetSkeletonDescriptorSet() const
+    {
+        return mVkSkeletonDescriptorSet;
+    }
+
+    void VulkanRenderer::InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout )
+    {
+        // Matrices
         std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
         // Matrices binding
         descriptor_set_layout_bindings[0].binding = 0;
@@ -649,7 +697,7 @@ namespace AeonGames
         descriptor_set_layout_create_info.flags = 0;
         descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
         descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr, &mVkMatrixDescriptorSetLayout ) )
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr, &aVkDescriptorSetLayout ) )
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -657,12 +705,94 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::FinalizeMatrixDescriptorSetLayout()
+    void VulkanRenderer::FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout )
     {
-        if ( mVkMatrixDescriptorSetLayout != VK_NULL_HANDLE )
+        if ( aVkDescriptorSetLayout != VK_NULL_HANDLE )
         {
-            vkDestroyDescriptorSetLayout ( mVkDevice, mVkMatrixDescriptorSetLayout, nullptr );
-            mVkMatrixDescriptorSetLayout = VK_NULL_HANDLE;
+            vkDestroyDescriptorSetLayout ( mVkDevice, aVkDescriptorSetLayout, nullptr );
+            aVkDescriptorSetLayout = VK_NULL_HANDLE;
         }
+    }
+
+    void VulkanRenderer::InitializeDescriptorPool()
+    {
+        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{};
+        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_pool_sizes[0].descriptorCount = 1;
+        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptor_pool_create_info.pNext = nullptr;
+        descriptor_pool_create_info.flags = 0;
+        descriptor_pool_create_info.maxSets = 2;
+        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
+        descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+
+        if ( VkResult result = vkCreateDescriptorPool ( mVkDevice, &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
+        {
+            std::ostringstream stream;
+            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+    }
+
+    void VulkanRenderer::FinalizeDescriptorPool()
+    {
+        if ( mVkDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVkDevice, mVkDescriptorPool, nullptr );
+            mVkDescriptorPool = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanRenderer::InitializeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet, const VkDescriptorSetLayout& aVkDescriptorSetLayout, const VkDescriptorBufferInfo& aVkDescriptorBufferInfo )
+    {
+        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { aVkDescriptorSetLayout } };
+        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
+        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+
+        if ( VkResult result = vkAllocateDescriptorSets ( mVkDevice, &descriptor_set_allocate_info, &aVkDescriptorSet ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets{};
+        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_sets[0].pNext = nullptr;
+        write_descriptor_sets[0].dstSet = aVkDescriptorSet;
+        write_descriptor_sets[0].dstBinding = 0;
+        write_descriptor_sets[0].dstArrayElement = 0;
+        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_sets[0].descriptorCount = 1;
+        write_descriptor_sets[0].pBufferInfo = &aVkDescriptorBufferInfo;
+        write_descriptor_sets[0].pImageInfo = nullptr;
+        write_descriptor_sets[0].pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets (
+            mVkDevice,
+            static_cast<uint32_t> ( write_descriptor_sets.size() ),
+            write_descriptor_sets.data(), 0, nullptr );
+    }
+
+    void VulkanRenderer::FinalizeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet )
+    {
+        if ( aVkDescriptorSet != VK_NULL_HANDLE )
+        {
+            vkFreeDescriptorSets ( mVkDevice, mVkDescriptorPool, 1, &aVkDescriptorSet );
+            aVkDescriptorSet = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix ) const
+    {
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aProjectionMatrix.GetMatrix4x4() );
+    }
+
+    void VulkanRenderer::SetViewMatrix ( const Matrix4x4& aViewMatrix ) const
+    {
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aViewMatrix.GetMatrix4x4() );
     }
 }

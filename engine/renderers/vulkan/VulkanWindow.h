@@ -55,14 +55,9 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
-        void InitializeDescriptorPool();
-        void FinalizeDescriptorPool();
-        void InitializeDescriptorSet();
-        void FinalizeDescriptorSet();
         void* mWindowId{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;
-        VulkanBuffer mMatrices;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };
@@ -76,8 +71,6 @@ namespace AeonGames
         uint32_t mActiveImageIndex{ UINT32_MAX };
         VkViewport mVkViewport{0, 0, 0, 0, 0, 1};
         VkRect2D mVkScissor{};
-        VkDescriptorPool mVkMatricesDescriptorPool{ VK_NULL_HANDLE };
-        VkDescriptorSet mVkMatricesDescriptorSet{ VK_NULL_HANDLE };
     };
 }
 #endif

@@ -363,7 +363,7 @@ namespace AeonGames
 
     const std::vector<VkDescriptorSet>& VulkanMaterial::GetDescriptorSets() const
     {
-        return mVkUniformDescriptorSets;
+        return mVkDescriptorSets;
     }
 
     void VulkanMaterial::InitializeDescriptorSetLayout()
@@ -470,8 +470,8 @@ namespace AeonGames
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
         descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( mVkDescriptorSetLayouts.size() );
         descriptor_set_allocate_info.pSetLayouts = mVkDescriptorSetLayouts.data();
-        mVkUniformDescriptorSets.resize ( mVkDescriptorSetLayouts.size(), VK_NULL_HANDLE );
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, mVkUniformDescriptorSets.data() ) )
+        mVkDescriptorSets.resize ( mVkDescriptorSetLayouts.size(), VK_NULL_HANDLE );
+        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, mVkDescriptorSets.data() ) )
         {
             std::ostringstream stream;
             stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -495,7 +495,7 @@ namespace AeonGames
             auto& write_descriptor_set = write_descriptor_sets.back();
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mVkUniformDescriptorSets[descriptor_set_index++];
+            write_descriptor_set.dstSet = mVkDescriptorSets[descriptor_set_index++];
             write_descriptor_set.dstBinding = 0;
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -511,7 +511,7 @@ namespace AeonGames
             auto& write_descriptor_set = write_descriptor_sets.back();
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mVkUniformDescriptorSets[descriptor_set_index];
+            write_descriptor_set.dstSet = mVkDescriptorSets[descriptor_set_index];
             write_descriptor_set.dstBinding = i;
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -544,13 +544,13 @@ namespace AeonGames
 
     void VulkanMaterial::FinalizeDescriptorSet()
     {
-        if ( mVkUniformDescriptorSets.size() )
+        if ( mVkDescriptorSets.size() )
         {
             vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(),
                                    mVkDescriptorPool,
-                                   static_cast<uint32_t> ( mVkUniformDescriptorSets.size() ),
-                                   mVkUniformDescriptorSets.data() );
-            mVkUniformDescriptorSets.clear();
+                                   static_cast<uint32_t> ( mVkDescriptorSets.size() ),
+                                   mVkDescriptorSets.data() );
+            mVkDescriptorSets.clear();
         }
     }
 
