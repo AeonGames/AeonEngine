@@ -90,25 +90,22 @@ namespace AeonGames
     {
         std::ostringstream stream;
 
-        stream << "[ ";
-
         if ( aFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT )
         {
-            stream << "INFO ";
+            stream << "[ INFO ]";
         }
         if ( aFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT )
         {
-            stream << "WARNING ";
+            stream << "[ WARNING ]";
         }
         if ( aFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
         {
-            stream << "PERFORMANCE ";
+            stream << "[ PERFORMANCE ]";
         }
         if ( aFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
         {
-            stream << "ERROR ";
+            stream << "[ ERROR ]";
 #if _WIN32
-            stream << "] ";
             stream << aLayerPrefix << ": " << aMsg << std::endl;
             std::cout << stream.str();
             MessageBox ( nullptr, aMsg, aLayerPrefix, MB_ICONERROR | MB_OK );
@@ -117,9 +114,8 @@ namespace AeonGames
         }
         if ( aFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
         {
-            stream << "DEBUG ";
+            stream << "[ DEBUG ]";
         }
-        stream << "] ";
         stream << aLayerPrefix << ": " << aMsg << std::endl;
 
         std::cout << stream.str();

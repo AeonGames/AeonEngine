@@ -491,6 +491,17 @@ namespace AeonGames
         memcpy ( descriptor_sets.data() + 2, material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
 
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
+
+        if ( aSkeleton )
+        {
+            ///@todo Bind a set rather than copy the whole buffer
+            // Copy local skeleton buffer to skeleton buffer.
+            VkBufferCopy copy_region{};
+            copy_region.size = aSkeleton->GetSize();
+            copy_region.srcOffset = copy_region.dstOffset = 0;
+            vkCmdCopyBuffer ( mVulkanRenderer.GetCommandBuffer(), reinterpret_cast<const VulkanBuffer*> ( aSkeleton )->GetBuffer(), mVulkanRenderer.GetSkeletonBuffer(), 1, &copy_region );
+        }
+
         Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
                              reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
@@ -501,7 +512,7 @@ namespace AeonGames
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
                                   0,
-                                  static_cast<uint32_t> ( material_descriptor_sets.size() + 1 ),
+                                  static_cast<uint32_t> ( material_descriptor_sets.size() + 2 ),
                                   descriptor_sets.data(), 0, nullptr );
 
         {
