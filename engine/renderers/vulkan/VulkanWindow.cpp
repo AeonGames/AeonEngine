@@ -37,21 +37,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( void* aWindowId, const VulkanRenderer&  aVulkanRenderer ) :
-        mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer ),
-        mMatrices ( mVulkanRenderer, sizeof ( float ) * 32, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                    std::array<float, 32>
-    {
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f,
-                  1.0f, 0.0f, 0.0f, 0.0f,
-                  0.0f, 1.0f, 0.0f, 0.0f,
-                  0.0f, 0.0f, 1.0f, 0.0f,
-                  0.0f, 0.0f, 0.0f, 1.0f
-        }
-    } .data() )
+        mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer )
     {
         try
         {
@@ -330,8 +316,6 @@ namespace AeonGames
         InitializeImageViews();
         InitializeDepthStencil();
         InitializeFrameBuffers();
-        InitializeDescriptorPool();
-        InitializeDescriptorSet();
     }
 
     void VulkanWindow::Finalize()
@@ -344,8 +328,6 @@ namespace AeonGames
         {
             std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
-        FinalizeDescriptorSet();
-        FinalizeDescriptorPool();
         FinalizeFrameBuffers();
         FinalizeDepthStencil();
         FinalizeImageViews();
@@ -397,8 +379,8 @@ namespace AeonGames
          *  but I do not want to introduce a dirty matrix flag.
          *  Will probably just make the set projection and transform to virtual. */
         Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+        mVulkanRenderer.SetProjectionMatrix ( mProjectionMatrix );
+        mVulkanRenderer.SetViewMatrix ( view_matrix );
 
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
@@ -504,10 +486,9 @@ namespace AeonGames
     {
         const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( ( aMaterial ) ? *aMaterial : aPipeline.GetDefaultMaterial() );
         const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
-        assert ( material_descriptor_sets.size() < 3 );
-        // Up to 3 VkDescriptorSets?
-        std::array<VkDescriptorSet, 3> descriptor_sets { { mVkMatricesDescriptorSet }};
-        memcpy ( descriptor_sets.data() + 1, material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
+        assert ( material_descriptor_sets.size() < 4 );
+        std::array<VkDescriptorSet, 4> descriptor_sets { { mVulkanRenderer.GetMatrixDescriptorSet(), mVulkanRenderer.GetSkeletonDescriptorSet() }};
+        memcpy ( descriptor_sets.data() + 2, material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
 
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
         Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
@@ -612,79 +593,5 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-    }
-
-    void VulkanWindow::InitializeDescriptorPool()
-    {
-        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{};
-        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = 1;
-        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
-        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptor_pool_create_info.pNext = nullptr;
-        descriptor_pool_create_info.flags = 0;
-        descriptor_pool_create_info.maxSets = 1;
-        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
-        descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
-        if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkMatricesDescriptorPool ) )
-        {
-            std::ostringstream stream;
-            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-    }
-
-    void VulkanWindow::FinalizeDescriptorPool()
-    {
-        if ( mVkMatricesDescriptorPool != VK_NULL_HANDLE )
-        {
-            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkMatricesDescriptorPool, nullptr );
-            mVkMatricesDescriptorPool = VK_NULL_HANDLE;
-        }
-    }
-
-    void VulkanWindow::InitializeDescriptorSet()
-    {
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { mVulkanRenderer.GetMatrixDescriptorSetLayout() } };
-        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptor_set_allocate_info.descriptorPool = mVkMatricesDescriptorPool;
-        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
-        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
-
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mVkMatricesDescriptorSet ) )
-        {
-            std::ostringstream stream;
-            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
-        {
-            {
-                VkDescriptorBufferInfo{mMatrices.GetBuffer(), 0, sizeof ( float ) * 32}
-            }
-        };
-
-        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets{};
-        // Matrices
-        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_sets[0].pNext = nullptr;
-        write_descriptor_sets[0].dstSet = mVkMatricesDescriptorSet;
-        write_descriptor_sets[0].dstBinding = 0;
-        write_descriptor_sets[0].dstArrayElement = 0;
-        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_sets[0].descriptorCount = 1;
-        write_descriptor_sets[0].pBufferInfo = &descriptor_buffer_infos[0];
-        write_descriptor_sets[0].pImageInfo = nullptr;
-        write_descriptor_sets[0].pTexelBufferView = nullptr;
-        vkUpdateDescriptorSets (
-            mVulkanRenderer.GetDevice(),
-            static_cast<uint32_t> ( write_descriptor_sets.size() ),
-            write_descriptor_sets.data(), 0, nullptr );
-    }
-
-    void VulkanWindow::FinalizeDescriptorSet()
-    {
     }
 }

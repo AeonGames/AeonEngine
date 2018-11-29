@@ -111,7 +111,7 @@ namespace AeonGames
         const VulkanRenderer& mVulkanRenderer;
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         std::vector<VkDescriptorSetLayout> mVkDescriptorSetLayouts{};
-        std::vector<VkDescriptorSet> mVkUniformDescriptorSets{};
+        std::vector<VkDescriptorSet> mVkDescriptorSets{};
         VulkanBuffer mUniformBuffer;
         std::vector<UniformVariable> mVariables{};
         std::vector<std::tuple<std::string, ResourceId>> mSamplers{};

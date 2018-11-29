@@ -208,8 +208,15 @@ namespace AeonGames
             "mat4 ViewMatrix;\n"
             "};\n"
         );
-
         vertex_shader.append ( transforms );
+
+        // Skeleton
+        std::string skeleton (
+            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+            "mat4 skeleton[256];\n"
+            "};\n"
+        );
+        vertex_shader.append ( skeleton );
 
         if ( aPipelineBuffer.default_material().property().size() )
         {
@@ -242,35 +249,23 @@ namespace AeonGames
                     throw std::runtime_error ( "Unknown Type." );
                 }
             }
-
             properties.append ( "};\n" );
-
-            std::string samplers ( "//----SAMPLERS-START----\n" );
-            {
-                uint32_t sampler_binding = 0;
-                for ( auto& i : aPipelineBuffer.default_material().sampler() )
-                {
-                    samplers += "layout(set = " + std::to_string ( set_count ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
-                    ++sampler_binding;
-                }
-                set_count += 1;
-            }
-            samplers.append ( "//----SAMPLERS-END----\n" );
-
             vertex_shader.append ( properties );
-            vertex_shader.append ( samplers );
         }
 
-        // Skeleton needs rework
-        if ( attributes & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        std::string samplers ( "//----SAMPLERS-START----\n" );
         {
-            std::string skeleton (
-                "layout(set = 2, binding = 2, std140) uniform Skeleton{\n"
-                "mat4 skeleton[256];\n"
-                "};\n"
-            );
-            vertex_shader.append ( skeleton );
+            uint32_t sampler_binding = 0;
+            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            {
+                samplers += "layout(set = " + std::to_string ( set_count ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                ++sampler_binding;
+            }
+            set_count += 1;
         }
+        samplers.append ( "//----SAMPLERS-END----\n" );
+
+        vertex_shader.append ( samplers );
 
         switch ( aPipelineBuffer.vertex_shader().source_case() )
         {
@@ -296,8 +291,15 @@ namespace AeonGames
             "mat4 ViewMatrix;\n"
             "};\n"
         );
-
         fragment_shader.append ( transforms );
+
+        // Skeleton
+        std::string skeleton (
+            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+            "mat4 skeleton[256];\n"
+            "};\n"
+        );
+        fragment_shader.append ( skeleton );
 
         if ( aPipelineBuffer.default_material().property().size() )
         {
@@ -609,13 +611,17 @@ namespace AeonGames
         push_constant_ranges[0].offset = 0;
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 
-        std::array<VkDescriptorSetLayout, 3> descriptor_set_layouts;
+        std::array<VkDescriptorSetLayout, 4> descriptor_set_layouts;
 
         uint32_t descriptor_set_layout_count = 0;
 
         if ( mVulkanRenderer.GetMatrixDescriptorSetLayout() != VK_NULL_HANDLE )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetMatrixDescriptorSetLayout();
+        }
+        if ( mVulkanRenderer.GetSkeletonDescriptorSetLayout() != VK_NULL_HANDLE )
+        {
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSkeletonDescriptorSetLayout();
         }
         for ( auto& i : mDefaultMaterial.GetDescriptorSetLayouts() )
         {
