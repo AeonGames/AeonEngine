@@ -29,7 +29,7 @@ namespace AeonGames
         /// Copy contsructor.
         VulkanBuffer ( const VulkanBuffer& aBuffer );
         /// No move allowed
-        VulkanBuffer ( VulkanBuffer&& );
+        VulkanBuffer ( VulkanBuffer&& ) = delete;
         /// Assignment operator due to rule of zero/three/five.
         VulkanBuffer& operator= ( const VulkanBuffer& aBuffer );
         /// No move assignment allowed

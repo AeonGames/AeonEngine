@@ -86,12 +86,13 @@ namespace AeonGames
         }
         catch ( ... )
         {
+            mSkeleton.Finalize();
+            mMatrices.Finalize();
             FinalizeDescriptorSet ( mVkMatrixDescriptorSet );
             FinalizeDescriptorSet ( mVkSkeletonDescriptorSet );
             FinalizeDescriptorSetLayout ( mVkMatrixDescriptorSetLayout );
             FinalizeDescriptorSetLayout ( mVkSkeletonDescriptorSetLayout );
             FinalizeDescriptorPool();
-            mMatrices.Finalize();
             FinalizeCommandPool();
             FinalizeRenderPass();
             FinalizeFence();
@@ -105,13 +106,14 @@ namespace AeonGames
 
     VulkanRenderer::~VulkanRenderer()
     {
+        mSkeleton.Finalize();
+        mMatrices.Finalize();
         vkQueueWaitIdle ( mVkQueue );
         FinalizeDescriptorSet ( mVkMatrixDescriptorSet );
         FinalizeDescriptorSet ( mVkSkeletonDescriptorSet );
         FinalizeDescriptorSetLayout ( mVkMatrixDescriptorSetLayout );
         FinalizeDescriptorSetLayout ( mVkSkeletonDescriptorSetLayout );
         FinalizeDescriptorPool();
-        mMatrices.Finalize();
         FinalizeCommandPool();
         FinalizeRenderPass();
         FinalizeFence();
@@ -184,6 +186,11 @@ namespace AeonGames
     uint32_t VulkanRenderer::GetQueueFamilyIndex() const
     {
         return mQueueFamilyIndex;
+    }
+
+    const VkBuffer& VulkanRenderer::GetSkeletonBuffer() const
+    {
+        return mSkeleton.GetBuffer();
     }
 
     uint32_t VulkanRenderer::GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const

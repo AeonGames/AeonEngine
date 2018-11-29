@@ -59,6 +59,7 @@ namespace AeonGames
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
         void SetProjectionMatrix ( const Matrix4x4& aProjectionMatrix ) const;
         void SetViewMatrix ( const Matrix4x4& aViewMatrix ) const;
+        const VkBuffer& GetSkeletonBuffer() const;
 
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
