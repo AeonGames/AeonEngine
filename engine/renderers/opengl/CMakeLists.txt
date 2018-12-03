@@ -84,6 +84,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLFunctions.h
     OpenGLPipeline.h
     OpenGLBuffer.h
+    OpenGLUniformBuffer.h
     OpenGLMaterial.h
     OpenGLImage.h
     OpenGLSkeleton.h
@@ -99,6 +100,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
     OpenGLWindow.cpp
     OpenGLBuffer.cpp
+    OpenGLUniformBuffer.cpp
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
     OpenGLImage.cpp

@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_RENDERBUFFER_H
-#define AEONGAMES_RENDERBUFFER_H
+#ifndef AEONGAMES_UNIFORMBUFFER_H
+#define AEONGAMES_UNIFORMBUFFER_H
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
-    class RenderBuffer
+    class UniformBuffer
     {
     public:
-        DLL virtual ~RenderBuffer() = 0;
+        DLL virtual ~UniformBuffer() = 0;
         virtual void* Map ( size_t aOffset, size_t aSize ) const = 0;
         virtual void Unmap() const = 0;
         virtual size_t GetSize() const = 0;

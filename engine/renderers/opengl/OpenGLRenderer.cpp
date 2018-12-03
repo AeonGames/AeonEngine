@@ -20,6 +20,7 @@ limitations under the License.
 #include "OpenGLMaterial.h"
 #include "OpenGLImage.h"
 #include "OpenGLBuffer.h"
+#include "OpenGLUniformBuffer.h"
 
 namespace AeonGames
 {
@@ -66,9 +67,9 @@ namespace AeonGames
         return std::make_unique<OpenGLImage> ( aPath );
     }
 
-    std::unique_ptr<RenderBuffer> OpenGLRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
+    std::unique_ptr<UniformBuffer> OpenGLRenderer::CreateUniformBuffer ( size_t aSize, const void* aData ) const
     {
-        return std::make_unique<OpenGLBuffer> ( static_cast<GLsizei> ( aSize ), GL_DYNAMIC_DRAW );
+        return std::make_unique<OpenGLUniformBuffer> ( static_cast<GLsizei> ( aSize ) );
     }
 
     void* OpenGLRenderer::GetOpenGLContext() const
