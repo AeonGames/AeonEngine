@@ -17,19 +17,18 @@ limitations under the License.
 #define AEONGAMES_OPENGLBUFFER_H
 #include <cstddef>
 #include "OpenGLFunctions.h"
-#include "aeongames/RenderBuffer.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLBuffer : public RenderBuffer
+    class OpenGLBuffer
     {
     public:
         OpenGLBuffer ();
         /// Copy contsructor.
         OpenGLBuffer ( const OpenGLBuffer& aBuffer );
         /// No move allowed
-        OpenGLBuffer ( OpenGLBuffer&& );
+        OpenGLBuffer ( OpenGLBuffer&& ) = delete;
         /// Assignment operator due to rule of zero/three/five.
         OpenGLBuffer& operator= ( const OpenGLBuffer& aBuffer );
         /// No move assignment allowed
@@ -43,12 +42,9 @@ namespace AeonGames
         void* Map ( const GLbitfield aAccess ) const;
         void* MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const;
         GLuint GetBufferId() const;
-        /**@ name Overriden Functions */
-        ///@{
-        void* Map ( const size_t aOffset, size_t aSize ) const final;
-        void Unmap() const final;
-        size_t GetSize() const final;
-        ///@}
+        void* Map ( const size_t aOffset, size_t aSize ) const;
+        void Unmap() const;
+        size_t GetSize() const;
     private:
         void Initialize ( const void *aData );
         GLsizei mSize{};

@@ -16,12 +16,11 @@ limitations under the License.
 #ifndef AEONGAMES_VULKANBUFFER_H
 #define AEONGAMES_VULKANBUFFER_H
 #include <vulkan/vulkan.h>
-#include "aeongames/RenderBuffer.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanBuffer : public RenderBuffer
+    class VulkanBuffer
     {
     public:
         VulkanBuffer ( const VulkanRenderer& aVulkanRenderer );
@@ -34,18 +33,14 @@ namespace AeonGames
         VulkanBuffer& operator= ( const VulkanBuffer& aBuffer );
         /// No move assignment allowed
         VulkanBuffer& operator = ( VulkanBuffer&& ) = delete;
-
-        ~VulkanBuffer() final;
+        ~VulkanBuffer();
         void Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
         void Finalize();
         const VkBuffer& GetBuffer() const;
         void WriteMemory ( const VkDeviceSize aOffset, const  VkDeviceSize aSize, const void *aData = nullptr ) const;
-        /**@ name Overriden Functions */
-        ///@{
-        void* Map ( size_t aOffset, size_t aSize ) const final;
-        void Unmap() const final;
-        size_t GetSize() const final;
-        ///@}
+        void* Map ( size_t aOffset, size_t aSize ) const;
+        void Unmap() const;
+        size_t GetSize() const;
     private:
         void Initialize ( const void *aData );
         void CopyBuffer ( const VkBuffer& aBuffer );

@@ -31,7 +31,7 @@ namespace AeonGames
 {
     ModelController::ModelController() :
         /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
-        mSkeletonBuffer{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
+        mSkeletonBuffer{GetRenderer()->CreateUniformBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
         const float identity[16] =
         {

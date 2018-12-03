@@ -28,8 +28,8 @@ set(VULKAN_RENDERER_HEADERS
     VulkanPipeline.h
     VulkanMaterial.h
     VulkanImage.h
-    VulkanSkeleton.h
     VulkanBuffer.h
+    VulkanUniformBuffer.h
     VulkanStackBuffer.h
     VulkanPoolBuffer.h)
 
@@ -41,8 +41,8 @@ set(VULKAN_RENDERER_SOURCES
     VulkanPipeline.cpp
     VulkanMaterial.cpp
     VulkanImage.cpp
-    VulkanSkeleton.cpp
     VulkanBuffer.cpp
+    VulkanUniformBuffer.cpp
     VulkanStackBuffer.cpp
     VulkanPoolBuffer.cpp
     Plugin.cpp)

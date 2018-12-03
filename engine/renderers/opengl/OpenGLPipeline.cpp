@@ -34,6 +34,7 @@ limitations under the License.
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLImage.h"
+#include "OpenGLUniformBuffer.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
@@ -514,7 +515,7 @@ namespace AeonGames
         mDefaultMaterial.Unload();
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial, const OpenGLBuffer* aSkeletonBuffer ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial, const OpenGLUniformBuffer* aSkeletonBuffer ) const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;

@@ -19,6 +19,7 @@ limitations under the License.
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
 #include "VulkanMesh.h"
+#include "VulkanUniformBuffer.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -478,7 +479,7 @@ namespace AeonGames
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const RenderBuffer* aSkeleton,
+                                const UniformBuffer* aSkeleton,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
@@ -499,7 +500,7 @@ namespace AeonGames
             VkBufferCopy copy_region{};
             copy_region.size = aSkeleton->GetSize();
             copy_region.srcOffset = copy_region.dstOffset = 0;
-            vkCmdCopyBuffer ( mVulkanRenderer.GetCommandBuffer(), reinterpret_cast<const VulkanBuffer*> ( aSkeleton )->GetBuffer(), mVulkanRenderer.GetSkeletonBuffer(), 1, &copy_region );
+            vkCmdCopyBuffer ( mVulkanRenderer.GetCommandBuffer(), reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton )->GetBuffer(), mVulkanRenderer.GetSkeletonBuffer(), 1, &copy_region );
         }
 
         Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();

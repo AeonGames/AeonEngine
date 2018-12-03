@@ -137,7 +137,7 @@ namespace AeonGames
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const RenderBuffer* aSkeleton,
+                                const UniformBuffer* aSkeleton,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
@@ -148,7 +148,7 @@ namespace AeonGames
         opengl_pipeline.Use (
             reinterpret_cast<const OpenGLMaterial&> ( ( aMaterial ) ?
                     *aMaterial : opengl_pipeline.GetDefaultMaterial() ),
-            reinterpret_cast<const OpenGLBuffer*> ( aSkeleton ) );
+            reinterpret_cast<const OpenGLUniformBuffer*> ( aSkeleton ) );
         OPENGL_CHECK_ERROR_NO_THROW;
         Matrix4x4 model_matrix = aModelTransform.GetMatrix();
         glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, model_matrix.GetMatrix4x4() );

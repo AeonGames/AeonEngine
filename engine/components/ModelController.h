@@ -20,7 +20,7 @@ limitations under the License.
 #include <array>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
-#include "aeongames/RenderBuffer.h"
+#include "aeongames/UniformBuffer.h"
 #include "aeongames/Component.h"
 #include "aeongames/ResourceId.h"
 
@@ -48,7 +48,7 @@ namespace AeonGames
         size_t mActiveAnimation{};
         double mAnimationDelta{};
         // Private Data
-        std::unique_ptr<RenderBuffer> mSkeletonBuffer{};
+        std::unique_ptr<UniformBuffer> mSkeletonBuffer{};
     };
 }
 #endif

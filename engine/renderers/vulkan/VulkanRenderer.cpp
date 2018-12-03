@@ -34,6 +34,7 @@ limitations under the License.
 #include "VulkanMaterial.h"
 #include "VulkanImage.h"
 #include "VulkanBuffer.h"
+#include "VulkanUniformBuffer.h"
 #include "VulkanUtilities.h"
 
 namespace AeonGames
@@ -659,11 +660,9 @@ namespace AeonGames
         return std::make_unique<VulkanImage> ( *this, aPath );
     }
 
-    std::unique_ptr<RenderBuffer> VulkanRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
+    std::unique_ptr<UniformBuffer> VulkanRenderer::CreateUniformBuffer ( size_t aSize, const void* aData ) const
     {
-        return std::make_unique<VulkanBuffer> ( *this, aSize,
-                                                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, aData );
+        return std::make_unique<VulkanUniformBuffer> ( *this, aSize, aData );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetMatrixDescriptorSetLayout() const

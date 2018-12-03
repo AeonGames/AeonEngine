@@ -37,7 +37,7 @@ namespace AeonGames
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
                         const Material* aMaterial = nullptr,
-                        const RenderBuffer* aSkeleton = nullptr,
+                        const UniformBuffer* aSkeleton = nullptr,
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
