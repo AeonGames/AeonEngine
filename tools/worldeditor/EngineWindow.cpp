@@ -88,8 +88,8 @@ namespace AeonGames
 
     EngineWindow::~EngineWindow()
     {
-        mWindow.reset();
         stop();
+        mWindow.reset();
     }
 
     void EngineWindow::stop()
