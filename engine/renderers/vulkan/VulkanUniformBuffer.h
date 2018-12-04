@@ -22,26 +22,34 @@ namespace AeonGames
     class VulkanUniformBuffer : public UniformBuffer
     {
     public:
-        VulkanUniformBuffer ( const VulkanRenderer& aVulkanRenderer );
         VulkanUniformBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const void *aData = nullptr );
-        /// Copy contsructor.
-        VulkanUniformBuffer ( const VulkanUniformBuffer& aBuffer );
+        /// No Copy contsructor.
+        VulkanUniformBuffer ( const VulkanUniformBuffer& aBuffer ) = delete;
         /// No move allowed
         VulkanUniformBuffer ( VulkanUniformBuffer&& ) = delete;
-        /// Assignment operator due to rule of zero/three/five.
-        VulkanUniformBuffer& operator= ( const VulkanUniformBuffer& aBuffer );
+        /// No Assignment operator
+        VulkanUniformBuffer& operator= ( const VulkanUniformBuffer& aBuffer ) = delete;
         /// No move assignment allowed
         VulkanUniformBuffer& operator = ( VulkanUniformBuffer&& ) = delete;
         const VkBuffer& GetBuffer() const;
-
+        const VkDescriptorSet& GetDescriptorSet() const;
         /**@ name Overriden Functions */
         ///@{
+        ~VulkanUniformBuffer() final;
+        void WriteMemory ( size_t aOffset, size_t aSize, const void *aData = nullptr ) const final;
         void* Map ( size_t aOffset, size_t aSize ) const final;
         void Unmap() const final;
         size_t GetSize() const final;
         ///@}
     private:
+        void InitializeDescriptorPool();
+        void FinalizeDescriptorPool();
+        void InitializeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet, const VkDescriptorSetLayout& aVkDescriptorSetLayout, const VkDescriptorBufferInfo& aVkDescriptorBufferInfo );
+        void FinalizeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet );
+        const VulkanRenderer& mVulkanRenderer;
         VulkanBuffer mBuffer;
+        VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
     };
 }
 #endif

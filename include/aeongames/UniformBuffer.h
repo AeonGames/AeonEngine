@@ -23,6 +23,7 @@ namespace AeonGames
     {
     public:
         DLL virtual ~UniformBuffer() = 0;
+        virtual void WriteMemory ( size_t aOffset, size_t aSize, const void *aData = nullptr ) const = 0;
         virtual void* Map ( size_t aOffset, size_t aSize ) const = 0;
         virtual void Unmap() const = 0;
         virtual size_t GetSize() const = 0;
