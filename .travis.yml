@@ -12,7 +12,7 @@ before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - sudo apt-get remove postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 postgresql-9.5 postgresql-contrib-9.5 postgresql-9.6 postgresql-contrib-9.6 oracle-java8-installer
   - sudo apt-get autoremove
-  - sudo add-apt-repository --yes ppa:beineri/opt-qt571-trusty
+  - sudo add-apt-repository --yes ppa:beineri/opt-qt571-xenial
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo apt-get update
   - sudo apt-get upgrade --allow-unauthenticated
