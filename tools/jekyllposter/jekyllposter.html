@@ -43,7 +43,16 @@
         filename += ".markdown";
         var postfile = "---\nlayout: post\ntitle: \"" + title + "\"\ndate: " + longdate + "\ncategories: " + categories + "\ncomments: " + comments + "\n---\n\n" + content;
         var blob = new Blob([postfile], {type: "text/plain;charset=utf-8"}, true);
-        saveAs(blob, filename);
+        if (window.saveAs) {
+            window.saveAs(blob, filename);
+        } else {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.download = filename;
+            a.href = url;
+            a.textContent = "Download Post.";
+            a.click();        
+        }
     }
     </script>
   </head>
