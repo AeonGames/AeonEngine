@@ -38,7 +38,22 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( void* aWindowId, const VulkanRenderer&  aVulkanRenderer ) :
-        mWindowId ( aWindowId ), mVulkanRenderer ( aVulkanRenderer )
+        mWindowId { aWindowId }, mVulkanRenderer { aVulkanRenderer },
+        mMatrices{aVulkanRenderer,
+                  sizeof ( float ) * 32,
+                  std::array<float, 32>
+    {
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        }
+    } .data() }
     {
         try
         {
@@ -380,8 +395,8 @@ namespace AeonGames
          *  but I do not want to introduce a dirty matrix flag.
          *  Will probably just make the set projection and transform to virtual. */
         Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
-        mVulkanRenderer.SetProjectionMatrix ( mProjectionMatrix );
-        mVulkanRenderer.SetViewMatrix ( view_matrix );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
 
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
@@ -487,21 +502,20 @@ namespace AeonGames
     {
         const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( ( aMaterial ) ? *aMaterial : aPipeline.GetDefaultMaterial() );
         const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
-        assert ( material_descriptor_sets.size() < 4 );
-        std::array<VkDescriptorSet, 4> descriptor_sets { { mVulkanRenderer.GetMatrixDescriptorSet(), mVulkanRenderer.GetSkeletonDescriptorSet() }};
-        memcpy ( descriptor_sets.data() + 2, material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
+        const VulkanUniformBuffer* vk_skeleton = reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton );
+        assert ( material_descriptor_sets.size() < 3 );
+
+        uint32_t descriptor_set_count = 1;
+        std::array<VkDescriptorSet, 4> descriptor_sets { { mMatrices.GetDescriptorSet() }};
+        if ( vk_skeleton )
+        {
+            descriptor_sets[descriptor_set_count++] = vk_skeleton->GetDescriptorSet();
+        }
+
+        memcpy ( &descriptor_sets[descriptor_set_count], material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
+        descriptor_set_count += material_descriptor_sets.size();
 
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
-
-        if ( aSkeleton )
-        {
-            ///@todo Bind a set rather than copy the whole buffer
-            // Copy local skeleton buffer to skeleton buffer.
-            VkBufferCopy copy_region{};
-            copy_region.size = aSkeleton->GetSize();
-            copy_region.srcOffset = copy_region.dstOffset = 0;
-            vkCmdCopyBuffer ( mVulkanRenderer.GetCommandBuffer(), reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton )->GetBuffer(), mVulkanRenderer.GetSkeletonBuffer(), 1, &copy_region );
-        }
 
         Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
@@ -513,7 +527,7 @@ namespace AeonGames
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
                                   0,
-                                  static_cast<uint32_t> ( material_descriptor_sets.size() + 2 ),
+                                  descriptor_set_count,
                                   descriptor_sets.data(), 0, nullptr );
 
         {

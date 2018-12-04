@@ -210,14 +210,16 @@ namespace AeonGames
         );
         vertex_shader.append ( transforms );
 
-        // Skeleton
-        std::string skeleton (
-            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
-            "mat4 skeleton[256];\n"
-            "};\n"
-        );
-        vertex_shader.append ( skeleton );
-
+        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        {
+            // Skeleton
+            std::string skeleton (
+                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "mat4 skeleton[256];\n"
+                "};\n"
+            );
+            vertex_shader.append ( skeleton );
+        }
         if ( aPipelineBuffer.default_material().property().size() )
         {
             std::string properties (
@@ -293,14 +295,16 @@ namespace AeonGames
         );
         fragment_shader.append ( transforms );
 
-        // Skeleton
-        std::string skeleton (
-            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
-            "mat4 skeleton[256];\n"
-            "};\n"
-        );
-        fragment_shader.append ( skeleton );
-
+        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        {
+            // Skeleton
+            std::string skeleton (
+                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "mat4 skeleton[256];\n"
+                "};\n"
+            );
+            fragment_shader.append ( skeleton );
+        }
         if ( aPipelineBuffer.default_material().property().size() )
         {
             std::string properties (
@@ -615,13 +619,13 @@ namespace AeonGames
 
         uint32_t descriptor_set_layout_count = 0;
 
-        if ( mVulkanRenderer.GetMatrixDescriptorSetLayout() != VK_NULL_HANDLE )
+        // Matrix Descriptor Set Layout
+        descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+
+        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
         {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetMatrixDescriptorSetLayout();
-        }
-        if ( mVulkanRenderer.GetSkeletonDescriptorSetLayout() != VK_NULL_HANDLE )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSkeletonDescriptorSetLayout();
+            // Skeleton Descriptor Set Layout
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         }
         for ( auto& i : mDefaultMaterial.GetDescriptorSetLayouts() )
         {
@@ -692,30 +696,4 @@ namespace AeonGames
             }
         }
     }
-#if 0
-    void VulkanPipeline::InitializeSkeletonUniform()
-    {
-        if ( GetAttributes() & ( Pipeline::VertexWeightIndicesBit | Pipeline::VertexWeightsBit ) )
-        {
-            mSkeletonBuffer.Initialize ( 256 * 16 * sizeof ( float ), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            auto* joint_array = static_cast<float*> ( mSkeletonBuffer.Map ( 0, VK_WHOLE_SIZE ) );
-            const float identity[16] =
-            {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f
-            };
-            for ( size_t i = 0; i < 256; ++i )
-            {
-                memcpy ( ( joint_array + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
-            }
-            mSkeletonBuffer.Unmap();
-        }
-    }
-
-    void VulkanPipeline::FinalizeSkeletonUniform()
-    {
-    }
-#endif
 }

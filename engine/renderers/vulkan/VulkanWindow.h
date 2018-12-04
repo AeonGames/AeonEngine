@@ -20,7 +20,7 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/Window.h"
-#include "VulkanBuffer.h"
+#include "VulkanUniformBuffer.h"
 
 namespace AeonGames
 {
@@ -58,19 +58,20 @@ namespace AeonGames
         void* mWindowId{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;
+        VulkanUniformBuffer mMatrices;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };
-        ::std::vector<VkImage> mVkSwapchainImages{};
-        ::std::vector<VkImageView> mVkSwapchainImageViews{};
         VkImage mVkDepthStencilImage{ VK_NULL_HANDLE };
         VkDeviceMemory mVkDepthStencilImageMemory{ VK_NULL_HANDLE };
         VkImageView mVkDepthStencilImageView { VK_NULL_HANDLE};
         bool mHasStencil{ false };
-        ::std::vector<VkFramebuffer> mVkFramebuffers{};
         uint32_t mActiveImageIndex{ UINT32_MAX };
         VkViewport mVkViewport{0, 0, 0, 0, 0, 1};
         VkRect2D mVkScissor{};
+        ::std::vector<VkImage> mVkSwapchainImages{};
+        ::std::vector<VkImageView> mVkSwapchainImageViews{};
+        ::std::vector<VkFramebuffer> mVkFramebuffers{};
     };
 }
 #endif

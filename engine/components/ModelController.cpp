@@ -40,12 +40,12 @@ namespace AeonGames
             0.0f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
         };
+        float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
         for ( size_t i = 0; i < 256; ++i )
         {
-            float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
             memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
-            mSkeletonBuffer->Unmap();
         }
+        mSkeletonBuffer->Unmap();
     }
 
     ModelController::~ModelController() = default;

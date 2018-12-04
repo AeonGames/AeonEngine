@@ -51,4 +51,8 @@ namespace AeonGames
     {
         return mBuffer.GetSize();
     }
+    void OpenGLUniformBuffer::WriteMemory ( size_t aOffset, size_t aSize, const void *aData ) const
+    {
+        mBuffer.WriteMemory ( aOffset, aSize, aData );
+    }
 }

@@ -37,6 +37,7 @@ namespace AeonGames
 
         /**@ name Overriden Functions */
         ///@{
+        void WriteMemory ( size_t aOffset, size_t aSize, const void *aData = nullptr ) const final;
         void* Map ( size_t aOffset, size_t aSize ) const final;
         void Unmap() const final;
         size_t GetSize() const final;
