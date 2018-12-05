@@ -25,8 +25,6 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
-#include "aeongames/Model.h"
-#include "aeongames/ModelInstance.h"
 #include "aeongames/AABB.h"
 #include "Factory.h"
 #include "aeongames/CRC.h"
@@ -530,12 +528,14 @@ namespace AeonGames
 
     size_t Node::AddComponent ( Component& aComponent )
     {
+        aComponent.OnEnterNode ( *this );
         return mComponents.Insert ( {aComponent.GetTypeId(), aComponent.GetDependencies(), &aComponent} );
     }
 
     void Node::RemoveComponent ( Component& aComponent )
     {
         mComponents.Erase ( aComponent.GetTypeId() );
+        aComponent.OnExitNode ( *this );
     }
 
     Component* Node::StoreComponent ( std::unique_ptr<Component> aComponent )
@@ -603,5 +603,49 @@ namespace AeonGames
     Component* Node::GetComponentById ( uint32_t aId )
     {
         return const_cast<Component*> ( static_cast<const Node*> ( this )->GetComponentById ( aId ) );
+    }
+
+    NodeData* Node::AddData ( std::unique_ptr<NodeData> aNodeData )
+    {
+        auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [&aNodeData] ( const std::unique_ptr<NodeData>& aIteratorNodeData )
+        {
+            return aNodeData->GetTypeId() == aIteratorNodeData->GetTypeId();
+        } );
+        if ( i != mNodeData.end() )
+        {
+            std::cout << "Overwriting node data for " << aNodeData->GetTypeName() << std::endl;
+            i->swap ( aNodeData );
+            return i->get();
+        }
+        mNodeData.emplace_back ( std::move ( aNodeData ) );
+        return mNodeData.back().get();
+    }
+
+    NodeData* Node::GetData ( uint32_t aId ) const
+    {
+        auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [aId] ( const std::unique_ptr<NodeData>& aNodeData )
+        {
+            return aNodeData->GetTypeId() == aId;
+        } );
+        if ( i != mNodeData.end() )
+        {
+            return i->get();
+        }
+        return nullptr;
+    }
+
+    std::unique_ptr<NodeData> Node::RemoveData ( uint32_t aId )
+    {
+        std::unique_ptr<NodeData> result{};
+        auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [aId] ( const std::unique_ptr<NodeData>& aNodeData )
+        {
+            return aNodeData->GetTypeId() == aId;
+        } );
+        if ( i != mNodeData.end() )
+        {
+            result = std::move ( *i );
+            mNodeData.erase ( std::remove ( i, mNodeData.end(), *i ), mNodeData.end() );
+        }
+        return result;
     }
 }

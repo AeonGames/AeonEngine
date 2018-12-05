@@ -87,6 +87,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/NodeData.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
@@ -116,6 +117,7 @@ set(ENGINE_CORE_SOURCES
     core/CRC.cpp
     core/Scene.cpp
     core/Node.cpp
+    core/NodeData.cpp
     core/Component.cpp
     core/Package.cpp
     core/ResourceFactory.cpp

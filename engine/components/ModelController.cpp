@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
 #include "aeongames/CRC.h"
+#include "ModelData.h"
 
 namespace AeonGames
 {
@@ -60,6 +61,16 @@ namespace AeonGames
         return "ModelController"_crc32;
     }
 
+    void ModelController::OnEnterNode ( Node& aNode ) const
+    {
+        aNode.AddData ( std::make_unique<ModelData>() );
+    }
+
+    void ModelController::OnExitNode ( Node& aNode ) const
+    {
+        aNode.RemoveData ( ModelData::mTypeInfo.GetId() );
+    }
+
     std::vector<uint32_t> ModelController::GetDependencies() const
     {
         return std::vector<uint32_t> {};
@@ -72,7 +83,6 @@ namespace AeonGames
         ( void ) aDelta;
         if ( auto model = mModel.Cast<Model>() )
         {
-
             if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
             {
                 float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
@@ -85,7 +95,6 @@ namespace AeonGames
                 }
                 mSkeletonBuffer->Unmap();
             }
-
         }
     }
 

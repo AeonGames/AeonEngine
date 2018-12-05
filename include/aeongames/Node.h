@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/CRC.h"
 #include "aeongames/Component.h"
+#include "aeongames/NodeData.h"
 #include "aeongames/DependencyMap.h"
 
 namespace AeonGames
@@ -137,6 +138,9 @@ namespace AeonGames
         DLL void RemoveComponent ( Component& aComponent );
         DLL Component* StoreComponent ( std::unique_ptr<Component> aComponent );
         DLL std::unique_ptr<Component> DisposeComponent ( const Component* aComponent );
+        DLL NodeData* AddData ( std::unique_ptr<NodeData> aNodeData );
+        DLL NodeData* GetData ( uint32_t aId ) const;
+        DLL std::unique_ptr<NodeData> RemoveData ( uint32_t aId );
         DLL const DependencyMap<uint32_t, Component*>& GetComponents() const;
         DLL const Component* GetComponentByIndex ( size_t aIndex ) const;
         DLL Component* GetComponentByIndex ( size_t aIndex );
@@ -166,6 +170,10 @@ namespace AeonGames
          * components in the node, nor does a pointer existing
          * here means it exists as part of the component dependency map. */
         std::vector<std::unique_ptr<Component>> mComponentStorage{};
+        /**
+         * Component managed Node Data
+        */
+        std::vector<std::unique_ptr<NodeData>> mNodeData{};
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<Node*>::size_type mIterator{ 0 };

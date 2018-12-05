@@ -210,6 +210,13 @@ constexpr uint32_t crc32r ( const char* message, const std::size_t size )
     return crc32impl ( message, size, 0xFFFFFFFF );
 }
 
+/** Recursive constexpr crc32 calculation, no size required. */
+template< size_t N >
+constexpr uint32_t crc32r ( char const ( &message ) [N] )
+{
+    return crc32impl ( message, N - 1, 0xFFFFFFFF );
+}
+
 constexpr const uint32_t operator "" _crc32 ( const char* message, const std::size_t size )
 {
     return crc32impl ( message, size, 0xFFFFFFFF );
@@ -217,6 +224,7 @@ constexpr const uint32_t operator "" _crc32 ( const char* message, const std::si
 
 static_assert ( "AeonGames"_crc32 == 0x2B0C3B, "CRC32 Operator Failure." );
 static_assert ( crc32r ( "AeonGames", 9 ) == 0x2B0C3B, "CRC32 Failure." );
+static_assert ( crc32r ( "AeonGames" ) == 0x2B0C3B, "CRC32 Failure." );
 
 #ifdef __cplusplus
 extern "C"
