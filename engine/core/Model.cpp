@@ -166,9 +166,7 @@ namespace AeonGames
 
     const Skeleton* Model::GetSkeleton() const
     {
-        /** @todo implement resource id to pointer */
-        assert ( 0 && "Implement resource id to pointer." );
-        return nullptr;
+        return mSkeleton.Cast<Skeleton>();
     }
 
     const std::vector<ResourceId>& Model::GetAnimations() const

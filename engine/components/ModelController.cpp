@@ -70,13 +70,23 @@ namespace AeonGames
         /** @todo Add code to update animations. */
         ( void ) aNode;
         ( void ) aDelta;
-#if 0
         if ( auto model = mModel.Cast<Model>() )
         {
-            void* skeleton_buffer = mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() );
-            mSkeletonBuffer->Unmap();
+
+            if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
+            {
+                float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+                auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
+                for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
+                {
+                    Matrix4x4 matrix{ ( animation->GetTransform ( i, mAnimationDelta ) *
+                                        model->GetSkeleton()->GetJoints() [i].GetInvertedTransform() ) };
+                    memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                }
+                mSkeletonBuffer->Unmap();
+            }
+
         }
-#endif
     }
 
     std::vector<PropertyRef> ModelController::GetProperties() const
