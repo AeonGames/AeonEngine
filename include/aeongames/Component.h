@@ -42,6 +42,8 @@ namespace AeonGames
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
+        virtual void OnEnterNode ( Node& aNode ) const = 0;
+        virtual void OnExitNode ( Node& aNode ) const = 0;
         /**@name Property Interface */
         /*@{*/
         /** Retrieve the list of properties of the component.*/
