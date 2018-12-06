@@ -513,7 +513,7 @@ namespace AeonGames
         }
 
         memcpy ( &descriptor_sets[descriptor_set_count], material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
-        descriptor_set_count += material_descriptor_sets.size();
+        descriptor_set_count += static_cast<uint32_t> ( material_descriptor_sets.size() );
 
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
 

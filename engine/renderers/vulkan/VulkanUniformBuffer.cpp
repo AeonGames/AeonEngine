@@ -64,16 +64,16 @@ namespace AeonGames
 
     void VulkanUniformBuffer::InitializeDescriptorPool()
     {
-        std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{};
-        descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_pool_sizes[0].descriptorCount = 1;
+        VkDescriptorPoolSize descriptor_pool_size{};
+        descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_pool_size.descriptorCount = 1;
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptor_pool_create_info.pNext = nullptr;
         descriptor_pool_create_info.flags = 0;
         descriptor_pool_create_info.maxSets = 1;
-        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( descriptor_pool_sizes.size() );
-        descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+        descriptor_pool_create_info.poolSizeCount = 1;
+        descriptor_pool_create_info.pPoolSizes = &descriptor_pool_size;
 
         if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
         {
@@ -94,12 +94,11 @@ namespace AeonGames
 
     void VulkanUniformBuffer::InitializeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet, const VkDescriptorSetLayout& aVkDescriptorSetLayout, const VkDescriptorBufferInfo& aVkDescriptorBufferInfo )
     {
-        std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{ { aVkDescriptorSetLayout } };
         VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
         descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( descriptor_set_layouts.size() );
-        descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+        descriptor_set_allocate_info.descriptorSetCount = 1;
+        descriptor_set_allocate_info.pSetLayouts = &aVkDescriptorSetLayout;
 
         if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &aVkDescriptorSet ) )
         {
@@ -108,21 +107,21 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        std::array<VkWriteDescriptorSet, 1> write_descriptor_sets{};
-        write_descriptor_sets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_sets[0].pNext = nullptr;
-        write_descriptor_sets[0].dstSet = aVkDescriptorSet;
-        write_descriptor_sets[0].dstBinding = 0;
-        write_descriptor_sets[0].dstArrayElement = 0;
-        write_descriptor_sets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_sets[0].descriptorCount = 1;
-        write_descriptor_sets[0].pBufferInfo = &aVkDescriptorBufferInfo;
-        write_descriptor_sets[0].pImageInfo = nullptr;
-        write_descriptor_sets[0].pTexelBufferView = nullptr;
+        VkWriteDescriptorSet write_descriptor_set{};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.pNext = nullptr;
+        write_descriptor_set.dstSet = aVkDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = 1;
+        write_descriptor_set.pBufferInfo = &aVkDescriptorBufferInfo;
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
         vkUpdateDescriptorSets (
             mVulkanRenderer.GetDevice(),
-            static_cast<uint32_t> ( write_descriptor_sets.size() ),
-            write_descriptor_sets.data(), 0, nullptr );
+            1,
+            &write_descriptor_set, 0, nullptr );
     }
 
     void VulkanUniformBuffer::FinalizeDescriptorSet ( VkDescriptorSet& aVkDescriptorSet )
