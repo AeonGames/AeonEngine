@@ -25,7 +25,7 @@ limitations under the License.
 #include "aeongames/Utilities.h"
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
-#include "aeongames/CRC.h"
+#include "aeongames/StringId.h"
 #include "ModelData.h"
 
 namespace AeonGames
@@ -68,7 +68,7 @@ namespace AeonGames
 
     void ModelController::OnExitNode ( Node& aNode ) const
     {
-        aNode.RemoveData ( ModelData::mTypeInfo.GetId() );
+        aNode.RemoveData ( ModelData::Id().GetId() );
     }
 
     std::vector<uint32_t> ModelController::GetDependencies() const
