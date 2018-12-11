@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_MODELDATA_H
 #include "aeongames/NodeData.h"
 #include "aeongames/ResourceId.h"
+#include "aeongames/UniformBuffer.h"
 
 namespace AeonGames
 {
@@ -24,13 +25,25 @@ namespace AeonGames
     {
     public:
         ~ModelData() final;
-        const uint32_t GetTypeId() const final;
-        const char* GetTypeName() const final;
-        static const NodeData::TypeInfo mTypeInfo;
+        const StringId& GetId() const final;
+        /** @name Properties */
+        ///@{
+        void SetModel ( const ResourceId& aModel ) noexcept;
+        const ResourceId& GetModel() const noexcept;
+        void SetActiveAnimation ( size_t aActiveAnimation ) noexcept;
+        size_t GetActiveAnimation() noexcept;
+        void SetAnimationDelta ( double aAnimationDelta ) noexcept;
+        double GetAnimationDelta() noexcept;
+        ///@}
+        ///@todo See if we can do without this static function.
+        static const StringId& Id();
     private:
+        // Properties
         ResourceId mModel{};
         size_t mActiveAnimation{};
         double mAnimationDelta{};
+        // Private Data
+        std::unique_ptr<UniformBuffer> mSkeletonBuffer{};
     };
 }
 #endif

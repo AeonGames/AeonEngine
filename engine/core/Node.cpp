@@ -27,7 +27,7 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 #include "aeongames/AABB.h"
 #include "Factory.h"
-#include "aeongames/CRC.h"
+#include "aeongames/StringId.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/Window.h"
 #ifdef _MSC_VER
@@ -609,11 +609,11 @@ namespace AeonGames
     {
         auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [&aNodeData] ( const std::unique_ptr<NodeData>& aIteratorNodeData )
         {
-            return aNodeData->GetTypeId() == aIteratorNodeData->GetTypeId();
+            return aNodeData->GetId() == aIteratorNodeData->GetId();
         } );
         if ( i != mNodeData.end() )
         {
-            std::cout << "Overwriting node data for " << aNodeData->GetTypeName() << std::endl;
+            std::cout << "Overwriting node data for " << aNodeData->GetId().GetString() << std::endl;
             i->swap ( aNodeData );
             return i->get();
         }
@@ -625,7 +625,7 @@ namespace AeonGames
     {
         auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [aId] ( const std::unique_ptr<NodeData>& aNodeData )
         {
-            return aNodeData->GetTypeId() == aId;
+            return aNodeData->GetId() == aId;
         } );
         if ( i != mNodeData.end() )
         {
@@ -639,7 +639,7 @@ namespace AeonGames
         std::unique_ptr<NodeData> result{};
         auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [aId] ( const std::unique_ptr<NodeData>& aNodeData )
         {
-            return aNodeData->GetTypeId() == aId;
+            return aNodeData->GetId() == aId;
         } );
         if ( i != mNodeData.end() )
         {

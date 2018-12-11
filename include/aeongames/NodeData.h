@@ -15,38 +15,18 @@ limitations under the License.
 */
 #ifndef AEONGAMES_NODEDATA_H
 #define AEONGAMES_NODEDATA_H
-#include <string>
-#include <cstdint>
 #include <vector>
 #include <tuple>
 #include "aeongames/Platform.h"
-#include "aeongames/CRC.h"
+
 namespace AeonGames
 {
+    class StringId;
     class NodeData
     {
     public:
-        class TypeInfo
-        {
-        public:
-            template<std::size_t aNameSize>
-            constexpr TypeInfo ( const char ( &aName ) [aNameSize] ) :
-                mName{aName}, mId{crc32r ( aName ) } {}
-            constexpr uint32_t GetId() const
-            {
-                return mId;
-            };
-            constexpr const char* GetName() const
-            {
-                return mName;
-            };
-        private:
-            const char* mName{};
-            uint32_t mId{};
-        };
         DLL virtual ~NodeData() = 0;
-        virtual const uint32_t GetTypeId() const = 0;
-        virtual const char* GetTypeName() const = 0;
+        virtual const StringId& GetId() const = 0;
     };
 }
 #endif

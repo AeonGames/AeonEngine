@@ -13,20 +13,45 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 #include "ModelData.h"
+#include "aeongames/StringId.h"
+
 namespace AeonGames
 {
-    const NodeData::TypeInfo ModelData::mTypeInfo{"Model"};
-
+    static const StringId ModelStringId{"ModelData"};
     ModelData::~ModelData() = default;
-
-    const uint32_t ModelData::GetTypeId() const
+    const StringId& ModelData::Id()
     {
-        return mTypeInfo.GetId();
+        return ModelStringId;
+    }
+    const StringId& ModelData::GetId() const
+    {
+        return ModelStringId;
     }
 
-    const char* ModelData::GetTypeName() const
+    void ModelData::SetModel ( const ResourceId& aModel ) noexcept
     {
-        return mTypeInfo.GetName();
+        mModel = aModel;
+    }
+    const ResourceId& ModelData::GetModel() const noexcept
+    {
+        return mModel;
+    }
+    void ModelData::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
+    {
+        mActiveAnimation = aActiveAnimation;
+    }
+    size_t ModelData::GetActiveAnimation() noexcept
+    {
+        return mActiveAnimation;
+    }
+    void ModelData::SetAnimationDelta ( double aAnimationDelta ) noexcept
+    {
+        mAnimationDelta = aAnimationDelta;
+    }
+    double ModelData::GetAnimationDelta() noexcept
+    {
+        return mAnimationDelta;
     }
 }
