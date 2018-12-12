@@ -528,14 +528,12 @@ namespace AeonGames
 
     size_t Node::AddComponent ( Component& aComponent )
     {
-        aComponent.OnEnterNode ( *this );
         return mComponents.Insert ( {aComponent.GetTypeId(), aComponent.GetDependencies(), &aComponent} );
     }
 
     void Node::RemoveComponent ( Component& aComponent )
     {
         mComponents.Erase ( aComponent.GetTypeId() );
-        aComponent.OnExitNode ( *this );
     }
 
     Component* Node::StoreComponent ( std::unique_ptr<Component> aComponent )

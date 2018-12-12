@@ -22,14 +22,8 @@ limitations under the License.
 #include <typeindex>
 #include "aeongames/Property.h"
 #include "aeongames/Platform.h"
-#include "aeongames/Memory.h"
-namespace google
-{
-    namespace protobuf
-    {
-        class Message;
-    }
-}
+#include <memory>
+
 namespace AeonGames
 {
     class Window;
@@ -42,8 +36,6 @@ namespace AeonGames
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
-        virtual void OnEnterNode ( Node& aNode ) const = 0;
-        virtual void OnExitNode ( Node& aNode ) const = 0;
         /**@name Property Interface */
         /*@{*/
         /** Retrieve the list of properties of the component.*/
