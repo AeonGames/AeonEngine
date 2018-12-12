@@ -15,8 +15,8 @@ limitations under the License.
 */
 #ifndef AEONGAMES_NODEDATA_H
 #define AEONGAMES_NODEDATA_H
-#include <vector>
-#include <tuple>
+#include <memory>
+#include <functional>
 #include "aeongames/Platform.h"
 
 namespace AeonGames
@@ -28,5 +28,15 @@ namespace AeonGames
         DLL virtual ~NodeData() = 0;
         virtual const StringId& GetId() const = 0;
     };
+    /**@name Factory Functions */
+    /*@{*/
+    DLL std::unique_ptr<NodeData> ConstructNodeData ( const StringId& aIdentifier );
+    /** Registers a NodeData loader for a specific identifier.*/
+    DLL bool RegisterNodeDataConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<NodeData>() >& aConstructor );
+    /** Unregisters a NodeData loader for a specific identifier.*/
+    DLL bool UnregisterNodeDataConstructor ( const StringId& aIdentifier );
+    /** Enumerates NodeData loader identifiers via an enumerator functor.*/
+    DLL void EnumerateNodeDataConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
+    /*@}*/
 }
 #endif

@@ -35,8 +35,6 @@ namespace AeonGames
         void SetAnimationDelta ( double aAnimationDelta ) noexcept;
         double GetAnimationDelta() noexcept;
         ///@}
-        ///@todo See if we can do without this static function.
-        static const StringId& Id();
     private:
         // Properties
         ResourceId mModel{};

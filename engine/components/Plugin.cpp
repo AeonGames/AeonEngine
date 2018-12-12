@@ -16,6 +16,7 @@ limitations under the License.
 /** \File Implements the interface for the Portaudio plugin.*/
 #include "aeongames/Plugin.h"
 #include "aeongames/Component.h"
+#include "aeongames/StringId.h"
 #include "ModelController.h"
 #include <iostream>
 

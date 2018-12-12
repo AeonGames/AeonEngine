@@ -26,6 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class StringId;
     class Window;
     class Node;
     class Component
@@ -45,13 +46,13 @@ namespace AeonGames
     };
     /**@name Factory Functions */
     /*@{*/
-    DLL std::unique_ptr<Component> ConstructComponent ( const std::string& aIdentifier );
+    DLL std::unique_ptr<Component> ConstructComponent ( const StringId& aIdentifier );
     /** Registers a Component loader for a specific identifier.*/
-    DLL bool RegisterComponentConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Component>() >& aConstructor );
+    DLL bool RegisterComponentConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Component>() >& aConstructor );
     /** Unregisters a Component loader for a specific identifier.*/
-    DLL bool UnregisterComponentConstructor ( const std::string& aIdentifier );
+    DLL bool UnregisterComponentConstructor ( const StringId& aIdentifier );
     /** Enumerates Component loader identifiers via an enumerator functor.*/
-    DLL void EnumerateComponentConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator );
+    DLL void EnumerateComponentConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
     /*@}*/
 }
 #endif

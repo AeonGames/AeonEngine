@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "Factory.h"
-#include "aeongames/Platform.h"
 #include "aeongames/Component.h"
+#include "aeongames/StringId.h"
 namespace AeonGames
 {
     Component::~Component() = default;

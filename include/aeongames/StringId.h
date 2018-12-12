@@ -16,7 +16,10 @@ limitations under the License.
 #ifndef AEONGAMES_STRINGID_H
 #define AEONGAMES_STRINGID_H
 #include <cstdint>
+#include <string>
+#include <functional>
 #include "aeongames/CRC.h"
+
 namespace AeonGames
 {
     class StringId
@@ -51,10 +54,29 @@ namespace AeonGames
         {
             return mId == b;
         }
+        constexpr operator uint32_t() const
+        {
+            return mId;
+        }
+        operator std::string() const
+        {
+            return std::string{mString};
+        }
     private:
         const char* mString{};
         uint32_t mStringSize{};
         uint32_t mId{};
+    };
+}
+
+namespace std
+{
+    template <> struct hash<AeonGames::StringId>
+    {
+        constexpr size_t operator() ( const AeonGames::StringId& aStringId ) const
+        {
+            return aStringId;
+        }
     };
 }
 #endif
