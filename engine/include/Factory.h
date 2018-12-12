@@ -14,28 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <unordered_map>
-#include <string>
 #include <functional>
 #include <memory>
 #include <utility>
-#include "aeongames/UniqueAnyPtr.h"
 
 #define FactoryImplementation(X) \
-    std::unique_ptr<X> Construct##X ( const std::string& aIdentifier )\
+    std::unique_ptr<X> Construct##X ( const StringId& aIdentifier )\
     { \
-        return Factory<std::string,X>::Construct ( aIdentifier ); \
+        return Factory<StringId,X>::Construct ( aIdentifier ); \
     } \
-    bool Register##X##Constructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ) \
+    bool Register##X##Constructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ) \
     { \
-        return Factory<std::string,X>::RegisterConstructor ( aIdentifier, aConstructor );\
+        return Factory<StringId,X>::RegisterConstructor ( aIdentifier, aConstructor );\
     }\
-    bool Unregister##X##Constructor ( const std::string& aIdentifier )\
+    bool Unregister##X##Constructor ( const StringId& aIdentifier )\
     {\
-        return Factory<std::string,X>::UnregisterConstructor ( aIdentifier );\
+        return Factory<StringId,X>::UnregisterConstructor ( aIdentifier );\
     }\
-    void Enumerate##X##Constructors ( const std::function<bool ( const std::string& ) >& aEnumerator )\
+    void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator )\
     {\
-        Factory<std::string,X>::EnumerateConstructors ( aEnumerator );\
+        Factory<StringId,X>::EnumerateConstructors ( aEnumerator );\
     }
 
 namespace AeonGames

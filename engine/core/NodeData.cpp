@@ -13,9 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include "Factory.h"
+#include "aeongames/StringId.h"
 #include "aeongames/NodeData.h"
 
 namespace AeonGames
 {
     NodeData::~NodeData() = default;
+    FactoryImplementation ( NodeData );
 }

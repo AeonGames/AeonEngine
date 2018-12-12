@@ -26,6 +26,7 @@ limitations under the License.
 #include "EngineWindow.h"
 #include "aeongames/Node.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/StringId.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -53,10 +54,10 @@ namespace AeonGames
         nodeListView->setModel ( &mNodeModel );
         componentTreeView->setModel ( &mComponentModel );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
-        EnumerateComponentConstructors ( [this] ( const std::string & aComponentConstructor )
+        EnumerateComponentConstructors ( [this] ( const StringId & aComponentConstructor )
         {
             QString text ( tr ( "Add " ) );
-            text.append ( aComponentConstructor.c_str() );
+            text.append ( aComponentConstructor.GetString() );
             text.append ( tr ( " Component" ) );
             QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
             mComponentAddActions.append ( action );
