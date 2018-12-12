@@ -61,16 +61,6 @@ namespace AeonGames
         return "ModelController"_crc32;
     }
 
-    void ModelController::OnEnterNode ( Node& aNode ) const
-    {
-        aNode.AddData ( std::make_unique<ModelData>() );
-    }
-
-    void ModelController::OnExitNode ( Node& aNode ) const
-    {
-        aNode.RemoveData ( ModelData::Id().GetId() );
-    }
-
     std::vector<uint32_t> ModelController::GetDependencies() const
     {
         return std::vector<uint32_t> {};

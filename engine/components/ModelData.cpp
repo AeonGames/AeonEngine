@@ -20,11 +20,9 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId ModelStringId{"ModelData"};
+
     ModelData::~ModelData() = default;
-    const StringId& ModelData::Id()
-    {
-        return ModelStringId;
-    }
+
     const StringId& ModelData::GetId() const
     {
         return ModelStringId;
@@ -34,22 +32,27 @@ namespace AeonGames
     {
         mModel = aModel;
     }
+
     const ResourceId& ModelData::GetModel() const noexcept
     {
         return mModel;
     }
+
     void ModelData::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
     {
         mActiveAnimation = aActiveAnimation;
     }
+
     size_t ModelData::GetActiveAnimation() noexcept
     {
         return mActiveAnimation;
     }
+
     void ModelData::SetAnimationDelta ( double aAnimationDelta ) noexcept
     {
         mAnimationDelta = aAnimationDelta;
     }
+
     double ModelData::GetAnimationDelta() noexcept
     {
         return mAnimationDelta;
