@@ -25,7 +25,6 @@ limitations under the License.
 #include "aeongames/Utilities.h"
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
-#include "aeongames/StringId.h"
 #include "ModelData.h"
 
 namespace AeonGames
