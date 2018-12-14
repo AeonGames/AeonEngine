@@ -16,8 +16,10 @@ limitations under the License.
 /** \File Implements the interface for the Portaudio plugin.*/
 #include "aeongames/Plugin.h"
 #include "aeongames/Component.h"
+#include "aeongames/NodeData.h"
 #include "aeongames/StringId.h"
 #include "ModelController.h"
+#include "ModelData.h"
 #include <iostream>
 
 extern "C"
@@ -28,11 +30,16 @@ extern "C"
         {
             return std::make_unique<AeonGames::ModelController>();
         } );
+        AeonGames::RegisterNodeDataConstructor ( "Model Data", []()
+        {
+            return std::make_unique<AeonGames::ModelData>();
+        } );
         return true;
     }
 
     void AeonEngineComponentsShutdown()
     {
+        AeonGames::UnregisterComponentConstructor ( "Model Data" );
         AeonGames::UnregisterComponentConstructor ( "Model Controller" );
     }
 

@@ -28,6 +28,8 @@ namespace AeonGames
         ///@{
         ~ModelData() final;
         const StringId& GetId() const final;
+        size_t GetPropertyCount () const final;
+        const PropertyInfo* GetPropertyInfoArray () const final;
         const UntypedRef GetProperty ( const StringId& aId ) const final;
         void SetProperty ( const StringId& aId, const UntypedRef aRef ) final;
         ///@}

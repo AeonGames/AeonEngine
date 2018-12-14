@@ -24,11 +24,14 @@ namespace AeonGames
 {
     class UntypedRef;
     class StringId;
+    class PropertyInfo;
     class NodeData
     {
     public:
         DLL virtual ~NodeData() = 0;
         virtual const StringId& GetId() const = 0;
+        virtual size_t GetPropertyCount () const = 0;
+        virtual const PropertyInfo* GetPropertyInfoArray () const = 0;
         virtual const UntypedRef GetProperty ( const StringId& aId ) const = 0;
         virtual void SetProperty ( const StringId& aId, const UntypedRef aRef ) = 0;
     };

@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <array>
 #include "ModelData.h"
-#include "aeongames/StringId.h"
-#include "aeongames/UntypedRef.h"
+#include "aeongames/PropertyInfo.h"
 
 namespace AeonGames
 {
@@ -28,6 +28,22 @@ namespace AeonGames
     {
         return ModelStringId;
     }
+
+    static const std::array<const PropertyInfo, 1> ModelDataPropertyInfo
+    {
+        {{"Model", typeid ( ResourceId ) }}
+    };
+
+    size_t ModelData::GetPropertyCount () const
+    {
+        return ModelDataPropertyInfo.size();
+    }
+
+    const PropertyInfo* ModelData::GetPropertyInfoArray () const
+    {
+        return ModelDataPropertyInfo.data();
+    }
+
 
     const UntypedRef ModelData::GetProperty ( const StringId& aId ) const
     {
