@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "ModelData.h"
 #include "aeongames/StringId.h"
+#include "aeongames/UntypedRef.h"
 
 namespace AeonGames
 {
@@ -26,6 +27,36 @@ namespace AeonGames
     const StringId& ModelData::GetId() const
     {
         return ModelStringId;
+    }
+
+    const UntypedRef ModelData::GetProperty ( const StringId& aId ) const
+    {
+        switch ( aId )
+        {
+        case "Model"_crc32:
+            return GetModel();
+        case "Active Animation"_crc32:
+            return GetActiveAnimation();
+        case "Animation Delta"_crc32:
+            return GetAnimationDelta();
+        }
+        return UntypedRef{nullptr};
+    }
+
+    void ModelData::SetProperty ( const StringId& aId, const UntypedRef aRef )
+    {
+        switch ( aId )
+        {
+        case "Model"_crc32:
+            SetModel ( aRef.Get<ResourceId>() );
+            break;
+        case "Active Animation"_crc32:
+            SetActiveAnimation ( aRef.Get<size_t>() );
+            break;
+        case "Animation Delta"_crc32:
+            SetAnimationDelta ( aRef.Get<double>() );
+            break;
+        }
     }
 
     void ModelData::SetModel ( const ResourceId& aModel ) noexcept
@@ -43,7 +74,7 @@ namespace AeonGames
         mActiveAnimation = aActiveAnimation;
     }
 
-    size_t ModelData::GetActiveAnimation() noexcept
+    const size_t& ModelData::GetActiveAnimation() const noexcept
     {
         return mActiveAnimation;
     }
@@ -53,7 +84,7 @@ namespace AeonGames
         mAnimationDelta = aAnimationDelta;
     }
 
-    double ModelData::GetAnimationDelta() noexcept
+    const double& ModelData::GetAnimationDelta() const noexcept
     {
         return mAnimationDelta;
     }

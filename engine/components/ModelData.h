@@ -24,16 +24,22 @@ namespace AeonGames
     class ModelData : public NodeData
     {
     public:
+        /** @name Overrides */
+        ///@{
         ~ModelData() final;
         const StringId& GetId() const final;
+        const UntypedRef GetProperty ( const StringId& aId ) const final;
+        void SetProperty ( const StringId& aId, const UntypedRef aRef ) final;
+        ///@}
+
         /** @name Properties */
         ///@{
         void SetModel ( const ResourceId& aModel ) noexcept;
         const ResourceId& GetModel() const noexcept;
         void SetActiveAnimation ( size_t aActiveAnimation ) noexcept;
-        size_t GetActiveAnimation() noexcept;
+        const size_t& GetActiveAnimation() const noexcept;
         void SetAnimationDelta ( double aAnimationDelta ) noexcept;
-        double GetAnimationDelta() noexcept;
+        const double& GetAnimationDelta() const noexcept;
         ///@}
     private:
         // Properties

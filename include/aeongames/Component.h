@@ -20,7 +20,6 @@ limitations under the License.
 #include <functional>
 #include <typeinfo>
 #include <typeindex>
-#include "aeongames/Property.h"
 #include "aeongames/Platform.h"
 #include <memory>
 
@@ -37,11 +36,13 @@ namespace AeonGames
         virtual std::vector<uint32_t> GetDependencies() const = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
+#if 0
         /**@name Property Interface */
         /*@{*/
         /** Retrieve the list of properties of the component.*/
         virtual std::vector<PropertyRef> GetProperties() const = 0;
         /*@}*/
+#endif
         DLL virtual ~Component() = 0;
     };
     /**@name Factory Functions */

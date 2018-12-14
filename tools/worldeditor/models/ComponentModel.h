@@ -43,7 +43,6 @@ namespace AeonGames
         void SetComponent ( Component* aComponent );
     private:
         Component* mComponent{};
-        std::vector<PropertyRef> mProperties{};
     };
 }
 #endif

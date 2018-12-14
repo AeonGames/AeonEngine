@@ -88,6 +88,7 @@ namespace AeonGames
         }
     }
 
+#if 0
     std::vector<PropertyRef> ModelController::GetProperties() const
     {
         /** @todo This is not going to work,
@@ -109,6 +110,7 @@ namespace AeonGames
             }
         };
     }
+#endif
 
     void ModelController::Render ( const Node& aNode, const Window& aWindow ) const
     {

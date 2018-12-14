@@ -18,15 +18,19 @@ limitations under the License.
 #include <memory>
 #include <functional>
 #include "aeongames/Platform.h"
+#include "aeongames/UntypedRef.h"
 
 namespace AeonGames
 {
+    class UntypedRef;
     class StringId;
     class NodeData
     {
     public:
         DLL virtual ~NodeData() = 0;
         virtual const StringId& GetId() const = 0;
+        virtual const UntypedRef GetProperty ( const StringId& aId ) const = 0;
+        virtual void SetProperty ( const StringId& aId, const UntypedRef aRef ) = 0;
     };
     /**@name Factory Functions */
     /*@{*/
