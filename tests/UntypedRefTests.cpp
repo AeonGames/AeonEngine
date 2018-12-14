@@ -17,38 +17,37 @@ limitations under the License.
 #include <iostream>
 #include <cstdint>
 #include <string>
-#include "aeongames/Property.h"
+#include "aeongames/UntypedRef.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
 using namespace ::testing;
 namespace AeonGames
 {
-    TEST ( PropertyRef, Constructor )
+    TEST ( UntypedRef, Constructor )
     {
         std::string string{""};
-        PropertyRef property{"reference", string};
+        UntypedRef property{string};
         EXPECT_TRUE ( property.HasType<std::string>() );
         EXPECT_FALSE ( property.HasType<int>() );
         EXPECT_EQ ( property.Get<std::string>(), "" );
         property.Get<std::string>() = "String";
         EXPECT_EQ ( property.Get<std::string>(), "String" );
-        EXPECT_EQ ( property.GetName(), "reference" );
     }
 
-    TEST ( PropertyRef, ModifyFromConstReference )
+    TEST ( UntypedRef, ModifyFromConstReference )
     {
         std::string string{""};
-        const PropertyRef property{"reference", string};
+        const UntypedRef property{string};
         EXPECT_EQ ( property.Get<std::string>(), "" );
         property.Get<std::string>() = "String";
         EXPECT_EQ ( property.Get<std::string>(), "String" );
     }
 
-    TEST ( PropertyRef, ModifyFromConstReferenceUsingSet )
+    TEST ( UntypedRef, ModifyFromConstReferenceUsingSet )
     {
         std::string string{""};
-        const PropertyRef property{"reference", string};
+        const UntypedRef property{string};
         EXPECT_EQ ( property.Get<std::string>(), "" );
         property.Set ( std::string{"String"} );
         EXPECT_EQ ( property.Get<std::string>(), "String" );

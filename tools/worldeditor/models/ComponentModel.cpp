@@ -55,10 +55,12 @@ namespace AeonGames
 
     QModelIndex ComponentModel::index ( int row, int column, const QModelIndex & parent ) const
     {
+#if 0
         if ( row < static_cast<int> ( mProperties.size() ) )
         {
             return createIndex ( row, column, nullptr );
         }
+#endif
         return QModelIndex();
     }
 
@@ -69,10 +71,12 @@ namespace AeonGames
 
     int ComponentModel::rowCount ( const QModelIndex & index ) const
     {
+#if 0
         if ( !index.isValid() )
         {
             return static_cast<int> ( mProperties.size() );
         }
+#endif
         // Only root may have children/rows
         return 0;
     }
@@ -87,6 +91,7 @@ namespace AeonGames
         return rowCount() > 0;
     }
 
+#if 0
     static std::unordered_map<size_t, std::function<QVariant ( const PropertyRef& aRef ) >> PropertyRefToVariant =
     {
         {
@@ -119,7 +124,7 @@ namespace AeonGames
             }
         }
     };
-
+#endif
 
     QVariant ComponentModel::data ( const QModelIndex & index, int role ) const
     {
@@ -131,11 +136,12 @@ namespace AeonGames
                 case 0:
                     if ( role == Qt::DisplayRole )
                     {
-                        return QString ( mProperties[index.row()].GetName() );
+                        //return QString ( mProperties[index.row()].GetName() );
                     }
                     break;
                 case 1:
-                    return PropertyRefToVariant[mProperties[index.row()].GetTypeInfo().hash_code()] ( mProperties[index.row()] );
+                    //return PropertyRefToVariant[mProperties[index.row()].GetTypeInfo().hash_code()] ( mProperties[index.row()] );
+                    break;
                 }
         }
         return QVariant();
@@ -150,6 +156,7 @@ namespace AeonGames
         return QAbstractItemModel::flags ( index );
     }
 
+#if 0
     static std::unordered_map<size_t, std::function<void ( const PropertyRef&, const QVariant& ) >> SetPropertyRef =
     {
         {
@@ -183,15 +190,18 @@ namespace AeonGames
             }
         },
     };
+#endif
 
     bool ComponentModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
+#if 0
         if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
             SetPropertyRef[mProperties[index.row()].GetTypeInfo().hash_code()] ( mProperties[index.row()], value );
             emit dataChanged ( index, index );
             return true;
         }
+#endif
         return false;
     }
 
@@ -199,11 +209,13 @@ namespace AeonGames
     {
         beginResetModel();
         mComponent = aComponent;
+#if 0
         mProperties.clear();
         if ( mComponent )
         {
             mProperties = mComponent->GetProperties();
         }
+#endif
         endResetModel();
     }
 }
