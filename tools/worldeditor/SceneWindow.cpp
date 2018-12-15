@@ -51,8 +51,8 @@ namespace AeonGames
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
-        nodeListView->setModel ( &mNodeModel );
-        componentTreeView->setModel ( &mComponentModel );
+        componentListView->setModel ( &mNodeModel );
+        componentPropertyTreeView->setModel ( &mComponentModel );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
         EnumerateComponentConstructors ( [this] ( const StringId & aComponentConstructor )
         {
@@ -88,7 +88,7 @@ namespace AeonGames
 
     void SceneWindow::on_actionRemoveComponent_triggered()
     {
-        QModelIndex index = nodeListView->currentIndex();
+        QModelIndex index = componentListView->currentIndex();
         ///@todo implement removing component from node
         ( void ) index;
     }
@@ -120,16 +120,16 @@ namespace AeonGames
             return;
         }
         QList<QAction *> actions;
-        QModelIndex index = nodeListView->indexAt ( aPoint );
+        QModelIndex index = componentListView->indexAt ( aPoint );
         actions.append ( mComponentAddActions );
         if ( index.isValid() )
         {
             actions.append ( actionRemoveComponent );
         }
-        nodeListView->setCurrentIndex ( index );
+        componentListView->setCurrentIndex ( index );
         if ( actions.size() )
         {
-            QMenu::exec ( actions, nodeListView->mapToGlobal ( aPoint ) );
+            QMenu::exec ( actions, componentListView->mapToGlobal ( aPoint ) );
         }
     }
 
@@ -316,7 +316,7 @@ namespace AeonGames
         UpdateGlobalTransformData ( nullptr );
     }
 
-    void SceneWindow::on_nodeListViewClicked ( const QModelIndex& aModelIndex )
+    void SceneWindow::on_componentListViewClicked ( const QModelIndex& aModelIndex )
     {
         if ( aModelIndex.isValid() && mNodeModel.GetNode() )
         {

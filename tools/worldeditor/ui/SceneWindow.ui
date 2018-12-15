@@ -113,7 +113,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="transformsTab">
              <attribute name="title">
@@ -414,7 +414,7 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
-               <widget class="QListView" name="nodeListView">
+               <widget class="QListView" name="componentListView">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
                 </property>
@@ -424,7 +424,46 @@
                </widget>
               </item>
               <item>
-               <widget class="QTreeView" name="componentTreeView">
+               <widget class="QTreeView" name="componentPropertyTreeView">
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="indentation">
+                 <number>0</number>
+                </property>
+                <property name="rootIsDecorated">
+                 <bool>false</bool>
+                </property>
+                <property name="allColumnsShowFocus">
+                 <bool>true</bool>
+                </property>
+                <property name="expandsOnDoubleClick">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="dataTab">
+             <attribute name="title">
+              <string>Data</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QListView" name="dataListView">
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+                <property name="selectionRectVisible">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTreeView" name="dataPropertyTreeView">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
                 </property>
@@ -554,7 +593,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>nodeListView</sender>
+   <sender>componentListView</sender>
    <signal>clicked(QModelIndex)</signal>
    <receiver>SceneWindow</receiver>
    <slot>on_nodeListViewClicked(QModelIndex)</slot>
@@ -858,7 +897,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>nodeListView</sender>
+   <sender>componentListView</sender>
    <signal>customContextMenuRequested(QPoint)</signal>
    <receiver>SceneWindow</receiver>
    <slot>on_nodeContextMenuRequested(QPoint)</slot>

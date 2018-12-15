@@ -42,7 +42,7 @@ namespace AeonGames
         void on_sceneContextMenuRequested ( const QPoint& aPoint );
         void on_nodeContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
-        void on_nodeListViewClicked ( const QModelIndex& aModelIndex );
+        void on_componentListViewClicked ( const QModelIndex& aModelIndex );
         void on_localTransformChanged();
         void on_globalTransformChanged();
     private:
