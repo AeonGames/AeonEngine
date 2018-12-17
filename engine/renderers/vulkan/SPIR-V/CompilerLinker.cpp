@@ -43,6 +43,7 @@
 #include "ResourceLimits.h"
 #include "glslang/Include/ShHandle.h"
 #include "glslang/Include/revision.h"
+#include "glslang/Public/ShaderLang.h"
 #include "SPIRV/GlslangToSpv.h"
 #include "SPIRV/GLSL.std.450.h"
 #include "SPIRV/doc.h"
@@ -128,28 +129,6 @@ namespace AeonGames
         }
     }
 
-    const char * CompilerLinker::GetStageName ( EShLanguage aStage ) const
-    {
-        switch ( aStage )
-        {
-        case EShLangVertex:
-            return "Vertex";
-        case EShLangTessControl:
-            return "TessControl";
-        case EShLangTessEvaluation:
-            return "TessEvaluation";
-        case EShLangGeometry:
-            return "Geometry";
-        case EShLangFragment:
-            return "Fragment";
-        case EShLangCompute:
-            return "Compute";
-        case EShLangCount:
-            break;
-        }
-        return "Invalid Stage";
-    }
-
     //
     // For linking mode: Will independently parse each compilation unit, but then put them
     // in the same program and link them together, making at most one linked module per
@@ -183,7 +162,7 @@ namespace AeonGames
             }
             shaders.emplace_back ( static_cast<EShLanguage> ( i ) );
             std::array<const char*, 1> source{ {mShaderCompilationUnits[i]} };
-            auto stage_name = GetStageName ( static_cast<EShLanguage> ( i ) );
+            auto stage_name = glslang::StageName ( static_cast<EShLanguage> ( i ) );
             shaders.back().setStringsWithLengthsAndNames ( source.data(), nullptr, &stage_name, 1 );
             shaders.back().setShiftSamplerBinding ( mBaseSamplerBinding[i] );
             shaders.back().setShiftTextureBinding ( mBaseTextureBinding[i] );
