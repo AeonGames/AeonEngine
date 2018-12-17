@@ -38,6 +38,7 @@
 #include <cctype>
 
 #include "ResourceLimits.h"
+#include "glslang/Include/revision.h"
 
 namespace glslang
 {
@@ -127,6 +128,17 @@ namespace glslang
         /* .MaxCullDistances = */ 8,
         /* .MaxCombinedClipAndCullDistances = */ 8,
         /* .MaxSamples = */ 4,
+#if defined(GLSLANG_PATCH_LEVEL) & GLSLANG_PATCH_LEVEL > 2888
+        /* .maxMeshOutputVerticesNV = */ 256,
+        /* .maxMeshOutputPrimitivesNV = */ 512,
+        /* .maxMeshWorkGroupSizeX_NV = */ 32,
+        /* .maxMeshWorkGroupSizeY_NV = */ 1,
+        /* .maxMeshWorkGroupSizeZ_NV = */ 1,
+        /* .maxTaskWorkGroupSizeX_NV = */ 32,
+        /* .maxTaskWorkGroupSizeY_NV = */ 1,
+        /* .maxTaskWorkGroupSizeZ_NV = */ 1,
+        /* .maxMeshViewCountNV = */ 4,
+#endif
         /* .limits = */ {
             /* .nonInductiveForLoops = */ true,
             /* .whileLoops = */ true,
@@ -227,6 +239,18 @@ namespace glslang
                 << "MaxCullDistances "                          << DefaultTBuiltInResource.maxCullDistances << "\n"
                 << "MaxCombinedClipAndCullDistances "           << DefaultTBuiltInResource.maxCombinedClipAndCullDistances << "\n"
                 << "MaxSamples "                                << DefaultTBuiltInResource.maxSamples << "\n"
+
+#if defined(GLSLANG_PATCH_LEVEL) & GLSLANG_PATCH_LEVEL > 2888
+                << "MaxMeshOutputVerticesNV "                   << DefaultTBuiltInResource.maxMeshOutputVerticesNV << "\n"
+                << "MaxMeshOutputPrimitivesNV "                 << DefaultTBuiltInResource.maxMeshOutputPrimitivesNV << "\n"
+                << "MaxMeshWorkGroupSizeX_NV "                  << DefaultTBuiltInResource.maxMeshWorkGroupSizeX_NV << "\n"
+                << "MaxMeshWorkGroupSizeY_NV "                  << DefaultTBuiltInResource.maxMeshWorkGroupSizeY_NV << "\n"
+                << "MaxMeshWorkGroupSizeZ_NV "                  << DefaultTBuiltInResource.maxMeshWorkGroupSizeZ_NV << "\n"
+                << "MaxTaskWorkGroupSizeX_NV "                  << DefaultTBuiltInResource.maxTaskWorkGroupSizeX_NV << "\n"
+                << "MaxTaskWorkGroupSizeY_NV "                  << DefaultTBuiltInResource.maxTaskWorkGroupSizeY_NV << "\n"
+                << "MaxTaskWorkGroupSizeZ_NV "                  << DefaultTBuiltInResource.maxTaskWorkGroupSizeZ_NV << "\n"
+                << "MaxMeshViewCountNV "                        << DefaultTBuiltInResource.maxMeshViewCountNV << "\n"
+#endif
 
                 << "nonInductiveForLoops "                      << DefaultTBuiltInResource.limits.nonInductiveForLoops << "\n"
                 << "whileLoops "                                << DefaultTBuiltInResource.limits.whileLoops << "\n"
