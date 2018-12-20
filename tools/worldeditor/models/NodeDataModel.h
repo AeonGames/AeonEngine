@@ -16,28 +16,20 @@ limitations under the License.
 
 #ifndef AEONGAMES_NODEDATAMODEL_H
 #define AEONGAMES_NODEDATAMODEL_H
-#include <QAbstractItemModel>
-#include <QList>
-#include <QAction>
 #include "aeongames/NodeData.h"
+#include "PropertyModel.h"
 namespace AeonGames
 {
-    class NodeDataModel : public QAbstractItemModel
+    class NodeDataModel : public PropertyModel
     {
         Q_OBJECT
     public:
         NodeDataModel ( QObject *parent = nullptr );
         virtual ~NodeDataModel();
-        ///@name Qt QAbstractItemModel overrides
+        ///@name PropertyModel overrides
         //@{
         QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const override;
-        QModelIndex parent ( const QModelIndex & index ) const override;
-        int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
-        int columnCount ( const QModelIndex & index = QModelIndex() ) const override;
         QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const override;
-        QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
-        bool hasChildren ( const QModelIndex & index = QModelIndex() ) const override;
-        Qt::ItemFlags flags ( const QModelIndex & index ) const override;
         bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
         //@}
         void SetNodeData ( NodeData* aNodeData );

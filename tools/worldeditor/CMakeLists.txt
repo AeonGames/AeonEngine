@@ -24,6 +24,7 @@ set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
     models/NodeModel.h
     models/MessageModel.h
+    models/PropertyModel.h
     models/ComponentModel.h
     models/NodeDataModel.h
     RendererSelectDialog.h
@@ -42,6 +43,7 @@ set(WORLDEDITOR_SOURCES
     models/SceneModel.cpp
     models/NodeModel.cpp
     models/MessageModel.cpp
+    models/PropertyModel.cpp
     models/ComponentModel.cpp
     models/NodeDataModel.cpp
     Main.cpp
