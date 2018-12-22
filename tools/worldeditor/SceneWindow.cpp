@@ -53,7 +53,9 @@ namespace AeonGames
         sceneTreeView->setModel ( &mSceneModel );
         componentListView->setModel ( &mNodeModel );
         componentPropertyTreeView->setModel ( &mComponentModel );
+        dataPropertyTreeView->setModel ( &mNodeDataModel );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
+
         EnumerateComponentConstructors ( [this] ( const StringId & aComponentConstructor )
         {
             QString text ( tr ( "Add " ) );
@@ -75,6 +77,28 @@ namespace AeonGames
             } );
             return true;
         } );
+
+        EnumerateNodeDataConstructors ( [this] ( const StringId & aNodeDataConstructor )
+        {
+            QString text ( tr ( "Add " ) );
+            text.append ( aNodeDataConstructor.GetString() );
+            text.append ( tr ( " Component" ) );
+            QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
+            mNodeDataAddActions.append ( action );
+            action->setStatusTip ( tr ( "Adds a new component of the specified type to the selected node" ) );
+            connect ( action, &QAction::triggered, this,
+                      [this, aNodeDataConstructor]()
+            {
+                QModelIndex index = sceneTreeView->currentIndex();
+                if ( index.isValid() )
+                {
+                    Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
+                    mNodeModel.SetNode ( node );
+                    mNodeDataModel.SetNodeData ( node->AddData ( ConstructNodeData ( aNodeDataConstructor ) ) );
+                }
+            } );
+            return true;
+        } );
     }
 
     SceneWindow::~SceneWindow()
@@ -90,6 +114,13 @@ namespace AeonGames
     {
         QModelIndex index = componentListView->currentIndex();
         ///@todo implement removing component from node
+        ( void ) index;
+    }
+
+    void SceneWindow::on_actionRemoveData_triggered()
+    {
+        QModelIndex index = dataListView->currentIndex();
+        ///@todo implement removing data from node
         ( void ) index;
     }
 
@@ -113,15 +144,15 @@ namespace AeonGames
         QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );
     }
 
-    void SceneWindow::on_nodeContextMenuRequested ( const QPoint& aPoint )
+    void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
         if ( !sceneTreeView->currentIndex().isValid() )
         {
             return;
         }
         QList<QAction *> actions;
-        QModelIndex index = componentListView->indexAt ( aPoint );
         actions.append ( mComponentAddActions );
+        QModelIndex index = componentListView->indexAt ( aPoint );
         if ( index.isValid() )
         {
             actions.append ( actionRemoveComponent );
@@ -130,6 +161,26 @@ namespace AeonGames
         if ( actions.size() )
         {
             QMenu::exec ( actions, componentListView->mapToGlobal ( aPoint ) );
+        }
+    }
+
+    void SceneWindow::on_dataContextMenuRequested ( const QPoint& aPoint )
+    {
+        if ( !sceneTreeView->currentIndex().isValid() )
+        {
+            return;
+        }
+        QList<QAction *> actions;
+        actions.append ( mNodeDataAddActions );
+        QModelIndex index = dataListView->indexAt ( aPoint );
+        if ( index.isValid() )
+        {
+            actions.append ( actionRemoveData );
+        }
+        dataListView->setCurrentIndex ( index );
+        if ( actions.size() )
+        {
+            QMenu::exec ( actions, dataListView->mapToGlobal ( aPoint ) );
         }
     }
 
@@ -305,6 +356,7 @@ namespace AeonGames
             {
                 mNodeModel.SetNode ( node );
                 mComponentModel.SetComponent ( nullptr );
+                mNodeDataModel.SetNodeData ( nullptr );
                 UpdateLocalTransformData ( node );
                 UpdateGlobalTransformData ( node );
                 return;
@@ -312,6 +364,7 @@ namespace AeonGames
         }
         mNodeModel.SetNode ( nullptr );
         mComponentModel.SetComponent ( nullptr );
+        mNodeDataModel.SetNodeData ( nullptr );
         UpdateLocalTransformData ( nullptr );
         UpdateGlobalTransformData ( nullptr );
     }
@@ -325,6 +378,18 @@ namespace AeonGames
         else
         {
             mComponentModel.SetComponent ( nullptr );
+        }
+    }
+
+    void SceneWindow::on_dataListViewClicked ( const QModelIndex& aModelIndex )
+    {
+        if ( aModelIndex.isValid() && mNodeModel.GetNode() )
+        {
+            mNodeDataModel.SetNodeData ( mNodeModel.GetNode()->GetData ( aModelIndex.internalId() ) );
+        }
+        else
+        {
+            mNodeDataModel.SetNodeData ( nullptr );
         }
     }
 

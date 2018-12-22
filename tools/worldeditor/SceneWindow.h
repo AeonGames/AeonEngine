@@ -22,6 +22,7 @@ limitations under the License.
 #include "models/SceneModel.h"
 #include "models/NodeModel.h"
 #include "models/ComponentModel.h"
+#include "models/NodeDataModel.h"
 
 namespace AeonGames
 {
@@ -39,10 +40,13 @@ namespace AeonGames
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
         void on_actionRemoveComponent_triggered();
+        void on_actionRemoveData_triggered();
         void on_sceneContextMenuRequested ( const QPoint& aPoint );
-        void on_nodeContextMenuRequested ( const QPoint& aPoint );
+        void on_componentContextMenuRequested ( const QPoint& aPoint );
+        void on_dataContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
         void on_componentListViewClicked ( const QModelIndex& aModelIndex );
+        void on_dataListViewClicked ( const QModelIndex& aModelIndex );
         void on_localTransformChanged();
         void on_globalTransformChanged();
     private:
@@ -51,8 +55,10 @@ namespace AeonGames
         SceneModel mSceneModel{};
         NodeModel mNodeModel{};
         ComponentModel mComponentModel{};
+        NodeDataModel mNodeDataModel{};
         EngineWindow* mEngineWindow{};
         QList<QAction *> mComponentAddActions{};
+        QList<QAction *> mNodeDataAddActions{};
     };
 }
 #endif
