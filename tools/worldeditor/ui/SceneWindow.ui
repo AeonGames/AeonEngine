@@ -534,6 +534,18 @@
     <string>Remove selected component from node</string>
    </property>
   </action>
+  <action name="actionRemoveData">
+   <property name="icon">
+    <iconset resource="../worldeditor_static.qrc">
+     <normaloff>:/icons/icon_subtract</normaloff>:/icons/icon_subtract</iconset>
+   </property>
+   <property name="text">
+    <string>Remove data</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected data</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>sceneTreeView</tabstop>
@@ -596,7 +608,23 @@
    <sender>componentListView</sender>
    <signal>clicked(QModelIndex)</signal>
    <receiver>SceneWindow</receiver>
-   <slot>on_nodeListViewClicked(QModelIndex)</slot>
+   <slot>on_componentListViewClicked(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>113</x>
+     <y>379</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>173</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dataListView</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_dataListViewClicked(QModelIndex)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>113</x>
@@ -900,7 +928,23 @@
    <sender>componentListView</sender>
    <signal>customContextMenuRequested(QPoint)</signal>
    <receiver>SceneWindow</receiver>
-   <slot>on_nodeContextMenuRequested(QPoint)</slot>
+   <slot>on_componentContextMenuRequested(QPoint)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>113</x>
+     <y>379</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>129</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dataListView</sender>
+   <signal>customContextMenuRequested(QPoint)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_dataContextMenuRequested(QPoint)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>113</x>
@@ -919,7 +963,7 @@
   <slot>on_sceneTreeViewClicked(QModelIndex)</slot>
   <slot>on_nodeListViewClicked(QModelIndex)</slot>
   <slot>on_sceneContextMenuRequested(QPoint)</slot>
-  <slot>on_nodeContextMenuRequested(QPoint)</slot>
   <slot>on_componentContextMenuRequested(QPoint)</slot>
+  <slot>on_dataContextMenuRequested(QPoint)</slot>
  </slots>
 </ui>
