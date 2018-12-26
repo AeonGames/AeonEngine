@@ -26,7 +26,8 @@ limitations under the License.
 #include <cassert>
 
 #include "aeongames/ResourceId.h"
-#include "aeongames/Model.h"
+#include "aeongames/NodeData.h"
+#include "aeongames/PropertyInfo.h"
 #include "NodeDataModel.h"
 
 namespace AeonGames
@@ -39,18 +40,16 @@ namespace AeonGames
 
     QModelIndex NodeDataModel::index ( int row, int column, const QModelIndex & parent ) const
     {
-#if 0
-        if ( row < static_cast<int> ( mProperties.size() ) )
+        if ( mNodeData && row < static_cast<int> ( mNodeData->GetPropertyCount() ) )
         {
-            return createIndex ( row, column, nullptr );
+            return createIndex ( row, column, mNodeData->GetPropertyInfoArray() [row].GetStringId() );
         }
-#endif
         return QModelIndex();
     }
 
     QVariant NodeDataModel::data ( const QModelIndex & index, int role ) const
     {
-        if ( index.isValid() )
+        if ( mNodeData && index.isValid() )
         {
             if ( role == Qt::EditRole || role == Qt::DisplayRole )
                 switch ( index.column() )
@@ -58,7 +57,7 @@ namespace AeonGames
                 case 0:
                     if ( role == Qt::DisplayRole )
                     {
-                        //return QString ( mProperties[index.row()].GetName() );
+                        return QString ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId().GetString() );
                     }
                     break;
                 case 1:
@@ -87,13 +86,6 @@ namespace AeonGames
     {
         beginResetModel();
         mNodeData = aNodeData;
-#if 0
-        mProperties.clear();
-        if ( mNodeData )
-        {
-            mProperties = mNodeData->GetProperties();
-        }
-#endif
         endResetModel();
     }
 }
