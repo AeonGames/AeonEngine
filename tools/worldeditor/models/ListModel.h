@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_NODEMODEL_H
-#define AEONGAMES_NODEMODEL_H
+#ifndef AEONGAMES_LISTMODEL_H
+#define AEONGAMES_LISTMODEL_H
 #include <QAbstractListModel>
 #include <vector>
 #include "aeongames/Memory.h"
@@ -23,22 +23,22 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class NodeModel : public QAbstractListModel
+    class ListModel : public QAbstractListModel
     {
         Q_OBJECT
     public:
-        NodeModel ( QObject *parent = nullptr );
-        virtual ~NodeModel();
+        ListModel ( QObject *parent = nullptr );
+        virtual ~ListModel();
         ///@name Qt QAbstractListModel overrides
         //@{
-        int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
-        QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const override;
-        QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
+        int rowCount ( const QModelIndex & index = QModelIndex() ) const = 0;
+        QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const = 0;
+        QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const = 0;
         //@}
         void SetNode ( Node* aNode );
         const Node* GetNode () const;
         Node* GetNode ();
-    private:
+    protected:
         Node* mNode{};
     };
 }

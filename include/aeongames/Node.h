@@ -138,14 +138,19 @@ namespace AeonGames
         DLL void RemoveComponent ( Component& aComponent );
         DLL Component* StoreComponent ( std::unique_ptr<Component> aComponent );
         DLL std::unique_ptr<Component> DisposeComponent ( const Component* aComponent );
-        DLL NodeData* AddData ( std::unique_ptr<NodeData> aNodeData );
-        DLL NodeData* GetData ( uint32_t aId ) const;
-        DLL std::unique_ptr<NodeData> RemoveData ( uint32_t aId );
         DLL const DependencyMap<uint32_t, Component*>& GetComponents() const;
         DLL const Component* GetComponentByIndex ( size_t aIndex ) const;
         DLL Component* GetComponentByIndex ( size_t aIndex );
         DLL const Component* GetComponentById ( uint32_t aId ) const;
         DLL Component* GetComponentById ( uint32_t aId );
+        /** @} */
+        /** @name Components */
+        /** @{ */
+        DLL NodeData* AddData ( std::unique_ptr<NodeData> aNodeData );
+        DLL size_t GetDataCount() const;
+        DLL NodeData* GetDataByIndex ( size_t aIndex ) const;
+        DLL NodeData* GetData ( uint32_t aId ) const;
+        DLL std::unique_ptr<NodeData> RemoveData ( uint32_t aId );
         /** @} */
         /** @name Abstract functions
          *  @todo decide if these should be private or public. */

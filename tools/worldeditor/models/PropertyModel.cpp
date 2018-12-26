@@ -58,12 +58,6 @@ namespace AeonGames
         return QModelIndex();
     }
 
-    int PropertyModel::rowCount ( const QModelIndex & index ) const
-    {
-        // Only root may have children/rows
-        return 0;
-    }
-
     int PropertyModel::columnCount ( const QModelIndex & index ) const
     {
         return 2;

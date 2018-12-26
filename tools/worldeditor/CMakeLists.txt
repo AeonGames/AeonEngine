@@ -22,7 +22,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 
 set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
-    models/NodeModel.h
+    models/ListModel.h
+    models/ComponentListModel.h
+    models/NodeDataListModel.h
     models/MessageModel.h
     models/PropertyModel.h
     models/ComponentModel.h
@@ -41,7 +43,9 @@ set(WORLDEDITOR_HEADERS
 
 set(WORLDEDITOR_SOURCES
     models/SceneModel.cpp
-    models/NodeModel.cpp
+    models/ListModel.cpp
+    models/ComponentListModel.cpp
+    models/NodeDataListModel.cpp
     models/MessageModel.cpp
     models/PropertyModel.cpp
     models/ComponentModel.cpp

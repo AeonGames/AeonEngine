@@ -21,18 +21,18 @@ limitations under the License.
 #include <QByteArray>
 #include <QXmlStreamWriter>
 #include <QTextStream>
-#include "NodeModel.h"
+#include "ComponentListModel.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 
 namespace AeonGames
 {
-    NodeModel::NodeModel ( QObject *parent ) :
-        QAbstractListModel ( parent ) {}
+    ComponentListModel::ComponentListModel ( QObject *parent ) :
+        ListModel ( parent ) {}
 
-    NodeModel::~NodeModel() = default;
+    ComponentListModel::~ComponentListModel() = default;
 
-    QVariant NodeModel::headerData ( int section, Qt::Orientation orientation, int role ) const
+    QVariant ComponentListModel::headerData ( int section, Qt::Orientation orientation, int role ) const
     {
         if ( ( orientation == Qt::Horizontal ) && ( role == Qt::DisplayRole ) )
         {
@@ -47,7 +47,7 @@ namespace AeonGames
         return QVariant();
     }
 
-    int NodeModel::rowCount ( const QModelIndex & index ) const
+    int ComponentListModel::rowCount ( const QModelIndex & index ) const
     {
         if ( !mNode || index.isValid() )
         {
@@ -56,7 +56,7 @@ namespace AeonGames
         return static_cast<int> ( mNode->GetComponents().Size() );
     }
 
-    QVariant NodeModel::data ( const QModelIndex & index, int role ) const
+    QVariant ComponentListModel::data ( const QModelIndex & index, int role ) const
     {
         if ( !mNode || !index.isValid() )
         {
@@ -67,19 +67,5 @@ namespace AeonGames
             return QString ( mNode->GetComponents() [index.row()]->GetTypeName() );
         }
         return QVariant();
-    }
-    void NodeModel::SetNode ( Node* aNode )
-    {
-        beginResetModel();
-        mNode = aNode;
-        endResetModel();
-    }
-    const Node* NodeModel::GetNode () const
-    {
-        return mNode;
-    }
-    Node* NodeModel::GetNode ()
-    {
-        return const_cast<Node*> ( static_cast<const NodeModel*> ( this )->GetNode() );
     }
 }

@@ -51,7 +51,8 @@ namespace AeonGames
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
-        componentListView->setModel ( &mNodeModel );
+        componentListView->setModel ( &mComponentListModel );
+        dataListView->setModel ( &mNodeDataListModel );
         componentPropertyTreeView->setModel ( &mComponentModel );
         dataPropertyTreeView->setModel ( &mNodeDataModel );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
@@ -71,7 +72,7 @@ namespace AeonGames
                 if ( index.isValid() )
                 {
                     Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
-                    mNodeModel.SetNode ( node );
+                    mComponentListModel.SetNode ( node );
                     mComponentModel.SetComponent ( node->GetComponentByIndex ( node->AddComponent ( *node->StoreComponent ( ConstructComponent ( aComponentConstructor ) ) ) ) );
                 }
             } );
@@ -82,7 +83,7 @@ namespace AeonGames
         {
             QString text ( tr ( "Add " ) );
             text.append ( aNodeDataConstructor.GetString() );
-            text.append ( tr ( " Component" ) );
+            text.append ( tr ( " Data" ) );
             QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
             mNodeDataAddActions.append ( action );
             action->setStatusTip ( tr ( "Adds a new component of the specified type to the selected node" ) );
@@ -93,7 +94,7 @@ namespace AeonGames
                 if ( index.isValid() )
                 {
                     Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
-                    mNodeModel.SetNode ( node );
+                    mNodeDataListModel.SetNode ( node );
                     mNodeDataModel.SetNodeData ( node->AddData ( ConstructNodeData ( aNodeDataConstructor ) ) );
                 }
             } );
@@ -354,7 +355,8 @@ namespace AeonGames
         {
             if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
             {
-                mNodeModel.SetNode ( node );
+                mComponentListModel.SetNode ( node );
+                mNodeDataListModel.SetNode ( node );
                 mComponentModel.SetComponent ( nullptr );
                 mNodeDataModel.SetNodeData ( nullptr );
                 UpdateLocalTransformData ( node );
@@ -362,7 +364,8 @@ namespace AeonGames
                 return;
             }
         }
-        mNodeModel.SetNode ( nullptr );
+        mComponentListModel.SetNode ( nullptr );
+        mNodeDataListModel.SetNode ( nullptr );
         mComponentModel.SetComponent ( nullptr );
         mNodeDataModel.SetNodeData ( nullptr );
         UpdateLocalTransformData ( nullptr );
@@ -371,9 +374,9 @@ namespace AeonGames
 
     void SceneWindow::on_componentListViewClicked ( const QModelIndex& aModelIndex )
     {
-        if ( aModelIndex.isValid() && mNodeModel.GetNode() )
+        if ( aModelIndex.isValid() && mComponentListModel.GetNode() )
         {
-            mComponentModel.SetComponent ( mNodeModel.GetNode()->GetComponentByIndex ( aModelIndex.row() ) );
+            mComponentModel.SetComponent ( mComponentListModel.GetNode()->GetComponentByIndex ( aModelIndex.row() ) );
         }
         else
         {
@@ -383,9 +386,9 @@ namespace AeonGames
 
     void SceneWindow::on_dataListViewClicked ( const QModelIndex& aModelIndex )
     {
-        if ( aModelIndex.isValid() && mNodeModel.GetNode() )
+        if ( aModelIndex.isValid() && mNodeDataListModel.GetNode() )
         {
-            mNodeDataModel.SetNodeData ( mNodeModel.GetNode()->GetData ( aModelIndex.internalId() ) );
+            mNodeDataModel.SetNodeData ( mNodeDataListModel.GetNode()->GetDataByIndex ( aModelIndex.row() ) );
         }
         else
         {

@@ -31,7 +31,7 @@ namespace AeonGames
         ///@name Qt QAbstractItemModel overrides
         //@{
         QModelIndex parent ( const QModelIndex & index ) const override;
-        int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
+        int rowCount ( const QModelIndex & index = QModelIndex() ) const override = 0;
         int columnCount ( const QModelIndex & index = QModelIndex() ) const override;
         QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
         bool hasChildren ( const QModelIndex & index = QModelIndex() ) const override;

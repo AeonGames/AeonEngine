@@ -14,28 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_NODEDATAMODEL_H
-#define AEONGAMES_NODEDATAMODEL_H
-#include "aeongames/NodeData.h"
-#include "PropertyModel.h"
+#ifndef AEONGAMES_NODEDATALISTMODEL_H
+#define AEONGAMES_NODEDATALISTMODEL_H
+#include <vector>
+#include <memory>
+#include "ListModel.h"
+
 namespace AeonGames
 {
-    class NodeDataModel : public PropertyModel
+    class NodeDataListModel : public ListModel
     {
         Q_OBJECT
     public:
-        NodeDataModel ( QObject *parent = nullptr );
-        virtual ~NodeDataModel();
-        ///@name PropertyModel overrides
+        NodeDataListModel ( QObject *parent = nullptr );
+        virtual ~NodeDataListModel();
+        ///@name Qt QAbstractListModel overrides
         //@{
-        QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const override;
         int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
         QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const override;
-        bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
+        QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
         //@}
-        void SetNodeData ( NodeData* aNodeData );
-    private:
-        NodeData* mNodeData{};
     };
 }
 #endif

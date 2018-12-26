@@ -47,6 +47,12 @@ namespace AeonGames
         return QModelIndex();
     }
 
+    int ComponentModel::rowCount ( const QModelIndex & index ) const
+    {
+        // Only root may have children/rows
+        return 0;
+    }
+
     QVariant ComponentModel::data ( const QModelIndex & index, int role ) const
     {
         if ( index.isValid() )

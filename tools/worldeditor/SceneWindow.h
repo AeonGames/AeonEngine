@@ -20,7 +20,8 @@ limitations under the License.
 #include <memory>
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
-#include "models/NodeModel.h"
+#include "models/ComponentListModel.h"
+#include "models/NodeDataListModel.h"
 #include "models/ComponentModel.h"
 #include "models/NodeDataModel.h"
 
@@ -53,7 +54,8 @@ namespace AeonGames
         void UpdateLocalTransformData ( const Node* aNode );
         void UpdateGlobalTransformData ( const Node* aNode );
         SceneModel mSceneModel{};
-        NodeModel mNodeModel{};
+        ComponentListModel mComponentListModel{};
+        NodeDataListModel mNodeDataListModel{};
         ComponentModel mComponentModel{};
         NodeDataModel mNodeDataModel{};
         EngineWindow* mEngineWindow{};
