@@ -28,18 +28,18 @@ namespace AeonGames
     public:
         /// @name Construction/Copy/Destruction
         ///@{
-        PropertyInfo ( const StringId& aId, const std::type_info& aTypeInfo ) : mId{aId}, mTypeInfo{aTypeInfo} {}
+        PropertyInfo ( const StringId& aStringId, const std::type_info& aTypeInfo ) : mStringId{aStringId}, mTypeInfo{aTypeInfo} {}
         ///@}
-        const StringId& GetId() const
+        const StringId& GetStringId() const
         {
-            return mId;
+            return mStringId;
         }
         const std::type_info& GetTypeInfo() const
         {
             return mTypeInfo;
         }
     private:
-        StringId mId;
+        StringId mStringId;
         const std::type_info& mTypeInfo;
     };
 }
