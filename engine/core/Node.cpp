@@ -603,6 +603,16 @@ namespace AeonGames
         return const_cast<Component*> ( static_cast<const Node*> ( this )->GetComponentById ( aId ) );
     }
 
+    size_t Node::GetDataCount() const
+    {
+        return mNodeData.size();
+    }
+
+    NodeData* Node::GetDataByIndex ( size_t aIndex ) const
+    {
+        return mNodeData[aIndex].get();
+    }
+
     NodeData* Node::AddData ( std::unique_ptr<NodeData> aNodeData )
     {
         auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [&aNodeData] ( const std::unique_ptr<NodeData>& aIteratorNodeData )

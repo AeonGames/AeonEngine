@@ -42,9 +42,19 @@ namespace AeonGames
     {
         if ( mNodeData && row < static_cast<int> ( mNodeData->GetPropertyCount() ) )
         {
-            return createIndex ( row, column, mNodeData->GetPropertyInfoArray() [row].GetStringId() );
+            return createIndex ( row, column );
         }
         return QModelIndex();
+    }
+
+    int NodeDataModel::rowCount ( const QModelIndex & index ) const
+    {
+        if ( mNodeData && !index.isValid() )
+        {
+            return mNodeData->GetPropertyCount();
+        }
+        // Only root may have children/rows
+        return 0;
     }
 
     QVariant NodeDataModel::data ( const QModelIndex & index, int role ) const

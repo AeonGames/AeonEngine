@@ -28,6 +28,7 @@ namespace AeonGames
         virtual ~ComponentModel();
         ///@name Qt PropertyModel overrides
         //@{
+        int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
         QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const override;
         QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const override;
         bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
