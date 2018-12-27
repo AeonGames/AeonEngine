@@ -1,4 +1,5 @@
 {
+    "git.path": "${GIT_EXECUTABLE}",
     "git.ignoreLimitWarning": true,
     "terminal.integrated.shell.windows": "${BASH_EXECUTABLE}",
     "terminal.integrated.shellArgs.windows": ["--login", "-i"],
