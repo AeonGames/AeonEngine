@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,7 +28,10 @@ limitations under the License.
 #include "aeongames/ResourceId.h"
 #include "aeongames/NodeData.h"
 #include "aeongames/PropertyInfo.h"
+#include "aeongames/ToString.h"
 #include "NodeDataModel.h"
+
+Q_DECLARE_METATYPE ( AeonGames::ResourceId );
 
 namespace AeonGames
 {
@@ -57,6 +60,26 @@ namespace AeonGames
         return 0;
     }
 
+#define QVariantFromValue(X) \
+        if(aUntypedRef.HasType<X>())\
+        {\
+            return QVariant::fromValue(aUntypedRef.Get<X>());\
+        }
+
+    static QVariant GetQVariantFromUntypedRef ( const UntypedRef& aUntypedRef )
+    {
+        QVariantFromValue ( int );
+        QVariantFromValue ( long );
+        QVariantFromValue ( long long );
+        QVariantFromValue ( unsigned );
+        QVariantFromValue ( unsigned long );
+        QVariantFromValue ( unsigned long long );
+        QVariantFromValue ( float );
+        QVariantFromValue ( double );
+        return QString ( "Invalid Type" );
+    }
+#undef QVariantFromValue
+
     QVariant NodeDataModel::data ( const QModelIndex & index, int role ) const
     {
         if ( mNodeData && index.isValid() )
@@ -71,24 +94,50 @@ namespace AeonGames
                     }
                     break;
                 case 1:
-                    //return PropertyRefToVariant[mProperties[index.row()].GetTypeInfo().hash_code()] ( mProperties[index.row()] );
+                    return GetQVariantFromUntypedRef ( mNodeData->GetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId() ) );
                     break;
                 }
         }
         return QVariant();
     }
 
-
     bool NodeDataModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
-#if 0
         if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
-            SetPropertyRef[mProperties[index.row()].GetTypeInfo().hash_code()] ( mProperties[index.row()], value );
+            const PropertyInfo& property_info = mNodeData->GetPropertyInfoArray() [index.row()];
+            size_t hash_code = property_info.GetTypeInfo().hash_code();
+            if ( ( hash_code == typeid ( int ).hash_code() ) || ( hash_code == typeid ( long ).hash_code() ) )
+            {
+                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toInt() );
+            }
+            else if ( hash_code == typeid ( long long ).hash_code() )
+            {
+                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toLongLong() );
+            }
+            else if ( ( hash_code == typeid ( unsigned ).hash_code() ) || ( hash_code == typeid ( unsigned long ).hash_code() ) )
+            {
+                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toUInt() );
+            }
+            else if ( hash_code == typeid ( unsigned long long ).hash_code() )
+            {
+                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toULongLong() );
+            }
+            else if ( hash_code == typeid ( float ).hash_code() )
+            {
+                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toFloat() );
+            }
+            else if ( hash_code == typeid ( double ).hash_code() )
+            {
+                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toDouble() );
+            }
+            else
+            {
+                return false;
+            }
             emit dataChanged ( index, index );
             return true;
         }
-#endif
         return false;
     }
 

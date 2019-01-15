@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,9 +29,13 @@ namespace AeonGames
         return ModelStringId;
     }
 
-    static const std::array<const PropertyInfo, 1> ModelDataPropertyInfo
+    static const std::array<const PropertyInfo, 3> ModelDataPropertyInfo
     {
-        {{"Model", typeid ( ResourceId ) }}
+        {
+            {"Model", typeid ( ResourceId ) },
+            {"Active Animation", typeid ( size_t ) },
+            {"Animation Delta", typeid ( double ) },
+        }
     };
 
     size_t ModelData::GetPropertyCount () const
