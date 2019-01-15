@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class UntypedRef;
     class StringId;
     class PropertyInfo;
     class NodeData
@@ -33,7 +32,15 @@ namespace AeonGames
         virtual size_t GetPropertyCount () const = 0;
         virtual const PropertyInfo* GetPropertyInfoArray () const = 0;
         virtual const UntypedRef GetProperty ( const StringId& aId ) const = 0;
+        template<class T> const T& GetProperty ( const StringId& aId ) const
+        {
+            return GetProperty ( aId ).Get<T>();
+        }
         virtual void SetProperty ( const StringId& aId, const UntypedRef aRef ) = 0;
+        template<class T> void SetProperty ( const StringId& aId, const T& aRef )
+        {
+            SetProperty ( aId, UntypedRef{ aRef } );
+        }
     };
     /**@name Factory Functions */
     /*@{*/
