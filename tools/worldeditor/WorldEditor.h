@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Material.h"
+#include "aeongames/ResourceId.h"
+Q_DECLARE_METATYPE ( AeonGames::ResourceId );
 
 #define qWorldEditorApp (reinterpret_cast<WorldEditor*> ( qApp ))
 
@@ -43,6 +45,7 @@ namespace AeonGames
         const Mesh& GetAABBWireMesh() const;
         bool IsBlocked() const;
     private:
+        int mResourceIdMetaType{};
         bool mIsBlocked{false};
         QMutex mMutex{};
         GridSettings mGridSettings{};

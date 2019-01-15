@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ namespace AeonGames
         aMesh.Load ( mesh_byte_array.data(), mesh_byte_array.size() );
     }
 
-    WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv )
+    WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ), mResourceIdMetaType{qRegisterMetaType<ResourceId>() }
     {
         /* Add a nice renderer selection window.*/
         QStringList renderer_list;
