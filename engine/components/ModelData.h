@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ namespace AeonGames
         ~ModelData() final;
         const StringId& GetId() const final;
         size_t GetPropertyCount () const final;
-        const PropertyInfo* GetPropertyInfoArray () const final;
-        const UntypedRef GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( const StringId& aId, const UntypedRef aRef ) final;
+        const StringId* GetPropertyInfoArray () const final;
+        Property GetProperty ( const StringId& aId ) const final;
+        void SetProperty ( const StringId& aId, const Property& aProperty ) final;
         ///@}
 
         /** @name Properties */

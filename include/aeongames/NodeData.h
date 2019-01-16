@@ -17,30 +17,36 @@ limitations under the License.
 #define AEONGAMES_NODEDATA_H
 #include <memory>
 #include <functional>
+#include <variant>
+#include <string>
 #include "aeongames/Platform.h"
-#include "aeongames/UntypedRef.h"
+#include "aeongames/StringId.h"
 
 namespace AeonGames
 {
-    class StringId;
-    class PropertyInfo;
+    using Property = std::variant
+                     <
+                     int,
+                     long,
+                     long long,
+                     unsigned,
+                     unsigned long,
+                     unsigned long long,
+                     float,
+                     double,
+                     StringId,
+                     std::string
+                     >;
+
     class NodeData
     {
     public:
         DLL virtual ~NodeData() = 0;
         virtual const StringId& GetId() const = 0;
         virtual size_t GetPropertyCount () const = 0;
-        virtual const PropertyInfo* GetPropertyInfoArray () const = 0;
-        virtual const UntypedRef GetProperty ( const StringId& aId ) const = 0;
-        template<class T> const T& GetProperty ( const StringId& aId ) const
-        {
-            return GetProperty ( aId ).Get<T>();
-        }
-        virtual void SetProperty ( const StringId& aId, const UntypedRef aRef ) = 0;
-        template<class T> void SetProperty ( const StringId& aId, const T& aRef )
-        {
-            SetProperty ( aId, UntypedRef{ aRef } );
-        }
+        virtual const StringId* GetPropertyInfoArray () const = 0;
+        virtual Property GetProperty ( const StringId& aId ) const = 0;
+        virtual void SetProperty ( const StringId& aId, const Property& aProperty ) = 0;
     };
     /**@name Factory Functions */
     /*@{*/
