@@ -16,7 +16,6 @@ limitations under the License.
 
 #include <array>
 #include "ModelData.h"
-#include "aeongames/PropertyInfo.h"
 
 namespace AeonGames
 {
@@ -29,52 +28,52 @@ namespace AeonGames
         return ModelStringId;
     }
 
-    static const std::array<const PropertyInfo, 3> ModelDataPropertyInfo
+    static const std::array<const StringId, 3> ModelDataPropertyIds
     {
         {
-            {"Model", typeid ( ResourceId ) },
-            {"Active Animation", typeid ( size_t ) },
-            {"Animation Delta", typeid ( double ) },
+            {"Model"},
+            {"Active Animation"},
+            {"Animation Delta"},
         }
     };
 
     size_t ModelData::GetPropertyCount () const
     {
-        return ModelDataPropertyInfo.size();
+        return ModelDataPropertyIds.size();
     }
 
-    const PropertyInfo* ModelData::GetPropertyInfoArray () const
+    const StringId* ModelData::GetPropertyInfoArray () const
     {
-        return ModelDataPropertyInfo.data();
+        return ModelDataPropertyIds.data();
     }
 
 
-    const UntypedRef ModelData::GetProperty ( const StringId& aId ) const
+    Property ModelData::GetProperty ( const StringId& aId ) const
     {
         switch ( aId )
         {
         case "Model"_crc32:
-            return GetModel();
+            return GetModel().GetPathString();
         case "Active Animation"_crc32:
             return GetActiveAnimation();
         case "Animation Delta"_crc32:
             return GetAnimationDelta();
         }
-        return UntypedRef{nullptr};
+        return Property{};
     }
 
-    void ModelData::SetProperty ( const StringId& aId, const UntypedRef aRef )
+    void ModelData::SetProperty ( const StringId& aId, const Property& aProperty )
     {
         switch ( aId )
         {
         case "Model"_crc32:
-            SetModel ( aRef.Get<ResourceId>() );
+            SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
             break;
         case "Active Animation"_crc32:
-            SetActiveAnimation ( aRef.Get<size_t>() );
+            SetActiveAnimation ( std::get<size_t> ( aProperty ) );
             break;
         case "Animation Delta"_crc32:
-            SetAnimationDelta ( aRef.Get<double>() );
+            SetAnimationDelta ( std::get<double> ( aProperty ) );
             break;
         }
     }

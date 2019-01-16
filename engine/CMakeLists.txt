@@ -97,8 +97,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/UntypedRef.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h)
 
 set(ENGINE_CORE_SOURCES
     core/Configuration.cpp

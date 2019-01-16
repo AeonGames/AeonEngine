@@ -22,16 +22,20 @@ limitations under the License.
 #include <QXmlStreamWriter>
 #include <QTextStream>
 #include <QAction>
+#include <QVariant>
+
 #include <typeinfo>
 #include <cassert>
+#include <string>
 
 #include "aeongames/ResourceId.h"
 #include "aeongames/NodeData.h"
-#include "aeongames/PropertyInfo.h"
 #include "aeongames/ToString.h"
+#include "aeongames/StringId.h"
 #include "NodeDataModel.h"
 
-Q_DECLARE_METATYPE ( AeonGames::ResourceId );
+Q_DECLARE_METATYPE ( AeonGames::StringId );
+Q_DECLARE_METATYPE ( std::string );
 
 namespace AeonGames
 {
@@ -60,25 +64,8 @@ namespace AeonGames
         return 0;
     }
 
-#define QVariantFromValue(X) \
-        if(aUntypedRef.HasType<X>())\
-        {\
-            return QVariant::fromValue(aUntypedRef.Get<X>());\
-        }
-
-    static QVariant GetQVariantFromUntypedRef ( const UntypedRef& aUntypedRef )
-    {
-        QVariantFromValue ( int );
-        QVariantFromValue ( long );
-        QVariantFromValue ( long long );
-        QVariantFromValue ( unsigned );
-        QVariantFromValue ( unsigned long );
-        QVariantFromValue ( unsigned long long );
-        QVariantFromValue ( float );
-        QVariantFromValue ( double );
-        return QString ( "Invalid Type" );
-    }
-#undef QVariantFromValue
+    /** @todo Implement FromStdVariant for backward compatibility. */
+    static_assert ( QT_VERSION >= QT_VERSION_CHECK ( 5, 11, 0 ), "QVariant::fromStdVariant not implemented on this version of Qt." );
 
     QVariant NodeDataModel::data ( const QModelIndex & index, int role ) const
     {
@@ -90,11 +77,11 @@ namespace AeonGames
                 case 0:
                     if ( role == Qt::DisplayRole )
                     {
-                        return QString ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId().GetString() );
+                        return QString ( mNodeData->GetPropertyInfoArray() [index.row()].GetString() );
                     }
                     break;
                 case 1:
-                    return GetQVariantFromUntypedRef ( mNodeData->GetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId() ) );
+                    return QVariant::fromStdVariant ( mNodeData->GetProperty ( mNodeData->GetPropertyInfoArray() [index.row()] ) );
                     break;
                 }
         }
@@ -103,6 +90,7 @@ namespace AeonGames
 
     bool NodeDataModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
+#if 0
         if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
             const PropertyInfo& property_info = mNodeData->GetPropertyInfoArray() [index.row()];
@@ -138,6 +126,7 @@ namespace AeonGames
             emit dataChanged ( index, index );
             return true;
         }
+#endif
         return false;
     }
 

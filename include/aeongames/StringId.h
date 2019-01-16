@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ namespace AeonGames
         constexpr StringId ( const char ( &aString ) [aStringSize] ) :
             mString{aString}, mStringSize{aStringSize}, mId{crc32r ( aString ) } {}
 
+        constexpr StringId() noexcept = default;
         constexpr StringId ( const StringId& ) noexcept = default;
         StringId ( StringId&& ) = delete;
         StringId& operator= ( const StringId& ) = delete;
