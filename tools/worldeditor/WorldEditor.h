@@ -18,12 +18,14 @@ limitations under the License.
 
 #include <QMutex>
 #include <QApplication>
+#include <string>
 #include "GridSettings.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Material.h"
-#include "aeongames/ResourceId.h"
-Q_DECLARE_METATYPE ( AeonGames::ResourceId );
+#include "aeongames/StringId.h"
+Q_DECLARE_METATYPE ( AeonGames::StringId );
+Q_DECLARE_METATYPE ( std::string );
 
 #define qWorldEditorApp (reinterpret_cast<WorldEditor*> ( qApp ))
 
@@ -44,8 +46,11 @@ namespace AeonGames
         const Pipeline& GetWirePipeline() const;
         const Mesh& GetAABBWireMesh() const;
         bool IsBlocked() const;
+        int GetStringIdMetaType() const;
+        int GetStringMetaType() const;
     private:
-        int mResourceIdMetaType{};
+        int mStringIdMetaType{};
+        int mStringMetaType{};
         bool mIsBlocked{false};
         QMutex mMutex{};
         GridSettings mGridSettings{};

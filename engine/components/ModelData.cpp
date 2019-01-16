@@ -67,13 +67,26 @@ namespace AeonGames
         switch ( aId )
         {
         case "Model"_crc32:
-            SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
+            if ( std::holds_alternative<std::string> ( aProperty ) )
+            {
+                SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
+            }
+            else if ( std::holds_alternative<uint32_t> ( aProperty ) )
+            {
+                SetModel ( {"Model"_crc32, std::get<uint32_t> ( aProperty ) } );
+            }
             break;
         case "Active Animation"_crc32:
-            SetActiveAnimation ( std::get<size_t> ( aProperty ) );
+            if ( std::holds_alternative<size_t> ( aProperty ) )
+            {
+                SetActiveAnimation ( std::get<size_t> ( aProperty ) );
+            }
             break;
         case "Animation Delta"_crc32:
-            SetAnimationDelta ( std::get<double> ( aProperty ) );
+            if ( std::holds_alternative<double> ( aProperty ) )
+            {
+                SetAnimationDelta ( std::get<double> ( aProperty ) );
+            }
             break;
         }
     }
