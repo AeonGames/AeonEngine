@@ -54,6 +54,16 @@ namespace AeonGames
         return *mAABBWireMesh;
     }
 
+    int WorldEditor::GetStringIdMetaType() const
+    {
+        return mStringIdMetaType;
+    }
+
+    int WorldEditor::GetStringMetaType() const
+    {
+        return mStringMetaType;
+    }
+
     static void LoadPipeline ( Pipeline& aPipeline, const std::string& aFileName )
     {
         QFile pipeline_file ( aFileName.c_str() );
@@ -76,7 +86,9 @@ namespace AeonGames
         aMesh.Load ( mesh_byte_array.data(), mesh_byte_array.size() );
     }
 
-    WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ), mResourceIdMetaType{qRegisterMetaType<ResourceId>() }
+    WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ),
+        mStringIdMetaType{qRegisterMetaType<StringId>() },
+        mStringMetaType{qRegisterMetaType<std::string>() }
     {
         /* Add a nice renderer selection window.*/
         QStringList renderer_list;

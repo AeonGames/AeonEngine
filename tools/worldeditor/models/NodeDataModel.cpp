@@ -26,16 +26,14 @@ limitations under the License.
 
 #include <typeinfo>
 #include <cassert>
-#include <string>
+#include <iostream>
 
 #include "aeongames/ResourceId.h"
 #include "aeongames/NodeData.h"
 #include "aeongames/ToString.h"
 #include "aeongames/StringId.h"
 #include "NodeDataModel.h"
-
-Q_DECLARE_METATYPE ( AeonGames::StringId );
-Q_DECLARE_METATYPE ( std::string );
+#include "WorldEditor.h"
 
 namespace AeonGames
 {
@@ -81,8 +79,17 @@ namespace AeonGames
                     }
                     break;
                 case 1:
-                    return QVariant::fromStdVariant ( mNodeData->GetProperty ( mNodeData->GetPropertyInfoArray() [index.row()] ) );
-                    break;
+                {
+                    Property property{ mNodeData->GetProperty ( mNodeData->GetPropertyInfoArray() [index.row()] ) };
+                    if ( std::holds_alternative<std::string> ( property ) )
+                    {
+                        return QString::fromStdString ( std::get<std::string> ( property ) );
+                    }
+                    else
+                    {
+                        return QVariant::fromStdVariant ( property );
+                    }
+                }
                 }
         }
         return QVariant();
@@ -90,43 +97,49 @@ namespace AeonGames
 
     bool NodeDataModel::setData ( const QModelIndex & index, const QVariant & value, int role )
     {
-#if 0
         if ( ( role == Qt::EditRole ) && ( index.isValid() ) && ( value.isValid() ) && ( index.column() == 1 ) )
         {
-            const PropertyInfo& property_info = mNodeData->GetPropertyInfoArray() [index.row()];
-            size_t hash_code = property_info.GetTypeInfo().hash_code();
-            if ( ( hash_code == typeid ( int ).hash_code() ) || ( hash_code == typeid ( long ).hash_code() ) )
+            Property property;
+            int user_type{value.userType() };
+            std::cout << __func__ << " UserType: " << user_type;
+            switch ( user_type )
             {
-                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toInt() );
-            }
-            else if ( hash_code == typeid ( long long ).hash_code() )
-            {
-                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toLongLong() );
-            }
-            else if ( ( hash_code == typeid ( unsigned ).hash_code() ) || ( hash_code == typeid ( unsigned long ).hash_code() ) )
-            {
-                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toUInt() );
-            }
-            else if ( hash_code == typeid ( unsigned long long ).hash_code() )
-            {
-                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toULongLong() );
-            }
-            else if ( hash_code == typeid ( float ).hash_code() )
-            {
-                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toFloat() );
-            }
-            else if ( hash_code == typeid ( double ).hash_code() )
-            {
-                mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()].GetStringId(), value.toDouble() );
-            }
-            else
-            {
+            case QMetaType::Int:    // 2 int
+                property = value.value<int>();
+                break;
+            case QMetaType::UInt:   //3 unsigned int
+                property = value.value<unsigned int>();
+                break;
+            case QMetaType::Double: //6 double
+                property = value.value<double>();
+                break;
+            case QMetaType::Long:   //32 long
+                property = value.value<long>();
+                break;
+            case QMetaType::LongLong:   //4 LongLong
+                property = value.value<long long>();
+                break;
+            case QMetaType::ULong:  //35 unsigned long
+                property = value.value<unsigned long>();
+                break;
+            case QMetaType::ULongLong:  //5 ULongLong
+                property = value.value<unsigned long long>();
+                break;
+            case QMetaType::Float:  //38 float
+                property = value.value<float>();
+                break;
+            case QMetaType::QString:    //10 QString
+                property = value.value<QString>().toStdString();
+                break;
+            default:
+                std::cout << " No Change" << std::endl;
                 return false;
             }
+            mNodeData->SetProperty ( mNodeData->GetPropertyInfoArray() [index.row()], property );
+            std::cout << " Value Changed" << std::endl;
             emit dataChanged ( index, index );
             return true;
         }
-#endif
         return false;
     }
 

@@ -12,7 +12,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR}
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${CMAKE_CURRENT_BINARY_DIR}
                     models
                     ${CMAKE_SOURCE_DIR}/include
                     ${PROTOBUF_INCLUDE_DIR}

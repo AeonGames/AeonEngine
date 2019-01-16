@@ -19,6 +19,7 @@ limitations under the License.
 #include <functional>
 #include <variant>
 #include <string>
+#include <type_traits>
 #include "aeongames/Platform.h"
 #include "aeongames/StringId.h"
 
@@ -37,7 +38,6 @@ namespace AeonGames
                      StringId,
                      std::string
                      >;
-
     class NodeData
     {
     public:
@@ -46,6 +46,10 @@ namespace AeonGames
         virtual size_t GetPropertyCount () const = 0;
         virtual const StringId* GetPropertyInfoArray () const = 0;
         virtual Property GetProperty ( const StringId& aId ) const = 0;
+        /**
+         * Set the value aProperty for the property identified by aId.
+         * @note If the type of the value passed does not match the expected types no change should be made.
+        */
         virtual void SetProperty ( const StringId& aId, const Property& aProperty ) = 0;
     };
     /**@name Factory Functions */
