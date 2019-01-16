@@ -65,7 +65,7 @@ install:
   - sudo ldconfig
   - cd ..
 before_script:
-  - source /opt/qt57/bin/qt57-env.sh
+  - source /opt/qt512/bin/qt512-env.sh
   - cmake -G "Unix Makefiles" .
 script:
   - make -j4 VERBOSE=1
