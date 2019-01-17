@@ -24,6 +24,7 @@ limitations under the License.
 #include "models/NodeDataListModel.h"
 #include "models/ComponentModel.h"
 #include "models/NodeDataModel.h"
+#include "delegates/PropertyDelegate.h"
 
 namespace AeonGames
 {
@@ -58,6 +59,7 @@ namespace AeonGames
         NodeDataListModel mNodeDataListModel{};
         ComponentModel mComponentModel{};
         NodeDataModel mNodeDataModel{};
+        PropertyDelegate mPropertyDelegate{};
         EngineWindow* mEngineWindow{};
         QList<QAction *> mComponentAddActions{};
         QList<QAction *> mNodeDataAddActions{};

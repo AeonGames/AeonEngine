@@ -15,6 +15,7 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_BINARY_DIR}
                     models
+                    delegates
                     ${CMAKE_SOURCE_DIR}/include
                     ${PROTOBUF_INCLUDE_DIR}
                     ${Qt5Core_INCLUDE_DIRS}
@@ -30,6 +31,7 @@ set(WORLDEDITOR_QT_HEADERS
     models/PropertyModel.h
     models/ComponentModel.h
     models/NodeDataModel.h
+    delegates/PropertyDelegate.h
     RendererSelectDialog.h
     SettingsDialog.h
     MainWindow.h
@@ -51,6 +53,7 @@ set(WORLDEDITOR_SOURCES
     models/PropertyModel.cpp
     models/ComponentModel.cpp
     models/NodeDataModel.cpp
+    delegates/PropertyDelegate.cpp
     Main.cpp
     WorldEditor.cpp
     MainWindow.cpp
