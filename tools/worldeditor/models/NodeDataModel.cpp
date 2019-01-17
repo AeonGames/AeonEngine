@@ -85,6 +85,10 @@ namespace AeonGames
                     {
                         return QString::fromStdString ( std::get<std::string> ( property ) );
                     }
+                    else if ( std::holds_alternative<std::filesystem::path> ( property ) )
+                    {
+                        return QString::fromStdString ( std::get<std::filesystem::path> ( property ).string() );
+                    }
                     else
                     {
                         return QVariant::fromStdVariant ( property );

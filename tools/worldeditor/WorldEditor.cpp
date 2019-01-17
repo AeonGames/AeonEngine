@@ -88,7 +88,8 @@ namespace AeonGames
 
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ),
         mStringIdMetaType{qRegisterMetaType<StringId>() },
-        mStringMetaType{qRegisterMetaType<std::string>() }
+        mStringMetaType{qRegisterMetaType<std::string>() },
+        mPathMetaType{qRegisterMetaType<std::filesystem::path>() }
     {
         /* Add a nice renderer selection window.*/
         QStringList renderer_list;

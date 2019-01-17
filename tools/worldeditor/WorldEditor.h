@@ -19,6 +19,7 @@ limitations under the License.
 #include <QMutex>
 #include <QApplication>
 #include <string>
+#include <filesystem>
 #include "GridSettings.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
@@ -26,6 +27,7 @@ limitations under the License.
 #include "aeongames/StringId.h"
 Q_DECLARE_METATYPE ( AeonGames::StringId );
 Q_DECLARE_METATYPE ( std::string );
+Q_DECLARE_METATYPE ( std::filesystem::path );
 
 #define qWorldEditorApp (reinterpret_cast<WorldEditor*> ( qApp ))
 
@@ -48,9 +50,11 @@ namespace AeonGames
         bool IsBlocked() const;
         int GetStringIdMetaType() const;
         int GetStringMetaType() const;
+        int GetPathMetaType() const;
     private:
         int mStringIdMetaType{};
         int mStringMetaType{};
+        int mPathMetaType{};
         bool mIsBlocked{false};
         QMutex mMutex{};
         GridSettings mGridSettings{};

@@ -71,6 +71,10 @@ namespace AeonGames
             {
                 SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
             }
+            else if ( std::holds_alternative<std::filesystem::path> ( aProperty ) )
+            {
+                SetModel ( {"Model"_crc32, std::get<std::filesystem::path> ( aProperty ).string() } );
+            }
             else if ( std::holds_alternative<uint32_t> ( aProperty ) )
             {
                 SetModel ( {"Model"_crc32, std::get<uint32_t> ( aProperty ) } );

@@ -22,22 +22,10 @@ limitations under the License.
 #include <type_traits>
 #include "aeongames/Platform.h"
 #include "aeongames/StringId.h"
+#include "aeongames/Property.h"
 
 namespace AeonGames
 {
-    using Property = std::variant
-                     <
-                     int,
-                     long,
-                     long long,
-                     unsigned,
-                     unsigned long,
-                     unsigned long long,
-                     float,
-                     double,
-                     StringId,
-                     std::string
-                     >;
     class NodeData
     {
     public:
