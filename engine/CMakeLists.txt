@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -97,7 +97,8 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h)
 
 set(ENGINE_CORE_SOURCES
     core/Configuration.cpp
