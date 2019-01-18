@@ -15,8 +15,12 @@ limitations under the License.
 */
 
 #include "PropertyDelegate.h"
+#include "WorldEditor.h"
+#include <iostream>
 #include <limits>
+#include <algorithm>
 #include <QSpinBox>
+#include <QLineEdit>
 
 namespace AeonGames
 {
@@ -26,9 +30,30 @@ namespace AeonGames
     {
         QSpinBox *editor = new QSpinBox ( parent );
         editor->setFrame ( false );
-        editor->setMinimum ( std::numeric_limits<T>::min() );
-        editor->setMaximum ( std::numeric_limits<T>::min() );
+        editor->setMinimum (
+            static_cast<int> (
+                std::max (
+                    static_cast<long long> ( std::numeric_limits<T>::min() ),
+                    static_cast<long long> ( std::numeric_limits<int>::min() ) ) ) );
+        editor->setMaximum (
+            static_cast<int> (
+                std::min (
+                    static_cast<unsigned long long> ( std::numeric_limits<T>::max() ),
+                    static_cast<unsigned long long> ( std::numeric_limits<int>::max() ) ) ) );
         return editor;
+    }
+
+    template<class T> void SetSpinboxEditorValue ( QWidget *editor, const QVariant& value )
+    {
+        QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );
+        spinBox->setValue ( value.value<T>() );
+    }
+
+    template<class T> void SetSpinboxModelData ( QWidget *editor, QAbstractItemModel *model, const QModelIndex &index )
+    {
+        QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );
+        spinBox->interpretText();
+        model->setData ( index, QVariant::fromValue ( static_cast<T> ( spinBox->value() ) ), Qt::EditRole );
     }
 
     QWidget *PropertyDelegate::createEditor ( QWidget *parent,
@@ -39,11 +64,22 @@ namespace AeonGames
         int user_type{value.userType() };
         switch ( user_type )
         {
+        case QMetaType::Int:
+            return BuildSpinboxEditor<int> ( parent );
+        case QMetaType::Long:
+            return BuildSpinboxEditor<long> ( parent );
+        case QMetaType::LongLong:
+            return BuildSpinboxEditor<long long> ( parent );
+        case QMetaType::UInt:
+            return BuildSpinboxEditor<unsigned int> ( parent );
+        case QMetaType::ULong:
+            return BuildSpinboxEditor<unsigned long> ( parent );
         case QMetaType::ULongLong:
             return BuildSpinboxEditor<unsigned long long> ( parent );
         }
         return QStyledItemDelegate::createEditor ( parent, option, index );
     }
+
     void PropertyDelegate::setEditorData ( QWidget *editor,
                                            const QModelIndex &index ) const
     {
@@ -51,15 +87,36 @@ namespace AeonGames
         int user_type{value.userType() };
         switch ( user_type )
         {
+        case QMetaType::Int:
+            SetSpinboxEditorValue<int> ( editor, value );
+            return;
+        case QMetaType::Long:
+            SetSpinboxEditorValue<long> ( editor, value );
+            return;
+        case QMetaType::LongLong:
+            SetSpinboxEditorValue<long long> ( editor, value );
+            return;
+        case QMetaType::UInt:
+            SetSpinboxEditorValue<unsigned int> ( editor, value );
+            return;
+        case QMetaType::ULong:
+            SetSpinboxEditorValue<unsigned long> ( editor, value );
+            return;
         case QMetaType::ULongLong:
-        {
-            QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );
-            spinBox->setValue ( value.value<unsigned long long>() );
+            SetSpinboxEditorValue<unsigned long long> ( editor, value );
+            return;
+        default:
+            if ( user_type == qWorldEditorApp->GetPathMetaType() )
+            {
+                QLineEdit* line_edit{static_cast<QLineEdit*> ( editor ) };
+                line_edit->setText ( QString::fromStdString ( value.value<std::filesystem::path>().string() ) );
+                return;
+            }
         }
-        return;
-        }
+        std::cout << __func__ << " Editor Class " << editor->metaObject()->className() << std::endl;
         QStyledItemDelegate::setEditorData ( editor, index );
     }
+
     void PropertyDelegate::setModelData ( QWidget *editor, QAbstractItemModel *model,
                                           const QModelIndex &index ) const
     {
@@ -67,17 +124,36 @@ namespace AeonGames
         int user_type{value.userType() };
         switch ( user_type )
         {
+        case QMetaType::Int:
+            SetSpinboxModelData<int> ( editor, model, index );
+            return;
+        case QMetaType::Long:
+            SetSpinboxModelData<long> ( editor, model, index );
+            return;
+        case QMetaType::LongLong:
+            SetSpinboxModelData<long long> ( editor, model, index );
+            return;
+        case QMetaType::UInt:
+            SetSpinboxModelData<unsigned int> ( editor, model, index );
+            return;
+        case QMetaType::ULong:
+            SetSpinboxModelData<unsigned long> ( editor, model, index );
+            return;
         case QMetaType::ULongLong:
-        {
-            QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );
-            spinBox->interpretText();
-            unsigned long long value = spinBox->value();
-            model->setData ( index, value, Qt::EditRole );
+            SetSpinboxModelData<unsigned long long> ( editor, model, index );
+            return;
+        default:
+            if ( user_type == qWorldEditorApp->GetPathMetaType() )
+            {
+                QLineEdit* line_edit{static_cast<QLineEdit*> ( editor ) };
+                model->setData ( index, line_edit->text(), Qt::EditRole );
+                return;
+            }
         }
-        return;
-        }
+        std::cout << __func__ << " Editor Class " << editor->metaObject()->className() << std::endl;
         QStyledItemDelegate::setModelData ( editor, model, index );
     }
+
     void PropertyDelegate::updateEditorGeometry ( QWidget *editor,
             const QStyleOptionViewItem &option, const QModelIndex &index ) const
     {
@@ -91,6 +167,7 @@ namespace AeonGames
         }
         return;
         }
+        std::cout << __func__ << " Editor Class " << editor->metaObject()->className() << std::endl;
         QStyledItemDelegate::updateEditorGeometry ( editor, option, index );
     }
 }
