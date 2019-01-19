@@ -62,8 +62,23 @@ namespace AeonGames
         return 0;
     }
 
-    /** @todo Implement FromStdVariant for backward compatibility. */
-    static_assert ( QT_VERSION >= QT_VERSION_CHECK ( 5, 11, 0 ), "QVariant::fromStdVariant not implemented on this version of Qt." );
+    template<typename... Types>
+    static inline QVariant fromStdVariant ( const std::variant<Types...> &value )
+    {
+#if QT_VERSION >= QT_VERSION_CHECK ( 5, 11, 0 )
+        return QVariant::fromStdVariant ( value );
+#else
+        if ( value.valueless_by_exception() )
+        {
+            return QVariant();
+        }
+        return std::visit ( [] ( const auto & arg )
+        {
+            return QVariant::fromValue ( arg );
+        }, value );
+
+#endif
+    }
 
     QVariant NodeDataModel::data ( const QModelIndex & index, int role ) const
     {
@@ -91,7 +106,7 @@ namespace AeonGames
                     }
                     else
                     {
-                        return QVariant::fromStdVariant ( property );
+                        return fromStdVariant ( property );
                     }
                 }
                 }
