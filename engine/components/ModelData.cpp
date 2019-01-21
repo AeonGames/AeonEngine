@@ -16,10 +16,40 @@ limitations under the License.
 
 #include <array>
 #include "ModelData.h"
+#include "aeongames/AeonEngine.h"
+#include "aeongames/Model.h"
+#include "aeongames/Mesh.h"
+#include "aeongames/Pipeline.h"
+#include "aeongames/Skeleton.h"
+#include "aeongames/Animation.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Window.h"
+#include "aeongames/UniformBuffer.h"
+#include "aeongames/Renderer.h"
+#include "aeongames/Node.h"
 
 namespace AeonGames
 {
     static const StringId ModelStringId{"ModelData"};
+
+    ModelData::ModelData() : NodeData{},
+        /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
+        mSkeletonBuffer{GetRenderer()->CreateUniformBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
+    {
+        const float identity[16] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+        for ( size_t i = 0; i < 256; ++i )
+        {
+            memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
+        }
+        mSkeletonBuffer->Unmap();
+    }
 
     ModelData::~ModelData() = default;
 
@@ -98,6 +128,7 @@ namespace AeonGames
     void ModelData::SetModel ( const ResourceId& aModel ) noexcept
     {
         mModel = aModel;
+        mModel.Store();
     }
 
     const ResourceId& ModelData::GetModel() const noexcept
@@ -108,6 +139,7 @@ namespace AeonGames
     void ModelData::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
     {
         mActiveAnimation = aActiveAnimation;
+        mAnimationDelta = 0.0;
     }
 
     const size_t& ModelData::GetActiveAnimation() const noexcept
@@ -123,5 +155,42 @@ namespace AeonGames
     const double& ModelData::GetAnimationDelta() const noexcept
     {
         return mAnimationDelta;
+    }
+
+    void ModelData::Update ( Node& aNode, double aDelta )
+    {
+        /** @todo Add code to update animations. */
+        ( void ) aNode;
+        mAnimationDelta += aDelta;
+        if ( auto model = mModel.Cast<Model>() )
+        {
+            if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
+            {
+                float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+                auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
+                for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
+                {
+                    Matrix4x4 matrix{ ( animation->GetTransform ( i, mAnimationDelta ) *
+                                        model->GetSkeleton()->GetJoints() [i].GetInvertedTransform() ) };
+                    memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                }
+                mSkeletonBuffer->Unmap();
+            }
+        }
+    }
+
+    void ModelData::Render ( const Node& aNode, const Window& aWindow ) const
+    {
+        if ( auto model = mModel.Cast<Model>() )
+        {
+            for ( auto& i : model->GetAssemblies() )
+            {
+                aWindow.Render ( aNode.GetGlobalTransform(),
+                                 *std::get<0> ( i ).Cast<Mesh>(),
+                                 *std::get<1> ( i ).Cast<Pipeline>(),
+                                 std::get<2> ( i ).Cast<Material>(),
+                                 mSkeletonBuffer.get() );
+            }
+        }
     }
 }
