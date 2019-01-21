@@ -17,13 +17,16 @@ limitations under the License.
 #define AEONGAMES_MODELDATA_H
 #include "aeongames/NodeData.h"
 #include "aeongames/ResourceId.h"
-#include "aeongames/UniformBuffer.h"
 
 namespace AeonGames
 {
+    class Node;
+    class Window;
+    class UniformBuffer;
     class ModelData : public NodeData
     {
     public:
+        ModelData();
         /** @name Overrides */
         ///@{
         ~ModelData() final;
@@ -33,6 +36,9 @@ namespace AeonGames
         Property GetProperty ( const StringId& aId ) const final;
         void SetProperty ( const StringId& aId, const Property& aProperty ) final;
         ///@}
+
+        void Update ( Node& aNode, double aDelta );
+        void Render ( const Node& aNode, const Window& aWindow ) const;
 
         /** @name Properties */
         ///@{

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace AeonGames
     class ModelController : public Component
     {
     public:
-        ModelController();
+        ModelController() = default;
         /** @name Component Overrides */
         ///@{
         ~ModelController() final;
@@ -39,13 +39,6 @@ namespace AeonGames
         std::vector<uint32_t> GetDependencies() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
-    private:
-        // Properties
-        ResourceId mModel{};
-        size_t mActiveAnimation{};
-        double mAnimationDelta{};
-        // Private Data
-        std::unique_ptr<UniformBuffer> mSkeletonBuffer{};
     };
 }
 #endif
