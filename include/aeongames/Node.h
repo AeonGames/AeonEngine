@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ limitations under the License.
 #include <tuple>
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
+#include "aeongames/AABB.h"
 #include "aeongames/Memory.h"
 #include "aeongames/CRC.h"
 #include "aeongames/Component.h"
@@ -36,7 +37,6 @@ namespace AeonGames
     class Window;
     class NodeBuffer;
     class Scene;
-    class AABB;
     class Node
     {
     public:
@@ -124,8 +124,10 @@ namespace AeonGames
         DLL void RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
         DLL const Transform& GetLocalTransform() const;
         DLL const Transform& GetGlobalTransform() const;
+        DLL const AABB& GetAABB() const;
         DLL void SetLocalTransform ( const Transform& aTransform );
         DLL void SetGlobalTransform ( const Transform& aTransform );
+        DLL void SetAABB ( const AABB& aAABB );
         DLL size_t GetChildrenCount() const;
         DLL Node* GetChild ( size_t aIndex ) const;
         DLL const Node& operator[] ( const std::size_t index ) const;
@@ -164,6 +166,7 @@ namespace AeonGames
         Node* mParent;
         Transform mLocalTransform;
         Transform mGlobalTransform;
+        AABB mAABB;
         std::vector<Node*> mNodes;
         DependencyMap<uint32_t, Component*> mComponents{};
         /** Local Component Storage

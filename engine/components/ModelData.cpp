@@ -159,11 +159,20 @@ namespace AeonGames
 
     void ModelData::Update ( Node& aNode, double aDelta )
     {
-        /** @todo Add code to update animations. */
-        ( void ) aNode;
         mAnimationDelta += aDelta;
         if ( auto model = mModel.Cast<Model>() )
         {
+
+            AABB aabb;
+            for ( auto& i : model->GetAssemblies() )
+            {
+                if ( Mesh* mesh = std::get<0> ( i ).Cast<Mesh>() )
+                {
+                    aabb += mesh->GetAABB();
+                }
+            }
+            aNode.SetAABB ( aabb );
+
             if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
             {
                 float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
