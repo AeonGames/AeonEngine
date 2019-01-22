@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,11 +25,10 @@ limitations under the License.
 #include <array>
 #include "aeongames/Platform.h"
 #include "aeongames/Vector3.h"
+#include "aeongames/Transform.h"
 
 namespace AeonGames
 {
-    class Transform;
-    class Plane;
     /*! \brief Axis Aligned Bounding Box class. */
     class AABB
     {
@@ -44,6 +43,8 @@ namespace AeonGames
         DLL void SetCenter ( const Vector3& aCenter );
         DLL void SetRadii ( const Vector3& aRadii );
         DLL std::array<Vector3, 8> GetPoints ( const Vector3& aOffset = { 0.0f, 0.0f, 0.0f, } ) const;
+        /** Get the AABB as a transform, the AABB center becomes translation and the radii becomes scale. */
+        DLL Transform GetTransform() const;
         /** Returns the shortest distance from any point in the plane's surface
         to the support point of the AABB in the plain normal inverted direction.
         In other words returns the required displacement of the AABB along the normal direction

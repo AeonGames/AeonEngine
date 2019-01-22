@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -255,12 +255,12 @@ namespace AeonGames
                         Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
                         mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Node & aNode )
                         {
-                            if ( frustum.Intersects ( aNode.GetGlobalTransform() * qWorldEditorApp->GetAABBWireMesh().GetAABB() ) )
+                            if ( frustum.Intersects ( aNode.GetGlobalTransform() * aNode.GetAABB() ) )
                             {
                                 // Call Node specific rendering function.
                                 aNode.Render ( *mWindow );
                                 // Render Node AABB
-                                mWindow->Render ( aNode.GetGlobalTransform(),
+                                mWindow->Render ( aNode.GetGlobalTransform() * aNode.GetAABB().GetTransform(),
                                                   qWorldEditorApp->GetAABBWireMesh(),
                                                   qWorldEditorApp->GetWirePipeline() );
                             }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
-#include "aeongames/AABB.h"
 #include "Factory.h"
 #include "aeongames/StringId.h"
 #include "aeongames/ProtoBufClasses.h"
@@ -128,6 +127,13 @@ namespace AeonGames
         return mGlobalTransform;
     }
 
+    const AABB& Node::GetAABB() const
+    {
+        /** @todo Decide if transforms should be applied
+         *  to the AABB and return the result */
+        return mAABB;
+    }
+
     void Node::SetLocalTransform ( const Transform& aTransform )
     {
         mLocalTransform = aTransform;
@@ -173,6 +179,11 @@ namespace AeonGames
                 }
             }
         } );
+    }
+
+    void Node::SetAABB ( const AABB& aAABB )
+    {
+        mAABB = aAABB;
     }
 
     void Node::SetName ( const std::string& aName )
