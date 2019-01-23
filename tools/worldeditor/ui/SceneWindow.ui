@@ -113,7 +113,7 @@
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="transformsTab">
              <attribute name="title">
@@ -408,45 +408,6 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="componentsTab">
-             <attribute name="title">
-              <string>Components</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
-              <item>
-               <widget class="QListView" name="componentListView">
-                <property name="contextMenuPolicy">
-                 <enum>Qt::CustomContextMenu</enum>
-                </property>
-                <property name="selectionRectVisible">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QTreeView" name="componentPropertyTreeView">
-                <property name="contextMenuPolicy">
-                 <enum>Qt::CustomContextMenu</enum>
-                </property>
-                <property name="alternatingRowColors">
-                 <bool>true</bool>
-                </property>
-                <property name="indentation">
-                 <number>0</number>
-                </property>
-                <property name="rootIsDecorated">
-                 <bool>false</bool>
-                </property>
-                <property name="allColumnsShowFocus">
-                 <bool>true</bool>
-                </property>
-                <property name="expandsOnDoubleClick">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
             <widget class="QWidget" name="dataTab">
              <attribute name="title">
               <string>Data</string>
@@ -605,70 +566,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>componentListView</sender>
-   <signal>clicked(QModelIndex)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_componentListViewClicked(QModelIndex)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>113</x>
-     <y>379</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>173</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>dataListView</sender>
-   <signal>clicked(QModelIndex)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_dataListViewClicked(QModelIndex)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>113</x>
-     <y>379</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>173</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>localScaleX</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_localTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>374</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>87</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>localScaleY</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_localTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>374</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>localScaleZ</sender>
    <signal>valueChanged(double)</signal>
    <receiver>SceneWindow</receiver>
@@ -701,39 +598,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>localRotationRoll</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_localTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>374</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>localRotationYaw</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_localTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>374</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>localTranslationX</sender>
+   <sender>localTranslationZ</sender>
    <signal>valueChanged(double)</signal>
    <receiver>SceneWindow</receiver>
    <slot>on_localTransformChanged()</slot>
@@ -765,54 +630,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>localTranslationZ</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_localTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>374</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>globalScaleX</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_globalTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>380</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>87</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>globalScaleY</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_globalTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>380</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>globalScaleZ</sender>
    <signal>valueChanged(double)</signal>
    <receiver>SceneWindow</receiver>
@@ -829,71 +646,23 @@
    </hints>
   </connection>
   <connection>
-   <sender>globalRotationPitch</sender>
+   <sender>localScaleX</sender>
    <signal>valueChanged(double)</signal>
    <receiver>SceneWindow</receiver>
-   <slot>on_globalTransformChanged()</slot>
+   <slot>on_localTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>380</y>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
-     <x>136</x>
+     <x>87</x>
      <y>0</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>globalRotationRoll</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_globalTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>380</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>globalRotationYaw</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_globalTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>380</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>globalTranslationX</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>SceneWindow</receiver>
-   <slot>on_globalTransformChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>129</x>
-     <y>380</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>0</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>globalTranslationY</sender>
+   <sender>globalScaleY</sender>
    <signal>valueChanged(double)</signal>
    <receiver>SceneWindow</receiver>
    <slot>on_globalTransformChanged()</slot>
@@ -925,17 +694,81 @@
    </hints>
   </connection>
   <connection>
-   <sender>componentListView</sender>
-   <signal>customContextMenuRequested(QPoint)</signal>
+   <sender>globalTranslationX</sender>
+   <signal>valueChanged(double)</signal>
    <receiver>SceneWindow</receiver>
-   <slot>on_componentContextMenuRequested(QPoint)</slot>
+   <slot>on_globalTransformChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>113</x>
-     <y>379</y>
+     <x>129</x>
+     <y>380</y>
     </hint>
     <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalScaleX</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
      <x>129</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>87</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localTranslationX</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localScaleY</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalTranslationY</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
      <y>0</y>
     </hint>
    </hints>
@@ -952,6 +785,102 @@
     </hint>
     <hint type="destinationlabel">
      <x>129</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dataListView</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_dataListViewClicked(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>113</x>
+     <y>379</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>173</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localRotationRoll</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalRotationPitch</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalRotationYaw</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localRotationYaw</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_localTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>0</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>globalRotationRoll</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>SceneWindow</receiver>
+   <slot>on_globalTransformChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
      <y>0</y>
     </hint>
    </hints>

@@ -26,6 +26,8 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Node;
+    class Window;
     class NodeData
     {
     public:
@@ -39,6 +41,8 @@ namespace AeonGames
          * @note If the type of the value passed does not match the expected types no change should be made.
         */
         virtual void SetProperty ( const StringId& aId, const Property& aProperty ) = 0;
+        virtual void Update ( Node& aNode, double aDelta ) = 0;
+        virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
     };
     /**@name Factory Functions */
     /*@{*/

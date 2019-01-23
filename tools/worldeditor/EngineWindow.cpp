@@ -26,7 +26,6 @@ limitations under the License.
 #include "EngineWindow.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
-#include "aeongames/ModelInstance.h"
 #include "aeongames/Animation.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"

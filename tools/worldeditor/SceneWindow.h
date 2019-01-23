@@ -20,9 +20,7 @@ limitations under the License.
 #include <memory>
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
-#include "models/ComponentListModel.h"
 #include "models/NodeDataListModel.h"
-#include "models/ComponentModel.h"
 #include "models/NodeDataModel.h"
 #include "delegates/PropertyDelegate.h"
 
@@ -41,13 +39,10 @@ namespace AeonGames
     private slots:
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
-        void on_actionRemoveComponent_triggered();
         void on_actionRemoveData_triggered();
         void on_sceneContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
-        void on_componentContextMenuRequested ( const QPoint& aPoint );
         void on_dataContextMenuRequested ( const QPoint& aPoint );
-        void on_componentListViewClicked ( const QModelIndex& aModelIndex );
         void on_dataListViewClicked ( const QModelIndex& aModelIndex );
         void on_localTransformChanged();
         void on_globalTransformChanged();
@@ -55,13 +50,10 @@ namespace AeonGames
         void UpdateLocalTransformData ( const Node* aNode );
         void UpdateGlobalTransformData ( const Node* aNode );
         SceneModel mSceneModel{};
-        ComponentListModel mComponentListModel{};
         NodeDataListModel mNodeDataListModel{};
-        ComponentModel mComponentModel{};
         NodeDataModel mNodeDataModel{};
         PropertyDelegate mPropertyDelegate{};
         EngineWindow* mEngineWindow{};
-        QList<QAction *> mComponentAddActions{};
         QList<QAction *> mNodeDataAddActions{};
     };
 }

@@ -1,5 +1,5 @@
-set(NODES_HEADERS ModelController.h ModelData.h)
-set(NODES_SOURCES Plugin.cpp ModelController.cpp ModelData.cpp)
+set(NODES_HEADERS ModelData.h)
+set(NODES_SOURCES Plugin.cpp ModelData.cpp)
 add_library(AeonEngineComponents SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
   set_target_properties(

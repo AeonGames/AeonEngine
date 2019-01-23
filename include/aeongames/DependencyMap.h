@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ namespace AeonGames
 {
     template <
         class Key,
-        class T,
+        class T = Key,
         class Hash = std::hash<Key>,
         class KeyEqual = std::equal_to<Key>,
         class MapAllocator = std::allocator< std::pair<const Key, typename std::tuple <
