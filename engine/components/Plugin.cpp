@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@ limitations under the License.
 */
 /** \File Implements the interface for the Portaudio plugin.*/
 #include "aeongames/Plugin.h"
-#include "aeongames/Component.h"
 #include "aeongames/NodeData.h"
 #include "aeongames/StringId.h"
-#include "ModelController.h"
 #include "ModelData.h"
 #include <iostream>
 
@@ -26,10 +24,6 @@ extern "C"
 {
     bool AeonEngineComponentsStartUp()
     {
-        AeonGames::RegisterComponentConstructor ( "Model Controller", []()
-        {
-            return std::make_unique<AeonGames::ModelController>();
-        } );
         AeonGames::RegisterNodeDataConstructor ( "Model Data", []()
         {
             return std::make_unique<AeonGames::ModelData>();
@@ -39,8 +33,7 @@ extern "C"
 
     void AeonEngineComponentsShutdown()
     {
-        AeonGames::UnregisterComponentConstructor ( "Model Data" );
-        AeonGames::UnregisterComponentConstructor ( "Model Controller" );
+        AeonGames::UnregisterNodeDataConstructor ( "Model Data" );
     }
 
     PLUGIN PluginModuleInterface PMI =

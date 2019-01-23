@@ -35,10 +35,9 @@ namespace AeonGames
         const StringId* GetPropertyInfoArray () const final;
         Property GetProperty ( const StringId& aId ) const final;
         void SetProperty ( const StringId& aId, const Property& aProperty ) final;
+        void Update ( Node& aNode, double aDelta ) final;
+        void Render ( const Node& aNode, const Window& aWindow ) const final;
         ///@}
-
-        void Update ( Node& aNode, double aDelta );
-        void Render ( const Node& aNode, const Window& aWindow ) const;
 
         /** @name Properties */
         ///@{
@@ -55,7 +54,7 @@ namespace AeonGames
         size_t mActiveAnimation{};
         double mAnimationDelta{};
         // Private Data
-        std::unique_ptr<UniformBuffer> mSkeletonBuffer{};
+        std::unique_ptr<UniformBuffer> mSkeletonBuffer;
     };
 }
 #endif

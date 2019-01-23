@@ -28,7 +28,6 @@ limitations under the License.
 #include "aeongames/AABB.h"
 #include "aeongames/Memory.h"
 #include "aeongames/CRC.h"
-#include "aeongames/Component.h"
 #include "aeongames/NodeData.h"
 #include "aeongames/DependencyMap.h"
 
@@ -134,19 +133,7 @@ namespace AeonGames
         DLL Node& operator[] ( const std::size_t index );
         DLL Node* GetParent() const;
         DLL size_t GetIndex() const;
-        /** @name Components */
-        /** @{ */
-        DLL size_t AddComponent ( Component& aComponent );
-        DLL void RemoveComponent ( Component& aComponent );
-        DLL Component* StoreComponent ( std::unique_ptr<Component> aComponent );
-        DLL std::unique_ptr<Component> DisposeComponent ( const Component* aComponent );
-        DLL const DependencyMap<uint32_t, Component*>& GetComponents() const;
-        DLL const Component* GetComponentByIndex ( size_t aIndex ) const;
-        DLL Component* GetComponentByIndex ( size_t aIndex );
-        DLL const Component* GetComponentById ( uint32_t aId ) const;
-        DLL Component* GetComponentById ( uint32_t aId );
-        /** @} */
-        /** @name Components */
+        /** @name Node Data */
         /** @{ */
         DLL NodeData* AddData ( std::unique_ptr<NodeData> aNodeData );
         DLL size_t GetDataCount() const;
@@ -168,18 +155,9 @@ namespace AeonGames
         Transform mGlobalTransform;
         AABB mAABB;
         std::vector<Node*> mNodes;
-        DependencyMap<uint32_t, Component*> mComponents{};
-        /** Local Component Storage
-         * This is a storage space for components
-         * owned by the node, such as deserialized
-         * components as well as any components requested from
-         * the node, or moved into the node.
-         * It does not necesarily contains a pointer to all
-         * components in the node, nor does a pointer existing
-         * here means it exists as part of the component dependency map. */
-        std::vector<std::unique_ptr<Component>> mComponentStorage{};
+        DependencyMap<uint32_t> mComponents{};
         /**
-         * Component managed Node Data
+         * Node Data container
         */
         std::vector<std::unique_ptr<NodeData>> mNodeData{};
         /** Tree iteration helper.

@@ -51,34 +51,10 @@ namespace AeonGames
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
-        componentListView->setModel ( &mComponentListModel );
         dataListView->setModel ( &mNodeDataListModel );
-        componentPropertyTreeView->setModel ( &mComponentModel );
         dataPropertyTreeView->setModel ( &mNodeDataModel );
         dataPropertyTreeView->setItemDelegate ( &mPropertyDelegate );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
-
-        EnumerateComponentConstructors ( [this] ( const StringId & aComponentConstructor )
-        {
-            QString text ( tr ( "Add " ) );
-            text.append ( aComponentConstructor.GetString() );
-            text.append ( tr ( " Component" ) );
-            QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
-            mComponentAddActions.append ( action );
-            action->setStatusTip ( tr ( "Adds a new component of the specified type to the selected node" ) );
-            connect ( action, &QAction::triggered, this,
-                      [this, aComponentConstructor]()
-            {
-                QModelIndex index = sceneTreeView->currentIndex();
-                if ( index.isValid() )
-                {
-                    Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
-                    mComponentListModel.SetNode ( node );
-                    mComponentModel.SetComponent ( node->GetComponentByIndex ( node->AddComponent ( *node->StoreComponent ( ConstructComponent ( aComponentConstructor ) ) ) ) );
-                }
-            } );
-            return true;
-        } );
 
         EnumerateNodeDataConstructors ( [this] ( const StringId & aNodeDataConstructor )
         {
@@ -112,13 +88,6 @@ namespace AeonGames
         mSceneModel.RemoveNode ( index.row(), index.parent() );
     }
 
-    void SceneWindow::on_actionRemoveComponent_triggered()
-    {
-        QModelIndex index = componentListView->currentIndex();
-        ///@todo implement removing component from node
-        ( void ) index;
-    }
-
     void SceneWindow::on_actionRemoveData_triggered()
     {
         QModelIndex index = dataListView->currentIndex();
@@ -144,26 +113,6 @@ namespace AeonGames
         }
         sceneTreeView->setCurrentIndex ( index );
         QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );
-    }
-
-    void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
-    {
-        if ( !sceneTreeView->currentIndex().isValid() )
-        {
-            return;
-        }
-        QList<QAction *> actions;
-        actions.append ( mComponentAddActions );
-        QModelIndex index = componentListView->indexAt ( aPoint );
-        if ( index.isValid() )
-        {
-            actions.append ( actionRemoveComponent );
-        }
-        componentListView->setCurrentIndex ( index );
-        if ( actions.size() )
-        {
-            QMenu::exec ( actions, componentListView->mapToGlobal ( aPoint ) );
-        }
     }
 
     void SceneWindow::on_dataContextMenuRequested ( const QPoint& aPoint )
@@ -356,33 +305,17 @@ namespace AeonGames
         {
             if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
             {
-                mComponentListModel.SetNode ( node );
                 mNodeDataListModel.SetNode ( node );
-                mComponentModel.SetComponent ( nullptr );
                 mNodeDataModel.SetNodeData ( nullptr );
                 UpdateLocalTransformData ( node );
                 UpdateGlobalTransformData ( node );
                 return;
             }
         }
-        mComponentListModel.SetNode ( nullptr );
         mNodeDataListModel.SetNode ( nullptr );
-        mComponentModel.SetComponent ( nullptr );
         mNodeDataModel.SetNodeData ( nullptr );
         UpdateLocalTransformData ( nullptr );
         UpdateGlobalTransformData ( nullptr );
-    }
-
-    void SceneWindow::on_componentListViewClicked ( const QModelIndex& aModelIndex )
-    {
-        if ( aModelIndex.isValid() && mComponentListModel.GetNode() )
-        {
-            mComponentModel.SetComponent ( mComponentListModel.GetNode()->GetComponentByIndex ( aModelIndex.row() ) );
-        }
-        else
-        {
-            mComponentModel.SetComponent ( nullptr );
-        }
     }
 
     void SceneWindow::on_dataListViewClicked ( const QModelIndex& aModelIndex )

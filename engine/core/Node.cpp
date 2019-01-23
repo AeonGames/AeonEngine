@@ -537,42 +537,11 @@ namespace AeonGames
         }
     }
 
-    size_t Node::AddComponent ( Component& aComponent )
-    {
-        return mComponents.Insert ( {aComponent.GetTypeId(), aComponent.GetDependencies(), &aComponent} );
-    }
-
-    void Node::RemoveComponent ( Component& aComponent )
-    {
-        mComponents.Erase ( aComponent.GetTypeId() );
-    }
-
-    Component* Node::StoreComponent ( std::unique_ptr<Component> aComponent )
-    {
-        mComponentStorage.emplace_back ( std::move ( aComponent ) );
-        return mComponentStorage.back().get();
-    }
-
-    std::unique_ptr<Component> Node::DisposeComponent ( const Component* aComponent )
-    {
-        std::unique_ptr<Component> result{};
-        auto i = std::find_if ( mComponentStorage.begin(), mComponentStorage.end(), [aComponent] ( const std::unique_ptr<Component>& component )
-        {
-            return aComponent == component.get();
-        } );
-        if ( i != mComponentStorage.end() )
-        {
-            result = std::move ( *i );
-            mComponentStorage.erase ( std::remove ( i, mComponentStorage.end(), *i ), mComponentStorage.end() );
-        }
-        return result;
-    }
-
     void Node::Update ( const double aDelta )
     {
         for ( auto& i : mComponents )
         {
-            i->Update ( *this, aDelta );
+            GetData ( i )->Update ( *this, aDelta );
         }
     }
 
@@ -580,38 +549,8 @@ namespace AeonGames
     {
         for ( auto& i : mComponents )
         {
-            i->Render ( *this, aWindow );
+            GetData ( i )->Render ( *this, aWindow );
         }
-    }
-
-    const DependencyMap<uint32_t, Component*>& Node::GetComponents() const
-    {
-        return mComponents;
-    }
-
-    const Component* Node::GetComponentByIndex ( size_t aIndex ) const
-    {
-        return mComponents[aIndex];
-    }
-
-    Component* Node::GetComponentByIndex ( size_t aIndex )
-    {
-        return const_cast<Component*> ( static_cast<const Node*> ( this )->GetComponentByIndex ( aIndex ) );
-    }
-
-    const Component* Node::GetComponentById ( uint32_t aId ) const
-    {
-        auto i = mComponents.Find ( aId );
-        if ( i != mComponents.end() )
-        {
-            return *i;
-        }
-        return nullptr;
-    }
-
-    Component* Node::GetComponentById ( uint32_t aId )
-    {
-        return const_cast<Component*> ( static_cast<const Node*> ( this )->GetComponentById ( aId ) );
     }
 
     size_t Node::GetDataCount() const
@@ -636,6 +575,7 @@ namespace AeonGames
             i->swap ( aNodeData );
             return i->get();
         }
+        mComponents.Insert ( {aNodeData->GetId(),/** @todo Get Node Data dependencies. */{}, aNodeData->GetId() } );
         mNodeData.emplace_back ( std::move ( aNodeData ) );
         return mNodeData.back().get();
     }
@@ -662,6 +602,7 @@ namespace AeonGames
         } );
         if ( i != mNodeData.end() )
         {
+            mComponents.Erase ( aId );
             result = std::move ( *i );
             mNodeData.erase ( std::remove ( i, mNodeData.end(), *i ), mNodeData.end() );
         }
