@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -533,11 +533,11 @@ namespace AeonGames
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
-            vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &reinterpret_cast<const VulkanMesh*> ( &aMesh )->GetBuffer(), &offset );
+            vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &vulkan_mesh.GetBuffer(), &offset );
             if ( aMesh.GetIndexCount() )
             {
                 vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
-                                       reinterpret_cast<const VulkanMesh*> ( &aMesh )->GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
+                                       &vulkan_mesh.GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
                                        vulkan_mesh.GetIndexType() );
                 vkCmdDrawIndexed (
                     mVulkanRenderer.GetCommandBuffer(),
