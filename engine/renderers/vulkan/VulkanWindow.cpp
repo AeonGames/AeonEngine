@@ -537,7 +537,7 @@ namespace AeonGames
             if ( aMesh.GetIndexCount() )
             {
                 vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
-                                       &vulkan_mesh.GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
+                                       vulkan_mesh.GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
                                        vulkan_mesh.GetIndexType() );
                 vkCmdDrawIndexed (
                     mVulkanRenderer.GetCommandBuffer(),
