@@ -126,7 +126,7 @@ namespace AeonGames
         QModelIndex index = componentListView->indexAt ( aPoint );
         if ( index.isValid() )
         {
-            actions.append ( actionRemoveData );
+            actions.append ( actionRemoveComponent );
         }
         componentListView->setCurrentIndex ( index );
         if ( actions.size() )
