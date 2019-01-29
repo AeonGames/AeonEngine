@@ -20,8 +20,8 @@ limitations under the License.
 #include <memory>
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
-#include "models/NodeDataListModel.h"
-#include "models/NodeDataModel.h"
+#include "models/ComponentListModel.h"
+#include "models/ComponentModel.h"
 #include "delegates/PropertyDelegate.h"
 
 namespace AeonGames
@@ -42,19 +42,19 @@ namespace AeonGames
         void on_actionRemoveData_triggered();
         void on_sceneContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
-        void on_dataContextMenuRequested ( const QPoint& aPoint );
-        void on_dataListViewClicked ( const QModelIndex& aModelIndex );
+        void on_componentContextMenuRequested ( const QPoint& aPoint );
+        void on_componentListViewClicked ( const QModelIndex& aModelIndex );
         void on_localTransformChanged();
         void on_globalTransformChanged();
     private:
         void UpdateLocalTransformData ( const Node* aNode );
         void UpdateGlobalTransformData ( const Node* aNode );
         SceneModel mSceneModel{};
-        NodeDataListModel mNodeDataListModel{};
-        NodeDataModel mNodeDataModel{};
+        ComponentListModel mComponentListModel{};
+        ComponentModel mComponentModel{};
         PropertyDelegate mPropertyDelegate{};
         EngineWindow* mEngineWindow{};
-        QList<QAction *> mNodeDataAddActions{};
+        QList<QAction *> mComponentAddActions{};
     };
 }
 #endif

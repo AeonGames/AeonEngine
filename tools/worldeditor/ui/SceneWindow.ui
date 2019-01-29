@@ -408,13 +408,13 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="dataTab">
+            <widget class="QWidget" name="componentsTab">
              <attribute name="title">
-              <string>Data</string>
+              <string>Components</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
-               <widget class="QListView" name="dataListView">
+               <widget class="QListView" name="componentListView">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
                 </property>
@@ -424,7 +424,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QTreeView" name="dataPropertyTreeView">
+               <widget class="QTreeView" name="componentPropertyTreeView">
                 <property name="contextMenuPolicy">
                  <enum>Qt::CustomContextMenu</enum>
                 </property>
@@ -774,7 +774,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>dataListView</sender>
+   <sender>componentListView</sender>
    <signal>customContextMenuRequested(QPoint)</signal>
    <receiver>SceneWindow</receiver>
    <slot>on_dataContextMenuRequested(QPoint)</slot>
@@ -790,7 +790,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>dataListView</sender>
+   <sender>componentListView</sender>
    <signal>clicked(QModelIndex)</signal>
    <receiver>SceneWindow</receiver>
    <slot>on_dataListViewClicked(QModelIndex)</slot>

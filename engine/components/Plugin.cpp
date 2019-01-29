@@ -15,25 +15,25 @@ limitations under the License.
 */
 /** \File Implements the interface for the Portaudio plugin.*/
 #include "aeongames/Plugin.h"
-#include "aeongames/NodeData.h"
+#include "aeongames/Component.h"
 #include "aeongames/StringId.h"
-#include "ModelData.h"
+#include "ModelComponent.h"
 #include <iostream>
 
 extern "C"
 {
     bool AeonEngineComponentsStartUp()
     {
-        AeonGames::RegisterNodeDataConstructor ( "Model Data", []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::ModelComponent::GetClassId(), []()
         {
-            return std::make_unique<AeonGames::ModelData>();
+            return std::make_unique<AeonGames::ModelComponent>();
         } );
         return true;
     }
 
     void AeonEngineComponentsShutdown()
     {
-        AeonGames::UnregisterNodeDataConstructor ( "Model Data" );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::GetClassId() );
     }
 
     PLUGIN PluginModuleInterface PMI =

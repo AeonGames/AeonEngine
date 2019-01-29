@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,16 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <QIcon>
-#include <QFile>
-#include <QMimeData>
-#include <QDataStream>
-#include <QByteArray>
-#include <QXmlStreamWriter>
-#include <QTextStream>
 #include "ComponentListModel.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/StringId.h"
 
 namespace AeonGames
 {
@@ -39,7 +33,7 @@ namespace AeonGames
             switch ( section )
             {
             case 0:
-                return QString ( "Component" );
+                return QString ( "Node Data" );
             default:
                 return QVariant();
             }
@@ -53,7 +47,7 @@ namespace AeonGames
         {
             return 0;
         }
-        return static_cast<int> ( mNode->GetComponents().Size() );
+        return static_cast<int> ( mNode->GetComponentCount() );
     }
 
     QVariant ComponentListModel::data ( const QModelIndex & index, int role ) const
@@ -64,7 +58,7 @@ namespace AeonGames
         }
         if ( role == Qt::DisplayRole )
         {
-            return QString ( mNode->GetComponents() [index.row()]->GetTypeName() );
+            return QString ( mNode->GetComponentByIndex ( index.row() )->GetId().GetString() );
         }
         return QVariant();
     }
