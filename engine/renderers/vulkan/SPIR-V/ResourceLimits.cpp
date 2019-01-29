@@ -1,6 +1,6 @@
 //
 // Copyright (C) 2016 Google, Inc.
-// Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -128,7 +128,7 @@ namespace glslang
         /* .MaxCullDistances = */ 8,
         /* .MaxCombinedClipAndCullDistances = */ 8,
         /* .MaxSamples = */ 4,
-#if defined(GLSLANG_PATCH_LEVEL) & GLSLANG_PATCH_LEVEL > 2888
+#if defined(GLSLANG_PATCH_LEVEL) && (GLSLANG_PATCH_LEVEL > 2888)
         /* .maxMeshOutputVerticesNV = */ 256,
         /* .maxMeshOutputPrimitivesNV = */ 512,
         /* .maxMeshWorkGroupSizeX_NV = */ 32,

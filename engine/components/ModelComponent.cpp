@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <array>
+#include <cstring>
 #include "ModelComponent.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Model.h"
