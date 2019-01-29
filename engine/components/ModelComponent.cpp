@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 #include <array>
-#include "ModelData.h"
+#include "ModelComponent.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
@@ -30,9 +30,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    static const StringId ModelStringId{"ModelData"};
+    static const StringId ModelStringId{"Model Component"};
+    const StringId& ModelComponent::GetClassId()
+    {
+        return ModelStringId;
+    }
 
-    ModelData::ModelData() : NodeData{},
+    ModelComponent::ModelComponent() : Component{},
         /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
         mSkeletonBuffer{GetRenderer()->CreateUniformBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
@@ -51,14 +55,14 @@ namespace AeonGames
         mSkeletonBuffer->Unmap();
     }
 
-    ModelData::~ModelData() = default;
+    ModelComponent::~ModelComponent() = default;
 
-    const StringId& ModelData::GetId() const
+    const StringId& ModelComponent::GetId() const
     {
         return ModelStringId;
     }
 
-    static const std::array<const StringId, 3> ModelDataPropertyIds
+    static const std::array<const StringId, 3> ModelComponentPropertyIds
     {
         {
             {"Model"},
@@ -67,18 +71,18 @@ namespace AeonGames
         }
     };
 
-    size_t ModelData::GetPropertyCount () const
+    size_t ModelComponent::GetPropertyCount () const
     {
-        return ModelDataPropertyIds.size();
+        return ModelComponentPropertyIds.size();
     }
 
-    const StringId* ModelData::GetPropertyInfoArray () const
+    const StringId* ModelComponent::GetPropertyInfoArray () const
     {
-        return ModelDataPropertyIds.data();
+        return ModelComponentPropertyIds.data();
     }
 
 
-    Property ModelData::GetProperty ( const StringId& aId ) const
+    Property ModelComponent::GetProperty ( const StringId& aId ) const
     {
         switch ( aId )
         {
@@ -92,7 +96,7 @@ namespace AeonGames
         return Property{};
     }
 
-    void ModelData::SetProperty ( const StringId& aId, const Property& aProperty )
+    void ModelComponent::SetProperty ( const StringId& aId, const Property& aProperty )
     {
         switch ( aId )
         {
@@ -125,39 +129,39 @@ namespace AeonGames
         }
     }
 
-    void ModelData::SetModel ( const ResourceId& aModel ) noexcept
+    void ModelComponent::SetModel ( const ResourceId& aModel ) noexcept
     {
         mModel = aModel;
         mModel.Store();
     }
 
-    const ResourceId& ModelData::GetModel() const noexcept
+    const ResourceId& ModelComponent::GetModel() const noexcept
     {
         return mModel;
     }
 
-    void ModelData::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
+    void ModelComponent::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
     {
         mActiveAnimation = aActiveAnimation;
         mAnimationDelta = 0.0;
     }
 
-    const size_t& ModelData::GetActiveAnimation() const noexcept
+    const size_t& ModelComponent::GetActiveAnimation() const noexcept
     {
         return mActiveAnimation;
     }
 
-    void ModelData::SetAnimationDelta ( double aAnimationDelta ) noexcept
+    void ModelComponent::SetAnimationDelta ( double aAnimationDelta ) noexcept
     {
         mAnimationDelta = aAnimationDelta;
     }
 
-    const double& ModelData::GetAnimationDelta() const noexcept
+    const double& ModelComponent::GetAnimationDelta() const noexcept
     {
         return mAnimationDelta;
     }
 
-    void ModelData::Update ( Node& aNode, double aDelta )
+    void ModelComponent::Update ( Node& aNode, double aDelta )
     {
         mAnimationDelta += aDelta;
         if ( auto model = mModel.Cast<Model>() )
@@ -188,7 +192,7 @@ namespace AeonGames
         }
     }
 
-    void ModelData::Render ( const Node& aNode, const Window& aWindow ) const
+    void ModelComponent::Render ( const Node& aNode, const Window& aWindow ) const
     {
         if ( auto model = mModel.Cast<Model>() )
         {

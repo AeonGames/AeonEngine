@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ namespace AeonGames
     public:
         ComponentModel ( QObject *parent = nullptr );
         virtual ~ComponentModel();
-        ///@name Qt PropertyModel overrides
+        ///@name PropertyModel overrides
         //@{
-        int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
         QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const override;
+        int rowCount ( const QModelIndex & index = QModelIndex() ) const override;
         QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const override;
         bool setData ( const QModelIndex & index, const QVariant & value, int role ) override;
         //@}

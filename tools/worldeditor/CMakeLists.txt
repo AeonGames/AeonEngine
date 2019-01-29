@@ -25,10 +25,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
     models/ListModel.h
-    models/NodeDataListModel.h
-    models/MessageModel.h
+    models/ComponentListModel.h
     models/PropertyModel.h
-    models/NodeDataModel.h
+    models/ComponentModel.h
     delegates/PropertyDelegate.h
     RendererSelectDialog.h
     SettingsDialog.h
@@ -45,10 +44,9 @@ set(WORLDEDITOR_HEADERS
 set(WORLDEDITOR_SOURCES
     models/SceneModel.cpp
     models/ListModel.cpp
-    models/NodeDataListModel.cpp
-    models/MessageModel.cpp
+    models/ComponentListModel.cpp
     models/PropertyModel.cpp
-    models/NodeDataModel.cpp
+    models/ComponentModel.cpp
     delegates/PropertyDelegate.cpp
     Main.cpp
     WorldEditor.cpp

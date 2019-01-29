@@ -539,72 +539,72 @@ namespace AeonGames
 
     void Node::Update ( const double aDelta )
     {
-        for ( auto& i : mComponents )
+        for ( auto& i : mComponentDependencyMap )
         {
-            GetData ( i )->Update ( *this, aDelta );
+            GetComponent ( i )->Update ( *this, aDelta );
         }
     }
 
     void Node::Render ( const Window& aWindow ) const
     {
-        for ( auto& i : mComponents )
+        for ( auto& i : mComponentDependencyMap )
         {
-            GetData ( i )->Render ( *this, aWindow );
+            GetComponent ( i )->Render ( *this, aWindow );
         }
     }
 
-    size_t Node::GetDataCount() const
+    size_t Node::GetComponentCount() const
     {
-        return mNodeData.size();
+        return mComponents.size();
     }
 
-    NodeData* Node::GetDataByIndex ( size_t aIndex ) const
+    Component* Node::GetComponentByIndex ( size_t aIndex ) const
     {
-        return mNodeData[aIndex].get();
+        return mComponents[aIndex].get();
     }
 
-    NodeData* Node::AddData ( std::unique_ptr<NodeData> aNodeData )
+    Component* Node::AddComponent ( std::unique_ptr<Component> aComponent )
     {
-        auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [&aNodeData] ( const std::unique_ptr<NodeData>& aIteratorNodeData )
+        auto i = std::find_if ( mComponents.begin(), mComponents.end(), [&aComponent] ( const std::unique_ptr<Component>& aIteratorComponent )
         {
-            return aNodeData->GetId() == aIteratorNodeData->GetId();
+            return aComponent->GetId() == aIteratorComponent->GetId();
         } );
-        if ( i != mNodeData.end() )
+        if ( i != mComponents.end() )
         {
-            std::cout << "Overwriting node data for " << aNodeData->GetId().GetString() << std::endl;
-            i->swap ( aNodeData );
+            std::cout << "Overwriting node data for " << aComponent->GetId().GetString() << std::endl;
+            i->swap ( aComponent );
             return i->get();
         }
-        mComponents.Insert ( {aNodeData->GetId(),/** @todo Get Node Data dependencies. */{}, aNodeData->GetId() } );
-        mNodeData.emplace_back ( std::move ( aNodeData ) );
-        return mNodeData.back().get();
+        mComponentDependencyMap.Insert ( {aComponent->GetId(),/** @todo Get Node Data dependencies. */{}, aComponent->GetId() } );
+        mComponents.emplace_back ( std::move ( aComponent ) );
+        return mComponents.back().get();
     }
 
-    NodeData* Node::GetData ( uint32_t aId ) const
+    Component* Node::GetComponent ( uint32_t aId ) const
     {
-        auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [aId] ( const std::unique_ptr<NodeData>& aNodeData )
+        auto i = std::find_if ( mComponents.begin(), mComponents.end(), [aId] ( const std::unique_ptr<Component>& aComponent )
         {
-            return aNodeData->GetId() == aId;
+            return aComponent->GetId() == aId;
         } );
-        if ( i != mNodeData.end() )
+        if ( i != mComponents.end() )
         {
             return i->get();
         }
         return nullptr;
     }
 
-    std::unique_ptr<NodeData> Node::RemoveData ( uint32_t aId )
+    std::unique_ptr<Component> Node::RemoveComponent ( uint32_t aId )
     {
-        std::unique_ptr<NodeData> result{};
-        auto i = std::find_if ( mNodeData.begin(), mNodeData.end(), [aId] ( const std::unique_ptr<NodeData>& aNodeData )
+        std::unique_ptr<Component> result{};
+        auto i = std::find_if ( mComponents.begin(), mComponents.end(), [aId] ( const std::unique_ptr<Component>& aComponent )
         {
-            return aNodeData->GetId() == aId;
+            return aComponent->GetId() == aId;
         } );
-        if ( i != mNodeData.end() )
+        if ( i != mComponents.end() )
         {
-            mComponents.Erase ( aId );
+            mComponentDependencyMap.Erase ( aId );
             result = std::move ( *i );
-            mNodeData.erase ( std::remove ( i, mNodeData.end(), *i ), mNodeData.end() );
+            mComponents.erase ( std::remove ( i, mComponents.end(), *i ), mComponents.end() );
         }
         return result;
     }

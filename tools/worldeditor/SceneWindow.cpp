@@ -51,28 +51,28 @@ namespace AeonGames
         widget->setSizePolicy ( size_policy );
         splitter->addWidget ( widget );
         sceneTreeView->setModel ( &mSceneModel );
-        dataListView->setModel ( &mNodeDataListModel );
-        dataPropertyTreeView->setModel ( &mNodeDataModel );
-        dataPropertyTreeView->setItemDelegate ( &mPropertyDelegate );
+        componentListView->setModel ( &mComponentListModel );
+        componentPropertyTreeView->setModel ( &mComponentModel );
+        componentPropertyTreeView->setItemDelegate ( &mPropertyDelegate );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
 
-        EnumerateNodeDataConstructors ( [this] ( const StringId & aNodeDataConstructor )
+        EnumerateComponentConstructors ( [this] ( const StringId & aComponentConstructor )
         {
             QString text ( tr ( "Add " ) );
-            text.append ( aNodeDataConstructor.GetString() );
+            text.append ( aComponentConstructor.GetString() );
             text.append ( tr ( " Data" ) );
             QAction *action = new QAction ( QIcon ( ":/icons/icon_add" ), text, this );
-            mNodeDataAddActions.append ( action );
+            mComponentAddActions.append ( action );
             action->setStatusTip ( tr ( "Adds a new component of the specified type to the selected node" ) );
             connect ( action, &QAction::triggered, this,
-                      [this, aNodeDataConstructor]()
+                      [this, aComponentConstructor]()
             {
                 QModelIndex index = sceneTreeView->currentIndex();
                 if ( index.isValid() )
                 {
                     Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
-                    mNodeDataListModel.SetNode ( node );
-                    mNodeDataModel.SetNodeData ( node->AddData ( ConstructNodeData ( aNodeDataConstructor ) ) );
+                    mComponentListModel.SetNode ( node );
+                    mComponentModel.SetComponent ( node->AddComponent ( ConstructComponent ( aComponentConstructor ) ) );
                 }
             } );
             return true;
@@ -90,7 +90,7 @@ namespace AeonGames
 
     void SceneWindow::on_actionRemoveData_triggered()
     {
-        QModelIndex index = dataListView->currentIndex();
+        QModelIndex index = componentListView->currentIndex();
         ///@todo implement removing data from node
         ( void ) index;
     }
@@ -115,23 +115,23 @@ namespace AeonGames
         QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );
     }
 
-    void SceneWindow::on_dataContextMenuRequested ( const QPoint& aPoint )
+    void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
         if ( !sceneTreeView->currentIndex().isValid() )
         {
             return;
         }
         QList<QAction *> actions;
-        actions.append ( mNodeDataAddActions );
-        QModelIndex index = dataListView->indexAt ( aPoint );
+        actions.append ( mComponentAddActions );
+        QModelIndex index = componentListView->indexAt ( aPoint );
         if ( index.isValid() )
         {
             actions.append ( actionRemoveData );
         }
-        dataListView->setCurrentIndex ( index );
+        componentListView->setCurrentIndex ( index );
         if ( actions.size() )
         {
-            QMenu::exec ( actions, dataListView->mapToGlobal ( aPoint ) );
+            QMenu::exec ( actions, componentListView->mapToGlobal ( aPoint ) );
         }
     }
 
@@ -305,28 +305,28 @@ namespace AeonGames
         {
             if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
             {
-                mNodeDataListModel.SetNode ( node );
-                mNodeDataModel.SetNodeData ( nullptr );
+                mComponentListModel.SetNode ( node );
+                mComponentModel.SetComponent ( nullptr );
                 UpdateLocalTransformData ( node );
                 UpdateGlobalTransformData ( node );
                 return;
             }
         }
-        mNodeDataListModel.SetNode ( nullptr );
-        mNodeDataModel.SetNodeData ( nullptr );
+        mComponentListModel.SetNode ( nullptr );
+        mComponentModel.SetComponent ( nullptr );
         UpdateLocalTransformData ( nullptr );
         UpdateGlobalTransformData ( nullptr );
     }
 
-    void SceneWindow::on_dataListViewClicked ( const QModelIndex& aModelIndex )
+    void SceneWindow::on_componentListViewClicked ( const QModelIndex& aModelIndex )
     {
-        if ( aModelIndex.isValid() && mNodeDataListModel.GetNode() )
+        if ( aModelIndex.isValid() && mComponentListModel.GetNode() )
         {
-            mNodeDataModel.SetNodeData ( mNodeDataListModel.GetNode()->GetDataByIndex ( aModelIndex.row() ) );
+            mComponentModel.SetComponent ( mComponentListModel.GetNode()->GetComponentByIndex ( aModelIndex.row() ) );
         }
         else
         {
-            mNodeDataModel.SetNodeData ( nullptr );
+            mComponentModel.SetComponent ( nullptr );
         }
     }
 

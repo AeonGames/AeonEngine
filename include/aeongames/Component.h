@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_NODEDATA_H
-#define AEONGAMES_NODEDATA_H
+#ifndef AEONGAMES_COMPONENT_H
+#define AEONGAMES_COMPONENT_H
 #include <memory>
 #include <functional>
 #include <variant>
@@ -28,10 +28,10 @@ namespace AeonGames
 {
     class Node;
     class Window;
-    class NodeData
+    class Component
     {
     public:
-        DLL virtual ~NodeData() = 0;
+        DLL virtual ~Component() = 0;
         virtual const StringId& GetId() const = 0;
         virtual size_t GetPropertyCount () const = 0;
         virtual const StringId* GetPropertyInfoArray () const = 0;
@@ -46,13 +46,13 @@ namespace AeonGames
     };
     /**@name Factory Functions */
     /*@{*/
-    DLL std::unique_ptr<NodeData> ConstructNodeData ( const StringId& aIdentifier );
-    /** Registers a NodeData loader for a specific identifier.*/
-    DLL bool RegisterNodeDataConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<NodeData>() >& aConstructor );
-    /** Unregisters a NodeData loader for a specific identifier.*/
-    DLL bool UnregisterNodeDataConstructor ( const StringId& aIdentifier );
-    /** Enumerates NodeData loader identifiers via an enumerator functor.*/
-    DLL void EnumerateNodeDataConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
+    DLL std::unique_ptr<Component> ConstructComponent ( const StringId& aIdentifier );
+    /** Registers a Component loader for a specific identifier.*/
+    DLL bool RegisterComponentConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Component>() >& aConstructor );
+    /** Unregisters a Component loader for a specific identifier.*/
+    DLL bool UnregisterComponentConstructor ( const StringId& aIdentifier );
+    /** Enumerates Component loader identifiers via an enumerator functor.*/
+    DLL void EnumerateComponentConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
     /*@}*/
 }
 #endif

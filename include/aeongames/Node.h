@@ -28,7 +28,7 @@ limitations under the License.
 #include "aeongames/AABB.h"
 #include "aeongames/Memory.h"
 #include "aeongames/CRC.h"
-#include "aeongames/NodeData.h"
+#include "aeongames/Component.h"
 #include "aeongames/DependencyMap.h"
 
 namespace AeonGames
@@ -135,11 +135,11 @@ namespace AeonGames
         DLL size_t GetIndex() const;
         /** @name Node Data */
         /** @{ */
-        DLL NodeData* AddData ( std::unique_ptr<NodeData> aNodeData );
-        DLL size_t GetDataCount() const;
-        DLL NodeData* GetDataByIndex ( size_t aIndex ) const;
-        DLL NodeData* GetData ( uint32_t aId ) const;
-        DLL std::unique_ptr<NodeData> RemoveData ( uint32_t aId );
+        DLL Component* AddComponent ( std::unique_ptr<Component> aComponent );
+        DLL size_t GetComponentCount() const;
+        DLL Component* GetComponentByIndex ( size_t aIndex ) const;
+        DLL Component* GetComponent ( uint32_t aId ) const;
+        DLL std::unique_ptr<Component> RemoveComponent ( uint32_t aId );
         /** @} */
         /** @name Abstract functions
          *  @todo decide if these should be private or public. */
@@ -155,11 +155,11 @@ namespace AeonGames
         Transform mGlobalTransform;
         AABB mAABB;
         std::vector<Node*> mNodes;
-        DependencyMap<uint32_t> mComponents{};
+        DependencyMap<uint32_t> mComponentDependencyMap{};
         /**
-         * Node Data container
+         * Node component container
         */
-        std::vector<std::unique_ptr<NodeData>> mNodeData{};
+        std::vector<std::unique_ptr<Component>> mComponents{};
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<Node*>::size_type mIterator{ 0 };

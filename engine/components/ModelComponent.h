@@ -13,9 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_MODELDATA_H
-#define AEONGAMES_MODELDATA_H
-#include "aeongames/NodeData.h"
+#ifndef AEONGAMES_MODELCOMPONENT_H
+#define AEONGAMES_MODELCOMPONENT_H
+#include "aeongames/Component.h"
 #include "aeongames/ResourceId.h"
 
 namespace AeonGames
@@ -23,13 +23,13 @@ namespace AeonGames
     class Node;
     class Window;
     class UniformBuffer;
-    class ModelData : public NodeData
+    class ModelComponent : public Component
     {
     public:
-        ModelData();
+        ModelComponent();
         /** @name Overrides */
         ///@{
-        ~ModelData() final;
+        ~ModelComponent() final;
         const StringId& GetId() const final;
         size_t GetPropertyCount () const final;
         const StringId* GetPropertyInfoArray () const final;
@@ -48,6 +48,7 @@ namespace AeonGames
         void SetAnimationDelta ( double aAnimationDelta ) noexcept;
         const double& GetAnimationDelta() const noexcept;
         ///@}
+        static const StringId& GetClassId();
     private:
         // Properties
         ResourceId mModel{};
