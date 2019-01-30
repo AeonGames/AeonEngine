@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <cassert>
 #include <algorithm>
+#include <type_traits>
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
 #include "aeongames/LogLevel.h"
@@ -196,6 +197,7 @@ namespace AeonGames
         return mName;
     }
 
+    template<class T> struct always_false : std::false_type {};
     void Node::Serialize ( NodeBuffer& aNodeBuffer ) const
     {
         *aNodeBuffer.mutable_name() = GetName();
@@ -209,6 +211,18 @@ namespace AeonGames
         aNodeBuffer.mutable_local()->mutable_translation()->set_x ( GetLocalTransform().GetTranslation() [0] );
         aNodeBuffer.mutable_local()->mutable_translation()->set_y ( GetLocalTransform().GetTranslation() [1] );
         aNodeBuffer.mutable_local()->mutable_translation()->set_z ( GetLocalTransform().GetTranslation() [2] );
+        for ( auto& i : mComponents )
+        {
+            ComponentBuffer* component_buffer = aNodeBuffer.add_component();
+            ( *component_buffer->mutable_name() ) = i->GetId().GetString();
+            const StringId* PropertyIds = i->GetPropertyInfoArray();
+            for ( size_t j = 0; j < i->GetPropertyCount(); ++j )
+            {
+                ComponentPropertyBuffer* component_property_buffer = component_buffer->add_property();
+                ( *component_property_buffer->mutable_name() ) = PropertyIds[j].GetString();
+                /// @todo visit i->GetProperty(PropertyIds[j]) to set the proper value.
+            }
+        }
     }
 
     void Node::Deserialize ( const NodeBuffer& aNodeBuffer )

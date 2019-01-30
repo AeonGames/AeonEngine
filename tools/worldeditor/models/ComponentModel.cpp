@@ -76,7 +76,6 @@ namespace AeonGames
         {
             return QVariant::fromValue ( arg );
         }, value );
-
 #endif
     }
 
