@@ -34,7 +34,7 @@ namespace AeonGames
         size_t GetPropertyCount () const final;
         const StringId* GetPropertyInfoArray () const final;
         Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( const StringId& aId, const Property& aProperty ) final;
+        void SetProperty ( uint32_t, const Property& aProperty ) final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, const Window& aWindow ) const final;
         ///@}

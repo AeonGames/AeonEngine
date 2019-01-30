@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -288,10 +288,6 @@ namespace AeonGames
     }
 
     // Renderer------------------------------------------------------------------------------
-    Renderer::~Renderer() //= default;
-    {
-        std::cout << __func__ << std::endl;
-    }
     UniformBuffer::~UniformBuffer() //= default;
     {
         std::cout << __func__ << std::endl;
@@ -306,7 +302,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Global renderer already set." );
         }
-        gRenderer = Factory<std::string, Renderer>::Construct ( aIdentifier );
+        gRenderer = ConstructRenderer ( aIdentifier );
 
         // Register default resource constructors related to renderer
         RegisterResourceConstructor ( "Image"_crc32,
@@ -334,17 +330,5 @@ namespace AeonGames
         } );
 
         return gRenderer.get();
-    }
-    bool RegisterRendererConstructor ( const std::string& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor )
-    {
-        return Factory<std::string, Renderer>::RegisterConstructor ( aIdentifier, aConstructor );
-    }
-    bool UnregisterRendererConstructor ( const std::string& aIdentifier )
-    {
-        return Factory<std::string, Renderer>::UnregisterConstructor ( aIdentifier );
-    }
-    void EnumerateRendererConstructors ( const std::function<bool ( const std::string& ) >& aEnumerator )
-    {
-        Factory<std::string, Renderer>::EnumerateConstructors ( aEnumerator );
     }
 }

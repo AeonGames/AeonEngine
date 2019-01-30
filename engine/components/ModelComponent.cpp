@@ -97,7 +97,7 @@ namespace AeonGames
         return Property{};
     }
 
-    void ModelComponent::SetProperty ( const StringId& aId, const Property& aProperty )
+    void ModelComponent::SetProperty ( uint32_t aId, const Property& aProperty )
     {
         switch ( aId )
         {

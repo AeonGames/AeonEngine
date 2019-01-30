@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,56 +13,84 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <unordered_map>
+#include <vector>
 #include <functional>
 #include <memory>
 #include <utility>
+#include <tuple>
+#include "aeongames/StringId.h"
 
 #define FactoryImplementation(X) \
+    std::unique_ptr<X> Construct##X ( uint32_t aIdentifier )\
+    { \
+        return Factory<X>::Construct ( aIdentifier ); \
+    } \
+    std::unique_ptr<X> Construct##X ( const std::string& aIdentifier )\
+    { \
+        return Factory<X>::Construct ( aIdentifier ); \
+    } \
     std::unique_ptr<X> Construct##X ( const StringId& aIdentifier )\
     { \
-        return Factory<StringId,X>::Construct ( aIdentifier ); \
+        return Factory<X>::Construct ( aIdentifier.GetId() ); \
     } \
     bool Register##X##Constructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ) \
     { \
-        return Factory<StringId,X>::RegisterConstructor ( aIdentifier, aConstructor );\
+        return Factory<X>::RegisterConstructor ( aIdentifier, aConstructor );\
     }\
     bool Unregister##X##Constructor ( const StringId& aIdentifier )\
     {\
-        return Factory<StringId,X>::UnregisterConstructor ( aIdentifier );\
+        return Factory<X>::UnregisterConstructor ( aIdentifier );\
     }\
     void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator )\
     {\
-        Factory<StringId,X>::EnumerateConstructors ( aEnumerator );\
+        Factory<X>::EnumerateConstructors ( aEnumerator );\
     }
 
 namespace AeonGames
 {
-    template<class K, class T, typename... Args>
+    template<class T>
     class Factory
     {
     public:
-        static std::unique_ptr<T> Construct ( const K& aIdentifier, Args&&... args )
+        using Constructor = std::tuple<StringId, std::function < std::unique_ptr<T>() >>;
+        static std::unique_ptr<T> Construct ( uint32_t aIdentifier )
         {
-            auto it = Constructors.find ( aIdentifier );
+            auto it = std::find_if ( Constructors.begin(), Constructors.end(),
+                                     [aIdentifier] ( const Constructor & aConstructor )
+            {
+                return aIdentifier == std::get<0> ( aConstructor );
+            } );
             if ( it != Constructors.end() )
             {
-                return it->second ( std::forward<Args> ( args )... );
+                return std::get<1> ( *it ) ();
             }
             return nullptr;
         }
-        static bool RegisterConstructor ( const K& aIdentifier, const std::function < std::unique_ptr<T> ( Args&&... args ) > & aConstructor )
+        static std::unique_ptr<T> Construct ( const std::string& aIdentifier )
         {
-            if ( Constructors.find ( aIdentifier ) == Constructors.end() )
+            return Construct ( crc32i ( aIdentifier.data(), aIdentifier.size() ) );
+        }
+        static bool RegisterConstructor ( const StringId& aIdentifier, const std::function < std::unique_ptr<T>() > & aConstructor )
+        {
+            auto it = std::find_if ( Constructors.begin(), Constructors.end(),
+                                     [aIdentifier] ( const Constructor & aConstructor )
             {
-                Constructors[aIdentifier] = aConstructor;
+                return aIdentifier == std::get<0> ( aConstructor );
+            } );
+            if ( it == Constructors.end() )
+            {
+                Constructors.emplace_back ( aIdentifier, aConstructor );
                 return true;
             }
             return false;
         }
-        static bool UnregisterConstructor ( const K& aIdentifier )
+        static bool UnregisterConstructor ( const StringId& aIdentifier )
         {
-            auto it = Constructors.find ( aIdentifier );
+            auto it = std::find_if ( Constructors.begin(), Constructors.end(),
+                                     [aIdentifier] ( const Constructor & aConstructor )
+            {
+                return aIdentifier == std::get<0> ( aConstructor );
+            } );
             if ( it != Constructors.end() )
             {
                 Constructors.erase ( it );
@@ -70,19 +98,19 @@ namespace AeonGames
             }
             return false;
         }
-        static void EnumerateConstructors ( const std::function<bool ( const K& ) >& aEnumerator )
+        static void EnumerateConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator )
         {
             for ( auto& i : Constructors )
             {
-                if ( !aEnumerator ( i.first ) )
+                if ( !aEnumerator ( std::get<0> ( i ) ) )
                 {
                     return;
                 }
             }
         }
     private:
-        static std::unordered_map < K, std::function < std::unique_ptr<T> ( Args&&... args ) >> Constructors;
+        static std::vector < Constructor > Constructors;
     };
-    template<class K, class T, typename... Args>
-    std::unordered_map < K, std::function < std::unique_ptr<T> ( Args&&... args ) >> Factory<K, T, Args...>::Constructors;
+    template<class T>
+    std::vector<std::tuple<StringId, std::function < std::unique_ptr<T>() >>> Factory<T>::Constructors;
 }

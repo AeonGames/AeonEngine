@@ -31,9 +31,9 @@ namespace AeonGames
 
         constexpr StringId() noexcept = default;
         constexpr StringId ( const StringId& ) noexcept = default;
-        StringId ( StringId&& ) = delete;
-        StringId& operator= ( const StringId& ) = delete;
-        StringId& operator= ( StringId&& ) = delete;
+        constexpr StringId ( StringId&& aString ) noexcept = default;
+        constexpr StringId& operator= ( const StringId& ) noexcept = default;
+        constexpr StringId& operator= ( StringId&& ) noexcept = default;
 
         constexpr uint32_t GetId() const
         {

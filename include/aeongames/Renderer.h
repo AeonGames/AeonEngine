@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ limitations under the License.
 
 #include <string>
 #include <memory>
+#include <functional>
 #include "Platform.h"
 
 namespace AeonGames
 {
+    class StringId;
     class UniformBuffer;
     class Image;
     class Mesh;
@@ -61,5 +63,17 @@ namespace AeonGames
         virtual std::unique_ptr<UniformBuffer> CreateUniformBuffer ( size_t aSize, const void* aData = nullptr ) const = 0;
         DLL virtual ~Renderer() = 0;
     };
+    /**@name Factory Functions */
+    /*@{*/
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier );
+    /** Registers a Renderer loader for a specific identifier.*/
+    DLL bool RegisterRendererConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor );
+    /** Unregisters a Renderer loader for a specific identifier.*/
+    DLL bool UnregisterRendererConstructor ( const StringId& aIdentifier );
+    /** Enumerates Renderer loader identifiers via an enumerator functor.*/
+    DLL void EnumerateRendererConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
+    /*@}*/
 }
 #endif
