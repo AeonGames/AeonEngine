@@ -32,6 +32,8 @@ namespace AeonGames
     {
     public:
         DLL virtual ~Component() = 0;
+        DLL void SetProperty ( const StringId& aId, const Property& aProperty );
+        DLL void SetProperty ( const std::string& aId, const Property& aProperty );
         virtual const StringId& GetId() const = 0;
         virtual size_t GetPropertyCount () const = 0;
         virtual const StringId* GetPropertyInfoArray () const = 0;
@@ -40,12 +42,14 @@ namespace AeonGames
          * Set the value aProperty for the property identified by aId.
          * @note If the type of the value passed does not match the expected types no change should be made.
         */
-        virtual void SetProperty ( const StringId& aId, const Property& aProperty ) = 0;
+        virtual void SetProperty ( uint32_t aId, const Property& aProperty ) = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
     };
     /**@name Factory Functions */
     /*@{*/
+    DLL std::unique_ptr<Component> ConstructComponent ( uint32_t aIdentifier );
+    DLL std::unique_ptr<Component> ConstructComponent ( const std::string& aIdentifier );
     DLL std::unique_ptr<Component> ConstructComponent ( const StringId& aIdentifier );
     /** Registers a Component loader for a specific identifier.*/
     DLL bool RegisterComponentConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Component>() >& aConstructor );

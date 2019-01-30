@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,18 +15,10 @@ limitations under the License.
 */
 #include "Factory.h"
 #include "aeongames/StringId.h"
-#include "aeongames/Component.h"
+#include "aeongames/Renderer.h"
 
 namespace AeonGames
 {
-    Component::~Component() = default;
-    void Component::SetProperty ( const StringId& aId, const Property& aProperty )
-    {
-        SetProperty ( aId.GetId(), aProperty );
-    }
-    void Component::SetProperty ( const std::string& aId, const Property& aProperty )
-    {
-        SetProperty ( crc32i ( aId.data(), aId.size() ), aProperty );
-    }
-    FactoryImplementation ( Component );
+    Renderer::~Renderer() = default;
+    FactoryImplementation ( Renderer );
 }

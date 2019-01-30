@@ -39,7 +39,7 @@ namespace AeonGames
     private slots:
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
-        void on_actionRemoveData_triggered();
+        void on_actionRemoveComponent_triggered();
         void on_sceneContextMenuRequested ( const QPoint& aPoint );
         void on_sceneTreeViewClicked ( const QModelIndex& aModelIndex );
         void on_componentContextMenuRequested ( const QPoint& aPoint );

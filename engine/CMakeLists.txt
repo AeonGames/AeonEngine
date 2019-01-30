@@ -100,7 +100,11 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h)
 
 set(ENGINE_CORE_SOURCES
+    core/AeonEngine.cpp
     core/Configuration.cpp
+    core/CRC.cpp
+    core/Component.cpp
+    core/Renderer.cpp
     core/Image.cpp
     core/Sound.cpp
     core/Pipeline.cpp
@@ -110,14 +114,11 @@ set(ENGINE_CORE_SOURCES
     core/Animation.cpp
     core/SoundSystem.cpp
     core/Utilities.cpp
-    core/AeonEngine.cpp
     core/LogLevel.cpp
     core/Model.cpp
     core/Window.cpp
-    core/CRC.cpp
     core/Scene.cpp
     core/Node.cpp
-    core/Component.cpp
     core/Package.cpp
     core/ResourceFactory.cpp
     core/ResourceCache.cpp

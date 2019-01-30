@@ -88,7 +88,7 @@ namespace AeonGames
         mSceneModel.RemoveNode ( index.row(), index.parent() );
     }
 
-    void SceneWindow::on_actionRemoveData_triggered()
+    void SceneWindow::on_actionRemoveComponent_triggered()
     {
         QModelIndex index = componentListView->currentIndex();
         ///@todo implement removing data from node
