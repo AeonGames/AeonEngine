@@ -18,7 +18,6 @@ limitations under the License.
 #include <variant>
 #include <string>
 #include <filesystem>
-#include "aeongames/StringId.h"
 
 namespace AeonGames
 {
@@ -32,7 +31,6 @@ namespace AeonGames
                      unsigned long long,
                      float,
                      double,
-                     StringId,
                      std::string,
                      std::filesystem::path
                      >;
