@@ -197,7 +197,9 @@ namespace AeonGames
         return mName;
     }
 
+    // Helper for the Property visitor in Serialize/Deserialize
     template<class T> struct always_false : std::false_type {};
+
     void Node::Serialize ( NodeBuffer& aNodeBuffer ) const
     {
         *aNodeBuffer.mutable_name() = GetName();
@@ -220,7 +222,58 @@ namespace AeonGames
             {
                 ComponentPropertyBuffer* component_property_buffer = component_buffer->add_property();
                 ( *component_property_buffer->mutable_name() ) = PropertyIds[j].GetString();
-                /// @todo visit i->GetProperty(PropertyIds[j]) to set the proper value.
+
+                std::visit (
+                    [component_property_buffer] ( auto&& arg )
+                {
+                    using T = std::decay_t<decltype ( arg ) >;
+                    if constexpr ( std::is_same_v<T, int> )
+                    {
+                        component_property_buffer->set_int_ ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, long> )
+                    {
+                        component_property_buffer->set_long_ ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, long long> )
+                    {
+                        component_property_buffer->set_long_long ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, unsigned> )
+                    {
+                        component_property_buffer->set_unsigned_ ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, unsigned long> )
+                    {
+                        component_property_buffer->set_unsigned_long ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, unsigned long long> )
+                    {
+                        component_property_buffer->set_unsigned_long_long ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, float> )
+                    {
+                        component_property_buffer->set_float_ ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, double> )
+                    {
+                        component_property_buffer->set_double_ ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, std::string> )
+                    {
+                        component_property_buffer->set_string ( arg );
+                    }
+                    else if constexpr ( std::is_same_v<T, std::filesystem::path> )
+                    {
+                        component_property_buffer->set_path ( arg.string() );
+                    }
+                    else
+                    {
+                        static_assert ( always_false<T>::value,
+                                        "A non-exhaustive visitor is being "
+                                        "called on an Property object!" );
+                    }
+                }, i->GetProperty ( PropertyIds[j] ) );
             }
         }
     }
