@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <array>
 #include <cstring>
+#include <cmath>
 #include "ModelComponent.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Model.h"
@@ -63,12 +64,12 @@ namespace AeonGames
         return ModelStringId;
     }
 
-    static const std::array<const StringId, 3> ModelComponentPropertyIds
+    static constexpr std::array<const StringId, 3> ModelComponentPropertyIds
     {
         {
             {"Model"},
             {"Active Animation"},
-            {"Animation Delta"},
+            {"Starting Frame"},
         }
     };
 
@@ -87,12 +88,12 @@ namespace AeonGames
     {
         switch ( aId )
         {
-        case "Model"_crc32:
+        case ModelComponentPropertyIds[0]:
             return GetModel().GetPathString();
-        case "Active Animation"_crc32:
+        case ModelComponentPropertyIds[1]:
             return GetActiveAnimation();
-        case "Animation Delta"_crc32:
-            return GetAnimationDelta();
+        case ModelComponentPropertyIds[2]:
+            return GetStartingFrame();
         }
         return Property{};
     }
@@ -101,7 +102,7 @@ namespace AeonGames
     {
         switch ( aId )
         {
-        case "Model"_crc32:
+        case ModelComponentPropertyIds[0]:
             if ( std::holds_alternative<std::string> ( aProperty ) )
             {
                 SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
@@ -115,16 +116,16 @@ namespace AeonGames
                 SetModel ( {"Model"_crc32, std::get<uint32_t> ( aProperty ) } );
             }
             break;
-        case "Active Animation"_crc32:
+        case ModelComponentPropertyIds[1]:
             if ( std::holds_alternative<size_t> ( aProperty ) )
             {
                 SetActiveAnimation ( std::get<size_t> ( aProperty ) );
             }
             break;
-        case "Animation Delta"_crc32:
+        case ModelComponentPropertyIds[2]:
             if ( std::holds_alternative<double> ( aProperty ) )
             {
-                SetAnimationDelta ( std::get<double> ( aProperty ) );
+                SetStartingFrame ( std::get<double> ( aProperty ) );
             }
             break;
         }
@@ -144,7 +145,7 @@ namespace AeonGames
     void ModelComponent::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
     {
         mActiveAnimation = aActiveAnimation;
-        mAnimationDelta = 0.0;
+        mCurrentSample = mStartingFrame;
     }
 
     const size_t& ModelComponent::GetActiveAnimation() const noexcept
@@ -152,19 +153,18 @@ namespace AeonGames
         return mActiveAnimation;
     }
 
-    void ModelComponent::SetAnimationDelta ( double aAnimationDelta ) noexcept
+    void ModelComponent::SetStartingFrame ( double aAnimationDelta ) noexcept
     {
-        mAnimationDelta = aAnimationDelta;
+        mStartingFrame = mCurrentSample = aAnimationDelta;
     }
 
-    const double& ModelComponent::GetAnimationDelta() const noexcept
+    const double& ModelComponent::GetStartingFrame() const noexcept
     {
-        return mAnimationDelta;
+        return mStartingFrame;
     }
 
     void ModelComponent::Update ( Node& aNode, double aDelta )
     {
-        mAnimationDelta += aDelta;
         if ( auto model = mModel.Cast<Model>() )
         {
 
@@ -182,9 +182,10 @@ namespace AeonGames
             {
                 float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
                 auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
+                mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
                 for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
                 {
-                    Matrix4x4 matrix{ ( animation->GetTransform ( i, mAnimationDelta ) *
+                    Matrix4x4 matrix{ ( animation->GetTransform ( i, mCurrentSample ) *
                                         model->GetSkeleton()->GetJoints() [i].GetInvertedTransform() ) };
                     memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
                 }

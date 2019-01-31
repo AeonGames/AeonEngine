@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,7 +36,9 @@ namespace AeonGames
         DLL void Unload ();
         DLL uint32_t GetFrameRate() const;
         DLL double GetDuration() const;
-        DLL const Transform GetTransform ( size_t aBoneIndex, double aTime ) const;
+        DLL double GetSample ( double aTime ) const;
+        DLL double AddTimeToSample ( double aSample, double aTime ) const;
+        DLL const Transform GetTransform ( size_t aBoneIndex, double aSample ) const;
     private:
         void Load ( const AnimationBuffer& aAnimationBuffer );
         std::string mFilename;

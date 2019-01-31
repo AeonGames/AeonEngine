@@ -45,16 +45,17 @@ namespace AeonGames
         const ResourceId& GetModel() const noexcept;
         void SetActiveAnimation ( size_t aActiveAnimation ) noexcept;
         const size_t& GetActiveAnimation() const noexcept;
-        void SetAnimationDelta ( double aAnimationDelta ) noexcept;
-        const double& GetAnimationDelta() const noexcept;
+        void SetStartingFrame ( double aAnimationDelta ) noexcept;
+        const double& GetStartingFrame() const noexcept;
         ///@}
         static const StringId& GetClassId();
     private:
         // Properties
         ResourceId mModel{};
         size_t mActiveAnimation{};
-        double mAnimationDelta{};
+        double mStartingFrame{};
         // Private Data
+        double mCurrentSample{};
         std::unique_ptr<UniformBuffer> mSkeletonBuffer;
     };
 }
