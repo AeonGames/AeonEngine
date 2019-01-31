@@ -169,15 +169,30 @@ namespace AeonGames
         return mDuration;
     }
 
-    const Transform Animation::GetTransform ( size_t aBoneIndex, double aTime ) const
+    double Animation::GetSample ( double aTime ) const
     {
-        double sample = fmod ( mFrameRate * fmod ( aTime, mDuration ), mFrames.size() );
+        /**
+         * The sample integral part represents the initial frame,
+         * the fractional part is the interpolation between the initial frame
+         * and the next.
+        */
+        return fmod ( mFrameRate * fmod ( aTime, mDuration ), mFrames.size() );
+    }
+
+    double Animation::AddTimeToSample ( double aSample, double aTime ) const
+    {
+        return fmod ( aSample + ( mFrameRate * fmod ( aTime, mDuration ) ), mFrames.size() );
+    }
+
+    const Transform Animation::GetTransform ( size_t aBoneIndex, double aSample ) const
+    {
         double frame;
-        double interpolation = modf ( sample, &frame );
+        double interpolation = modf ( aSample, &frame );
         auto frame1 = static_cast<size_t> ( frame );
         size_t frame2 = ( ( frame1 + 1 ) % mFrames.size() );
         size_t frame0 = frame1 == 0 ? mFrames.size() - 1 : ( ( frame1 - 1 ) % mFrames.size() );
         size_t frame3 = ( ( frame1 + 2 ) % mFrames.size() );
+#if 0
         if ( interpolation <= 0.0 )
         {
             return mFrames[frame1][aBoneIndex];
@@ -186,6 +201,10 @@ namespace AeonGames
         {
             return mFrames[frame2][aBoneIndex];
         }
+#else
+        /// modf should guarantee interpolation to be in the range [0.0,1.0)
+        assert ( ( interpolation >= 0.0 ) && ( interpolation < 1.0 ) && "Interpolation out of range [0.0,1.0)." );
+#endif
         return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
     }
 }
