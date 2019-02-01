@@ -18,6 +18,7 @@ limitations under the License.
 #include <memory>
 #include <utility>
 #include <tuple>
+#include <algorithm>
 #include "aeongames/StringId.h"
 
 #define FactoryImplementation(X) \
