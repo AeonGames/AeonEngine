@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import export
+import bpy
 bl_info = {
     "name": "AeonGames Animation Format (.anm)",
     "author": "Rodrigo Hernandez (Kwizatz)",
@@ -25,9 +27,6 @@ bl_info = {
     "tracker_url": "",
     "category": "Import-Export"}
 
-import bpy
-from . import export
-
 
 def anm_menu_func(self, context):
     self.layout.operator(
@@ -38,6 +37,11 @@ def anm_menu_func(self, context):
 def register():
     bpy.utils.register_class(export.ANMExporter)
     bpy.types.INFO_MT_file_export.append(anm_menu_func)
+
+
+def unregister():
+    bpy.utils.unregister_class(export.ANMExporter)
+    bpy.types.INFO_MT_file_export.remove(anm_menu_func)
 
 
 if __name__ == "__main__":

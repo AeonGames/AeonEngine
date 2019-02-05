@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import export
+import bpy
 bl_info = {
     "name": "AeonGames Geometry Format (.gty)",
     "author": "Rodrigo Hernandez",
@@ -24,26 +26,22 @@ bl_info = {
     "tracker_url": "",
     "category": "Import-Export"}
 
-import bpy
-from . import export
 
 def gty_menu_func(self, context):
     self.layout.operator(
         export.GTYExporter.bl_idname,
-        text="AeonGames Mesh (.gty)")
-
-
-def gty_all_menu_func(self, context):
-    self.layout.operator(
-        export.GTYExportAll.bl_idname,
-        text="AeonGames Meshes (.gty)")
+        text="AeonGames Collision Geometry (.gty)")
 
 
 def register():
     bpy.utils.register_class(export.GTYExporter)
     bpy.types.INFO_MT_file_export.append(gty_menu_func)
-    #bpy.utils.register_class(export.GTYExportAll)
-    #bpy.types.INFO_MT_file_export.append(gty_all_menu_func)
+
+
+def unregister():
+    bpy.utils.unregister_class(export.GTYExporter)
+    bpy.types.INFO_MT_file_export.remove(gty_menu_func)
+
 
 if __name__ == "__main__":
     register()
