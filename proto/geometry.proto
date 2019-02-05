@@ -26,8 +26,7 @@ message SixDOPBuffer
 
 message BrushBuffer {
     SixDOPBuffer six_dop = 1;
-    // To Do: change index to be a byte string
-    repeated int32 index = 2;
+    bytes plane_indices  = 2;
 }
 
 message GeometryBuffer {
