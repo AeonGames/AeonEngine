@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,40 +18,20 @@ package AeonGames;
 import "vector3.proto";
 import "vector4.proto";
 
+message SixDOPBuffer
+{
+    Vector3Buffer positive = 1;
+    Vector3Buffer negative = 2;
+}
+
 message BrushBuffer {
-    float SixDOPPX = 1;
-    float SixDOPPY = 2;
-    float SixDOPPZ = 3;
-    float SixDOPNX = 4;
-    float SixDOPNY = 5;
-    float SixDOPNZ = 6;
-    uint32 PlaneIndexStart = 8;
-    uint32 PlaneIndexCount = 7;
-}
-
-message KdNodeBuffer {
-    enum AxisEnum {
-        AxisX=0;
-        AxisY=1;
-        AxisZ=2;
-    }
-    AxisEnum Axis = 1;
-    float Distance = 2;
-    int32 NearIndex = 3;
-    int32 FarIndex = 4;
-}
-
-message KdLeafBuffer {
-    repeated uint32 BrushIndex=1;
+    SixDOPBuffer six_dop = 1;
+    // To Do: change index to be a byte string
+    repeated int32 index = 2;
 }
 
 message GeometryBuffer {
-	uint32 Version         = 1;
-    Vector3Buffer Center   = 2;
-    Vector3Buffer Radii    = 3;
-	repeated Vector4Buffer Plane = 4;
-	repeated uint32 Index = 5;
-	repeated BrushBuffer Brush = 6;
-	repeated KdNodeBuffer KdNode = 7;
-	repeated KdLeafBuffer KdLeaf = 8;
+	uint32 version = 1;
+	repeated Vector4Buffer plane = 2;
+	repeated BrushBuffer brush = 3;
 }
