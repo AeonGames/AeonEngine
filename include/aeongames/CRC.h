@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -210,16 +210,16 @@ constexpr uint32_t crc32r ( const char* message, const std::size_t size )
     return crc32impl ( message, size, 0xFFFFFFFF );
 }
 
+constexpr uint32_t operator "" _crc32 ( const char* message, const std::size_t size )
+{
+    return crc32r ( message, size );
+}
+
 /** Recursive constexpr crc32 calculation, no size required. */
 template< size_t N >
 constexpr uint32_t crc32r ( char const ( &message ) [N] )
 {
-    return crc32impl ( message, N - 1, 0xFFFFFFFF );
-}
-
-constexpr const uint32_t operator "" _crc32 ( const char* message, const std::size_t size )
-{
-    return crc32impl ( message, size, 0xFFFFFFFF );
+    return crc32r ( message, N - 1 );
 }
 
 static_assert ( "AeonGames"_crc32 == 0x2B0C3B, "CRC32 Operator Failure." );
@@ -422,7 +422,7 @@ constexpr uint64_t crc64r ( const char* message, const std::size_t size )
 
 constexpr const uint64_t operator "" _crc64 ( const char* message, const std::size_t size )
 {
-    return crc64impl ( message, size, 0xFFFFFFFFFFFFFFFF );
+    return crc64r ( message, size );
 }
 
 /*

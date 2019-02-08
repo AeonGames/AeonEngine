@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -222,7 +222,7 @@ namespace AeonGames
                     {
                         mAction = Action::Compress;
                     }
-                    else if ( strncmp ( &argv[i][2], "directory\0", 9 ) == 0 )
+                    else if ( strncmp ( &argv[i][2], "directory\0", 10 ) == 0 )
                     {
                         mAction = Action::Directory;
                     }

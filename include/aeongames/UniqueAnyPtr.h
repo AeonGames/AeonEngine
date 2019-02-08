@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,10 @@ namespace AeonGames
     class UniqueAnyPtr
     {
         void* mPointer{};
-        const std::type_info& ( *mManager ) ( void* aPointer ) {};
+        const std::type_info& ( *mManager ) ( void* aPointer )
+        {
+            nullptr
+        };
     public:
         void Swap ( UniqueAnyPtr& aUniqueAnyPtr ) noexcept
         {
@@ -35,10 +38,16 @@ namespace AeonGames
         /** @name Creation and Destruction. */
         /**@{*/
         UniqueAnyPtr() noexcept = default;
-        UniqueAnyPtr ( std::nullptr_t ) noexcept {};
+        UniqueAnyPtr ( std::nullptr_t ) noexcept : mManager
+        {
+            nullptr
+        } {};
         UniqueAnyPtr ( const UniqueAnyPtr& aUniqueResource ) = delete;
         UniqueAnyPtr& operator= ( const UniqueAnyPtr& aUniqueResource ) = delete;
-        UniqueAnyPtr ( UniqueAnyPtr&& aUniqueAnyPtr ) noexcept
+        UniqueAnyPtr ( UniqueAnyPtr&& aUniqueAnyPtr ) noexcept : mManager
+        {
+            nullptr
+        }
         {
             aUniqueAnyPtr.Swap ( *this );
         }
