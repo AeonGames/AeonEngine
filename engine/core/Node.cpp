@@ -450,7 +450,7 @@ namespace AeonGames
 
     bool Node::RemoveByIndex ( size_t aIndex )
     {
-        if ( mNodes.size() < aIndex )
+        if ( aIndex >= mNodes.size() )
         {
             return false;
         }

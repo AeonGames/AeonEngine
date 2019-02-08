@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -142,12 +142,12 @@ namespace AeonGames
         glBufferData ( GL_ARRAY_BUFFER, aMeshBuffer.vertexbuffer().size(), aMeshBuffer.vertexbuffer().data(), GL_STATIC_DRAW );
         OPENGL_CHECK_ERROR_THROW;
 
-        uint8_t* offset = nullptr;
+        size_t offset{0};
         if ( mVertexFlags & Mesh::POSITION_BIT )
         {
             glEnableVertexAttribArray ( 0 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -156,7 +156,7 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( 1 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -165,7 +165,7 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( 2 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -174,7 +174,7 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( 3 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -183,7 +183,7 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( 4 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 2;
         }
@@ -192,12 +192,12 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( 5 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
             glEnableVertexAttribArray ( 6 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mVertexFlags ), offset );
+            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             //offset += sizeof ( uint8_t ) * 4;
         }

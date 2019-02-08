@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -245,7 +245,7 @@ namespace AeonGames
 
     bool Scene::RemoveByIndex ( size_t aIndex )
     {
-        if ( mNodes.size() < aIndex )
+        if ( aIndex >= mNodes.size() )
         {
             return false;
         }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace AeonGames
         char magick_number[8] = { 0 };
         file.read ( magick_number, sizeof ( magick_number ) );
         file.exceptions ( std::ifstream::badbit );
-        if ( strncmp ( magick_number, aFormat.c_str(), 7 ) )
+        if ( strncmp ( magick_number, aFormat.c_str(), 7 ) != 0 )
         {
             file.close();
             std::ostringstream stream;
@@ -107,7 +107,7 @@ namespace AeonGames
         char magick_number[8] = { 0 };
         file.read ( magick_number, sizeof ( magick_number ) );
         file.exceptions ( std::ifstream::badbit );
-        if ( strncmp ( magick_number, aFormat.c_str(), 7 ) )
+        if ( strncmp ( magick_number, aFormat.c_str(), 7 ) != 0 )
         {
             file.close();
             std::ostringstream stream;
@@ -181,7 +181,7 @@ namespace AeonGames
     template<class T> T LoadProtoBufObject ( const void * aData, size_t aSize, const std::string& aFormat )
     {
         T t;
-        if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) )
+        if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) != 0 )
         {
             std::ostringstream stream;
             stream << "Provided buffer does not contain " << aFormat << " information.";
@@ -226,7 +226,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Not enough data or null pointer passed to LoadProtoBufObject." );
         }
-        if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) )
+        if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) != 0 )
         {
             std::ostringstream stream;
             stream << "Provided buffer does not contain " << aFormat << " information.";

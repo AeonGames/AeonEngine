@@ -355,7 +355,7 @@ namespace AeonGames
     {
         VkSurfaceCapabilitiesKHR surface_capabilities{};
         VkResult result {vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_capabilities ) };
-        if ( !result && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) )
+        if ( !result && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) != 0 )
         {
             if ( ( result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) ) )
             {

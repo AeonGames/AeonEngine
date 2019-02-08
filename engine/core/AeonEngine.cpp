@@ -53,7 +53,7 @@ namespace AeonGames
 #else
     static std::vector<std::tuple<void*, PluginModuleInterface*>> gPlugInCache;
 #endif
-    static std::string gPlugInPath ( std::getenv ( "PATH" ) );
+    static std::string gPlugInPath ( std::getenv ( "PATH" ) ? std::getenv ( "PATH" ) : ""  );
     static void LoadPlugin ( const std::string& aDir, const std::string& aFilename )
     {
         std::cout << "Plugin: " << aFilename << std::endl;
