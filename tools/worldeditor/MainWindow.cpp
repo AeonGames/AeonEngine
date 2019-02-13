@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ namespace AeonGames
         mdiSubWindow->setWindowTitle ( tr ( "Untitled Scene" ) );
         mdiSubWindow->showMaximized();
         mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
+        actionNew->setEnabled ( true );
     }
 
     void MainWindow::on_actionOpen_triggered()
@@ -68,8 +69,11 @@ namespace AeonGames
             mdiSubWindow->showMaximized();
             mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
             sceneWindow->Open ( fileinfo.absoluteFilePath().toStdString() );
+            /** @todo handle open failure. */
+            actionNew->setEnabled ( true );
         }
     }
+
     void MainWindow::on_actionSave_triggered()
     {
         QMdiSubWindow*
