@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ namespace AeonGames
     class Vector4;
     class MaterialBuffer;
     class PropertyBuffer;
-#if 1
     class Material
     {
     public:
@@ -38,9 +37,9 @@ namespace AeonGames
         virtual std::unique_ptr<Material> Clone() const = 0;
         ///@name Loaders
         ///@{
-        virtual void Load ( const std::string& aFilename ) = 0;
-        virtual void Load ( const uint32_t aId ) = 0;
-        virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const uint32_t aId );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
         virtual void Load ( const MaterialBuffer& aMaterialBuffer ) = 0;
         virtual void Unload() = 0;
         ///@}
@@ -66,96 +65,5 @@ namespace AeonGames
         virtual const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const = 0;
         ///@}
     };
-#else
-    class Material
-    {
-    public:
-        enum PropertyType
-        {
-            UNKNOWN = 0,
-            UINT,
-            FLOAT,
-            SINT,
-            FLOAT_VEC2,
-            FLOAT_VEC3,
-            FLOAT_VEC4,
-            SAMPLER_2D,
-            SAMPLER_CUBE,
-        };
-    private:
-        class Property
-        {
-        public:
-            Property ( Material& aMaterial, const PropertyBuffer& aPropertyBuffer );
-            ~Property();
-            DLL Property ( const Property& aProperty );
-            DLL Property& operator = ( const Property& aProperty );
-            ///@name Getters
-            ///@{
-            DLL PropertyType GetType() const;
-            DLL const std::string GetDeclaration() const;
-            DLL const std::string& GetName() const;
-            DLL uint32_t GetUint() const;
-            DLL int32_t GetSint() const;
-            DLL float GetFloat() const;
-            DLL Vector2 GetVector2() const;
-            DLL Vector3 GetVector3() const;
-            DLL Vector4 GetVector4() const;
-            DLL const Image* GetImage() const;
-            ///@}
-            ///@name Setters
-            ///@{
-            DLL void Set ( uint32_t aValue );
-            DLL void Set ( int32_t aValue );
-            DLL void Set ( float aValue );
-            DLL void Set ( const Vector2& aValue );
-            DLL void Set ( const Vector3& aValue );
-            DLL void Set ( const Vector4& aValue );
-            DLL void Set ( const std::string& aFileName );
-            ///@}
-        private:
-            friend class Material;
-            Material* mMaterial{};
-            std::string mName{};
-            PropertyType mType{ UNKNOWN };
-            union
-            {
-                size_t mOffset;
-                std::unique_ptr<AeonGames::Image> mImage;
-            };
-        };
-    public:
-        DLL Material();
-        DLL Material ( uint32_t aId );
-        DLL Material ( const std::string& aFilename );
-        DLL Material ( const void* aBuffer, size_t aBufferSize );
-        DLL Material ( const MaterialBuffer& aMaterialBuffer );
-        DLL Material ( const Material& aMaterial );
-        DLL Material& operator = ( const Material& aMaterial );
-        DLL virtual ~Material();
-        DLL void Load ( const std::string& aFilename );
-        DLL void Load ( const void* aBuffer, size_t aBufferSize );
-        DLL void Load ( const MaterialBuffer& aMaterialBuffer );
-        DLL void Unload();
-        DLL const std::vector<Property>& GetProperties() const;
-        DLL const std::vector<uint8_t>& GetPropertyBlock() const;
-        DLL size_t GetSamplerCount() const;
-        ///@}
-        ///@name Property Setters
-        ///@{
-        DLL void Set ( const std::string& aName, uint32_t aValue );
-        DLL void Set ( const std::string& aName, int32_t aValue );
-        DLL void Set ( const std::string& aName, float aValue );
-        DLL void Set ( const std::string& aName, const Vector2& aValue );
-        DLL void Set ( const std::string& aName, const Vector3& aValue );
-        DLL void Set ( const std::string& aName, const Vector4& aValue );
-        ///@}
-        DLL static const std::shared_ptr<Material> GetMaterial ( uint32_t aId );
-        DLL static const std::shared_ptr<Material> GetMaterial ( const std::string& aPath );
-    private:
-        std::vector<Property> mProperties{};
-        std::vector<uint8_t> mPropertyBlock{};
-    };
-#endif
 }
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            Load ( aPath );
+            Material::Load ( aPath );
         }
     }
 
@@ -65,34 +65,6 @@ namespace AeonGames
     std::unique_ptr<Material> OpenGLMaterial::Clone() const
     {
         return std::make_unique<OpenGLMaterial> ( *this );
-    }
-
-    void OpenGLMaterial::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-
-    void OpenGLMaterial::Load ( const uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    void OpenGLMaterial::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static MaterialBuffer material_buffer;
-        LoadProtoBufObject ( material_buffer, aBuffer, aBufferSize, "AEONMTL" );
-        Load ( material_buffer );
-        material_buffer.Clear();
     }
 
     void OpenGLMaterial::Load ( const MaterialBuffer& aMaterialBuffer )
