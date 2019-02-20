@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,9 +32,6 @@ namespace AeonGames
         OpenGLPipeline ( uint32_t aPath = 0 );
         ///@name Overrides
         ///@{
-        void Load ( const std::string& aFilename ) final;
-        void Load ( uint32_t aId ) final;
-        void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const PipelineBuffer& aPipelineBuffer ) final;
         void Unload() final;
         const OpenGLMaterial& GetDefaultMaterial() const final;
