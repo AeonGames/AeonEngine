@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -181,6 +181,59 @@ namespace AeonGames
         return attributes;
     }
 
+    static std::string GetPropertiesCode ( const PipelineBuffer& aPipelineBuffer, uint32_t aSetNumber )
+    {
+        std::string properties;
+        if ( aPipelineBuffer.default_material().property().size() )
+        {
+            std::string properties =
+                "layout(set = " + std::to_string ( aSetNumber ) + ", binding = 0,std140) uniform Properties{\n";
+            for ( auto& i : aPipelineBuffer.default_material().property() )
+            {
+                switch ( i.value_case() )
+                {
+                case PropertyBuffer::ValueCase::kScalarFloat:
+                    properties += "float " + i.name() + ";\n";
+                    break;
+                case PropertyBuffer::ValueCase::kScalarUint:
+                    properties += "uint " + i.name() + ";\n";
+                    break;
+                case PropertyBuffer::ValueCase::kScalarInt:
+                    properties += "int " + i.name() + ";\n";
+                    break;
+                case PropertyBuffer::ValueCase::kVector2:
+                    properties += "vec2 " + i.name() + ";\n";
+                    break;
+                case PropertyBuffer::ValueCase::kVector3:
+                    properties += "vec3 " + i.name() + ";\n";
+                    break;
+                case PropertyBuffer::ValueCase::kVector4:
+                    properties += "vec4 " + i.name() + ";\n";
+                    break;
+                default:
+                    throw std::runtime_error ( "Unknown Type." );
+                }
+            }
+            properties.append ( "};\n" );
+        }
+        return properties;
+    }
+
+    static std::string GetSamplersCode ( const PipelineBuffer& aPipelineBuffer, uint32_t aSetNumber )
+    {
+        std::string samplers ( "//----SAMPLERS-START----\n" );
+        {
+            uint32_t sampler_binding = 0;
+            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            {
+                samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                ++sampler_binding;
+            }
+        }
+        samplers.append ( "//----SAMPLERS-END----\n" );
+        return samplers;
+    }
+
     static std::string GetVertexShaderCode ( const PipelineBuffer& aPipelineBuffer )
     {
         std::string vertex_shader{ "#version 450\n" };
@@ -220,54 +273,9 @@ namespace AeonGames
             );
             vertex_shader.append ( skeleton );
         }
-        if ( aPipelineBuffer.default_material().property().size() )
-        {
-            std::string properties (
-                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0,std140) uniform Properties{\n"
-            );
-            for ( auto& i : aPipelineBuffer.default_material().property() )
-            {
-                switch ( i.value_case() )
-                {
-                case PropertyBuffer::ValueCase::kScalarFloat:
-                    properties += "float " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kScalarUint:
-                    properties += "uint " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kScalarInt:
-                    properties += "int " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector2:
-                    properties += "vec2 " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector3:
-                    properties += "vec3 " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector4:
-                    properties += "vec4 " + i.name() + ";\n";
-                    break;
-                default:
-                    throw std::runtime_error ( "Unknown Type." );
-                }
-            }
-            properties.append ( "};\n" );
-            vertex_shader.append ( properties );
-        }
 
-        std::string samplers ( "//----SAMPLERS-START----\n" );
-        {
-            uint32_t sampler_binding = 0;
-            for ( auto& i : aPipelineBuffer.default_material().sampler() )
-            {
-                samplers += "layout(set = " + std::to_string ( set_count ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
-                ++sampler_binding;
-            }
-            set_count += 1;
-        }
-        samplers.append ( "//----SAMPLERS-END----\n" );
-
-        vertex_shader.append ( samplers );
+        vertex_shader.append ( GetPropertiesCode ( aPipelineBuffer, set_count++ ) );
+        vertex_shader.append ( GetSamplersCode ( aPipelineBuffer, set_count++ ) );
 
         switch ( aPipelineBuffer.vertex_shader().source_case() )
         {
@@ -305,54 +313,10 @@ namespace AeonGames
             );
             fragment_shader.append ( skeleton );
         }
-        if ( aPipelineBuffer.default_material().property().size() )
-        {
-            std::string properties (
-                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0,std140) uniform Properties{\n"
-            );
-            for ( auto& i : aPipelineBuffer.default_material().property() )
-            {
-                switch ( i.value_case() )
-                {
-                case PropertyBuffer::ValueCase::kScalarFloat:
-                    properties += "float " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kScalarUint:
-                    properties += "uint " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kScalarInt:
-                    properties += "int " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector2:
-                    properties += "vec2 " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector3:
-                    properties += "vec3 " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector4:
-                    properties += "vec4 " + i.name() + ";\n";
-                    break;
-                default:
-                    throw std::runtime_error ( "Unknown Type." );
-                }
-            }
-            properties.append ( "};\n" );
 
-            std::string samplers ( "//----SAMPLERS-START----\n" );
-            {
-                uint32_t sampler_binding = 0;
-                for ( auto& i : aPipelineBuffer.default_material().sampler() )
-                {
-                    samplers += "layout(set = " + std::to_string ( set_count ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
-                    ++sampler_binding;
-                }
-                set_count += 1;
-            }
-            samplers.append ( "//----SAMPLERS-END----\n" );
+        fragment_shader.append ( GetPropertiesCode ( aPipelineBuffer, set_count++ ) );
+        fragment_shader.append ( GetSamplersCode ( aPipelineBuffer, set_count++ ) );
 
-            fragment_shader.append ( properties );
-            fragment_shader.append ( samplers );
-        }
         switch ( aPipelineBuffer.fragment_shader().source_case() )
         {
         case ShaderBuffer::SourceCase::kCode:
