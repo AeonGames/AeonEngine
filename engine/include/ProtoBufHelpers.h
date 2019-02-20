@@ -66,6 +66,7 @@ namespace AeonGames
         {
             if ( !t.ParseFromIstream ( &file ) )
             {
+                file.close();
                 std::ostringstream stream;
                 stream << "Binary parse failed on file " << aFilename;
                 throw std::runtime_error ( stream.str().c_str() );
@@ -73,10 +74,10 @@ namespace AeonGames
         }
         else
         {
-            file.close();
             std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
             if ( !google::protobuf::TextFormat::ParseFromString ( text, &t ) )
             {
+                file.close();
                 std::ostringstream stream;
                 stream << "Text parse failed on file " << aFilename;
                 throw std::runtime_error ( stream.str().c_str() );
