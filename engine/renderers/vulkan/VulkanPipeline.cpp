@@ -186,7 +186,7 @@ namespace AeonGames
         std::string properties;
         if ( aPipelineBuffer.default_material().property().size() )
         {
-            std::string properties =
+            properties =
                 "layout(set = " + std::to_string ( aSetNumber ) + ", binding = 0,std140) uniform Properties{\n";
             for ( auto& i : aPipelineBuffer.default_material().property() )
             {
