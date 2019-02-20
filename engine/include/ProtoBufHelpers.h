@@ -31,58 +31,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    /** Loads a Protocol Buffer Object from an AeonGames file.
-    @param aFilename Path to file to load object from.
-    @param aFormat Expected format of the file represented by its magick number.
-    @return A fully loaded protocol buffer object.
-    @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
-    */
-    template<class T> T LoadProtoBufObject ( const std::string& aFilename, const std::string& aFormat )
-    {
-        T t;
-        if ( !FileExists ( aFilename ) )
-        {
-            std::ostringstream stream;
-            stream << "File " << aFilename << " not found.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        std::ifstream file;
-        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-        file.open ( aFilename, std::ifstream::in | std::ifstream::binary );
-        char magick_number[8] = { 0 };
-        file.read ( magick_number, sizeof ( magick_number ) );
-        file.exceptions ( std::ifstream::badbit );
-        if ( strncmp ( magick_number, aFormat.c_str(), 7 ) != 0 )
-        {
-            file.close();
-            std::ostringstream stream;
-            stream << "File " << aFilename << " Is not an AeonGames format.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        else if ( magick_number[7] == '\0' )
-        {
-            file.close();
-            if ( !t.ParseFromIstream ( &file ) )
-            {
-                std::ostringstream stream;
-                stream << "Binary parse failed on file " << aFilename;
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        else
-        {
-            file.close();
-            std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
-            if ( !google::protobuf::TextFormat::ParseFromString ( text, &t ) )
-            {
-                std::ostringstream stream;
-                stream << "Text parse failed on file " << aFilename;
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        file.close();
-        return t;
-    }
     /** Loads a Protocol Buffer Object from an AeonGames file into the provided reference.
     @param t Reference to the object to be loaded with the file data.
     @param aFilename Path to file to load object from.
@@ -125,6 +73,7 @@ namespace AeonGames
         }
         else
         {
+            file.close();
             std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
             if ( !google::protobuf::TextFormat::ParseFromString ( text, &t ) )
             {
@@ -134,6 +83,19 @@ namespace AeonGames
             }
         }
         file.close();
+    }
+
+    /** Loads a Protocol Buffer Object from an AeonGames file.
+    @param aFilename Path to file to load object from.
+    @param aFormat Expected format of the file represented by its magick number.
+    @return A fully loaded protocol buffer object.
+    @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
+    */
+    template<class T> T LoadProtoBufObject ( const std::string& aFilename, const std::string& aFormat )
+    {
+        T t;
+        LoadProtoBufObject ( t, aFilename, aFormat );
+        return t;
     }
 
     // Helper class to read from a raw memory buffer.
@@ -171,44 +133,6 @@ namespace AeonGames
         const uint8_t* mEnd;
     };
 
-    /** Loads a Protocol Buffer Object from a memory buffer.
-    @param aData Pointer to the start of the buffer.
-    @param aSize size of the provided buffer.
-    @param aFormat Expected format of the file represented by its magick number.
-    @return A fully loaded protocol buffer object.
-    @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
-    */
-    template<class T> T LoadProtoBufObject ( const void * aData, size_t aSize, const std::string& aFormat )
-    {
-        T t;
-        if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) != 0 )
-        {
-            std::ostringstream stream;
-            stream << "Provided buffer does not contain " << aFormat << " information.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        else if ( reinterpret_cast<const uint8_t*> ( aData ) [7] == '\0' )
-        {
-            BufferInputStream buffer_input_stream ( reinterpret_cast<const uint8_t*> ( aData ) + 8, aSize - 8 );
-            if ( !t.ParseFromZeroCopyStream ( &buffer_input_stream ) )
-            {
-                std::ostringstream stream;
-                stream << "Binary parse failed on " << aFormat << "buffer.";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        else
-        {
-            BufferInputStream buffer_input_stream ( reinterpret_cast<const uint8_t*> ( aData ) + 8, aSize - 8 );
-            if ( !google::protobuf::TextFormat::Parse ( &buffer_input_stream, &t ) )
-            {
-                std::ostringstream stream;
-                stream << "Text parse failed on " << aFormat << " buffer.";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        return t;
-    }
     /** Loads a Protocol Buffer Object from a meory buffer into the provided reference.
     @param t Reference to the object to be loaded with the file data.
     @param aData Pointer to the start of the buffer.
@@ -252,5 +176,19 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
+    }
+
+    /** Loads a Protocol Buffer Object from a memory buffer.
+    @param aData Pointer to the start of the buffer.
+    @param aSize size of the provided buffer.
+    @param aFormat Expected format of the file represented by its magick number.
+    @return A fully loaded protocol buffer object.
+    @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
+    */
+    template<class T> T LoadProtoBufObject ( const void * aData, size_t aSize, const std::string& aFormat )
+    {
+        T t;
+        LoadProtoBufObject ( t, aData, aSize, aFormat );
+        return t;
     }
 }
