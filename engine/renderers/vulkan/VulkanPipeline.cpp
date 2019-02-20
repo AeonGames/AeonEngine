@@ -21,6 +21,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -47,7 +48,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            Load ( aPath );
+            Pipeline::Load ( aPath );
         }
     }
 
@@ -70,155 +71,6 @@ namespace AeonGames
         return mVkPipeline;
     }
 
-    void VulkanPipeline::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-    void VulkanPipeline::Load ( uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-    void VulkanPipeline::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static PipelineBuffer pipeline_buffer;
-        LoadProtoBufObject ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
-        Load ( pipeline_buffer );
-        pipeline_buffer.Clear();
-    }
-
-    enum AttributeBits
-    {
-        VertexPositionBit = 0x1,
-        VertexNormalBit = 0x2,
-        VertexTangentBit = 0x4,
-        VertexBitangentBit = 0x8,
-        VertexUVBit = 0x10,
-        VertexWeightIndicesBit = 0x20,
-        VertexWeightsBit = 0x40,
-        VertexAllBits = VertexPositionBit |
-                        VertexNormalBit |
-                        VertexTangentBit |
-                        VertexBitangentBit |
-                        VertexUVBit |
-                        VertexWeightIndicesBit |
-                        VertexWeightsBit
-    };
-
-    enum AttributeFormat
-    {
-        Vector2Float,
-        Vector3Float,
-        Vector4Byte,
-        Vector4ByteNormalized,
-    };
-
-    static const std::array<const char*, 7> AttributeStrings
-    {
-        {
-            "VertexPosition",
-            "VertexNormal",
-            "VertexTangent",
-            "VertexBitangent",
-            "VertexUV",
-            "VertexWeightIndices",
-            "VertexWeights"
-        }
-    };
-
-    static const std::array<const char*, 7> AttributeTypes
-    {
-        {
-            "vec3",
-            "vec3",
-            "vec3",
-            "vec3",
-            "vec2",
-            "uvec4",
-            "vec4"
-        }
-    };
-
-    /**@note static const regex: construct once, use for ever.*/
-    static const std::regex attribute_regex (
-        "\\bVertexPosition\\b|"
-        "\\bVertexNormal\\b|"
-        "\\bVertexTangent\\b|"
-        "\\bVertexBitangent\\b|"
-        "\\bVertexUV\\b|"
-        "\\bVertexWeightIndices\\b|"
-        "\\bVertexWeights\\b" );
-
-    static uint32_t GetAttributes ( const PipelineBuffer& aPipelineBuffer )
-    {
-        std::smatch attribute_matches;
-        uint32_t attributes{};
-        std::string code = aPipelineBuffer.vertex_shader().code();
-        while ( std::regex_search ( code, attribute_matches, attribute_regex ) )
-        {
-            for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
-            {
-                if ( attribute_matches.str().substr ( 6 ) == AttributeStrings[i] + 6 )
-                {
-                    if ( ! ( attributes & ( 1 << i ) ) )
-                    {
-                        attributes |= ( 1 << i );
-                    }
-                    break;
-                }
-            }
-            code = attribute_matches.suffix();
-        }
-        return attributes;
-    }
-
-    static std::string GetPropertiesCode ( const PipelineBuffer& aPipelineBuffer, uint32_t aSetNumber )
-    {
-        std::string properties;
-        if ( aPipelineBuffer.default_material().property().size() )
-        {
-            properties =
-                "layout(set = " + std::to_string ( aSetNumber ) + ", binding = 0,std140) uniform Properties{\n";
-            for ( auto& i : aPipelineBuffer.default_material().property() )
-            {
-                switch ( i.value_case() )
-                {
-                case PropertyBuffer::ValueCase::kScalarFloat:
-                    properties += "float " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kScalarUint:
-                    properties += "uint " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kScalarInt:
-                    properties += "int " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector2:
-                    properties += "vec2 " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector3:
-                    properties += "vec3 " + i.name() + ";\n";
-                    break;
-                case PropertyBuffer::ValueCase::kVector4:
-                    properties += "vec4 " + i.name() + ";\n";
-                    break;
-                default:
-                    throw std::runtime_error ( "Unknown Type." );
-                }
-            }
-            properties.append ( "};\n" );
-        }
-        return properties;
-    }
-
     static std::string GetSamplersCode ( const PipelineBuffer& aPipelineBuffer, uint32_t aSetNumber )
     {
         std::string samplers ( "//----SAMPLERS-START----\n" );
@@ -237,23 +89,9 @@ namespace AeonGames
     static std::string GetVertexShaderCode ( const PipelineBuffer& aPipelineBuffer )
     {
         std::string vertex_shader{ "#version 450\n" };
-        uint32_t attributes{GetAttributes ( aPipelineBuffer ) };
-        for ( uint32_t i = 0; i < 7; ++i )
-        {
-            if ( attributes & ( 1 << i ) )
-            {
-                vertex_shader.append ( "layout(location = " );
-                vertex_shader.append ( std::to_string ( i ) );
-                vertex_shader.append ( ") in " );
-                vertex_shader.append ( AttributeTypes[i] );
-                vertex_shader.append ( " " );
-                vertex_shader.append ( AttributeStrings[i] );
-                vertex_shader.append ( ";\n" );
-            }
-        }
+        vertex_shader.append ( GetAttributesGLSL ( aPipelineBuffer ) );
 
         uint32_t set_count = 0;
-
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
             "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
@@ -261,6 +99,7 @@ namespace AeonGames
             "mat4 ViewMatrix;\n"
             "};\n"
         );
+
         vertex_shader.append ( transforms );
 
         if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
@@ -274,7 +113,11 @@ namespace AeonGames
             vertex_shader.append ( skeleton );
         }
 
-        vertex_shader.append ( GetPropertiesCode ( aPipelineBuffer, set_count++ ) );
+        // Properties
+        vertex_shader.append (
+            "layout(set = " + std::to_string ( set_count++ ) +
+            ", binding = 0,std140) uniform Properties{\n" +
+            GetPropertiesGLSL ( aPipelineBuffer ) + "};\n" );
         vertex_shader.append ( GetSamplersCode ( aPipelineBuffer, set_count++ ) );
 
         switch ( aPipelineBuffer.vertex_shader().source_case() )
@@ -314,7 +157,9 @@ namespace AeonGames
             fragment_shader.append ( skeleton );
         }
 
-        fragment_shader.append ( GetPropertiesCode ( aPipelineBuffer, set_count++ ) );
+        fragment_shader.append ( "layout(set = " + std::to_string ( set_count++ ) +
+                                 ", binding = 0,std140) uniform Properties{\n" +
+                                 GetPropertiesGLSL ( aPipelineBuffer ) + "};\n" );
         fragment_shader.append ( GetSamplersCode ( aPipelineBuffer, set_count++ ) );
 
         switch ( aPipelineBuffer.fragment_shader().source_case() )

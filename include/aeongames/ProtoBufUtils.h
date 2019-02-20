@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,10 +16,15 @@ limitations under the License.
 #ifndef AEONGAMES_PROTOBUFUTILS_H
 #define AEONGAMES_PROTOBUFUTILS_H
 #include <cstdint>
+#include <string>
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
     class ReferenceBuffer;
+    class PipelineBuffer;
     DLL uint32_t GetReferenceBufferId ( const ReferenceBuffer& reference_buffer );
+    DLL uint32_t GetAttributes ( const PipelineBuffer& aPipelineBuffer );
+    DLL std::string GetAttributesGLSL ( const PipelineBuffer& aPipelineBuffer );
+    DLL std::string GetPropertiesGLSL ( const PipelineBuffer& aPipelineBuffer );
 }
 #endif
