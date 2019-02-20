@@ -14,7 +14,7 @@
                         "value":"${DEBUG_PATH}"
                     }                    
                 ],
-                "externalConsole": false,
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
                         "program": "${CMAKE_BINARY_DIR}/bin/worldeditor${CMAKE_EXECUTABLE_SUFFIX}",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
@@ -39,7 +39,7 @@
                         "value":"${DEBUG_PATH}"
                     }                    
                 ],
-                "externalConsole": false,
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
                         "program": "${CMAKE_BINARY_DIR}/bin/unit-tests${CMAKE_EXECUTABLE_SUFFIX}",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
@@ -66,7 +66,7 @@
                         "value":"${DEBUG_PATH}"
                     }                    
                 ],
-                "externalConsole": false,
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
                         "program": "${CMAKE_BINARY_DIR}/bin/aeontool${CMAKE_EXECUTABLE_SUFFIX}",
                         "miDebuggerPath": "${GDB_EXECUTABLE}",
                         "MIMode": "gdb",
