@@ -29,6 +29,7 @@ limitations under the License.
 #include "Factory.h"
 #include "aeongames/StringId.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -283,49 +284,11 @@ namespace AeonGames
         SetName ( aNodeBuffer.name() );
         if ( aNodeBuffer.has_local() )
         {
-            SetLocalTransform (
-            {
-                {
-                    aNodeBuffer.local().scale().x(),
-                    aNodeBuffer.local().scale().y(),
-                    aNodeBuffer.local().scale().z()
-                },
-                {
-                    aNodeBuffer.local().rotation().w(),
-                    aNodeBuffer.local().rotation().x(),
-                    aNodeBuffer.local().rotation().y(),
-                    aNodeBuffer.local().rotation().z()
-                },
-                {
-                    aNodeBuffer.local().translation().x(),
-                    aNodeBuffer.local().translation().y(),
-                    aNodeBuffer.local().translation().z()
-                }
-            }
-            );
+            SetLocalTransform ( GetTransform ( aNodeBuffer.local() ) );
         }
         else if ( aNodeBuffer.has_global() )
         {
-            SetGlobalTransform (
-            {
-                {
-                    aNodeBuffer.global().scale().x(),
-                    aNodeBuffer.global().scale().y(),
-                    aNodeBuffer.global().scale().z()
-                },
-                {
-                    aNodeBuffer.global().rotation().w(),
-                    aNodeBuffer.global().rotation().x(),
-                    aNodeBuffer.global().rotation().y(),
-                    aNodeBuffer.global().rotation().z()
-                },
-                {
-                    aNodeBuffer.global().translation().x(),
-                    aNodeBuffer.global().translation().y(),
-                    aNodeBuffer.global().translation().z()
-                }
-            }
-            );
+            SetGlobalTransform ( GetTransform ( aNodeBuffer.global() ) );
         }
         for ( auto& i : aNodeBuffer.component() )
         {
@@ -474,32 +437,6 @@ namespace AeonGames
         return true;
     }
 
-    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
-    {
-        /** @todo (EC++ Item 3) This code is the same as the constant overload,
-        but can't easily be implemented in terms of that because of aAction's node parameter
-        need to also be const.
-        */
-        auto node = this;
-        aAction ( *node );
-        auto parent = mParent;
-        while ( node != parent )
-        {
-            if ( node->mIterator < node->mNodes.size() )
-            {
-                auto prev = node;
-                node = node->mNodes[node->mIterator];
-                aAction ( *node );
-                prev->mIterator++;
-            }
-            else
-            {
-                node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
-            }
-        }
-    }
-
     void Node::LoopTraverseDFSPreOrder (
         const std::function<void ( Node& ) >& aPreamble,
         const std::function<void ( Node& ) >& aPostamble )
@@ -518,7 +455,7 @@ namespace AeonGames
                 auto prev = node;
                 node = node->mNodes[node->mIterator];
                 aPreamble ( *node );
-                prev->mIterator++;
+                ++prev->mIterator;
             }
             else
             {
@@ -529,77 +466,68 @@ namespace AeonGames
         }
     }
 
-    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( const Node& ) >& aAction ) const
-    {
-        auto node = this;
-        aAction ( *node );
-        auto parent = mParent;
-        while ( node != parent )
-        {
-            if ( node->mIterator < node->mNodes.size() )
-            {
-                auto prev = node;
-                node = node->mNodes[node->mIterator];
-                aAction ( *node );
-                ++prev->mIterator;
-            }
-            else
-            {
-                node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
-            }
-        }
+    /*  This is ugly, but it is only way to use the same code for the const and the non const version
+        without having to add template or friend members to the class declaration. */
+#define LoopTraverseDFSPreOrder(CONST) \
+    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( CONST Node& ) >& aAction ) CONST \
+    {\
+        /** @todo (EC++ Item 3) This code is the same as the constant overload,\
+        but can't easily be implemented in terms of that because of aAction's node parameter\
+        need to also be const.\
+        */\
+        auto node = this;\
+        aAction ( *node );\
+        auto parent = mParent;\
+        while ( node != parent )\
+        {\
+            if ( node->mIterator < node->mNodes.size() )\
+            {\
+                auto prev = node;\
+                node = node->mNodes[node->mIterator];\
+                aAction ( *node );\
+                prev->mIterator++;\
+            }\
+            else\
+            {\
+                node->mIterator = 0; /* Reset counter for next traversal.*/\
+                node = node->mParent;\
+            }\
+        }\
     }
 
-    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
-    {
-        /*
-        This code implements a similar solution to this stackoverflow answer:
-        http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
-        */
-        auto node = this;
-        auto parent = mParent;
-        while ( node != parent )
-        {
-            if ( node->mIterator < node->mNodes.size() )
-            {
-                auto prev = node;
-                node = node->mNodes[node->mIterator];
-                ++prev->mIterator;
-            }
-            else
-            {
-                aAction ( *node );
-                node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
-            }
-        }
+    LoopTraverseDFSPreOrder ( const )
+    LoopTraverseDFSPreOrder()
+#undef LoopTraverseDFSPreOrder
+
+#define LoopTraverseDFSPostOrder(CONST) \
+    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( CONST Node& ) >& aAction ) CONST \
+    { \
+        /* \
+        This code implements a similar solution to this stackoverflow answer: \
+        http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138 \
+        */ \
+        auto node = this; \
+        auto parent = mParent; \
+        while ( node != parent ) \
+        { \
+            if ( node->mIterator < node->mNodes.size() ) \
+            { \
+                auto prev = node; \
+                node = node->mNodes[node->mIterator]; \
+                ++prev->mIterator; \
+            } \
+            else \
+            { \
+                aAction ( *node ); \
+                node->mIterator = 0; /* Reset counter for next traversal. */ \
+                node = node->mParent; \
+            } \
+        } \
     }
 
-    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( const Node& ) >& aAction ) const
-    {
-        /*
-        This code implements a similar solution to this stackoverflow answer:
-        http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138
-        */
-        auto node = this;
-        auto parent = mParent;
-        while ( node != parent )
-        {
-            if ( node->mIterator < node->mNodes.size() )
-            {
-                auto prev = node;
-                node = node->mNodes[node->mIterator];
-                ++prev->mIterator;
-            }
-            else
-            {
-                aAction ( *node );
-                node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
-            }
-        }
-    }
+    LoopTraverseDFSPostOrder ( const )
+    LoopTraverseDFSPostOrder()
+#undef LoopTraverseDFSPostOrder
 
     void Node::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )
     {
