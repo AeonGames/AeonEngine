@@ -17,6 +17,8 @@ limitations under the License.
 #include <regex>
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
+#include "aeongames/Quaternion.h"
+#include "aeongames/Vector3.h"
 #include "aeongames/CRC.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -24,6 +26,9 @@ limitations under the License.
 #endif
 #include "reference.pb.h"
 #include "pipeline.pb.h"
+#include "vector3.pb.h"
+#include "quaternion.pb.h"
+#include "transform.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -154,4 +159,24 @@ namespace AeonGames
         }
         return properties;
     }
+
+    Vector3 GetVector3 ( const Vector3Buffer& aVector3 )
+    {
+        return {aVector3.x(), aVector3.y(), aVector3.z() };
+    }
+    Quaternion GetQuaternion ( const QuaternionBuffer& aQuaternion )
+    {
+        return {aQuaternion.w(), aQuaternion.x(), aQuaternion.y(), aQuaternion.z() };
+    }
+
+    Transform GetTransform ( const TransformBuffer& aTransform )
+    {
+        return
+        {
+            GetVector3 ( aTransform.scale() ),
+            GetQuaternion ( aTransform.rotation() ),
+            GetVector3 ( aTransform.translation() )
+        };
+    }
+
 }
