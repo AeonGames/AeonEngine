@@ -295,43 +295,7 @@ namespace AeonGames
             Component* component = AddComponent ( ConstructComponent ( i.name() ) );
             for ( auto& j : i.property() )
             {
-                switch ( j.value_case() )
-                {
-                case ComponentPropertyBuffer::kInt:
-                    component->SetProperty ( j.name(), static_cast<int> ( j.int_() ) );
-                    break;
-                case ComponentPropertyBuffer::kLong:
-                    component->SetProperty ( j.name(), static_cast<long> ( j.long_() ) );
-                    break;
-                case ComponentPropertyBuffer::kLongLong:
-                    component->SetProperty ( j.name(), static_cast<long long> ( j.long_long() ) );
-                    break;
-                case ComponentPropertyBuffer::kUnsigned:
-                    component->SetProperty ( j.name(), static_cast<unsigned> ( j.int_() ) );
-                    break;
-                case ComponentPropertyBuffer::kUnsignedLong:
-                    component->SetProperty ( j.name(), static_cast<long> ( j.unsigned_long() ) );
-                    break;
-                case ComponentPropertyBuffer::kUnsignedLongLong:
-                    component->SetProperty ( j.name(), static_cast<long long> ( j.unsigned_long_long() ) );
-                    break;
-                case ComponentPropertyBuffer::kFloat:
-                    component->SetProperty ( j.name(), static_cast<float> ( j.float_() ) );
-                    break;
-                case ComponentPropertyBuffer::kDouble:
-                    component->SetProperty ( j.name(), static_cast<double> ( j.double_() ) );
-                    break;
-                case ComponentPropertyBuffer::kString:
-                    component->SetProperty ( j.name(), j.string() );
-                    break;
-                case ComponentPropertyBuffer::kPath:
-                    component->SetProperty ( j.name(), std::filesystem::path ( j.string() ) );
-                    break;
-                case ComponentPropertyBuffer::VALUE_NOT_SET:
-                    /// @todo Add component and property names to the exception message.
-                    throw std::runtime_error ( "Component property value not set." );
-                    break;
-                }
+                component->SetProperty ( j.name(), GetProperty ( j ) );
             }
         }
     }
