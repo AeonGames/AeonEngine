@@ -17,8 +17,6 @@ limitations under the License.
 #include <regex>
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
-#include "aeongames/Quaternion.h"
-#include "aeongames/Vector3.h"
 #include "aeongames/CRC.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -29,6 +27,7 @@ limitations under the License.
 #include "vector3.pb.h"
 #include "quaternion.pb.h"
 #include "transform.pb.h"
+#include "scene.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -179,4 +178,35 @@ namespace AeonGames
         };
     }
 
+    Property GetProperty ( const ComponentPropertyBuffer& aComponentPropertyBuffer )
+    {
+        switch ( aComponentPropertyBuffer.value_case() )
+        {
+        case ComponentPropertyBuffer::kInt:
+            return static_cast<int> ( aComponentPropertyBuffer.int_() );
+        case ComponentPropertyBuffer::kLong:
+            return static_cast<long> ( aComponentPropertyBuffer.long_() );
+        case ComponentPropertyBuffer::kLongLong:
+            return static_cast<long long> ( aComponentPropertyBuffer.long_long() );
+        case ComponentPropertyBuffer::kUnsigned:
+            return static_cast<unsigned> ( aComponentPropertyBuffer.int_() );
+        case ComponentPropertyBuffer::kUnsignedLong:
+            return static_cast<long> ( aComponentPropertyBuffer.unsigned_long() );
+        case ComponentPropertyBuffer::kUnsignedLongLong:
+            return static_cast<long long> ( aComponentPropertyBuffer.unsigned_long_long() );
+        case ComponentPropertyBuffer::kFloat:
+            return static_cast<float> ( aComponentPropertyBuffer.float_() );
+        case ComponentPropertyBuffer::kDouble:
+            return static_cast<double> ( aComponentPropertyBuffer.double_() );
+        case ComponentPropertyBuffer::kString:
+            return aComponentPropertyBuffer.string();
+        case ComponentPropertyBuffer::kPath:
+            return std::filesystem::path ( aComponentPropertyBuffer.string() );
+        case ComponentPropertyBuffer::VALUE_NOT_SET:
+            /// @todo Add component and property names to the exception message.
+            throw std::runtime_error ( "Component property value not set." );
+            break;
+        }
+        return Property{};
+    }
 }
