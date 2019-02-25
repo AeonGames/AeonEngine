@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -356,7 +356,6 @@ namespace AeonGames
     {
         Scene scene;
         std::string serialized = mScene.Serialize ( false );
-        std::cout << serialized << std::endl;
         scene.Deserialize ( serialized );
         EXPECT_EQ ( scene.Serialize ( false ), serialized );
     }
