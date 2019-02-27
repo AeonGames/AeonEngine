@@ -432,8 +432,8 @@ namespace AeonGames
 
     /*  This is ugly, but it is only way to use the same code for the const and the non const version
         without having to add template or friend members to the class declaration. */
-#define LoopTraverseDFSPreOrder(CONST) \
-    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( CONST Node& ) >& aAction ) CONST \
+#define LoopTraverseDFSPreOrder(...) \
+    void Node::LoopTraverseDFSPreOrder ( const std::function<void ( __VA_ARGS__ Node& ) >& aAction ) __VA_ARGS__ \
     {\
         /** @todo (EC++ Item 3) This code is the same as the constant overload,\
         but can't easily be implemented in terms of that because of aAction's node parameter\
@@ -460,11 +460,11 @@ namespace AeonGames
     }
 
     LoopTraverseDFSPreOrder ( const )
-    LoopTraverseDFSPreOrder()
+    LoopTraverseDFSPreOrder( )
 #undef LoopTraverseDFSPreOrder
 
-#define LoopTraverseDFSPostOrder(CONST) \
-    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( CONST Node& ) >& aAction ) CONST \
+#define LoopTraverseDFSPostOrder(...) \
+    void Node::LoopTraverseDFSPostOrder ( const std::function<void ( __VA_ARGS__ Node& ) >& aAction ) __VA_ARGS__ \
     { \
         /* \
         This code implements a similar solution to this stackoverflow answer: \
@@ -490,7 +490,7 @@ namespace AeonGames
     }
 
     LoopTraverseDFSPostOrder ( const )
-    LoopTraverseDFSPostOrder()
+    LoopTraverseDFSPostOrder( )
 #undef LoopTraverseDFSPostOrder
 
     void Node::RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction )

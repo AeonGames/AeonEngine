@@ -64,6 +64,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer")
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON
     CACHE INTERNAL "Force compilation database")
 
