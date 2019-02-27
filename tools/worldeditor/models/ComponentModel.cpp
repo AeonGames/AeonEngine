@@ -56,7 +56,7 @@ namespace AeonGames
     {
         if ( mComponent && !index.isValid() )
         {
-            return mComponent->GetPropertyCount();
+            return static_cast<int> ( mComponent->GetPropertyCount() );
         }
         // Only root may have children/rows
         return 0;
