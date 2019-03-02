@@ -49,7 +49,7 @@ namespace AeonGames
         mdiSubWindow->setWindowTitle ( tr ( "Untitled Scene" ) );
         mdiSubWindow->showMaximized();
         mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
-        actionNew->setEnabled ( true );
+        actionSave->setEnabled ( true );
     }
 
     void MainWindow::on_actionOpen_triggered()
@@ -70,7 +70,7 @@ namespace AeonGames
             mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
             sceneWindow->Open ( fileinfo.absoluteFilePath().toStdString() );
             /** @todo handle open failure. */
-            actionNew->setEnabled ( true );
+            actionSave->setEnabled ( true );
         }
     }
 
@@ -88,7 +88,6 @@ namespace AeonGames
                            tr ( "Scene Files (*.scn *.txt)" ) );
         if ( ! ( filename.isEmpty() || filename.isNull() ) )
         {
-            QFileInfo fileinfo ( filename );
             SceneWindow* sceneWindow = reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() );
             if ( sceneWindow )
             {

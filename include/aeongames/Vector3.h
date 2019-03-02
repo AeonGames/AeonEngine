@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -64,8 +64,8 @@ namespace AeonGames
         DLL Vector3& operator*= ( const float aLhs );
         DLL Vector3& operator*= ( const Vector3& aLhs );
         DLL Vector3& operator/= ( const float aLhs );
-        DLL float operator[] ( const uint32_t aIndex ) const;
-        DLL float& operator [] ( const uint32_t aIndex );
+        DLL float operator[] ( const size_t aIndex ) const;
+        DLL float& operator [] ( const size_t aIndex );
         //@}
     protected:
         /// X,Y,Z

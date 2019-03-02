@@ -116,12 +116,13 @@ namespace AeonGames
         auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
         for ( auto& i : mVariables )
         {
-            auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),
+            auto& material_properties = aMaterialBuffer.property();
+            auto j = std::find_if ( material_properties.begin(), material_properties.end(),
                                     [&i] ( const PropertyBuffer & property )
             {
                 return property.name() == i.GetName();
             } );
-            if ( j != aMaterialBuffer.property().end() )
+            if ( j != material_properties.end() )
             {
                 switch ( i.GetType() )
                 {

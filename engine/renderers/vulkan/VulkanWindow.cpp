@@ -355,16 +355,16 @@ namespace AeonGames
     {
         VkSurfaceCapabilitiesKHR surface_capabilities{};
         VkResult result {vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_capabilities ) };
-        if ( !result && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) != 0 )
+        if ( result == VK_SUCCESS && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) != 0 )
         {
-            if ( ( result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) ) )
+            if ( VK_SUCCESS != ( result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) ) )
             {
                 std::ostringstream stream;
                 stream << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
-            if ( ( result = vkDeviceWaitIdle ( mVulkanRenderer.GetDevice() ) ) )
+            if ( VK_SUCCESS != ( result = vkDeviceWaitIdle ( mVulkanRenderer.GetDevice() ) ) )
             {
                 std::ostringstream stream;
                 stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
