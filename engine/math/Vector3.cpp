@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -131,13 +131,13 @@ namespace AeonGames
                    ( aLhs.GetX() * aRhs.GetY() ) - ( aLhs.GetY() * aRhs.GetX() ) );
     }
 
-    float Vector3::operator [] ( const uint32_t aIndex ) const
+    float Vector3::operator [] ( const size_t aIndex ) const
     {
         assert ( aIndex < 3 );
         return mVector[aIndex];
     }
 
-    float& Vector3::operator [] ( const uint32_t aIndex )
+    float& Vector3::operator [] ( const size_t aIndex )
     {
         assert ( aIndex < 3 );
         return mVector[aIndex];
