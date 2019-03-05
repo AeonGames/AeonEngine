@@ -1,5 +1,14 @@
-set(NODES_HEADERS ModelComponent.h)
-set(NODES_SOURCES Plugin.cpp ModelComponent.cpp)
+set(NODES_HEADERS
+  ModelComponent.h
+  PointLight.h
+  Camera.h
+)
+set(NODES_SOURCES
+  Plugin.cpp
+  ModelComponent.cpp
+  PointLight.cpp
+  Camera.cpp
+)
 add_library(AeonEngineComponents SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
   set_target_properties(
@@ -13,7 +22,7 @@ elseif(MINGW OR MSYS)
                                    PREFIX
                                    "")
 endif()
-target_link_libraries(AeonEngineComponents AeonEngine ${PORTAUDIO_LIBRARY})
+target_link_libraries(AeonEngineComponents AeonEngine)
 if(USE_CLANG_TIDY)
   set_target_properties(
     AeonEngineComponents
