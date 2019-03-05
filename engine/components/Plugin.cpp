@@ -18,6 +18,8 @@ limitations under the License.
 #include "aeongames/Component.h"
 #include "aeongames/StringId.h"
 #include "ModelComponent.h"
+#include "Camera.h"
+#include "PointLight.h"
 #include <iostream>
 
 extern "C"
@@ -28,12 +30,22 @@ extern "C"
         {
             return std::make_unique<AeonGames::ModelComponent>();
         } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::Camera::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::Camera>();
+        } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::PointLight::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::PointLight>();
+        } );
         return true;
     }
 
     void AeonEngineComponentsShutdown()
     {
         AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );
     }
 
     PLUGIN PluginModuleInterface PMI =
