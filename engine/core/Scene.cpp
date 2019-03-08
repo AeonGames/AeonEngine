@@ -22,6 +22,7 @@ limitations under the License.
 #include <cassert>
 #include <algorithm>
 #include <sstream>
+#include <variant>
 
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
@@ -174,14 +175,19 @@ namespace AeonGames
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-            if ( auto parent = aNode->mParent )
+            std::visit ( [aNode] ( auto&& parent )
             {
-                if ( !parent->Remove ( aNode ) )
+                if ( parent != nullptr )
                 {
-                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    if ( !parent->Remove ( aNode ) )
+                    {
+                        std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    }
                 }
-            }
-            aNode->mParent = nullptr;
+            },
+            aNode->mParent );
+
+            aNode->mParent = this;
             if ( aIndex < mNodes.size() )
             {
                 mNodes.insert ( mNodes.begin() + aIndex, aNode );
@@ -203,14 +209,18 @@ namespace AeonGames
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-            if ( auto parent = aNode->mParent )
+            std::visit ( [aNode] ( auto&& parent )
             {
-                if ( !parent->Remove ( aNode ) )
+                if ( parent != nullptr )
                 {
-                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    if ( !parent->Remove ( aNode ) )
+                    {
+                        std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    }
                 }
-            }
-            aNode->mParent = nullptr;
+            },
+            aNode->mParent );
+            aNode->mParent = this;
             mNodes.emplace_back ( aNode );
             // Force a recalculation of the LOCAL transform
             // by setting the GLOBAL transform to itself.
@@ -235,7 +245,7 @@ namespace AeonGames
         if ( it != mNodes.end() )
         {
             // Force recalculation of transforms.
-            aNode->mParent = nullptr;
+            aNode->mParent = static_cast<Node*> ( nullptr );
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             mNodes.erase ( it );
             return true;
@@ -249,7 +259,7 @@ namespace AeonGames
         {
             return false;
         }
-        mNodes[aIndex]->mParent = nullptr;
+        mNodes[aIndex]->mParent = static_cast<Node*> ( nullptr );
         mNodes[aIndex]->SetLocalTransform ( mNodes[aIndex]->mGlobalTransform );
         mNodes.erase ( mNodes.begin() + aIndex );
         return true;
@@ -261,10 +271,17 @@ namespace AeonGames
         {
             return false;
         }
-        if ( aNode->GetParent() )
+        std::visit ( [aNode] ( auto&& parent )
         {
-            aNode->GetParent()->Remove ( aNode );
-        }
+            if ( parent != nullptr )
+            {
+                if ( !parent->Remove ( aNode ) )
+                {
+                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                }
+            }
+        },
+        aNode->mParent );
         Insert ( aIndex, aNode );
         return true;
     }
@@ -278,7 +295,7 @@ namespace AeonGames
             [&node_map] ( const Node & node )
         {
             NodeBuffer* node_buffer;
-            auto parent = node_map.find ( node.GetParent() );
+            auto parent = node_map.find ( GetNodePtr ( node.GetParent() ) );
             if ( parent != node_map.end() )
             {
                 node_buffer = ( *parent ).second->add_node();

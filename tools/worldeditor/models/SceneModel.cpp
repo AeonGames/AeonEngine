@@ -72,7 +72,7 @@ namespace AeonGames
         if ( index.isValid() )
         {
             Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
-            Node* node_parent = node->GetParent();
+            Node* node_parent = GetNodePtr ( node->GetParent() );
             if ( node_parent != nullptr )
             {
                 return createIndex ( static_cast<int> ( node->GetIndex() ), 0, node_parent );
