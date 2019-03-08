@@ -1,14 +1,5 @@
-set(NODES_HEADERS
-  ModelComponent.h
-  PointLight.h
-  Camera.h
-)
-set(NODES_SOURCES
-  Plugin.cpp
-  ModelComponent.cpp
-  PointLight.cpp
-  Camera.cpp
-)
+set(NODES_HEADERS ModelComponent.h PointLight.h Camera.h)
+set(NODES_SOURCES Plugin.cpp ModelComponent.cpp PointLight.cpp Camera.cpp)
 add_library(AeonEngineComponents SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
   set_target_properties(

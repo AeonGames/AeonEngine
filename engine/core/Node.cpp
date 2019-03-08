@@ -55,16 +55,21 @@ namespace AeonGames
     Node::~Node()
     {
         /* Make sure tree is left in a valid state */
-        if ( auto parent = mParent )
+        std::visit ( [this] ( auto&& parent )
         {
-            if ( !parent->Remove ( this ) )
+            if ( parent != nullptr )
             {
-                std::cerr << "Remove Node Failed" << std::endl;
+                if ( !parent->Remove ( this ) )
+                {
+                    std::cerr << "Remove Node Failed" << std::endl;
+                }
             }
-        }
+        },
+        mParent );
+
         for ( auto & mNode : mNodes )
         {
-            mNode->mParent = nullptr;
+            mNode->mParent = static_cast<Node*> ( nullptr );
             mNode = nullptr;
         }
     }
@@ -85,23 +90,26 @@ namespace AeonGames
     {
         return mNodes.at ( aIndex );
     }
-    Node* Node::GetParent() const
+    NodeParent Node::GetParent() const
     {
         return mParent;
     }
     size_t Node::GetIndex() const
     {
-        auto parent = mParent;
-        if ( parent )
+        return std::visit ( [this] ( auto&& parent ) -> size_t
         {
+            if ( parent == nullptr )
+            {
+                throw std::runtime_error ( "Node has no parent and thus no assigned index." );
+            }
             auto index = std::find_if ( parent->mNodes.begin(), parent->mNodes.end(),
                                         [this] ( const Node * node )
             {
                 return node == this;
             } );
             return index - parent->mNodes.begin();
-        }
-        throw std::runtime_error ( "Node has no parent and thus no assigned index." );
+        },
+        mParent );
     }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
@@ -142,14 +150,18 @@ namespace AeonGames
         LoopTraverseDFSPreOrder (
             [] ( Node & node )
         {
-            if ( auto parent = node.mParent )
+            std::visit ( [&node] ( auto&& parent )
             {
-                node.mGlobalTransform = parent->mGlobalTransform * node.mLocalTransform;
-            }
-            else
-            {
-                node.mGlobalTransform = node.mLocalTransform;
-            }
+                if ( typeid ( parent ).hash_code() == typeid ( Node* ).hash_code() && parent != nullptr )
+                {
+                    node.mGlobalTransform = reinterpret_cast<Node*> ( parent )->mGlobalTransform * node.mLocalTransform;
+                }
+                else
+                {
+                    node.mGlobalTransform = node.mLocalTransform;
+                }
+            },
+            node.mParent );
         } );
     }
 
@@ -157,14 +169,19 @@ namespace AeonGames
     {
         mGlobalTransform = aTransform;
         // Update the Local transform for this node only
-        if ( auto parent = mParent )
+        std::visit ( [this] ( auto&& parent )
         {
-            mLocalTransform = mGlobalTransform * parent->mGlobalTransform.GetInverted();
-        }
-        else
-        {
-            mLocalTransform = mGlobalTransform;
-        }
+            if ( typeid ( parent ).hash_code() == typeid ( Node* ).hash_code() && parent != nullptr )
+            {
+                mLocalTransform = mGlobalTransform * reinterpret_cast<Node*> ( parent )->mGlobalTransform.GetInverted();
+            }
+            else
+            {
+                mLocalTransform = mGlobalTransform;
+            }
+        },
+        mParent );
+
         // Then Update the Global transform for all children
         LoopTraverseDFSPreOrder (
             [this] ( Node & node )
@@ -173,13 +190,14 @@ namespace AeonGames
                       think about removing the check and let it be recomputed,
                       it may be faster than the branch that needs to run
                       for each node and is false only once.*/
-            if ( &node != this )
+            std::visit ( [this, &node] ( auto&& parent )
             {
-                if ( auto parent = node.mParent )
+                if ( &node != this && typeid ( parent ).hash_code() == typeid ( Node* ).hash_code() && parent != nullptr )
                 {
-                    node.mGlobalTransform = parent->mGlobalTransform * node.mLocalTransform;
+                    node.mGlobalTransform = reinterpret_cast<Node*> ( parent )->mGlobalTransform * node.mLocalTransform;
                 }
-            }
+            },
+            node.mParent );
         } );
     }
 
@@ -306,13 +324,19 @@ namespace AeonGames
         ///@todo std::find might be slower than removing and reinserting an existing node
         if ( ( aNode != nullptr ) && ( aNode != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-            if ( auto parent = aNode->mParent )
+
+            std::visit ( [aNode] ( auto&& parent )
             {
-                if ( !parent->Remove ( aNode ) )
+                if ( parent != nullptr )
                 {
-                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    if ( !parent->Remove ( aNode ) )
+                    {
+                        std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    }
                 }
-            }
+            },
+            aNode->mParent );
+
             aNode->mParent = this;
             if ( aIndex < mNodes.size() )
             {
@@ -335,13 +359,18 @@ namespace AeonGames
         // Never append null or this pointers.
         if ( ( aNode != nullptr ) && ( aNode != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-            if ( auto parent = aNode->mParent )
+            std::visit ( [aNode] ( auto&& parent )
             {
-                if ( !parent->Remove ( aNode ) )
+                if ( parent != nullptr )
                 {
-                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    if ( !parent->Remove ( aNode ) )
+                    {
+                        std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    }
                 }
-            }
+            },
+            aNode->mParent );
+
             aNode->mParent = this;
             mNodes.push_back ( aNode );
             // Force a recalculation of the LOCAL transform
@@ -366,7 +395,7 @@ namespace AeonGames
         } );
         if ( it != mNodes.end() )
         {
-            aNode->mParent = nullptr;
+            aNode->mParent = static_cast<Node*> ( nullptr );
             // Force recalculation of transforms.
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             mNodes.erase ( it );
@@ -381,7 +410,7 @@ namespace AeonGames
         {
             return false;
         }
-        mNodes[aIndex]->mParent = nullptr;
+        mNodes[aIndex]->mParent = static_cast<Node*> ( nullptr );
         mNodes[aIndex]->SetLocalTransform ( mNodes[aIndex]->mGlobalTransform );
         mNodes.erase ( mNodes.begin() + aIndex );
         return true;
@@ -393,10 +422,18 @@ namespace AeonGames
         {
             return false;
         }
-        if ( aNode->GetParent() )
+
+        std::visit ( [aNode] ( auto&& parent )
         {
-            aNode->GetParent()->Remove ( aNode );
-        }
+            if ( parent != nullptr )
+            {
+                if ( !parent->Remove ( aNode ) )
+                {
+                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                }
+            }
+        },
+        aNode->mParent );
         Insert ( aIndex, aNode );
         return true;
     }
@@ -411,7 +448,7 @@ namespace AeonGames
         */
         auto node = this;
         aPreamble ( *node );
-        auto parent = mParent;
+        auto parent = GetNodePtr ( mParent );
         while ( node != parent )
         {
             if ( node->mIterator < node->mNodes.size() )
@@ -425,7 +462,7 @@ namespace AeonGames
             {
                 aPostamble ( *node );
                 node->mIterator = 0; // Reset counter for next traversal.
-                node = node->mParent;
+                node = GetNodePtr ( node->mParent );
             }
         }
     }
@@ -441,7 +478,7 @@ namespace AeonGames
         */\
         auto node = this;\
         aAction ( *node );\
-        auto parent = mParent;\
+        auto parent = GetNodePtr(mParent);\
         while ( node != parent )\
         {\
             if ( node->mIterator < node->mNodes.size() )\
@@ -454,7 +491,7 @@ namespace AeonGames
             else\
             {\
                 node->mIterator = 0; /* Reset counter for next traversal.*/\
-                node = node->mParent;\
+                node = GetNodePtr(node->mParent);\
             }\
         }\
     }
@@ -471,7 +508,7 @@ namespace AeonGames
         http://stackoverflow.com/questions/5987867/traversing-a-n-ary-tree-without-using-recurrsion/5988138#5988138 \
         */ \
         auto node = this; \
-        auto parent = mParent; \
+        auto parent = GetNodePtr(mParent); \
         while ( node != parent ) \
         { \
             if ( node->mIterator < node->mNodes.size() ) \
@@ -484,7 +521,7 @@ namespace AeonGames
             { \
                 aAction ( *node ); \
                 node->mIterator = 0; /* Reset counter for next traversal. */ \
-                node = node->mParent; \
+                node = GetNodePtr(node->mParent); \
             } \
         } \
     }
@@ -517,7 +554,7 @@ namespace AeonGames
         while ( node != nullptr )
         {
             aAction ( *node );
-            node = node->mParent;
+            node = GetNodePtr ( node->mParent );
         }
     }
 
@@ -527,14 +564,14 @@ namespace AeonGames
         while ( node != nullptr )
         {
             aAction ( *node );
-            node = node->mParent;
+            node = GetNodePtr ( node->mParent );
         }
     }
 
     void Node::RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction )
     {
         aAction ( *this );
-        if ( auto parent = mParent )
+        if ( auto parent = GetNodePtr ( mParent ) )
         {
             parent->RecursiveTraverseAncestors ( aAction );
         }

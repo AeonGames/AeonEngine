@@ -36,6 +36,11 @@ namespace AeonGames
     class Window;
     class NodeBuffer;
     class Scene;
+    using NodeParent = std::variant<Node*, Scene*>;
+    inline Node* GetNodePtr ( const NodeParent& aNodeParent )
+    {
+        return std::holds_alternative<Node*> ( aNodeParent ) ? std::get<Node*> ( aNodeParent ) : nullptr;
+    }
     class Node
     {
     public:
@@ -131,7 +136,7 @@ namespace AeonGames
         DLL Node* GetChild ( size_t aIndex ) const;
         DLL const Node& operator[] ( const std::size_t index ) const;
         DLL Node& operator[] ( const std::size_t index );
-        DLL Node* GetParent() const;
+        DLL NodeParent GetParent() const;
         DLL size_t GetIndex() const;
         /** @name Node Data */
         /** @{ */
@@ -150,7 +155,7 @@ namespace AeonGames
     private:
         friend class Scene;
         std::string mName;
-        Node* mParent;
+        NodeParent mParent;
         Transform mLocalTransform;
         Transform mGlobalTransform;
         AABB mAABB;
