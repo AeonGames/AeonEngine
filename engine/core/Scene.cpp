@@ -50,7 +50,7 @@ namespace AeonGames
     {
         for ( auto & mRootNode : mNodes )
         {
-            mRootNode = nullptr;
+            Remove ( mRootNode );
         }
     }
 
