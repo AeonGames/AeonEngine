@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ namespace AeonGames
         DLL bool Insert ( size_t aIndex, Node* aNode );
         DLL bool Remove ( Node* aNode );
         DLL bool RemoveByIndex ( size_t aIndex );
-        DLL bool Move ( size_t aIndex, Node* aNode );
         DLL size_t GetChildrenCount() const;
         DLL Node* GetChild ( size_t aIndex ) const;
         DLL size_t GetChildIndex ( const Node* aNode ) const;

@@ -77,7 +77,6 @@ namespace AeonGames
         DLL bool Insert ( size_t aIndex, Node* aNode );
         DLL bool Remove ( Node* );
         DLL bool RemoveByIndex ( size_t aIndex );
-        DLL bool Move ( size_t aIndex, Node* aNode );
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in pre-order.
         This function guarrantees that parents are processed before their children.

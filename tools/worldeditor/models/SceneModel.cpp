@@ -161,7 +161,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    destination->Move ( destinationRow + i, source );
+                    destination->Insert ( destinationRow + i, source );
                 }
                 endMoveRows();
             }
@@ -178,7 +178,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    mScene.Move ( destinationRow, source );
+                    mScene.Insert ( destinationRow, source );
                 }
                 endMoveRows();
             }
@@ -196,7 +196,7 @@ namespace AeonGames
                 for ( int i = 0; i < count; ++i )
                 {
                     Node* node = mScene.GetChild ( sourceRow );
-                    destination->Move ( destinationRow, node );
+                    destination->Insert ( destinationRow, node );
                 }
                 endMoveRows();
             }
@@ -213,7 +213,7 @@ namespace AeonGames
                 for ( int i = 0; i < count; ++i )
                 {
                     Node* node = mScene.GetChild ( sourceRow );
-                    mScene.Move ( destinationRow, node );
+                    mScene.Insert ( destinationRow, node );
                 }
                 endMoveRows();
             }
