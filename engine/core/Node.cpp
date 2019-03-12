@@ -111,6 +111,15 @@ namespace AeonGames
         },
         mParent );
     }
+    Scene* Node::GetScene() const
+    {
+        const Node* node = this;
+        while ( std::holds_alternative<Node*> ( node->mParent ) && std::get<Node*> ( node->mParent ) != nullptr )
+        {
+            node = std::get<Node*> ( node->mParent );
+        }
+        return GetScenePtr ( node->mParent );
+    }
 
     void Node::SetFlags ( uint32_t aFlagBits, bool aEnabled )
     {
@@ -324,7 +333,6 @@ namespace AeonGames
         ///@todo std::find might be slower than removing and reinserting an existing node
         if ( ( aNode != nullptr ) && ( aNode != this ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
-
             std::visit ( [aNode] ( auto&& parent )
             {
                 if ( parent != nullptr )

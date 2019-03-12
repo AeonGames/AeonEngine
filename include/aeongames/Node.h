@@ -41,6 +41,10 @@ namespace AeonGames
     {
         return std::holds_alternative<Node*> ( aNodeParent ) ? std::get<Node*> ( aNodeParent ) : nullptr;
     }
+    inline Scene* GetScenePtr ( const NodeParent& aNodeParent )
+    {
+        return std::holds_alternative<Scene*> ( aNodeParent ) ? std::get<Scene*> ( aNodeParent ) : nullptr;
+    }
     class Node
     {
     public:
@@ -77,6 +81,11 @@ namespace AeonGames
         DLL bool Insert ( size_t aIndex, Node* aNode );
         DLL bool Remove ( Node* );
         DLL bool RemoveByIndex ( size_t aIndex );
+        /** Retrieve a pointer to the scene containing the node instance
+         * @return A pointer to the scene at the root of the node tree
+         *  or nullptr if the node is not contained in a scene.
+        */
+        DLL Scene* GetScene() const;
         /** Iterative depth first search iteration.
         Iterates all descendants without recursion in pre-order.
         This function guarrantees that parents are processed before their children.

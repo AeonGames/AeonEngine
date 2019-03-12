@@ -172,7 +172,7 @@ namespace AeonGames
 
     bool Scene::Insert ( size_t aIndex, Node* aNode )
     {
-        // Never append null or this pointers.
+        // Never append null or duplicate pointers.
         if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
         {
             std::visit ( [aNode] ( auto&& parent )
