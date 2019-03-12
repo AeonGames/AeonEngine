@@ -416,28 +416,6 @@ namespace AeonGames
         return true;
     }
 
-    bool Node::Move ( size_t aIndex, Node* aNode )
-    {
-        if ( !aNode )
-        {
-            return false;
-        }
-
-        std::visit ( [aNode] ( auto&& parent )
-        {
-            if ( parent != nullptr )
-            {
-                if ( !parent->Remove ( aNode ) )
-                {
-                    std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
-                }
-            }
-        },
-        aNode->mParent );
-        Insert ( aIndex, aNode );
-        return true;
-    }
-
     void Node::LoopTraverseDFSPreOrder (
         const std::function<void ( Node& ) >& aPreamble,
         const std::function<void ( Node& ) >& aPostamble )
