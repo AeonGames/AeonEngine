@@ -366,4 +366,22 @@ namespace AeonGames
         scene.Deserialize ( serialized );
         EXPECT_EQ ( scene.Serialize(), serialized );
     }
+
+    TEST_F ( SceneTest, GetScene )
+    {
+        EXPECT_EQ ( a.GetScene(), &mScene );
+        EXPECT_EQ ( b.GetScene(), &mScene );
+        EXPECT_EQ ( c.GetScene(), &mScene );
+        EXPECT_EQ ( d.GetScene(), &mScene );
+        EXPECT_EQ ( e.GetScene(), &mScene );
+        EXPECT_EQ ( f.GetScene(), &mScene );
+        EXPECT_EQ ( g.GetScene(), &mScene );
+        EXPECT_EQ ( h.GetScene(), &mScene );
+        EXPECT_EQ ( i.GetScene(), &mScene );
+        EXPECT_EQ ( j.GetScene(), &mScene );
+        EXPECT_EQ ( k.GetScene(), &mScene );
+        EXPECT_EQ ( l.GetScene(), &mScene );
+        EXPECT_EQ ( m.GetScene(), &mScene );
+        EXPECT_EQ ( n.GetScene(), &mScene );
+    }
 }
