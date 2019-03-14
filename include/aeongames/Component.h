@@ -45,6 +45,7 @@ namespace AeonGames
         virtual void SetProperty ( uint32_t aId, const Property& aProperty ) = 0;
         virtual void Update ( Node& aNode, double aDelta ) = 0;
         virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
+        virtual void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) = 0;
     };
     /**@name Factory Functions */
     /*@{*/

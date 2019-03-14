@@ -22,6 +22,7 @@ limitations under the License.
 */
 #include "aeongames/Platform.h"
 #include "aeongames/Memory.h"
+#include "aeongames/Matrix4x4.h"
 #include <vector>
 #include <string>
 #include <functional>
@@ -37,6 +38,9 @@ namespace AeonGames
     class Scene
     {
     public:
+        // Deleted Methods (avoid copy and copy construction)
+        Scene& operator= ( const Scene& ) = delete;
+        Scene ( const Scene& ) = delete;
         DLL explicit Scene(); // "Explicit Scene"... chuckle
         DLL ~Scene();
         DLL void SetName ( const char* aName );
@@ -51,6 +55,7 @@ namespace AeonGames
         DLL const Node& operator[] ( const std::size_t index ) const;
         DLL Node& operator[] ( const std::size_t index );
         DLL void Update ( const double delta );
+        DLL void BroadcastMessage ( uint32_t aMessageType, const void* aMessageData );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node&) > aAction)*/
         DLL void LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
         /** @copydoc Node::LoopTraverseDFSPreOrder(
@@ -69,15 +74,26 @@ namespace AeonGames
         DLL void RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
         /** @copydoc Node::RecursiveTraverseDFSPostOrder(std::function<void(const Node*&) > aAction)*/
         DLL void RecursiveTraverseDFSPostOrder ( const std::function<void ( Node& ) >& aAction );
+        DLL Node* Find ( const std::function<bool ( const Node& ) >& aUnaryPredicate ) const;
         DLL std::string Serialize ( bool aAsBinary = true ) const;
         DLL void Deserialize ( const std::string& aSerializedScene );
         DLL Node* StoreNode ( std::unique_ptr<Node> aNode );
         DLL std::unique_ptr<Node> DisposeNode ( const Node* aNode );
-        // Deleted Methods (avoid copy and copy construction)
-        Scene& operator= ( const Scene& ) = delete;
-        Scene ( const Scene& ) = delete;
+        /** @name Camera Data */
+        /**@{*/
+        /** Set rendering camera
+         * @param aNode pointer to the node for which camera location and orientation will be extracted.
+         * @todo Need a way to uniquely identify nodes for messaging and camera assignment. */
+        DLL void SetCamera ( Node* aNode );
+        DLL void SetCamera ( uint32_t aNodeId );
+        DLL void SetCamera ( const std::string& aNodeName );
+        DLL const Node* GetCamera() const;
+        DLL void SetProjection ( const Matrix4x4& aMatrix );
+        DLL const Matrix4x4& GetProjection() const;
+        /**@}*/
     private:
         friend class Node;
+        Matrix4x4 mProjection{};
         std::string mName{};
         /// Child Nodes
         std::vector<Node*> mNodes{};
@@ -90,6 +106,7 @@ namespace AeonGames
          * nodes in the tree, nor does a pointer existing
          * here means it exists as part of the tree. */
         std::vector<std::unique_ptr<Node>> mNodeStorage{};
+        Node* mCamera{};
     };
 }
 #endif
