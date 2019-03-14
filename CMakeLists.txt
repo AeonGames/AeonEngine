@@ -474,13 +474,21 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
                     COMMENT "Fixing Compile Commands Database")
 endif()
 
-set(COVER_BACKGROUND "${CMAKE_BINARY_DIR}/wallpaper.png" CACHE filepath "Background for the create-cover target")
-set(COVER_POINTSIZE "250" CACHE string "Font pointsize for the create-cover target")
-add_custom_target(
-  create-cover
-  COMMAND
-    "${ImageMagick_convert_EXECUTABLE}" -size 1920x1080 xc:none -background transparent -font Righteous -gravity center -pointsize ${COVER_POINTSIZE} -fill none -stroke SteelBlue4 -strokewidth 10 -draw \"text 0,0 \'`date +"%B %d %Y"`\'\" -blur 0x10 -pointsize ${COVER_POINTSIZE} -fill white -stroke none -strokewidth 0 -draw \"text 0,0 \'`date +"%B %d %Y"`\'\" PNG32:overlay.png
-  COMMAND
-    "${ImageMagick_convert_EXECUTABLE}" "${COVER_BACKGROUND}" -draw 'image over 0,0 1920,1080 overlay.png' cover.png
-  DEPENDS "${COVER_BACKGROUND}"
-  COMMENT "Creating Cover")
+set(COVER_BACKGROUND "${CMAKE_BINARY_DIR}/wallpaper.png"
+    CACHE filepath "Background for the create-cover target")
+set(COVER_POINTSIZE "250"
+    CACHE string "Font pointsize for the create-cover target")
+add_custom_target(create-cover
+                  COMMAND "${ImageMagick_convert_EXECUTABLE}" -size 1920x1080
+                          xc:none -background transparent -font Righteous
+                          -gravity center -pointsize ${COVER_POINTSIZE} -fill
+                          none -stroke SteelBlue4 -strokewidth 10 -draw \"text
+                          0,0 \'`date +"%B %d %Y"`\'\" -blur 0x10 -pointsize
+                          ${COVER_POINTSIZE} -fill white -stroke none
+                          -strokewidth 0 -draw \"text 0,0 \'`date +"%B %d
+                          %Y"`\'\" PNG32:overlay.png
+                  COMMAND "${ImageMagick_convert_EXECUTABLE}"
+                          "${COVER_BACKGROUND}" -draw
+                          'image over 0,0 1920,1080 overlay.png' cover.png
+                  DEPENDS "${COVER_BACKGROUND}"
+                  COMMENT "Creating Cover")

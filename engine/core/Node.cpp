@@ -31,6 +31,7 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
+#include "aeongames/CRC.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4251 )
@@ -48,6 +49,7 @@ namespace AeonGames
         mLocalTransform(),
         mGlobalTransform(),
         mNodes(),
+        mId{crc32i ( mName.c_str(), mName.size() ) },
         mFlags ( aFlags )
     {
     }
@@ -217,12 +219,18 @@ namespace AeonGames
 
     void Node::SetName ( const std::string& aName )
     {
+        mId = crc32i ( aName.c_str(), aName.size() );
         mName = aName;
     }
 
     const std::string& Node::GetName() const
     {
         return mName;
+    }
+
+    uint32_t Node::GetId() const
+    {
+        return mId;
     }
 
     // Helper for the Property visitor in Serialize/Deserialize
@@ -486,6 +494,36 @@ namespace AeonGames
     LoopTraverseDFSPreOrder( )
 #undef LoopTraverseDFSPreOrder
 
+    Node* Node::Find ( const std::function<bool ( const Node& ) >& aUnaryPredicate ) const
+    {
+        /* Short Circuit in case this is the noode being searched for */
+        if ( aUnaryPredicate ( *this ) )
+        {
+            return const_cast<Node*> ( this );
+        };
+        auto node = this;
+        auto parent = GetNodePtr ( mParent );
+        while ( node != parent )
+        {
+            if ( node->mIterator < node->mNodes.size() )
+            {
+                auto prev = node;
+                node = node->mNodes[node->mIterator];
+                ++prev->mIterator;
+            }
+            else
+            {
+                node->mIterator = 0; /* Reset counter for next traversal. */
+                if ( aUnaryPredicate ( *node ) )
+                {
+                    return const_cast<Node*> ( node );
+                };
+                node = GetNodePtr ( node->mParent );
+            }
+        }
+        return nullptr;
+    }
+
 #define LoopTraverseDFSPostOrder(...) \
     void Node::LoopTraverseDFSPostOrder ( const std::function<void ( __VA_ARGS__ Node& ) >& aAction ) __VA_ARGS__ \
     { \
@@ -568,6 +606,14 @@ namespace AeonGames
         for ( auto& i : mComponentDependencyMap )
         {
             GetComponent ( i )->Update ( *this, aDelta );
+        }
+    }
+
+    void Node::ProcessMessage ( uint32_t aMessageType, const void* aMessageData )
+    {
+        for ( auto& i : mComponentDependencyMap )
+        {
+            GetComponent ( i )->ProcessMessage ( *this, aMessageType, aMessageData );
         }
     }
 

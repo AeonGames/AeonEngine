@@ -64,6 +64,36 @@ namespace AeonGames
         return mName.c_str();
     }
 
+    void Scene::SetCamera ( Node* aNode )
+    {
+        mCamera = aNode;
+    }
+
+    void Scene::SetCamera ( uint32_t aNodeId )
+    {
+        SetCamera ( Find ( [aNodeId] ( const Node & aNode ) -> bool { return aNode.GetId() == aNodeId; } ) );
+    }
+
+    void Scene::SetCamera ( const std::string& aNodeName )
+    {
+        SetCamera ( crc32i ( aNodeName.c_str(), aNodeName.size() ) );
+    }
+
+    const Node* Scene::GetCamera() const
+    {
+        return mCamera;
+    }
+
+    void Scene::SetProjection ( const Matrix4x4& aMatrix )
+    {
+        mProjection = aMatrix;
+    }
+
+    const Matrix4x4& Scene::GetProjection() const
+    {
+        return mProjection;
+    }
+
     size_t Scene::GetChildrenCount() const
     {
         return mNodes.size();
@@ -112,6 +142,20 @@ namespace AeonGames
         }
     }
 
+    void Scene::BroadcastMessage ( uint32_t aMessageType, const void* aMessageData )
+    {
+        for ( auto & mRootNode : mNodes )
+        {
+            mRootNode->LoopTraverseDFSPreOrder ( [aMessageType, aMessageData] ( Node & node )
+            {
+                if ( node.mFlags[Node::Enabled] )
+                {
+                    node.ProcessMessage ( aMessageType, aMessageData );
+                }
+            } );
+        }
+    }
+
     void Scene::LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )
     {
         for ( auto & mRootNode : mNodes )
@@ -152,6 +196,18 @@ namespace AeonGames
         {
             static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPostOrder ( aAction );
         }
+    }
+
+    Node* Scene::Find ( const std::function<bool ( const Node& ) >& aUnaryPredicate ) const
+    {
+        for ( const auto& mRootNode : mNodes )
+        {
+            if ( Node* node = static_cast<Node*> ( mRootNode )->Find ( aUnaryPredicate ) )
+            {
+                return node;
+            }
+        }
+        return nullptr;
     }
 
     void Scene::RecursiveTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction )

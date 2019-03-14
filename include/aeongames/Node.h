@@ -134,6 +134,7 @@ namespace AeonGames
         DLL void LoopTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
         DLL void LoopTraverseAncestors ( const std::function<void ( const Node& ) >& aAction ) const;
         DLL void RecursiveTraverseAncestors ( const std::function<void ( Node& ) >& aAction );
+        DLL Node* Find ( const std::function<bool ( const Node& ) >& aUnaryPredicate ) const;
         DLL const Transform& GetLocalTransform() const;
         DLL const Transform& GetGlobalTransform() const;
         DLL const AABB& GetAABB() const;
@@ -146,6 +147,7 @@ namespace AeonGames
         DLL Node& operator[] ( const std::size_t index );
         DLL NodeParent GetParent() const;
         DLL size_t GetIndex() const;
+        DLL uint32_t GetId() const;
         /** @name Node Data */
         /** @{ */
         DLL Component* AddComponent ( std::unique_ptr<Component> aComponent );
@@ -159,15 +161,16 @@ namespace AeonGames
         /** @{ */
         DLL void Update ( const double delta );
         DLL void Render ( const Window& aWindow ) const;
+        DLL void ProcessMessage ( uint32_t aMessageType, const void* aMessageData );
         /** @} */
     private:
         friend class Scene;
-        std::string mName;
-        NodeParent mParent;
-        Transform mLocalTransform;
-        Transform mGlobalTransform;
-        AABB mAABB;
-        std::vector<Node*> mNodes;
+        std::string mName{};
+        NodeParent mParent{};
+        Transform mLocalTransform{};
+        Transform mGlobalTransform{};
+        AABB mAABB{};
+        std::vector<Node*> mNodes{};
         DependencyMap<uint32_t> mComponentDependencyMap{};
         /**
          * Node component container
@@ -176,7 +179,8 @@ namespace AeonGames
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<Node*>::size_type mIterator{ 0 };
-        std::bitset<8> mFlags;
+        uint32_t mId{};
+        std::bitset<8> mFlags{};
     };
 }
 #endif

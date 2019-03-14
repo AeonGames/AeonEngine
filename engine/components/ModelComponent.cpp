@@ -208,4 +208,7 @@ namespace AeonGames
             }
         }
     }
+    void ModelComponent::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
+    {
+    }
 }

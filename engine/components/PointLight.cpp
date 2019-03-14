@@ -72,4 +72,8 @@ namespace AeonGames
     void PointLight::Render ( const Node& aNode, const Window& aWindow ) const
     {
     }
+
+    void PointLight::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
+    {
+    }
 }
