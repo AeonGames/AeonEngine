@@ -18,6 +18,7 @@
     <file alias="icon_orb">resources/icons/orb.svg</file>
     <file alias="icon_add">resources/icons/add.svg</file>
     <file alias="icon_subtract">resources/icons/subtract.svg</file>
-    <file alias="icon_close">resources/icons/close.svg</file>    
+    <file alias="icon_close">resources/icons/close.svg</file>
+    <file alias="icon_camera">resources/icons/camera.svg</file>
   </qresource>
 </RCC>
