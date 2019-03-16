@@ -47,7 +47,7 @@ namespace AeonGames
         }
     }
 
-    static const std::array<const char*, 7> AttributeStrings
+    static const std::array<const char*, 8> AttributeStrings
     {
         {
             "VertexPosition",
@@ -56,11 +56,12 @@ namespace AeonGames
             "VertexBitangent",
             "VertexUV",
             "VertexWeightIndices",
-            "VertexWeights"
+            "VertexWeights",
+            "VertexColor"
         }
     };
 
-    static const std::array<const char*, 7> AttributeTypes
+    static const std::array<const char*, 8> AttributeTypes
     {
         {
             "vec3",
@@ -69,7 +70,8 @@ namespace AeonGames
             "vec3",
             "vec2",
             "uvec4",
-            "vec4"
+            "vec4",
+            "vec3"
         }
     };
 
@@ -82,7 +84,8 @@ namespace AeonGames
         "\\bVertexBitangent\\b|"
         "\\bVertexUV\\b|"
         "\\bVertexWeightIndices\\b|"
-        "\\bVertexWeights\\b" };
+        "\\bVertexWeights\\b|"
+        "\\bVertexColor\\b" };
 
     uint32_t GetAttributes ( const PipelineBuffer& aPipelineBuffer )
     {
@@ -111,7 +114,7 @@ namespace AeonGames
     {
         std::string attribute_code{};
         uint32_t attributes{GetAttributes ( aPipelineBuffer ) };
-        for ( uint32_t i = 0; i < 7; ++i )
+        for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
         {
             if ( attributes & ( 1 << i ) )
             {

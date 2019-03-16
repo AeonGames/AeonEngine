@@ -199,8 +199,18 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
-            //offset += sizeof ( uint8_t ) * 4;
+            offset += sizeof ( uint8_t ) * 4;
         }
+
+        if ( mVertexFlags & Mesh::COLOR_BIT )
+        {
+            glEnableVertexAttribArray ( 6 );
+            OPENGL_CHECK_ERROR_THROW;
+            glVertexAttribPointer ( 6, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            OPENGL_CHECK_ERROR_THROW;
+            //offset += sizeof ( float ) * 3;
+        }
+
         //---Index Buffer---
         if ( mIndexCount )
         {
