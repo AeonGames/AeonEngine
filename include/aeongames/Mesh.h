@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ namespace AeonGames
             BITANGENT_BIT = 0b1000,
             UV_BIT = 0b10000,
             WEIGHT_BIT = 0b100000,
+            COLOR_BIT = 0b1000000,
         };
         enum IndexType
         {
@@ -88,6 +89,10 @@ namespace AeonGames
         if ( aVertexFlags & Mesh::AttributeMask::WEIGHT_BIT )
         {
             stride += sizeof ( uint8_t ) * 8;
+        }
+        if ( aVertexFlags & Mesh::AttributeMask::COLOR_BIT )
+        {
+            stride += sizeof ( float ) * 3;
         }
         return stride;
     }

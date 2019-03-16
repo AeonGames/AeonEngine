@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -170,6 +170,12 @@ namespace AeonGames
                     offset += sizeof ( Vertex::weight_indices );
                     memcpy ( vertices[j].weight_influences, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
                     offset += sizeof ( Vertex::weight_influences );
+                }
+
+                if ( mVertexFlags & Mesh::COLOR_BIT )
+                {
+                    memcpy ( vertices[j].color, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::color ) );
+                    offset += sizeof ( Vertex::color );
                 }
             }
         }

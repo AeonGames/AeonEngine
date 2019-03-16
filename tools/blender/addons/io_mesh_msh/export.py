@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ ATTR_TANGENT_MASK = 0b100
 ATTR_BITANGENT_MASK = 0b1000
 ATTR_UV_MASK = 0b10000
 ATTR_WEIGHT_MASK = 0b100000
+ATTR_COLOR_MASK = 0b1000000
+
 
 class MSHExporterCommon():
 
@@ -133,6 +135,12 @@ class MSHExporterCommon():
                 weight_values.append(weight[0])
             vertex.extend(weight_indices)
             vertex.extend(weight_values)
+
+        if self.flags & ATTR_COLOR_MASK:
+            vertex.extend([self.mesh.vertex_colors[0].data[loop.index].color[0],
+                           self.mesh.vertex_colors[0].data[loop.index].color[1],
+                           self.mesh.vertex_colors[0].data[loop.index].color[2]])
+
         print("Generating Vertex", loop.index)
         return [loop.index, vertex]
 
@@ -253,6 +261,10 @@ class MSHExporterCommon():
         if self.armature is not None:
             mesh_buffer.VertexFlags |= ATTR_WEIGHT_MASK
             vertex_struct_string += '8B'
+
+        if(len(mesh.vertex_colors) > 0):
+            mesh_buffer.VertexFlags |= ATTR_COLOR_MASK
+            vertex_struct_string += '3f'
 
         # Generate Vertex Buffer--------------------------------------
         self.flags = mesh_buffer.VertexFlags

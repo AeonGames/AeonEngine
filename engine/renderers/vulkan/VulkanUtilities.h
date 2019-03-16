@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,11 +31,12 @@ namespace AeonGames
         float uv[2];
         uint8_t weight_indices[4];
         uint8_t weight_influences[4];
+        float color[3];
     };
 
     static_assert (
         sizeof ( Vertex ) ==
-        ( sizeof ( float ) * 14 + sizeof ( uint8_t ) * 8 ),
+        ( sizeof ( float ) * 17 + sizeof ( uint8_t ) * 8 ),
         "Vertex Structure Contains Padding." );
 
     VKAPI_ATTR VkBool32 VKAPI_CALL

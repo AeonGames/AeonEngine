@@ -38,13 +38,15 @@ namespace AeonGames
         VertexUVBit = 0x10,
         VertexWeightIndicesBit = 0x20,
         VertexWeightsBit = 0x40,
+        VertexColorBit = 0x80,
         VertexAllBits = VertexPositionBit |
                         VertexNormalBit |
                         VertexTangentBit |
                         VertexBitangentBit |
                         VertexUVBit |
                         VertexWeightIndicesBit |
-                        VertexWeightsBit
+                        VertexWeightsBit |
+                        VertexColorBit
     };
 
     enum AttributeFormat
