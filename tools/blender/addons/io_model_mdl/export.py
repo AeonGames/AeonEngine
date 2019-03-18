@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,14 +34,18 @@ class MDLExporter(bpy.types.Operator):
         return is_msh_loaded
 
     def execute(self, context):
-        if not os.path.exists(self.directory + "/meshes"):
-            os.makedirs(self.directory + "/meshes")
-        bpy.ops.export_mesh.all_msh(
-            'EXEC_DEFAULT',
-            directory=self.directory +
-            os.sep +
-            "meshes")
+        if not os.path.exists(self.directory + "meshes"):
+            os.makedirs(self.directory + "meshes")
+
         model_buffer = model_pb2.ModelBuffer()
+        for object in context.scene.objects:
+            if object.type == 'MESH':
+                assembly = model_buffer.assembly.add()
+                assembly.mesh.path = "meshes" + os.sep + object.name + ".msh"
+                bpy.ops.export_mesh.msh(
+                    'EXEC_DEFAULT',
+                    filepath=self.directory + assembly.mesh.path)
+
         print(
             "Writting",
             self.directory +
