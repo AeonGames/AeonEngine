@@ -141,7 +141,7 @@ class MSHExporterCommon():
                            self.mesh.vertex_colors[0].data[loop.index].color[1],
                            self.mesh.vertex_colors[0].data[loop.index].color[2]])
 
-        print("Generating Vertex", loop.index)
+        #print("Generating Vertex", loop.index)
         return [loop.index, vertex]
 
     def get_indices_per_vertex(self, key_group):
@@ -288,8 +288,8 @@ class MSHExporterCommon():
         self.indices = []
         for polygon in mesh.polygons:
             polygon_count = polygon_count + 1
-            print("\rPolygon ", polygon_count, " of ", len(
-                mesh.polygons))
+            #print("\rPolygon ", polygon_count, " of ", len(
+            #    mesh.polygons))
             if(len(polygon.loop_indices) < 3):  # skip invalid faces
                 continue
             for i in range(1, len(polygon.loop_indices), 2):
@@ -362,8 +362,8 @@ class MSHExporterCommon():
         out.write(mesh_buffer.SerializeToString())
         out.close()
         print("Done.")
-        print("Writting", self.filepath + ".txt", ".")
-        out = open(self.filepath + ".txt", "wt")
+        print("Writting", self.filepath.replace('.msh','.txt'), ".")
+        out = open(self.filepath.replace('.msh','.txt'), "wt")
         out.write("AEONMSH\n")
         out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
         out.close()

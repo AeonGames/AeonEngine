@@ -204,11 +204,11 @@ namespace AeonGames
 
         if ( mVertexFlags & Mesh::COLOR_BIT )
         {
-            glEnableVertexAttribArray ( 6 );
+            glEnableVertexAttribArray ( 7 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 6, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 7, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
-            //offset += sizeof ( float ) * 3;
+            offset += sizeof ( float ) * 3;
         }
 
         //---Index Buffer---
