@@ -1,0 +1,9 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/diffuse_vertex_color.txt"
+}
+assembly {
+    mesh {
+        path: "Road/meshes/roadTile_140.txt"
+    }
+}

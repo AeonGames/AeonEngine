@@ -1,0 +1,9 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/diffuse_vertex_color.txt"
+}
+assembly {
+    mesh {
+        path: "Nature/meshes/Grey_Cliff_Bottom_Green_Top_01.txt"
+    }
+}

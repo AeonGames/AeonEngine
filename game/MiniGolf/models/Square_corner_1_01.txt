@@ -1,0 +1,9 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/diffuse_vertex_color.txt"
+}
+assembly {
+    mesh {
+        path: "MiniGolf/meshes/Square_corner_1_01.txt"
+    }
+}

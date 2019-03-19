@@ -1,0 +1,9 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/diffuse_vertex_color.txt"
+}
+assembly {
+    mesh {
+        path: "Medieval/meshes/Roof_Corner_Green_01.txt"
+    }
+}
