@@ -20,7 +20,7 @@ limitations under the License.
 #include "aeongames/CRC.h"
 #ifdef _MSC_VER
 #pragma warning( push )
-#pragma warning( disable : 4251 )
+#pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include "reference.pb.h"
 #include "pipeline.pb.h"

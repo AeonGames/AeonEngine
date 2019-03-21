@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #ifdef _MSC_VER
 #pragma warning( push )
-#pragma warning( disable : 4251 )
+#pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include "reference.pb.h"
 #include "model.pb.h"

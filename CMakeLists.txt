@@ -33,7 +33,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/msys64/mingw64;C:/msys64/usr")
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CMAKE_PREFIX_PATH "${CMAKE_PROGRAM_PATH};C:/msys64/mingw64;C:/msys64/usr")
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /DPROTOBUF_WARNINGS=\"4251 4996\"")
+else()
+  set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/msys64/mingw64;C:/msys64/usr")
+endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Debug' as none was specified.")
@@ -62,10 +68,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
   set(CMAKE_CXX_FLAGS_RELEASE
       "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer")
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON
@@ -475,9 +477,9 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
 endif()
 
 set(COVER_BACKGROUND "${CMAKE_BINARY_DIR}/wallpaper.png"
-    CACHE filepath "Background for the create-cover target")
+    CACHE FILEPATH "Background for the create-cover target")
 set(COVER_POINTSIZE "250"
-    CACHE string "Font pointsize for the create-cover target")
+    CACHE STRING "Font pointsize for the create-cover target")
 add_custom_target(create-cover
                   COMMAND "${ImageMagick_convert_EXECUTABLE}" -size 1920x1080
                           xc:none -background transparent -font Righteous

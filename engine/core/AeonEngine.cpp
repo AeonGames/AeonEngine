@@ -13,22 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 #include <iostream>
-#include <utility>
 #include <memory>
+
 #include "aeongames/ProtoBufClasses.h"
-#include "aeongames/Plugin.h"
-#include "aeongames/Node.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
-#pragma warning( disable : 4251 )
+#pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include <google/protobuf/stubs/common.h>
 #include "configuration.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "aeongames/Plugin.h"
+#include "aeongames/Node.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/UniformBuffer.h"

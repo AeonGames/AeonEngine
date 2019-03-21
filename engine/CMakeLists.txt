@@ -154,10 +154,9 @@ set(ENGINE_HEADERS
 
 if(MSVC)
   set_source_files_properties(
-    ${PROTOBUF_SOURCES}
-    PROPERTIES
-    COMPILE_FLAGS
-    "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267")
+    ${PROTOBUF_SOURCES} PROPERTIES COMPILE_FLAGS
+    # I give up protobuf, you can keep your 4996 warning.
+    "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267 -wd4996")
 endif()
 
 add_library(ProtoBufClasses
