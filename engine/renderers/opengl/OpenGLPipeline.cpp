@@ -113,7 +113,7 @@ namespace AeonGames
                 ",std140) uniform Properties{\n" +
                 GetPropertiesGLSL ( aPipelineBuffer ) + "};\n" );
 
-            if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+            if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
             {
                 std::string skeleton (
                     "layout(std140, binding = " + std::to_string ( uniform_block_binding++ ) + ") uniform Skeleton{\n"
