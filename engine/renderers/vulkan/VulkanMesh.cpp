@@ -48,10 +48,8 @@ namespace AeonGames
             Load ( aId );
         }
     }
-    VulkanMesh::~VulkanMesh()
-    {
-        Unload();
-    }
+
+    VulkanMesh::~VulkanMesh() = default;
 
     VkIndexType VulkanMesh::GetIndexType() const
     {
@@ -164,10 +162,14 @@ namespace AeonGames
                     offset += sizeof ( Vertex::uv );
                 }
 
-                if ( mVertexFlags & Mesh::WEIGHT_BIT )
+                if ( mVertexFlags & Mesh::WEIGHT_IDX_BIT )
                 {
                     memcpy ( vertices[j].weight_indices, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
                     offset += sizeof ( Vertex::weight_indices );
+                }
+
+                if ( mVertexFlags & Mesh::WEIGHT_BIT )
+                {
                     memcpy ( vertices[j].weight_influences, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
                     offset += sizeof ( Vertex::weight_influences );
                 }
@@ -189,9 +191,9 @@ namespace AeonGames
             else
             {
                 /**@note upcast to 16 bit indices.*/
-                for ( size_t j = 0; j < aMeshBuffer.indexbuffer().size(); ++j )
+                for ( size_t j = 0; j < mIndexCount; ++j )
                 {
-                    reinterpret_cast<uint16_t*> ( data ) [j] = aMeshBuffer.indexbuffer() [j];
+                    ( reinterpret_cast<uint16_t*> ( data ) [j] ) = aMeshBuffer.indexbuffer() [j];
                 }
             }
         }
@@ -200,6 +202,12 @@ namespace AeonGames
 
     void VulkanMesh::Unload ()
     {
+        mBuffer.Finalize();
+        mAABB = {};
+        mVertexFlags = {};
+        mVertexCount = {};
+        mIndexSize = {};
+        mIndexCount = {};
     }
 
     uint32_t VulkanMesh::GetIndexCount() const

@@ -25,7 +25,7 @@ before_build:
 
     .\vcpkg integrate install
 
-    .\vcpkg install protobuf zlib libpng glslang spirv-tools portaudio libogg libvorbis gtk
+    .\vcpkg install protobuf zlib libpng glslang spirv-tools portaudio libogg libvorbis
 
     cd ..
 

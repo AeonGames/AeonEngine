@@ -26,8 +26,9 @@ message MeshBuffer {
         TANGENT_BIT = 4;
         BITANGENT_BIT = 8;
         UV_BIT = 16;
-        WEIGHT_BIT = 32;
-        COLOR_BIT = 64;
+        WEIGHT_IDX_BIT = 32;
+        WEIGHT_BIT = 64;
+        COLOR_BIT = 128;
     }
 	uint32 Version         = 1;
     Vector3Buffer Center   = 2;

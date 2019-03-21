@@ -188,13 +188,17 @@ namespace AeonGames
             offset += sizeof ( float ) * 2;
         }
 
-        if ( mVertexFlags & Mesh::WEIGHT_BIT )
+        if ( mVertexFlags & Mesh::WEIGHT_IDX_BIT )
         {
             glEnableVertexAttribArray ( 5 );
             OPENGL_CHECK_ERROR_THROW;
             glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
+        }
+
+        if ( mVertexFlags & Mesh::WEIGHT_BIT )
+        {
             glEnableVertexAttribArray ( 6 );
             OPENGL_CHECK_ERROR_THROW;
             glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
