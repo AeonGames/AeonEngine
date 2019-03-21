@@ -27,6 +27,7 @@ import google.protobuf.text_format
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
+
 class MSHExporterCommon():
 
     def __init__(self, filepath):
@@ -72,7 +73,8 @@ class MSHExporterCommon():
             vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
                            1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
 
-        if self.flags & (mesh_pb2.MeshBuffer.WEIGHT_IDX_BIT | mesh_pb2.MeshBuffer.WEIGHT_BIT):
+        if self.flags & (mesh_pb2.MeshBuffer.WEIGHT_IDX_BIT |
+                         mesh_pb2.MeshBuffer.WEIGHT_BIT):
             weights = []
             for group in self.mesh.vertices[
                     loop.vertex_index].groups:
@@ -277,7 +279,7 @@ class MSHExporterCommon():
         self.indices = []
         for polygon in mesh.polygons:
             polygon_count = polygon_count + 1
-            #print("\rPolygon ", polygon_count, " of ", len(
+            # print("\rPolygon ", polygon_count, " of ", len(
             #    mesh.polygons))
             if(len(polygon.loop_indices) < 3):  # skip invalid faces
                 continue
@@ -351,8 +353,8 @@ class MSHExporterCommon():
         out.write(mesh_buffer.SerializeToString())
         out.close()
         print("Done.")
-        print("Writting", self.filepath.replace('.msh','.txt'), ".")
-        out = open(self.filepath.replace('.msh','.txt'), "wt")
+        print("Writting", self.filepath.replace('.msh', '.txt'), ".")
+        out = open(self.filepath.replace('.msh', '.txt'), "wt")
         out.write("AEONMSH\n")
         out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
         out.close()

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ limitations under the License.
 
 #ifdef _MSC_VER
 #pragma warning( push )
-#pragma warning( disable : 4251 )
+#pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include <google/protobuf/text_format.h>
 #ifdef _MSC_VER
