@@ -19,7 +19,7 @@ limitations under the License.
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
-#pragma warning( disable : 4251 )
+#pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include "material.pb.h"
 //#include "property.pb.h"

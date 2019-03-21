@@ -13,11 +13,9 @@ before_build:
 
     set VCPKG_DEFAULT_TRIPLET=x64-windows
 
-    git clone https://github.com/Kwizatz/vcpkg.git
+    git clone https://github.com/Microsoft/vcpkg.git
 
     cd vcpkg
-
-    git checkout protobuf-c++17-iterator-fix-patch
 
     rem powershell -Command "(Get-Content ports\libpng\portfile.cmake) | ForEach-Object { $_ -replace \"libpng16/\", \"libpng16/older-releases/\" } | Set-Content ports\libpng\portfile.cmake"
 
@@ -25,15 +23,15 @@ before_build:
 
     .\vcpkg integrate install
 
-    .\vcpkg install protobuf zlib libpng glslang spirv-tools portaudio libogg libvorbis
+    .\vcpkg install protobuf zlib libpng glslang spirv-tools portaudio libogg libvorbis vulkan gtest
 
     cd ..
 
-    curl -LfsS -o VulkanSDK-1.0.54.0-Installer.exe https://vulkan.lunarg.com/sdk/download/1.0.54.0/windows/VulkanSDK-1.0.54.0-Installer.exe
+    rem curl -LfsS -o VulkanSDK-1.0.54.0-Installer.exe https://vulkan.lunarg.com/sdk/download/1.0.54.0/windows/VulkanSDK-1.0.54.0-Installer.exe
 
-    start "" /WAIT VulkanSDK-1.0.54.0-Installer.exe /S
+    rem start "" /WAIT VulkanSDK-1.0.54.0-Installer.exe /S
 
-    set VULKAN_SDK=C:\VulkanSDK\1.0.54.0
+    rem set VULKAN_SDK=C:\VulkanSDK\1.0.54.0
 
     mkdir build
 

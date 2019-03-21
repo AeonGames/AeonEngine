@@ -29,7 +29,7 @@ limitations under the License.
 #include "aeongames/StringId.h"
 #ifdef _MSC_VER
 #pragma warning( push )
-#pragma warning( disable : 4251 )
+#pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include <google/protobuf/message.h>
 #ifdef _MSC_VER
