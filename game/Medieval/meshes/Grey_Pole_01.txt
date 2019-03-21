@@ -10,7 +10,7 @@ Radii {
   y: 8.000005734808383
   z: 35.20000076293945
 }
-VertexFlags: 67
+VertexFlags: 131
 VertexCount: 8
 IndexSize: 1
 IndexCount: 36

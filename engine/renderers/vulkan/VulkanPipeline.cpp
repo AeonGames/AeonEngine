@@ -102,7 +102,7 @@ namespace AeonGames
 
         vertex_shader.append ( transforms );
 
-        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
@@ -146,7 +146,7 @@ namespace AeonGames
         );
         fragment_shader.append ( transforms );
 
-        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
@@ -181,8 +181,8 @@ namespace AeonGames
     static VkFormat GetFormat ( AttributeBits aAttributeBit )
     {
         return ( aAttributeBit & VertexUVBit ) ? VK_FORMAT_R32G32_SFLOAT :
-               ( aAttributeBit & VertexWeightIndicesBit ) ? VK_FORMAT_R8G8B8A8_UINT :
-               ( aAttributeBit & VertexWeightsBit ) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R32G32B32_SFLOAT;
+               ( aAttributeBit & VertexWeightIdxBit ) ? VK_FORMAT_R8G8B8A8_UINT :
+               ( aAttributeBit & VertexWeightBit ) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R32G32B32_SFLOAT;
     }
 
     static uint32_t GetSize ( AttributeBits aAttributeBit )
@@ -431,7 +431,7 @@ namespace AeonGames
         // Matrix Descriptor Set Layout
         descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
 
-        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIndicesBit | VertexWeightsBit ) )
+        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton Descriptor Set Layout
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();

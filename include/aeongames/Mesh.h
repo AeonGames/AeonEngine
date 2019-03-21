@@ -27,13 +27,14 @@ namespace AeonGames
     public:
         enum AttributeMask
         {
-            POSITION_BIT = 0b1,
-            NORMAL_BIT = 0b10,
-            TANGENT_BIT = 0b100,
-            BITANGENT_BIT = 0b1000,
-            UV_BIT = 0b10000,
-            WEIGHT_BIT = 0b100000,
-            COLOR_BIT = 0b1000000,
+            POSITION_BIT =   0b1,
+            NORMAL_BIT =     0b10,
+            TANGENT_BIT =    0b100,
+            BITANGENT_BIT =  0b1000,
+            UV_BIT =         0b10000,
+            WEIGHT_IDX_BIT = 0b100000,
+            WEIGHT_BIT =     0b1000000,
+            COLOR_BIT =      0b10000000,
         };
         enum IndexType
         {
@@ -86,9 +87,13 @@ namespace AeonGames
         {
             stride += sizeof ( float ) * 2;
         }
+        if ( aVertexFlags & Mesh::AttributeMask::WEIGHT_IDX_BIT )
+        {
+            stride += sizeof ( uint8_t ) * 4;
+        }
         if ( aVertexFlags & Mesh::AttributeMask::WEIGHT_BIT )
         {
-            stride += sizeof ( uint8_t ) * 8;
+            stride += sizeof ( uint8_t ) * 4;
         }
         if ( aVertexFlags & Mesh::AttributeMask::COLOR_BIT )
         {
