@@ -11,6 +11,12 @@ before_build:
 
     rem powershell -Command new-itemproperty -path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v4.0.30319" -name "SchUseStrongCrypto" -Value 1 -PropertyType "DWord"
 
+    curl -LfsS -o vulkan-runtime.exe https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-runtime.exe?u=
+
+    start "" /WAIT vulkan-runtime.exe /S
+
+    rem set VULKAN_SDK=C:\VulkanSDK\1.0.54.0
+
     set VCPKG_DEFAULT_TRIPLET=x64-windows
 
     git clone https://github.com/Microsoft/vcpkg.git
@@ -26,12 +32,6 @@ before_build:
     .\vcpkg install protobuf zlib libpng glslang spirv-tools portaudio libogg libvorbis vulkan gtest
 
     cd ..
-
-    rem curl -LfsS -o VulkanSDK-1.0.54.0-Installer.exe https://vulkan.lunarg.com/sdk/download/1.0.54.0/windows/VulkanSDK-1.0.54.0-Installer.exe
-
-    rem start "" /WAIT VulkanSDK-1.0.54.0-Installer.exe /S
-
-    rem set VULKAN_SDK=C:\VulkanSDK\1.0.54.0
 
     mkdir build
 
