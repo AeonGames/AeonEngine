@@ -40,6 +40,7 @@ namespace AeonGames
 
     ModelComponent::ModelComponent() : Component{},
         /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
+        /// @todo Initialize the skeleton only when needed.
         mSkeletonBuffer{GetRenderer()->CreateUniformBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
         const float identity[16] =
@@ -204,7 +205,7 @@ namespace AeonGames
                                  *std::get<0> ( i ).Cast<Mesh>(),
                                  *std::get<1> ( i ).Cast<Pipeline>(),
                                  std::get<2> ( i ).Cast<Material>(),
-                                 mSkeletonBuffer.get() );
+                                 model->GetSkeleton() ? mSkeletonBuffer.get() : nullptr );
             }
         }
     }
