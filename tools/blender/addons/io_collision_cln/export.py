@@ -22,11 +22,10 @@ import itertools
 import geometry_pb2
 import google.protobuf.text_format
 
-
-class GTYExporter(bpy.types.Operator):
-    '''Exports scene to an AeonGames Tile (GTY) file'''
-    bl_idname = "export_scene.gty"
-    bl_label = "Export AeonGames Level Geometry"
+class CLNExporter(bpy.types.Operator):
+    '''Exports a mesh as AeonGames Collision Data file (CLN) file'''
+    bl_idname = "export_mesh.cln"
+    bl_label = "Export AeonGames Collision Data"
     filepath = bpy.props.StringProperty(subtype='FILE_PATH')
     index_struct = struct.Struct('i')
 
@@ -36,7 +35,6 @@ class GTYExporter(bpy.types.Operator):
         return True
 
     def addplane(self, plane, geometry_buffer):
-        #print("Adding Plane",plane)
         i = 0
         for iplane in geometry_buffer.plane:
             if ((math.fabs(plane[0] - iplane.x) <= 0.00001) and
@@ -64,7 +62,7 @@ class GTYExporter(bpy.types.Operator):
     def calculate_sixdops(self, mesh, geometry_buffer, collision_faces):
         count = 1
         for polygon in mesh.polygons:
-            print("Processing polygon ", count, " out of ", len(mesh.polygons))
+            #print("Processing polygon ", count, " out of ", len(mesh.polygons))
             count = count + 1
             # Calculate polygon 6DOP
             sixdop = [
@@ -95,7 +93,6 @@ class GTYExporter(bpy.types.Operator):
             collision_faces[polygon].six_dop.negative.x = sixdop[3]
             collision_faces[polygon].six_dop.negative.y = sixdop[4]
             collision_faces[polygon].six_dop.negative.z = sixdop[5]
-            print(collision_faces[polygon])
 
             # Calculate face plane if face normal does not match a 6DOP
             if not (
@@ -110,8 +107,7 @@ class GTYExporter(bpy.types.Operator):
                                     polygon.normal[2]) <= 1.000001):
                 plane = [polygon.normal[0], polygon.normal[1], polygon.normal[2],
                          polygon.normal.dot(mesh.vertices[polygon.vertices[0]].co)]
-                print("Polygon Plane: ", plane)
-                collision_faces[polygon].plane_indices += GTYExporter.index_struct.pack(
+                collision_faces[polygon].plane_indices += CLNExporter.index_struct.pack(
                     self.addplane(plane, geometry_buffer))
             # else:
             #    print("Polygon plane matches a 6-DOP, discarded")
@@ -121,7 +117,7 @@ class GTYExporter(bpy.types.Operator):
         # (if any)
         count = 1
         for edge in mesh.edges:
-            print("Processing edge ", count, " out of ", len(mesh.edges))
+            #print("Processing edge ", count, " out of ", len(mesh.edges))
             count = count + 1
             adjacent_faces = []
             for polygon in mesh.polygons:
@@ -150,7 +146,7 @@ class GTYExporter(bpy.types.Operator):
                 plane_index = self.addplane(
                     [normal[0], normal[1], normal[2], distance], geometry_buffer)
                 collision_faces[adjacent_faces[0]
-                                ].plane_indices += GTYExporter.index_struct.pack(plane_index)
+                                ].plane_indices += CLNExporter.index_struct.pack(plane_index)
                 # TODO: Add extra bevelling plane to edge using face normal and
                 # the normal of the created plane.
             elif len(adjacent_faces) == 2:
@@ -173,9 +169,9 @@ class GTYExporter(bpy.types.Operator):
                             [normal[0], normal[1], normal[2], distance], geometry_buffer)
                         # Same plane for both faces.
                         collision_faces[adjacent_faces[0]
-                                        ].plane_indices += GTYExporter.index_struct.pack(plane_index)
+                                        ].plane_indices += CLNExporter.index_struct.pack(plane_index)
                         collision_faces[adjacent_faces[1]
-                                        ].plane_indices += GTYExporter.index_struct.pack(plane_index)
+                                        ].plane_indices += CLNExporter.index_struct.pack(plane_index)
                         edgedir = mesh.vertices[edge.vertices[0]
                                                 ].co - mesh.vertices[edge.vertices[1]].co
                         edgedir.normalize()
@@ -196,9 +192,9 @@ class GTYExporter(bpy.types.Operator):
                         plane_index = self.addplane(
                             [normal[0], normal[1], normal[2], distance], geometry_buffer)
                         collision_faces[adjacent_faces[0]
-                                        ].plane_indices += GTYExporter.index_struct.pack(plane_index)
+                                        ].plane_indices += CLNExporter.index_struct.pack(plane_index)
                         collision_faces[adjacent_faces[1]
-                                        ].plane_indices += GTYExporter.index_struct.pack(-(plane_index + 1))
+                                        ].plane_indices += CLNExporter.index_struct.pack(-(plane_index + 1))
                         break
                     else:
                         #print ("Concave Edge")
@@ -212,25 +208,25 @@ class GTYExporter(bpy.types.Operator):
                             adjacent_faces[0].normal[2],
                             adjacent_faces[0].normal.dot(mesh.vertices[adjacent_faces[0].vertices[0]].co)], geometry_buffer)
                         collision_faces[adjacent_faces[1]
-                                        ].plane_indices += GTYExporter.index_struct.pack(-(plane_index + 1))
+                                        ].plane_indices += CLNExporter.index_struct.pack(-(plane_index + 1))
                         plane_index = self.addplane([
                             adjacent_faces[1].normal[0],
                             adjacent_faces[1].normal[1],
                             adjacent_faces[1].normal[2],
                             adjacent_faces[1].normal.dot(mesh.vertices[adjacent_faces[1].vertices[0]].co)], geometry_buffer)
                         collision_faces[adjacent_faces[0]
-                                        ].plane_indices += GTYExporter.index_struct.pack(-(plane_index + 1))
+                                        ].plane_indices += CLNExporter.index_struct.pack(-(plane_index + 1))
                         break
             else:
                 # either edge has no faces attached or has more than 2, either
                 # way it is invalid for collision detection.
-                print("Invalid Edge")
+                print("Non-Manifold Edge")
 
     def calculate_vertexplanes(self, mesh, geometry_buffer, collision_faces):
         # Calculate vertex planes.
         count = 1
         for vertex in mesh.vertices:
-            print("Processing vertex ", count, " out of ", len(mesh.vertices))
+            #print("Processing vertex ", count, " out of ", len(mesh.vertices))
             count = count + 1
             distance = vertex.normal.dot(vertex.co)
             # TODO: plane must only be added if the vertex is "sharp".
@@ -241,11 +237,11 @@ class GTYExporter(bpy.types.Operator):
                 distance], geometry_buffer)
             for polygon in mesh.polygons:
                 if vertex in polygon.vertices:
-                    collision_faces[polygon].plane_indices += GTYExporter.index_struct.pack(
+                    collision_faces[polygon].plane_indices += CLNExporter.index_struct.pack(
                         plane_index)
 
     def process_collision_mesh(self, mesh_object, geometry_buffer):
-        print("Processing Mesh ", mesh_object.name, " for collision data.")
+        #print("Processing Mesh ", mesh_object.name, " for collision data.")
         mesh = mesh_object.data
         collision_faces = {}
 
@@ -257,7 +253,7 @@ class GTYExporter(bpy.types.Operator):
         seconds = time.time()
         bpy.ops.object.mode_set()
         scene = context.scene
-        self.filepath = bpy.path.ensure_ext(self.filepath, ".gty")
+        self.filepath = bpy.path.ensure_ext(self.filepath, ".cln")
         geometry_buffer = geometry_pb2.GeometryBuffer()
         for obj in scene.objects:
             if (obj.type == 'MESH'):
@@ -267,12 +263,12 @@ class GTYExporter(bpy.types.Operator):
         print("Writting", self.filepath, ".")
         out = open(self.filepath, "wb")
         magick_struct = struct.Struct('8s')
-        out.write(magick_struct.pack(b'AEONGTY\x00'))
+        out.write(magick_struct.pack(b'AEONCLN\x00'))
         out.write(geometry_buffer.SerializeToString())
         out.close()
         print("Done.")
 
-        print("Writting", self.filepath + ".txt", ".")
+        print("Writting", self.filepath.replace('.cln', '.txt'), ".")
         for brush in geometry_buffer.brush:
             fmt = ""
             for i in range(0, len(brush.plane_indices) //
@@ -282,8 +278,8 @@ class GTYExporter(bpy.types.Operator):
             for i in struct.unpack(fmt, brush.plane_indices):
                 plane_indices += str(i) + " "
             brush.plane_indices = bytes(plane_indices.strip(), 'utf-8')
-        out = open(self.filepath + ".txt", "wt")
-        out.write("AEONGTY\n")
+        out = open(self.filepath.replace('.cln', '.txt'), "wt")
+        out.write("AEONCLN\n")
         out.write(google.protobuf.text_format.MessageToString(geometry_buffer))
         out.close()
         print("Done.")
@@ -299,8 +295,8 @@ class GTYExporter(bpy.types.Operator):
                     bpy.data.filepath) +
                 os.sep +
                 context.scene.name,
-                ".gty")
+                ".cln")
         else:
-            self.filepath = bpy.path.ensure_ext(self.filepath, ".gty")
+            self.filepath = bpy.path.ensure_ext(self.filepath, ".cln")
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}

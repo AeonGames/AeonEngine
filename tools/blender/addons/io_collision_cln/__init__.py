@@ -15,32 +15,32 @@
 from . import export
 import bpy
 bl_info = {
-    "name": "AeonGames Geometry Format (.gty)",
+    "name": "AeonGames Collision Format (.cln)",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
     "blender": (2, 7, 0),
-    "location": "File > Export > Export AeonGames Geometry",
-    "description": "Exports a mesh to an AeonGames Geometry (GTY) file",
+    "location": "File > Export > Export AeonGames Collision Data",
+    "description": "Exports a mesh as AeonGames Collision Data file (CLN)",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
     "category": "Import-Export"}
 
 
-def gty_menu_func(self, context):
+def cln_menu_func(self, context):
     self.layout.operator(
-        export.GTYExporter.bl_idname,
-        text="AeonGames Collision Geometry (.gty)")
+        export.CLNExporter.bl_idname,
+        text="AeonGames Collision Data (.cln)")
 
 
 def register():
-    bpy.utils.register_class(export.GTYExporter)
-    bpy.types.INFO_MT_file_export.append(gty_menu_func)
+    bpy.utils.register_class(export.CLNExporter)
+    bpy.types.INFO_MT_file_export.append(cln_menu_func)
 
 
 def unregister():
-    bpy.utils.unregister_class(export.GTYExporter)
-    bpy.types.INFO_MT_file_export.remove(gty_menu_func)
+    bpy.utils.unregister_class(export.CLNExporter)
+    bpy.types.INFO_MT_file_export.remove(cln_menu_func)
 
 
 if __name__ == "__main__":
