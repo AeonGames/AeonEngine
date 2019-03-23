@@ -153,7 +153,14 @@ namespace AeonGames
                 std::cout << " No Change" << std::endl;
                 return false;
             }
-            mComponent->SetProperty ( mComponent->GetPropertyInfoArray() [index.row()], property );
+            try
+            {
+                mComponent->SetProperty ( mComponent->GetPropertyInfoArray() [index.row()], property );
+            }
+            catch ( std::runtime_error& e )
+            {
+                std::cout << e.what() << std::endl;
+            }
             std::cout << " Value Changed" << std::endl;
             emit dataChanged ( index, index );
             return true;

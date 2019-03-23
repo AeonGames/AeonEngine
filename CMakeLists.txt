@@ -34,7 +34,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_PREFIX_PATH "${CMAKE_PROGRAM_PATH};C:/msys64/mingw64;C:/msys64/usr")
   set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /DPROTOBUF_WARNINGS=\"4251 4996\"")
 else()
@@ -81,9 +80,9 @@ find_program(XXD_EXECUTABLE xxd
                    MSYS2_PATH
                    ChocolateyInstall)
 find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
-find_program(GLOBAL_EXECUTABLE NAMES global global.exe)
-find_program(CLANG_EXECUTABLE NAMES clang clang.exe)
-find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe)
+find_program(GLOBAL_EXECUTABLE NAMES global global.exe HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(CLANG_EXECUTABLE NAMES clang clang.exe HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
 find_package(Git)
 
