@@ -220,6 +220,7 @@ class CLNExporter(bpy.types.Operator):
             else:
                 # either edge has no faces attached or has more than 2, either
                 # way it is invalid for collision detection.
+                edge.select = True
                 print("Non-Manifold Edge")
 
     def calculate_vertexplanes(self, mesh, geometry_buffer, collision_faces):
