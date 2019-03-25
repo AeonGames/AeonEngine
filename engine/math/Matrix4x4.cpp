@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -220,5 +220,28 @@ namespace AeonGames
     const bool operator== ( const Matrix4x4& lhs, const Matrix4x4& rhs )
     {
         return memcmp ( lhs.GetMatrix4x4(), rhs.GetMatrix4x4(), sizeof ( float ) * 16 ) == 0;
+    }
+
+    const Matrix4x4 Abs ( const Matrix4x4& aMatrix4x4 )
+    {
+        return Matrix4x4
+        {
+            std::abs ( aMatrix4x4[0] ),
+            std::abs ( aMatrix4x4[1] ),
+            std::abs ( aMatrix4x4[2] ),
+            std::abs ( aMatrix4x4[3] ),
+            std::abs ( aMatrix4x4[4] ),
+            std::abs ( aMatrix4x4[5] ),
+            std::abs ( aMatrix4x4[6] ),
+            std::abs ( aMatrix4x4[7] ),
+            std::abs ( aMatrix4x4[8] ),
+            std::abs ( aMatrix4x4[9] ),
+            std::abs ( aMatrix4x4[10] ),
+            std::abs ( aMatrix4x4[11] ),
+            std::abs ( aMatrix4x4[12] ),
+            std::abs ( aMatrix4x4[13] ),
+            std::abs ( aMatrix4x4[14] ),
+            std::abs ( aMatrix4x4[15] )
+        };
     }
 }

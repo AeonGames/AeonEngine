@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -158,15 +158,15 @@ namespace AeonGames
         return Transform ( *this ).Invert();
     }
 
-    Transform& Transform::operator *= ( const Transform& lhs )
+    Transform& Transform::operator *= ( const Transform& rhs )
     {
         // Item 22 from MEC++
         // Translation
-        mTranslation  = ( mRotation * lhs.GetTranslation() ) + mTranslation;
+        mTranslation += ( mRotation * rhs.GetTranslation() );
         // Rotation
-        mRotation *= lhs.GetRotation();
+        mRotation *= rhs.GetRotation();
         // Scale
-        mScale *= lhs.GetScale();
+        mScale *= rhs.GetScale();
         return *this;
     }
 
@@ -183,8 +183,9 @@ namespace AeonGames
         ///@note Based on Real Time Collision Detection 4.2.6
         return AABB
         {
-            lhs.GetTranslation() + ( lhs.GetRotation() *rhs.GetCenter() ),
-            Abs ( lhs.GetRotation() * ( lhs.GetScale() * rhs.GetRadii() ) )
+            lhs.GetTranslation() + ( lhs.GetRotation() * ( lhs.GetScale() * rhs.GetCenter() ) ),
+            /// @todo see if there is a way to create an Abs(Quaternion)
+            Abs ( lhs.GetRotation().GetMatrix4x4() ) * ( Abs ( lhs.GetScale() ) * rhs.GetRadii() )
         };
     }
 
