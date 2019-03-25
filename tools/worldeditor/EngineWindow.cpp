@@ -254,14 +254,25 @@ namespace AeonGames
                         Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
                         mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Node & aNode )
                         {
-                            if ( frustum.Intersects ( aNode.GetGlobalTransform() * aNode.GetAABB() ) )
+                            AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
+                            if ( frustum.Intersects ( transformed_aabb ) )
                             {
                                 // Call Node specific rendering function.
                                 aNode.Render ( *mWindow );
-                                // Render Node AABB
-                                mWindow->Render ( aNode.GetGlobalTransform() * aNode.GetAABB().GetTransform(),
+                                // Render Node AABBss
+                                mWindow->Render ( transformed_aabb.GetTransform(),
                                                   qWorldEditorApp->GetAABBWireMesh(),
                                                   qWorldEditorApp->GetWirePipeline() );
+                                // Render Node Root
+                                mWindow->Render ( aNode.GetGlobalTransform(),
+                                                  qWorldEditorApp->GetAABBWireMesh(),
+                                                  qWorldEditorApp->GetWirePipeline() );
+                                // Render AABB Center
+                                mWindow->Render (   Transform{Vector3{1, 1, 1},
+                                                              Quaternion{1, 0, 0, 0},
+                                                              Vector3{transformed_aabb.GetCenter() }},
+                                                    qWorldEditorApp->GetAABBWireMesh(),
+                                                    qWorldEditorApp->GetWirePipeline() );
                             }
                         } );
                     }
