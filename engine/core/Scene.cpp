@@ -237,7 +237,7 @@ namespace AeonGames
                 {
                     if ( !parent->Remove ( aNode ) )
                     {
-                        std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                        std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                     }
                 }
             },
@@ -271,7 +271,7 @@ namespace AeonGames
                 {
                     if ( !parent->Remove ( aNode ) )
                     {
-                        std::cout << LogLevel ( LogLevel::Level::Warning ) << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                        std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
                     }
                 }
             },

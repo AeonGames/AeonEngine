@@ -122,6 +122,13 @@ namespace AeonGames
         }
         gInitialized = true;
         GOOGLE_PROTOBUF_VERIFY_VERSION;
+#if _WIN32
+        HANDLE hOut = GetStdHandle ( STD_OUTPUT_HANDLE );
+        DWORD dwMode = 0;
+        GetConsoleMode ( hOut, &dwMode );
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode ( hOut, dwMode );
+#endif
         try
         {
             LoadProtoBufObject<ConfigurationBuffer> ( gConfigurationBuffer, "game/config", "AEONCFG" );

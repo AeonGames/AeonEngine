@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "VulkanUtilities.h"
+#include "aeongames/LogLevel.h"
 #include <iostream>
 #include <sstream>
 namespace AeonGames
@@ -88,38 +89,32 @@ namespace AeonGames
         const char *aMsg,
         void *aUserData )
     {
-        std::ostringstream stream;
-
         if ( aFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT )
         {
-            stream << "[ INFO ]";
+            std::cout << LogLevel::Info;
         }
         if ( aFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT )
         {
-            stream << "[ WARNING ]";
+            std::cout << LogLevel::Warning;
         }
         if ( aFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
         {
-            stream << "[ PERFORMANCE ]";
+            std::cout << LogLevel::Performance;
         }
         if ( aFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
         {
-            stream << "[ ERROR ]";
+            std::cout << LogLevel::Error;
 #if _WIN32
-            stream << aLayerPrefix << ": " << aMsg << std::endl;
-            std::cout << stream.str();
+            std::cout << aLayerPrefix << ": " << aMsg << std::endl;
             MessageBox ( nullptr, aMsg, aLayerPrefix, MB_ICONERROR | MB_OK );
             return false;
 #endif
         }
         if ( aFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
         {
-            stream << "[ DEBUG ]";
+            std::cout << LogLevel::Debug;
         }
-        stream << aLayerPrefix << ": " << aMsg << std::endl;
-
-        std::cout << stream.str();
-
+        std::cout << aLayerPrefix << ": " << aMsg << std::endl;
         return false;
     }
 }
