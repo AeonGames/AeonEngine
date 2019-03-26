@@ -115,7 +115,6 @@ set(ENGINE_CORE_SOURCES
     core/Animation.cpp
     core/SoundSystem.cpp
     core/Utilities.cpp
-    core/LogLevel.cpp
     core/Model.cpp
     core/Window.cpp
     core/Scene.cpp
