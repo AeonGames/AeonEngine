@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ limitations under the License.
 #define _USE_MATH_DEFINES
 #include "aeongames/Quaternion.h"
 #include "aeongames/Matrix4x4.h"
+#include "aeongames/Matrix3x3.h"
 #include "aeongames/Vector3.h"
 #include <cassert>
 #include <cmath>
@@ -72,6 +73,39 @@ namespace AeonGames
             0.0f,
             // Fourth row
             0, 0, 0, 1};
+    }
+
+    Matrix3x3 Quaternion::GetMatrix3x3() const
+    {
+        // Products
+        float p1 = mQuaternion[0] * mQuaternion[1];
+        float p2 = mQuaternion[0] * mQuaternion[2];
+        float p3 = mQuaternion[0] * mQuaternion[3];
+
+        float p4 = mQuaternion[1] * mQuaternion[1];
+        float p5 = mQuaternion[1] * mQuaternion[2];
+        float p6 = mQuaternion[1] * mQuaternion[3];
+
+        float p7 = mQuaternion[2] * mQuaternion[2];
+        float p8 = mQuaternion[2] * mQuaternion[3];
+
+        float p9 = mQuaternion[3] * mQuaternion[3];
+
+        return Matrix3x3
+        {
+            // First row
+            1.0f - 2.0f * ( p7 + p9 ),
+            2.0f * ( p5 + p3 ),
+            2.0f * ( p6 - p2 ),
+            // Second row
+            2.0f * ( p5 - p3 ),
+            1.0f - 2.0f * ( p4 + p9 ),
+            2.0f * ( p8 + p1 ),
+            // Third row
+            2.0f * ( p6 + p2 ),
+            2.0f * ( p8 - p1 ),
+            1.0f - 2.0f * ( p4 + p7 ),
+        };
     }
 
     Quaternion& Quaternion::operator= ( const float* aLhs )

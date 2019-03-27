@@ -74,6 +74,7 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/AABB.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Frustum.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix3x3.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
 
 set(ENGINE_CORE_HEADERS
@@ -134,6 +135,7 @@ set(ENGINE_MATH_SOURCES
     math/AABB.cpp
     math/Frustum.cpp
     math/Matrix4x4.cpp
+    math/Matrix3x3.cpp
     math/Transform.cpp)
 
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
