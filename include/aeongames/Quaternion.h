@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Matrix4x4;
+    class Matrix3x3;
     class Vector3;
     /*! \brief Quaternion class. */
     class Quaternion
@@ -40,6 +41,7 @@ namespace AeonGames
         /// destructor.
         DLL ~Quaternion();
         DLL Matrix4x4 GetMatrix4x4() const;
+        DLL Matrix3x3 GetMatrix3x3() const;
         /*! \name Operators */
         //@{
         DLL Quaternion& operator= ( const float* aLhs );

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -94,6 +94,13 @@ namespace AeonGames
         \return Pointer to transformation matrix, same as M.
         */
         DLL const Matrix4x4 GetMatrix() const;
+
+        /*!
+        \brief Constructs a transformation matrix from only the SR variables.
+        \param M [out] Transformation matrix.
+        \return 3x3 transformation matrix.
+        */
+        DLL const Matrix3x3 GetScaleRotationMatrix() const;
 
         /*!
         \brief Constructs an inverted transformation matrix from the SRT variables.

@@ -17,6 +17,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/AABB.h"
 #include "aeongames/Matrix4x4.h"
+#include "aeongames/Matrix3x3.h"
 #include "3DMath.h"
 
 namespace AeonGames
@@ -130,6 +131,26 @@ namespace AeonGames
         };
     }
 
+    const Matrix3x3 Transform::GetScaleRotationMatrix () const
+    {
+        Matrix3x3 rotation = mRotation.GetMatrix3x3();
+        return Matrix3x3
+        {
+            // Simplified 3x3 scale matrix multiplication
+            rotation[0] * mScale[0],
+            rotation[1] * mScale[0],
+            rotation[2] * mScale[0],
+
+            rotation[3] * mScale[1],
+            rotation[4] * mScale[1],
+            rotation[5] * mScale[1],
+
+            rotation[6] * mScale[2],
+            rotation[7] * mScale[2],
+            rotation[8] * mScale[2],
+        };
+    }
+
     const Matrix4x4 Transform::GetInvertedMatrix () const
     {
         return GetInverted().GetMatrix();
@@ -181,11 +202,11 @@ namespace AeonGames
     const AABB operator* ( const Transform & lhs, const AABB & rhs )
     {
         ///@note Based on Real Time Collision Detection 4.2.6
+        Matrix3x3 scale_rotation{lhs.GetScaleRotationMatrix() };
         return AABB
         {
-            lhs.GetTranslation() + ( lhs.GetRotation() * ( lhs.GetScale() * rhs.GetCenter() ) ),
-            /// @todo see if there is a way to create an Abs(Quaternion)
-            Abs ( lhs.GetRotation().GetMatrix4x4() ) * ( Abs ( lhs.GetScale() ) * rhs.GetRadii() )
+            lhs.GetTranslation() + scale_rotation * rhs.GetCenter(),
+            Abs ( scale_rotation ) * rhs.GetRadii()
         };
     }
 
