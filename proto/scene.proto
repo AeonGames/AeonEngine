@@ -49,6 +49,7 @@ message NodeBuffer {
 }
 
 message SceneBuffer{
-    string              name = 1;
-    repeated NodeBuffer node = 2;
+    string              name   = 1;
+    string              camera = 2;
+    repeated NodeBuffer node   = 3;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015,2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ namespace AeonGames
         //@}
         void InsertNode ( int row, const QModelIndex & parent = QModelIndex(), std::unique_ptr<Node> aNode = {} );
         void RemoveNode ( int row, const QModelIndex & parent = QModelIndex() );
+        void SetCameraNode ( const QModelIndex & index = QModelIndex() );
         std::string Serialize ( bool aAsBinary = true ) const;
         void Deserialize ( const std::string& aSerializedScene );
         const Scene& GetScene() const;

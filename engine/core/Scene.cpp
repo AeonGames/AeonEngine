@@ -325,6 +325,10 @@ namespace AeonGames
     {
         static SceneBuffer scene_buffer;
         *scene_buffer.mutable_name() = mName;
+        if ( mCamera )
+        {
+            *scene_buffer.mutable_camera() = mCamera->GetName();
+        }
         std::unordered_map<const Node*, NodeBuffer*> node_map;
         LoopTraverseDFSPreOrder (
             [&node_map] ( const Node & node )
@@ -390,6 +394,7 @@ namespace AeonGames
                 }
             }
         }
+        SetCamera ( scene_buffer.camera() );
         scene_buffer.Clear();
     }
     Node* Scene::StoreNode ( std::unique_ptr<Node> aNode )
