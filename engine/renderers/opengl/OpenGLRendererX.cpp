@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -144,19 +144,19 @@ namespace AeonGames
         // Verifying that context is a direct context
         if ( ! glXIsDirect (  static_cast<Display*> ( mWindowId ),  static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
-            std::cout << LogLevel ( LogLevel::Level::Info ) <<
+            std::cout << LogLevel ( LogLevel::Info ) <<
                       "Indirect GLX rendering context obtained" << std::endl;
         }
         else
         {
-            std::cout << LogLevel ( LogLevel::Level::Info ) <<
+            std::cout << LogLevel ( LogLevel::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
 
         if ( !glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
 
-            std::cout << LogLevel ( LogLevel::Level::Warning ) <<
+            std::cout << LogLevel ( LogLevel::Warning ) <<
                       "glxMakeCurrent Failed." << std::endl;
         }
 
