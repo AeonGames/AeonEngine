@@ -88,6 +88,12 @@ namespace AeonGames
         mSceneModel.RemoveNode ( index.row(), index.parent() );
     }
 
+    void SceneWindow::on_actionSetCameraNode_triggered()
+    {
+        QModelIndex index = sceneTreeView->currentIndex();
+        mSceneModel.SetCameraNode ( index );
+    }
+
     void SceneWindow::on_actionRemoveComponent_triggered()
     {
         QModelIndex index = componentListView->currentIndex();
@@ -110,6 +116,7 @@ namespace AeonGames
         if ( index.isValid() )
         {
             actions.append ( actionRemoveNode );
+            actions.append ( actionSetCameraNode );
         }
         sceneTreeView->setCurrentIndex ( index );
         QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );

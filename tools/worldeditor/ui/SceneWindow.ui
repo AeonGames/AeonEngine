@@ -483,6 +483,18 @@
     <string>Remove a child node from this scene or node</string>
    </property>
   </action>
+  <action name="actionSetCameraNode">
+   <property name="icon">
+    <iconset resource="../worldeditor_static.qrc">
+     <normaloff>:/icons/icon_camera</normaloff>:/icons/icon_camera</iconset>
+   </property>
+   <property name="text">
+    <string>Set as camera</string>
+   </property>
+   <property name="toolTip">
+    <string>Set node as initial/default/current camera</string>
+   </property>
+  </action>
   <action name="actionRemoveComponent">
    <property name="icon">
     <iconset resource="../worldeditor_static.qrc">

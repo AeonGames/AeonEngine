@@ -120,7 +120,11 @@ namespace AeonGames
         }
         else if ( role == Qt::DecorationRole )
         {
-            return QIcon ( ":/icons/icon_node" );
+            if ( mScene.GetCamera() != reinterpret_cast<Node*> ( index.internalPointer() ) )
+            {
+                return QIcon ( ":/icons/icon_node" );
+            }
+            return QIcon ( ":/icons/icon_camera" );
         }
         else if ( role == Qt::UserRole )
         {
@@ -319,6 +323,20 @@ namespace AeonGames
             mScene.DisposeNode ( node );
         }
         endRemoveRows();
+    }
+
+    void SceneModel::SetCameraNode ( const QModelIndex & index )
+    {
+        beginResetModel();
+        if ( index.isValid() )
+        {
+            mScene.SetCamera ( reinterpret_cast<Node*> ( index.internalPointer() ) );
+        }
+        else
+        {
+            mScene.SetCamera ( nullptr );
+        }
+        endResetModel();
     }
 
     std::string SceneModel::Serialize ( bool aAsBinary ) const
