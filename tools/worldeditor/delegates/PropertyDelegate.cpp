@@ -20,6 +20,7 @@ limitations under the License.
 #include <limits>
 #include <algorithm>
 #include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <QLineEdit>
 
 namespace AeonGames
@@ -76,6 +77,8 @@ namespace AeonGames
             return BuildSpinboxEditor<unsigned long> ( parent );
         case QMetaType::ULongLong:
             return BuildSpinboxEditor<unsigned long long> ( parent );
+        case QMetaType::Float:
+            return new QDoubleSpinBox ( parent );
         }
         return QStyledItemDelegate::createEditor ( parent, option, index );
     }
@@ -105,6 +108,12 @@ namespace AeonGames
         case QMetaType::ULongLong:
             SetSpinboxEditorValue<unsigned long long> ( editor, value );
             return;
+        case QMetaType::Float:
+        {
+            QDoubleSpinBox* spinBox = static_cast<QDoubleSpinBox*> ( editor );
+            spinBox->setValue ( value.value<float>() );
+        }
+        return;
         default:
             if ( user_type == qWorldEditorApp->GetPathMetaType() )
             {
@@ -142,6 +151,13 @@ namespace AeonGames
         case QMetaType::ULongLong:
             SetSpinboxModelData<unsigned long long> ( editor, model, index );
             return;
+        case QMetaType::Float:
+        {
+            QDoubleSpinBox* spinBox = static_cast<QDoubleSpinBox*> ( editor );
+            spinBox->interpretText();
+            model->setData ( index, QVariant::fromValue ( static_cast<float> ( spinBox->value() ) ), Qt::EditRole );
+        }
+        return;
         default:
             if ( user_type == qWorldEditorApp->GetPathMetaType() )
             {
