@@ -43,8 +43,8 @@ namespace AeonGames
         void SetFarPlane ( float aFarPlane );
         static const StringId& GetClassId();
     private:
-        float mNearPlane;
-        float mFarPlane;
+        float mNearPlane{1.0f};
+        float mFarPlane{16000.0f};
     };
 }
 #endif
