@@ -80,9 +80,15 @@ find_program(XXD_EXECUTABLE xxd
                    MSYS2_PATH
                    ChocolateyInstall)
 find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
-find_program(GLOBAL_EXECUTABLE NAMES global global.exe HINTS ENV MINGW_PREFIX MSYS2_PATH)
-find_program(CLANG_EXECUTABLE NAMES clang clang.exe HINTS ENV MINGW_PREFIX MSYS2_PATH)
-find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy clang-tidy.exe HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(GLOBAL_EXECUTABLE
+             NAMES global global.exe
+             HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(CLANG_EXECUTABLE
+             NAMES clang clang.exe
+             HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(CLANG_TIDY_EXECUTABLE
+             NAMES clang-tidy clang-tidy.exe
+             HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
 find_package(Git)
 
@@ -435,9 +441,11 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
 
   set(INCLIST "")
 
-  list(APPEND INCLIST ${Qt5Core_INCLUDE_DIRS})
-  list(APPEND INCLIST ${Qt5Gui_INCLUDE_DIRS})
-  list(APPEND INCLIST ${Qt5Widgets_INCLUDE_DIRS})
+  if(Qt5_FOUND)
+    list(APPEND INCLIST ${Qt5Core_INCLUDE_DIRS})
+    list(APPEND INCLIST ${Qt5Gui_INCLUDE_DIRS})
+    list(APPEND INCLIST ${Qt5Widgets_INCLUDE_DIRS})
+  endif(Qt5_FOUND)
   list(APPEND INCLIST ${GLSlang_INCLUDE_DIR})
   list(APPEND INCLIST ${VULKAN_INCLUDE_DIR})
   list(APPEND INCLIST ${Protobuf_INCLUDE_DIR})
