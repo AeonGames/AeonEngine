@@ -98,7 +98,7 @@ namespace AeonGames
     {
         /* Add a nice renderer selection window.*/
         QStringList renderer_list;
-        EnumerateRendererConstructors ( [this, &renderer_list] ( const std::string & aIdentifier )->bool
+        EnumerateRendererConstructors ( [&renderer_list] ( const std::string & aIdentifier )->bool
         {
             renderer_list.append ( QString::fromStdString ( aIdentifier ) );
             return true;

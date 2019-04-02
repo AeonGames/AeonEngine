@@ -50,7 +50,7 @@ namespace AeonGames
             0.0f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
         };
-        float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+        auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
         for ( size_t i = 0; i < 256; ++i )
         {
             memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
@@ -181,7 +181,7 @@ namespace AeonGames
 
             if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
             {
-                float* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+                auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
                 auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
                 mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
                 for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
