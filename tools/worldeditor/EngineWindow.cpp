@@ -252,7 +252,7 @@ namespace AeonGames
                     {
                         Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
                         Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
-                        mScene->LoopTraverseDFSPreOrder ( [this, &frustum, &view_matrix] ( const Node & aNode )
+                        mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
                         {
                             AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
                             if ( frustum.Intersects ( transformed_aabb ) )

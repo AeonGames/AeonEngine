@@ -502,7 +502,7 @@ namespace AeonGames
     {
         const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( ( aMaterial ) ? *aMaterial : aPipeline.GetDefaultMaterial() );
         const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
-        const VulkanUniformBuffer* vk_skeleton = reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton );
+        const auto* vk_skeleton = reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton );
         assert ( material_descriptor_sets.size() < 3 );
 
         uint32_t descriptor_set_count = 1;
