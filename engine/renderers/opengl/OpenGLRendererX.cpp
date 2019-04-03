@@ -52,7 +52,7 @@ namespace AeonGames
     }
 
     PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
-    const int context_attribs[] =
+    int context_attribs[] =
     {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
         GLX_CONTEXT_MINOR_VERSION_ARB, 5,
@@ -115,7 +115,7 @@ namespace AeonGames
             XVisualInfo *vi = glXGetVisualFromFBConfig ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i] );
             if ( vi )
             {
-                std::cout << "Visual: " << *vi << std::endl;
+                std::cout << *vi << std::endl;
                 int samp_buf, samples;
                 glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
                 glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLES, &samples  );
@@ -123,7 +123,7 @@ namespace AeonGames
                 if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
                 {
                     best_fbc = i, best_num_samp = samples;
-                    std::cout << "Best Visual " << *vi << std::endl;
+                    std::cout << "Best Visual " << std::endl << *vi << std::endl;
                 }
                 if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
                 {
@@ -138,7 +138,13 @@ namespace AeonGames
         if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( static_cast<Display*> ( mWindowId ), bestFbc, 0,
                                   True, context_attribs ) ) )
         {
-            throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
+            context_attribs[1] = 1;
+            context_attribs[3] = 0;
+            if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( static_cast<Display*> ( mWindowId ), bestFbc, 0,
+                                      True, context_attribs ) ) )
+            {
+                throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
+            }
         }
 
         // Verifying that context is a direct context
