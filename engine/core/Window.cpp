@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,5 +33,15 @@ namespace AeonGames
     const Transform & Window::GetViewTransform() const
     {
         return mViewTransform;
+    }
+    float Window::GetHalfAspectRatio() const
+    {
+        return mHalfAspectRatio;
+    }
+    void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    {
+        mHalfAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) ) / 2.0f;
+        mProjectionMatrix.Frustum ( -mHalfAspectRatio, mHalfAspectRatio, 0.5, -0.5, 1, 1600 );
+        OnResizeViewport ( aX, aY, aWidth, aHeight );
     }
 }

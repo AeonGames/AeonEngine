@@ -76,6 +76,7 @@ namespace AeonGames
         }
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
         updateViewMatrix();
+#if 0
         float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;
         float v1[2] = { 1, 0 };
         float v2[2] = { 1, half_radius };
@@ -83,6 +84,7 @@ namespace AeonGames
         v2[0] /= length;
         v2[1] /= length;
         mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
+#endif
     }
 
     EngineWindow::~EngineWindow()
@@ -174,6 +176,7 @@ namespace AeonGames
                 0,
                 aResizeEvent->size().width(), aResizeEvent->size().height() );
 #endif
+#if 0
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 1.0f, 0.0f,
@@ -186,11 +189,12 @@ namespace AeonGames
             mWindow->SetProjectionMatrix ( mProjectionMatrix.constData() );
             // Calculate frustum half vertical angle (for fitting nodes into frustum)
             float v1[2] = { 1, 0 };
-            float v2[2] = { 1, half_radius };
+            float v2[2] = { 1, mWindow->GetHalfAspectRatio() };
             float length = sqrtf ( ( v2[0] * v2[0] ) + ( v2[1] * v2[1] ) );
             v2[0] /= length;
             v2[1] /= length;
             mFrustumVerticalHalfAngle = acosf ( ( v1[0] * v2[0] ) + ( v1[1] * v2[1] ) );
+#endif
             start();
         }
         else
@@ -230,6 +234,7 @@ namespace AeonGames
                 }
                 if ( mScene )
                 {
+                    ///@todo this should be Scene::Update.
                     const_cast<Scene*> ( mScene )->LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
                     {
                         aNode.Update ( delta );
@@ -248,6 +253,7 @@ namespace AeonGames
                                       qWorldEditorApp->GetGridPipeline(),
                                       &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
                                       qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
+                    ///@todo This should be Window::Render(const Scene&)
                     if ( mScene )
                     {
                         Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };

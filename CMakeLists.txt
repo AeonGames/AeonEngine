@@ -164,6 +164,8 @@ endif()
 
 find_program(DOXYGEN_EXECUTABLE doxygen
              HINTS ENV
+                   MINGW_PREFIX
+                   MSYS2_PATH
                    ProgramFiles
                    ChocolateyInstall
                    ProgramData
@@ -171,6 +173,8 @@ find_program(DOXYGEN_EXECUTABLE doxygen
 if(DOXYGEN_EXECUTABLE)
   find_program(DOT_EXECUTABLE dot
                HINTS ENV
+                     MINGW_PREFIX
+                     MSYS2_PATH
                      ProgramFiles
                      ChocolateyInstall
                      ProgramData
