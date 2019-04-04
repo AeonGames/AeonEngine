@@ -193,6 +193,11 @@ if(DOXYGEN_EXECUTABLE)
   endif()
   file(RELATIVE_PATH BIN_TO_SRC ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
   configure_file("${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in" "Doxyfile" @ONLY)
+  add_custom_target(
+    generate-documentation
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/docs/static/documentation
+    COMMAND ${DOXYGEN_EXECUTABLE}
+    COMMENT "Generating Documentation")
 endif()
 
 add_subdirectory(tools/aeontool)
