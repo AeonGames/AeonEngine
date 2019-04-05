@@ -15,7 +15,8 @@
 set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h Pack.h)
 set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp Pack.cpp)
 
-include_directories(${PROTOBUF_INCLUDE_DIR}
+include_directories(${ZLIB_INCLUDE_DIR}
+					${PROTOBUF_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/include
                     ${CMAKE_CURRENT_BINARY_DIR}
                     ${CMAKE_BINARY_DIR}/engine)
