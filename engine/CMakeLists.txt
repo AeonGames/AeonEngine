@@ -12,7 +12,9 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-include_directories(${CMAKE_SOURCE_DIR}/engine
+include_directories(${ZLIB_INCLUDE_DIR}
+					${PNG_PNG_INCLUDE_DIR}
+					${CMAKE_SOURCE_DIR}/engine
                     ${CMAKE_SOURCE_DIR}/engine/include
                     ${CMAKE_SOURCE_DIR}/engine/renderers/opengl
                     ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
