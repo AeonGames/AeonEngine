@@ -91,6 +91,11 @@ namespace AeonGames
         mMatrix[13] = 0.0f;
         mMatrix[14] = - ( ( 2 * aFar * aNear ) / ( aFar - aNear ) );
         mMatrix[15] = 0.0f;
+#if 0
+        std::cout << "Near " << aNear << " ? " << - ( mMatrix[14] / ( mMatrix[6] + 1.0f ) ) << std::endl;
+        std::cout << "Far " << aFar << " ? " << mMatrix[14] / ( 1.0f - mMatrix[6] ) << std::endl;
+        std::cout << "Aspect " << mMatrix[0] << "/" << -mMatrix[9] << std::endl;
+#endif
     }
 
     void Matrix4x4::Ortho ( float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar )

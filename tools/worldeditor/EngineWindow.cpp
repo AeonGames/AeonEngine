@@ -234,11 +234,7 @@ namespace AeonGames
                 }
                 if ( mScene )
                 {
-                    ///@todo this should be Scene::Update.
-                    const_cast<Scene*> ( mScene )->LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
-                    {
-                        aNode.Update ( delta );
-                    } );
+                    const_cast<Scene*> ( mScene )->Update ( delta );
                 }
                 if ( GetRenderer() )
                 {
@@ -253,7 +249,9 @@ namespace AeonGames
                                       qWorldEditorApp->GetGridPipeline(),
                                       &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
                                       qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
-                    ///@todo This should be Window::Render(const Scene&)
+                    /** @todo This should be the code path for edit mode,
+                     * game mode should just render the scene using Window::Render(const Scene&)
+                    */
                     if ( mScene )
                     {
                         Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
