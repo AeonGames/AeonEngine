@@ -50,6 +50,7 @@ namespace AeonGames
     private:
         void UpdateLocalTransformData ( const Node* aNode );
         void UpdateGlobalTransformData ( const Node* aNode );
+        ///@todo SceneWindow should own the scene, not SceneModel
         SceneModel mSceneModel{};
         ComponentListModel mComponentListModel{};
         ComponentModel mComponentModel{};

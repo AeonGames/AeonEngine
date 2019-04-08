@@ -15,6 +15,11 @@ limitations under the License.
 */
 #include "aeongames/Window.h"
 #include "aeongames/Platform.h"
+#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Frustum.h"
+
 namespace AeonGames
 {
     DLL Window::~Window() = default;
@@ -43,5 +48,20 @@ namespace AeonGames
         mHalfAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) ) / 2.0f;
         mProjectionMatrix.Frustum ( -mHalfAspectRatio, mHalfAspectRatio, 0.5, -0.5, 1, 1600 );
         OnResizeViewport ( aX, aY, aWidth, aHeight );
+    }
+
+    void Window::Render ( const Scene& aScene ) const
+    {
+        Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };
+        Frustum frustum ( mProjectionMatrix * view_matrix );
+        aScene.LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
+        {
+            AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
+            if ( frustum.Intersects ( transformed_aabb ) )
+            {
+                // Call Node specific rendering function.
+                aNode.Render ( *this );
+            }
+        } );
     }
 }

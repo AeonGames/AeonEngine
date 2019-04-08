@@ -89,11 +89,14 @@ namespace AeonGames
         DLL void SetCamera ( const std::string& aNodeName );
         DLL const Node* GetCamera() const;
         DLL void SetProjection ( const Matrix4x4& aMatrix );
+        DLL void SetView ( const Matrix4x4& aMatrix );
         DLL const Matrix4x4& GetProjection() const;
+        DLL const Matrix4x4& GetView() const;
         /**@}*/
     private:
         friend class Node;
         Matrix4x4 mProjection{};
+        Matrix4x4 mView{};
         std::string mName{};
         /// Child Nodes
         std::vector<Node*> mNodes{};
