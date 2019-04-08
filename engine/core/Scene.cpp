@@ -94,6 +94,16 @@ namespace AeonGames
         return mProjection;
     }
 
+    void Scene::SetView ( const Matrix4x4& aMatrix )
+    {
+        mView = aMatrix;
+    }
+
+    const Matrix4x4& Scene::GetView() const
+    {
+        return mView;
+    }
+
     size_t Scene::GetChildrenCount() const
     {
         return mNodes.size();
@@ -130,16 +140,10 @@ namespace AeonGames
 
     void Scene::Update ( const double delta )
     {
-        for ( auto & mRootNode : mNodes )
+        LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
         {
-            mRootNode->LoopTraverseDFSPreOrder ( [delta] ( Node & node )
-            {
-                if ( node.mFlags[Node::Enabled] )
-                {
-                    node.Update ( delta );
-                }
-            } );
-        }
+            aNode.Update ( delta );
+        } );
     }
 
     void Scene::BroadcastMessage ( uint32_t aMessageType, const void* aMessageData )

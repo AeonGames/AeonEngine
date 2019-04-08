@@ -44,6 +44,11 @@ namespace AeonGames
             uint32_t aVertexCount = 0xffffffff,
             uint32_t aInstanceCount = 1,
             uint32_t aFirstInstance = 0 ) const = 0;
+        /** Render Scene in Full
+         * @param aScene Scene to render
+         * @note must be called between calls to BeginRender and EndRender
+        */
+        DLL void Render ( const Scene& aScene ) const;
         ///@}
         ///@name Matrix Functions
         ///@{
