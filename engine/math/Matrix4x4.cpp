@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 #include "aeongames/Matrix4x4.h"
@@ -76,13 +77,13 @@ namespace AeonGames
 
         // Y
         mMatrix[4] = - ( ( aRight + aLeft ) / ( aRight - aLeft ) );
-        mMatrix[5] = - ( ( aTop + aBottom ) / ( aTop - aBottom ) );
+        mMatrix[5] = - ( ( aBottom + aTop ) / ( aBottom - aTop ) );
         mMatrix[6] = ( ( aFar + aNear ) / ( aFar - aNear ) );
         mMatrix[7] = 1.0f;
 
         // Z
         mMatrix[8] = 0.0f;
-        mMatrix[9] = ( 2 * aNear ) / ( aTop - aBottom );
+        mMatrix[9] = ( 2 * aNear ) / ( aBottom - aTop );
         mMatrix[10] = 0.0f;
         mMatrix[11] = 0.0f;
 
@@ -91,11 +92,6 @@ namespace AeonGames
         mMatrix[13] = 0.0f;
         mMatrix[14] = - ( ( 2 * aFar * aNear ) / ( aFar - aNear ) );
         mMatrix[15] = 0.0f;
-#if 0
-        std::cout << "Near " << aNear << " ? " << - ( mMatrix[14] / ( mMatrix[6] + 1.0f ) ) << std::endl;
-        std::cout << "Far " << aFar << " ? " << mMatrix[14] / ( 1.0f - mMatrix[6] ) << std::endl;
-        std::cout << "Aspect " << mMatrix[0] << "/" << -mMatrix[9] << std::endl;
-#endif
     }
 
     void Matrix4x4::Ortho ( float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar )
@@ -130,7 +126,7 @@ namespace AeonGames
 
     void Matrix4x4::Perspective ( float aFieldOfVision, float aAspect, float aNear, float aFar )
     {
-        float fH = std::tan ( aFieldOfVision / 360 * PI ) * aNear;
+        float fH = std::tan ( aFieldOfVision * M_PI / 360.0f ) * aNear;
         float fW = fH * aAspect;
         Frustum ( -fW, fW, -fH, fH, aNear, aFar );
     }
@@ -183,7 +179,7 @@ namespace AeonGames
 
     const Matrix4x4 Matrix4x4::GetRotationMatrix ( float angle, float x, float y, float z )
     {
-        auto radians = float ( ( angle / 180.0f ) * PI );
+        auto radians = float ( ( angle / 180.0f ) * M_PI );
         float c = cosf ( radians );
         float s = sinf ( radians );
         return Matrix4x4
