@@ -44,11 +44,12 @@ namespace AeonGames
         return CameraStringId;
     }
 
-    static constexpr std::array<const StringId, 2> CameraPropertyIds
+    static constexpr std::array<const StringId, 3> CameraPropertyIds
     {
         {
             {"Near Plane"},
-            {"Far Plane"}
+            {"Far Plane"},
+            {"Field of Vision"}
         }
     };
 

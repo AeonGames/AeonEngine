@@ -179,12 +179,12 @@ namespace AeonGames
 #if 0
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, -1.0f, 0.0f,
                 0.0f, -1.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f );
             mProjectionMatrix.setToIdentity();
             float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
-            mProjectionMatrix.frustum ( -half_radius, half_radius, 0.5, -0.5, 1, 1600 );
+            mProjectionMatrix.frustum ( -half_radius, half_radius, -0.5, 0.5, 1, 1600 );
             mProjectionMatrix = mProjectionMatrix * flipMatrix;
             mWindow->SetProjectionMatrix ( mProjectionMatrix.constData() );
             // Calculate frustum half vertical angle (for fitting nodes into frustum)

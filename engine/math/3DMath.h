@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (C) 2009-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2009-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,8 +36,9 @@ limitations under the License.
     m[3] & m[7] & m[11] & m[15] \end{array} \right)
     \f]
 
-    &copy; 2009-2017 Rodrigo Hernandez
+    &copy; 2009-2019 Rodrigo Hernandez
 */
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cassert>
 #include <cstring>
@@ -48,15 +49,15 @@ limitations under the License.
 /*! \name Constants */
 // @{
 /// The pi Constant
-const float PI = 3.1415926535897932384626433832795f;
+constexpr float PI = M_PI;
 /// Two times pi
-const float TWOPI = 6.2831853071795864769252867665590f;
+constexpr float TWOPI = M_PI * 2;
 /// Pi divided between 180
-const float PIOVER180 = 0.017453292519943295769236907684883f;
+constexpr float PIOVER180 = M_PI / 180.0f;
 /// 180 divided between pi
-const float ONE80OVERPI = 57.295779513082320876798154814105f;
+constexpr float ONE80OVERPI = 180 / M_PI;
 /// Floating point comparison tolerance
-const float FLT_TOLERANCE = sqrtf ( FLT_EPSILON );
+const float FLT_TOLERANCE = std::sqrt ( FLT_EPSILON );
 // @}
 
 inline void RotateVectorByQuat ( const float* q, const float* v, float* out );

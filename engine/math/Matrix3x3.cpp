@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#define _USE_MATH_DEFINES
 #include <cmath>
-
 #include "aeongames/Matrix3x3.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Vector3.h"

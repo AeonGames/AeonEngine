@@ -57,13 +57,13 @@ namespace AeonGames
         DLL const Matrix4x4& GetProjectionMatrix() const;
         DLL const Transform& GetViewTransform() const;
         ///@}
-        DLL float GetHalfAspectRatio() const;
+        DLL float GetAspectRatio() const;
     protected:
         virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         Matrix4x4 mProjectionMatrix{};
         Transform mViewTransform{};
     private:
-        float mHalfAspectRatio{0.5f};
+        float mAspectRatio{1.0f};
     };
 }
 #endif
