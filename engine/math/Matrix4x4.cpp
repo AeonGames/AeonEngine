@@ -13,9 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#define _USE_MATH_DEFINES
 #include <cmath>
-
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Vector3.h"
@@ -126,7 +124,7 @@ namespace AeonGames
 
     void Matrix4x4::Perspective ( float aFieldOfVision, float aAspect, float aNear, float aFar )
     {
-        float fH = std::tan ( aFieldOfVision * M_PI / 360.0f ) * aNear;
+        float fH = std::tan ( aFieldOfVision * static_cast<float> ( M_PI ) / 360.0f ) * aNear;
         float fW = fH * aAspect;
         Frustum ( -fW, fW, -fH, fH, aNear, aFar );
     }

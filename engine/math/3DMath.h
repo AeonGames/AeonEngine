@@ -38,7 +38,6 @@ limitations under the License.
 
     &copy; 2009-2019 Rodrigo Hernandez
 */
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cassert>
 #include <cstring>
@@ -46,6 +45,7 @@ limitations under the License.
 #include <cfloat>
 #include <cstdio>
 
+#if 0
 /*! \name Constants */
 // @{
 /// The pi Constant
@@ -59,9 +59,11 @@ constexpr float ONE80OVERPI = 180 / M_PI;
 /// Floating point comparison tolerance
 const float FLT_TOLERANCE = std::sqrt ( FLT_EPSILON );
 // @}
+#endif
 
 inline void RotateVectorByQuat ( const float* q, const float* v, float* out );
 
+#if 0
 /*! \name General Utility Functions */
 // @{
 /*! \brief Convert degrees to radians.
@@ -80,6 +82,7 @@ inline float RAD2DEG ( float rad )
 {
     return ONE80OVERPI * rad;
 }
+#endif
 /*! \brief Single pressision floating point absolute value.
 
     Returns the absolute (positive) value of a single floating point value.
@@ -1505,7 +1508,7 @@ inline float* GetQuaternionInverse ( const float* q, float* out )
 */
 inline void AngleAxisToQuat ( float angle, float x, float y, float z, float* quat )
 {
-    float radians = float ( ( angle / 180.0f ) * PI );
+    float radians = float ( ( angle / 180.0f ) * M_PI );
     float result = ( float ) sin ( radians / 2.0f );
     quat[0] = ( float ) cos ( radians / 2.0f );
     quat[1] = float ( x * result );
@@ -1526,9 +1529,9 @@ inline void AngleAxisToQuat ( float angle, float x, float y, float z, float* qua
 */
 inline void EulerToQuat ( float* euler, float* q )
 {
-    float roll = ( ( euler[0] / 180.0f ) * PI );
-    float pitch = ( ( euler[1] / 180.0f ) * PI );
-    float yaw = ( ( euler[2] / 180.0f ) * PI );
+    float roll = ( ( euler[0] / 180.0f ) * static_cast<float> ( M_PI ) );
+    float pitch = ( ( euler[1] / 180.0f ) * static_cast<float> ( M_PI ) );
+    float yaw = ( ( euler[2] / 180.0f ) * static_cast<float> ( M_PI ) );
     q[0] = cos ( roll / 2 ) * cos ( pitch / 2 ) * cos ( yaw / 2 ) + sin ( roll / 2 ) * sin ( pitch / 2 ) * sin ( yaw / 2 );
     q[1] = sin ( roll / 2 ) * cos ( pitch / 2 ) * cos ( yaw / 2 ) - cos ( roll / 2 ) * sin ( pitch / 2 ) * sin ( yaw / 2 );
     q[2] = cos ( roll / 2 ) * sin ( pitch / 2 ) * cos ( yaw / 2 ) + sin ( roll / 2 ) * cos ( pitch / 2 ) * sin ( yaw / 2 );
