@@ -45,6 +45,7 @@ namespace AeonGames
     private:
         float mNearPlane{1.0f};
         float mFarPlane{16000.0f};
+        float mFieldOfVision{60.0f};
     };
 }
 #endif

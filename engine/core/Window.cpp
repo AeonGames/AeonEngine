@@ -39,14 +39,15 @@ namespace AeonGames
     {
         return mViewTransform;
     }
-    float Window::GetHalfAspectRatio() const
+    float Window::GetAspectRatio() const
     {
-        return mHalfAspectRatio;
+        return mAspectRatio;
     }
     void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
-        mHalfAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) ) / 2.0f;
-        mProjectionMatrix.Frustum ( -mHalfAspectRatio, mHalfAspectRatio, 0.5, -0.5, 1, 1600 );
+        mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
+        //mProjectionMatrix.Frustum ( -mAspectRatio, mAspectRatio, -0.5, 0.5, 1, 1600 );
+        mProjectionMatrix.Perspective ( /*53.1301f*/60.0f, mAspectRatio, 1, 1600 );
         OnResizeViewport ( aX, aY, aWidth, aHeight );
     }
 
