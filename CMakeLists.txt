@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-cmake_minimum_required(VERSION 3.9.2)
+cmake_minimum_required(VERSION 3.10.0)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
   if(POLICY CMP0020)
@@ -33,7 +33,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_compile_definitions(_USE_MATH_DEFINES)
+if(CMAKE_VERSION VERSION_LESS "3.12.4")
+  add_definitions(-D_USE_MATH_DEFINES)
+else()
+  add_compile_definitions(_USE_MATH_DEFINES)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_CXX_FLAGS
@@ -195,11 +199,11 @@ if(DOXYGEN_EXECUTABLE)
   endif()
   file(RELATIVE_PATH BIN_TO_SRC ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
   configure_file("${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in" "Doxyfile" @ONLY)
-  add_custom_target(
-    generate-documentation
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/docs/static/documentation
-    COMMAND ${DOXYGEN_EXECUTABLE}
-    COMMENT "Generating Documentation")
+  add_custom_target(generate-documentation
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory
+                            ${CMAKE_SOURCE_DIR}/docs/static/documentation
+                    COMMAND ${DOXYGEN_EXECUTABLE}
+                    COMMENT "Generating Documentation")
 endif()
 
 add_subdirectory(tools/aeontool)
