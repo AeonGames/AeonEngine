@@ -26,18 +26,20 @@ namespace AeonGames
     void Window::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
         mProjectionMatrix = aMatrix;
+        mFrustum = mProjectionMatrix * mViewMatrix;
     }
-    void Window::SetViewTransform ( const Transform& aTransform )
+    void Window::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
-        mViewTransform = aTransform;
+        mViewMatrix = aMatrix;
+        mFrustum = mProjectionMatrix * mViewMatrix;
     }
     const Matrix4x4 & Window::GetProjectionMatrix() const
     {
         return mProjectionMatrix;
     }
-    const Transform & Window::GetViewTransform() const
+    const Matrix4x4 & Window::GetViewMatrix() const
     {
-        return mViewTransform;
+        return mViewMatrix;
     }
     float Window::GetAspectRatio() const
     {
@@ -48,17 +50,16 @@ namespace AeonGames
         mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
         //mProjectionMatrix.Frustum ( -mAspectRatio, mAspectRatio, -0.5, 0.5, 1, 1600 );
         mProjectionMatrix.Perspective ( /*53.1301f*/60.0f, mAspectRatio, 1, 1600 );
+        mFrustum = mProjectionMatrix * mViewMatrix;
         OnResizeViewport ( aX, aY, aWidth, aHeight );
     }
 
     void Window::Render ( const Scene& aScene ) const
     {
-        Matrix4x4 view_matrix { mViewTransform.GetInverted().GetMatrix() };
-        Frustum frustum ( mProjectionMatrix * view_matrix );
-        aScene.LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
+        aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
         {
             AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-            if ( frustum.Intersects ( transformed_aabb ) )
+            if ( mFrustum.Intersects ( transformed_aabb ) )
             {
                 // Call Node specific rendering function.
                 aNode.Render ( *this );

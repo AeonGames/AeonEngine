@@ -394,9 +394,8 @@ namespace AeonGames
         /** @todo I no longer think writing to the matrix buffer each time is optimal,
          *  but I do not want to introduce a dirty matrix flag.
          *  Will probably just make the set projection and transform to virtual. */
-        Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
 
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
