@@ -15,9 +15,11 @@ limitations under the License.
 */
 #ifndef AEONGAMES_WINDOW_H
 #define AEONGAMES_WINDOW_H
-#include "Memory.h"
+#include <memory>
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
+#include "aeongames/Frustum.h"
+
 namespace AeonGames
 {
     class Scene;
@@ -53,16 +55,17 @@ namespace AeonGames
         ///@name Matrix Functions
         ///@{
         DLL void SetProjectionMatrix ( const Matrix4x4& aMatrix );
-        DLL void SetViewTransform ( const Transform& aTransform );
+        DLL void SetViewMatrix ( const Matrix4x4& aMatrix );
         DLL const Matrix4x4& GetProjectionMatrix() const;
-        DLL const Transform& GetViewTransform() const;
+        DLL const Matrix4x4& GetViewMatrix() const;
         ///@}
         DLL float GetAspectRatio() const;
     protected:
         virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         Matrix4x4 mProjectionMatrix{};
-        Transform mViewTransform{};
+        Matrix4x4 mViewMatrix{};
     private:
+        Frustum mFrustum{};
         float mAspectRatio{1.0f};
     };
 }
