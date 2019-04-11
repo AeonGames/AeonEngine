@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Frustum::Frustum() = default;
     Frustum::Frustum ( const Matrix4x4 & aMatrix ) :
         mPlanes
     {

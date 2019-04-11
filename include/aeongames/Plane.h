@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ namespace AeonGames
     {
     public:
         ///@brief Default constructor.
+        DLL Plane ();
         DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
         /// destructor.
         DLL ~Plane();
@@ -40,7 +41,7 @@ namespace AeonGames
         DLL const float& GetDistance() const;
     private:
         Vector3 mNormal;
-        float mDistance;
+        float mDistance{};
     };
 }
 #endif

@@ -253,8 +253,7 @@ namespace AeonGames
                     */
                     if ( mScene )
                     {
-                        Matrix4x4 view_matrix { mWindow->GetViewTransform().GetInverted().GetMatrix() };
-                        Frustum frustum ( mWindow->GetProjectionMatrix() * view_matrix );
+                        Frustum frustum ( mWindow->GetProjectionMatrix() * mWindow->GetViewMatrix() );
                         mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
                         {
                             AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
@@ -293,7 +292,7 @@ namespace AeonGames
         Transform view_transform;
         view_transform.SetTranslation ( Vector3 ( mCameraLocation.x(), mCameraLocation.y(), mCameraLocation.z() ) );
         view_transform.SetRotation ( Quaternion ( mCameraRotation.scalar(), mCameraRotation.x(), mCameraRotation.y(), mCameraRotation.z() ) );
-        mWindow->SetViewTransform ( view_transform );
+        mWindow->SetViewMatrix ( view_transform.GetInverted().GetMatrix() );
     }
 
     void EngineWindow::keyPressEvent ( QKeyEvent * event )

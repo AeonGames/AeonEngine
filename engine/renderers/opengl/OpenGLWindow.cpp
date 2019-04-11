@@ -96,7 +96,6 @@ namespace AeonGames
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
 
-        Matrix4x4 view_matrix{ mViewTransform.GetInvertedMatrix() };
         Matrix4x4 projection_matrix =
             mProjectionMatrix * Matrix4x4
         {
@@ -111,7 +110,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, view_matrix.GetMatrix4x4() );
+        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
     }
