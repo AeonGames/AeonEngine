@@ -22,6 +22,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${Qt5Gui_INCLUDE_DIRS}
                     ${Qt5Widgets_INCLUDE_DIRS})
 
+
+qt5_create_translation(QM_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/i18n/es_CR.ts
+                OPTIONS
+        -source-language en_US -target-language es_CR)
+
 set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
     models/ListModel.h
@@ -116,7 +123,8 @@ add_executable(worldeditor
                ${WORLDEDITOR_MOCS}
                ${WORLDEDITOR_UI_HEADERS}
                ${WORLDEDITOR_HEADERS}
-               ${WORLDEDITOR_RESOURCES})
+               ${WORLDEDITOR_RESOURCES}
+               ${QM_FILES})
 
 if(UNIX OR MINGW OR MSYS)
   set_target_properties(worldeditor PROPERTIES COMPILE_FLAGS "-Wall -Werror")
