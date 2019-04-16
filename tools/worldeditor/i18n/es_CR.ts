@@ -48,37 +48,37 @@
     <message>
         <location filename="../ui/CameraSettings.ui" line="14"/>
         <source>Camera Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de Camara</translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="24"/>
         <source>Camera Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Tipo de Camara</translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="35"/>
         <source>Perspective</source>
-        <translation type="unfinished"></translation>
+        <translation>Perspectiva</translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="40"/>
         <source>Orthogonal</source>
-        <translation type="unfinished"></translation>
+        <translation>Ortogonal</translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="48"/>
         <source>Field of view</source>
-        <translation type="unfinished"></translation>
+        <translation>Campo de Vision</translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="68"/>
         <source>Near</source>
-        <translation type="unfinished"></translation>
+        <translation>Cerca</translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="85"/>
         <source>Far</source>
-        <translation type="unfinished"></translation>
+        <translation>Lejos</translation>
     </message>
 </context>
 <context>
@@ -96,12 +96,12 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="59"/>
         <source>Settings</source>
-        <translation type="unfinished">Ajustes</translation>
+        <translation>Ajustes</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="69"/>
         <source>toolBar</source>
-        <translation type="unfinished"></translation>
+        <translation>Barra de Herramientas</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="80"/>
@@ -143,13 +143,13 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="118"/>
         <source>Camera</source>
-        <translation type="unfinished"></translation>
+        <translation>Camara</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="121"/>
         <location filename="../ui/MainWindow.ui" line="124"/>
         <source>Camera Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de Camara</translation>
     </message>
 </context>
 <context>
