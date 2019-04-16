@@ -36,6 +36,9 @@ namespace AeonGames
         virtual ~SceneWindow();
         void Open ( const std::string& mFilename );
         void Save ( const std::string& mFilename ) const;
+        void SetFieldOfView ( float aFieldOfView );
+        void SetNear ( float aNear );
+        void SetFar ( float aFar );
     private slots:
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();
