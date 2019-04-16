@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <QMutex>
 #include <QApplication>
+#include <QSettings>
 #include <string>
 #include <filesystem>
 #include "GridSettings.h"
@@ -51,7 +52,9 @@ namespace AeonGames
         int GetStringIdMetaType() const;
         int GetStringMetaType() const;
         int GetPathMetaType() const;
+        QSettings& GetSettings();
     private:
+        QSettings mSettings{"AeonGames", "AeonGames World Editor"};
         int mStringIdMetaType{};
         int mStringMetaType{};
         int mPathMetaType{};

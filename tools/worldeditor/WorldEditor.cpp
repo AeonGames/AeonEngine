@@ -68,7 +68,10 @@ namespace AeonGames
     {
         return mPathMetaType;
     }
-
+    QSettings& WorldEditor::GetSettings()
+    {
+        return mSettings;
+    }
     static void LoadPipeline ( Pipeline& aPipeline, const std::string& aFileName )
     {
         QFile pipeline_file ( aFileName.c_str() );

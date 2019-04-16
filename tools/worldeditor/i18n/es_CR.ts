@@ -4,23 +4,23 @@
 <context>
     <name>AeonGames::MainWindow</name>
     <message>
-        <location filename="../MainWindow.cpp" line="49"/>
+        <location filename="../MainWindow.cpp" line="54"/>
         <source>Untitled Scene</source>
         <translation>Escena sin titulo</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="58"/>
+        <location filename="../MainWindow.cpp" line="63"/>
         <source>Open Scene</source>
         <translation>Abrir Escena</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="60"/>
-        <location filename="../MainWindow.cpp" line="88"/>
+        <location filename="../MainWindow.cpp" line="65"/>
+        <location filename="../MainWindow.cpp" line="93"/>
         <source>Scene Files (*.scn *.txt)</source>
         <translation>Archivos de Escena</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="86"/>
+        <location filename="../MainWindow.cpp" line="91"/>
         <source>Save Scene</source>
         <translation>Salvar Escena</translation>
     </message>
@@ -44,6 +44,44 @@
     </message>
 </context>
 <context>
+    <name>CameraSettings</name>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="14"/>
+        <source>Camera Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="24"/>
+        <source>Camera Mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="35"/>
+        <source>Perspective</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="40"/>
+        <source>Orthogonal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="48"/>
+        <source>Field of view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="68"/>
+        <source>Near</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/CameraSettings.ui" line="85"/>
+        <source>Far</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <location filename="../ui/MainWindow.ui" line="14"/>
@@ -56,46 +94,62 @@
         <translation>Archivo</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="62"/>
+        <location filename="../ui/MainWindow.ui" line="59"/>
+        <source>Settings</source>
+        <translation type="unfinished">Ajustes</translation>
+    </message>
+    <message>
+        <location filename="../ui/MainWindow.ui" line="69"/>
         <source>toolBar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="73"/>
-        <location filename="../ui/MainWindow.ui" line="76"/>
+        <location filename="../ui/MainWindow.ui" line="80"/>
+        <location filename="../ui/MainWindow.ui" line="83"/>
         <source>Open</source>
         <translation>Abrir</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="79"/>
+        <location filename="../ui/MainWindow.ui" line="86"/>
         <source>Ctrl+O</source>
         <translation>Ctrl+O</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="87"/>
-        <location filename="../ui/MainWindow.ui" line="90"/>
+        <location filename="../ui/MainWindow.ui" line="94"/>
+        <location filename="../ui/MainWindow.ui" line="97"/>
         <source>Save</source>
         <translation>Salvar</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="93"/>
+        <location filename="../ui/MainWindow.ui" line="100"/>
         <source>Ctrl+S</source>
         <translation>Ctrl+S</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="98"/>
+        <location filename="../ui/MainWindow.ui" line="105"/>
         <source>Exit</source>
         <translation>Salir</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="103"/>
+        <location filename="../ui/MainWindow.ui" line="110"/>
         <source>&amp;New</source>
         <translation>&amp;Nuevo</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="106"/>
+        <location filename="../ui/MainWindow.ui" line="113"/>
         <source>Ctrl+N</source>
         <translation>Ctrl+N</translation>
+    </message>
+    <message>
+        <location filename="../ui/MainWindow.ui" line="118"/>
+        <source>Camera</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/MainWindow.ui" line="121"/>
+        <location filename="../ui/MainWindow.ui" line="124"/>
+        <source>Camera Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

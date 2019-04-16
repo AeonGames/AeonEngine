@@ -44,7 +44,6 @@ namespace AeonGames
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         // Stand back 3 meters.
         mCameraLocation ( -QVector3D ( mCameraRotation.rotatedVector ( forward ) * 300.0f ), 1 ),
-        mProjectionMatrix(),
         mViewMatrix()
     {
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
@@ -74,6 +73,14 @@ namespace AeonGames
             throw std::runtime_error ( "Window creation failed." );
         }
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
+
+        auto& settings = qWorldEditorApp->GetSettings();
+        settings.beginGroup ( "Camera" );
+        mFieldOfView = settings.value ( "FieldOfView", 60.0f ).toFloat();
+        mNear = settings.value ( "Near", 1.0f ).toFloat();
+        mFar = settings.value ( "Far", 1600.0f ).toFloat();
+        settings.endGroup();
+
         updateViewMatrix();
 #if 0
         float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;
@@ -113,6 +120,27 @@ namespace AeonGames
     void EngineWindow::setScene ( const Scene* aScene )
     {
         mScene = aScene;
+    }
+    void EngineWindow::SetFieldOfView ( float aFieldOfView )
+    {
+        mFieldOfView = aFieldOfView;
+        Matrix4x4 projection{};
+        projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
+        mWindow->SetProjectionMatrix ( projection );
+    }
+    void EngineWindow::SetNear ( float aNear )
+    {
+        mNear = aNear;
+        Matrix4x4 projection{};
+        projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
+        mWindow->SetProjectionMatrix ( projection );
+    }
+    void EngineWindow::SetFar ( float aFar )
+    {
+        mFar = aFar;
+        Matrix4x4 projection{};
+        projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
+        mWindow->SetProjectionMatrix ( projection );
     }
 #if 0
     // Commented pending Refactor
@@ -175,6 +203,9 @@ namespace AeonGames
                 0,
                 aResizeEvent->size().width(), aResizeEvent->size().height() );
 #endif
+            Matrix4x4 projection {};
+            projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
+            mWindow->SetProjectionMatrix ( projection );
 #if 0
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,

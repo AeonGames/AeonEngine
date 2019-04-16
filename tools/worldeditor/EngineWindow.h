@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ limitations under the License.
 #include <QPoint>
 #include <QCloseEvent>
 
+#include "WorldEditor.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
@@ -45,6 +46,9 @@ namespace AeonGames
         void stop();
         void start();
         void setScene ( const Scene* aScene );
+        void SetFieldOfView ( float aFieldOfView );
+        void SetNear ( float aNear );
+        void SetFar ( float aFar );
     private:
         const QVector3D right
         {
@@ -68,10 +72,12 @@ namespace AeonGames
         std::unique_ptr<AeonGames::Window> mWindow;
         float mFrustumVerticalHalfAngle;
         float mStep;
+        float mFieldOfView{};
+        float mNear{};
+        float mFar{};
         /* We're using QT classes for now... */
         QQuaternion mCameraRotation;
         QVector4D mCameraLocation;
-        QMatrix4x4 mProjectionMatrix;
         QMatrix4x4 mViewMatrix;
     };
 }
