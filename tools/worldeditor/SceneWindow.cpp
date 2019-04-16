@@ -353,4 +353,16 @@ namespace AeonGames
         scene_file.write ( scene.data(), scene.size() );
         scene_file.close();
     }
+    void SceneWindow::SetFieldOfView ( float aFieldOfView )
+    {
+        mEngineWindow->SetFieldOfView ( aFieldOfView );
+    }
+    void SceneWindow::SetNear ( float aNear )
+    {
+        mEngineWindow->SetNear ( aNear );
+    }
+    void SceneWindow::SetFar ( float aFar )
+    {
+        mEngineWindow->SetFar ( aFar );
+    }
 }

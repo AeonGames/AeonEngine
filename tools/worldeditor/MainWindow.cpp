@@ -21,6 +21,7 @@ limitations under the License.
 #include "MainWindow.h"
 #include "SceneWindow.h"
 #include "EngineWindow.h"
+#include "CameraSettings.h"
 
 namespace AeonGames
 {
@@ -31,6 +32,10 @@ namespace AeonGames
         surface_format.setDepthBufferSize ( 24 );
         surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
         QSurfaceFormat::setDefaultFormat ( surface_format );
+        mCameraSettings = new CameraSettings ( this );
+        connect ( mCameraSettings, SIGNAL ( fieldOfViewChanged ( double ) ), this, SLOT ( fieldOfViewChanged ( double ) ) );
+        connect ( mCameraSettings, SIGNAL ( nearChanged ( double ) ), this, SLOT ( nearChanged ( double ) ) );
+        connect ( mCameraSettings, SIGNAL ( farChanged ( double ) ), this, SLOT ( farChanged ( double ) ) );
     }
 
     MainWindow::~MainWindow() = default;
@@ -94,5 +99,41 @@ namespace AeonGames
                 sceneWindow->Save ( filename.toStdString() );
             }
         }
+    }
+
+    void MainWindow::on_actionCamera_triggered()
+    {
+        mCameraSettings->show();
+    }
+
+    void MainWindow::fieldOfViewChanged ( double aFieldOfView )
+    {
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->currentSubWindow ();
+        if ( !mdiSubWindow )
+        {
+            return;
+        }
+        reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetFieldOfView ( static_cast<float> ( aFieldOfView ) );
+    }
+    void MainWindow::nearChanged ( double aNear )
+    {
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->currentSubWindow ();
+        if ( !mdiSubWindow )
+        {
+            return;
+        }
+        reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetNear ( static_cast<float> ( aNear ) );
+    }
+    void MainWindow::farChanged ( double aFar )
+    {
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->currentSubWindow ();
+        if ( !mdiSubWindow )
+        {
+            return;
+        }
+        reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetFar ( static_cast<float> ( aFar ) );
     }
 }

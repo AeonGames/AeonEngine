@@ -60,6 +60,7 @@ namespace AeonGames
         DLL const Matrix4x4& GetViewMatrix() const;
         ///@}
         DLL float GetAspectRatio() const;
+        DLL const Frustum& GetFrustum() const;
     protected:
         virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         Matrix4x4 mProjectionMatrix{};
