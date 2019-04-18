@@ -84,14 +84,32 @@ namespace AeonGames
         return mCamera;
     }
 
-    void Scene::SetProjection ( const Matrix4x4& aMatrix )
+    void Scene::SetFieldOfView ( float aFieldOfView )
     {
-        mProjection = aMatrix;
+        mFieldOfView = aFieldOfView;
     }
 
-    const Matrix4x4& Scene::GetProjection() const
+    void Scene::SetNear ( float aNear )
     {
-        return mProjection;
+        mNear = aNear;
+    }
+
+    void Scene::SetFar ( float aFar )
+    {
+        mFar = aFar;
+    }
+
+    float Scene::GetFieldOfView() const
+    {
+        return mFieldOfView;
+    }
+    float Scene::GetNear() const
+    {
+        return mNear;
+    }
+    float Scene::GetFar() const
+    {
+        return mFar;
     }
 
     void Scene::SetView ( const Matrix4x4& aMatrix )
@@ -331,7 +349,10 @@ namespace AeonGames
         *scene_buffer.mutable_name() = mName;
         if ( mCamera )
         {
-            *scene_buffer.mutable_camera() = mCamera->GetName();
+            *scene_buffer.mutable_camera()->mutable_node() = mCamera->GetName();
+            scene_buffer.mutable_camera()->set_field_of_view ( mFieldOfView );
+            scene_buffer.mutable_camera()->set_near_plane ( mNear );
+            scene_buffer.mutable_camera()->set_far_plane ( mFar );
         }
         std::unordered_map<const Node*, NodeBuffer*> node_map;
         LoopTraverseDFSPreOrder (
@@ -398,7 +419,17 @@ namespace AeonGames
                 }
             }
         }
-        SetCamera ( scene_buffer.camera() );
+        SetCamera ( scene_buffer.camera().node() );
+        mFieldOfView = scene_buffer.camera().field_of_view();
+        mFieldOfView = ( mFieldOfView == 0.0f ) ? 60.0f : mFieldOfView;
+        mNear = scene_buffer.camera().near_plane();
+        mNear = ( mNear == 0.0f ) ? 1.0f : mNear;
+        mFar = scene_buffer.camera().far_plane();
+        mFar = ( mFar == 0.0f ) ? 1600.0f : mFar;
+        if ( mCamera )
+        {
+            mView = mCamera->GetGlobalTransform().GetInvertedMatrix();
+        }
         scene_buffer.Clear();
     }
     Node* Scene::StoreNode ( std::unique_ptr<Node> aNode )

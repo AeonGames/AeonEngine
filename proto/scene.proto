@@ -48,8 +48,15 @@ message NodeBuffer {
     repeated NodeBuffer node = 5;
 }
 
+message CameraBuffer {
+    string              node          = 1;
+    float               field_of_view = 2;
+    float               near_plane    = 3;
+    float               far_plane     = 4;
+}
+
 message SceneBuffer{
     string              name   = 1;
-    string              camera = 2;
+    CameraBuffer        camera = 2;
     repeated NodeBuffer node   = 3;
 }
