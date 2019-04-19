@@ -114,7 +114,7 @@ namespace AeonGames
 
     void Scene::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
-        mView = aMatrix;
+        mViewMatrix = aMatrix;
     }
 
     const Matrix4x4& Scene::GetViewMatrix() const
@@ -428,7 +428,7 @@ namespace AeonGames
         mFar = ( mFar == 0.0f ) ? 1600.0f : mFar;
         if ( mCamera )
         {
-            mView = mCamera->GetGlobalTransform().GetInvertedMatrix();
+            mViewMatrix = mCamera->GetGlobalTransform().GetInvertedMatrix();
         }
         scene_buffer.Clear();
     }
