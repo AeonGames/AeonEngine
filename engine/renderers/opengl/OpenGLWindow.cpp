@@ -204,7 +204,9 @@ namespace AeonGames
                           DefaultScreen ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ) ) ) << std::endl;
         XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
         {
-            std::cout << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+            char error_string[1024];
+            XGetErrorText ( display, error_event->error_code, error_string, 1024 );
+            std::cout << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
             return 0;
         } );
         if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
