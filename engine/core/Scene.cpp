@@ -112,14 +112,14 @@ namespace AeonGames
         return mFar;
     }
 
-    void Scene::SetView ( const Matrix4x4& aMatrix )
+    void Scene::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mView = aMatrix;
     }
 
-    const Matrix4x4& Scene::GetView() const
+    const Matrix4x4& Scene::GetViewMatrix() const
     {
-        return mView;
+        return mViewMatrix;
     }
 
     size_t Scene::GetChildrenCount() const

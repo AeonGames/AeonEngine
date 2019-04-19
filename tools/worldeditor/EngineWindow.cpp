@@ -292,6 +292,9 @@ namespace AeonGames
                             {
                                 // Call Node specific rendering function.
                                 aNode.Render ( *mWindow );
+                                if ( &aNode == mScene->GetCamera() )
+                                {
+                                }
                                 // Render Node AABBss
                                 mWindow->Render ( transformed_aabb.GetTransform(),
                                                   qWorldEditorApp->GetAABBWireMesh(),

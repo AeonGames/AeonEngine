@@ -70,4 +70,25 @@ namespace AeonGames
             }
         } );
     }
+    void Window::Render (
+        const Transform& aModelTransform,
+        const Mesh& aMesh,
+        const Pipeline& aPipeline,
+        const Material* aMaterial,
+        const UniformBuffer* aSkeleton,
+        uint32_t aVertexStart,
+        uint32_t aVertexCount,
+        uint32_t aInstanceCount,
+        uint32_t aFirstInstance ) const
+    {
+        Render ( aModelTransform.GetMatrix(),
+                 aMesh,
+                 aPipeline,
+                 aMaterial,
+                 aSkeleton,
+                 aVertexStart,
+                 aVertexCount,
+                 aInstanceCount,
+                 aFirstInstance );
+    }
 }

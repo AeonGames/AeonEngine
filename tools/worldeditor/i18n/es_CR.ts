@@ -99,9 +99,13 @@
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../ui/MainWindow.ui" line="69"/>
         <source>toolBar</source>
-        <translation>Barra de Herramientas</translation>
+        <translation type="vanished">Barra de Herramientas</translation>
+    </message>
+    <message>
+        <location filename="../ui/MainWindow.ui" line="69"/>
+        <source>Tool Bar</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="80"/>
