@@ -132,7 +132,7 @@ namespace AeonGames
 #endif
     }
 
-    void OpenGLWindow::Render ( const Transform& aModelTransform,
+    void OpenGLWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
@@ -149,8 +149,7 @@ namespace AeonGames
                     *aMaterial : opengl_pipeline.GetDefaultMaterial() ),
             reinterpret_cast<const OpenGLUniformBuffer*> ( aSkeleton ) );
         OPENGL_CHECK_ERROR_NO_THROW;
-        Matrix4x4 model_matrix = aModelTransform.GetMatrix();
-        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, model_matrix.GetMatrix4x4() );
+        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter

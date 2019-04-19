@@ -88,19 +88,18 @@ namespace AeonGames
         DLL void SetCamera ( uint32_t aNodeId );
         DLL void SetCamera ( const std::string& aNodeName );
         DLL const Node* GetCamera() const;
-        DLL void SetProjection ( const Matrix4x4& aMatrix );
-        DLL void SetView ( const Matrix4x4& aMatrix );
-        DLL const Matrix4x4& GetView() const;
+        DLL void SetViewMatrix ( const Matrix4x4& aMatrix );
+        DLL const Matrix4x4& GetViewMatrix() const;
         /**@}*/
-        void SetFieldOfView ( float aFieldOfView );
-        void SetNear ( float aNear );
-        void SetFar ( float aFar );
-        float GetFieldOfView() const;
-        float GetNear() const;
-        float GetFar() const;
+        DLL void SetFieldOfView ( float aFieldOfView );
+        DLL void SetNear ( float aNear );
+        DLL void SetFar ( float aFar );
+        DLL float GetFieldOfView() const;
+        DLL float GetNear() const;
+        DLL float GetFar() const;
     private:
         friend class Node;
-        Matrix4x4 mView{};
+        Matrix4x4 mViewMatrix{};
         float mFieldOfView{60.0f};
         float mNear{1.0f};
         float mFar{1600.0f};

@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Window.h"
 #include "aeongames/UniformBuffer.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 
 namespace AeonGames
@@ -47,9 +48,9 @@ namespace AeonGames
     static constexpr std::array<const StringId, 3> CameraPropertyIds
     {
         {
+            {"Field of View"},
             {"Near Plane"},
-            {"Far Plane"},
-            {"Field of Vision"}
+            {"Far Plane"}
         }
     };
 
@@ -63,6 +64,10 @@ namespace AeonGames
         return CameraPropertyIds.data();
     }
 
+    float Camera::GetFieldOfView() const
+    {
+        return mFieldOfView;
+    }
     float Camera::GetNearPlane() const
     {
         return mNearPlane;
@@ -70,6 +75,10 @@ namespace AeonGames
     float Camera::GetFarPlane() const
     {
         return mFarPlane;
+    }
+    void Camera::SetFieldOfView ( float aFieldOfView )
+    {
+        mFieldOfView = aFieldOfView;
     }
     void Camera::SetNearPlane ( float aNearPlane )
     {
@@ -85,8 +94,10 @@ namespace AeonGames
         switch ( aId )
         {
         case CameraPropertyIds[0]:
-            return GetNearPlane();
+            return GetFieldOfView();
         case CameraPropertyIds[1]:
+            return GetNearPlane();
+        case CameraPropertyIds[2]:
             return GetFarPlane();
         }
         return Property{};
@@ -99,10 +110,16 @@ namespace AeonGames
         case CameraPropertyIds[0]:
             if ( std::holds_alternative<float> ( aProperty ) )
             {
-                SetNearPlane ( std::get<float> ( aProperty ) );
+                SetFieldOfView ( std::get<float> ( aProperty ) );
             }
             break;
         case CameraPropertyIds[1]:
+            if ( std::holds_alternative<float> ( aProperty ) )
+            {
+                SetNearPlane ( std::get<float> ( aProperty ) );
+            }
+            break;
+        case CameraPropertyIds[2]:
             if ( std::holds_alternative<float> ( aProperty ) )
             {
                 SetFarPlane ( std::get<float> ( aProperty ) );
@@ -113,6 +130,13 @@ namespace AeonGames
 
     void Camera::Update ( Node& aNode, double aDelta )
     {
+        auto scene = aNode.GetScene();
+        if ( scene && scene->GetCamera() == &aNode )
+        {
+            scene->SetFieldOfView ( mFieldOfView );
+            scene->SetNear ( mNearPlane );
+            scene->SetFar ( mFarPlane );
+        }
     }
 
     void Camera::Render ( const Node& aNode, const Window& aWindow ) const
