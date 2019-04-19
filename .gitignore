@@ -42,6 +42,7 @@ codeblocks32
 codeblocks64
 clang32*
 clang64*
+.vscode
 
 # CTags
 tags
@@ -53,3 +54,6 @@ tags
 *.mtl
 *.png
 *.tga
+
+# Generated files
+game/images/*.svg
