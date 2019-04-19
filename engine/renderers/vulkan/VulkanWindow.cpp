@@ -489,7 +489,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Render ( const Transform& aModelTransform,
+    void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
@@ -516,11 +516,10 @@ namespace AeonGames
 
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
 
-        Matrix4x4 ModelMatrix = aModelTransform.GetMatrix();
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
                              reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, ModelMatrix.GetMatrix4x4() );
+                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
 
         vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,

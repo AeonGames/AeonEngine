@@ -37,15 +37,17 @@ namespace AeonGames
         void Render ( const Node& aNode, const Window& aWindow ) const final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
+        float GetFieldOfView() const;
         float GetNearPlane() const;
         float GetFarPlane() const;
+        void SetFieldOfView ( float aFieldOfView );
         void SetNearPlane ( float aNearPlane );
         void SetFarPlane ( float aFarPlane );
         static const StringId& GetClassId();
     private:
+        float mFieldOfView{60.0f};
         float mNearPlane{1.0f};
         float mFarPlane{16000.0f};
-        float mFieldOfVision{60.0f};
     };
 }
 #endif
