@@ -6,23 +6,23 @@
     <message>
         <location filename="../MainWindow.cpp" line="54"/>
         <source>Untitled Scene</source>
-        <translation>Escena sin titulo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="63"/>
         <source>Open Scene</source>
-        <translation>Abrir Escena</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="65"/>
         <location filename="../MainWindow.cpp" line="93"/>
         <source>Scene Files (*.scn *.txt)</source>
-        <translation>Archivos de Escena</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="91"/>
         <source>Save Scene</source>
-        <translation>Salvar Escena</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -30,17 +30,17 @@
     <message>
         <location filename="../SceneWindow.cpp" line="61"/>
         <source>Add </source>
-        <translation>Agregar </translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../SceneWindow.cpp" line="63"/>
         <source> Data</source>
-        <translation>Datos</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../SceneWindow.cpp" line="66"/>
         <source>Adds a new component of the specified type to the selected node</source>
-        <translation>Agrega un nuevo componente del tipo especificado al nodo seleccionado</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -48,37 +48,37 @@
     <message>
         <location filename="../ui/CameraSettings.ui" line="14"/>
         <source>Camera Settings</source>
-        <translation>Ajustes de Camara</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="24"/>
         <source>Camera Mode</source>
-        <translation>Tipo de Camara</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="35"/>
         <source>Perspective</source>
-        <translation>Perspectiva</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="40"/>
         <source>Orthogonal</source>
-        <translation>Ortogonal</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="48"/>
         <source>Field of view</source>
-        <translation>Campo de Vision</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="68"/>
         <source>Near</source>
-        <translation>Cerca</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/CameraSettings.ui" line="85"/>
         <source>Far</source>
-        <translation>Lejos</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -86,21 +86,17 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="14"/>
         <source>AeonGames World Editor</source>
-        <translation>Editor de Mundos AeonGames</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="49"/>
         <source>File</source>
-        <translation>Archivo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="59"/>
         <source>Settings</source>
-        <translation>Ajustes</translation>
-    </message>
-    <message>
-        <source>toolBar</source>
-        <translation type="vanished">Barra de Herramientas</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="69"/>
@@ -111,49 +107,49 @@
         <location filename="../ui/MainWindow.ui" line="80"/>
         <location filename="../ui/MainWindow.ui" line="83"/>
         <source>Open</source>
-        <translation>Abrir</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="86"/>
         <source>Ctrl+O</source>
-        <translation>Ctrl+O</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="94"/>
         <location filename="../ui/MainWindow.ui" line="97"/>
         <source>Save</source>
-        <translation>Salvar</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="100"/>
         <source>Ctrl+S</source>
-        <translation>Ctrl+S</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="105"/>
         <source>Exit</source>
-        <translation>Salir</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="110"/>
         <source>&amp;New</source>
-        <translation>&amp;Nuevo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="113"/>
         <source>Ctrl+N</source>
-        <translation>Ctrl+N</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="118"/>
         <source>Camera</source>
-        <translation>Camara</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="121"/>
         <location filename="../ui/MainWindow.ui" line="124"/>
         <source>Camera Settings</source>
-        <translation>Ajustes de Camara</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -161,12 +157,12 @@
     <message>
         <location filename="../ui/RendererSelectDialog.ui" line="14"/>
         <source>Select Renderer</source>
-        <translation>Seleccionar Renderizador</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/RendererSelectDialog.ui" line="28"/>
         <source>Renderer</source>
-        <translation>Renderizador</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -174,27 +170,27 @@
     <message>
         <location filename="../ui/ResourcesDialog.ui" line="14"/>
         <source>Resources</source>
-        <translation>Recursos</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/ResourcesDialog.ui" line="20"/>
         <source>Resource Locations:</source>
-        <translation>Localizaciones de Recursos:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/ResourcesDialog.ui" line="49"/>
         <source>Add</source>
-        <translation>Agregar</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/ResourcesDialog.ui" line="56"/>
         <source>Remove</source>
-        <translation>Remover</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/ResourcesDialog.ui" line="63"/>
         <source>Close</source>
-        <translation>Cerrar</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -202,95 +198,95 @@
     <message>
         <location filename="../ui/SceneWindow.ui" line="14"/>
         <source>Scene</source>
-        <translation>Escena</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="58"/>
         <source>Scenegraph</source>
-        <translation>Grafo de escena</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="104"/>
         <source>Node Properties</source>
-        <translation>Propiedades de Nodo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="120"/>
         <source>Transforms</source>
-        <translation>Transformaciones</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="132"/>
         <source>Local Transform</source>
-        <translation>Transformacion Local</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="148"/>
         <location filename="../ui/SceneWindow.ui" line="356"/>
         <source>Translation</source>
-        <translation>Traslacion</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="198"/>
         <location filename="../ui/SceneWindow.ui" line="286"/>
         <source>Rotation</source>
-        <translation>Rotacion</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="251"/>
         <location filename="../ui/SceneWindow.ui" line="336"/>
         <source>Scale</source>
-        <translation>Escala</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="267"/>
         <source>Global Transform</source>
-        <translation>Transformacion Global</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="413"/>
         <source>Components</source>
-        <translation>Componentes</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="468"/>
         <source>Add node</source>
-        <translation>Agregar nodo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="471"/>
         <source>Add a child node to this scene or node</source>
-        <translation>Agregar nodo hijo a esta escena o nodo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="480"/>
         <source>Remove node</source>
-        <translation>Remover nodo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="483"/>
         <source>Remove a child node from this scene or node</source>
-        <translation>Remover nodo hijo de esta escena o nodo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="492"/>
         <source>Set as camera</source>
-        <translation>Establecer como camara</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="495"/>
         <source>Set node as initial/default/current camera</source>
-        <translation>Establecer nodo como camara inicial/por defecto/actual</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="504"/>
         <source>Remove component</source>
-        <translation>Remover Componente</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SceneWindow.ui" line="507"/>
         <source>Remove selected component from node</source>
-        <translation>Remover componente seleccionado del nodo</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -298,32 +294,32 @@
     <message>
         <location filename="../ui/SettingsDialog.ui" line="17"/>
         <source>Settings</source>
-        <translation>Ajustes</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SettingsDialog.ui" line="26"/>
         <source>OpenGL View</source>
-        <translation>Vista OpenGL</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SettingsDialog.ui" line="32"/>
         <source>Background Color:</source>
-        <translation>Color de Fondo:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SettingsDialog.ui" line="55"/>
         <source>Apply</source>
-        <translation>Aplicar</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SettingsDialog.ui" line="62"/>
         <source>Revert</source>
-        <translation>Revertir</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/SettingsDialog.ui" line="69"/>
         <source>Close</source>
-        <translation>Cerrar</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
