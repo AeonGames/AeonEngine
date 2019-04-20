@@ -42,6 +42,7 @@ limitations under the License.
 #include "aeongames/Animation.h"
 #include "aeongames/Package.h"
 #include "aeongames/ResourceFactory.h"
+#include "aeongames/LogLevel.h"
 #include "Factory.h"
 
 #ifdef _WIN32
@@ -64,18 +65,18 @@ namespace AeonGames
     static std::string gPlugInPath ( std::getenv ( "PATH" ) ? std::getenv ( "PATH" ) : ""  );
     static void LoadPlugin ( const std::string& aDir, const std::string& aFilename )
     {
-        std::cout << "Plugin: " << aFilename << std::endl;
+        std::cout << LogLevel::Info << "Plugin: " << aFilename << std::endl;
 #if (defined WIN32)
         HMODULE plugin = LoadLibraryEx ( aFilename.c_str(), nullptr, 0 );
         if ( nullptr == plugin )
         {
-            std::cout << "Failed to load " << aFilename << " Error " << GetLastError() << std::endl;
+            std::cout << LogLevel::Error << "Failed to load " << aFilename << " Error " << GetLastError() << std::endl;
             return;
         }
         auto* pmi = ( PluginModuleInterface* ) GetProcAddress ( ( HINSTANCE ) plugin, "PMI" );
         if ( nullptr == pmi )
         {
-            std::cout << aFilename << " is not an AeonEngine Plugin." << std::endl;
+            std::cout << LogLevel::Warning << aFilename << " is not an AeonEngine Plugin." << std::endl;
             FreeLibrary ( ( HINSTANCE ) plugin );
             return;
         }

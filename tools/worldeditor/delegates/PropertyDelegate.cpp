@@ -78,7 +78,14 @@ namespace AeonGames
         case QMetaType::ULongLong:
             return BuildSpinboxEditor<unsigned long long> ( parent );
         case QMetaType::Float:
-            return new QDoubleSpinBox ( parent );
+        {
+            auto float_spinbox = new QDoubleSpinBox ( parent );
+            float_spinbox->setMinimum (
+                std::numeric_limits<float>::min() );
+            float_spinbox->setMaximum (
+                std::numeric_limits<float>::max() );
+            return float_spinbox;
+        }
         }
         return QStyledItemDelegate::createEditor ( parent, option, index );
     }

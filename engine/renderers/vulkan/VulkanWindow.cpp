@@ -618,4 +618,30 @@ namespace AeonGames
             }
         }
     }
+
+    void VulkanWindow::Run()
+    {
+        MSG msg;
+        bool done = false;
+        while ( !done )
+        {
+            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+            {
+                if ( msg.message == WM_QUIT )
+                {
+                    done = true;
+                }
+                else
+                {
+                    TranslateMessage ( &msg );
+                    DispatchMessage ( &msg );
+                }
+            }
+            else
+            {
+                BeginRender();
+                EndRender();
+            }
+        }
+    }
 }
