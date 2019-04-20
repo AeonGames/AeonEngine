@@ -287,14 +287,21 @@ namespace AeonGames
                         Frustum frustum ( mWindow->GetProjectionMatrix() * mWindow->GetViewMatrix() );
                         mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
                         {
+                            if ( &aNode == mScene->GetCamera() )
+                            {
+                                Matrix4x4 projection_matrix{};
+                                projection_matrix.Perspective ( mScene->GetFieldOfView(), mWindow->GetAspectRatio(), mScene->GetNear(), mScene->GetFar() );
+                                projection_matrix.Invert();
+                                mWindow->Render ( aNode.GetGlobalTransform() * projection_matrix,
+                                                  qWorldEditorApp->GetAABBWireMesh(),
+                                                  qWorldEditorApp->GetWirePipeline() );
+                            }
+
                             AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
                             if ( frustum.Intersects ( transformed_aabb ) )
                             {
                                 // Call Node specific rendering function.
                                 aNode.Render ( *mWindow );
-                                if ( &aNode == mScene->GetCamera() )
-                                {
-                                }
                                 // Render Node AABBss
                                 mWindow->Render ( transformed_aabb.GetTransform(),
                                                   qWorldEditorApp->GetAABBWireMesh(),

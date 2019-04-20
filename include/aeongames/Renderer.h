@@ -43,18 +43,12 @@ namespace AeonGames
             @return A unique pointer to a Window object referencing the specific renderer implementation.
         */
         virtual std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const = 0;
-#if 0
-        /*
-        NOTE: The idea here is not having to deal with manual window creation and management if
-        all you want to do is a single window/fullscreen game or application, but since
-        I am not doing that just yet, I'll KISS and comment this out for future reference,
-        after all, it may YAGNI.
-        */
+
         /** Creates a standalone Window object based on the system the engine is running on.
             @return A unique pointer to a Window object referencing the specific renderer implementation.
         */
-        virtual std::unique_ptr<Window> CreateWindowInstance() = 0;
-#endif
+        virtual std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const = 0;
+
         ///@}
         virtual std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
