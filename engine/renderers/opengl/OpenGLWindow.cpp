@@ -32,6 +32,70 @@ limitations under the License.
 
 namespace AeonGames
 {
+#ifdef WIN32
+    LRESULT CALLBACK AeonEngineWindowProc (
+        _In_ HWND   hwnd,
+        _In_ UINT   uMsg,
+        _In_ WPARAM wParam,
+        _In_ LPARAM lParam
+    )
+    {
+        //OpenGLWindow* window = reinterpret_cast<OpenGLWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        switch ( uMsg )
+        {
+        case WM_CLOSE:
+        //DestroyWindow(hwnd);
+        //break;
+        case WM_DESTROY:
+            PostQuitMessage ( 0 );
+            break;
+        default:
+            return DefWindowProc ( hwnd, uMsg, wParam, lParam );
+        }
+        return 0;
+    }
+#endif
+
+    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+        mOpenGLRenderer ( aOpenGLRenderer ), mOwnsWindowId{ true }, mFullScreen{aFullScreen}
+    {
+#ifdef WIN32
+        RECT rect = { aX, aY, static_cast<int32_t> ( aWidth ), static_cast<int32_t> ( aHeight ) };
+        WNDCLASSEX wcex;
+        wcex.cbSize = sizeof ( WNDCLASSEX );
+        wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wcex.lpfnWndProc = ( WNDPROC ) AeonEngineWindowProc;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
+        wcex.hInstance = GetModuleHandle ( nullptr );
+        wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
+        wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
+        wcex.hbrBackground = nullptr;
+        wcex.lpszMenuName = nullptr;
+        wcex.lpszClassName = "AeonEngine";
+        wcex.hIconSm = nullptr;
+        ATOM atom = RegisterClassEx ( &wcex );
+        mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+                                     MAKEINTATOM ( atom ), "OpenGL AeonEngine Window",
+                                     WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                     rect.left, rect.top, // Location
+                                     rect.right - rect.left, rect.bottom - rect.top, // Dimensions
+                                     nullptr,
+                                     nullptr,
+                                     GetModuleHandle ( nullptr ),
+                                     nullptr );
+        SetWindowLongPtr ( reinterpret_cast<HWND> ( mWindowId ), GWLP_USERDATA, reinterpret_cast<LONG_PTR> ( this ) );
+#endif
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
+    }
     OpenGLWindow::OpenGLWindow ( void* aWindowId, const OpenGLRenderer&  aOpenGLRenderer ) :
         mOpenGLRenderer ( aOpenGLRenderer ), mWindowId ( aWindowId )
     {
@@ -271,5 +335,50 @@ namespace AeonGames
             mMatricesBuffer = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
+        if ( mOwnsWindowId )
+        {
+#if _WIN32
+            HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+            wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
+            wglMakeCurrent ( hdc, nullptr );
+            ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+            DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+            UnregisterClass ( reinterpret_cast<LPCSTR> (
+#if defined(_M_X64) || defined(__amd64__)
+                                  0x0ULL +
+#endif
+                                  MAKELONG ( atom, 0 ) ), nullptr );
+#endif
+        }
+    }
+
+
+    void OpenGLWindow::Run()
+    {
+        MSG msg;
+        bool done = false;
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
+        while ( !done )
+        {
+            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+            {
+                if ( msg.message == WM_QUIT )
+                {
+                    done = true;
+                }
+                else
+                {
+                    TranslateMessage ( &msg );
+                    DispatchMessage ( &msg );
+                }
+            }
+            else
+            {
+                BeginRender();
+                EndRender();
+            }
+        }
     }
 }

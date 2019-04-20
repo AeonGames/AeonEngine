@@ -30,8 +30,10 @@ namespace AeonGames
     class OpenGLWindow : public Window
     {
     public:
+        OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         OpenGLWindow ( void* aWindowId, const OpenGLRenderer&  aOpenGLRenderer );
         ~OpenGLWindow() final;
+        void Run() final;
         void* GetWindowId() const;
         void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() const final;
@@ -53,6 +55,8 @@ namespace AeonGames
         void* mWindowId{};
         mutable void* mDeviceContext{};
         GLuint mMatricesBuffer{};
+        bool mOwnsWindowId{ false };
+        bool mFullScreen{ false };
     };
 }
 #endif
