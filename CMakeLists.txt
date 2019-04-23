@@ -209,10 +209,16 @@ endif()
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
-find_package(Qt5 COMPONENTS LinguistTools Core Gui Widgets)
+find_package(Qt5
+             COMPONENTS LinguistTools
+                        Core
+                        Gui
+                        Widgets)
 if(WIN32)
   find_package(Qt5 COMPONENTS WinExtras)
-endif(WIN32)
+elseif(UNIX)
+  find_package(Qt5 COMPONENTS X11Extras)
+endif()
 if(Qt5_FOUND)
   add_subdirectory(tools/worldeditor)
 endif()

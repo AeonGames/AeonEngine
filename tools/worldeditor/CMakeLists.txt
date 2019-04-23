@@ -22,12 +22,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${Qt5Gui_INCLUDE_DIRS}
                     ${Qt5Widgets_INCLUDE_DIRS})
 
-
 qt5_create_translation(QM_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/i18n/es_CR.ts
-                OPTIONS
-        -source-language en_US -target-language es_CR)
+                       ${CMAKE_CURRENT_SOURCE_DIR}
+                       ${CMAKE_CURRENT_SOURCE_DIR}/i18n/es_CR.ts
+                       OPTIONS
+                       -source-language
+                       en_US
+                       -target-language
+                       es_CR)
 
 set(WORLDEDITOR_QT_HEADERS
     models/SceneModel.h
@@ -78,7 +80,9 @@ set(WORLDEDITOR_UI
 if(WIN32)
   include_directories(${Qt5WinExtras_INCLUDE_DIRS})
   list(APPEND WORLDEDITOR_SOURCES ${WORLDEDITOR_SOURCES} icon.rc)
-endif(WIN32)
+elseif(UNIX)
+  include_directories(${Qt5X11Extras_INCLUDE_DIRS})
+endif()
 
 configure_file(worldeditor_dynamic.qrc
                ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
@@ -144,6 +148,7 @@ target_link_libraries(worldeditor
                       ${Qt5Gui_LIBRARIES}
                       ${Qt5Widgets_LIBRARIES}
                       ${Qt5WinExtras_LIBRARIES}
+                      ${Qt5X11Extras_LIBRARIES}
                       ${OPENGL_LIBRARIES}
                       ${CMAKE_DL_LIBS}
                       ${CMAKE_THREAD_LIBS_INIT})

@@ -11,5 +11,8 @@
     "python.pythonPath": "${PYTHON_EXECUTABLE}",
     "clang.executable": "${CLANG_EXECUTABLE}",
     "cmake.cmakePath": "${CMAKE_COMMAND}",
-    "window.zoomLevel": ${CODE_ZOOMLEVEL}
+    "window.zoomLevel": ${CODE_ZOOMLEVEL},
+    "files.associations": {
+        "*.json.in": "json"
+    }
 }
