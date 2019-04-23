@@ -621,6 +621,7 @@ namespace AeonGames
 
     void VulkanWindow::Run()
     {
+#ifdef _WIN32
         MSG msg;
         bool done = false;
         while ( !done )
@@ -643,5 +644,7 @@ namespace AeonGames
                 EndRender();
             }
         }
+#else
+#endif
     }
 }
