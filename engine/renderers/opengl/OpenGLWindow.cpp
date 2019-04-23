@@ -357,6 +357,7 @@ namespace AeonGames
 
     void OpenGLWindow::Run()
     {
+#if _WIN32
         MSG msg;
         bool done = false;
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
@@ -380,5 +381,7 @@ namespace AeonGames
                 EndRender();
             }
         }
+#else
+#endif
     }
 }
