@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/LogLevel.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLPipeline.h"
@@ -53,6 +54,21 @@ namespace AeonGames
             return DefWindowProc ( hwnd, uMsg, wParam, lParam );
         }
         return 0;
+    }
+#elif defined(__unix__)
+    std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo )
+    {
+        out << "Visual: " << aXVisualInfo.visual << std::endl;
+        out << "VisualID: " << aXVisualInfo.visualid << std::endl;
+        out << "Screen: " << aXVisualInfo.screen << std::endl;
+        out << "Depth: " << aXVisualInfo.depth << std::endl;
+        out << "Class: " << aXVisualInfo.c_class << std::endl;
+        out << "Red Mask: " << aXVisualInfo.red_mask << std::endl;
+        out << "Green Mask: " << aXVisualInfo.green_mask << std::endl;
+        out << "Blue Mask: " << aXVisualInfo.blue_mask << std::endl;
+        out << "Colormap Size: " << aXVisualInfo.colormap_size << std::endl;
+        out << "Bits Per RGB: " << aXVisualInfo.bits_per_rgb << std::endl;
+        return out;
     }
 #endif
 
@@ -132,7 +148,7 @@ namespace AeonGames
 #else
             glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                              reinterpret_cast<::Window> ( mWindowId ),
-                             static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
+                             static_cast<GLXContext> ( mDeviceContext ) );
             OPENGL_CHECK_ERROR_NO_THROW;
 #endif
             glViewport ( aX, aY, aWidth, aHeight );
@@ -146,17 +162,16 @@ namespace AeonGames
         if ( mDeviceContext )
         {
             EndRender();
-            std::cout << "BeginRender call without a previous EndRender call." << std::endl;
+            std::cout << LogLevel::Error << "BeginRender call without a previous EndRender call." << std::endl;
             return;
         }
         mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #else
-        ( void ) mDeviceContext;
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ),
-                         static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
+                         static_cast<GLXContext> ( mDeviceContext ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 #endif
 
@@ -184,7 +199,7 @@ namespace AeonGames
 #if _WIN32
         if ( !mDeviceContext )
         {
-            std::cout << "EndRender call without a previous BeginRender call." << std::endl;
+            std::cout << LogLevel::Error << "EndRender call without a previous BeginRender call." << std::endl;
             return;
         }
         SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
@@ -260,22 +275,72 @@ namespace AeonGames
         glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
 #else
-        XWindowAttributes x_window_attributes {};
-        XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                               reinterpret_cast<::Window> ( mWindowId ), &x_window_attributes );
-        std::cout << "Visual " << x_window_attributes.visual <<
-                  " Default " << DefaultVisual ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                          DefaultScreen ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ) ) ) << std::endl;
+        if ( !mOwnsWindowId )
+        {
+            /* We need to create a separate OpenGL Context for external Windows. */
+            XWindowAttributes x_window_attributes {};
+            XGetWindowAttributes ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
+                                   reinterpret_cast<::Window> ( mWindowId ), &x_window_attributes );
+            int frame_buffer_config_count;
+            GLXFBConfig *frame_buffer_configs =
+                glXChooseFBConfig ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
+                                    DefaultScreen ( mOpenGLRenderer.GetWindowId()  ),
+                                    nullptr, &frame_buffer_config_count );
+            if ( !frame_buffer_configs )
+            {
+                throw std::runtime_error ( "Failed to retrieve a framebuffer configs" );
+            }
+            for ( int i = 0; i < frame_buffer_config_count; ++i )
+            {
+                XVisualInfo *visual_info = glXGetVisualFromFBConfig ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ), frame_buffer_configs[i] );
+                if ( visual_info && visual_info->visualid == x_window_attributes.visual->visualid )
+                {
+                    int context_attribs[] =
+                    {
+                        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+                        GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+                        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                        None
+                    };
+                    std::cout << LogLevel::Info << *visual_info << std::endl;
+                    if ( ! ( mDeviceContext =
+                                 glXCreateContextAttribsARB (
+                                     static_cast<Display*> (
+                                         mOpenGLRenderer.GetWindowId() ),
+                                     frame_buffer_configs[i],
+                                     static_cast<GLXContext> (
+                                         mOpenGLRenderer.GetOpenGLContext() ),
+                                     True,
+                                     context_attribs ) ) )
+                    {
+                        std::cout << LogLevel::Error << "Failed to create OpenGL context for external window." << std::endl;
+                    }
+                    XFree ( visual_info );
+                    break;
+                }
+                XFree ( visual_info );
+            }
+            XFree ( frame_buffer_configs );
+        }
+        else
+        {
+            /** @todo This needs to be revisited once code for native Window is in place*/
+            mDeviceContext = mOpenGLRenderer.GetOpenGLContext();
+        }
+        if ( !mDeviceContext )
+        {
+            throw std::runtime_error ( "Unable to find a usable OpenGL context." );
+        }
         XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
         {
             char error_string[1024];
             XGetErrorText ( display, error_event->error_code, error_string, 1024 );
-            std::cout << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
+            std::cout << LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
             return 0;
         } );
         if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                                 reinterpret_cast<::Window> ( mWindowId ),
-                                static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
+                                static_cast<GLXContext> ( mDeviceContext ) ) )
         {
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
@@ -337,7 +402,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( mOwnsWindowId )
         {
-#if _WIN32
+#ifdef _WIN32
             HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
             wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -350,6 +415,17 @@ namespace AeonGames
                                   0x0ULL +
 #endif
                                   MAKELONG ( atom, 0 ) ), nullptr );
+#endif
+        }
+        else
+        {
+#ifdef __unix__
+            glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ), 0, 0 );
+            if ( mDeviceContext != nullptr )
+            {
+                glXDestroyContext ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ), static_cast<GLXContext> ( mDeviceContext ) );
+                mDeviceContext = nullptr;
+            }
 #endif
         }
     }

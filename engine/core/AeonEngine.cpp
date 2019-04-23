@@ -86,8 +86,8 @@ namespace AeonGames
         {
             if ( ! ( plugin = dlopen ( ( "lib" + aFilename + ".so" ).c_str(), RTLD_NOW | RTLD_GLOBAL ) ) )
             {
-                std::cout << "Failed to load " << aFilename << std::endl;
-                std::cout << "Error " << dlerror() << std::endl;
+                std::cout << LogLevel::Error << "Failed to load " << aFilename << std::endl;
+                std::cout << LogLevel::Error << "Error " << dlerror() << std::endl;
                 return;
             }
         }

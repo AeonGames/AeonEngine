@@ -11,7 +11,8 @@
             ],
             "defines": [],
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "compileCommands": "@CMAKE_BINARY_DIR@/compile_commands.json"
         }
     ],
     "version": 4

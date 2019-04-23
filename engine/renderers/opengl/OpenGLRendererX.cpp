@@ -36,22 +36,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo )
-    {
-        out << "Visual: " << aXVisualInfo.visual << std::endl;
-        out << "VisualID: " << aXVisualInfo.visualid << std::endl;
-        out << "Screen: " << aXVisualInfo.screen << std::endl;
-        out << "Depth: " << aXVisualInfo.depth << std::endl;
-        out << "Class: " << aXVisualInfo.c_class << std::endl;
-        out << "Red Mask: " << aXVisualInfo.red_mask << std::endl;
-        out << "Green Mask: " << aXVisualInfo.green_mask << std::endl;
-        out << "Blue Mask: " << aXVisualInfo.blue_mask << std::endl;
-        out << "Colormap Size: " << aXVisualInfo.colormap_size << std::endl;
-        out << "Bits Per RGB: " << aXVisualInfo.bits_per_rgb << std::endl;
-        return out;
-    }
-
-    PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
     int context_attribs[] =
     {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
@@ -59,7 +43,8 @@ namespace AeonGames
         GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
         None
     };
-    const int visual_attribs[] =
+
+    static const int visual_attribs[] =
     {
         GLX_X_RENDERABLE, True,
         GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
@@ -72,15 +57,13 @@ namespace AeonGames
         GLX_DEPTH_SIZE, 24,
         GLX_STENCIL_SIZE, 8,
         GLX_DOUBLEBUFFER, True,
-        //GLX_SAMPLE_BUFFERS  , 1,
-        //GLX_SAMPLES         , 4,
         None
     };
 
     void OpenGLRenderer::Initialize()
     {
         // Retrieve Display
-        mWindowId = XOpenDisplay ( nullptr );
+        mWindowId = XOpenDisplay ( std::getenv ( "DISPLAY" ) );
         if ( !mWindowId )
         {
             throw std::runtime_error ( "Failed retrieving X Display." );
@@ -106,31 +89,22 @@ namespace AeonGames
             throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
         }
 
-        // Pick the FB config/visual with the most samples per pixel
-        int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
-
-        int i;
-        for ( i = 0; i < frame_buffer_config_count; ++i )
+        // Pick the FB config with the most samples per pixel
+        int best_fbc = -1;
+        int best_num_samp = -1;
+        for ( int i = 0; i < frame_buffer_config_count; ++i )
         {
-            XVisualInfo *vi = glXGetVisualFromFBConfig ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i] );
-            if ( vi )
-            {
-                std::cout << *vi << std::endl;
-                int samp_buf, samples;
-                glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-                glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLES, &samples  );
+            int samp_buf, samples;
+            glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+            glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLES, &samples  );
 
-                if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
-                {
-                    best_fbc = i, best_num_samp = samples;
-                    std::cout << "Best Visual " << std::endl << *vi << std::endl;
-                }
-                if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
-                {
-                    worst_fbc = i, worst_num_samp = samples;
-                }
+            std::cout << LogLevel::Info << "Matching fbconfig " << i << " SAMPLE_BUFFERS = " << samp_buf <<
+                      " SAMPLES = " << samples << std::endl;
+
+            if ( best_fbc < 0 || ( samp_buf && samples > best_num_samp ) )
+            {
+                best_fbc = i, best_num_samp = samples;
             }
-            XFree ( vi );
         }
 
         GLXFBConfig bestFbc = frame_buffer_configs[ best_fbc ];

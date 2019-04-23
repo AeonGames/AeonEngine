@@ -52,9 +52,9 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         /// Internal Window Id, required to create initial shared context
-        void* mWindowId = nullptr;
+        void* mWindowId{};
         /// Internal OpenGL context, shared with all other contexts
-        void* mOpenGLContext = nullptr;
+        void* mOpenGLContext{};
     };
 }
 #endif

@@ -1,4 +1,7 @@
 /**DISCLAIMER**/
+#ifdef __unix__
+glXCreateContextAttribsARB
+#endif
 #ifdef ANDROID
 #ifndef DISABLE_VAO
 // GL_OES_vertex_array_object

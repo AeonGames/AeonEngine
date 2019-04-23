@@ -27,6 +27,31 @@
                          ]
             },
             {
+                "name": "Debug Game",
+                "type": "cppdbg",
+                "request": "launch",
+                "args": [],
+                "stopAtEntry": false,
+                "cwd": "${CMAKE_SOURCE_DIR}",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"${DEBUG_PATH}"
+                    }                    
+                ],
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
+                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
+                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
+            },
+            {
                 "name": "Debug Unit Tests",
                 "type": "cppdbg",
                 "request": "launch",

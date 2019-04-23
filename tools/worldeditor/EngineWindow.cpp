@@ -16,6 +16,9 @@ limitations under the License.
 #include <QResizeEvent>
 #include <QString>
 #include <QStringList>
+#ifdef __unix__
+#include <QX11Info>
+#endif
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -46,6 +49,7 @@ namespace AeonGames
         mCameraLocation ( -QVector3D ( mCameraRotation.rotatedVector ( forward ) * 300.0f ), 1 ),
         mViewMatrix()
     {
+        std::cout << "QX11Info::display() " << QX11Info::display() << std::endl;
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );
 
