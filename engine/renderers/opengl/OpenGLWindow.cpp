@@ -232,7 +232,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
-        glBindVertexArray ( opengl_mesh.GetArrayId() );
+        opengl_mesh.BindVertexArray();
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( aMesh.GetIndexCount() )
         {

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -11,6 +11,12 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
+
+option(SINGLE_VAO "Use a single Vertex Array per OpenGL context." OFF)
+
+if(SINGLE_VAO)
+  add_definitions(-DSINGLE_VAO)
+endif()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 

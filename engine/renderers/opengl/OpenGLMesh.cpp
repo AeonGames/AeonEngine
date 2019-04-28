@@ -31,7 +31,6 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
 #include "OpenGLFunctions.h"
@@ -53,9 +52,11 @@ namespace AeonGames
         Unload();
     }
 
-    GLuint OpenGLMesh::GetArrayId() const
+    void OpenGLMesh::BindVertexArray() const
     {
-        return mArray;
+#ifndef SINGLE_VAO
+        glBindVertexArray ( mArray );
+#endif
     }
 
     GLuint OpenGLMesh::GetVertexBufferId() const
@@ -131,10 +132,12 @@ namespace AeonGames
         // OpenGL Specific Code:
         ///@todo Use OpenGLBuffer class instead of raw GL ids
 
+#ifndef SINGLE_VAO
         glGenVertexArrays ( 1, &mArray );
         OPENGL_CHECK_ERROR_THROW;
         glBindVertexArray ( mArray );
         OPENGL_CHECK_ERROR_THROW;
+#endif
         glGenBuffers ( 1, &mVertexBuffer );
         OPENGL_CHECK_ERROR_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer );
@@ -228,6 +231,7 @@ namespace AeonGames
     }
     void OpenGLMesh::Unload ()
     {
+#ifndef SINGLE_VAO
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsVertexArray ( mArray ) )
         {
@@ -236,6 +240,7 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             mArray = 0;
         }
+#endif
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsBuffer ( mVertexBuffer ) )
         {
