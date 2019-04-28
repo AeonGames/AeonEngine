@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ namespace AeonGames
         ///@name OpenGL Specific API
         ///@{
         GLenum GetIndexType() const;
-        GLuint GetArrayId() const;
+        void BindVertexArray() const;
         GLuint GetVertexBufferId() const;
         GLuint GetIndexBufferId() const;
         ///@}
@@ -52,8 +52,10 @@ namespace AeonGames
         uint32_t mVertexCount{};
         uint32_t mIndexCount{};
         uint32_t mIndexSize{};
-        GLuint mArray{};
-        GLuint mVertexBuffer{};
+#ifndef SINGLE_VAO
+        GLuint mArray {};
+#endif
+        GLuint mVertexBuffer {};
         GLuint mIndexBuffer{};
     };
 }
