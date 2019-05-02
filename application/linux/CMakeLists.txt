@@ -1,6 +1,0 @@
-find_package(X11 REQUIRED)
-set(EXECUTABLE_HEADERS)
-set(EXECUTABLE_SOURCES Main.cpp)
-include_directories(${CMAKE_SOURCE_DIR}/include)
-add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
-target_link_libraries(game ${X11_LIBRARIES} AeonEngine)
