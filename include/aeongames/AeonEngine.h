@@ -24,7 +24,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Renderer;
-    DLL bool InitializeGlobalEnvironment();
+    DLL bool InitializeGlobalEnvironment ( int argc = 0, char *argv[] = nullptr );
     DLL void FinalizeGlobalEnvironment();
     DLL std::vector<std::string> GetResourcePath();
     DLL void SetResourcePath ( const std::vector<std::string>& aPath );

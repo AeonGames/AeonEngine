@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -129,5 +129,22 @@ namespace AeonGames
         result.insert ( result.end(), aSecond.begin(), aSecond.end() );
         return result;
     }
+
+    class OptionHandler
+    {
+    public:
+        DLL OptionHandler ( const char aShortOption, const char* aLongOption, void ( *aHandler ) ( const char*, void* ), void* aUserData = nullptr );
+        DLL ~OptionHandler();
+        DLL const char GetShortOption() const;
+        DLL const char* GetLongOption() const;
+        DLL void* GetUserData() const;
+        DLL void operator() ( const char*, void* ) const;
+    private:
+        void ( *mHandler ) ( const char*, void* );
+        const char mShortOption{};
+        const char* mLongOption{nullptr};
+        void* mUserData{nullptr};
+    };
+    DLL void ProcessOpts ( int argc, char *argv[], const OptionHandler* aOptionHandler, size_t aOptionHandlerCount );
 }
 #endif

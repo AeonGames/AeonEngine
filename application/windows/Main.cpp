@@ -19,37 +19,130 @@ limitations under the License.
 #include "aeongames/StringId.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/Window.h"
+#include "aeongames/Utilities.h"
+#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <sstream>
+#include <regex>
+#include <tuple>
 #include <shellapi.h>
+
+/** Convert a WinMain command line (lpCmdLine) into a regular argc,argv pair.
+ * @param aCmdLine Windows API WinMain format command line.
+ * @return tuple containing a vector of char* (std::get<0>) and a string
+ * containing the argument strings separated each by a null character(std::get<1>).
+ * @note The string part is meant only as managed storage for the char* vector,
+ * as those point into the string memory, so there should not be a real reason
+ * to read it directly.
+*/
+static std::tuple<std::vector<char*>, const std::string> GetArgs ( char* aCmdLine )
+{
+    /*Match any whitespace OR any whitespace followed by eol OR eol.*/
+    std::regex whitespace{"\\s+|\\s+$|$"};
+    std::tuple<std::vector<char*>, std::string>
+    /*Replace all matches with a single plain old space character.
+        Note: using "\0" instead of " " would be great, but "\0"
+        gets converted as per the spec into the empty string rather
+        than a size 1 string containing the null character.
+        And no, "\0\0" does not work, std::string("\0\0",2) does not either.*/
+    result{std::vector<char*>{}, std::regex_replace ( aCmdLine, whitespace, " " ) };
+
+    size_t count{0};
+
+    for ( size_t i = 0; i < std::get<1> ( result ).size(); ++i )
+    {
+        if ( std::get<1> ( result ) [i] == ' ' )
+        {
+            std::get<1> ( result ) [i] = '\0';
+            ++count;
+        }
+    }
+
+    if ( count )
+    {
+        std::get<0> ( result ).reserve ( count );
+        std::get<0> ( result ).emplace_back ( std::get<1> ( result ).data() );
+        for ( uint32_t i = 0; i < std::get<1> ( result ).size() - 1; ++i )
+        {
+            if ( std::get<1> ( result ) [i] == '\0' )
+            {
+                std::get<0> ( result ).emplace_back ( std::get<1> ( result ).data() + ( i + 1 ) );
+            }
+        }
+    }
+    return result;
+}
+
+static void GetArgumentIntoString ( const char* aArgument, void* aUserData )
+{
+    std::string* string_pointer = reinterpret_cast<std::string*> ( aUserData );
+    if ( aArgument && string_pointer )
+    {
+        *string_pointer = aArgument;
+    }
+}
+
 
 int WINAPI ENTRYPOINT WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
-    AeonGames::InitializeGlobalEnvironment();
+    auto args = GetArgs ( lpCmdLine );
+    AeonGames::InitializeGlobalEnvironment ( std::get<0> ( args ).size(), std::get<0> ( args ).data() );
     {
-        std::vector<std::string> renderers;
-        renderers.reserve ( 5 );
-        ///@todo Have a function return a vector of strings?
-        AeonGames::EnumerateRendererConstructors ( [&renderers] ( const AeonGames::StringId & aIdentifier ) -> bool
+        std::string renderer_name{};
+        std::string scene_name{};
+        std::array<AeonGames::OptionHandler, 2> option_handlers
         {
-            renderers.emplace_back ( aIdentifier );
-            std::cout << AeonGames::LogLevel::Info << aIdentifier.GetString() << std::endl;
+            AeonGames::OptionHandler{
+                'r',
+                "renderer",
+                GetArgumentIntoString,
+                &renderer_name
+            },
+            AeonGames::OptionHandler{
+                's',
+                "scene",
+                GetArgumentIntoString,
+                &scene_name
+            },
+        };
+
+        ProcessOpts ( std::get<0> ( args ).size(), std::get<0> ( args ).data(), option_handlers.data(), option_handlers.size() );
+
+        const AeonGames::Renderer* renderer{};
+        AeonGames::Scene scene{};
+
+        ///@todo Have a function return a vector of strings?
+        AeonGames::EnumerateRendererConstructors ( [&renderer, &renderer_name] ( const AeonGames::StringId & aIdentifier ) -> bool
+        {
+            if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )
+            {
+                renderer = AeonGames::SetRenderer ( aIdentifier.GetString() );
+                return false;
+            }
             return true;
         } );
 
-        if ( !renderers.size() )
+        if ( renderer == nullptr )
         {
             std::cerr << AeonGames::LogLevel::Error << "No renderer available, cannot continue." << std::endl;
             AeonGames::FinalizeGlobalEnvironment();
             return -1;
         }
-        auto renderer = AeonGames::SetRenderer ( renderers.at ( 0 ) );
+
+        /* Renderer is available from here on.*/
+        if ( !scene_name.empty() )
+        {
+            //scene.Deserialize(scene_name);
+        }
+
         auto window = renderer->CreateWindowInstance ( 0, 0, 640, 480, false );
-        window->Run();
+        window->Run ( scene );
     }
     AeonGames::FinalizeGlobalEnvironment();
     return 0;
@@ -71,5 +164,11 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     // Use _CrtSetBreakAlloc( ) to set breakpoints on allocations.
     //_CrtSetBreakAlloc (1159202);
 #endif
-    return WinMain ( GetModuleHandle ( NULL ), NULL, NULL, 0 );
+    std::ostringstream stream;
+    for ( uint32_t i = 0; i < argc; ++i )
+    {
+        stream << argv[i] << ( ( i != argc - 1 ) ? " " : "" );
+    }
+    std::string command_line = stream.str();
+    return WinMain ( GetModuleHandle ( NULL ), NULL, stream.str().data(), 0 );
 }
