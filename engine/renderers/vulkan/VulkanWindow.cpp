@@ -619,7 +619,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::Run()
+    void VulkanWindow::Run ( const Scene& aScene )
     {
 #ifdef _WIN32
         MSG msg;
@@ -641,6 +641,7 @@ namespace AeonGames
             else
             {
                 BeginRender();
+                Window::Render ( aScene );
                 EndRender();
             }
         }

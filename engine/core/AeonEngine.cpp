@@ -43,6 +43,7 @@ limitations under the License.
 #include "aeongames/Package.h"
 #include "aeongames/ResourceFactory.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/Utilities.h"
 #include "Factory.h"
 
 #ifdef _WIN32
@@ -122,7 +123,21 @@ namespace AeonGames
         }
     }
 
-    bool InitializeGlobalEnvironment()
+    static std::string gConfigFile{"game/config"};
+    const std::array<OptionHandler, 1> gOptionHandlers
+    {
+        OptionHandler{
+            'c',
+            "config",
+            [] ( const char* aArgument, void* aUserData ) -> void {if ( aArgument )
+                {
+                    std::cout << LogLevel::Info << "Reading Configuration from " << aArgument << std::endl;
+                    gConfigFile = aArgument;
+                }}
+        }
+    };
+
+    bool InitializeGlobalEnvironment ( int argc, char *argv[] )
     {
         if ( gInitialized )
         {
@@ -137,13 +152,14 @@ namespace AeonGames
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         SetConsoleMode ( hOut, dwMode );
 #endif
+        ProcessOpts ( argc, argv, gOptionHandlers.data(), gOptionHandlers.size() );
         try
         {
-            LoadProtoBufObject<ConfigurationBuffer> ( gConfigurationBuffer, "game/config", "AEONCFG" );
+            LoadProtoBufObject<ConfigurationBuffer> ( gConfigurationBuffer, gConfigFile, "AEONCFG" );
         }
         catch ( std::runtime_error& e )
         {
-            std::cerr << "Warning: " << e.what() << std::endl;
+            std::cerr << LogLevel::Warning << e.what() << std::endl;
         }
 
         gPlugInCache.reserve ( gConfigurationBuffer.plugin_size() );

@@ -32,7 +32,7 @@ namespace AeonGames
     public:
         DLL virtual ~Window() = 0;
         DLL void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
-        virtual void Run() = 0;
+        virtual void Run ( const Scene& aScene ) = 0;
         ///@name Render Functions
         ///@{
         virtual void BeginRender() const = 0;

@@ -431,7 +431,7 @@ namespace AeonGames
     }
 
 
-    void OpenGLWindow::Run()
+    void OpenGLWindow::Run ( const Scene& aScene )
     {
 #if _WIN32
         MSG msg;
@@ -454,6 +454,7 @@ namespace AeonGames
             else
             {
                 BeginRender();
+                Window::Render ( aScene );
                 EndRender();
             }
         }

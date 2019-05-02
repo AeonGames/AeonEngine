@@ -17,7 +17,6 @@ limitations under the License.
 #include <utility>
 #include <vector>
 #include <fstream>
-#include <regex>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
