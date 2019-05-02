@@ -9,10 +9,11 @@
                 "stopAtEntry": false,
                 "cwd": "${CMAKE_SOURCE_DIR}",
                 "environment": [
+                    ${QT_QPA_PLATFORM}
                     {
                         "name":"PATH",
                         "value":"${DEBUG_PATH}"
-                    }                    
+                    }
                 ],
                 "externalConsole": ${USE_EXTERNAL_CONSOLE},
                         "program": "${CMAKE_BINARY_DIR}/bin/worldeditor${CMAKE_EXECUTABLE_SUFFIX}",

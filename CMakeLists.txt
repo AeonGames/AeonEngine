@@ -488,6 +488,7 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
   else()
     set(DEBUG_PATH "$ENV{PATH}:${DEBUG_PATH}")
     set(USE_EXTERNAL_CONSOLE "false")
+    set(QT_QPA_PLATFORM "{\"name\":\"QT_QPA_PLATFORM\",\"value\":\"xcb\"},")
   endif()
   configure_file("${CMAKE_SOURCE_DIR}/cmake/tasks.json.in"
                  "${CMAKE_SOURCE_DIR}/.vscode/tasks.json")

@@ -1,4 +1,4 @@
-# Copyright 2016 Rodrigo Jose Hernandez Cordoba
+# Copyright 2016,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -12,9 +12,9 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-if(WIN32)
-  add_subdirectory(windows)
-endif()
-if(UNIX)
-  add_subdirectory(linux)
-endif()
+set(EXECUTABLE_HEADERS)
+set(EXECUTABLE_SOURCES Main.cpp windows.cpp linux.cpp)
+include_directories(${CMAKE_SOURCE_DIR}/include)
+add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
+target_link_libraries(game AeonEngine)
+add_dependencies(game AeonEngine)
