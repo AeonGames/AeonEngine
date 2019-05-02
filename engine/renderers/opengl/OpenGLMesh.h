@@ -47,6 +47,7 @@ namespace AeonGames
         GLuint GetIndexBufferId() const;
         ///@}
     private:
+        void BindBuffers() const;
         AABB mAABB;
         uint32_t mVertexFlags{};
         uint32_t mVertexCount{};

@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <algorithm>
 #include <iostream>
+#include <cstring>
 #include "aeongames/Platform.h"
 #include "aeongames/Utilities.h"
 namespace AeonGames

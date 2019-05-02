@@ -54,7 +54,10 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         void* mWindowId{};
         mutable void* mDeviceContext{};
-        GLuint mMatricesBuffer{};
+#ifdef SINGLE_VAO
+        GLuint mVAO {};
+#endif
+        GLuint mMatricesBuffer {};
         bool mOwnsWindowId{ false };
         bool mFullScreen{ false };
     };

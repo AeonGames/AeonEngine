@@ -345,6 +345,12 @@ namespace AeonGames
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
         XSetErrorHandler ( nullptr );
+#ifdef SINGLE_VAO
+        glGenVertexArrays ( 1, &mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindVertexArray ( mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+#endif
 #endif
         glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -392,6 +398,11 @@ namespace AeonGames
 
     void OpenGLWindow::Finalize()
     {
+#ifdef __unix__
+        glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
+                          reinterpret_cast<::Window> ( mWindowId ),
+                          static_cast<GLXContext> ( mDeviceContext ) );
+#endif
         if ( glIsBuffer ( mMatricesBuffer ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -399,6 +410,16 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             mMatricesBuffer = 0;
         }
+        OPENGL_CHECK_ERROR_NO_THROW;
+#ifdef SINGLE_VAO
+        if ( glIsVertexArray ( mVAO ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteVertexArrays ( 1, &mVAO );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mVAO = 0;
+        }
+#endif
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( mOwnsWindowId )
         {

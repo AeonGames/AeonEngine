@@ -54,7 +54,9 @@ namespace AeonGames
 
     void OpenGLMesh::BindVertexArray() const
     {
-#ifndef SINGLE_VAO
+#ifdef SINGLE_VAO
+        BindBuffers();
+#else
         glBindVertexArray ( mArray );
 #endif
     }
@@ -140,9 +142,30 @@ namespace AeonGames
 #endif
         glGenBuffers ( 1, &mVertexBuffer );
         OPENGL_CHECK_ERROR_THROW;
+
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer );
         OPENGL_CHECK_ERROR_THROW;
         glBufferData ( GL_ARRAY_BUFFER, aMeshBuffer.vertexbuffer().size(), aMeshBuffer.vertexbuffer().data(), GL_STATIC_DRAW );
+        OPENGL_CHECK_ERROR_THROW;
+
+        //---Index Buffer---
+        if ( mIndexCount )
+        {
+            glGenBuffers ( 1, &mIndexBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, aMeshBuffer.indexbuffer().size(), aMeshBuffer.indexbuffer().data(), GL_STATIC_DRAW );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+#ifndef SINGLE_VAO
+        BindBuffers();
+#endif
+    }
+
+    void OpenGLMesh::BindBuffers() const
+    {
+        glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer );
         OPENGL_CHECK_ERROR_THROW;
 
         size_t offset{0};
@@ -221,14 +244,11 @@ namespace AeonGames
         //---Index Buffer---
         if ( mIndexCount )
         {
-            glGenBuffers ( 1, &mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, aMeshBuffer.indexbuffer().size(), aMeshBuffer.indexbuffer().data(), GL_STATIC_DRAW );
             OPENGL_CHECK_ERROR_THROW;
         }
     }
+
     void OpenGLMesh::Unload ()
     {
 #ifndef SINGLE_VAO
