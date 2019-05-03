@@ -31,7 +31,7 @@
                 "name": "Game",
                 "type": "cppdbg",
                 "request": "launch",
-                "args": ["-r" "OpenGL" "-s","game/scenes/main.txt"],
+                "args": ["-r","OpenGL","-s","scenes/main.txt"],
                 "stopAtEntry": false,
                 "cwd": "${CMAKE_SOURCE_DIR}",
                 "environment": [

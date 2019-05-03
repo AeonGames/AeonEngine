@@ -47,7 +47,7 @@ int Main ( int argc, char *argv[] )
     AeonGames::InitializeGlobalEnvironment (  argc, argv );
     {
         std::string renderer_name{};
-        std::string scene_name{};
+        std::string scene_path{};
         std::array<AeonGames::OptionHandler, 2> option_handlers
         {
             AeonGames::OptionHandler{
@@ -60,7 +60,7 @@ int Main ( int argc, char *argv[] )
                 's',
                 "scene",
                 GetArgumentIntoString,
-                &scene_name
+                &scene_path
             },
         };
 
@@ -88,9 +88,9 @@ int Main ( int argc, char *argv[] )
         }
 
         /* Renderer is available from here on.*/
-        if ( !scene_name.empty() )
+        if ( !scene_path.empty() )
         {
-            //scene.Deserialize(scene_name);
+            scene.Load ( scene_path );
         }
 
         auto window = renderer->CreateWindowInstance ( 0, 0, 640, 480, false );
