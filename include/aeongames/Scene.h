@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_SCENE_H
 /*! \file
     \brief Header for the Scene class.
-    \copy 2014-2018
+    \copy 2014-2019
     \author Rodrigo Hernandez.
 */
 #include "aeongames/Platform.h"
@@ -29,6 +29,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class SceneBuffer;
     class Node;
     class Renderer;
     /*! \brief Scene class.
@@ -43,6 +44,9 @@ namespace AeonGames
         Scene ( const Scene& ) = delete;
         DLL explicit Scene(); // "Explicit Scene"... chuckle
         DLL ~Scene();
+        DLL void Load ( uint32_t aId );
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void SetName ( const char* aName );
         DLL const char* const GetName() const;
         DLL bool Add ( Node* aNode );

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include "aeongames/AeonEngine.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 #include "aeongames/LogLevel.h"
@@ -52,6 +53,28 @@ namespace AeonGames
         {
             Remove ( mRootNode );
         }
+    }
+
+    void Scene::Load ( const std::string& aFilename )
+    {
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+    }
+    void Scene::Load ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            throw;
+        }
+    }
+    void Scene::Load ( const void* aBuffer, size_t aBufferSize )
+    {
+        Deserialize ( {reinterpret_cast<const char*> ( aBuffer ), aBufferSize} );
     }
 
     void Scene::SetName ( const char* aName )
