@@ -19,6 +19,8 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/Node.h"
+#include "aeongames/Scene.h"
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLPipeline.h"
@@ -41,7 +43,6 @@ namespace AeonGames
         _In_ LPARAM lParam
     )
     {
-        //OpenGLWindow* window = reinterpret_cast<OpenGLWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
         switch ( uMsg )
         {
         case WM_CLOSE:
@@ -50,6 +51,12 @@ namespace AeonGames
         case WM_DESTROY:
             PostQuitMessage ( 0 );
             break;
+        case WM_SIZE:
+        {
+            Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
+            window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            return 0;
+        }
         default:
             return DefWindowProc ( hwnd, uMsg, wParam, lParam );
         }
@@ -452,9 +459,10 @@ namespace AeonGames
     }
 
 
-    void OpenGLWindow::Run ( const Scene& aScene )
+    void OpenGLWindow::Run ( Scene& aScene )
     {
 #if _WIN32
+        //double delta{};
         MSG msg;
         bool done = false;
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
@@ -474,6 +482,24 @@ namespace AeonGames
             }
             else
             {
+#if 0
+                if ( mStopWatch.isValid() )
+                {
+                    delta = mStopWatch.restart() * 1e-3f;
+                    if ( delta > 1e-1f )
+                    {
+                        delta = 1.0 / 30.0;
+                    }
+                }
+#endif
+                aScene.Update ( 0 );
+                if ( const Node* camera = aScene.GetCamera() )
+                {
+                    SetViewMatrix ( camera->GetGlobalTransform().GetInverted().GetMatrix() );
+                    Matrix4x4 projection {};
+                    projection.Perspective ( aScene.GetFieldOfView(), GetAspectRatio(), aScene.GetNear(), aScene.GetFar() );
+                    SetProjectionMatrix ( projection );
+                }
                 BeginRender();
                 Window::Render ( aScene );
                 EndRender();

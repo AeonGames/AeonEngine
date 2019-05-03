@@ -101,6 +101,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Clock.h
     # ${CMAKE_SOURCE_DIR}/include/aeongames/Octree.h
     )
 
@@ -127,6 +128,7 @@ set(ENGINE_CORE_SOURCES
     core/ResourceFactory.cpp
     core/ResourceCache.cpp
     core/ProtoBufUtils.cpp
+    core/Clock.cpp
     # core/Octree.cpp
     )
 
