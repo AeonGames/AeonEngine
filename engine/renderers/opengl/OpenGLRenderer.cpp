@@ -44,7 +44,7 @@ namespace AeonGames
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<OpenGLWindow> ( aWindowId, *this );
+        return std::make_unique<OpenGLWindow> ( *this, aWindowId );
     }
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const

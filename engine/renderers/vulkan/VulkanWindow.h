@@ -28,9 +28,9 @@ namespace AeonGames
     class VulkanWindow : public Window
     {
     public:
-        VulkanWindow ( void* aWindowId, const VulkanRenderer&  aVulkanRenderer );
-        virtual ~VulkanWindow();
-        void Run ( Scene& aScene ) final;
+        VulkanWindow ( const VulkanRenderer& aVulkanRenderer, void* aWindowId );
+        VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        ~VulkanWindow() final;
         void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() const final;
         void EndRender() const final;
@@ -56,7 +56,6 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
-        void* mWindowId{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;
         VulkanUniformBuffer mMatrices;
