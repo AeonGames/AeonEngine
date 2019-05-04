@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#ifdef _WIN32
 #include <cstring>
 #include <cassert>
 #include <cstdio>
@@ -27,6 +28,7 @@ limitations under the License.
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLImage.h"
+#include "OpenGLWindow.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
@@ -201,4 +203,154 @@ namespace AeonGames
 #endif
                               MAKELONG ( atom, 0 ) ), nullptr );
     }
+
+    void OpenGLWindow::OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    {
+        if ( aWidth && aHeight )
+        {
+            HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
+            wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
+            glViewport ( aX, aY, aWidth, aHeight );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
+    void OpenGLWindow::BeginRender() const
+    {
+        if ( mDeviceContext )
+        {
+            EndRender();
+            std::cout << LogLevel::Error << "BeginRender call without a previous EndRender call." << std::endl;
+            return;
+        }
+        mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );
+        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+        Matrix4x4 projection_matrix =
+            mProjectionMatrix * Matrix4x4
+        {
+            // Flip Matrix
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+    }
+
+    void OpenGLWindow::EndRender() const
+    {
+        if ( !mDeviceContext )
+        {
+            std::cout << LogLevel::Error << "EndRender call without a previous BeginRender call." << std::endl;
+            return;
+        }
+        SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
+        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
+        mDeviceContext = nullptr;
+    }
+    void OpenGLWindow::Initialize()
+    {
+        HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+        PIXELFORMATDESCRIPTOR pfd{};
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 32;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        int pf = ChoosePixelFormat ( hdc, &pfd );
+        SetPixelFormat ( hdc, pf, &pfd );
+        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+        RECT rect;
+        GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
+        glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
+        OPENGL_CHECK_ERROR_THROW;
+
+        glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_BLEND );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDepthFunc ( GL_LESS );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glCullFace ( GL_BACK );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_CULL_FACE );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        // Initialize Matrix Buffer
+        glGenBuffers ( 1, &mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        float matrices[48] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
+                       matrices, GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::Finalize()
+    {
+        if ( glIsBuffer ( mMatricesBuffer ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteBuffers ( 1, &mMatricesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mMatricesBuffer = 0;
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
+#ifdef SINGLE_VAO
+        if ( glIsVertexArray ( mVAO ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteVertexArrays ( 1, &mVAO );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mVAO = 0;
+        }
+#endif
+        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( mOwnsWindowId )
+        {
+            HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+            wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            wglMakeCurrent ( hdc, nullptr );
+            ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+        }
+    }
 }
+#endif

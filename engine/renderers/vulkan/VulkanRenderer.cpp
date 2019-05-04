@@ -591,7 +591,12 @@ namespace AeonGames
 
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<VulkanWindow> ( aWindowId, *this );
+        return std::make_unique<VulkanWindow> ( *this, aWindowId );
+    }
+
+    std::unique_ptr<Window> VulkanRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
+    {
+        return std::make_unique<VulkanWindow> ( *this, aX, aY, aWidth, aHeight, aFullScreen );
     }
 
     std::unique_ptr<Mesh> VulkanRenderer::CreateMesh ( uint32_t aPath ) const
@@ -657,10 +662,5 @@ namespace AeonGames
             vkDestroyDescriptorSetLayout ( mVkDevice, aVkDescriptorSetLayout, nullptr );
             aVkDescriptorSetLayout = VK_NULL_HANDLE;
         }
-    }
-
-    std::unique_ptr<Window> VulkanRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
-    {
-        return nullptr;
     }
 }

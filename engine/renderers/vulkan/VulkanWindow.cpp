@@ -37,8 +37,37 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanWindow::VulkanWindow ( void* aWindowId, const VulkanRenderer&  aVulkanRenderer ) :
-        mWindowId { aWindowId }, mVulkanRenderer { aVulkanRenderer },
+    VulkanWindow::VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+        Window { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
+        mMatrices{aVulkanRenderer,
+                  sizeof ( float ) * 32,
+                  std::array<float, 32>
+    {
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        }
+    } .data() }
+    {
+        try
+        {
+            Initialize();
+        }
+        catch ( ... )
+        {
+            Finalize();
+            throw;
+        }
+    }
+
+    VulkanWindow::VulkanWindow ( const VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
+        Window { aWindowId }, mVulkanRenderer { aVulkanRenderer },
         mMatrices{aVulkanRenderer,
                   sizeof ( float ) * 32,
                   std::array<float, 32>
@@ -617,35 +646,5 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-    }
-
-    void VulkanWindow::Run ( Scene& aScene )
-    {
-#ifdef _WIN32
-        MSG msg;
-        bool done = false;
-        while ( !done )
-        {
-            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
-            {
-                if ( msg.message == WM_QUIT )
-                {
-                    done = true;
-                }
-                else
-                {
-                    TranslateMessage ( &msg );
-                    DispatchMessage ( &msg );
-                }
-            }
-            else
-            {
-                BeginRender();
-                Window::Render ( aScene );
-                EndRender();
-            }
-        }
-#else
-#endif
     }
 }

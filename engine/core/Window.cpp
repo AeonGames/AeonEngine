@@ -22,7 +22,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    DLL Window::~Window() = default;
+    Window::Window ( void* aWindowId ) : mWindowId{aWindowId} {}
+
     void Window::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
         mProjectionMatrix = aMatrix;
@@ -52,9 +53,6 @@ namespace AeonGames
     void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
-        //mProjectionMatrix.Frustum ( -mAspectRatio, mAspectRatio, -0.5, 0.5, 1, 1600 );
-        //mProjectionMatrix.Perspective ( /*53.1301f*/60.0f, mAspectRatio, 1, 1600 );
-        //mFrustum = mProjectionMatrix * mViewMatrix;
         OnResizeViewport ( aX, aY, aWidth, aHeight );
     }
 
