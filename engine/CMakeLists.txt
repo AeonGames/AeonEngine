@@ -129,6 +129,8 @@ set(ENGINE_CORE_SOURCES
     core/ResourceCache.cpp
     core/ProtoBufUtils.cpp
     core/Clock.cpp
+    core/windows.cpp
+    core/x11.cpp
     # core/Octree.cpp
     )
 

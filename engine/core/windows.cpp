@@ -1,0 +1,131 @@
+/*
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+#ifdef _WIN32
+#include <ctime>
+#include <ratio>
+#include <chrono>
+#include "aeongames/Platform.h"
+#include "aeongames/Window.h"
+#include "aeongames/Node.h"
+#include "aeongames/Scene.h"
+namespace AeonGames
+{
+    LRESULT CALLBACK AeonEngineWindowProc (
+        _In_ HWND   hwnd,
+        _In_ UINT   uMsg,
+        _In_ WPARAM wParam,
+        _In_ LPARAM lParam
+    )
+    {
+        switch ( uMsg )
+        {
+        case WM_CLOSE:
+        //DestroyWindow(hwnd);
+        //break;
+        case WM_DESTROY:
+            PostQuitMessage ( 0 );
+            break;
+        case WM_SIZE:
+        {
+            Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
+            window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            return 0;
+        }
+        default:
+            return DefWindowProc ( hwnd, uMsg, wParam, lParam );
+        }
+        return 0;
+    }
+
+    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
+    {
+        RECT rect = { aX, aY, static_cast<int32_t> ( aWidth ), static_cast<int32_t> ( aHeight ) };
+        WNDCLASSEX wcex;
+        wcex.cbSize = sizeof ( WNDCLASSEX );
+        wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wcex.lpfnWndProc = ( WNDPROC ) AeonEngineWindowProc;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
+        wcex.hInstance = GetModuleHandle ( nullptr );
+        wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
+        wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
+        wcex.hbrBackground = nullptr;
+        wcex.lpszMenuName = nullptr;
+        wcex.lpszClassName = "AeonEngine";
+        wcex.hIconSm = nullptr;
+        ATOM atom = RegisterClassEx ( &wcex );
+        mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+                                     MAKEINTATOM ( atom ), "AeonEngine",
+                                     WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                     rect.left, rect.top, // Location
+                                     rect.right - rect.left, rect.bottom - rect.top, // Dimensions
+                                     nullptr,
+                                     nullptr,
+                                     GetModuleHandle ( nullptr ),
+                                     nullptr );
+        SetWindowLongPtr ( reinterpret_cast<HWND> ( mWindowId ), GWLP_USERDATA, reinterpret_cast<LONG_PTR> ( this ) );
+    }
+    DLL Window::~Window()
+    {
+        ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
+        DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+        UnregisterClass ( reinterpret_cast<LPCSTR> (
+#if defined(_M_X64) || defined(__amd64__)
+                              0x0ULL +
+#endif
+                              MAKELONG ( atom, 0 ) ), nullptr );
+    }
+    void Window::Run ( Scene& aScene )
+    {
+        MSG msg;
+        bool done = false;
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
+        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        while ( !done )
+        {
+            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+            {
+                if ( msg.message == WM_QUIT )
+                {
+                    done = true;
+                }
+                else
+                {
+                    TranslateMessage ( &msg );
+                    DispatchMessage ( &msg );
+                }
+            }
+            else
+            {
+                std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
+                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+                aScene.Update ( delta.count() );
+                last_time = current_time;
+                if ( const Node* camera = aScene.GetCamera() )
+                {
+                    SetViewMatrix ( camera->GetGlobalTransform().GetInverted().GetMatrix() );
+                    Matrix4x4 projection {};
+                    projection.Perspective ( aScene.GetFieldOfView(), GetAspectRatio(), aScene.GetNear(), aScene.GetFar() );
+                    SetProjectionMatrix ( projection );
+                }
+                BeginRender();
+                Window::Render ( aScene );
+                EndRender();
+            }
+        }
+    }
+}
+#endif

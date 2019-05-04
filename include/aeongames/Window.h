@@ -30,9 +30,11 @@ namespace AeonGames
     class Window
     {
     public:
+        DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        DLL Window ( void* aWindowId );
         DLL virtual ~Window() = 0;
         DLL void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
-        virtual void Run ( Scene& aScene ) = 0;
+        DLL void Run ( Scene& aScene );
         ///@name Render Functions
         ///@{
         virtual void BeginRender() const = 0;
@@ -74,6 +76,7 @@ namespace AeonGames
         DLL const Frustum& GetFrustum() const;
     protected:
         virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
+        void* mWindowId{};
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
     private:
