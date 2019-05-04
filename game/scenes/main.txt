@@ -1,0 +1,70 @@
+AEONSCE
+name: "Scene"
+camera {
+  node: "Camera"
+  field_of_view: 60
+  near_plane: 1
+  far_plane: 16000
+}
+node {
+  name: "Camera"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      w: 6.12303177e-017
+      z: 1
+    }
+    Translation {
+      y: 200
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 60
+    }
+    property {
+      name: "Near Plane"
+      float: 1
+    }
+    property {
+      name: "Far Plane"
+      float: 16000
+    }
+  }
+}
+node {
+  name: "Banner"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      w: 1
+    }
+    Translation {
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      string: "Medieval/models/Banner_01.txt"
+    }
+    property {
+      name: "Active Animation"
+      unsigned_long_long: 0
+    }
+    property {
+      name: "Starting Frame"
+      double: 0
+    }
+  }
+}
