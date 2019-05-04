@@ -32,6 +32,9 @@ limitations under the License.
 #include <algorithm>
 #include <array>
 #include <utility>
+#include <ctime>
+#include <ratio>
+#include <chrono>
 
 namespace AeonGames
 {
@@ -466,6 +469,7 @@ namespace AeonGames
         MSG msg;
         bool done = false;
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
+        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
         while ( !done )
         {
             if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
@@ -492,7 +496,10 @@ namespace AeonGames
                     }
                 }
 #endif
-                aScene.Update ( 0 );
+                std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
+                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+                aScene.Update ( delta.count() );
+                last_time = current_time;
                 if ( const Node* camera = aScene.GetCamera() )
                 {
                     SetViewMatrix ( camera->GetGlobalTransform().GetInverted().GetMatrix() );
