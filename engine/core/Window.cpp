@@ -50,6 +50,7 @@ namespace AeonGames
     {
         return mFrustum;
     }
+
     void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );

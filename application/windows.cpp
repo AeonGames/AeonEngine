@@ -16,6 +16,7 @@ limitations under the License.
 #ifdef _WIN32
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/LogLevel.h"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -48,7 +49,6 @@ static std::tuple<std::vector<char*>, const std::string> GetArgs ( char* aCmdLin
     result{std::vector<char*>{}, std::regex_replace ( aCmdLine, whitespace, " " ) };
 
     size_t count{0};
-
     for ( size_t i = 0; i < std::get<1> ( result ).size(); ++i )
     {
         if ( std::get<1> ( result ) [i] == ' ' )

@@ -41,14 +41,19 @@ static void GetArgumentIntoString ( const char* aArgument, void* aUserData )
     }
 }
 
+static void ArgumentExists ( const char* aArgument, void* aUserData )
+{
+    *reinterpret_cast<bool*> ( aUserData ) = true;
+}
 
 int Main ( int argc, char *argv[] )
 {
     AeonGames::InitializeGlobalEnvironment (  argc, argv );
     {
+        bool fullscreen{false};
         std::string renderer_name{};
         std::string scene_path{};
-        std::array<AeonGames::OptionHandler, 2> option_handlers
+        std::array<AeonGames::OptionHandler, 3> option_handlers
         {
             AeonGames::OptionHandler{
                 'r',
@@ -61,6 +66,12 @@ int Main ( int argc, char *argv[] )
                 "scene",
                 GetArgumentIntoString,
                 &scene_path
+            },
+            AeonGames::OptionHandler{
+                'f',
+                "fullscreen",
+                ArgumentExists,
+                &fullscreen
             },
         };
 
@@ -93,7 +104,7 @@ int Main ( int argc, char *argv[] )
             scene.Load ( scene_path );
         }
 
-        auto window = renderer->CreateWindowInstance ( 0, 0, 640, 480, false );
+        auto window = renderer->CreateWindowInstance ( 0, 0, 640, 480, fullscreen );
         window->Run ( scene );
     }
     AeonGames::FinalizeGlobalEnvironment();
