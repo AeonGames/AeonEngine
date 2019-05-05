@@ -58,6 +58,14 @@ namespace AeonGames
         try
         {
             Initialize();
+#if _WIN32
+            if ( aFullScreen )
+            {
+                RECT rect;
+                GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
+                OnResizeViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
+            }
+#endif
         }
         catch ( ... )
         {
