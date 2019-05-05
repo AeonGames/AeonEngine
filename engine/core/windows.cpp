@@ -17,6 +17,7 @@ limitations under the License.
 #include <ctime>
 #include <ratio>
 #include <chrono>
+#include <iostream>
 #include "aeongames/Platform.h"
 #include "aeongames/Window.h"
 #include "aeongames/Node.h"
@@ -41,7 +42,10 @@ namespace AeonGames
         case WM_SIZE:
         {
             Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
-            window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            if ( window )
+            {
+                window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            }
             return 0;
         }
         default:
@@ -50,8 +54,35 @@ namespace AeonGames
         return 0;
     }
 
-    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
+    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+        mAspectRatio { static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) }
     {
+        DWORD dwExStyle{WS_EX_APPWINDOW | WS_EX_WINDOWEDGE};
+        DWORD dwStyle{WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN};
+        if ( aFullScreen )
+        {
+            dwExStyle = WS_EX_APPWINDOW;
+            dwStyle = {WS_POPUP};
+            DEVMODE device_mode{};
+            device_mode.dmSize = sizeof ( DEVMODE );
+            if ( EnumDisplaySettingsEx ( nullptr, ENUM_CURRENT_SETTINGS, &device_mode, 0 ) )
+            {
+                std::cout <<
+                          "Position: " << device_mode.dmPosition.x << " " << device_mode.dmPosition.y << std::endl <<
+                          "Display Orientation: " << device_mode.dmDisplayOrientation << std::endl <<
+                          "Display Flags: " << device_mode.dmDisplayFlags << std::endl <<
+                          "Display Frecuency: " << device_mode.dmDisplayFrequency << std::endl <<
+                          "Bits Per Pixel: " << device_mode.dmBitsPerPel << std::endl <<
+                          "Width: " << device_mode.dmPelsWidth << std::endl <<
+                          "Height: " << device_mode.dmPelsHeight << std::endl;
+                aX = device_mode.dmPosition.x;
+                aY = device_mode.dmPosition.y;
+                aWidth = device_mode.dmPelsWidth;
+                aHeight = device_mode.dmPelsHeight;
+                mAspectRatio = static_cast<float> ( aWidth ) / static_cast<float> ( aHeight );
+                ChangeDisplaySettings ( &device_mode, CDS_FULLSCREEN );
+            }
+        }
         RECT rect = { aX, aY, static_cast<int32_t> ( aWidth ), static_cast<int32_t> ( aHeight ) };
         WNDCLASSEX wcex;
         wcex.cbSize = sizeof ( WNDCLASSEX );
@@ -67,9 +98,9 @@ namespace AeonGames
         wcex.lpszClassName = "AeonEngine";
         wcex.hIconSm = nullptr;
         ATOM atom = RegisterClassEx ( &wcex );
-        mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+        mWindowId = CreateWindowEx ( dwExStyle,
                                      MAKEINTATOM ( atom ), "AeonEngine",
-                                     WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                     dwStyle,
                                      rect.left, rect.top, // Location
                                      rect.right - rect.left, rect.bottom - rect.top, // Dimensions
                                      nullptr,

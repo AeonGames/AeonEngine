@@ -28,10 +28,85 @@
                          ]
             },
             {
-                "name": "Game",
+                "name": "Game Window OpenGL",
                 "type": "cppdbg",
                 "request": "launch",
                 "args": ["-r","OpenGL","-s","scenes/main.txt"],
+                "stopAtEntry": false,
+                "cwd": "${CMAKE_SOURCE_DIR}",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"${DEBUG_PATH}"
+                    }                    
+                ],
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
+                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
+                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
+            },
+            {
+                "name": "Game FullScreen OpenGL",
+                "type": "cppdbg",
+                "request": "launch",
+                "args": ["-f","-r","OpenGL","-s","scenes/main.txt"],
+                "stopAtEntry": false,
+                "cwd": "${CMAKE_SOURCE_DIR}",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"${DEBUG_PATH}"
+                    }                    
+                ],
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
+                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
+                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
+            },
+            {
+                "name": "Game Window Vulkan",
+                "type": "cppdbg",
+                "request": "launch",
+                "args": ["-r","Vulkan","-s","scenes/main.txt"],
+                "stopAtEntry": false,
+                "cwd": "${CMAKE_SOURCE_DIR}",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"${DEBUG_PATH}"
+                    }                    
+                ],
+                "externalConsole": ${USE_EXTERNAL_CONSOLE},
+                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
+                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
+            },
+            {
+                "name": "Game FullScreen Vulkan",
+                "type": "cppdbg",
+                "request": "launch",
+                "args": ["-f","-r","Vulkan","-s","scenes/main.txt"],
                 "stopAtEntry": false,
                 "cwd": "${CMAKE_SOURCE_DIR}",
                 "environment": [
