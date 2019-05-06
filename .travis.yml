@@ -17,7 +17,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get upgrade -y --allow-unauthenticated
   - sudo apt-get dist-upgrade -y --allow-unauthenticated
-  - sudo apt-get install -y sed python3 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng12-dev vim-common git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev google-mock libglu1-mesa-dev freeglut3-dev mesa-common-dev
+  - sudo apt-get install -y sed python3 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng12-dev vim-common git portaudio19-dev libogg-dev libvorbis-dev libgtest-dev google-mock libglu1-mesa-dev freeglut3-dev mesa-common-dev libcairo2-dev
   # libprotobuf-dev protobuf-compiler mesa-vulkan-drivers vulkan-utils libvulkan1 libvulkan-dev
   # Install QT on its own to avoid build timeout
   - sudo apt-get install -y qt512-meta-minimal

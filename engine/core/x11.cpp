@@ -22,5 +22,8 @@ limitations under the License.
 namespace AeonGames
 {
     DLL Window::~Window() = default;
+    void Window::Run ( Scene& aScene )
+    {
+    }
 }
 #endif
