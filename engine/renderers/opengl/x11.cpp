@@ -22,12 +22,12 @@ limitations under the License.
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
-#include "math/3DMath.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLImage.h"
+#include "OpenGLWindow.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
