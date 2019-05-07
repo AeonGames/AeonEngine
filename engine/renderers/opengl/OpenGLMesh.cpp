@@ -57,7 +57,7 @@ namespace AeonGames
 #ifdef SINGLE_VAO
         BindBuffers();
 #else
-        glBindVertexArray ( mArray );
+        glBindVertexArray ( mVAO );
 #endif
     }
 
@@ -133,11 +133,10 @@ namespace AeonGames
 
         // OpenGL Specific Code:
         ///@todo Use OpenGLBuffer class instead of raw GL ids
-
 #ifndef SINGLE_VAO
-        glGenVertexArrays ( 1, &mArray );
+        glGenVertexArrays ( 1, &mVAO );
         OPENGL_CHECK_ERROR_THROW;
-        glBindVertexArray ( mArray );
+        glBindVertexArray ( mVAO );
         OPENGL_CHECK_ERROR_THROW;
 #endif
         glGenBuffers ( 1, &mVertexBuffer );
@@ -253,12 +252,12 @@ namespace AeonGames
     {
 #ifndef SINGLE_VAO
         OPENGL_CHECK_ERROR_NO_THROW;
-        if ( glIsVertexArray ( mArray ) )
+        if ( glIsVertexArray ( mVAO ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteVertexArrays ( 1, &mArray );
+            glDeleteVertexArrays ( 1, &mVAO );
             OPENGL_CHECK_ERROR_NO_THROW;
-            mArray = 0;
+            mVAO = 0;
         }
 #endif
         OPENGL_CHECK_ERROR_NO_THROW;

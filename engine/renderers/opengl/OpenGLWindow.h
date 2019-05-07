@@ -48,13 +48,13 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0 ) const final;
         const GLuint GetMatricesBuffer() const;
     private:
-        void Initialize();
-        void Finalize();
+        void InitializePlatform();
+        void InitializeCommon();
+        void FinalizeCommon();
+        void FinalizePlatform();
         const OpenGLRenderer& mOpenGLRenderer;
         mutable void* mDeviceContext{};
-#ifdef SINGLE_VAO
-        GLuint mVAO {};
-#endif
+        GLuint mVAO {}; ///< Only used on SINGLE_VAO configuration, but kept for structure consistency
         GLuint mMatricesBuffer {};
         bool mOwnsWindowId{ false };
         bool mFullScreen{ false };
