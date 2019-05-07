@@ -29,6 +29,10 @@ namespace AeonGames
         try
         {
             Initialize();
+            if ( !LoadOpenGLAPI() )
+            {
+                throw std::runtime_error ( "Unable to Load OpenGL functions." );
+            }
         }
         catch ( ... )
         {

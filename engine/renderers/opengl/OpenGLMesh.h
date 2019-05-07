@@ -53,9 +53,7 @@ namespace AeonGames
         uint32_t mVertexCount{};
         uint32_t mIndexCount{};
         uint32_t mIndexSize{};
-#ifndef SINGLE_VAO
-        GLuint mArray {};
-#endif
+        GLuint mVAO {}; ///< Only used on NON SINGLE_VAO configuration, but kept for structure consistency
         GLuint mVertexBuffer {};
         GLuint mIndexBuffer{};
     };
