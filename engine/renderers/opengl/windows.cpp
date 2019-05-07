@@ -163,27 +163,6 @@ namespace AeonGames
         {
             std::cout << "wglMakeCurrent Failed. Error: " << GetLastError() << std::endl;
         }
-        if ( !LoadOpenGLAPI() )
-        {
-            std::cout << "Unable to Load OpenGL functions." << std::endl;
-        }
-
-        glClearColor ( 0.5f, 0.5f, 0.5f, 0.0f );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_BLEND );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glDepthFunc ( GL_LESS );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_DEPTH_TEST );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glCullFace ( GL_BACK );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_CULL_FACE );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLRenderer::Finalize()
@@ -259,7 +238,7 @@ namespace AeonGames
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
         mDeviceContext = nullptr;
     }
-    void OpenGLWindow::Initialize()
+    void OpenGLWindow::InitializePlatform()
     {
         HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
         PIXELFORMATDESCRIPTOR pfd{};
@@ -278,71 +257,10 @@ namespace AeonGames
         GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
         glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
-
-        glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_BLEND );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glDepthFunc ( GL_LESS );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_DEPTH_TEST );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glCullFace ( GL_BACK );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glEnable ( GL_CULL_FACE );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        OPENGL_CHECK_ERROR_NO_THROW;
-
-        // Initialize Matrix Buffer
-        glGenBuffers ( 1, &mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        float matrices[48] =
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
-                       matrices, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLWindow::Finalize()
+    void OpenGLWindow::FinalizePlatform()
     {
-        if ( glIsBuffer ( mMatricesBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteBuffers ( 1, &mMatricesBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mMatricesBuffer = 0;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
-#ifdef SINGLE_VAO
-        if ( glIsVertexArray ( mVAO ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteVertexArrays ( 1, &mVAO );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mVAO = 0;
-        }
-#endif
-        OPENGL_CHECK_ERROR_NO_THROW;
         if ( mOwnsWindowId )
         {
             HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );

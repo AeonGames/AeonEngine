@@ -35,16 +35,92 @@ limitations under the License.
 
 namespace AeonGames
 {
+    void OpenGLWindow::InitializeCommon()
+    {
+#ifdef SINGLE_VAO
+        glGenVertexArrays ( 1, &mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindVertexArray ( mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+#endif
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        OPENGL_CHECK_ERROR_THROW;
+        glEnable ( GL_BLEND );
+        OPENGL_CHECK_ERROR_THROW;
+        glDepthFunc ( GL_LESS );
+        OPENGL_CHECK_ERROR_THROW;
+        glEnable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_THROW;
+        glCullFace ( GL_BACK );
+        OPENGL_CHECK_ERROR_THROW;
+        glEnable ( GL_CULL_FACE );
+        OPENGL_CHECK_ERROR_THROW;
+        /// @todo Initial clear color should be configurable.
+        glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
+        OPENGL_CHECK_ERROR_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_THROW;
+
+        // Initialize Matrix Buffer
+        glGenBuffers ( 1, &mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        float matrices[48] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        };
+        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
+                       matrices, GL_DYNAMIC_DRAW );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+    }
+
+    void OpenGLWindow::FinalizeCommon()
+    {
+        if ( glIsBuffer ( mMatricesBuffer ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteBuffers ( 1, &mMatricesBuffer );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mMatricesBuffer = 0;
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
+#ifdef SINGLE_VAO
+        if ( glIsVertexArray ( mVAO ) )
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteVertexArrays ( 1, &mVAO );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mVAO = 0;
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
+#endif
+    }
+
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer ( aOpenGLRenderer ), mOwnsWindowId{ true }, mFullScreen{aFullScreen}
     {
         try
         {
-            Initialize();
+            InitializePlatform();
+            InitializeCommon();
         }
         catch ( ... )
         {
-            Finalize();
+            FinalizeCommon();
+            FinalizePlatform();
             throw;
         }
     }
@@ -53,18 +129,21 @@ namespace AeonGames
     {
         try
         {
-            Initialize();
+            InitializePlatform();
+            InitializeCommon();
         }
         catch ( ... )
         {
-            Finalize();
+            FinalizeCommon();
+            FinalizePlatform();
             throw;
         }
     }
 
     OpenGLWindow::~OpenGLWindow()
     {
-        Finalize();
+        FinalizeCommon();
+        FinalizePlatform();
     }
 
     void* OpenGLWindow::GetWindowId() const
