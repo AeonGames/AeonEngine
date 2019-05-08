@@ -66,11 +66,11 @@ namespace AeonGames
         wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
         wcex.hbrBackground = nullptr;
         wcex.lpszMenuName = nullptr;
-        wcex.lpszClassName = "glUnitTest";
+        wcex.lpszClassName = "AeonEngineOpenGLInternalWindow";
         wcex.hIconSm = nullptr;
         ATOM atom = RegisterClassEx ( &wcex );
         mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
-                                     MAKEINTATOM ( atom ), "OpenGL Unit Testing Window",
+                                     MAKEINTATOM ( atom ), "AeonEngine OpenGL Internal Window",
                                      WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                      0, 0, // Location
                                      rect.right - rect.left, rect.bottom - rect.top, // dimensions
@@ -157,8 +157,7 @@ namespace AeonGames
             DestroyWindow ( static_cast<HWND> ( mWindowId ) );
             throw std::runtime_error ( "WGL_ARB_create_context is not available" );
         }
-
-        // Get New OpenGL API
+        // Make OpenGL Context current.
         if ( !wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLContext ) ) )
         {
             std::cout << "wglMakeCurrent Failed. Error: " << GetLastError() << std::endl;
@@ -187,10 +186,8 @@ namespace AeonGames
     {
         if ( aWidth && aHeight )
         {
-            HDC hdc = GetDC ( reinterpret_cast<HWND> ( mWindowId ) );
-            wglMakeCurrent ( hdc, reinterpret_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+            wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
-            ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), hdc );
             glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
@@ -198,13 +195,6 @@ namespace AeonGames
 
     void OpenGLWindow::BeginRender() const
     {
-        if ( mDeviceContext )
-        {
-            EndRender();
-            std::cout << LogLevel::Error << "BeginRender call without a previous EndRender call." << std::endl;
-            return;
-        }
-        mDeviceContext = reinterpret_cast<void*> ( GetDC ( reinterpret_cast<HWND> ( mWindowId ) ) );
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -229,18 +219,12 @@ namespace AeonGames
 
     void OpenGLWindow::EndRender() const
     {
-        if ( !mDeviceContext )
-        {
-            std::cout << LogLevel::Error << "EndRender call without a previous BeginRender call." << std::endl;
-            return;
-        }
         SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
-        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
-        mDeviceContext = nullptr;
     }
+
     void OpenGLWindow::InitializePlatform()
     {
-        HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
+        mDeviceContext = reinterpret_cast<void*> ( GetDC ( static_cast<HWND> ( mWindowId ) ) );
         PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
@@ -249,10 +233,9 @@ namespace AeonGames
         pfd.cColorBits = 32;
         pfd.cDepthBits = 32;
         pfd.iLayerType = PFD_MAIN_PLANE;
-        int pf = ChoosePixelFormat ( hdc, &pfd );
-        SetPixelFormat ( hdc, pf, &pfd );
-        wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
-        ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
+        int pf = ChoosePixelFormat ( reinterpret_cast<HDC> ( mDeviceContext ), &pfd );
+        SetPixelFormat ( reinterpret_cast<HDC> ( mDeviceContext ), pf, &pfd );
+        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
         RECT rect;
         GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
         glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
@@ -261,14 +244,9 @@ namespace AeonGames
 
     void OpenGLWindow::FinalizePlatform()
     {
-        if ( mOwnsWindowId )
-        {
-            HDC hdc = GetDC ( static_cast<HWND> ( mWindowId ) );
-            wglMakeCurrent ( hdc, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            wglMakeCurrent ( hdc, nullptr );
-            ReleaseDC ( static_cast<HWND> ( mWindowId ), hdc );
-        }
+        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), nullptr );
+        ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
+        mDeviceContext = nullptr;
     }
 }
 #endif

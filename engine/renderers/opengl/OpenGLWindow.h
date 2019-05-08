@@ -55,6 +55,9 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         mutable void* mDeviceContext{};
         GLuint mVAO {}; ///< Only used on SINGLE_VAO configuration, but kept for structure consistency
+        GLuint mFBO {};
+        GLuint mColorBuffer {};
+        GLuint mRBO {};
         GLuint mMatricesBuffer {};
         bool mOwnsWindowId{ false };
         bool mFullScreen{ false };
