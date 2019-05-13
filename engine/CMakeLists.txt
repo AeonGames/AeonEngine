@@ -226,13 +226,3 @@ add_subdirectory(renderers/vulkan)
 add_subdirectory(images)
 add_subdirectory(sound/portaudio)
 add_subdirectory(sound/oggvorbis)
-
-# UI Plugin
-if(PKG_CONFIG_FOUND)
-  pkg_check_modules(CAIRO cairo)
-  if(CAIRO_FOUND)
-    # message(STATUS "Found Cairo.")
-  else()
-    # message(STATUS "Cairo not found.")
-  endif()
-endif()
