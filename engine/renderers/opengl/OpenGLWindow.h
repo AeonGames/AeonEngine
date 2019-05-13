@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Memory.h"
 #include "aeongames/Window.h"
 #include "OpenGLFunctions.h"
+#include "OpenGLBuffer.h"
 
 namespace AeonGames
 {
@@ -58,6 +59,8 @@ namespace AeonGames
         GLuint mFBO {};
         GLuint mColorBuffer {};
         GLuint mRBO {};
+        GLuint mProgram{};
+        OpenGLBuffer mScreenQuad{};
         GLuint mMatricesBuffer {};
         bool mOwnsWindowId{ false };
         bool mFullScreen{ false };
