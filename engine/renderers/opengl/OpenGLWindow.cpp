@@ -35,6 +35,51 @@ limitations under the License.
 
 namespace AeonGames
 {
+    const GLchar vertex_shader_code[] =
+        R"(#version 450 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoords;
+
+out vec2 Pos;
+out vec2 TexCoords;
+
+void main()
+{
+    gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0); 
+    Pos = aPos;
+    TexCoords = aTexCoords;
+}
+)";
+const GLint vertex_shader_len { sizeof(vertex_shader_code) /*/ sizeof(vertex_shader_code[0])*/};
+const GLchar* const vertex_shader_code_ptr = vertex_shader_code;
+
+const GLchar fragment_shader_code[] =
+R"(#version 450 core
+out vec4 FragColor;
+  
+in vec2 Pos;
+in vec2 TexCoords;
+
+layout (location = 0) uniform sampler2D screenTexture;
+
+void main()
+{ 
+    //FragColor = vec4((Pos.x+1.0)/2,(Pos.y+1.0)/2,0,1);
+    FragColor = texture(screenTexture, TexCoords);
+}
+)";
+const GLint fragment_shader_len { sizeof(fragment_shader_code) /*/ sizeof(fragment_shader_code[0])*/};
+const GLchar* const fragment_shader_code_ptr = fragment_shader_code;
+
+const float vertices[] = {  
+    // positions   // texCoords
+    -1.0f,  1.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f,  0.0f, 0.0f,
+    1.0f, -1.0f,  1.0f, 0.0f,
+    1.0f,  1.0f,  1.0f, 1.0f
+};
+const GLuint vertex_size{sizeof(vertices)};
+
     void OpenGLWindow::InitializeCommon()
     {
 #ifdef SINGLE_VAO
@@ -83,6 +128,77 @@ namespace AeonGames
 
         glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
         OPENGL_CHECK_ERROR_THROW;
+//----------------------------------------------------------------
+    GLint compile_status{};
+    mProgram = glCreateProgram();
+    OPENGL_CHECK_ERROR_THROW;
+    GLuint vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
+    OPENGL_CHECK_ERROR_THROW;
+    glShaderSource (vertex_shader,1,&vertex_shader_code_ptr,&vertex_shader_len );
+    OPENGL_CHECK_ERROR_THROW;
+    glCompileShader ( vertex_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    glGetShaderiv ( vertex_shader, GL_COMPILE_STATUS, &compile_status );
+    OPENGL_CHECK_ERROR_THROW;
+    if ( compile_status != GL_TRUE )
+    {
+        GLint info_log_len;
+        glGetShaderiv ( vertex_shader, GL_INFO_LOG_LENGTH, &info_log_len );
+        OPENGL_CHECK_ERROR_THROW;
+        std::string log_string;
+        log_string.resize ( info_log_len );
+        if ( info_log_len > 1 )
+        {
+            glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+            OPENGL_CHECK_ERROR_THROW;
+            std::cout << vertex_shader_code << std::endl;
+            std::cout << log_string << std::endl;
+        }
+    }
+    glAttachShader ( mProgram, vertex_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    //-------------------------
+    uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
+    OPENGL_CHECK_ERROR_THROW;
+    glShaderSource ( fragment_shader, 1, &fragment_shader_code_ptr, &fragment_shader_len );
+    OPENGL_CHECK_ERROR_THROW;
+    glCompileShader ( fragment_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    glGetShaderiv ( fragment_shader, GL_COMPILE_STATUS, &compile_status );
+    OPENGL_CHECK_ERROR_THROW;
+    if ( compile_status != GL_TRUE )
+    {
+        GLint info_log_len;
+        glGetShaderiv ( fragment_shader, GL_INFO_LOG_LENGTH, &info_log_len );
+        OPENGL_CHECK_ERROR_THROW;
+        std::string log_string;
+        log_string.resize ( info_log_len );
+        if ( info_log_len > 1 )
+        {
+            glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+            OPENGL_CHECK_ERROR_THROW;
+            std::cout << fragment_shader_code << std::endl;
+            std::cout << log_string << std::endl;
+        }
+    }
+    glAttachShader ( mProgram, fragment_shader );
+    OPENGL_CHECK_ERROR_THROW;
+
+    glLinkProgram ( mProgram );
+    OPENGL_CHECK_ERROR_THROW;
+    glDetachShader ( mProgram, vertex_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    glDetachShader ( mProgram, fragment_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    glDeleteShader ( vertex_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    glDeleteShader ( fragment_shader );
+    OPENGL_CHECK_ERROR_THROW;
+    glUseProgram(mProgram);
+    OPENGL_CHECK_ERROR_THROW;
+    glUniform1i ( 0, 0 );
+    OPENGL_CHECK_ERROR_THROW;
+//----------------------------------------------------------------
 
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
         OPENGL_CHECK_ERROR_THROW;
@@ -125,6 +241,7 @@ namespace AeonGames
         glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
                        matrices, GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_NO_THROW;
+        mScreenQuad.Initialize(vertex_size, GL_STATIC_DRAW, vertices);
     }
 
     void OpenGLWindow::FinalizeCommon()
@@ -152,6 +269,16 @@ namespace AeonGames
         }
         OPENGL_CHECK_ERROR_NO_THROW;
 
+        if(glIsProgram(mProgram))
+        {
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glUseProgram(0);
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glDeleteProgram(mProgram);
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mProgram = 0;
+        }
+
         if ( glIsBuffer ( mMatricesBuffer ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -160,6 +287,8 @@ namespace AeonGames
             mMatricesBuffer = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
+
+        mScreenQuad.Finalize();
 #ifdef SINGLE_VAO
         if ( glIsVertexArray ( mVAO ) )
         {

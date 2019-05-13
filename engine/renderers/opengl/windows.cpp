@@ -189,15 +189,26 @@ namespace AeonGames
             wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
             OPENGL_CHECK_ERROR_NO_THROW;
             glViewport ( aX, aY, aWidth, aHeight );
-            OPENGL_CHECK_ERROR_NO_THROW;
+            OPENGL_CHECK_ERROR_THROW;
+            glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, aWidth, aHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
+            OPENGL_CHECK_ERROR_THROW;
+            glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, aWidth, aHeight );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
+            OPENGL_CHECK_ERROR_THROW;
         }
     }
 
     void OpenGLWindow::BeginRender() const
     {
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
+        glEnable ( GL_DEPTH_TEST );
         Matrix4x4 projection_matrix =
             mProjectionMatrix * Matrix4x4
         {
@@ -219,6 +230,17 @@ namespace AeonGames
 
     void OpenGLWindow::EndRender() const
     {
+        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+        glClear ( GL_COLOR_BUFFER_BIT );
+        glDisable ( GL_DEPTH_TEST );
+        glUseProgram ( mProgram );
+        glBindBuffer ( GL_ARRAY_BUFFER, mScreenQuad.GetBufferId() );
+        glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+        glEnableVertexAttribArray ( 0 );
+        glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, 0 );
+        glEnableVertexAttribArray ( 1 );
+        glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, reinterpret_cast<const void*> ( sizeof ( float ) * 2 ) );
+        glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
     }
 
