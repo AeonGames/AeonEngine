@@ -47,9 +47,6 @@ namespace AeonGames
         mTranslation.Get ( aData + 7 );
     }
 
-    Transform::~Transform()
-        = default;
-
     const Vector3& Transform::GetScale() const
     {
         return mScale;

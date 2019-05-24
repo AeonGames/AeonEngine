@@ -66,7 +66,7 @@ namespace AeonGames
         return *this *= GetRotationMatrix ( angle, x, y, z );
     }
 
-    Matrix3x3& Matrix3x3::operator *= ( const Matrix3x3& lhs )
+    Matrix3x3& Matrix3x3::operator *= ( const Matrix3x3& aRight )
     {
         // Item 22 from MEC++
         float local[9]
@@ -77,17 +77,17 @@ namespace AeonGames
         };
 
         // Column mayor (OpenGL way)
-        mMatrix[0] = local[0] * lhs.mMatrix[0] + local[3] * lhs.mMatrix[1] + local[6] * lhs.mMatrix[2];
-        mMatrix[1] = local[1] * lhs.mMatrix[0] + local[4] * lhs.mMatrix[1] + local[7] * lhs.mMatrix[2];
-        mMatrix[2] = local[2] * lhs.mMatrix[0] + local[5] * lhs.mMatrix[1] + local[8] * lhs.mMatrix[2];
+        mMatrix[0] = local[0] * aRight.mMatrix[0] + local[3] * aRight.mMatrix[1] + local[6] * aRight.mMatrix[2];
+        mMatrix[1] = local[1] * aRight.mMatrix[0] + local[4] * aRight.mMatrix[1] + local[7] * aRight.mMatrix[2];
+        mMatrix[2] = local[2] * aRight.mMatrix[0] + local[5] * aRight.mMatrix[1] + local[8] * aRight.mMatrix[2];
 
-        mMatrix[3] = local[0] * lhs.mMatrix[3] + local[3] * lhs.mMatrix[4] + local[6] * lhs.mMatrix[5];
-        mMatrix[4] = local[1] * lhs.mMatrix[3] + local[4] * lhs.mMatrix[4] + local[7] * lhs.mMatrix[5];
-        mMatrix[5] = local[2] * lhs.mMatrix[3] + local[5] * lhs.mMatrix[4] + local[8] * lhs.mMatrix[5];
+        mMatrix[3] = local[0] * aRight.mMatrix[3] + local[3] * aRight.mMatrix[4] + local[6] * aRight.mMatrix[5];
+        mMatrix[4] = local[1] * aRight.mMatrix[3] + local[4] * aRight.mMatrix[4] + local[7] * aRight.mMatrix[5];
+        mMatrix[5] = local[2] * aRight.mMatrix[3] + local[5] * aRight.mMatrix[4] + local[8] * aRight.mMatrix[5];
 
-        mMatrix[6] = local[0] * lhs.mMatrix[6] + local[3] * lhs.mMatrix[7] + local[6] * lhs.mMatrix[8];
-        mMatrix[7] = local[1] * lhs.mMatrix[6] + local[4] * lhs.mMatrix[7] + local[7] * lhs.mMatrix[8];
-        mMatrix[8] = local[2] * lhs.mMatrix[6] + local[5] * lhs.mMatrix[7] + local[8] * lhs.mMatrix[8];
+        mMatrix[6] = local[0] * aRight.mMatrix[6] + local[3] * aRight.mMatrix[7] + local[6] * aRight.mMatrix[8];
+        mMatrix[7] = local[1] * aRight.mMatrix[6] + local[4] * aRight.mMatrix[7] + local[7] * aRight.mMatrix[8];
+        mMatrix[8] = local[2] * aRight.mMatrix[6] + local[5] * aRight.mMatrix[7] + local[8] * aRight.mMatrix[8];
 
         return *this;
     }
