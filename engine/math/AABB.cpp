@@ -26,7 +26,6 @@ namespace AeonGames
     AABB::AABB ( const Vector3 & aCenter, const Vector3 & aRadii ) : mCenter ( aCenter ), mRadii ( aRadii )
     {
     }
-    AABB::~AABB() = default;
     const Vector3 & AABB::GetCenter() const
     {
         return mCenter;

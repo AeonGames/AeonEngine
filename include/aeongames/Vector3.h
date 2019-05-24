@@ -40,8 +40,6 @@ namespace AeonGames
         DLL Vector3 ( const float* const aVector );
         DLL Vector3 ( const void* const aVector, const uint32_t aStride );
         DLL Vector3 ( float aX, float aY, float aZ );
-        /// destructor.
-        DLL ~Vector3();
         DLL void Get ( float* aData ) const;
         DLL const float* const GetVector3() const;
         DLL const float& GetX() const;

@@ -40,8 +40,6 @@ namespace AeonGames
         DLL Transform ( const float* aData );
         DLL void Get ( float* aData ) const;
 
-        /// destructor.
-        DLL ~Transform();
         DLL const Vector3& GetScale() const;
         DLL const Quaternion& GetRotation() const;
         DLL const Vector3& GetTranslation() const;
@@ -119,7 +117,6 @@ namespace AeonGames
 
     protected:
         /// Scale rotation and translation
-        //float srt[10];
         Vector3 mScale{1, 1, 1};
         Quaternion mRotation{1, 0, 0, 0};
         Vector3 mTranslation{0, 0, 0};

@@ -36,8 +36,6 @@ namespace AeonGames
         ///@brief Default constructor.
         DLL AABB();
         DLL AABB ( const Vector3& aCenter, const Vector3& aRadii );
-        /// destructor.
-        DLL ~AABB();
         DLL const Vector3& GetCenter() const;
         DLL const Vector3& GetRadii() const;
         DLL void SetCenter ( const Vector3& aCenter );
