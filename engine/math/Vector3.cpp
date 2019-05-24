@@ -94,9 +94,6 @@ namespace AeonGames
         mVector[2] = aZ;
     }
 
-    Vector3::~Vector3()
-        = default;
-
     void Vector3::Get ( float* aData ) const
     {
         memcpy ( aData, mVector, sizeof ( float ) * 3 );
