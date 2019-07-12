@@ -22,7 +22,6 @@ limitations under the License.
 #include <cassert>
 #include <cstring>
 #include "aeongames/ProtoBufClasses.h"
-#include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -31,6 +30,8 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "ProtoBufHelpers.h"
+
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
 #include "OpenGLFunctions.h"

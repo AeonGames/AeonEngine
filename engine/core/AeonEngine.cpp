@@ -18,7 +18,6 @@ limitations under the License.
 #include <memory>
 
 #include "aeongames/ProtoBufClasses.h"
-#include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -28,6 +27,8 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+#include "ProtoBufHelpers.h"
+
 #include "aeongames/Plugin.h"
 #include "aeongames/Node.h"
 #include "aeongames/AeonEngine.h"
@@ -129,7 +130,8 @@ namespace AeonGames
         OptionHandler{
             'c',
             "config",
-            [] ( const char* aArgument, void* aUserData ) -> void {if ( aArgument )
+            [] ( const char* aArgument, void* aUserData ) -> void {
+                if ( aArgument )
                 {
                     std::cout << LogLevel::Info << "Reading Configuration from " << aArgument << std::endl;
                     gConfigFile = aArgument;
