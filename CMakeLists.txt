@@ -511,7 +511,7 @@ set(COVER_POINTSIZE "250"
     CACHE STRING "Font pointsize for the create-cover target")
 add_custom_target(create-cover
                   COMMAND "${ImageMagick_convert_EXECUTABLE}" -size 1920x1080
-                          xc:none -background transparent -font Righteous
+                          xc:none -background transparent -font Ego
                           -gravity center -pointsize ${COVER_POINTSIZE} -fill
                           none -stroke SteelBlue4 -strokewidth 10 -draw \"text
                           0,0 \'`date \+\"%B %d %Y\"`\'\" -blur 0x10 -pointsize
