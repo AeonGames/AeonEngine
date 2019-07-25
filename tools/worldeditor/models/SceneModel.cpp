@@ -165,7 +165,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    destination->Insert ( destinationRow + i, source );
+                    destination->Insert ( destinationRow + i, source->RemoveByIndex ( sourceRow ) );
                 }
                 endMoveRows();
             }
@@ -182,7 +182,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    mScene.Insert ( destinationRow, source );
+                    mScene.Insert ( destinationRow + i, source->RemoveByIndex ( sourceRow ) );
                 }
                 endMoveRows();
             }
@@ -199,8 +199,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    Node* node = mScene.GetChild ( sourceRow );
-                    destination->Insert ( destinationRow, node );
+                    destination->Insert ( destinationRow + i, mScene.RemoveByIndex ( sourceRow ) );
                 }
                 endMoveRows();
             }
@@ -216,8 +215,7 @@ namespace AeonGames
             {
                 for ( int i = 0; i < count; ++i )
                 {
-                    Node* node = mScene.GetChild ( sourceRow );
-                    mScene.Insert ( destinationRow, node );
+                    mScene.Insert ( destinationRow + i, mScene.RemoveByIndex ( sourceRow ) );
                 }
                 endMoveRows();
             }
@@ -298,11 +296,11 @@ namespace AeonGames
         beginInsertRows ( parent, row, row );
         if ( parent.isValid() )
         {
-            reinterpret_cast<Node*> ( parent.internalPointer() )->Insert ( static_cast<size_t> ( row ), mScene.StoreNode ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() ) );
+            reinterpret_cast<Node*> ( parent.internalPointer() )->Insert ( static_cast<size_t> ( row ), ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() ) );
         }
         else
         {
-            mScene.Insert ( static_cast<size_t> ( row ), mScene.StoreNode ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() ) );
+            mScene.Insert ( static_cast<size_t> ( row ), ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() ) );
         }
         endInsertRows();
     }
@@ -312,15 +310,11 @@ namespace AeonGames
         beginRemoveRows ( parent, row, row );
         if ( parent.isValid() )
         {
-            Node* node = reinterpret_cast<Node*> ( parent.internalPointer() )->GetChild ( static_cast<size_t> ( row ) );
             reinterpret_cast<Node*> ( parent.internalPointer() )->RemoveByIndex ( static_cast<size_t> ( row ) );
-            mScene.DisposeNode ( node );
         }
         else
         {
-            Node* node = mScene.GetChild ( static_cast<size_t> ( row ) );
             mScene.RemoveByIndex ( static_cast<size_t> ( row ) );
-            mScene.DisposeNode ( node );
         }
         endRemoveRows();
     }

@@ -49,10 +49,10 @@ namespace AeonGames
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void SetName ( const char* aName );
         DLL const char* const GetName() const;
-        DLL bool Add ( Node* aNode );
-        DLL bool Insert ( size_t aIndex, Node* aNode );
-        DLL bool Remove ( Node* aNode );
-        DLL bool RemoveByIndex ( size_t aIndex );
+        DLL Node* Add ( std::unique_ptr<Node> aNode );
+        DLL Node* Insert ( size_t aIndex, std::unique_ptr<Node> aNode );
+        DLL std::unique_ptr<Node> Remove ( Node* aNode );
+        DLL std::unique_ptr<Node> RemoveByIndex ( size_t aIndex );
         DLL size_t GetChildrenCount() const;
         DLL Node* GetChild ( size_t aIndex ) const;
         DLL size_t GetChildIndex ( const Node* aNode ) const;
@@ -81,8 +81,6 @@ namespace AeonGames
         DLL Node* Find ( const std::function<bool ( const Node& ) >& aUnaryPredicate ) const;
         DLL std::string Serialize ( bool aAsBinary = true ) const;
         DLL void Deserialize ( const std::string& aSerializedScene );
-        DLL Node* StoreNode ( std::unique_ptr<Node> aNode );
-        DLL std::unique_ptr<Node> DisposeNode ( const Node* aNode );
         /** @name Camera Data */
         /**@{*/
         /** Set rendering camera
@@ -108,8 +106,9 @@ namespace AeonGames
         float mNear{1.0f};
         float mFar{1600.0f};
         std::string mName{};
-        /// Child Nodes
-        std::vector<Node*> mNodes{};
+        /// Children Nodes
+        std::vector<std::unique_ptr<Node>> mNodes{};
+#if 0
         /** Local Node Storage
          * This is a storage space for nodes
          * owned by the scene, such as deserialized
@@ -119,7 +118,8 @@ namespace AeonGames
          * nodes in the tree, nor does a pointer existing
          * here means it exists as part of the tree. */
         std::vector<std::unique_ptr<Node>> mNodeStorage{};
-        Node* mCamera{};
+#endif
+        Node* mCamera {};
     };
 }
 #endif

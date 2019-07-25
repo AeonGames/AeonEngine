@@ -42,6 +42,11 @@ namespace AeonGames
 
     void MainWindow::on_actionExit_triggered()
     {
+        mdiArea->closeAllSubWindows();
+        for ( auto* i : mdiArea->subWindowList() )
+        {
+            delete i;
+        }
         close();
     }
 
