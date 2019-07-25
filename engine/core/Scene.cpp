@@ -51,7 +51,7 @@ namespace AeonGames
     {
         for ( auto & mRootNode : mNodes )
         {
-            Remove ( mRootNode );
+            Remove ( mRootNode.get() );
         }
     }
 
@@ -152,15 +152,15 @@ namespace AeonGames
 
     Node* Scene::GetChild ( size_t aIndex ) const
     {
-        return mNodes.at ( aIndex );
+        return mNodes.at ( aIndex ).get();
     }
 
     size_t Scene::GetChildIndex ( const Node* aNode ) const
     {
         auto index = std::find_if ( mNodes.begin(), mNodes.end(),
-                                    [aNode] ( const Node * node )
+                                    [aNode] ( const std::unique_ptr<Node>& node )
         {
-            return node == aNode;
+            return node.get() == aNode;
         } );
         if ( index != mNodes.end() )
         {
@@ -223,7 +223,7 @@ namespace AeonGames
     {
         for ( const auto& mRootNode : mNodes )
         {
-            static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPreOrder ( aAction );
+            static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPreOrder ( aAction );
         }
     }
 
@@ -239,7 +239,7 @@ namespace AeonGames
     {
         for ( const auto& mRootNode : mNodes )
         {
-            static_cast<const Node*> ( mRootNode )->LoopTraverseDFSPostOrder ( aAction );
+            static_cast<const Node*> ( mRootNode.get() )->LoopTraverseDFSPostOrder ( aAction );
         }
     }
 
@@ -247,7 +247,7 @@ namespace AeonGames
     {
         for ( const auto& mRootNode : mNodes )
         {
-            if ( Node* node = static_cast<Node*> ( mRootNode )->Find ( aUnaryPredicate ) )
+            if ( Node* node = static_cast<Node*> ( mRootNode.get() )->Find ( aUnaryPredicate ) )
             {
                 return node;
             }
@@ -271,99 +271,102 @@ namespace AeonGames
         }
     }
 
-    bool Scene::Insert ( size_t aIndex, Node* aNode )
+    Node* Scene::Insert ( size_t aIndex, std::unique_ptr<Node> aNode )
     {
-        // Never append null or duplicate pointers.
-        if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
+        // Never append null pointers.
+        if ( aNode == nullptr )
         {
-            std::visit ( [aNode] ( auto&& parent )
-            {
-                if ( parent != nullptr )
-                {
-                    if ( !parent->Remove ( aNode ) )
-                    {
-                        std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
-                    }
-                }
-            },
-            aNode->mParent );
-
-            aNode->mParent = this;
-            if ( aIndex < mNodes.size() )
-            {
-                mNodes.insert ( mNodes.begin() + aIndex, aNode );
-            }
-            else
-            {
-                mNodes.emplace_back ( aNode );
-            }
-            // Force a recalculation of the LOCAL transform
-            // by setting the GLOBAL transform to itself.
-            aNode->SetGlobalTransform ( aNode->mGlobalTransform );
-            return true;
+            return nullptr;
         }
-        return false;
+        std::visit ( [&aNode] ( auto&& parent )
+        {
+            if ( parent != nullptr )
+            {
+                if ( !parent->Remove ( aNode.get() ) )
+                {
+                    std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                }
+            }
+        },
+        aNode->mParent );
+        aNode->mParent = this;
+        std::vector<std::unique_ptr<Node>>::iterator inserted_node;
+        if ( aIndex < mNodes.size() )
+        {
+            inserted_node = mNodes.insert ( mNodes.begin() + aIndex, std::move ( aNode ) );
+        }
+        else
+        {
+            inserted_node = mNodes.insert ( mNodes.end(), std::move ( aNode ) );
+        }
+        // Force a recalculation of the LOCAL transform
+        // by setting the GLOBAL transform to itself.
+        ( *inserted_node )->SetGlobalTransform ( ( *inserted_node )->mGlobalTransform );
+        return ( *inserted_node ).get();
     }
 
-    bool Scene::Add ( Node* aNode )
+    Node* Scene::Add ( std::unique_ptr<Node> aNode )
     {
-        // Never append null or this pointers.
-        if ( ( aNode != nullptr ) && ( std::find ( mNodes.begin(), mNodes.end(), aNode ) == mNodes.end() ) )
+        // Never append null pointers.
+        if ( aNode == nullptr )
         {
-            std::visit ( [aNode] ( auto&& parent )
-            {
-                if ( parent != nullptr )
-                {
-                    if ( !parent->Remove ( aNode ) )
-                    {
-                        std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
-                    }
-                }
-            },
-            aNode->mParent );
-            aNode->mParent = this;
-            mNodes.emplace_back ( aNode );
-            // Force a recalculation of the LOCAL transform
-            // by setting the GLOBAL transform to itself.
-            aNode->SetGlobalTransform ( aNode->mGlobalTransform );
-            return true;
+            return nullptr;
         }
-        return false;
+        std::visit ( [&aNode] ( auto&& parent )
+        {
+            if ( parent != nullptr )
+            {
+                if ( !parent->Remove ( aNode.get() ) )
+                {
+                    std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                }
+            }
+        },
+        aNode->mParent );
+        aNode->mParent = this;
+        mNodes.emplace_back ( std::move ( aNode ) );
+        // Force a recalculation of the LOCAL transform
+        // by setting the GLOBAL transform to itself.
+        mNodes.back()->SetGlobalTransform ( mNodes.back()->mGlobalTransform );
+        return mNodes.back().get();
     }
 
-    bool Scene::Remove ( Node* aNode )
+    std::unique_ptr<Node> Scene::Remove ( Node* aNode )
     {
         if ( aNode == nullptr )
         {
-            return false;
+            return nullptr;
         }
         // If passed a null or this pointer find SHOULD not find it on release builds.
         auto it = std::find_if ( mNodes.begin(), mNodes.end(),
-                                 [aNode] ( const Node * node )
+                                 [aNode] ( const std::unique_ptr<Node>& node )
         {
-            return aNode == node;
+            return aNode == node.get();
         } );
         if ( it != mNodes.end() )
         {
             // Force recalculation of transforms.
             aNode->mParent = static_cast<Node*> ( nullptr );
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
+            std::unique_ptr<Node> removed_node{std::move ( * ( it ) ) };
             mNodes.erase ( it );
-            return true;
+            return removed_node;
         }
-        return false;
+        return nullptr;
     }
 
-    bool Scene::RemoveByIndex ( size_t aIndex )
+    std::unique_ptr<Node> Scene::RemoveByIndex ( size_t aIndex )
     {
         if ( aIndex >= mNodes.size() )
         {
-            return false;
+            return nullptr;
         }
         mNodes[aIndex]->mParent = static_cast<Node*> ( nullptr );
         mNodes[aIndex]->SetLocalTransform ( mNodes[aIndex]->mGlobalTransform );
-        mNodes.erase ( mNodes.begin() + aIndex );
-        return true;
+        auto it = mNodes.begin() + aIndex;
+        std::unique_ptr<Node> removed_node{std::move ( * ( it ) ) };
+        mNodes.erase ( it );
+        return removed_node;
     }
 
     std::string Scene::Serialize ( bool aAsBinary ) const
@@ -421,8 +424,7 @@ namespace AeonGames
         for ( auto &i : scene_buffer.node() )
         {
             const NodeBuffer* node = &i;
-            node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {nullptr, 0, StoreNode ( std::make_unique<Node>() ) };
-            Add ( std::get<2> ( node_map[node] ) );
+            node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {nullptr, 0, Add ( std::make_unique<Node>() ) };
             std::get<2> ( node_map[node] )->Deserialize ( *node );
             while ( node )
             {
@@ -430,8 +432,7 @@ namespace AeonGames
                 {
                     const NodeBuffer* prev = node;
                     node = &node->node ( std::get<1> ( node_map[node] ) );
-                    node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {prev, 0, StoreNode ( std::make_unique<Node>() ) };
-                    std::get<2> ( node_map[prev] )->Add ( std::get<2> ( node_map[node] ) );
+                    node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {prev, 0, std::get<2> ( node_map[prev] )->Add ( std::make_unique<Node>() ) };
                     std::get<2> ( node_map[node] )->Deserialize ( *node );
                     ++std::get<1> ( node_map[prev] );
                 }
@@ -454,24 +455,5 @@ namespace AeonGames
             mViewMatrix = mCamera->GetGlobalTransform().GetInvertedMatrix();
         }
         scene_buffer.Clear();
-    }
-    Node* Scene::StoreNode ( std::unique_ptr<Node> aNode )
-    {
-        mNodeStorage.emplace_back ( ( aNode ) ? std::move ( aNode ) : std::make_unique<Node>() );
-        return mNodeStorage.back().get();
-    }
-    std::unique_ptr<Node> Scene::DisposeNode ( const Node* aNode )
-    {
-        std::unique_ptr<Node> result{};
-        auto i = std::find_if ( mNodeStorage.begin(), mNodeStorage.end(), [aNode] ( const std::unique_ptr<Node>& node )
-        {
-            return aNode == node.get();
-        } );
-        if ( i != mNodeStorage.end() )
-        {
-            result = std::move ( *i );
-            mNodeStorage.erase ( std::remove ( i, mNodeStorage.end(), *i ), mNodeStorage.end() );
-        }
-        return result;
     }
 }

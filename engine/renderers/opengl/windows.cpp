@@ -231,16 +231,27 @@ namespace AeonGames
     void OpenGLWindow::EndRender() const
     {
         glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glClear ( GL_COLOR_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glDisable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glUseProgram ( mProgram );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, mScreenQuad.GetBufferId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glEnableVertexAttribArray ( 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glEnableVertexAttribArray ( 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, reinterpret_cast<const void*> ( sizeof ( float ) * 2 ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
+        OPENGL_CHECK_ERROR_NO_THROW;
         SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
     }
 
@@ -266,7 +277,11 @@ namespace AeonGames
 
     void OpenGLWindow::FinalizePlatform()
     {
+        OPENGL_CHECK_ERROR_NO_THROW;
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), nullptr );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        wglMakeCurrent ( GetDC ( static_cast<HWND> ( mOpenGLRenderer.GetWindowId() ) ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
         mDeviceContext = nullptr;
     }
