@@ -59,6 +59,7 @@ namespace AeonGames
         BindBuffers();
 #else
         glBindVertexArray ( mVAO );
+        OPENGL_CHECK_ERROR_THROW;
 #endif
     }
 

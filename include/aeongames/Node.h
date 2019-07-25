@@ -61,7 +61,6 @@ namespace AeonGames
             FlagCount
         };
         DLL Node ( uint32_t aFlags = AllBits );
-        DLL ~Node();
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
         DLL void Serialize ( NodeBuffer& aNodeBuffer ) const;
@@ -77,10 +76,10 @@ namespace AeonGames
         */
         DLL void SetFlag ( enum Flags aFlag, bool aEnabled = true );
         DLL bool IsFlagEnabled ( enum Flags aFlag ) const;
-        DLL bool Add ( Node* aNode );
-        DLL bool Insert ( size_t aIndex, Node* aNode );
-        DLL bool Remove ( Node* );
-        DLL bool RemoveByIndex ( size_t aIndex );
+        DLL Node* Add ( std::unique_ptr<Node> aNode );
+        DLL Node* Insert ( size_t aIndex, std::unique_ptr<Node> aNode );
+        DLL std::unique_ptr<Node> Remove ( Node* );
+        DLL std::unique_ptr<Node> RemoveByIndex ( size_t aIndex );
         /** Retrieve a pointer to the scene containing the node instance
          * @return A pointer to the scene at the root of the node tree
          *  or nullptr if the node is not contained in a scene.
@@ -170,7 +169,7 @@ namespace AeonGames
         Transform mLocalTransform{};
         Transform mGlobalTransform{};
         AABB mAABB{};
-        std::vector<Node*> mNodes{};
+        std::vector<std::unique_ptr<Node>> mNodes{};
         DependencyMap<uint32_t> mComponentDependencyMap{};
         /**
          * Node component container

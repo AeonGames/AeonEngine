@@ -35,34 +35,34 @@ namespace AeonGames
         }
         virtual void SetUp()
         {
-            mScene.Add ( &a );
-            mScene.Add ( &b );
-            a.Add ( &c );
-            a.Add ( &d );
-            b.Add ( &e );
-            b.Add ( &f );
-            c.Add ( &g );
-            c.Add ( &h );
-            d.Add ( &i );
-            d.Add ( &j );
-            e.Add ( &k );
-            e.Add ( &l );
-            f.Add ( &m );
-            f.Add ( &n );
-            a.SetName ( "a" );
-            b.SetName ( "b" );
-            c.SetName ( "c" );
-            d.SetName ( "d" );
-            e.SetName ( "e" );
-            f.SetName ( "f" );
-            g.SetName ( "g" );
-            h.SetName ( "h" );
-            i.SetName ( "i" );
-            j.SetName ( "j" );
-            k.SetName ( "k" );
-            l.SetName ( "l" );
-            m.SetName ( "m" );
-            n.SetName ( "n" );
+            a = mScene.Add ( std::make_unique<Node>() );
+            b = mScene.Add ( std::make_unique<Node>() );
+            c = a->Add ( std::make_unique<Node>() );
+            d = a->Add ( std::make_unique<Node>() );
+            e = b->Add ( std::make_unique<Node>() );
+            f = b->Add ( std::make_unique<Node>() );
+            g = c->Add ( std::make_unique<Node>() );
+            h = c->Add ( std::make_unique<Node>() );
+            i = d->Add ( std::make_unique<Node>() );
+            j = d->Add ( std::make_unique<Node>() );
+            k = e->Add ( std::make_unique<Node>() );
+            l = e->Add ( std::make_unique<Node>() );
+            m = f->Add ( std::make_unique<Node>() );
+            n = f->Add ( std::make_unique<Node>() );
+            a->SetName ( "a" );
+            b->SetName ( "b" );
+            c->SetName ( "c" );
+            d->SetName ( "d" );
+            e->SetName ( "e" );
+            f->SetName ( "f" );
+            g->SetName ( "g" );
+            h->SetName ( "h" );
+            i->SetName ( "i" );
+            j->SetName ( "j" );
+            k->SetName ( "k" );
+            l->SetName ( "l" );
+            m->SetName ( "m" );
+            n->SetName ( "n" );
         }
         virtual void TearDown()
         {
@@ -81,20 +81,20 @@ namespace AeonGames
                                           /\   /\  /\   /\
                                           g h i  j k l  m n
         */
-        Node a{};
-        Node b{};
-        Node c{};
-        Node d{};
-        Node e{};
-        Node f{};
-        Node g{};
-        Node h{};
-        Node i{};
-        Node j{};
-        Node k{};
-        Node l{};
-        Node m{};
-        Node n{};
+        Node* a{};
+        Node* b{};
+        Node* c{};
+        Node* d{};
+        Node* e{};
+        Node* f{};
+        Node* g{};
+        Node* h{};
+        Node* i{};
+        Node* j{};
+        Node* k{};
+        Node* l{};
+        Node* m{};
+        Node* n{};
         Scene mScene{};
     };
 
@@ -213,11 +213,11 @@ namespace AeonGames
     TEST_F ( SceneTest, AddSynchsLocalTransform )
     {
         Transform transform{Vector3{1, 1, 1}, Quaternion{1, 0, 0, 0}, Vector3{2, 4, 6}};
-        Node node;
-        node.SetGlobalTransform ( transform );
+        std::unique_ptr<Node> node{std::make_unique<Node>() };
+        node->SetGlobalTransform ( transform );
         transform.SetTranslation ( {1, 2, 3} );
         mScene[0].SetLocalTransform ( transform );
-        mScene[0].Add ( &node );
+        mScene[0].Add ( std::move ( node ) );
         EXPECT_EQ ( transform, mScene[0][mScene[0].GetChildrenCount() - 1].GetLocalTransform() );
     }
     TEST_F ( SceneTest, LocalTransformSyncsGlobalTransformInChildNode )
@@ -253,84 +253,68 @@ namespace AeonGames
     }
     TEST_F ( SceneTest, IndicesAreContiguous )
     {
-        Node node1;
-        Node node2;
-        Node node3;
-        Node node;
-        node.Add ( &node1 );
-        node.Add ( &node2 );
-        node.Add ( &node3 );
-        size_t count = node.GetChildrenCount();
+        std::unique_ptr<Node> node{std::make_unique<Node>() };
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        size_t count = node->GetChildrenCount();
         for ( size_t i = 0; i < count; ++i )
         {
-            EXPECT_EQ ( node.GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
         }
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterRemovingFirstNode )
     {
-        Node node1;
-        Node node2;
-        Node node3;
-        Node node;
-        node.Add ( &node1 );
-        node.Add ( &node2 );
-        node.Add ( &node3 );
-        EXPECT_EQ ( node.GetChildrenCount(), 3u );
-        Node* removedNode = node.GetChild ( 0 );
-        node.Remove ( removedNode );
-        for ( size_t i = 0; i < node.GetChildrenCount(); ++i )
+        std::unique_ptr<Node> node{std::make_unique<Node>() };
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        EXPECT_EQ ( node->GetChildrenCount(), 3u );
+        node->Remove ( node->GetChild ( 0 ) );
+        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node.GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
         }
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterRemovingMiddleNode )
     {
-        Node node1;
-        Node node2;
-        Node node3;
-        Node node;
-        node.Add ( &node1 );
-        node.Add ( &node2 );
-        node.Add ( &node3 );
-        EXPECT_EQ ( node.GetChildrenCount(), 3u );
-        Node* removedNode = node.GetChild ( 1 );
-        node[0].Remove ( removedNode );
-        for ( size_t i = 0; i < node.GetChildrenCount(); ++i )
+        std::unique_ptr<Node> node{std::make_unique<Node>() };
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        EXPECT_EQ ( node->GetChildrenCount(), 3u );
+        Node* removedNode = node->GetChild ( 1 );
+        ( *node ) [0].Remove ( removedNode );
+        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node.GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
         }
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterInsertingNodeOnFront )
     {
-        Node node1;
-        Node node2;
-        Node node3;
-        Node node;
-        node.Add ( &node1 );
-        node.Add ( &node2 );
-        node.Insert ( 0, &node3 );
-        EXPECT_EQ ( node.GetChildrenCount(), 3u );
-        for ( size_t i = 0; i < node.GetChildrenCount(); ++i )
+        std::unique_ptr<Node> node{std::make_unique<Node>() };
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        node->Insert ( 0, std::make_unique<Node>() );
+        EXPECT_EQ ( node->GetChildrenCount(), 3u );
+        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node.GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
         }
-        EXPECT_EQ ( &node[0], node.GetChild ( 0 ) );
+        EXPECT_EQ ( & ( *node ) [0], node->GetChild ( 0 ) );
     }
     TEST_F ( SceneTest, IndicesAreContiguousAfterInsertingNodeAtMiddle )
     {
-        Node node1;
-        Node node2;
-        Node node3;
-        Node node;
-        node.Add ( &node1 );
-        node.Add ( &node2 );
-        node.Insert ( 0, &node3 );
-        EXPECT_EQ ( node.GetChildrenCount(), 3u );
-        for ( size_t i = 0; i < node.GetChildrenCount(); ++i )
+        std::unique_ptr<Node> node{std::make_unique<Node>() };
+        node->Add ( std::make_unique<Node>() );
+        node->Add ( std::make_unique<Node>() );
+        node->Insert ( 0, std::make_unique<Node>() );
+        EXPECT_EQ ( node->GetChildrenCount(), 3u );
+        for ( size_t i = 0; i < node->GetChildrenCount(); ++i )
         {
-            EXPECT_EQ ( node.GetChild ( i )->GetIndex(), i );
+            EXPECT_EQ ( node->GetChild ( i )->GetIndex(), i );
         }
-        EXPECT_EQ ( &node[1], node.GetChild ( 1 ) );
+        EXPECT_EQ ( & ( *node ) [1], node->GetChild ( 1 ) );
     }
     TEST_F ( SceneTest, SerializeAsTextHasProperHeader )
     {
@@ -343,14 +327,6 @@ namespace AeonGames
         std::string serialized = mScene.Serialize ( true );
         EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONSCE" );
         EXPECT_EQ ( serialized[7], 0 );
-    }
-    TEST ( Scene, StoreDispose )
-    {
-        Scene scene;
-        Node* node = scene.StoreNode ( std::make_unique<Node>() );
-        EXPECT_NE ( node, nullptr );
-        std::unique_ptr<Node> unique_ptr_node = scene.DisposeNode ( node );
-        EXPECT_EQ ( unique_ptr_node.get(), node );
     }
     TEST_F ( SceneTest, SerializeDeserializeText )
     {
@@ -369,19 +345,19 @@ namespace AeonGames
 
     TEST_F ( SceneTest, GetScene )
     {
-        EXPECT_EQ ( a.GetScene(), &mScene );
-        EXPECT_EQ ( b.GetScene(), &mScene );
-        EXPECT_EQ ( c.GetScene(), &mScene );
-        EXPECT_EQ ( d.GetScene(), &mScene );
-        EXPECT_EQ ( e.GetScene(), &mScene );
-        EXPECT_EQ ( f.GetScene(), &mScene );
-        EXPECT_EQ ( g.GetScene(), &mScene );
-        EXPECT_EQ ( h.GetScene(), &mScene );
-        EXPECT_EQ ( i.GetScene(), &mScene );
-        EXPECT_EQ ( j.GetScene(), &mScene );
-        EXPECT_EQ ( k.GetScene(), &mScene );
-        EXPECT_EQ ( l.GetScene(), &mScene );
-        EXPECT_EQ ( m.GetScene(), &mScene );
-        EXPECT_EQ ( n.GetScene(), &mScene );
+        EXPECT_EQ ( a->GetScene(), &mScene );
+        EXPECT_EQ ( b->GetScene(), &mScene );
+        EXPECT_EQ ( c->GetScene(), &mScene );
+        EXPECT_EQ ( d->GetScene(), &mScene );
+        EXPECT_EQ ( e->GetScene(), &mScene );
+        EXPECT_EQ ( f->GetScene(), &mScene );
+        EXPECT_EQ ( g->GetScene(), &mScene );
+        EXPECT_EQ ( h->GetScene(), &mScene );
+        EXPECT_EQ ( i->GetScene(), &mScene );
+        EXPECT_EQ ( j->GetScene(), &mScene );
+        EXPECT_EQ ( k->GetScene(), &mScene );
+        EXPECT_EQ ( l->GetScene(), &mScene );
+        EXPECT_EQ ( m->GetScene(), &mScene );
+        EXPECT_EQ ( n->GetScene(), &mScene );
     }
 }
