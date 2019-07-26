@@ -39,6 +39,7 @@ namespace AeonGames
         OpenGLRenderer();
         ~OpenGLRenderer() override;
         void* GetOpenGLContext() const;
+        void* GetDeviceContext() const;
         void* GetWindowId() const;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
@@ -55,6 +56,8 @@ namespace AeonGames
         void* mWindowId{};
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext{};
+        /// Internal OpenGL Device Context used on Windows only for now.
+        void* mDeviceContext{};
     };
 }
 #endif

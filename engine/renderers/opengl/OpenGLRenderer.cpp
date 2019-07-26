@@ -86,6 +86,11 @@ namespace AeonGames
         return mOpenGLContext;
     }
 
+    void* OpenGLRenderer::GetDeviceContext() const
+    {
+        return mDeviceContext;
+    }
+
     void* OpenGLRenderer::GetWindowId() const
     {
         return mWindowId;
