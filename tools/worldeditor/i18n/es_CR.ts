@@ -4,23 +4,23 @@
 <context>
     <name>AeonGames::MainWindow</name>
     <message>
-        <location filename="../MainWindow.cpp" line="54"/>
+        <location filename="../MainWindow.cpp" line="59"/>
         <source>Untitled Scene</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="63"/>
+        <location filename="../MainWindow.cpp" line="68"/>
         <source>Open Scene</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="65"/>
-        <location filename="../MainWindow.cpp" line="93"/>
+        <location filename="../MainWindow.cpp" line="70"/>
+        <location filename="../MainWindow.cpp" line="98"/>
         <source>Scene Files (*.scn *.txt)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="91"/>
+        <location filename="../MainWindow.cpp" line="96"/>
         <source>Save Scene</source>
         <translation type="unfinished"></translation>
     </message>
