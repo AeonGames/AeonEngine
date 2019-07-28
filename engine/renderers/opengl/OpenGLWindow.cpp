@@ -82,12 +82,11 @@ const GLuint vertex_size{sizeof(vertices)};
 
     void OpenGLWindow::InitializeCommon()
     {
-#ifdef SINGLE_VAO
         glGenVertexArrays ( 1, &mVAO );
         OPENGL_CHECK_ERROR_THROW;
         glBindVertexArray ( mVAO );
         OPENGL_CHECK_ERROR_THROW;
-#endif
+
         // Frame Buffer
         glGenFramebuffers ( 1, &mFBO );
         OPENGL_CHECK_ERROR_THROW;
@@ -289,7 +288,6 @@ const GLuint vertex_size{sizeof(vertices)};
         OPENGL_CHECK_ERROR_NO_THROW;
 
         mScreenQuad.Finalize();
-#ifdef SINGLE_VAO
         if ( glIsVertexArray ( mVAO ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -298,7 +296,6 @@ const GLuint vertex_size{sizeof(vertices)};
             mVAO = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
-#endif
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
@@ -362,6 +359,10 @@ const GLuint vertex_size{sizeof(vertices)};
         OPENGL_CHECK_ERROR_NO_THROW;
         glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+        OPENGL_CHECK_ERROR_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
         opengl_mesh.BindVertexArray();

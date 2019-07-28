@@ -178,6 +178,10 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
+        else
+        {
+            glDisableVertexAttribArray ( 0 );
+        }
 
         if ( mVertexFlags & Mesh::NORMAL_BIT )
         {
@@ -186,6 +190,10 @@ namespace AeonGames
             glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
+        }
+        else
+        {
+            glDisableVertexAttribArray ( 1 );
         }
 
         if ( mVertexFlags & Mesh::TANGENT_BIT )
@@ -196,6 +204,10 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
+        else
+        {
+            glDisableVertexAttribArray ( 2 );
+        }
 
         if ( mVertexFlags & Mesh::BITANGENT_BIT )
         {
@@ -204,6 +216,10 @@ namespace AeonGames
             glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
+        }
+        else
+        {
+            glDisableVertexAttribArray ( 3 );
         }
 
         if ( mVertexFlags & Mesh::UV_BIT )
@@ -214,6 +230,10 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 2;
         }
+        else
+        {
+            glDisableVertexAttribArray ( 4 );
+        }
 
         if ( mVertexFlags & Mesh::WEIGHT_IDX_BIT )
         {
@@ -222,6 +242,10 @@ namespace AeonGames
             glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
+        }
+        else
+        {
+            glDisableVertexAttribArray ( 5 );
         }
 
         if ( mVertexFlags & Mesh::WEIGHT_BIT )
@@ -232,6 +256,10 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
         }
+        else
+        {
+            glDisableVertexAttribArray ( 6 );
+        }
 
         if ( mVertexFlags & Mesh::COLOR_BIT )
         {
@@ -241,13 +269,21 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
+        else
+        {
+            glDisableVertexAttribArray ( 7 );
+        }
 
         //---Index Buffer---
         if ( mIndexCount )
         {
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
         }
+        else
+        {
+            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0 );
+        }
+        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLMesh::Unload ()
