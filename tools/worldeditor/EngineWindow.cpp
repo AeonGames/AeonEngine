@@ -254,7 +254,10 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            if ( geometry().width() && geometry().height() && !qWorldEditorApp->IsBlocked() )
+            if ( !geometry().width() || !geometry().height() || qWorldEditorApp->IsBlocked() || !GetRenderer() )
+            {
+                return QWindow::event ( aEvent );
+            }
             {
                 double delta = 0.0;
                 if ( mStopWatch.isValid() )
@@ -269,61 +272,58 @@ namespace AeonGames
                 {
                     const_cast<Scene*> ( mScene )->Update ( delta );
                 }
-                if ( GetRenderer() )
+                mWindow->BeginRender();
+                mWindow->Render ( Transform{},
+                                  qWorldEditorApp->GetGridMesh(),
+                                  qWorldEditorApp->GetGridPipeline(),
+                                  &qWorldEditorApp->GetXGridMaterial(), nullptr, 0, 2,
+                                  qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
+                mWindow->Render ( Transform{},
+                                  qWorldEditorApp->GetGridMesh(),
+                                  qWorldEditorApp->GetGridPipeline(),
+                                  &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
+                                  qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
+                /** @todo This should be the code path for edit mode,
+                 * game mode should just render the scene using Window::Render(const Scene&)
+                */
+                if ( mScene && mScene->GetChildrenCount() )
                 {
-                    mWindow->BeginRender();
-                    mWindow->Render ( Transform{},
-                                      qWorldEditorApp->GetGridMesh(),
-                                      qWorldEditorApp->GetGridPipeline(),
-                                      &qWorldEditorApp->GetXGridMaterial(), nullptr, 0, 2,
-                                      qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
-                    mWindow->Render ( Transform{},
-                                      qWorldEditorApp->GetGridMesh(),
-                                      qWorldEditorApp->GetGridPipeline(),
-                                      &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
-                                      qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
-                    /** @todo This should be the code path for edit mode,
-                     * game mode should just render the scene using Window::Render(const Scene&)
-                    */
-                    if ( mScene )
+                    Frustum frustum ( mWindow->GetProjectionMatrix() * mWindow->GetViewMatrix() );
+                    mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
                     {
-                        Frustum frustum ( mWindow->GetProjectionMatrix() * mWindow->GetViewMatrix() );
-                        mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
+                        if ( &aNode == mScene->GetCamera() )
                         {
-                            if ( &aNode == mScene->GetCamera() )
-                            {
-                                Matrix4x4 projection_matrix{};
-                                projection_matrix.Perspective ( mScene->GetFieldOfView(), mWindow->GetAspectRatio(), mScene->GetNear(), mScene->GetFar() );
-                                projection_matrix.Invert();
-                                mWindow->Render ( aNode.GetGlobalTransform() * projection_matrix,
-                                                  qWorldEditorApp->GetAABBWireMesh(),
-                                                  qWorldEditorApp->GetWirePipeline() );
-                            }
+                            Matrix4x4 projection_matrix{};
+                            projection_matrix.Perspective ( mScene->GetFieldOfView(), mWindow->GetAspectRatio(), mScene->GetNear(), mScene->GetFar() );
+                            projection_matrix.Invert();
+                            mWindow->Render ( aNode.GetGlobalTransform() * projection_matrix,
+                                              qWorldEditorApp->GetAABBWireMesh(),
+                                              qWorldEditorApp->GetWirePipeline() );
+                        }
 
-                            AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                            if ( frustum.Intersects ( transformed_aabb ) )
-                            {
-                                // Call Node specific rendering function.
-                                aNode.Render ( *mWindow );
-                                // Render Node AABBss
-                                mWindow->Render ( transformed_aabb.GetTransform(),
-                                                  qWorldEditorApp->GetAABBWireMesh(),
-                                                  qWorldEditorApp->GetWirePipeline() );
-                                // Render Node Root
-                                mWindow->Render ( aNode.GetGlobalTransform(),
-                                                  qWorldEditorApp->GetAABBWireMesh(),
-                                                  qWorldEditorApp->GetWirePipeline() );
-                                // Render AABB Center
-                                mWindow->Render (   Transform{Vector3{1, 1, 1},
-                                                              Quaternion{1, 0, 0, 0},
-                                                              Vector3{transformed_aabb.GetCenter() }},
-                                                    qWorldEditorApp->GetAABBWireMesh(),
-                                                    qWorldEditorApp->GetWirePipeline() );
-                            }
-                        } );
-                    }
-                    mWindow->EndRender();
+                        AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
+                        if ( frustum.Intersects ( transformed_aabb ) )
+                        {
+                            // Call Node specific rendering function.
+                            aNode.Render ( *mWindow );
+                            // Render Node AABBss
+                            mWindow->Render ( transformed_aabb.GetTransform(),
+                                              qWorldEditorApp->GetAABBWireMesh(),
+                                              qWorldEditorApp->GetWirePipeline() );
+                            // Render Node Root
+                            mWindow->Render ( aNode.GetGlobalTransform(),
+                                              qWorldEditorApp->GetAABBWireMesh(),
+                                              qWorldEditorApp->GetWirePipeline() );
+                            // Render AABB Center
+                            mWindow->Render (   Transform{Vector3{1, 1, 1},
+                                                          Quaternion{1, 0, 0, 0},
+                                                          Vector3{transformed_aabb.GetCenter() }},
+                                                qWorldEditorApp->GetAABBWireMesh(),
+                                                qWorldEditorApp->GetWirePipeline() );
+                        }
+                    } );
                 }
+                mWindow->EndRender();
                 return true;
             }
         default:
