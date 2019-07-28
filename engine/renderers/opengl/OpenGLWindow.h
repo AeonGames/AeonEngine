@@ -55,7 +55,7 @@ namespace AeonGames
         void FinalizePlatform();
         const OpenGLRenderer& mOpenGLRenderer;
         mutable void* mDeviceContext{};
-        GLuint mVAO {}; ///< Only used on SINGLE_VAO configuration, but kept for structure consistency
+        GLuint mVAO {};
         GLuint mFBO {};
         GLuint mColorBuffer {};
         GLuint mRBO {};

@@ -219,14 +219,10 @@ namespace AeonGames
             0.0f, 0.0f, -1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
         };
-
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
+        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
     }
 
     void OpenGLWindow::EndRender() const
@@ -239,6 +235,10 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glUseProgram ( mProgram );
         OPENGL_CHECK_ERROR_NO_THROW;
+#ifndef SINGLE_VAO
+        glBindVertexArray ( mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+#endif
         glBindBuffer ( GL_ARRAY_BUFFER, mScreenQuad.GetBufferId() );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
