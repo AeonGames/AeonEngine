@@ -43,11 +43,14 @@ protobuf_generate_export_cpp(PROTOBUF_SOURCES
                              ${CMAKE_SOURCE_DIR}/proto/geometry.proto
                              ${CMAKE_SOURCE_DIR}/proto/transform.proto
                              ${CMAKE_SOURCE_DIR}/proto/scene.proto
-                             ${CMAKE_SOURCE_DIR}/proto/reference.proto)
+                             ${CMAKE_SOURCE_DIR}/proto/reference.proto
+                             ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
+                             )
 
 set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/FrameBuffer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
@@ -92,7 +95,6 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Component.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/StringId.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
@@ -120,6 +122,7 @@ set(ENGINE_CORE_SOURCES
     core/Animation.cpp
     core/SoundSystem.cpp
     core/Utilities.cpp
+    core/FrameBuffer.cpp
     core/Model.cpp
     core/Window.cpp
     core/Scene.cpp
