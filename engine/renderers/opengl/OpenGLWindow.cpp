@@ -92,12 +92,13 @@ const GLuint vertex_size{sizeof(vertices)};
         OPENGL_CHECK_ERROR_THROW;
         glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
         OPENGL_CHECK_ERROR_THROW;
+
         // Color Buffer
         glGenTextures ( 1, &mColorBuffer );
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
         OPENGL_CHECK_ERROR_THROW;
@@ -105,6 +106,7 @@ const GLuint vertex_size{sizeof(vertices)};
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, 0 );
         OPENGL_CHECK_ERROR_THROW;
+
         glFramebufferTexture2D ( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mColorBuffer, 0 );
         OPENGL_CHECK_ERROR_THROW;
         // Render Buffer
