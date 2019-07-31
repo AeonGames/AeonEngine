@@ -99,8 +99,9 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLUniformBuffer.h
     OpenGLMaterial.h
     OpenGLImage.h
-    OpenGLSkeleton.h
-    OpenGLMesh.h)
+    OpenGLMesh.h
+    OpenGLFrameBuffer.h
+    )
 
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
@@ -110,9 +111,9 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
     OpenGLImage.cpp
-    OpenGLSkeleton.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
+    OpenGLFrameBuffer.cpp
     windows.cpp
     x11.cpp
     Plugin.cpp)
