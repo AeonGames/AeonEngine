@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -45,7 +45,8 @@ namespace AeonGames
         virtual void Load ( const std::string& aPath ) = 0;
         virtual void Load ( uint32_t aId ) = 0;
         virtual void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr ) = 0;
-        virtual void BitBlit ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) = 0;
+        virtual void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr ) = 0;
+        virtual void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) = 0;
         virtual void Finalize() = 0;
         virtual uint32_t Width() const = 0;
         virtual uint32_t Height() const = 0;

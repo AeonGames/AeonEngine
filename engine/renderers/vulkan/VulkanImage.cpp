@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ namespace AeonGames
         }
         if ( aPixels )
         {
-            BitBlit ( 0, 0, aWidth, aHeight, aFormat, aType, aPixels );
+            WritePixels ( 0, 0, aWidth, aHeight, aFormat, aType, aPixels );
         }
     }
 
@@ -181,7 +181,13 @@ namespace AeonGames
         }
     }
 
-    void VulkanImage::BitBlit ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    void VulkanImage::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
+    {
+        /** @todo Implement. */
+    }
+
+
+    void VulkanImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
     {
         // -----------------------------
         // Write Memory

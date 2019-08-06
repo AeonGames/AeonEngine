@@ -101,7 +101,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLImage.h
     OpenGLMesh.h
     OpenGLFrameBuffer.h
-    )
+    OpenGLOverlay.h)
 
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
@@ -114,6 +114,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
+    OpenGLOverlay.cpp
     windows.cpp
     x11.cpp
     Plugin.cpp)
