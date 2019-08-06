@@ -135,6 +135,9 @@ find_program(AUTOPEP8_EXECUTABLE autopep8
 find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
              HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
+option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
+option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
+
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
          OFF)
@@ -337,7 +340,7 @@ add_custom_target(
   COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
-                      ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
+                       ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
   SOURCES ${CMAKE_SOURCE_DIR}/proto/mesh.proto
           ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
           ${CMAKE_SOURCE_DIR}/proto/animation.proto
@@ -516,10 +519,10 @@ set(COVER_POINTSIZE "250"
     CACHE STRING "Font pointsize for the create-cover target")
 add_custom_target(create-cover
                   COMMAND "${ImageMagick_convert_EXECUTABLE}" -size 1920x1080
-                          xc:none -background transparent -font Ego
-                          -gravity center -pointsize ${COVER_POINTSIZE} -fill
-                          none -stroke SteelBlue4 -strokewidth 10 -draw \"text
-                          0,0 \'`date \+\"%B %d %Y\"`\'\" -blur 0x10 -pointsize
+                          xc:none -background transparent -font Ego -gravity
+                          center -pointsize ${COVER_POINTSIZE} -fill none
+                          -stroke SteelBlue4 -strokewidth 10 -draw \"text 0,0
+                          \'`date \+\"%B %d %Y\"`\'\" -blur 0x10 -pointsize
                           ${COVER_POINTSIZE} -fill white -stroke none
                           -strokewidth 0 -draw \"text 0,0 \'`date \+\"%B %d
                           %Y\"`\'\" PNG32:overlay.png

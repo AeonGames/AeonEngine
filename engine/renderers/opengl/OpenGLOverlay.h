@@ -13,17 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OVERLAY_H
-#define AEONGAMES_OVERLAY_H
-#include "aeongames/Platform.h"
-#include <cstdint>
+#ifndef AEONGAMES_OPENGLOVERLAY_H
+#define AEONGAMES_OPENGLOVERLAY_H
+#include <cstddef>
+#include "OpenGLFunctions.h"
+#include "aeongames/Overlay.h"
+
 namespace AeonGames
 {
-    class Overlay
+    class OpenGLRenderer;
+    class OpenGLOverlay : public Overlay
     {
     public:
-        DLL virtual ~Overlay() = 0;
-        virtual void Resize ( size_t aWidth, size_t aHeight ) = 0;
+        OpenGLOverlay ( const OpenGLRenderer& aOpenGLRenderer );
+        ~OpenGLOverlay() final;
+        void Resize ( size_t aWidth, size_t aHeight ) final;
+    private:
+        const OpenGLRenderer& mOpenGLRenderer;
     };
 }
 #endif
