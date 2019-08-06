@@ -13,17 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OVERLAY_H
-#define AEONGAMES_OVERLAY_H
-#include "aeongames/Platform.h"
-#include <cstdint>
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "framebuffer.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+#include "ProtoBufHelpers.h"
+#include "OpenGLOverlay.h"
+#include "aeongames/CRC.h"
+#include "aeongames/AeonEngine.h"
+
 namespace AeonGames
 {
-    class Overlay
+    OpenGLOverlay::OpenGLOverlay ( const OpenGLRenderer& aOpenGLRenderer ) : mOpenGLRenderer{aOpenGLRenderer}
     {
-    public:
-        DLL virtual ~Overlay() = 0;
-        virtual void Resize ( size_t aWidth, size_t aHeight ) = 0;
-    };
+    }
+
+    OpenGLOverlay::~OpenGLOverlay() = default;
+
+    void OpenGLOverlay::Resize ( size_t aWidth, size_t aHeight )
+    {
+    }
 }
-#endif

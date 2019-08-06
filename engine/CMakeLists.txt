@@ -13,8 +13,8 @@
 # the License.
 
 include_directories(${ZLIB_INCLUDE_DIR}
-					${PNG_PNG_INCLUDE_DIR}
-					${CMAKE_SOURCE_DIR}/engine
+                    ${PNG_PNG_INCLUDE_DIR}
+                    ${CMAKE_SOURCE_DIR}/engine
                     ${CMAKE_SOURCE_DIR}/engine/include
                     ${CMAKE_SOURCE_DIR}/engine/renderers/opengl
                     ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
@@ -44,8 +44,7 @@ protobuf_generate_export_cpp(PROTOBUF_SOURCES
                              ${CMAKE_SOURCE_DIR}/proto/transform.proto
                              ${CMAKE_SOURCE_DIR}/proto/scene.proto
                              ${CMAKE_SOURCE_DIR}/proto/reference.proto
-                             ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
-                             )
+                             ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto)
 
 set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
@@ -226,8 +225,12 @@ if(USE_CLANG_TIDY)
 endif()
 
 add_subdirectory(components)
-add_subdirectory(renderers/opengl)
-add_subdirectory(renderers/vulkan)
+if(BUILD_OPENGL_RENDERER)
+  add_subdirectory(renderers/opengl)
+endif()
+if(BUILD_VULKAN_RENDERER)
+  add_subdirectory(renderers/vulkan)
+endif()
 add_subdirectory(images)
 add_subdirectory(sound/portaudio)
 add_subdirectory(sound/oggvorbis)

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,18 +56,29 @@ namespace AeonGames
         {
             throw std::runtime_error ( "OpenGLImage: Image already initiaized." );
         }
+        mFormat = aFormat;
+        mType = aType;
         glGenTextures ( 1, &mTexture );
         OPENGL_CHECK_ERROR_THROW;
+        Resize ( aWidth, aHeight, aPixels );
+    }
+
+    void OpenGLImage::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
+    {
+        if ( glIsTexture ( mTexture ) != GL_TRUE )
+        {
+            throw std::runtime_error ( "OpenGLImage: Image Not initiaized." );
+        }
         glBindTexture ( GL_TEXTURE_2D, mTexture );
         OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( aFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
                        aWidth,
                        aHeight,
                        0,
-                       ( aFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       ( aType == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                       ( mFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mType == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
                        aPixels );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -78,7 +89,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLImage::BitBlit ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    void OpenGLImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
     {
         if ( glIsTexture ( mTexture ) != GL_TRUE )
         {
