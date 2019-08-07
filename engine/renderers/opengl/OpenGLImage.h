@@ -13,13 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLTEXTURE_H
-#define AEONGAMES_OPENGLTEXTURE_H
+#ifndef AEONGAMES_OPENGLIMAGE_H
+#define AEONGAMES_OPENGLIMAGE_H
+#include "aeongames/Image.h"
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
-#include "aeongames/Image.h"
 
 namespace AeonGames
 {
@@ -28,23 +28,24 @@ namespace AeonGames
     {
     public:
         OpenGLImage ( uint32_t aPath = 0 );
+        OpenGLImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr );
         ~OpenGLImage() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
-        void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr ) final;
+        void Initialize ( uint32_t aWidth, uint32_t aHeight, Image::Format aFormat, Image::Type aType, const uint8_t* aPixels = nullptr ) final;
         void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr ) final;
-        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) final;
+        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Image::Format aFormat, Image::Type aType, const uint8_t* aPixels ) final;
         void Finalize() final;
-        uint32_t Width() const final;
-        uint32_t Height() const final;
-        ImageFormat Format() const final;
-        ImageType Type() const final;
+        uint32_t GetWidth() const final;
+        uint32_t GetHeight() const final;
+        Format GetFormat() const final;
+        Type GetType() const final;
         /**@todo Determine if we want to keep the texture id exposed like this.
             Maybe all we need is a Bind function.*/
         const uint32_t GetTextureId() const;
     private:
-        ImageFormat mFormat{};
-        ImageType mType{};
+        Format mFormat{};
+        Type mType{};
         uint32_t mTexture{};
     };
 }
