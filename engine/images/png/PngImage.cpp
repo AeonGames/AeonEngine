@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -93,12 +93,12 @@ namespace AeonGames
             png_byte color_type = png_get_color_type ( png_ptr, info_ptr );
             png_byte bit_depth = png_get_bit_depth ( png_ptr, info_ptr );
 
-            Image::ImageFormat format;
-            Image::ImageType type;
+            Image::Format format;
+            Image::Type type;
             if ( ( color_type == PNG_COLOR_TYPE_RGB ) || ( color_type == PNG_COLOR_TYPE_RGBA ) )
             {
-                format = ( color_type == PNG_COLOR_TYPE_RGB ) ? Image::ImageFormat::RGB : Image::ImageFormat::RGBA;
-                type   = ( bit_depth == 8 ) ? Image::ImageType::UNSIGNED_BYTE : Image::ImageType::UNSIGNED_SHORT;
+                format = ( color_type == PNG_COLOR_TYPE_RGB ) ? Image::Format::RGB : Image::Format::RGBA;
+                type   = ( bit_depth == 8 ) ? Image::Type::UNSIGNED_BYTE : Image::Type::UNSIGNED_SHORT;
             }
             else
             {

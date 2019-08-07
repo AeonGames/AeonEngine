@@ -58,7 +58,7 @@ namespace AeonGames
         DecodeImage ( *this, buffer.data(), buffer.size() );
     }
 
-    void VulkanImage::Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    void VulkanImage::Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
     {
         mWidth = aWidth;
         mHeight = aHeight;
@@ -95,24 +95,24 @@ namespace AeonGames
         }
     }
 
-    uint32_t VulkanImage::Width() const
+    uint32_t VulkanImage::GetWidth() const
     {
         return mWidth;
     }
 
-    uint32_t VulkanImage::Height() const
+    uint32_t VulkanImage::GetHeight() const
     {
         return mHeight;
     }
 
-    Image::ImageFormat VulkanImage::Format() const
+    Image::Format VulkanImage::GetFormat() const
     {
-        return Image::ImageFormat::RGBA;
+        return Image::Format::RGBA;
     }
 
-    Image::ImageType VulkanImage::Type() const
+    Image::Type VulkanImage::GetType() const
     {
-        return Image::ImageType::UNSIGNED_BYTE;
+        return Image::Type::UNSIGNED_BYTE;
     }
 
     void VulkanImage::Finalize()
@@ -126,7 +126,7 @@ namespace AeonGames
         FinalizeImage();
     }
 
-    void VulkanImage::InitializeImage ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType )
+    void VulkanImage::InitializeImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType )
     {
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -187,7 +187,7 @@ namespace AeonGames
     }
 
 
-    void VulkanImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    void VulkanImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
     {
         // -----------------------------
         // Write Memory
@@ -236,9 +236,9 @@ namespace AeonGames
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        if ( aFormat == Image::ImageFormat::RGBA )
+        if ( aFormat == Image::Format::RGBA )
         {
-            if ( aType == Image::ImageType::UNSIGNED_BYTE )
+            if ( aType == Image::Type::UNSIGNED_BYTE )
             {
                 memcpy ( image_memory, aPixels, aWidth * aHeight * GetPixelSize ( aFormat, aType ) );
             }
@@ -267,7 +267,7 @@ namespace AeonGames
         }
         else
         {
-            if ( aType == Image::ImageType::UNSIGNED_BYTE )
+            if ( aType == Image::Type::UNSIGNED_BYTE )
             {
                 const uint8_t* read_pointer = aPixels;
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );

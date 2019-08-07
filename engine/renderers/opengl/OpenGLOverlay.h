@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstddef>
 #include "OpenGLFunctions.h"
 #include "aeongames/Overlay.h"
+#include "OpenGLImage.h"
 
 namespace AeonGames
 {
@@ -25,11 +26,13 @@ namespace AeonGames
     class OpenGLOverlay : public Overlay
     {
     public:
-        OpenGLOverlay ( const OpenGLRenderer& aOpenGLRenderer );
+        OpenGLOverlay ( const OpenGLRenderer& aOpenGLRenderer, uint32_t aWidth, uint32_t aHeight );
         ~OpenGLOverlay() final;
-        void Resize ( size_t aWidth, size_t aHeight ) final;
+        void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
+        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels ) final;
     private:
         const OpenGLRenderer& mOpenGLRenderer;
+        OpenGLImage mImage;
     };
 }
 #endif

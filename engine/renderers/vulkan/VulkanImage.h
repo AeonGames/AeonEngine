@@ -33,18 +33,18 @@ namespace AeonGames
         ~VulkanImage() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
-        void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr ) final;
+        void Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr ) final;
         void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels ) final;
-        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) final;
+        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels ) final;
         void Finalize() final;
-        uint32_t Width() const final;
-        uint32_t Height() const final;
-        ImageFormat Format() const final;
-        ImageType Type() const final;
+        uint32_t GetWidth() const final;
+        uint32_t GetHeight() const final;
+        Format GetFormat() const final;
+        Type GetType() const final;
 
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
-        void InitializeImage ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType );
+        void InitializeImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType );
         void FinalizeImage();
         void InitializeImageView();
         void FinalizeImageView();
