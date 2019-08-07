@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "OpenGLRenderer.h"
+#include "OpenGLImage.h"
 #include "OpenGLWindow.h"
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
-#include "OpenGLImage.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLUniformBuffer.h"
 

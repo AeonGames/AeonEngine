@@ -25,6 +25,12 @@ limitations under the License.
 
 namespace AeonGames
 {
+
+    OpenGLImage::OpenGLImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
+    {
+        Initialize ( aWidth, aHeight, aFormat, aType, aPixels );
+    }
+
     OpenGLImage::OpenGLImage ( uint32_t aPath )
     {
         if ( aPath )
@@ -50,7 +56,7 @@ namespace AeonGames
         DecodeImage ( *this, buffer.data(), buffer.size() );
     }
 
-    void OpenGLImage::Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    void OpenGLImage::Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
     {
         if ( glIsTexture ( mTexture ) == GL_TRUE )
         {
@@ -73,12 +79,12 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( mFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA,
                        aWidth,
                        aHeight,
                        0,
-                       ( mFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                       ( mType == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                       ( mFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mType == Image::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
                        aPixels );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -89,40 +95,40 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels )
+    void OpenGLImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
     {
         if ( glIsTexture ( mTexture ) != GL_TRUE )
         {
             throw std::runtime_error ( "OpenGLImage: Trying to bit blit an uninitialized image." );
         }
         glTextureSubImage2D ( mTexture, 0, aXOffset, aYOffset, aWidth, aHeight,
-                              ( aFormat == Image::ImageFormat::RGB ) ? GL_RGB : GL_RGBA,
-                              ( aType == Image::ImageType::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT, aPixels );
+                              ( aFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA,
+                              ( aType == Image::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT, aPixels );
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    uint32_t OpenGLImage::Width() const
+    uint32_t OpenGLImage::GetWidth() const
     {
         GLint width{};
         glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_WIDTH, &width );
         return static_cast<uint32_t> ( width );
     }
 
-    uint32_t OpenGLImage::Height() const
+    uint32_t OpenGLImage::GetHeight() const
     {
         GLint height{};
         glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_HEIGHT, &height );
         return static_cast<uint32_t> ( height );
     }
 
-    Image::ImageFormat OpenGLImage::Format() const
+    Image::Format OpenGLImage::GetFormat() const
     {
         GLint format{};
         glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_INTERNAL_FORMAT, &format );
-        return ( format == GL_RGB ) ? Image::ImageFormat::RGB : Image::ImageFormat::RGBA;
+        return ( format == GL_RGB ) ? Image::Format::RGB : Image::Format::RGBA;
     }
 
-    Image::ImageType OpenGLImage::Type() const
+    Image::Type OpenGLImage::GetType() const
     {
         GLint red{};
         //GLint green{};
@@ -130,7 +136,7 @@ namespace AeonGames
         glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_RED_TYPE, &red );
         //glGetTextureLevelParameteriv(mTexture,0,GL_TEXTURE_GREEN_TYPE,&green);
         //glGetTextureLevelParameteriv(mTexture,0,GL_TEXTURE_BLUE_TYPE,&blue);
-        return ( red == GL_UNSIGNED_BYTE ) ? Image::ImageType::UNSIGNED_BYTE : Image::ImageType::UNSIGNED_SHORT;
+        return ( red == GL_UNSIGNED_BYTE ) ? Image::Type::UNSIGNED_BYTE : Image::Type::UNSIGNED_SHORT;
     }
 
     void OpenGLImage::Finalize()

@@ -16,26 +16,22 @@ limitations under the License.
 #ifndef AEONGAMES_IMAGE_H
 #define AEONGAMES_IMAGE_H
 #include <cstdint>
-#include <functional>
 #include <string>
-#include <vector>
-#include <mutex>
-#include <memory>
+#include <functional>
 #include "aeongames/Platform.h"
-#include "Platform.h"
 
 namespace AeonGames
 {
     class Image
     {
     public:
-        enum class ImageFormat : uint32_t
+        enum class Format : uint32_t
         {
             Unknown = 0,
             RGB,
             RGBA
         };
-        enum class ImageType : uint32_t
+        enum class Type : uint32_t
         {
             Unknown = 0,
             UNSIGNED_BYTE,
@@ -44,14 +40,14 @@ namespace AeonGames
         DLL virtual ~Image() = 0;
         virtual void Load ( const std::string& aPath ) = 0;
         virtual void Load ( uint32_t aId ) = 0;
-        virtual void Initialize ( uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels = nullptr ) = 0;
+        virtual void Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr ) = 0;
         virtual void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr ) = 0;
-        virtual void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, ImageFormat aFormat, ImageType aType, const uint8_t* aPixels ) = 0;
+        virtual void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels ) = 0;
         virtual void Finalize() = 0;
-        virtual uint32_t Width() const = 0;
-        virtual uint32_t Height() const = 0;
-        virtual ImageFormat Format() const = 0;
-        virtual ImageType Type() const = 0;
+        virtual uint32_t GetWidth() const = 0;
+        virtual uint32_t GetHeight() const = 0;
+        virtual Format GetFormat() const = 0;
+        virtual Type GetType() const = 0;
     };
     /**@name Decoder Functions */
     /*@{*/
@@ -64,10 +60,10 @@ namespace AeonGames
     /***/
     DLL bool DecodeImage ( Image& aImage, const std::string& aFileName );
     /*@}*/
-    static constexpr size_t GetPixelSize ( Image::ImageFormat aFormat, Image::ImageType aType )
+    static constexpr size_t GetPixelSize ( Image::Format aFormat, Image::Type aType )
     {
-        return ( aFormat == Image::ImageFormat::Unknown || aType == Image::ImageType::Unknown ) ? 0 :
-               ( ( aFormat == Image::ImageFormat::RGB ) ? 3 : 4 ) * ( ( aType == Image::ImageType::UNSIGNED_BYTE ) ? 1 : 2 );
+        return ( aFormat == Image::Format::Unknown || aType == Image::Type::Unknown ) ? 0 :
+               ( ( aFormat == Image::Format::RGB ) ? 3 : 4 ) * ( ( aType == Image::Type::UNSIGNED_BYTE ) ? 1 : 2 );
     }
 }
 #endif

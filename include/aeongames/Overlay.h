@@ -23,7 +23,8 @@ namespace AeonGames
     {
     public:
         DLL virtual ~Overlay() = 0;
-        virtual void Resize ( size_t aWidth, size_t aHeight ) = 0;
+        virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels ) = 0;
     };
 }
 #endif

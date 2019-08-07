@@ -29,13 +29,21 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLOverlay::OpenGLOverlay ( const OpenGLRenderer& aOpenGLRenderer ) : mOpenGLRenderer{aOpenGLRenderer}
+    OpenGLOverlay::OpenGLOverlay ( const OpenGLRenderer& aOpenGLRenderer, uint32_t aWidth, uint32_t aHeight ) :
+        mOpenGLRenderer{aOpenGLRenderer},
+        mImage{aWidth, aHeight, Image::Format::RGBA, Image::Type::UNSIGNED_BYTE}
     {
     }
 
     OpenGLOverlay::~OpenGLOverlay() = default;
 
-    void OpenGLOverlay::Resize ( size_t aWidth, size_t aHeight )
+    void OpenGLOverlay::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
+        mImage.Resize ( aWidth, aHeight );
+    }
+
+    void OpenGLOverlay::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
+    {
+        mImage.WritePixels ( aXOffset, aYOffset, aWidth, aHeight, Image::Format::RGBA, Image::Type::UNSIGNED_BYTE, aPixels );
     }
 }
