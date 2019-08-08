@@ -58,9 +58,9 @@ int main ( int argc, char *argv[] )
     try
     {
         int retval = 0;
-        if ( argc >= 2 || ToolFactories.find ( argv[1] ) != ToolFactories.end() )
+        if ( argc >= 2 && ToolFactories.find ( argv[1] ) != ToolFactories.end() )
         {
-            ToolFactories[argv[1]]()->operator() ( argc, argv );
+            retval = ToolFactories[argv[1]]()->operator() ( argc, argv );
         }
         else
         {
