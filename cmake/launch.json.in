@@ -157,7 +157,7 @@
                 "type": "cppdbg",
                 "request": "launch",
                 "args": [
-                    "-i","game/meshes/cube.txt","-o","game/meshes/cube.msh"
+                    "convert","-i","game/meshes/cube.txt","-o","game/meshes/cube.msh"
                 ],
                 "stopAtEntry": false,
                 "cwd": "${CMAKE_SOURCE_DIR}",
