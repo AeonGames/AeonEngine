@@ -364,24 +364,24 @@ add_custom_target(
 # Binary asset generation target.
 #
 add_custom_target(
-  generate-binary-assets
-  COMMAND ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses>
+  binary-assets
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o
           ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
-  COMMAND ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses>
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
-  COMMAND ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses>
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
-  COMMAND ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses>
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
-  COMMAND ${CMAKE_COMMAND} -E env PATH=$<TARGET_FILE_DIR:ProtoBufClasses>
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
