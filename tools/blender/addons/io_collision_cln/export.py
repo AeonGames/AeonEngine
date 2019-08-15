@@ -22,12 +22,14 @@ import itertools
 import geometry_pb2
 import google.protobuf.text_format
 
-class CLNExporter(bpy.types.Operator):
+class CLN_OT_exporter(bpy.types.Operator):
     '''Exports a mesh as AeonGames Collision Data file (CLN) file'''
     bl_idname = "export_mesh.cln"
     bl_label = "Export AeonGames Collision Data"
-    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
-    index_struct = struct.Struct('i')
+    filepath: bpy.props.StringProperty(subtype='FILE_PATH')
+
+    def __init__(self):
+        self.index_struct = struct.Struct('i')
 
     @classmethod
     def poll(cls, context):
@@ -107,7 +109,7 @@ class CLNExporter(bpy.types.Operator):
                                     polygon.normal[2]) <= 1.000001):
                 plane = [polygon.normal[0], polygon.normal[1], polygon.normal[2],
                          polygon.normal.dot(mesh.vertices[polygon.vertices[0]].co)]
-                collision_faces[polygon].plane_indices += CLNExporter.index_struct.pack(
+                collision_faces[polygon].plane_indices += CLN_OT_exporter.index_struct.pack(
                     self.addplane(plane, geometry_buffer))
             # else:
             #    print("Polygon plane matches a 6-DOP, discarded")
@@ -146,7 +148,7 @@ class CLNExporter(bpy.types.Operator):
                 plane_index = self.addplane(
                     [normal[0], normal[1], normal[2], distance], geometry_buffer)
                 collision_faces[adjacent_faces[0]
-                                ].plane_indices += CLNExporter.index_struct.pack(plane_index)
+                                ].plane_indices += CLN_OT_exporter.index_struct.pack(plane_index)
                 # TODO: Add extra bevelling plane to edge using face normal and
                 # the normal of the created plane.
             elif len(adjacent_faces) == 2:
@@ -169,9 +171,9 @@ class CLNExporter(bpy.types.Operator):
                             [normal[0], normal[1], normal[2], distance], geometry_buffer)
                         # Same plane for both faces.
                         collision_faces[adjacent_faces[0]
-                                        ].plane_indices += CLNExporter.index_struct.pack(plane_index)
+                                        ].plane_indices += CLN_OT_exporter.index_struct.pack(plane_index)
                         collision_faces[adjacent_faces[1]
-                                        ].plane_indices += CLNExporter.index_struct.pack(plane_index)
+                                        ].plane_indices += CLN_OT_exporter.index_struct.pack(plane_index)
                         edgedir = mesh.vertices[edge.vertices[0]
                                                 ].co - mesh.vertices[edge.vertices[1]].co
                         edgedir.normalize()
@@ -192,9 +194,9 @@ class CLNExporter(bpy.types.Operator):
                         plane_index = self.addplane(
                             [normal[0], normal[1], normal[2], distance], geometry_buffer)
                         collision_faces[adjacent_faces[0]
-                                        ].plane_indices += CLNExporter.index_struct.pack(plane_index)
+                                        ].plane_indices += CLN_OT_exporter.index_struct.pack(plane_index)
                         collision_faces[adjacent_faces[1]
-                                        ].plane_indices += CLNExporter.index_struct.pack(-(plane_index + 1))
+                                        ].plane_indices += CLN_OT_exporter.index_struct.pack(-(plane_index + 1))
                         break
                     else:
                         #print ("Concave Edge")
@@ -208,14 +210,14 @@ class CLNExporter(bpy.types.Operator):
                             adjacent_faces[0].normal[2],
                             adjacent_faces[0].normal.dot(mesh.vertices[adjacent_faces[0].vertices[0]].co)], geometry_buffer)
                         collision_faces[adjacent_faces[1]
-                                        ].plane_indices += CLNExporter.index_struct.pack(-(plane_index + 1))
+                                        ].plane_indices += CLN_OT_exporter.index_struct.pack(-(plane_index + 1))
                         plane_index = self.addplane([
                             adjacent_faces[1].normal[0],
                             adjacent_faces[1].normal[1],
                             adjacent_faces[1].normal[2],
                             adjacent_faces[1].normal.dot(mesh.vertices[adjacent_faces[1].vertices[0]].co)], geometry_buffer)
                         collision_faces[adjacent_faces[0]
-                                        ].plane_indices += CLNExporter.index_struct.pack(-(plane_index + 1))
+                                        ].plane_indices += CLN_OT_exporter.index_struct.pack(-(plane_index + 1))
                         break
             else:
                 # either edge has no faces attached or has more than 2, either
@@ -238,7 +240,7 @@ class CLNExporter(bpy.types.Operator):
                 distance], geometry_buffer)
             for polygon in mesh.polygons:
                 if vertex in polygon.vertices:
-                    collision_faces[polygon].plane_indices += CLNExporter.index_struct.pack(
+                    collision_faces[polygon].plane_indices += CLN_OT_exporter.index_struct.pack(
                         plane_index)
 
     def process_collision_mesh(self, mesh_object, geometry_buffer):

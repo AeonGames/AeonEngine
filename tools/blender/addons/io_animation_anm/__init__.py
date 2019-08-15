@@ -18,10 +18,10 @@ bl_info = {
     "name": "AeonGames Animation Format (.anm)",
     "author": "Rodrigo Hernandez (Kwizatz)",
     "version": (1, 0, 0),
-    "blender": (2, 7, 0),
-    "location": "File > Export > Export AeonGames Animations",
+    "blender": (2, 80, 0),
+    "location": "File > Export > Export AeonEngine Animations",
     "description":
-        "Exports armature actions as AeonGames Animation (ANM) files",
+        "Exports armature actions as AeonEngine Animation (ANM) files",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -30,19 +30,19 @@ bl_info = {
 
 def anm_menu_func(self, context):
     self.layout.operator(
-        export.ANMExporter.bl_idname,
-        text="AeonGames Animations (.anm)")
+        export.ANM_OT_exporter.bl_idname,
+        text="AeonEngine Animations (.anm)")
+
 
 
 def register():
-    bpy.utils.register_class(export.ANMExporter)
-    bpy.types.INFO_MT_file_export.append(anm_menu_func)
+    bpy.utils.register_class(export.ANM_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.append(anm_menu_func)
 
 
 def unregister():
-    bpy.utils.unregister_class(export.ANMExporter)
-    bpy.types.INFO_MT_file_export.remove(anm_menu_func)
-
+    bpy.utils.unregister_class(export.ANM_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.remove(anm_menu_func)
 
 if __name__ == "__main__":
     register()

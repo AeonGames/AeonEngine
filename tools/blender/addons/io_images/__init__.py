@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ bl_info = {
     "name": "Export All Images",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
-    "blender": (2, 7, 0),
+    "blender": (2, 80, 0),
     "location": "File > Export > All Images",
     "description": "Saves all images to a directory",
     "warning": "",
@@ -30,12 +30,12 @@ from . import export
 
 def img_menu_func(self, context):
     self.layout.operator(
-        export.IMGExporter.bl_idname,
+        export.IMG_OT_exporter.bl_idname,
         text="All Images")
 
 def register():
-    bpy.utils.register_class(export.IMGExporter)
-    bpy.types.INFO_MT_file_export.append(img_menu_func)
+    bpy.utils.register_class(export.IMG_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.append(img_menu_func)
 
 if __name__ == "__main__":
     register()
