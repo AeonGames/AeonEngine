@@ -20,13 +20,13 @@ import model_pb2
 import google.protobuf.text_format
 
 
-class MDLExporter(bpy.types.Operator):
+class MDL_OT_exporter(bpy.types.Operator):
 
     '''Exports an armature to an AeonGames Model (MDL) file'''
     bl_idname = "export_model.mdl"
     bl_label = "Export AeonGames Model"
 
-    directory = bpy.props.StringProperty(subtype='DIR_PATH')
+    directory: bpy.props.StringProperty(subtype='DIR_PATH')
 
     @classmethod
     def poll(cls, context):

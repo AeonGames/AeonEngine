@@ -28,7 +28,7 @@ from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 
-class MSHExporterCommon():
+class MSH_OT_exporterCommon():
 
     def __init__(self, filepath):
         self.mesh = None
@@ -361,13 +361,13 @@ class MSHExporterCommon():
         print("Done.")
 
 
-class MSHExporter(bpy.types.Operator):
+class MSH_OT_exporter(bpy.types.Operator):
 
     '''Exports a mesh to an AeonGames Mesh (MSH) file'''
     bl_idname = "export_mesh.msh"
     bl_label = "Export AeonGames Mesh"
 
-    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
+    filepath: bpy.props.StringProperty(subtype='FILE_PATH')
 
     @classmethod
     def poll(cls, context):
@@ -380,7 +380,7 @@ class MSHExporter(bpy.types.Operator):
             return {'CANCELLED'}
         bpy.ops.object.mode_set()
         self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
-        exporter = MSHExporterCommon(self.filepath)
+        exporter = MSH_OT_exporterCommon(self.filepath)
         exporter.run(context.active_object)
         return {'FINISHED'}
 
@@ -404,7 +404,7 @@ class MSHExportAll(bpy.types.Operator):
     bl_idname = "export_mesh.all_msh"
     bl_label = "Export AeonGames Meshes"
 
-    directory = bpy.props.StringProperty(subtype='DIR_PATH')
+    directory: bpy.props.StringProperty(subtype='DIR_PATH')
 
     @classmethod
     def poll(cls, context):
@@ -413,7 +413,7 @@ class MSHExportAll(bpy.types.Operator):
     def execute(self, context):
         for object in context.scene.objects:
             if (object.type == 'MESH'):
-                exporter = MSHExporterCommon(
+                exporter = MSH_OT_exporterCommon(
                     self.directory + os.sep + object.name + ".msh")
                 exporter.run(object)
         return {'FINISHED'}

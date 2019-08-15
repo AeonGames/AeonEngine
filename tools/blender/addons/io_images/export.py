@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
 import bpy
 import os
 
-class IMGExporter(bpy.types.Operator):
+class IMG_OT_exporter(bpy.types.Operator):
 
     '''Saves All Images in a specified directory'''
     bl_idname = "export_images.img"
     bl_label = "All Images"
 
-    directory = bpy.props.StringProperty(subtype='DIR_PATH')
+    directory: bpy.props.StringProperty(subtype='DIR_PATH')
 
     @classmethod
     def poll(cls, context):

@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import google.protobuf.text_format
 from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 
-class SKLExporter(bpy.types.Operator):
+class SKL_OT_exporter(bpy.types.Operator):
 
     '''Exports an armature to an AeonGames Skeleton (SKL) file'''
     bl_idname = "export_skeleton.skl"
     bl_label = "Export AeonGames Skeleton"
 
-    filepath = bpy.props.StringProperty(subtype='FILE_PATH')
+    filepath: bpy.props.StringProperty(subtype='FILE_PATH')
 
     @classmethod
     def poll(cls, context):

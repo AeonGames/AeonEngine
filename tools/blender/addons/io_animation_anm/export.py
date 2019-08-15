@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -87,13 +87,13 @@ class Bone():
             "Translation:\n" + str(self.translation[0].data_path) + "\n"
 
 
-class ANMExporter(bpy.types.Operator):
+class ANM_OT_exporter(bpy.types.Operator):
 
     '''Exports an armature's actions to AeonGames animation (ANM) file'''
-    bl_idname = "export_armature.anm"
-    bl_label = "Export AeonGames Animations"
+    bl_idname= "export_armature.anm"
+    bl_label= "Export AeonGames Animations"
 
-    directory = bpy.props.StringProperty(subtype='DIR_PATH')
+    directory: bpy.props.StringProperty(subtype='DIR_PATH')
 
     EPSILON = 0.00001
 

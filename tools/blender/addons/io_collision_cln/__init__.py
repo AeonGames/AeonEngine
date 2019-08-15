@@ -18,7 +18,7 @@ bl_info = {
     "name": "AeonGames Collision Format (.cln)",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
-    "blender": (2, 7, 0),
+    "blender": (2, 80, 0),
     "location": "File > Export > Export AeonGames Collision Data",
     "description": "Exports a mesh as AeonGames Collision Data file (CLN)",
     "warning": "",
@@ -29,18 +29,18 @@ bl_info = {
 
 def cln_menu_func(self, context):
     self.layout.operator(
-        export.CLNExporter.bl_idname,
+        export.CLN_OT_exporter.bl_idname,
         text="AeonGames Collision Data (.cln)")
 
 
 def register():
-    bpy.utils.register_class(export.CLNExporter)
-    bpy.types.INFO_MT_file_export.append(cln_menu_func)
+    bpy.utils.register_class(export.CLN_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.append(cln_menu_func)
 
 
 def unregister():
-    bpy.utils.unregister_class(export.CLNExporter)
-    bpy.types.INFO_MT_file_export.remove(cln_menu_func)
+    bpy.utils.unregister_class(export.CLN_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.remove(cln_menu_func)
 
 
 if __name__ == "__main__":
