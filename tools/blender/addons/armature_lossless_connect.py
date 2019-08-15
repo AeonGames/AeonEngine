@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ bl_info = {
     "name": "Lossless Bone Connect",
     "author": "Rodrigo Hernandez",
     "version": (1, 0),
-    "blender": (2, 78, 0),
+    "blender": (2, 80, 0),
     "location": "Object > Connect Bones",
     "description": "Connects all single child bones to their parent tail without moving their heads",
     "category": "Object",

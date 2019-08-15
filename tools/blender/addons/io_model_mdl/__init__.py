@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ bl_info = {
     "name": "AeonGames Model Format (.mdl)",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
-    "blender": (2, 7, 0),
+    "blender": (2, 80, 0),
     "location": "File > Export > Export AeonGames Model",
     "description": "Exports an armature to an AeonGames Model (MDL) file",
     "warning": "",
@@ -30,13 +30,13 @@ from . import export
 
 def mdl_menu_func(self, context):
     self.layout.operator(
-        export.MDLExporter.bl_idname,
+        export.MDL_OT_exporter.bl_idname,
         text="AeonGames Model (.mdl)")
 
 
 def register():
-    bpy.utils.register_class(export.MDLExporter)
-    bpy.types.INFO_MT_file_export.append(mdl_menu_func)
+    bpy.utils.register_class(export.MDL_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.append(mdl_menu_func)
 
 
 if __name__ == "__main__":
