@@ -49,6 +49,7 @@ namespace AeonGames
         const VkCommandPool& GetCommandPool() const;
         const VkSemaphore& GetSignalSemaphore() const;
         const VkDescriptorSetLayout& GetUniformBufferDescriptorSetLayout() const;
+        const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
@@ -97,6 +98,7 @@ namespace AeonGames
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
+        mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};

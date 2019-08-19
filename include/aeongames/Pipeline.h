@@ -63,7 +63,6 @@ namespace AeonGames
         DLL virtual ~Pipeline() = 0;
         virtual void Load ( const PipelineBuffer& aPipelineBuffer ) = 0;
         virtual void Unload() = 0;
-        virtual const Material& GetDefaultMaterial() const = 0;
         // Non Virtual
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( uint32_t aId );

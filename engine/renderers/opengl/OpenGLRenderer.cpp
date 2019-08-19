@@ -17,7 +17,6 @@ limitations under the License.
 #include "OpenGLImage.h"
 #include "OpenGLWindow.h"
 #include "OpenGLMesh.h"
-#include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLUniformBuffer.h"
@@ -33,6 +32,7 @@ namespace AeonGames
             {
                 throw std::runtime_error ( "Unable to Load OpenGL functions." );
             }
+            /** @todo load mOverlay pipeline */
         }
         catch ( ... )
         {

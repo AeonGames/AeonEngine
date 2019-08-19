@@ -84,11 +84,6 @@ namespace AeonGames
         Unload();
     }
 
-    const OpenGLMaterial& OpenGLPipeline::GetDefaultMaterial() const
-    {
-        return mDefaultMaterial;
-    }
-
     static std::string GetVertexShaderCode ( const PipelineBuffer& aPipelineBuffer )
     {
         std::string vertex_shader{ "#version 450\n" };
@@ -105,7 +100,7 @@ namespace AeonGames
         );
         vertex_shader.append ( transforms );
 
-        if ( aPipelineBuffer.default_material().property().size() )
+        if ( aPipelineBuffer.uniform().size() )
         {
             std::string properties (
                 "layout(binding = " + std::to_string ( uniform_block_binding++ ) +
@@ -124,7 +119,7 @@ namespace AeonGames
 
             uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            for ( auto& i : aPipelineBuffer.sampler() )
             {
                 samplers += "layout(binding = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
@@ -161,7 +156,7 @@ namespace AeonGames
 
         fragment_shader.append ( transforms );
 
-        if ( aPipelineBuffer.default_material().property().size() )
+        if ( aPipelineBuffer.uniform().size() )
         {
             std::string properties
             {
@@ -171,13 +166,12 @@ namespace AeonGames
 
             uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            for ( auto& i : aPipelineBuffer.sampler() )
             {
                 samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
             }
             samplers.append ( "//----SAMPLERS-END----\n" );
-
             fragment_shader.append ( properties );
             fragment_shader.append ( samplers );
         }
@@ -200,7 +194,6 @@ namespace AeonGames
         }
 
         mTopology = GetGLTopology ( aPipelineBuffer.topology() );
-        mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
         std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
         std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
 
@@ -315,9 +308,10 @@ namespace AeonGames
 
         // Samplers
 #if 1
-        for ( GLuint uniform = 0; uniform < GetDefaultMaterial().GetSamplers().size(); ++uniform )
+
+        for ( GLint i = 0; i < aPipelineBuffer.sampler().size(); ++i )
         {
-            glUniform1i ( uniform, uniform );
+            glUniform1i ( i, i );
             OPENGL_CHECK_ERROR_THROW;
         }
 #else
@@ -348,32 +342,34 @@ namespace AeonGames
             mProgramId = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
-        mDefaultMaterial.Unload();
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial& aMaterial, const OpenGLUniformBuffer* aSkeletonBuffer ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const OpenGLUniformBuffer* aSkeletonBuffer ) const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
 
-        for ( GLenum i = 0; i < aMaterial.GetSamplers().size(); ++i )
-        {
-            glActiveTexture ( GL_TEXTURE0 + i );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLImage*> ( std::get<1> ( aMaterial.GetSamplers() [i] ).Cast<Image>() )->GetTextureId() );
-            OPENGL_CHECK_ERROR_NO_THROW;
-        }
-
         // Binding 0 is the matrix buffer.
         GLuint index{1};
-        if ( GLuint buffer = aMaterial.GetPropertiesBufferId() )
-        {
-            glBindBuffer ( GL_UNIFORM_BUFFER, buffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindBufferBase ( GL_UNIFORM_BUFFER, index++, buffer );
-            OPENGL_CHECK_ERROR_THROW;
-        }
 
+        if ( aMaterial )
+        {
+            for ( GLenum i = 0; i < aMaterial->GetSamplers().size(); ++i )
+            {
+                glActiveTexture ( GL_TEXTURE0 + i );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLImage*> ( std::get<1> ( aMaterial->GetSamplers() [i] ).Cast<Image>() )->GetTextureId() );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+
+            if ( GLuint buffer = aMaterial->GetPropertiesBufferId() )
+            {
+                glBindBuffer ( GL_UNIFORM_BUFFER, buffer );
+                OPENGL_CHECK_ERROR_THROW;
+                glBindBufferBase ( GL_UNIFORM_BUFFER, index++, buffer );
+                OPENGL_CHECK_ERROR_THROW;
+            }
+        }
         if ( aSkeletonBuffer != nullptr && aSkeletonBuffer->GetBufferId() )
         {
             glBindBuffer ( GL_UNIFORM_BUFFER, aSkeletonBuffer->GetBufferId() );
