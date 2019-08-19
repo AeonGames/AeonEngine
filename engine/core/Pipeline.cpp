@@ -53,7 +53,7 @@ namespace AeonGames
     void Pipeline::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static PipelineBuffer pipeline_buffer;
-        LoadProtoBufObject ( pipeline_buffer, aBuffer, aBufferSize, "AEONPRG" );
+        LoadProtoBufObject ( pipeline_buffer, aBuffer, aBufferSize, "AEONPLN" );
         Load ( pipeline_buffer );
         pipeline_buffer.Clear();
     }

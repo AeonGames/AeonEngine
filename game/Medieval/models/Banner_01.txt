@@ -2,6 +2,9 @@ AEONMDL
 default_pipeline {
     path: "shaders/diffuse_vertex_color.txt"
 }
+default_material {
+    path: "materials/diffuse_vertex_color.txt"
+}
 assembly {
     mesh {
         path: "Medieval/meshes/Banner_01.txt"

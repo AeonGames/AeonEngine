@@ -298,7 +298,8 @@ namespace AeonGames
                             projection_matrix.Invert();
                             mWindow->Render ( aNode.GetGlobalTransform() * projection_matrix,
                                               qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline() );
+                                              qWorldEditorApp->GetWirePipeline(),
+                                              &qWorldEditorApp->GetWireMaterial() );
                         }
 
                         AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
@@ -309,17 +310,20 @@ namespace AeonGames
                             // Render Node AABBss
                             mWindow->Render ( transformed_aabb.GetTransform(),
                                               qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline() );
+                                              qWorldEditorApp->GetWirePipeline(),
+                                              &qWorldEditorApp->GetWireMaterial() );
                             // Render Node Root
                             mWindow->Render ( aNode.GetGlobalTransform(),
                                               qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline() );
+                                              qWorldEditorApp->GetWirePipeline(),
+                                              &qWorldEditorApp->GetWireMaterial() );
                             // Render AABB Center
                             mWindow->Render (   Transform{Vector3{1, 1, 1},
                                                           Quaternion{1, 0, 0, 0},
                                                           Vector3{transformed_aabb.GetCenter() }},
                                                 qWorldEditorApp->GetAABBWireMesh(),
-                                                qWorldEditorApp->GetWirePipeline() );
+                                                qWorldEditorApp->GetWirePipeline(),
+                                                &qWorldEditorApp->GetWireMaterial() );
                         }
                     } );
                 }

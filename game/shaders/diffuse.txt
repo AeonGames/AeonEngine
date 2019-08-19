@@ -1,27 +1,15 @@
-AEONPRG
-default_material {
-    property {
-      name: "LightPosition"
-      vector3 {
-        x: 0
-        y: 0
-        z: 0
-      }
-    }
-    property {
-      name: "Kd"
-      vector3 {
-        x: 1
-        y: 1
-        z: 1
-      }
-    }
-    sampler {
-      name: "DiffuseMap"
-      image {
-		    path: "images/orange.png"
-	  }
-    }
+AEONPLN
+uniform {
+  name: "LightPosition"
+  type: VECTOR_FLOAT_3
+}
+uniform {
+  name: "Kd"
+  type: VECTOR_FLOAT_3
+}
+uniform {
+    name: "DiffuseMap"
+    type: SAMPLER
 }
 topology: TRIANGLE_LIST
 vertex_shader {

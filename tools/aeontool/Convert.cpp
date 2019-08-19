@@ -518,10 +518,10 @@ namespace AeonGames
             switch ( GetFileType ( magick_number ) )
             {
             /* coverity[unterminated_case] */
-            case FileType::AEONPRGB:
+            case FileType::AEONPLNB:
                 binary_input = true;
             /* coverity[fallthrough] */
-            case FileType::AEONPRGT:
+            case FileType::AEONPLNT:
                 message = &pipeline_buffer;
                 break;
             /* coverity[unterminated_case] */
@@ -646,10 +646,10 @@ namespace AeonGames
         {
             const char* type = aMagic + 4;
             // This looks like an AeonEngine file, now determine which one.
-            if ( strncmp ( type, "PRG", 3 ) == 0 )
+            if ( strncmp ( type, "PLN", 3 ) == 0 )
             {
-                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONPRGB :
-                         Convert::FileType::AEONPRGT;
+                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONPLNB :
+                         Convert::FileType::AEONPLNT;
             }
             else if ( strncmp ( type, "MTL", 3 ) == 0 )
             {

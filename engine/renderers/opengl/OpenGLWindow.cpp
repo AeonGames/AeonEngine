@@ -354,9 +354,7 @@ const GLuint vertex_size{sizeof(vertices)};
     {
         const OpenGLMesh& opengl_mesh{reinterpret_cast<const OpenGLMesh&> ( aMesh ) };
         const OpenGLPipeline& opengl_pipeline{reinterpret_cast<const OpenGLPipeline&> ( aPipeline ) };
-        opengl_pipeline.Use (
-            reinterpret_cast<const OpenGLMaterial&> ( ( aMaterial ) ?
-                    *aMaterial : opengl_pipeline.GetDefaultMaterial() ),
+        opengl_pipeline.Use (reinterpret_cast<const OpenGLMaterial*>(aMaterial),
             reinterpret_cast<const OpenGLUniformBuffer*> ( aSkeleton ) );
         OPENGL_CHECK_ERROR_NO_THROW;
         glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );

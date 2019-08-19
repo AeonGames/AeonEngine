@@ -1,23 +1,13 @@
-AEONPRG
-default_material {
-    property {
-      name: "LightPosition"
-      vector3 {
-        x: 0
-        y: 0
-        z: 0
-      }
-    }
-    property {
-      name: "Kd"
-      vector3 {
-        x: 1
-        y: 1
-        z: 1
-      }
-    }
-}
+AEONPLN
 topology: TRIANGLE_LIST
+uniform {
+  name: "LightPosition"
+  type: VECTOR_FLOAT_3
+}
+uniform {
+  name: "Kd"
+  type: VECTOR_FLOAT_3
+}
 vertex_shader {
   code:
   "layout(location = 0) out vec3 LightIntensity;\n"

@@ -1,16 +1,9 @@
-AEONPRG
-default_material {
-    property {
-      name: "SolidColor"
-      vector4 {
-        x: 0.5
-        y: 0.5
-        z: 0.5
-        w: 1.0
-      }
-    }
-}
+AEONPLN
 topology: TRIANGLE_LIST
+uniform {
+  name: "SolidColor"
+  type: VECTOR_FLOAT_4
+}
 vertex_shader {
   code: "void main()\n"
   "{\n"

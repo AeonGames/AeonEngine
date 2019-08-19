@@ -536,11 +536,19 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( ( aMaterial ) ? *aMaterial : aPipeline.GetDefaultMaterial() );
-        const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
-        const auto* vk_skeleton = reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton );
-        assert ( material_descriptor_sets.size() < 3 );
+        //const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( aMaterial );
+        //const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
+        //const auto* vk_skeleton = reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton );
+        //assert ( material_descriptor_sets.size() < 3 );
 
+        //========================Move to Pipeline==============================================//
+#if 1
+        reinterpret_cast<const VulkanPipeline&> ( aPipeline ).Use (
+            reinterpret_cast<const VulkanMaterial*> ( aMaterial ),
+            &mMatrices,
+            &aModelMatrix,
+            reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton ) );
+#else
         uint32_t descriptor_set_count = 1;
         std::array<VkDescriptorSet, 4> descriptor_sets { { mMatrices.GetDescriptorSet() }};
         if ( vk_skeleton )
@@ -564,7 +572,8 @@ namespace AeonGames
                                   0,
                                   descriptor_set_count,
                                   descriptor_sets.data(), 0, nullptr );
-
+#endif
+        //======================================================================================//
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
