@@ -5,8 +5,12 @@
     <file alias="grid.msh">${CMAKE_CURRENT_BINARY_DIR}/grid.msh</file>
   </qresource>
   <qresource prefix="pipelines">
-    <file alias="solid_color.prg">${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg</file>
-    <file alias="solid_wire.prg">${CMAKE_CURRENT_BINARY_DIR}/solid_wire.prg</file>
-    <file alias="grid.prg">${CMAKE_CURRENT_BINARY_DIR}/grid.prg</file>
+    <file alias="solid_color.pln">${CMAKE_CURRENT_BINARY_DIR}/solid_color.pln</file>
+    <file alias="solid_wire.pln">${CMAKE_CURRENT_BINARY_DIR}/solid_wire.pln</file>
+    <file alias="grid.pln">${CMAKE_CURRENT_BINARY_DIR}/grid.pln</file>
+  </qresource>
+  <qresource prefix="materials">
+    <file alias="grid.mtl">${CMAKE_CURRENT_BINARY_DIR}/grid.mtl</file>
+    <file alias="solidcolor.mtl">${CMAKE_CURRENT_BINARY_DIR}/solidcolor.mtl</file>
   </qresource>
 </RCC>

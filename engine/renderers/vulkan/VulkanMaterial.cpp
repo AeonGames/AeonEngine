@@ -63,9 +63,8 @@ namespace AeonGames
         mUniformBuffer{aMaterial.mUniformBuffer},
         mVariables{aMaterial.mVariables}
     {
-        InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
-        InitializeDescriptorSet();
+        InitializeDescriptorSets();
     }
 
     VulkanMaterial& VulkanMaterial::operator= ( const VulkanMaterial& aMaterial )
@@ -76,9 +75,8 @@ namespace AeonGames
         }
         mVariables = aMaterial.mVariables;
         mUniformBuffer = aMaterial.mUniformBuffer;
-        InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
-        InitializeDescriptorSet();
+        InitializeDescriptorSets();
         return *this;
     }
 
@@ -186,16 +184,14 @@ namespace AeonGames
         {
             std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
         }
-        InitializeDescriptorSetLayout();
         InitializeDescriptorPool();
-        InitializeDescriptorSet();
+        InitializeDescriptorSets();
     }
 
     void VulkanMaterial::Unload()
     {
-        FinalizeDescriptorSet();
+        FinalizeDescriptorSets();
         FinalizeDescriptorPool();
-        FinalizeDescriptorSetLayout();
         mUniformBuffer.Finalize();
     }
 
@@ -328,78 +324,9 @@ namespace AeonGames
         return ResourceId{"Image"_crc32, 0};
     }
 
-    const std::vector<VkDescriptorSetLayout>& VulkanMaterial::GetDescriptorSetLayouts() const
-    {
-        return mVkDescriptorSetLayouts;
-    }
-
     const std::vector<VkDescriptorSet>& VulkanMaterial::GetDescriptorSets() const
     {
         return mVkDescriptorSets;
-    }
-
-    void VulkanMaterial::InitializeDescriptorSetLayout()
-    {
-        if ( !mUniformBuffer.GetSize() && !mSamplers.size() )
-        {
-            // We don' need any layouts.
-            return;
-        }
-
-        size_t layout_index = 0;
-        mVkDescriptorSetLayouts.resize ( ( mUniformBuffer.GetSize() ? 1 : 0 ) + ( mSamplers.size() ? 1 : 0 ), VK_NULL_HANDLE );
-
-        if ( mUniformBuffer.GetSize() )
-        {
-            VkDescriptorSetLayoutBinding descriptor_set_layout_binding{};
-            descriptor_set_layout_binding.binding = 0;
-            descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-            descriptor_set_layout_binding.descriptorCount = 1;
-            descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
-            descriptor_set_layout_binding.pImmutableSamplers = nullptr;
-
-            VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
-            descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            descriptor_set_layout_create_info.pNext = nullptr;
-            descriptor_set_layout_create_info.flags = 0;
-            descriptor_set_layout_create_info.bindingCount = 1;
-            descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
-            if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayouts[layout_index++] ) )
-            {
-                std::ostringstream stream;
-                stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-
-        if ( mSamplers.size() )
-        {
-            std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
-            descriptor_set_layout_bindings.resize ( mSamplers.size() );
-            for ( uint32_t i = 0; i < mSamplers.size(); ++i )
-            {
-                descriptor_set_layout_bindings[i].binding = i;
-                descriptor_set_layout_bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                // Descriptor Count is the count of elements in an array.
-                descriptor_set_layout_bindings[i].descriptorCount = 1;
-                descriptor_set_layout_bindings[i].stageFlags = VK_SHADER_STAGE_ALL;
-                descriptor_set_layout_bindings[i].pImmutableSamplers = nullptr;
-            }
-
-            VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
-            descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            descriptor_set_layout_create_info.pNext = nullptr;
-            descriptor_set_layout_create_info.flags = 0;
-            descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
-            descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-            if ( VkResult result = vkCreateDescriptorSetLayout ( mVulkanRenderer.GetDevice(), &descriptor_set_layout_create_info, nullptr, &mVkDescriptorSetLayouts[layout_index++] ) )
-            {
-                std::ostringstream stream;
-                stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
     }
 
     void VulkanMaterial::InitializeDescriptorPool()
@@ -435,14 +362,28 @@ namespace AeonGames
         }
     }
 
-    void VulkanMaterial::InitializeDescriptorSet()
+    void VulkanMaterial::InitializeDescriptorSets()
     {
+        uint32_t descriptorset_layout_count = 0;
+        std::array<VkDescriptorSetLayout, 2> descriptorset_layouts{VK_NULL_HANDLE, VK_NULL_HANDLE};
+        if ( mUniformBuffer.GetSize() )
+        {
+            descriptorset_layouts[descriptorset_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+        }
+        if ( mSamplers.size() )
+        {
+            descriptorset_layouts[descriptorset_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplers.size() );
+        }
+        if ( !descriptorset_layout_count )
+        {
+            return;
+        }
         VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
         descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-        descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t> ( mVkDescriptorSetLayouts.size() );
-        descriptor_set_allocate_info.pSetLayouts = mVkDescriptorSetLayouts.data();
-        mVkDescriptorSets.resize ( mVkDescriptorSetLayouts.size(), VK_NULL_HANDLE );
+        descriptor_set_allocate_info.descriptorSetCount = descriptorset_layout_count;
+        descriptor_set_allocate_info.pSetLayouts = descriptorset_layouts.data();
+        mVkDescriptorSets.resize ( descriptorset_layout_count, VK_NULL_HANDLE );
         if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, mVkDescriptorSets.data() ) )
         {
             std::ostringstream stream;
@@ -476,13 +417,13 @@ namespace AeonGames
             write_descriptor_set.pImageInfo = nullptr;
             write_descriptor_set.pTexelBufferView = nullptr;
         }
-
         for ( uint32_t i = 0; i < mSamplers.size(); ++i )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
+            // Note that the descriptor set does not change, we are setting multiple bindings on a single descriptor set.
             write_descriptor_set.dstSet = mVkDescriptorSets[descriptor_set_index];
             write_descriptor_set.dstBinding = i;
             write_descriptor_set.dstArrayElement = 0;
@@ -491,7 +432,8 @@ namespace AeonGames
             write_descriptor_set.pBufferInfo = nullptr;
             write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSamplers[i] ).Get<Image>() )->GetDescriptorImageInfo();
         }
-        descriptor_set_index += 1;
+        /* Uncomment the following line if a third descriptor set is ever needed. */
+        //descriptor_set_index += 1;
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
@@ -504,17 +446,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanMaterial::FinalizeDescriptorSetLayout()
-    {
-        for ( auto& i : mVkDescriptorSetLayouts )
-        {
-            vkDestroyDescriptorSetLayout ( mVulkanRenderer.GetDevice(), i, nullptr );
-            i = VK_NULL_HANDLE;
-        }
-        mVkDescriptorSetLayouts.clear();
-    }
-
-    void VulkanMaterial::FinalizeDescriptorSet()
+    void VulkanMaterial::FinalizeDescriptorSets()
     {
         if ( mVkDescriptorSets.size() )
         {

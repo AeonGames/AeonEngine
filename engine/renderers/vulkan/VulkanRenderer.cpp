@@ -73,6 +73,13 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+
+        for ( auto& i : mVkSamplerDescriptorSetLayouts )
+        {
+            vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
+        }
+        mVkSamplerDescriptorSetLayouts.clear();
+
         FinalizeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
         FinalizeCommandPool();
         FinalizeRenderPass();
@@ -627,6 +634,51 @@ namespace AeonGames
     const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDescriptorSetLayout() const
     {
         return mVkUniformBufferDescriptorSetLayout;
+    }
+
+    const VkDescriptorSetLayout& VulkanRenderer::GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const
+    {
+        auto lb = std::lower_bound ( mVkSamplerDescriptorSetLayouts.begin(), mVkSamplerDescriptorSetLayouts.end(), aSamplerCount,
+                                     [] ( const std::tuple<size_t, VkDescriptorSetLayout>&a, size_t b )
+        {
+            return std::get<0> ( a ) < b;
+        } );
+        if ( lb != mVkSamplerDescriptorSetLayouts.end() && std::get<0> ( *lb ) == aSamplerCount )
+        {
+            return std::get<1> ( *lb );
+        }
+        if ( aSamplerCount )
+        {
+            std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings;
+            descriptor_set_layout_bindings.resize ( aSamplerCount );
+            for ( uint32_t i = 0; i < aSamplerCount; ++i )
+            {
+                descriptor_set_layout_bindings[i].binding = i;
+                descriptor_set_layout_bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                // Descriptor Count is the count of elements in an array.
+                descriptor_set_layout_bindings[i].descriptorCount = 1;
+                descriptor_set_layout_bindings[i].stageFlags = VK_SHADER_STAGE_ALL;
+                descriptor_set_layout_bindings[i].pImmutableSamplers = nullptr;
+            }
+
+            VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info {};
+            descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            descriptor_set_layout_create_info.pNext = nullptr;
+            descriptor_set_layout_create_info.flags = 0;
+            descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
+            descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+            lb = mVkSamplerDescriptorSetLayouts.insert ( lb, {{aSamplerCount}, {VK_NULL_HANDLE}} );
+            if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr,
+                                   &std::get<1> ( *lb ) ) )
+            {
+                std::ostringstream stream;
+                stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            return std::get<1> ( *lb );
+        }
+        throw std::runtime_error ( "Sampler Count must be > 0" );
+        return VK_NULL_HANDLE;
     }
 
     void VulkanRenderer::InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout )

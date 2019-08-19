@@ -133,26 +133,26 @@ namespace AeonGames
     std::string GetPropertiesGLSL ( const PipelineBuffer& aPipelineBuffer )
     {
         std::string properties{};
-        for ( auto& i : aPipelineBuffer.default_material().property() )
+        for ( auto& i : aPipelineBuffer.uniform() )
         {
-            switch ( i.value_case() )
+            switch ( i.type() )
             {
-            case PropertyBuffer::ValueCase::kScalarFloat:
+            case UniformDescriptorBuffer::SCALAR_FLOAT:
                 properties += "float " + i.name() + ";\n";
                 break;
-            case PropertyBuffer::ValueCase::kScalarUint:
+            case UniformDescriptorBuffer::SCALAR_UINT:
                 properties += "uint " + i.name() + ";\n";
                 break;
-            case PropertyBuffer::ValueCase::kScalarInt:
+            case UniformDescriptorBuffer::SCALAR_INT:
                 properties += "int " + i.name() + ";\n";
                 break;
-            case PropertyBuffer::ValueCase::kVector2:
+            case UniformDescriptorBuffer::VECTOR_FLOAT_2:
                 properties += "vec2 " + i.name() + ";\n";
                 break;
-            case PropertyBuffer::ValueCase::kVector3:
+            case UniformDescriptorBuffer::VECTOR_FLOAT_3:
                 properties += "vec3 " + i.name() + ";\n";
                 break;
-            case PropertyBuffer::ValueCase::kVector4:
+            case UniformDescriptorBuffer::VECTOR_FLOAT_4:
                 properties += "vec4 " + i.name() + ";\n";
                 break;
             default:
@@ -211,5 +211,43 @@ namespace AeonGames
             break;
         }
         return Property{};
+    }
+
+    size_t GetUniformBufferSize ( const PipelineBuffer& aPipelineBuffer )
+    {
+        size_t size = 0;
+        for ( auto& i : aPipelineBuffer.uniform() )
+        {
+            switch ( i.type() )
+            {
+            case UniformDescriptorBuffer::SCALAR_FLOAT:
+                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
+                size += sizeof ( float );
+                break;
+            case UniformDescriptorBuffer::SCALAR_UINT:
+                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
+                size += sizeof ( uint32_t );
+                break;
+            case UniformDescriptorBuffer::SCALAR_INT:
+                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
+                size += sizeof ( int32_t );
+                break;
+            case UniformDescriptorBuffer::VECTOR_FLOAT_2:
+                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
+                size += sizeof ( float ) * 2;
+                break;
+            case UniformDescriptorBuffer::VECTOR_FLOAT_3:
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 3;
+                break;
+            case UniformDescriptorBuffer::VECTOR_FLOAT_4:
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                size += sizeof ( float ) * 4;
+                break;
+            default:
+                break;
+            }
+        }
+        return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 float
     }
 }

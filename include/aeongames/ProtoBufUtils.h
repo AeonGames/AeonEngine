@@ -30,6 +30,7 @@ namespace AeonGames
     class QuaternionBuffer;
     class TransformBuffer;
     class ComponentPropertyBuffer;
+    class PipelineBuffer;
     DLL uint32_t GetReferenceBufferId ( const ReferenceBuffer& reference_buffer );
     DLL uint32_t GetAttributes ( const PipelineBuffer& aPipelineBuffer );
     DLL std::string GetAttributesGLSL ( const PipelineBuffer& aPipelineBuffer );
@@ -38,5 +39,6 @@ namespace AeonGames
     Quaternion GetQuaternion ( const QuaternionBuffer& aQuaternion );
     Transform GetTransform ( const TransformBuffer& aTransform );
     Property GetProperty ( const ComponentPropertyBuffer& aComponentPropertyBuffer );
+    size_t GetUniformBufferSize ( const PipelineBuffer& aPipelineBuffer );
 }
 #endif

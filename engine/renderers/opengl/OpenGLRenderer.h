@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Matrix4x4.h"
 #include "OpenGLFunctions.h"
+#include "OpenGLPipeline.h"
 
 namespace AeonGames
 {
@@ -58,6 +59,8 @@ namespace AeonGames
         void* mOpenGLContext{};
         /// Internal OpenGL Device Context used on Windows only for now.
         void* mDeviceContext{};
+        /// Overlay Pipeline
+        OpenGLPipeline mOverlayPipeline{};
     };
 }
 #endif

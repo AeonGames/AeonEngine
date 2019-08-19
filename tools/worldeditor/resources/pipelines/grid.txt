@@ -1,71 +1,37 @@
-AEONPRG
-default_material {
-    property {
-      name: "OddLineColor"
-      vector4 {
-        x: 0.0
-        y: 0.0
-        z: 0.0
-        w: 1.0
-      }
-    }
-    property {
-      name: "EvenLineColor"
-      vector4 {
-        x: 0.0
-        y: 0.0
-        z: 0.0
-        w: 1.0
-      }
-    }
-    property {
-      name: "CentralLineColor"
-      vector4 {
-        x: 0.0
-        y: 0.0
-        z: 0.0
-        w: 1.0
-      }
-    }
-    property {
-      name: "BorderLineColor"
-      vector4 {
-        x: 0.0
-        y: 0.0
-        z: 0.0
-        w: 1.0
-      }
-    }
-    property {
-      name: "Scale"
-      vector3 {
-        x: 1
-        y: 1
-        z: 1
-      }
-    }
-    property {
-      name: "StartingPosition"
-      vector3 {
-        x: 0
-        y: 0
-        z: 0
-      }
-    }
-      property {
-      name: "Offset"
-      vector3 {
-        x: 0
-        y: 0.03225806451
-        z: 0
-      }
-    }
-    property {
-      name: "LineCount"
-      scalar_uint: 32
-    }
-}
+AEONPLN
 topology: LINE_LIST
+uniform {
+  name: "OddLineColor"
+  type: VECTOR_FLOAT_4
+}
+uniform {
+  name: "EvenLineColor"
+  type: VECTOR_FLOAT_4
+}
+uniform {
+  name: "CentralLineColor"
+  type: VECTOR_FLOAT_4
+}
+uniform {
+  name: "BorderLineColor"
+  type: VECTOR_FLOAT_4
+}
+uniform {
+  name: "Scale"
+  type: VECTOR_FLOAT_3
+}
+uniform {
+  name: "StartingPosition"
+  type: VECTOR_FLOAT_3
+}
+  uniform {
+  name: "Offset"
+  type: VECTOR_FLOAT_3
+}
+uniform {
+  name: "LineCount"
+  type: SCALAR_UINT
+}
 vertex_shader {
   code:
     "#ifndef VULKAN\n"

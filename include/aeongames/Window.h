@@ -39,6 +39,7 @@ namespace AeonGames
         ///@{
         virtual void BeginRender() const = 0;
         virtual void EndRender() const = 0;
+        /** @todo Model matrix should be optional, the only required arguments should be pipeline and mesh... and I am not sure about pipeline. */
         virtual void Render (
             const Matrix4x4& aModelMatrix,
             const Mesh& aMesh,

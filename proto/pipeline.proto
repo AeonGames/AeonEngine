@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,22 @@
 syntax = "proto3";
 package AeonGames;
 
-import "material.proto";
+message UniformDescriptorBuffer {
+    enum Type
+    {
+		SCALAR_FLOAT   = 0;
+		SCALAR_UINT    = 1;
+		SCALAR_INT     = 2;
+		VECTOR_FLOAT_2 = 3;
+		VECTOR_FLOAT_3 = 4;
+		VECTOR_FLOAT_4 = 5;
+	}
+	string name = 1;
+	Type type = 2;
+}
+message SamplerDescriptorBuffer {
+	string name = 1;
+}
 
 message ShaderBuffer {
     oneof source {
@@ -39,8 +54,9 @@ message PipelineBuffer {
 		TRIANGLE_STRIP_WITH_ADJACENCY	 = 9;
 		PATCH_LIST						 = 10;
     }
-	MaterialBuffer default_material    = 1;
-	Topology       topology            = 2;
-	ShaderBuffer vertex_shader         = 3;
-	ShaderBuffer fragment_shader       = 4;
+	Topology       topology                  = 1;
+	repeated UniformDescriptorBuffer uniform = 2;
+	repeated SamplerDescriptorBuffer sampler = 3;
+	ShaderBuffer vertex_shader               = 4;
+	ShaderBuffer fragment_shader             = 5;
 }

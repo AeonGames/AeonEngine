@@ -43,7 +43,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, uint32_t aPath ) :
-        mVulkanRenderer { aVulkanRenderer }, mDefaultMaterial {mVulkanRenderer}
+        mVulkanRenderer { aVulkanRenderer }
     {
         if ( aPath )
         {
@@ -54,11 +54,6 @@ namespace AeonGames
     VulkanPipeline::~VulkanPipeline()
     {
         Unload();
-    }
-
-    const VulkanMaterial& VulkanPipeline::GetDefaultMaterial() const
-    {
-        return mDefaultMaterial;
     }
 
     const VkPipelineLayout VulkanPipeline::GetPipelineLayout() const
@@ -75,7 +70,7 @@ namespace AeonGames
         std::string samplers ( "//----SAMPLERS-START----\n" );
         {
             uint32_t sampler_binding = 0;
-            for ( auto& i : aPipelineBuffer.default_material().sampler() )
+            for ( auto& i : aPipelineBuffer.sampler() )
             {
                 samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
@@ -245,7 +240,6 @@ namespace AeonGames
 
     void VulkanPipeline::Load ( const PipelineBuffer& aPipelineBuffer )
     {
-        mDefaultMaterial.Load ( aPipelineBuffer.default_material() );
         std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
         std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
 
@@ -435,9 +429,13 @@ namespace AeonGames
             // Skeleton Descriptor Set Layout
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         }
-        for ( auto& i : mDefaultMaterial.GetDescriptorSetLayouts() )
+        if ( aPipelineBuffer.uniform().size() )
         {
-            descriptor_set_layouts[descriptor_set_layout_count++] = i;
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+        }
+        if ( aPipelineBuffer.sampler().size() )
+        {
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( aPipelineBuffer.sampler().size() );
         }
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
@@ -484,7 +482,6 @@ namespace AeonGames
 
     void VulkanPipeline::Unload()
     {
-        mDefaultMaterial.Unload();
         if ( mVkPipeline != VK_NULL_HANDLE )
         {
             vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkPipeline, nullptr );
@@ -502,6 +499,47 @@ namespace AeonGames
                 vkDestroyShaderModule ( mVulkanRenderer.GetDevice(), i, nullptr );
                 i = VK_NULL_HANDLE;
             }
+        }
+    }
+
+    void VulkanPipeline::Use ( const VulkanMaterial* aMaterial,
+                               const VulkanUniformBuffer* aProjectionView,
+                               const Matrix4x4* aModelMatrix,
+                               const VulkanUniformBuffer* aSkeleton ) const
+    {
+        uint32_t descriptor_set_count = 0;
+        std::array<VkDescriptorSet, 4> descriptor_sets{};
+        if ( aProjectionView )
+        {
+            descriptor_sets[descriptor_set_count++] = aProjectionView->GetDescriptorSet();
+        }
+        if ( aSkeleton )
+        {
+            descriptor_sets[descriptor_set_count++] = aSkeleton->GetDescriptorSet();
+        }
+        if ( aMaterial )
+        {
+            for ( auto& i : aMaterial->GetDescriptorSets() )
+            {
+                descriptor_sets[descriptor_set_count++] = i;
+            }
+        }
+        vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+        if ( aModelMatrix )
+        {
+            vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
+                                 mVkPipelineLayout,
+                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                 0, sizeof ( float ) * 16, aModelMatrix->GetMatrix4x4() );
+        }
+        if ( descriptor_set_count )
+        {
+            vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      mVkPipelineLayout,
+                                      0,
+                                      descriptor_set_count,
+                                      descriptor_sets.data(), 0, nullptr );
         }
     }
 }

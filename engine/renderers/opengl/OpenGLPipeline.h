@@ -34,17 +34,15 @@ namespace AeonGames
         ///@{
         void Load ( const PipelineBuffer& aPipelineBuffer ) final;
         void Unload() final;
-        const OpenGLMaterial& GetDefaultMaterial() const final;
         ///@}
         ~OpenGLPipeline() final;
-        void Use ( const OpenGLMaterial& aMaterial, const OpenGLUniformBuffer* aSkeletonBuffer = nullptr ) const;
+        void Use ( const OpenGLMaterial* aMaterial = nullptr, const OpenGLUniformBuffer* aSkeletonBuffer = nullptr ) const;
         GLenum GetTopology() const;
     private:
         void Initialize();
         void Finalize();
         uint32_t mProgramId{};
         GLenum mTopology{};
-        OpenGLMaterial mDefaultMaterial{};
     };
 }
 #endif

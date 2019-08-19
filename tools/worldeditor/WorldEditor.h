@@ -47,6 +47,7 @@ namespace AeonGames
         const Material& GetXGridMaterial() const;
         const Material& GetYGridMaterial() const;
         const Pipeline& GetWirePipeline() const;
+        const Material& GetWireMaterial() const;
         const Mesh& GetAABBWireMesh() const;
         bool IsBlocked() const;
         int GetStringIdMetaType() const;
@@ -66,6 +67,7 @@ namespace AeonGames
         std::unique_ptr<Material> mXGridMaterial{};
         std::unique_ptr<Material> mYGridMaterial{};
         std::unique_ptr<Pipeline> mWirePipeline{};
+        std::unique_ptr<Material> mWireMaterial{};
         std::unique_ptr<Mesh> mAABBWireMesh{};
     };
 }

@@ -88,37 +88,50 @@ configure_file(worldeditor_dynamic.qrc
                ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/aabb.msh
-         ${CMAKE_CURRENT_BINARY_DIR}/aabb_wire.msh
-         ${CMAKE_CURRENT_BINARY_DIR}/grid.msh
-  COMMAND $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb.txt -o aabb.msh
-  COMMAND $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb_wire.txt -o
-          aabb_wire.msh
-  COMMAND $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/grid.txt -o grid.msh
-  DEPENDS resources/meshes/aabb.txt resources/meshes/aabb_wire.txt
-          resources/meshes/grid.txt
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Creating binary meshes.")
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/aabb.msh
+                ${CMAKE_CURRENT_BINARY_DIR}/aabb_wire.msh
+                ${CMAKE_CURRENT_BINARY_DIR}/grid.msh
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb.txt -o aabb.msh
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/aabb_wire.txt -o
+                aabb_wire.msh
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes/grid.txt -o grid.msh
+        DEPENDS resources/meshes/aabb.txt resources/meshes/aabb_wire.txt
+                resources/meshes/grid.txt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Creating binary meshes.")
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/solid_color.prg
-         ${CMAKE_CURRENT_BINARY_DIR}/solid_wire.prg
-         ${CMAKE_CURRENT_BINARY_DIR}/grid.prg
-  COMMAND $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_color.txt -o
-          solid_color.prg
-  COMMAND $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_wire.txt -o
-          solid_wire.prg
-  COMMAND $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/grid.txt -o grid.prg
-  DEPENDS resources/pipelines/solid_color.txt resources/pipelines/solid_wire.txt
-          resources/pipelines/grid.txt
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Creating binary pipelines.")
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/solid_color.pln
+               ${CMAKE_CURRENT_BINARY_DIR}/solid_wire.pln
+               ${CMAKE_CURRENT_BINARY_DIR}/grid.pln
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_color.txt -o
+                solid_color.pln
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/solid_wire.txt -o
+                solid_wire.pln
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/pipelines/grid.txt -o grid.pln
+        DEPENDS resources/pipelines/solid_color.txt resources/pipelines/solid_wire.txt
+                resources/pipelines/grid.txt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Creating binary pipelines.")
+add_custom_command(
+        OUTPUT
+                ${CMAKE_CURRENT_BINARY_DIR}/grid.mtl
+                ${CMAKE_CURRENT_BINARY_DIR}/solidcolor.mtl
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/materials/grid.txt -o grid.mtl
+        COMMAND $<TARGET_FILE:aeontool> convert -i
+                ${CMAKE_CURRENT_SOURCE_DIR}/resources/materials/solidcolor.txt -o solidcolor.mtl
+        DEPENDS
+                resources/materials/grid.txt
+                resources/materials/solidcolor.txt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Creating binary materials.")
 
 qt5_wrap_cpp(WORLDEDITOR_MOCS ${WORLDEDITOR_QT_HEADERS})
 qt5_wrap_ui(WORLDEDITOR_UI_HEADERS ${WORLDEDITOR_UI})
