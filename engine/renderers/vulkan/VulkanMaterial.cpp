@@ -60,8 +60,8 @@ namespace AeonGames
 
     VulkanMaterial::VulkanMaterial ( const VulkanMaterial& aMaterial ) :
         mVulkanRenderer{aMaterial.mVulkanRenderer},
-        mUniformBuffer{aMaterial.mUniformBuffer},
-        mVariables{aMaterial.mVariables}
+        mVariables{aMaterial.mVariables},
+        mUniformBuffer{aMaterial.mUniformBuffer}
     {
         InitializeDescriptorPool();
         InitializeDescriptorSets();
