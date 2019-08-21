@@ -195,84 +195,41 @@ namespace AeonGames
         mUniformBuffer.Finalize();
     }
 
-    void VulkanMaterial::SetUint ( const std::string& aName, uint32_t aValue )
+    void VulkanMaterial::Set ( const std::string& aName, const UniformValue& aValue )
     {
         auto i = std::find_if ( mVariables.begin(), mVariables.end(),
                                 [&aName] ( const UniformVariable & variable )
         {
             return variable.GetName() == aName;
         } );
-        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kScalarUint ) )
+        if ( i != mVariables.end() )
         {
-            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &aValue );
+            switch ( i->GetType() )
+            {
+            // Let the exception from std::get be thrown if called with wrong values.
+            case PropertyBuffer::ValueCase::kScalarUint:
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &std::get<uint32_t> ( aValue ) );
+                break;
+            case PropertyBuffer::ValueCase::kScalarInt:
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &std::get<int32_t> ( aValue ) );
+                break;
+            case PropertyBuffer::ValueCase::kScalarFloat:
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &std::get<float> ( aValue ) );
+                break;
+            case PropertyBuffer::ValueCase::kVector2:
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, std::get<Vector2> ( aValue ).GetVector() );
+                break;
+            case PropertyBuffer::ValueCase::kVector3:
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, std::get<Vector3> ( aValue ).GetVector3() );
+                break;
+            case PropertyBuffer::ValueCase::kVector4:
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, std::get<Vector4> ( aValue ).GetVector4() );
+                break;
+            }
         }
     }
 
-    void VulkanMaterial::SetSint ( const std::string& aName, int32_t aValue )
-    {
-        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
-        {
-            return variable.GetName() == aName;
-        } );
-        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kScalarInt ) )
-        {
-            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &aValue );
-        }
-    }
-
-    void VulkanMaterial::SetFloat ( const std::string& aName, float aValue )
-    {
-        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
-        {
-            return variable.GetName() == aName;
-        } );
-        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kScalarFloat ) )
-        {
-            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &aValue );
-        }
-    }
-
-    void VulkanMaterial::SetFloatVec2 ( const std::string& aName, const Vector2& aValue )
-    {
-        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
-        {
-            return variable.GetName() == aName;
-        } );
-        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kVector2 ) )
-        {
-            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, aValue.GetVector() );
-        }
-    }
-
-    void VulkanMaterial::SetFloatVec3 ( const std::string& aName, const Vector3& aValue )
-    {
-        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
-        {
-            return variable.GetName() == aName;
-        } );
-        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kVector3 ) )
-        {
-            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, aValue.GetVector3() );
-        }
-    }
-
-    void VulkanMaterial::SetFloatVec4 ( const std::string& aName, const Vector4& aValue )
-    {
-        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
-        {
-            return variable.GetName() == aName;
-        } );
-        if ( ( i != mVariables.end() ) && ( i->GetType() == PropertyBuffer::ValueCase::kVector4 ) )
-        {
-            mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, aValue.GetVector4() );
-        }
-    }
-
+#if 0
     void VulkanMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
@@ -285,7 +242,7 @@ namespace AeonGames
             std::get<1> ( *i ) = aValue;
         }
     }
-
+#endif
     uint32_t VulkanMaterial::GetUint ( const std::string& aName )
     {
         return 0;
