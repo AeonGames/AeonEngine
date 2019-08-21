@@ -51,13 +51,7 @@ namespace AeonGames
         ///@}
         ///@name Property and Sampler Setters
         ///@{
-        void SetUint ( const std::string& aName, uint32_t aValue ) final;
-        void SetSint ( const std::string& aName, int32_t aValue ) final;
-        void SetFloat ( const std::string& aName, float aValue ) final;
-        void SetFloatVec2 ( const std::string& aName, const Vector2& aValue ) final;
-        void SetFloatVec3 ( const std::string& aName, const Vector3& aValue ) final;
-        void SetFloatVec4 ( const std::string& aName, const Vector4& aValue ) final;
-        void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
+        void Set ( const std::string& aName, const UniformValue& aValue ) final;
         ///@}
         ///@name Property and Sampler Getters
         ///@{
