@@ -40,7 +40,7 @@ limitations under the License.
 namespace AeonGames
 {
     OpenGLMaterial::OpenGLMaterial ( uint32_t aPath ) :
-        mVariables{},
+        Material{},
         mUniformBuffer{}
     {
         if ( aPath )
@@ -49,15 +49,27 @@ namespace AeonGames
         }
     }
 
+    OpenGLMaterial::OpenGLMaterial ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) :
+        Material{},
+        mUniformBuffer{}
+    {
+        OpenGLMaterial::Load ( aUniforms, aSamplers );
+    }
+
+    void OpenGLMaterial::Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers )
+    {
+
+    }
+
     OpenGLMaterial::OpenGLMaterial ( const OpenGLMaterial& aMaterial ) :
-        mVariables{aMaterial.mVariables},
+        Material{aMaterial},
         mUniformBuffer{aMaterial.mUniformBuffer}
     {
     }
 
     OpenGLMaterial& OpenGLMaterial::operator= ( const OpenGLMaterial& aMaterial )
     {
-        mVariables = aMaterial.mVariables;
+        this->Material::operator= ( aMaterial );
         mUniformBuffer = aMaterial.mUniformBuffer;
         return *this;
     }
@@ -69,98 +81,55 @@ namespace AeonGames
 
     void OpenGLMaterial::Load ( const MaterialBuffer& aMaterialBuffer )
     {
-        size_t size = 0;
-        mVariables.reserve ( aMaterialBuffer.property().size() );
-        for ( auto& i : aMaterialBuffer.property() )
+        size_t size = LoadVariables ( aMaterialBuffer );
+        if ( size )
         {
-            switch ( i.value_case() )
+            mUniformBuffer.Initialize ( static_cast<GLsizei> ( size ), GL_DYNAMIC_DRAW );
+            auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
+            for ( auto& i : mVariables )
             {
-            case PropertyBuffer::ValueCase::kScalarFloat:
-                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float );
-                break;
-            case PropertyBuffer::ValueCase::kScalarUint:
-                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( uint32_t );
-                break;
-            case PropertyBuffer::ValueCase::kScalarInt:
-                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( int32_t );
-                break;
-            case PropertyBuffer::ValueCase::kVector2:
-                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float ) * 2;
-                break;
-            case PropertyBuffer::ValueCase::kVector3:
-                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float ) * 3;
-                break;
-            case PropertyBuffer::ValueCase::kVector4:
-                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float ) * 4;
-                break;
-            default:
-                break;
-            }
-        }
-
-        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
-
-        mUniformBuffer.Initialize ( static_cast<GLsizei> ( size ), GL_DYNAMIC_DRAW );
-        auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
-        for ( auto& i : mVariables )
-        {
-            auto& material_properties = aMaterialBuffer.property();
-            auto j = std::find_if ( material_properties.begin(), material_properties.end(),
-                                    [&i] ( const PropertyBuffer & property )
-            {
-                return property.name() == i.GetName();
-            } );
-            if ( j != material_properties.end() )
-            {
-                switch ( i.GetType() )
+                auto& material_properties = aMaterialBuffer.property();
+                auto j = std::find_if ( material_properties.begin(), material_properties.end(),
+                                        [&i] ( const PropertyBuffer & property )
                 {
-                case PropertyBuffer::ValueCase::kScalarFloat:
-                    ( *reinterpret_cast<float*> ( pointer + i.GetOffset() ) ) = j->scalar_float();
-                    break;
-                case PropertyBuffer::ValueCase::kScalarUint:
-                    ( *reinterpret_cast<uint32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_uint();
-                    break;
-                case PropertyBuffer::ValueCase::kScalarInt:
-                    ( *reinterpret_cast<int32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_int();
-                    break;
-                case PropertyBuffer::ValueCase::kVector2:
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector2().x();
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector2().y();
-                    break;
-                case PropertyBuffer::ValueCase::kVector3:
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector3().x();
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector3().y();
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector3().z();
-                    break;
-                case PropertyBuffer::ValueCase::kVector4:
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector4().x();
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector4().y();
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector4().z();
-                    reinterpret_cast<float*> ( pointer + i.GetOffset() ) [3] = j->vector4().w();
-                    break;
-                default:
-                    break;
+                    return property.name() == i.GetName();
+                } );
+                if ( j != material_properties.end() )
+                {
+                    switch ( i.GetType() )
+                    {
+                    case PropertyBuffer::ValueCase::kScalarFloat:
+                        ( *reinterpret_cast<float*> ( pointer + i.GetOffset() ) ) = j->scalar_float();
+                        break;
+                    case PropertyBuffer::ValueCase::kScalarUint:
+                        ( *reinterpret_cast<uint32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_uint();
+                        break;
+                    case PropertyBuffer::ValueCase::kScalarInt:
+                        ( *reinterpret_cast<int32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_int();
+                        break;
+                    case PropertyBuffer::ValueCase::kVector2:
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector2().x();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector2().y();
+                        break;
+                    case PropertyBuffer::ValueCase::kVector3:
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector3().x();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector3().y();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector3().z();
+                        break;
+                    case PropertyBuffer::ValueCase::kVector4:
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector4().x();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector4().y();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector4().z();
+                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [3] = j->vector4().w();
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
+            mUniformBuffer.Unmap();
         }
-        mUniformBuffer.Unmap();
-        mSamplers.reserve ( aMaterialBuffer.sampler().size() );
-        for ( auto& i : aMaterialBuffer.sampler() )
-        {
-            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
-        }
+        LoadSamplers ( aMaterialBuffer );
     }
 
     void OpenGLMaterial::Unload()
@@ -201,7 +170,7 @@ namespace AeonGames
             }
         }
     }
-#if 0
+
     void OpenGLMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
@@ -214,7 +183,6 @@ namespace AeonGames
             std::get<1> ( *i ) = aValue;
         }
     }
-#endif
 
     uint32_t OpenGLMaterial::GetUint ( const std::string& aName )
     {

@@ -537,6 +537,10 @@ namespace AeonGames
     {
         if ( mVkDevice != VK_NULL_HANDLE )
         {
+            if ( VkResult result = vkDeviceWaitIdle ( mVkDevice ) )
+            {
+                std::cout << "vkDeviceWaitIdle returned " << GetVulkanResultString ( result ) << std::endl;
+            }
             vkDestroyDevice ( mVkDevice, nullptr );
             mVkDevice = VK_NULL_HANDLE;
         }

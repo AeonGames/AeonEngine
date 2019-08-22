@@ -16,13 +16,13 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include "material.pb.h"
-//#include "property.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -30,8 +30,72 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Material::Material()
+        = default;
     Material::~Material()
         = default;
+
+    Material::Material ( const Material& aMaterial ) : mVariables{aMaterial.mVariables}, mSamplers{aMaterial.mSamplers} {}
+    Material& Material::operator= ( const Material& aMaterial )
+    {
+        mVariables = aMaterial.mVariables;
+        mSamplers = aMaterial.mSamplers;
+        return *this;
+    }
+
+    size_t Material::LoadVariables ( const MaterialBuffer& aMaterialBuffer )
+    {
+        size_t size = 0;
+        mVariables.reserve ( aMaterialBuffer.property().size() );
+        for ( auto& i : aMaterialBuffer.property() )
+        {
+            switch ( i.value_case() )
+            {
+            case PropertyBuffer::ValueCase::kScalarFloat:
+                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
+                size += sizeof ( float );
+                break;
+            case PropertyBuffer::ValueCase::kScalarUint:
+                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
+                size += sizeof ( uint32_t );
+                break;
+            case PropertyBuffer::ValueCase::kScalarInt:
+                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
+                size += sizeof ( int32_t );
+                break;
+            case PropertyBuffer::ValueCase::kVector2:
+                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
+                size += sizeof ( float ) * 2;
+                break;
+            case PropertyBuffer::ValueCase::kVector3:
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
+                size += sizeof ( float ) * 3;
+                break;
+            case PropertyBuffer::ValueCase::kVector4:
+                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
+                mVariables.emplace_back ( i.name(), i.value_case(), size );
+                size += sizeof ( float ) * 4;
+                break;
+            default:
+                break;
+            }
+        }
+        return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+    }
+
+    void Material::LoadSamplers ( const MaterialBuffer& aMaterialBuffer )
+    {
+        mSamplers.reserve ( aMaterialBuffer.sampler().size() );
+        for ( auto& i : aMaterialBuffer.sampler() )
+        {
+            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
+        }
+    }
 
     void Material::Load ( const std::string& aFilename )
     {
