@@ -34,6 +34,7 @@ namespace AeonGames
     {
     public:
         OpenGLMaterial ( uint32_t aPath = 0 );
+        OpenGLMaterial ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers );
         /// The Copy Contsructor is used for virtual copying.
         OpenGLMaterial ( const OpenGLMaterial& aMaterial );
         /// Assignment operator due to rule of zero/three/five.
@@ -48,11 +49,13 @@ namespace AeonGames
         ///@name Loaders
         ///@{
         void Load ( const MaterialBuffer& aMaterialBuffer ) final;
+        void Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) final;
         void Unload() final;
         ///@}
         ///@name Property and Sampler Setters
         ///@{
         void Set ( const std::string& aName, const UniformValue& aValue ) final;
+        void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
         ///@}
         ///@name Property and Sampler Getters
         ///@{
@@ -67,32 +70,6 @@ namespace AeonGames
         ///@}
         GLuint GetPropertiesBufferId() const;
     private:
-        class UniformVariable
-        {
-        public:
-            UniformVariable ( const std::string& aName, size_t aType, size_t aOffset ) :
-                mName{aName},
-                mType{aType},
-                mOffset{aOffset} {}
-            const std::string& GetName() const
-            {
-                return mName;
-            }
-            size_t GetType()
-            {
-                return mType;
-            }
-            size_t GetOffset()
-            {
-                return mOffset;
-            }
-        private:
-            std::string mName{};
-            size_t mType{};
-            size_t mOffset{};
-        };
-        std::vector<UniformVariable> mVariables{};
-        std::vector<std::tuple<std::string, ResourceId>> mSamplers{};
         OpenGLBuffer mUniformBuffer{};
     };
 }

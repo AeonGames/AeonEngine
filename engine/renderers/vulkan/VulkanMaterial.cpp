@@ -44,6 +44,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
+        Material{},
         mVulkanRenderer { aVulkanRenderer },
         mUniformBuffer { mVulkanRenderer }
     {
@@ -53,14 +54,22 @@ namespace AeonGames
         }
     }
 
+    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) :
+        Material{},
+        mVulkanRenderer { aVulkanRenderer },
+        mUniformBuffer { mVulkanRenderer }
+    {
+        VulkanMaterial::Load ( aUniforms, aSamplers );
+    }
+
     VulkanMaterial::~VulkanMaterial()
     {
         Unload();
     }
 
     VulkanMaterial::VulkanMaterial ( const VulkanMaterial& aMaterial ) :
+        Material{aMaterial},
         mVulkanRenderer{aMaterial.mVulkanRenderer},
-        mVariables{aMaterial.mVariables},
         mUniformBuffer{aMaterial.mUniformBuffer}
     {
         InitializeDescriptorPool();
@@ -73,7 +82,7 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Assigning materials from different renderer instances." );
         }
-        mVariables = aMaterial.mVariables;
+        this->Material::operator= ( aMaterial );
         mUniformBuffer = aMaterial.mUniformBuffer;
         InitializeDescriptorPool();
         InitializeDescriptorSets();
@@ -85,50 +94,13 @@ namespace AeonGames
         return std::make_unique<VulkanMaterial> ( *this );
     }
 
+    void VulkanMaterial::Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers )
+    {
+    }
+
     void VulkanMaterial::Load ( const MaterialBuffer& aMaterialBuffer )
     {
-        size_t size = 0;
-        mVariables.reserve ( aMaterialBuffer.property().size() );
-        for ( auto& i : aMaterialBuffer.property() )
-        {
-            switch ( i.value_case() )
-            {
-            case PropertyBuffer::ValueCase::kScalarFloat:
-                size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float );
-                break;
-            case PropertyBuffer::ValueCase::kScalarUint:
-                size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( uint32_t );
-                break;
-            case PropertyBuffer::ValueCase::kScalarInt:
-                size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( int32_t );
-                break;
-            case PropertyBuffer::ValueCase::kVector2:
-                size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float ) * 2;
-                break;
-            case PropertyBuffer::ValueCase::kVector3:
-                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float ) * 3;
-                break;
-            case PropertyBuffer::ValueCase::kVector4:
-                size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
-                mVariables.emplace_back ( i.name(), i.value_case(), size );
-                size += sizeof ( float ) * 4;
-                break;
-            default:
-                break;
-            }
-        }
-
-        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+        size_t size = LoadVariables ( aMaterialBuffer );
         if ( size )
         {
             mUniformBuffer.Initialize (
@@ -179,11 +151,7 @@ namespace AeonGames
             }
             mUniformBuffer.Unmap();
         }
-        mSamplers.reserve ( aMaterialBuffer.sampler().size() );
-        for ( auto& i : aMaterialBuffer.sampler() )
-        {
-            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
-        }
+        LoadSamplers ( aMaterialBuffer );
         InitializeDescriptorPool();
         InitializeDescriptorSets();
     }
@@ -229,7 +197,6 @@ namespace AeonGames
         }
     }
 
-#if 0
     void VulkanMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
@@ -242,7 +209,7 @@ namespace AeonGames
             std::get<1> ( *i ) = aValue;
         }
     }
-#endif
+
     uint32_t VulkanMaterial::GetUint ( const std::string& aName )
     {
         return 0;
