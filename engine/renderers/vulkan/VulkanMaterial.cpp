@@ -107,49 +107,10 @@ namespace AeonGames
                 static_cast<VkDeviceSize> ( size ),
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-            auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( 0, size ) );
-            for ( auto& i : mVariables )
+            for ( auto& i : aMaterialBuffer.property() )
             {
-                auto j = std::find_if ( aMaterialBuffer.property().begin(), aMaterialBuffer.property().end(),
-                                        [&i] ( const PropertyBuffer & property )
-                {
-                    return property.name() == i.GetName();
-                } );
-                if ( j != aMaterialBuffer.property().end() )
-                {
-                    switch ( i.GetType() )
-                    {
-                    case PropertyBuffer::ValueCase::kScalarFloat:
-                        ( *reinterpret_cast<float*> ( pointer + i.GetOffset() ) ) = j->scalar_float();
-                        break;
-                    case PropertyBuffer::ValueCase::kScalarUint:
-                        ( *reinterpret_cast<uint32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_uint();
-                        break;
-                    case PropertyBuffer::ValueCase::kScalarInt:
-                        ( *reinterpret_cast<int32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_int();
-                        break;
-                    case PropertyBuffer::ValueCase::kVector2:
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector2().x();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector2().y();
-                        break;
-                    case PropertyBuffer::ValueCase::kVector3:
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector3().x();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector3().y();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector3().z();
-                        break;
-                    case PropertyBuffer::ValueCase::kVector4:
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector4().x();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector4().y();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector4().z();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [3] = j->vector4().w();
-                        break;
-                    default:
-                        break;
-                    }
-                }
+                Set ( PropertyToKeyValue ( i ) );
             }
-            mUniformBuffer.Unmap();
         }
         LoadSamplers ( aMaterialBuffer );
         InitializeDescriptorPool();
@@ -163,12 +124,12 @@ namespace AeonGames
         mUniformBuffer.Finalize();
     }
 
-    void VulkanMaterial::Set ( const std::string& aName, const UniformValue& aValue )
+    void VulkanMaterial::Set ( const UniformKeyValue& aValue )
     {
         auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
+                                [&aValue] ( const UniformVariable & variable )
         {
-            return variable.GetName() == aName;
+            return variable.GetName() == std::get<std::string> ( aValue );
         } );
         if ( i != mVariables.end() )
         {
@@ -176,22 +137,22 @@ namespace AeonGames
             {
             // Let the exception from std::get be thrown if called with wrong values.
             case PropertyBuffer::ValueCase::kScalarUint:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &std::get<uint32_t> ( aValue ) );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &std::get<uint32_t> ( std::get<UniformValue> ( aValue ) ) );
                 break;
             case PropertyBuffer::ValueCase::kScalarInt:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &std::get<int32_t> ( aValue ) );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &std::get<int32_t> ( std::get<UniformValue> ( aValue ) ) );
                 break;
             case PropertyBuffer::ValueCase::kScalarFloat:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &std::get<float> ( aValue ) );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &std::get<float> ( std::get<UniformValue> ( aValue ) ) );
                 break;
             case PropertyBuffer::ValueCase::kVector2:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, std::get<Vector2> ( aValue ).GetVector() );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, std::get<Vector2> ( std::get<UniformValue> ( aValue ) ).GetVector() );
                 break;
             case PropertyBuffer::ValueCase::kVector3:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, std::get<Vector3> ( aValue ).GetVector3() );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, std::get<Vector3> ( std::get<UniformValue> ( aValue ) ).GetVector3() );
                 break;
             case PropertyBuffer::ValueCase::kVector4:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, std::get<Vector4> ( aValue ).GetVector4() );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, std::get<Vector4> ( std::get<UniformValue> ( aValue ) ).GetVector4() );
                 break;
             }
         }

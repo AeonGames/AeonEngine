@@ -21,6 +21,7 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/ResourceCache.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -85,49 +86,10 @@ namespace AeonGames
         if ( size )
         {
             mUniformBuffer.Initialize ( static_cast<GLsizei> ( size ), GL_DYNAMIC_DRAW );
-            auto* pointer = reinterpret_cast<uint8_t*> ( mUniformBuffer.Map ( GL_WRITE_ONLY ) );
-            for ( auto& i : mVariables )
+            for ( auto& i : aMaterialBuffer.property() )
             {
-                auto& material_properties = aMaterialBuffer.property();
-                auto j = std::find_if ( material_properties.begin(), material_properties.end(),
-                                        [&i] ( const PropertyBuffer & property )
-                {
-                    return property.name() == i.GetName();
-                } );
-                if ( j != material_properties.end() )
-                {
-                    switch ( i.GetType() )
-                    {
-                    case PropertyBuffer::ValueCase::kScalarFloat:
-                        ( *reinterpret_cast<float*> ( pointer + i.GetOffset() ) ) = j->scalar_float();
-                        break;
-                    case PropertyBuffer::ValueCase::kScalarUint:
-                        ( *reinterpret_cast<uint32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_uint();
-                        break;
-                    case PropertyBuffer::ValueCase::kScalarInt:
-                        ( *reinterpret_cast<int32_t*> ( pointer + i.GetOffset() ) ) = j->scalar_int();
-                        break;
-                    case PropertyBuffer::ValueCase::kVector2:
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector2().x();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector2().y();
-                        break;
-                    case PropertyBuffer::ValueCase::kVector3:
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector3().x();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector3().y();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector3().z();
-                        break;
-                    case PropertyBuffer::ValueCase::kVector4:
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [0] = j->vector4().x();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [1] = j->vector4().y();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [2] = j->vector4().z();
-                        reinterpret_cast<float*> ( pointer + i.GetOffset() ) [3] = j->vector4().w();
-                        break;
-                    default:
-                        break;
-                    }
-                }
+                Set ( PropertyToKeyValue ( i ) );
             }
-            mUniformBuffer.Unmap();
         }
         LoadSamplers ( aMaterialBuffer );
     }
@@ -137,12 +99,12 @@ namespace AeonGames
         mUniformBuffer.Finalize();
     }
 
-    void OpenGLMaterial::Set ( const std::string& aName, const UniformValue& aValue )
+    void OpenGLMaterial::Set ( const UniformKeyValue& aValue )
     {
         auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aName] ( const UniformVariable & variable )
+                                [&aValue] ( const UniformVariable & variable )
         {
-            return variable.GetName() == aName;
+            return variable.GetName() == std::get<std::string> ( aValue );
         } );
         if ( i != mVariables.end() )
         {
@@ -150,22 +112,22 @@ namespace AeonGames
             {
             // Let the exception from std::get be thrown if called with wrong values.
             case PropertyBuffer::ValueCase::kScalarUint:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &std::get<uint32_t> ( aValue ) );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &std::get<uint32_t> ( std::get<UniformValue> ( aValue ) ) );
                 break;
             case PropertyBuffer::ValueCase::kScalarInt:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &std::get<int32_t> ( aValue ) );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &std::get<int32_t> ( std::get<UniformValue> ( aValue ) ) );
                 break;
             case PropertyBuffer::ValueCase::kScalarFloat:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &std::get<float> ( aValue ) );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &std::get<float> ( std::get<UniformValue> ( aValue ) ) );
                 break;
             case PropertyBuffer::ValueCase::kVector2:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, std::get<Vector2> ( aValue ).GetVector() );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, std::get<Vector2> ( std::get<UniformValue> ( aValue ) ).GetVector() );
                 break;
             case PropertyBuffer::ValueCase::kVector3:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, std::get<Vector3> ( aValue ).GetVector3() );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, std::get<Vector3> ( std::get<UniformValue> ( aValue ) ).GetVector3() );
                 break;
             case PropertyBuffer::ValueCase::kVector4:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, std::get<Vector4> ( aValue ).GetVector4() );
+                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, std::get<Vector4> ( std::get<UniformValue> ( aValue ) ).GetVector4() );
                 break;
             }
         }

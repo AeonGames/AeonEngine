@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Quaternion.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Property.h"
+#include "aeongames/Material.h"
 namespace AeonGames
 {
     class ReferenceBuffer;
@@ -40,5 +41,6 @@ namespace AeonGames
     Transform GetTransform ( const TransformBuffer& aTransform );
     Property GetProperty ( const ComponentPropertyBuffer& aComponentPropertyBuffer );
     size_t GetUniformBufferSize ( const PipelineBuffer& aPipelineBuffer );
+    DLL Material::UniformKeyValue PropertyToKeyValue ( const PropertyBuffer& aProperty );
 }
 #endif
