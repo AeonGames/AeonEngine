@@ -24,6 +24,7 @@ limitations under the License.
 #endif
 #include "reference.pb.h"
 #include "pipeline.pb.h"
+#include "property.pb.h"
 #include "vector3.pb.h"
 #include "quaternion.pb.h"
 #include "transform.pb.h"
@@ -249,5 +250,28 @@ namespace AeonGames
             }
         }
         return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 float
+    }
+
+    Material::UniformKeyValue PropertyToKeyValue ( const PropertyBuffer& aProperty )
+    {
+        switch ( aProperty.value_case() )
+        {
+        case PropertyBuffer::ValueCase::kScalarFloat:
+            return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_float() };
+        case PropertyBuffer::ValueCase::kScalarUint:
+            return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_uint() };
+        case PropertyBuffer::ValueCase::kScalarInt:
+            return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_int() };
+        case PropertyBuffer::ValueCase::kVector2:
+            return Material::UniformKeyValue{aProperty.name(), Vector2{aProperty.vector2().x(), aProperty.vector2().y() }};
+        case PropertyBuffer::ValueCase::kVector3:
+            return Material::UniformKeyValue{aProperty.name(), Vector3{aProperty.vector3().x(), aProperty.vector3().y(), aProperty.vector3().z() }};
+        case PropertyBuffer::ValueCase::kVector4:
+            return Material::UniformKeyValue{aProperty.name(), Vector4{aProperty.vector4().x(), aProperty.vector4().y(), aProperty.vector4().z(), aProperty.vector4().w() }};
+        default:
+            break;
+        }
+        throw std::runtime_error ( "Property contained no value." );
+        return {};
     }
 }
