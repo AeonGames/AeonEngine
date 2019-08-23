@@ -85,7 +85,8 @@ namespace AeonGames
                 break;
             }
         }
-        return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+        size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 floats
+        return size;
     }
 
     void Material::LoadSamplers ( const MaterialBuffer& aMaterialBuffer )

@@ -54,7 +54,7 @@ namespace AeonGames
         ///@}
         ///@name Property and Sampler Setters
         ///@{
-        void Set ( const std::string& aName, const UniformValue& aValue ) final;
+        void Set ( const UniformKeyValue& aValue ) final;
         void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
         ///@}
         ///@name Property and Sampler Getters
