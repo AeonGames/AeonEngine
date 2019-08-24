@@ -45,26 +45,26 @@ class MSH_OT_exporterCommon():
         # this should be a single function
         if self.flags & mesh_pb2.MeshBuffer.POSITION_BIT:
             localpos = self.mesh.vertices[
-                loop.vertex_index].co * mesh_world_matrix
+                loop.vertex_index].co @ mesh_world_matrix # @ is the matrix multiplication operator now
             vertex.extend([localpos[0],
                            localpos[1],
                            localpos[2]])
 
         if self.flags & mesh_pb2.MeshBuffer.NORMAL_BIT:
             localnormal = self.mesh.vertices[
-                loop.vertex_index].normal * mesh_world_matrix
+                loop.vertex_index].normal @ mesh_world_matrix
             vertex.extend([localnormal[0],
                            localnormal[1],
                            localnormal[2]])
 
         if self.flags & mesh_pb2.MeshBuffer.TANGENT_BIT:
-            localtangent = loop.tangent * mesh_world_matrix
+            localtangent = loop.tangent @ mesh_world_matrix
             vertex.extend([localtangent[0],
                            localtangent[1],
                            localtangent[2]])
 
         if self.flags & mesh_pb2.MeshBuffer.BITANGENT_BIT:
-            localbitangent = loop.bitangent * mesh_world_matrix
+            localbitangent = loop.bitangent @ mesh_world_matrix
             vertex.extend([localbitangent[0],
                            localbitangent[1],
                            localbitangent[2]])
@@ -236,7 +236,7 @@ class MSH_OT_exporterCommon():
 
         if(len(mesh.uv_layers) > 0):
 
-            mesh.calc_tangents(mesh.uv_layers[0].name)
+            mesh.calc_tangents(uvmap=mesh.uv_layers[0].name)
 
             mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.TANGENT_BIT
             vertex_struct_string += '3f'
