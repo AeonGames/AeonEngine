@@ -44,7 +44,9 @@ protobuf_generate_export_cpp(PROTOBUF_SOURCES
                              ${CMAKE_SOURCE_DIR}/proto/transform.proto
                              ${CMAKE_SOURCE_DIR}/proto/scene.proto
                              ${CMAKE_SOURCE_DIR}/proto/reference.proto
-                             ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto)
+                             ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
+                             ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
+)
 
 set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
