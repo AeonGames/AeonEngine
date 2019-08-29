@@ -59,12 +59,6 @@ namespace AeonGames
         ///@}
         ///@name Property and Sampler Getters
         ///@{
-        uint32_t GetUint ( const std::string& aName ) final;
-        int32_t GetSint ( const std::string& aName ) final;
-        float GetFloat ( const std::string& aName ) final;
-        Vector2 GetFloatVec2 ( const std::string& aName ) final;
-        Vector3 GetFloatVec3 ( const std::string& aName ) final;
-        Vector4 GetFloatVec4 ( const std::string& aName ) final;
         ResourceId GetSampler ( const std::string& aName ) final;
         const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const final;
         ///@}

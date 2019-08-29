@@ -133,28 +133,14 @@ namespace AeonGames
         } );
         if ( i != mVariables.end() )
         {
-            switch ( i->GetType() )
+            size_t value_size = GetUniformValueSize ( std::get<UniformValue> ( aValue ) );
+            // Do some bounds checking
+            auto j = i + 1;
+            if ( ( ( j != mVariables.end() ) ? ( j->GetOffset() - i->GetOffset() ) : ( mUniformBuffer.GetSize() - i->GetOffset() ) ) < value_size )
             {
-            // Let the exception from std::get be thrown if called with wrong values.
-            case PropertyBuffer::ValueCase::kScalarUint:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( uint32_t ), &std::get<uint32_t> ( std::get<UniformValue> ( aValue ) ) );
-                break;
-            case PropertyBuffer::ValueCase::kScalarInt:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( int32_t ), &std::get<int32_t> ( std::get<UniformValue> ( aValue ) ) );
-                break;
-            case PropertyBuffer::ValueCase::kScalarFloat:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ), &std::get<float> ( std::get<UniformValue> ( aValue ) ) );
-                break;
-            case PropertyBuffer::ValueCase::kVector2:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 2, std::get<Vector2> ( std::get<UniformValue> ( aValue ) ).GetVector() );
-                break;
-            case PropertyBuffer::ValueCase::kVector3:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 3, std::get<Vector3> ( std::get<UniformValue> ( aValue ) ).GetVector3() );
-                break;
-            case PropertyBuffer::ValueCase::kVector4:
-                mUniformBuffer.WriteMemory ( i->GetOffset(), sizeof ( float ) * 4, std::get<Vector4> ( std::get<UniformValue> ( aValue ) ).GetVector4() );
-                break;
+                throw std::runtime_error ( "Value type size exceeds original type size." );
             }
+            mUniformBuffer.WriteMemory ( i->GetOffset(), value_size, GetUniformValuePointer ( std::get<UniformValue> ( aValue ) ) );
         }
     }
 
@@ -171,30 +157,6 @@ namespace AeonGames
         }
     }
 
-    uint32_t VulkanMaterial::GetUint ( const std::string& aName )
-    {
-        return 0;
-    }
-    int32_t VulkanMaterial::GetSint ( const std::string& aName )
-    {
-        return 0;
-    }
-    float VulkanMaterial::GetFloat ( const std::string& aName )
-    {
-        return 0.0f;
-    }
-    Vector2 VulkanMaterial::GetFloatVec2 ( const std::string& aName )
-    {
-        return Vector2{};
-    }
-    Vector3 VulkanMaterial::GetFloatVec3 ( const std::string& aName )
-    {
-        return Vector3{};
-    }
-    Vector4 VulkanMaterial::GetFloatVec4 ( const std::string& aName )
-    {
-        return Vector4{};
-    }
     ResourceId VulkanMaterial::GetSampler ( const std::string& aName )
     {
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
