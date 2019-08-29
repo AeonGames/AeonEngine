@@ -19,7 +19,6 @@ limitations under the License.
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
 #include "VulkanMesh.h"
-#include "VulkanUniformBuffer.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>

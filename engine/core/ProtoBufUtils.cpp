@@ -268,6 +268,26 @@ namespace AeonGames
             return Material::UniformKeyValue{aProperty.name(), Vector3{aProperty.vector3().x(), aProperty.vector3().y(), aProperty.vector3().z() }};
         case PropertyBuffer::ValueCase::kVector4:
             return Material::UniformKeyValue{aProperty.name(), Vector4{aProperty.vector4().x(), aProperty.vector4().y(), aProperty.vector4().z(), aProperty.vector4().w() }};
+        case PropertyBuffer::ValueCase::kMatrix4X4:
+            return Material::UniformKeyValue{aProperty.name(), Matrix4x4
+                {
+                    aProperty.matrix4x4().m0(),
+                    aProperty.matrix4x4().m1(),
+                    aProperty.matrix4x4().m2(),
+                    aProperty.matrix4x4().m3(),
+                    aProperty.matrix4x4().m4(),
+                    aProperty.matrix4x4().m5(),
+                    aProperty.matrix4x4().m6(),
+                    aProperty.matrix4x4().m7(),
+                    aProperty.matrix4x4().m8(),
+                    aProperty.matrix4x4().m9(),
+                    aProperty.matrix4x4().m10(),
+                    aProperty.matrix4x4().m11(),
+                    aProperty.matrix4x4().m12(),
+                    aProperty.matrix4x4().m13(),
+                    aProperty.matrix4x4().m14(),
+                    aProperty.matrix4x4().m15()
+                }};
         default:
             break;
         }

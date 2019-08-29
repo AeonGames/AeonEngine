@@ -66,12 +66,6 @@ namespace AeonGames
         ///@}
         ///@name Property and Sampler Getters
         ///@{
-        virtual uint32_t GetUint ( const std::string& aName ) = 0;
-        virtual int32_t GetSint ( const std::string& aName ) = 0;
-        virtual float GetFloat ( const std::string& aName ) = 0;
-        virtual Vector2 GetFloatVec2 ( const std::string& aName ) = 0;
-        virtual Vector3 GetFloatVec3 ( const std::string& aName ) = 0;
-        virtual Vector4 GetFloatVec4 ( const std::string& aName ) = 0;
         virtual ResourceId GetSampler ( const std::string& aName ) = 0;
         virtual const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const = 0;
         ///@}
@@ -79,17 +73,12 @@ namespace AeonGames
         class UniformVariable
         {
         public:
-            UniformVariable ( const std::string& aName, size_t aType, size_t aOffset ) :
+            UniformVariable ( const std::string& aName, size_t aOffset ) :
                 mName{aName},
-                mType{aType},
                 mOffset{aOffset} {}
             const std::string& GetName() const
             {
                 return mName;
-            }
-            size_t GetType()
-            {
-                return mType;
             }
             size_t GetOffset()
             {
@@ -105,5 +94,7 @@ namespace AeonGames
         std::vector<UniformVariable> mVariables{};
         std::vector<std::tuple<std::string, ResourceId>> mSamplers{};
     };
+    DLL size_t GetUniformValueSize ( const Material::UniformValue& aValue );
+    DLL const void* GetUniformValuePointer ( const Material::UniformValue& aValue );
 }
 #endif
