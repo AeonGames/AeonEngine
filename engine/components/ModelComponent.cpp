@@ -26,7 +26,7 @@ limitations under the License.
 #include "aeongames/Animation.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Window.h"
-#include "aeongames/UniformBuffer.h"
+#include "aeongames/Buffer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Node.h"
 
@@ -41,7 +41,7 @@ namespace AeonGames
     ModelComponent::ModelComponent() : Component{},
         /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
         /// @todo Initialize the skeleton only when needed.
-        mSkeletonBuffer{GetRenderer()->CreateUniformBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
+        mSkeletonBuffer{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
         const float identity[16] =
         {

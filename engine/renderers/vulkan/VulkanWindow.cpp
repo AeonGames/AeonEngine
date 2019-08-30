@@ -40,6 +40,10 @@ namespace AeonGames
         Window { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
         mMatrices{aVulkanRenderer,
                   sizeof ( float ) * 32,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                   std::array<float, 32>
     {
         {
@@ -77,6 +81,10 @@ namespace AeonGames
         Window { aWindowId }, mVulkanRenderer { aVulkanRenderer },
         mMatrices{aVulkanRenderer,
                   sizeof ( float ) * 32,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                   std::array<float, 32>
     {
         {
@@ -529,50 +537,17 @@ namespace AeonGames
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const UniformBuffer* aSkeleton,
+                                const Buffer* aSkeleton,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        //const auto& vulkan_material = reinterpret_cast<const VulkanMaterial&> ( aMaterial );
-        //const std::vector<VkDescriptorSet>& material_descriptor_sets = vulkan_material.GetDescriptorSets();
-        //const auto* vk_skeleton = reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton );
-        //assert ( material_descriptor_sets.size() < 3 );
-
-        //========================Move to Pipeline==============================================//
-#if 1
         reinterpret_cast<const VulkanPipeline&> ( aPipeline ).Use (
             reinterpret_cast<const VulkanMaterial*> ( aMaterial ),
             &mMatrices,
             &aModelMatrix,
-            reinterpret_cast<const VulkanUniformBuffer*> ( aSkeleton ) );
-#else
-        uint32_t descriptor_set_count = 1;
-        std::array<VkDescriptorSet, 4> descriptor_sets { { mMatrices.GetDescriptorSet() }};
-        if ( vk_skeleton )
-        {
-            descriptor_sets[descriptor_set_count++] = vk_skeleton->GetDescriptorSet();
-        }
-
-        memcpy ( &descriptor_sets[descriptor_set_count], material_descriptor_sets.data(), material_descriptor_sets.size() *sizeof ( VkDescriptorSet ) );
-        descriptor_set_count += static_cast<uint32_t> ( material_descriptor_sets.size() );
-
-        vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipeline() );
-
-        vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
-                             reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
-
-        vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  reinterpret_cast<const VulkanPipeline*> ( &aPipeline )->GetPipelineLayout(),
-                                  0,
-                                  descriptor_set_count,
-                                  descriptor_sets.data(), 0, nullptr );
-#endif
-        //======================================================================================//
+            reinterpret_cast<const VulkanBuffer*> ( aSkeleton ) );
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };

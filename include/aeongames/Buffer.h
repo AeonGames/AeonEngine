@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_UNIFORMBUFFER_H
-#define AEONGAMES_UNIFORMBUFFER_H
+#ifndef AEONGAMES_BUFFER_H
+#define AEONGAMES_BUFFER_H
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
-    class UniformBuffer
+    class Buffer
     {
     public:
-        DLL virtual ~UniformBuffer() = 0;
+        DLL virtual ~Buffer() = 0;
         virtual void WriteMemory ( size_t aOffset, size_t aSize, const void *aData = nullptr ) const = 0;
         virtual void* Map ( size_t aOffset, size_t aSize ) const = 0;
         virtual void Unmap() const = 0;

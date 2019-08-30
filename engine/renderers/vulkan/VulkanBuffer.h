@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@ limitations under the License.
 #ifndef AEONGAMES_VULKANBUFFER_H
 #define AEONGAMES_VULKANBUFFER_H
 #include <vulkan/vulkan.h>
+#include "aeongames/Buffer.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanBuffer
+    class VulkanBuffer : public Buffer
     {
     public:
         VulkanBuffer ( const VulkanRenderer& aVulkanRenderer );
@@ -37,10 +38,13 @@ namespace AeonGames
         void Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
         void Finalize();
         const VkBuffer& GetBuffer() const;
-        void WriteMemory ( const VkDeviceSize aOffset, const  VkDeviceSize aSize, const void *aData = nullptr ) const;
-        void* Map ( size_t aOffset, size_t aSize ) const;
-        void Unmap() const;
-        size_t GetSize() const;
+        /// @name Virtual functions
+        ///@{
+        void WriteMemory ( const size_t aOffset, const size_t aSize, const void *aData = nullptr ) const final;
+        void* Map ( const size_t aOffset, size_t aSize ) const final;
+        void Unmap() const final;
+        size_t GetSize() const final;
+        ///@}
     private:
         void Initialize ( const void *aData );
         void CopyBuffer ( const VkBuffer& aBuffer );

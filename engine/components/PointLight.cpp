@@ -21,7 +21,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Window.h"
-#include "aeongames/UniformBuffer.h"
+#include "aeongames/Buffer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Node.h"
 

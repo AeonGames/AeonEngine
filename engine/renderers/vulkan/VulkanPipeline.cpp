@@ -503,12 +503,14 @@ namespace AeonGames
     }
 
     void VulkanPipeline::Use ( const VulkanMaterial* aMaterial,
-                               const VulkanUniformBuffer* aProjectionView,
+                               const VulkanBuffer* aProjectionView,
                                const Matrix4x4* aModelMatrix,
-                               const VulkanUniformBuffer* aSkeleton ) const
+                               const VulkanBuffer* aSkeleton ) const
     {
         uint32_t descriptor_set_count = 0;
         std::array<VkDescriptorSet, 4> descriptor_sets{};
+#if 0
+        // Commenting while the matrix and materials are added.
         if ( aProjectionView )
         {
             descriptor_sets[descriptor_set_count++] = aProjectionView->GetDescriptorSet();
@@ -517,6 +519,7 @@ namespace AeonGames
         {
             descriptor_sets[descriptor_set_count++] = aSkeleton->GetDescriptorSet();
         }
+#endif
         if ( aMaterial )
         {
             for ( auto& i : aMaterial->GetDescriptorSets() )
