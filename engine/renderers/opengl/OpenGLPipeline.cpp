@@ -34,7 +34,7 @@ limitations under the License.
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLImage.h"
-#include "OpenGLUniformBuffer.h"
+#include "OpenGLBuffer.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
@@ -344,7 +344,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const OpenGLUniformBuffer* aSkeletonBuffer ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const OpenGLBuffer* aSkeletonBuffer ) const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -375,8 +375,8 @@ namespace AeonGames
             glBindBuffer ( GL_UNIFORM_BUFFER, aSkeletonBuffer->GetBufferId() );
             OPENGL_CHECK_ERROR_THROW;
             glBindBufferBase ( GL_UNIFORM_BUFFER, index++, aSkeletonBuffer->GetBufferId() );
-            OPENGL_CHECK_ERROR_THROW;
-        }
+            OPENGL_CHECK_ERROR_THROW
+        };
     }
 
     GLenum OpenGLPipeline::GetTopology() const

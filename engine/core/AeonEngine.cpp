@@ -33,7 +33,7 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
-#include "aeongames/UniformBuffer.h"
+#include "aeongames/Buffer.h"
 #include "aeongames/Image.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
@@ -322,10 +322,11 @@ namespace AeonGames
     }
 
     // Renderer------------------------------------------------------------------------------
-    UniformBuffer::~UniformBuffer() //= default;
+    Buffer::~Buffer() //= default;
     {
         std::cout << __func__ << std::endl;
     }
+
     const Renderer* GetRenderer()
     {
         return gRenderer.get();
