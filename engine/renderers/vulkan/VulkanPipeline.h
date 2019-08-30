@@ -27,7 +27,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Matrix4x4;
-    class VulkanUniformBuffer;
+    class VulkanBuffer;
     class VulkanRenderer;
     class VulkanPipeline : public Pipeline
     {
@@ -42,9 +42,9 @@ namespace AeonGames
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
         void Use ( const VulkanMaterial* aMaterial,
-                   const VulkanUniformBuffer* aProjectionView,
+                   const VulkanBuffer* aProjectionView,
                    const Matrix4x4* aModel,
-                   const VulkanUniformBuffer* aSkeleton ) const;
+                   const VulkanBuffer* aSkeleton ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >

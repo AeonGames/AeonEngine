@@ -20,7 +20,7 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/Window.h"
-#include "VulkanUniformBuffer.h"
+#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
@@ -38,7 +38,7 @@ namespace AeonGames
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
                         const Material* aMaterial = nullptr,
-                        const UniformBuffer* aSkeleton = nullptr,
+                        const Buffer* aSkeleton = nullptr,
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
@@ -58,7 +58,7 @@ namespace AeonGames
         void FinalizeFrameBuffers();
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;
-        VulkanUniformBuffer mMatrices;
+        VulkanBuffer mMatrices;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };

@@ -22,7 +22,7 @@ namespace AeonGames
 {
     class Node;
     class Window;
-    class UniformBuffer;
+    class Buffer;
     class ModelComponent : public Component
     {
     public:
@@ -57,7 +57,7 @@ namespace AeonGames
         double mStartingFrame{};
         // Private Data
         double mCurrentSample{};
-        std::unique_ptr<UniformBuffer> mSkeletonBuffer;
+        std::unique_ptr<Buffer> mSkeletonBuffer;
     };
 }
 #endif

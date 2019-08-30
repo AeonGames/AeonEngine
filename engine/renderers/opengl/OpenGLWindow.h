@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class UniformBuffer;
+    class Buffer;
     class OpenGLRenderer;
     class OpenGLWindow : public Window
     {
@@ -42,7 +42,7 @@ namespace AeonGames
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
                         const Material* aMaterial = nullptr,
-                        const UniformBuffer* aSkeleton = nullptr,
+                        const Buffer* aSkeleton = nullptr,
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,

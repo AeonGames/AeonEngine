@@ -104,7 +104,7 @@ namespace AeonGames
         Initialize ( aData );
     }
 
-    void OpenGLBuffer::WriteMemory ( const GLintptr aOffset, const GLsizeiptr aSize, const void * aData ) const
+    void OpenGLBuffer::WriteMemory ( const size_t aOffset, const size_t aSize, const void * aData ) const
     {
         if ( ( glIsBuffer ( mBuffer ) ) && ( aData ) )
         {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLBUFFER_H
 #define AEONGAMES_OPENGLBUFFER_H
 #include <cstddef>
+#include "aeongames/Buffer.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLBuffer
+    class OpenGLBuffer : public Buffer
     {
     public:
         OpenGLBuffer ();
@@ -38,13 +39,16 @@ namespace AeonGames
         ~OpenGLBuffer();
         void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         void Finalize();
-        void WriteMemory ( const GLintptr aOffset, const GLsizeiptr aSize, const void *aData = nullptr ) const ;
+        /// @name Virtual functions
+        ///@{
+        void WriteMemory ( const size_t aOffset, const size_t aSize, const void *aData = nullptr ) const final;
+        void* Map ( const size_t aOffset, size_t aSize ) const final;
+        void Unmap() const final;
+        size_t GetSize() const final;
+        ///@}
         void* Map ( const GLbitfield aAccess ) const;
         void* MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const;
         GLuint GetBufferId() const;
-        void* Map ( const size_t aOffset, size_t aSize ) const;
-        void Unmap() const;
-        size_t GetSize() const;
     private:
         void Initialize ( const void *aData );
         GLsizei mSize{};
