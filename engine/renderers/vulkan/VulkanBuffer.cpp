@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,35 +50,12 @@ namespace AeonGames
 
     void VulkanBuffer::CopyBuffer ( const VkBuffer& aBuffer )
     {
-        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        command_buffer_allocate_info.commandPool = mVulkanRenderer.GetCommandPool();
-        command_buffer_allocate_info.commandBufferCount = 1;
-
-        VkCommandBuffer command_buffer;
-        vkAllocateCommandBuffers ( mVulkanRenderer.GetDevice(), &command_buffer_allocate_info, &command_buffer );
-
-        VkCommandBufferBeginInfo begin_info = {};
-        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer ( command_buffer, &begin_info );
-
+        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
         VkBufferCopy copy_region = {};
         copy_region.size = mSize;
         copy_region.srcOffset  = copy_region.dstOffset = 0;
         vkCmdCopyBuffer ( command_buffer, aBuffer, mBuffer, 1, &copy_region );
-
-        vkEndCommandBuffer ( command_buffer );
-
-        VkSubmitInfo submit_info = {};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &command_buffer;
-        vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, VK_NULL_HANDLE );
-        vkQueueWaitIdle ( mVulkanRenderer.GetQueue() );
-        vkFreeCommandBuffers ( mVulkanRenderer.GetDevice(), mVulkanRenderer.GetCommandPool(), 1, &command_buffer );
+        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
     }
 
     VulkanBuffer::VulkanBuffer ( const VulkanBuffer& aBuffer ) :
@@ -144,35 +121,12 @@ namespace AeonGames
             else if ( ( mProperties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) && ( mUsage & VK_BUFFER_USAGE_TRANSFER_DST_BIT ) )
             {
                 VulkanBuffer source ( mVulkanRenderer, aSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, aData );
-                VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-                command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-                command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-                command_buffer_allocate_info.commandPool = mVulkanRenderer.GetCommandPool();
-                command_buffer_allocate_info.commandBufferCount = 1;
-
-                VkCommandBuffer command_buffer;
-                vkAllocateCommandBuffers ( mVulkanRenderer.GetDevice(), &command_buffer_allocate_info, &command_buffer );
-
-                VkCommandBufferBeginInfo begin_info = {};
-                begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-                vkBeginCommandBuffer ( command_buffer, &begin_info );
-
+                VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
                 VkBufferCopy copy_region = {};
                 copy_region.size = aSize;
                 copy_region.srcOffset  = copy_region.dstOffset = aOffset;
                 vkCmdCopyBuffer ( command_buffer, source.GetBuffer(), mBuffer, 1, &copy_region );
-
-                vkEndCommandBuffer ( command_buffer );
-
-                VkSubmitInfo submit_info = {};
-                submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                submit_info.commandBufferCount = 1;
-                submit_info.pCommandBuffers = &command_buffer;
-                vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, VK_NULL_HANDLE );
-                vkQueueWaitIdle ( mVulkanRenderer.GetQueue() );
-                vkFreeCommandBuffers ( mVulkanRenderer.GetDevice(), mVulkanRenderer.GetCommandPool(), 1, &command_buffer );
+                mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
             }
         }
     }
