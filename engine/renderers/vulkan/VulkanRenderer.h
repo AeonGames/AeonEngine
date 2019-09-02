@@ -46,7 +46,6 @@ namespace AeonGames
         const VkFormat& GetDepthStencilFormat() const;
         const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
         const VkCommandBuffer& GetCommandBuffer() const;
-        const VkCommandPool& GetCommandPool() const;
         const VkSemaphore& GetSignalSemaphore() const;
         const VkDescriptorSetLayout& GetUniformBufferDescriptorSetLayout() const;
         const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;

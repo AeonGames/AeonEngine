@@ -140,11 +140,6 @@ namespace AeonGames
         return mVkCommandBuffer;
     }
 
-    const VkCommandPool & VulkanRenderer::GetCommandPool() const
-    {
-        return mVkCommandPool;
-    }
-
     const VkSemaphore & VulkanRenderer::GetSignalSemaphore() const
     {
         return mVkSignalSemaphore;
