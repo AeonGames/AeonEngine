@@ -42,7 +42,7 @@ namespace AeonGames
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
         void Use ( const VulkanMaterial* aMaterial,
-                   const VulkanBuffer* aProjectionView,
+                   const VulkanMaterial* aProjectionView,
                    const Matrix4x4* aModel,
                    const VulkanBuffer* aSkeleton ) const;
     private:
