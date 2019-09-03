@@ -28,11 +28,13 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
+        OnSetProjectionMatrix();
     }
     void Window::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
+        OnSetViewMatrix();
     }
     const Matrix4x4 & Window::GetProjectionMatrix() const
     {

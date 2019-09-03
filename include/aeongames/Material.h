@@ -91,6 +91,8 @@ namespace AeonGames
         };
         DLL size_t LoadVariables ( const MaterialBuffer& aMaterialBuffer );
         DLL void LoadSamplers ( const MaterialBuffer& aMaterialBuffer );
+        DLL size_t LoadVariables ( std::initializer_list<UniformKeyValue> aUniforms );
+        DLL void LoadSamplers ( std::initializer_list<SamplerKeyValue> aSamplers );
         std::vector<UniformVariable> mVariables{};
         std::vector<std::tuple<std::string, ResourceId>> mSamplers{};
     };

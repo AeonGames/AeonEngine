@@ -386,4 +386,10 @@ const GLuint vertex_size{sizeof(vertices)};
     {
         return mMatricesBuffer;
     }
+    void OpenGLWindow::OnSetProjectionMatrix()
+    {
+    }
+    void OpenGLWindow::OnSetViewMatrix()
+    {
+    }
 }

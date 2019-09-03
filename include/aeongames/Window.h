@@ -81,6 +81,8 @@ namespace AeonGames
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
     private:
+        virtual void OnSetProjectionMatrix() = 0;
+        virtual void OnSetViewMatrix() = 0;
         Frustum mFrustum{};
         float mAspectRatio{1.0f};
     };

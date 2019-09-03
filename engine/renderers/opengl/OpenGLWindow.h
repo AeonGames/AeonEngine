@@ -49,6 +49,8 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0 ) const final;
         const GLuint GetMatricesBuffer() const;
     private:
+        void OnSetProjectionMatrix() final;
+        void OnSetViewMatrix() final;
         void InitializePlatform();
         void InitializeCommon();
         void FinalizeCommon();
