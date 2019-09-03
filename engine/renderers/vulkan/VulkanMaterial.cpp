@@ -96,6 +96,21 @@ namespace AeonGames
 
     void VulkanMaterial::Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers )
     {
+        size_t size = LoadVariables ( aUniforms );
+        if ( size )
+        {
+            mUniformBuffer.Initialize (
+                static_cast<VkDeviceSize> ( size ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            for ( auto& i : aUniforms )
+            {
+                Set ( i );
+            }
+        }
+        LoadSamplers ( aSamplers );
+        InitializeDescriptorPool();
+        InitializeDescriptorSets();
     }
 
     void VulkanMaterial::Load ( const MaterialBuffer& aMaterialBuffer )

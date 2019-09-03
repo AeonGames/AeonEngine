@@ -103,6 +103,50 @@ namespace AeonGames
         }
     }
 
+    static size_t GetUniformValueOffset ( const Material::UniformValue& aValue, size_t& aLastOffset )
+    {
+        return std::visit ( [&aLastOffset] ( auto&& arg )
+        {
+            size_t value_size = sizeof ( std::decay_t<decltype ( arg ) > );
+            size_t size = aLastOffset;
+            aLastOffset += value_size;
+            if ( value_size <= 4 )
+            {
+                size += ( size % 4 ) ? 4 - ( size % 4 ) : 0;
+            }
+            else if ( value_size <= 8 )
+            {
+                size += ( size % 8 ) ? 8 - ( size % 8 ) : 0;
+            }
+            else
+            {
+                size += ( size % 16 ) ? 16 - ( size % 16 ) : 0;
+            }
+            return size;
+        }, aValue );
+    }
+
+    size_t Material::LoadVariables ( std::initializer_list<UniformKeyValue> aUniforms )
+    {
+        size_t size = 0;
+        mVariables.reserve ( aUniforms.size() );
+        for ( auto& i : aUniforms )
+        {
+            mVariables.emplace_back ( std::get<0> ( i ),  GetUniformValueOffset ( std::get<1> ( i ), size ) );
+        }
+        size += ( size % ( 16 ) ) ? ( 16 ) - ( size % ( 16 ) ) : 0; // align the final value to 4 floats
+        return size;
+    }
+
+    void Material::LoadSamplers ( std::initializer_list<SamplerKeyValue> aSamplers )
+    {
+        mSamplers.reserve ( aSamplers.size() );
+        for ( auto& i : aSamplers )
+        {
+            std::get<1> ( mSamplers.emplace_back ( std::get<0> ( i ), std::get<1> ( i ) ) ).Store();
+        }
+    }
+
     void Material::Load ( const std::string& aFilename )
     {
         Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );

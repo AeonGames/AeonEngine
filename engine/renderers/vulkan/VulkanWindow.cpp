@@ -38,25 +38,7 @@ namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
-        mMatrices{aVulkanRenderer,
-                  sizeof ( float ) * 32,
-                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                  std::array<float, 32>
-    {
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        }
-    } .data() }
+        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}}
     {
         try
         {
@@ -79,25 +61,7 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( const VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         Window { aWindowId }, mVulkanRenderer { aVulkanRenderer },
-        mMatrices{aVulkanRenderer,
-                  sizeof ( float ) * 32,
-                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                  std::array<float, 32>
-    {
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        }
-    } .data() }
+        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}}
     {
         try
         {
@@ -433,14 +397,17 @@ namespace AeonGames
         mVkScissor.extent.height = ( aY + aHeight > mVkSurfaceCapabilitiesKHR.currentExtent.height ) ? mVkSurfaceCapabilitiesKHR.currentExtent.height : aY + aHeight;
     }
 
+    void VulkanWindow::OnSetProjectionMatrix()
+    {
+        mMatrices.Set ( Material::UniformKeyValue{"ProjectionMatrix", mProjectionMatrix} );
+    }
+    void VulkanWindow::OnSetViewMatrix()
+    {
+        mMatrices.Set ( Material::UniformKeyValue{"ViewMatrix", mViewMatrix} );
+    }
+
     void VulkanWindow::BeginRender() const
     {
-        /** @todo I no longer think writing to the matrix buffer each time is optimal,
-         *  but I do not want to introduce a dirty matrix flag.
-         *  Will probably just make the set projection and transform to virtual. */
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
-
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
                                    mVkSwapchainKHR,
