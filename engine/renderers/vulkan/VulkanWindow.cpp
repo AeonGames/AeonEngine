@@ -399,11 +399,11 @@ namespace AeonGames
 
     void VulkanWindow::OnSetProjectionMatrix()
     {
-        mMatrices.Set ( Material::UniformKeyValue{"ProjectionMatrix", mProjectionMatrix} );
+        mMatrices.Set ( 0, mProjectionMatrix );
     }
     void VulkanWindow::OnSetViewMatrix()
     {
-        mMatrices.Set ( Material::UniformKeyValue{"ViewMatrix", mViewMatrix} );
+        mMatrices.Set ( 1, mViewMatrix );
     }
 
     void VulkanWindow::BeginRender() const

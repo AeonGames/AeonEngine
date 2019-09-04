@@ -99,6 +99,11 @@ namespace AeonGames
         mUniformBuffer.Finalize();
     }
 
+    void OpenGLMaterial::Set ( size_t aIndex, const UniformValue& aValue )
+    {
+        mUniformBuffer.WriteMemory ( mVariables.at ( aIndex ).GetOffset(), GetUniformValueSize ( aValue ), GetUniformValuePointer ( aValue ) );
+    }
+
     void OpenGLMaterial::Set ( const UniformKeyValue& aValue )
     {
         auto i = std::find_if ( mVariables.begin(), mVariables.end(),
