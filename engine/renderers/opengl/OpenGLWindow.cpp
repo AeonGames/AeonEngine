@@ -219,6 +219,7 @@ const GLuint vertex_size{sizeof(vertices)};
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         OPENGL_CHECK_ERROR_THROW;
 
+#if 0
         // Initialize Matrix Buffer
         glGenBuffers ( 1, &mMatricesBuffer );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -242,6 +243,7 @@ const GLuint vertex_size{sizeof(vertices)};
         glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
                        matrices, GL_DYNAMIC_DRAW );
         OPENGL_CHECK_ERROR_NO_THROW;
+#endif        
         mScreenQuad.Initialize(vertex_size, GL_STATIC_DRAW, vertices);
     }
 
@@ -280,16 +282,10 @@ const GLuint vertex_size{sizeof(vertices)};
             mProgram = 0;
         }
 
-        if ( glIsBuffer ( mMatricesBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteBuffers ( 1, &mMatricesBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mMatricesBuffer = 0;
-        }
-        OPENGL_CHECK_ERROR_NO_THROW;
+        mMatrices.Unload();
 
         mScreenQuad.Finalize();
+
         if ( glIsVertexArray ( mVAO ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -301,7 +297,9 @@ const GLuint vertex_size{sizeof(vertices)};
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer ( aOpenGLRenderer ), mOwnsWindowId{ true }, mFullScreen{aFullScreen}
+        Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer ( aOpenGLRenderer ),
+        mMatrices{{{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}, {"ModelMatrix", Matrix4x4{}}}, {}},
+        mOwnsWindowId{ true }, mFullScreen{aFullScreen}
     {
         try
         {
@@ -357,11 +355,12 @@ const GLuint vertex_size{sizeof(vertices)};
         opengl_pipeline.Use (reinterpret_cast<const OpenGLMaterial*>(aMaterial),
             reinterpret_cast<const OpenGLBuffer*> ( aSkeleton ) );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
+
+        mMatrices.Set(2,aModelMatrix);
+
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatrices.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
@@ -384,12 +383,22 @@ const GLuint vertex_size{sizeof(vertices)};
 
     const GLuint OpenGLWindow::GetMatricesBuffer() const
     {
-        return mMatricesBuffer;
+        return mMatrices.GetPropertiesBufferId();
     }
+
     void OpenGLWindow::OnSetProjectionMatrix()
     {
+        mMatrices.Set ( 0, mProjectionMatrix * Matrix4x4
+        {
+            // Flip Matrix
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        } );
     }
     void OpenGLWindow::OnSetViewMatrix()
     {
+        mMatrices.Set ( 1, mViewMatrix );
     }
 }

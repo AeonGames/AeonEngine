@@ -206,5 +206,4 @@ namespace AeonGames
             return reinterpret_cast<const void*> ( &value );
         }, aValue );
     }
-
 }

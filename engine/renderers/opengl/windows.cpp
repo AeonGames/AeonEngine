@@ -210,19 +210,6 @@ namespace AeonGames
         glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
-        Matrix4x4 projection_matrix =
-            mProjectionMatrix * Matrix4x4
-        {
-            // Flip Matrix
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, -1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glNamedBufferSubData ( mMatricesBuffer, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
-        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLWindow::EndRender() const
