@@ -219,31 +219,8 @@ const GLuint vertex_size{sizeof(vertices)};
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         OPENGL_CHECK_ERROR_THROW;
 
-#if 0
-        // Initialize Matrix Buffer
-        glGenBuffers ( 1, &mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        float matrices[48] =
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        glBufferData ( GL_UNIFORM_BUFFER, sizeof ( float ) * 48,
-                       matrices, GL_DYNAMIC_DRAW );
-        OPENGL_CHECK_ERROR_NO_THROW;
-#endif        
+		mMatrices.Load({ {"ModelMatrix", Matrix4x4{}},{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}},{});
+
         mScreenQuad.Initialize(vertex_size, GL_STATIC_DRAW, vertices);
     }
 
@@ -298,7 +275,6 @@ const GLuint vertex_size{sizeof(vertices)};
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer ( aOpenGLRenderer ),
-        mMatrices{{{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}, {"ModelMatrix", Matrix4x4{}}}, {}},
         mOwnsWindowId{ true }, mFullScreen{aFullScreen}
     {
         try
@@ -356,7 +332,7 @@ const GLuint vertex_size{sizeof(vertices)};
             reinterpret_cast<const OpenGLBuffer*> ( aSkeleton ) );
         OPENGL_CHECK_ERROR_NO_THROW;
 
-        mMatrices.Set(2,aModelMatrix);
+        mMatrices.Set(0,aModelMatrix);
 
         glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetPropertiesBufferId() );
         OPENGL_CHECK_ERROR_THROW;
@@ -388,7 +364,7 @@ const GLuint vertex_size{sizeof(vertices)};
 
     void OpenGLWindow::OnSetProjectionMatrix()
     {
-        mMatrices.Set ( 0, mProjectionMatrix * Matrix4x4
+        mMatrices.Set ( 1, mProjectionMatrix * Matrix4x4
         {
             // Flip Matrix
             1.0f, 0.0f, 0.0f, 0.0f,
@@ -399,6 +375,6 @@ const GLuint vertex_size{sizeof(vertices)};
     }
     void OpenGLWindow::OnSetViewMatrix()
     {
-        mMatrices.Set ( 1, mViewMatrix );
+        mMatrices.Set ( 2, mViewMatrix );
     }
 }

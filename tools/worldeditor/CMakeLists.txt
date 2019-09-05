@@ -24,7 +24,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 
 qt5_create_translation(QM_FILES
                        ${CMAKE_CURRENT_SOURCE_DIR}
-                       ${CMAKE_CURRENT_SOURCE_DIR}/i18n/es_CR.ts
+                       i18n/es_CR.ts
                        OPTIONS
                        -source-language
                        en_US
