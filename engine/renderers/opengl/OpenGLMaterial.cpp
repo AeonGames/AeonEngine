@@ -59,7 +59,16 @@ namespace AeonGames
 
     void OpenGLMaterial::Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers )
     {
-
+        size_t size = LoadVariables ( aUniforms );
+        if ( size )
+        {
+            mUniformBuffer.Initialize ( static_cast<GLsizei> ( size ), GL_DYNAMIC_DRAW );
+            for ( auto& i : aUniforms )
+            {
+                Set ( i );
+            }
+        }
+        LoadSamplers ( aSamplers );
     }
 
     OpenGLMaterial::OpenGLMaterial ( const OpenGLMaterial& aMaterial ) :
