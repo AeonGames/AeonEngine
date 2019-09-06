@@ -135,7 +135,7 @@ find_program(AUTOPEP8_EXECUTABLE autopep8
 find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
              HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
-option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
+option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" OFF) # Temporarily disabling OpenGL to focus on Vulkan
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 
 if(CLANG_TIDY_EXECUTABLE)
