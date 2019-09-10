@@ -128,7 +128,7 @@ namespace AeonGames
         }
     }
 
-    void Camera::Update ( Node& aNode, double aDelta )
+    void Camera::Update ( Node& aNode, double aDelta, const Window* aWindow )
     {
         auto scene = aNode.GetScene();
         if ( scene && scene->GetCamera() == &aNode )

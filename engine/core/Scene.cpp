@@ -179,11 +179,11 @@ namespace AeonGames
         return const_cast<Node&> ( static_cast<const Scene&> ( *this ) [index] );
     }
 
-    void Scene::Update ( const double delta )
+    void Scene::Update ( const double delta, const Window* aWindow )
     {
-        LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
+        LoopTraverseDFSPreOrder ( [delta, aWindow] ( Node & aNode )
         {
-            aNode.Update ( delta );
+            aNode.Update ( delta, aWindow );
         } );
     }
 
