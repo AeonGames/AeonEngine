@@ -270,7 +270,7 @@ namespace AeonGames
                 }
                 if ( mScene )
                 {
-                    const_cast<Scene*> ( mScene )->Update ( delta );
+                    const_cast<Scene*> ( mScene )->Update ( delta, mWindow.get() );
                 }
                 mWindow->BeginRender();
                 mWindow->Render ( Transform{},

@@ -38,11 +38,10 @@ namespace AeonGames
         return ModelStringId;
     }
 
-    ModelComponent::ModelComponent() : Component{},
-        /// @todo We're hardcoding the skeleton buffer here to the max size, but should be set based on what the model requires.
-        /// @todo Initialize the skeleton only when needed.
-        mSkeletonBuffer{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
+    ModelComponent::ModelComponent() : Component{}
+        //,mSkeletonBuffer{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
+#if 0
         const float identity[16] =
         {
             1.0f, 0.0f, 0.0f, 0.0f,
@@ -56,6 +55,7 @@ namespace AeonGames
             memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
         }
         mSkeletonBuffer->Unmap();
+#endif
     }
 
     ModelComponent::~ModelComponent() = default;
@@ -83,7 +83,6 @@ namespace AeonGames
     {
         return ModelComponentPropertyIds.data();
     }
-
 
     Property ModelComponent::GetProperty ( const StringId& aId ) const
     {
@@ -164,11 +163,10 @@ namespace AeonGames
         return mStartingFrame;
     }
 
-    void ModelComponent::Update ( Node& aNode, double aDelta )
+    void ModelComponent::Update ( Node& aNode, double aDelta, const Window* aWindow )
     {
         if ( auto model = mModel.Cast<Model>() )
         {
-
             AABB aabb;
             for ( auto& i : model->GetAssemblies() )
             {
@@ -178,7 +176,7 @@ namespace AeonGames
                 }
             }
             aNode.SetAABB ( aabb );
-
+#if 0
             if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
             {
                 auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
@@ -192,6 +190,7 @@ namespace AeonGames
                 }
                 mSkeletonBuffer->Unmap();
             }
+#endif
         }
     }
 
@@ -205,7 +204,7 @@ namespace AeonGames
                                  *std::get<0> ( i ).Cast<Mesh>(),
                                  *std::get<1> ( i ).Cast<Pipeline>(),
                                  std::get<2> ( i ).Cast<Material>(),
-                                 model->GetSkeleton() ? mSkeletonBuffer.get() : nullptr );
+                                 nullptr );
             }
         }
     }

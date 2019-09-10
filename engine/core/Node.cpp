@@ -559,11 +559,11 @@ namespace AeonGames
         }
     }
 
-    void Node::Update ( const double aDelta )
+    void Node::Update ( const double aDelta, const Window* aWindow )
     {
         for ( auto& i : mComponentDependencyMap )
         {
-            GetComponent ( i )->Update ( *this, aDelta );
+            GetComponent ( i )->Update ( *this, aDelta, aWindow );
         }
     }
 

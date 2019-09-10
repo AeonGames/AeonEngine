@@ -36,6 +36,7 @@ limitations under the License.
 #include "VulkanBuffer.h"
 #include "VulkanBuffer.h"
 #include "VulkanUtilities.h"
+#include "aeongames/LogLevel.h"
 
 namespace AeonGames
 {
@@ -298,6 +299,8 @@ namespace AeonGames
 
             mVkPhysicalDevice = physical_device_list[0];
             vkGetPhysicalDeviceProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceProperties );
+            std::cout << LogLevel::Debug << "minUniformBufferOffsetAlignment: " << mVkPhysicalDeviceProperties.limits.minUniformBufferOffsetAlignment << std::endl;
+            std::cout << LogLevel::Debug << "maxUniformBufferRange: " << mVkPhysicalDeviceProperties.limits.maxUniformBufferRange << std::endl;
             vkGetPhysicalDeviceMemoryProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceMemoryProperties );
         }
 

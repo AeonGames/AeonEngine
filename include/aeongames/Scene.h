@@ -32,6 +32,7 @@ namespace AeonGames
     class SceneBuffer;
     class Node;
     class Renderer;
+    class Window;
     /*! \brief Scene class.
       Scene is the container for all elements in a game level,
       takes care of collision, rendering and updates to all elements therein.
@@ -58,7 +59,7 @@ namespace AeonGames
         DLL size_t GetChildIndex ( const Node* aNode ) const;
         DLL const Node& operator[] ( const std::size_t index ) const;
         DLL Node& operator[] ( const std::size_t index );
-        DLL void Update ( const double delta );
+        DLL void Update ( const double delta, const Window* aWindow = nullptr );
         DLL void BroadcastMessage ( uint32_t aMessageType, const void* aMessageData );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node&) > aAction)*/
         DLL void LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );
