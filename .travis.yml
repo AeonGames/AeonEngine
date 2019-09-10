@@ -47,16 +47,20 @@ install:
   - make
   - sudo make install
   - cd ..
-  - wget https://vulkan.lunarg.com/sdk/download/1.0.54.0/linux/vulkansdk-linux-x86_64-1.0.54.0.run
-  - chmod a+x vulkansdk-linux-x86_64-1.0.54.0.run
-  - sudo ./vulkansdk-linux-x86_64-1.0.54.0.run
-  - echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.54.0/x86_64" >> ~/.bashrc
-  - echo "export VULKAN_SDK" >> ~/.bashrc
-  - echo "export PATH=$PWD/VulkanSDK/1.0.54.0/bin:$PATH" >> ~/.bashrc
-  - echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.54.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
-  - echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.54.0/etc/explicit_layer.d" >> ~/.bashrc
-  - source ~/.bashrc
-  - sudo ldconfig
+  #- wget https://vulkan.lunarg.com/sdk/download/1.0.54.0/linux/vulkansdk-linux-x86_64-1.0.54.0.run
+  #- chmod a+x vulkansdk-linux-x86_64-1.0.54.0.run
+  #- sudo ./vulkansdk-linux-x86_64-1.0.54.0.run
+  #- echo "VULKAN_SDK=$PWD/VulkanSDK/1.0.54.0/x86_64" >> ~/.bashrc
+  #- echo "export VULKAN_SDK" >> ~/.bashrc
+  #- echo "export PATH=$PWD/VulkanSDK/1.0.54.0/bin:$PATH" >> ~/.bashrc
+  #- echo "export LD_LIBRARY_PATH=$PWD/VulkanSDK/1.0.54.0/lib:$LD_LIBRARY_PATH" >> ~/.bashrc
+  #- echo "export VK_LAYER_PATH=$PWD/VulkanSDK/1.0.54.0/etc/explicit_layer.d" >> ~/.bashrc
+  #- source ~/.bashrc
+  #- sudo ldconfig
+  - wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+  - sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.1.114-xenial.list http://packages.lunarg.com/vulkan/1.1.114/lunarg-vulkan-1.1.114-xenial.list
+  - sudo apt update
+  - sudo apt install -y vulkan-sdk
   - git clone https://github.com/KhronosGroup/glslang.git
   - cd glslang
   - git checkout 8f674e821e1e5f628474b21d7fe21af2e86b5fb4
