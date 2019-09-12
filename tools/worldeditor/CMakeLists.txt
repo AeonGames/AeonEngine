@@ -45,7 +45,6 @@ set(WORLDEDITOR_QT_HEADERS
     EngineWindow.h)
 
 set(WORLDEDITOR_HEADERS
-    Debug.h
     WorldEditor.h
     GridSettings.h
     ${WORLDEDITOR_QT_HEADERS})
@@ -65,7 +64,6 @@ set(WORLDEDITOR_SOURCES
     CameraSettings.cpp
     SettingsDialog.cpp
     EngineWindow.cpp
-    Debug.cpp
     GridSettings.cpp)
 
 set(WORLDEDITOR_UI

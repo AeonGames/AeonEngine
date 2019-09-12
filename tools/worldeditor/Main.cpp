@@ -19,10 +19,13 @@ limitations under the License.
 #include <mutex>
 #include "MainWindow.h"
 #include "WorldEditor.h"
-#include "Debug.h"
 #include "aeongames/AeonEngine.h"
 
 #ifdef _MSC_VER
+#include <tlhelp32.h>
+#include <Dbghelp.h>
+#pragma comment(lib, "Dbghelp.lib")
+
 FILE* gAllocationLog = NULL;
 int AllocHook ( int allocType, void *userData, size_t size, int
                 blockType, long requestNumber, const unsigned char *filename, int
@@ -30,24 +33,45 @@ int AllocHook ( int allocType, void *userData, size_t size, int
 {
     static std::mutex m;
     /** Seems like deallocations always have zero size and requestNumber */
-    if ( ( blockType == _CRT_BLOCK ) /*|| (!size && !requestNumber)*/ )
+    if ( ( blockType == _CRT_BLOCK ) )
     {
         return TRUE;
     }
     if ( gAllocationLog && allocType != _HOOK_FREE )
     {
+        STACKFRAME stack_frame{};
+        CONTEXT context{};
+        uint8_t symbol_buffer[sizeof ( IMAGEHLP_SYMBOL64 ) + MAX_PATH] {};
+        PIMAGEHLP_SYMBOL64 symbol = reinterpret_cast<PIMAGEHLP_SYMBOL64> ( symbol_buffer );
+        DWORD64 displacement{};
+        char name[1024] {};
         std::lock_guard<std::mutex> hold ( m );
-#if 0
-        if ( requestNumber == 3236 )
-        {
-            PrintCallStack ( gAllocationLog );
-        }
-#endif
-        fprintf ( gAllocationLog, "%s %ld Size %llu\n",
+
+        RtlCaptureContext ( &context );
+        stack_frame.AddrPC.Offset = context.Rip;
+        stack_frame.AddrPC.Mode = AddrModeFlat;
+        stack_frame.AddrStack.Offset = context.Rsp;
+        stack_frame.AddrStack.Mode = AddrModeFlat;
+        stack_frame.AddrFrame.Offset = context.Rbp;
+        stack_frame.AddrFrame.Mode = AddrModeFlat;
+
+        symbol->SizeOfStruct = sizeof ( IMAGEHLP_SYMBOL64 );
+        symbol->MaxNameLength = MAX_PATH;
+
+        fprintf ( gAllocationLog, "%s %ld Size %llu File %s Line %d\n",
                   ( allocType == _HOOK_ALLOC ) ? "ALLOCATION" :
                   ( allocType == _HOOK_REALLOC ) ? "REALLOCATION" : "DEALLOCATION",
                   requestNumber,
-                  size );
+                  size, ( filename != NULL ) ? reinterpret_cast<const char*> ( filename ) : static_cast<const char*> ( "Unknown" ), lineNumber );
+
+        while ( StackWalk64 ( IMAGE_FILE_MACHINE_AMD64, GetCurrentProcess(), GetCurrentThread(), &stack_frame, &context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL ) )
+        {
+            SymGetSymFromAddr64 ( GetCurrentProcess(), ( ULONG64 ) stack_frame.AddrPC.Offset, &displacement, symbol );
+            UnDecorateSymbolName ( symbol->Name, ( PSTR ) name, 1024, UNDNAME_COMPLETE );
+            fprintf ( gAllocationLog, "%s\n", name );
+        }
+
+        fflush ( gAllocationLog );
     }
     return TRUE;
 }
@@ -57,9 +81,10 @@ int ENTRYPOINT main ( int argc, char *argv[] )
 {
 #ifdef _MSC_VER
 #if 0
+    // This now works but the log gets huge and makes the process really slow to start up
+    // P.S. Looks like all leaks are related to Qt.
     SymInitialize ( GetCurrentProcess(), nullptr, TRUE );
     gAllocationLog = fopen ( "allocation.log", "wt" );
-    InitializeModuleTable();
     _CrtSetAllocHook ( AllocHook );
 #endif
     /*  Call _CrtDumpMemoryLeaks on exit, required because Qt does a lot of static allocations,

@@ -107,7 +107,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     //_CrtSetBreakAlloc (1159202);
 #endif
     std::ostringstream stream;
-    for ( uint32_t i = 0; i < argc; ++i )
+    for ( int i = 0; i < argc; ++i )
     {
         stream << argv[i] << ( ( i != argc - 1 ) ? " " : "" );
     }

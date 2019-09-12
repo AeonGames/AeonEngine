@@ -298,6 +298,7 @@ namespace AeonGames
             write_descriptor_set.descriptorCount = 1;
             write_descriptor_set.pBufferInfo = nullptr;
             write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSamplers[i] ).Get<Image>() )->GetDescriptorImageInfo();
+            write_descriptor_set.pTexelBufferView = nullptr;
         }
         /* Uncomment the following line if a third descriptor set is ever needed. */
         //descriptor_set_index += 1;
