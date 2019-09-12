@@ -191,7 +191,7 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        if ( mWindow && aResizeEvent->size().width() && aResizeEvent->size().height() )
+        if ( aResizeEvent->size() != aResizeEvent->oldSize() && mWindow && aResizeEvent->size().width() && aResizeEvent->size().height() )
         {
 #ifdef Q_OS_WIN
             // This is a workaround
