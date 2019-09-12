@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_SOUND_H
 #include "Platform.h"
 #include <cstdint>
-#include "aeongames/Memory.h"
+#include <memory>
 #include <functional>
 #include <string>
 namespace AeonGames

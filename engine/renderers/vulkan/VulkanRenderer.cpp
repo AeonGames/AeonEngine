@@ -62,7 +62,8 @@ namespace AeonGames
             InitializeFence();
             InitializeRenderPass();
             InitializeCommandPool();
-            InitializeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
+            InitializeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
+            InitializeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC );
         }
         catch ( ... )
         {
@@ -81,6 +82,7 @@ namespace AeonGames
         }
         mVkSamplerDescriptorSetLayouts.clear();
 
+        FinalizeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout );
         FinalizeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
         FinalizeCommandPool();
         FinalizeRenderPass();
@@ -114,6 +116,11 @@ namespace AeonGames
     const VkPhysicalDevice & VulkanRenderer::GetPhysicalDevice() const
     {
         return mVkPhysicalDevice;
+    }
+
+    const VkPhysicalDeviceProperties & VulkanRenderer::GetPhysicalDeviceProperties() const
+    {
+        return mVkPhysicalDeviceProperties;
     }
 
     const VkPhysicalDeviceMemoryProperties & VulkanRenderer::GetPhysicalDeviceMemoryProperties() const
@@ -643,6 +650,11 @@ namespace AeonGames
         return mVkUniformBufferDescriptorSetLayout;
     }
 
+    const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDynamicDescriptorSetLayout() const
+    {
+        return mVkUniformBufferDynamicDescriptorSetLayout;
+    }
+
     const VkDescriptorSetLayout& VulkanRenderer::GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const
     {
         auto lb = std::lower_bound ( mVkSamplerDescriptorSetLayouts.begin(), mVkSamplerDescriptorSetLayouts.end(), aSamplerCount,
@@ -688,24 +700,22 @@ namespace AeonGames
         return VK_NULL_HANDLE;
     }
 
-    void VulkanRenderer::InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout )
+    void VulkanRenderer::InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType )
     {
-        // Matrices
-        std::array<VkDescriptorSetLayoutBinding, 1> descriptor_set_layout_bindings;
-        // Matrices binding
-        descriptor_set_layout_bindings[0].binding = 0;
-        descriptor_set_layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        VkDescriptorSetLayoutBinding descriptor_set_layout_binding;
+        descriptor_set_layout_binding.binding = 0;
+        descriptor_set_layout_binding.descriptorType = aVkDescriptorType;
         /* We will bind just 1 UBO, descriptor count is the number of array elements, and we just use a single struct. */
-        descriptor_set_layout_bindings[0].descriptorCount = 1;
-        descriptor_set_layout_bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-        descriptor_set_layout_bindings[0].pImmutableSamplers = nullptr;
+        descriptor_set_layout_binding.descriptorCount = 1;
+        descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        descriptor_set_layout_binding.pImmutableSamplers = nullptr;
 
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         descriptor_set_layout_create_info.pNext = nullptr;
         descriptor_set_layout_create_info.flags = 0;
-        descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
-        descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
+        descriptor_set_layout_create_info.bindingCount = 1;
+        descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
         if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr, &aVkDescriptorSetLayout ) )
         {
             std::ostringstream stream;

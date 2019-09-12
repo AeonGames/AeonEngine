@@ -21,6 +21,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/Window.h"
 #include "VulkanMaterial.h"
+#include "VulkanMemoryPoolBuffer.h"
 
 namespace AeonGames
 {
@@ -61,6 +62,7 @@ namespace AeonGames
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;
         VulkanMaterial mMatrices;
+        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };
