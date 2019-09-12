@@ -19,7 +19,6 @@ limitations under the License.
 #include "aeongames/CRC.h"
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
-#include "aeongames/Memory.h"
 
 using namespace ::testing;
 namespace AeonGames

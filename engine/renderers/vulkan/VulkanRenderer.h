@@ -19,9 +19,9 @@ limitations under the License.
 
 #include <vulkan/vulkan.h>
 #include <unordered_map>
+#include <memory>
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
-#include "aeongames/Memory.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "VulkanWindow.h"
@@ -41,6 +41,7 @@ namespace AeonGames
         const VkDevice& GetDevice() const;
         const VkQueue& GetQueue() const;
         const VkFence& GetFence() const;
+        const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
         const VkRenderPass& GetRenderPass() const;
         const VkFormat& GetDepthStencilFormat() const;
@@ -48,6 +49,7 @@ namespace AeonGames
         const VkCommandBuffer& GetCommandBuffer() const;
         const VkSemaphore& GetSignalSemaphore() const;
         const VkDescriptorSetLayout& GetUniformBufferDescriptorSetLayout() const;
+        const VkDescriptorSetLayout& GetUniformBufferDynamicDescriptorSetLayout() const;
         const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
@@ -79,7 +81,7 @@ namespace AeonGames
         void FinalizeRenderPass();
         void FinalizeCommandPool();
         void FinalizeDebug();
-        void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
+        void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
         bool mValidate{ true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
@@ -97,6 +99,7 @@ namespace AeonGames
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};

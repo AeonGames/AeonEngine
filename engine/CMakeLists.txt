@@ -69,7 +69,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceId.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Memory.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/MemoryPool.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h)
 
 set(ENGINE_MATH_HEADERS
@@ -137,6 +137,7 @@ set(ENGINE_CORE_SOURCES
     core/Clock.cpp
     core/windows.cpp
     core/x11.cpp
+    core/MemoryPool.cpp
     # core/Octree.cpp
     )
 

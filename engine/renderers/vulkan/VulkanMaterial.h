@@ -21,8 +21,8 @@ limitations under the License.
 #include <tuple>
 #include <initializer_list>
 #include <vulkan/vulkan.h>
+#include <memory>
 #include "aeongames/Material.h"
-#include "aeongames/Memory.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames

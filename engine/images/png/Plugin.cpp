@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Plugin.h"
 #include "PngImage.h"
-#include "aeongames/Memory.h"
 
 extern "C"
 {

@@ -25,31 +25,34 @@ limitations under the License.
 #include "aeongames/Vector2.h"
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
-#include "VulkanStackBuffer.h"
+#include "VulkanMemoryPoolBuffer.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 
 namespace AeonGames
 {
-    VulkanStackBuffer::VulkanStackBuffer ( const VulkanRenderer&  aVulkanRenderer, size_t aStackSize ) :
+    VulkanMemoryPoolBuffer::VulkanMemoryPoolBuffer ( const VulkanRenderer&  aVulkanRenderer, size_t aStackSize ) :
         mVulkanRenderer { aVulkanRenderer },
-        mUniformBuffer { mVulkanRenderer }
+        mUniformBuffer { mVulkanRenderer,
+                         ( ( aStackSize - 1 ) | ( mVulkanRenderer.GetPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment - 1 ) ) + 1, // Adjust for alignment
+                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT }
     {
         InitializeDescriptorPool();
         InitializeDescriptorSet();
     }
 
-    VulkanStackBuffer::~VulkanStackBuffer()
+    VulkanMemoryPoolBuffer::~VulkanMemoryPoolBuffer()
     {
         FinalizeDescriptorSet();
         FinalizeDescriptorPool();
         mUniformBuffer.Finalize();
     }
 
-    void VulkanStackBuffer::InitializeDescriptorPool()
+    void VulkanMemoryPoolBuffer::InitializeDescriptorPool()
     {
         VkDescriptorPoolSize descriptor_pool_size{};
-        descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_pool_size.descriptorCount = 1;
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -66,10 +69,10 @@ namespace AeonGames
         }
     }
 
-    void VulkanStackBuffer::InitializeDescriptorSet()
+    void VulkanMemoryPoolBuffer::InitializeDescriptorSet()
     {
         VkDescriptorSetLayout descriptorset_layout{VK_NULL_HANDLE};
-        descriptorset_layout = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+        descriptorset_layout = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
         VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
         descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
@@ -88,7 +91,7 @@ namespace AeonGames
         write_descriptor_set.dstSet = mVkDescriptorSet;
         write_descriptor_set.dstBinding = 0;
         write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         write_descriptor_set.descriptorCount = 1;
         write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
         write_descriptor_set.pImageInfo = nullptr;
@@ -96,7 +99,7 @@ namespace AeonGames
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
     }
 
-    void VulkanStackBuffer::FinalizeDescriptorPool()
+    void VulkanMemoryPoolBuffer::FinalizeDescriptorPool()
     {
         if ( mVkDescriptorPool != VK_NULL_HANDLE )
         {
@@ -105,7 +108,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanStackBuffer::FinalizeDescriptorSet()
+    void VulkanMemoryPoolBuffer::FinalizeDescriptorSet()
     {
         if ( mVkDescriptorSet != VK_NULL_HANDLE )
         {

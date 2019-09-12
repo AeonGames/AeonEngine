@@ -21,8 +21,8 @@ limitations under the License.
     \author Rodrigo Hernandez.
 */
 #include "aeongames/Platform.h"
-#include "aeongames/Memory.h"
 #include "aeongames/Matrix4x4.h"
+#include <memory>
 #include <vector>
 #include <string>
 #include <functional>
