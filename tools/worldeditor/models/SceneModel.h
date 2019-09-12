@@ -18,7 +18,6 @@ limitations under the License.
 #define AEONGAMES_SCENEMODEL_H
 #include <QAbstractItemModel>
 #include <vector>
-#include "aeongames/Memory.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 

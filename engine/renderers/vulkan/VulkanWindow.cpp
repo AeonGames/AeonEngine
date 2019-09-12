@@ -33,12 +33,14 @@ limitations under the License.
 #include "aeongames/AABB.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
-        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}}
+        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}},
+    mMemoryPoolBuffer{mVulkanRenderer, 8_mb}
     {
         try
         {
@@ -61,7 +63,8 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( const VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         Window { aWindowId }, mVulkanRenderer { aVulkanRenderer },
-        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}}
+        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}},
+    mMemoryPoolBuffer{mVulkanRenderer, 8_mb}
     {
         try
         {

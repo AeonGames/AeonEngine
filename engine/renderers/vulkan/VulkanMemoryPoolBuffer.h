@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANSTACKBUFFER_H
-#define AEONGAMES_VULKANSTACKBUFFER_H
+#ifndef AEONGAMES_VULKANMEMORYPOOLBUFFER_H
+#define AEONGAMES_VULKANMEMORYPOOLBUFFER_H
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -22,27 +22,27 @@ limitations under the License.
 #include <initializer_list>
 #include <vulkan/vulkan.h>
 #include "aeongames/Material.h"
-#include "aeongames/Memory.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanStackBuffer
+    class VulkanMemoryPoolBuffer
     {
     public:
-        VulkanStackBuffer ( const VulkanRenderer&  aVulkanRenderer, size_t aStackSize );
-        VulkanStackBuffer ( const VulkanRenderer& ) = delete;
-        VulkanStackBuffer& operator= ( const VulkanStackBuffer& ) = delete;
-        VulkanStackBuffer& operator = ( VulkanStackBuffer&& ) = delete;
-        VulkanStackBuffer ( VulkanStackBuffer&& ) = delete;
-        ~VulkanStackBuffer();
+        VulkanMemoryPoolBuffer ( const VulkanRenderer&  aVulkanRenderer, size_t aStackSize );
+        VulkanMemoryPoolBuffer ( const VulkanRenderer& ) = delete;
+        VulkanMemoryPoolBuffer& operator= ( const VulkanMemoryPoolBuffer& ) = delete;
+        VulkanMemoryPoolBuffer& operator = ( VulkanMemoryPoolBuffer&& ) = delete;
+        VulkanMemoryPoolBuffer ( VulkanMemoryPoolBuffer&& ) = delete;
+        ~VulkanMemoryPoolBuffer();
     private:
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
+        size_t mStackOffset{0};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
         VulkanBuffer mUniformBuffer;

@@ -29,7 +29,7 @@ set(VULKAN_RENDERER_HEADERS
     VulkanMaterial.h
     VulkanImage.h
     VulkanBuffer.h
-    VulkanStackBuffer.h
+    VulkanMemoryPoolBuffer.h
     )
 
 set(VULKAN_RENDERER_SOURCES
@@ -41,7 +41,7 @@ set(VULKAN_RENDERER_SOURCES
     VulkanMaterial.cpp
     VulkanImage.cpp
     VulkanBuffer.cpp
-    VulkanStackBuffer.cpp
+    VulkanMemoryPoolBuffer.cpp
     Plugin.cpp)
 
 source_group("Renderer"
