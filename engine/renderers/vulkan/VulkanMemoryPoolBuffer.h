@@ -21,7 +21,7 @@ limitations under the License.
 #include <tuple>
 #include <initializer_list>
 #include <vulkan/vulkan.h>
-#include "aeongames/Material.h"
+#include "aeongames/BufferAccessor.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames
@@ -36,13 +36,15 @@ namespace AeonGames
         VulkanMemoryPoolBuffer& operator = ( VulkanMemoryPoolBuffer&& ) = delete;
         VulkanMemoryPoolBuffer ( VulkanMemoryPoolBuffer&& ) = delete;
         ~VulkanMemoryPoolBuffer();
+        BufferAccessor Allocate ( size_t aSize );
+        void Reset();
     private:
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
         void InitializeDescriptorSet();
         void FinalizeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
-        size_t mStackOffset{0};
+        size_t mOffset{0};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
         VulkanBuffer mUniformBuffer;
