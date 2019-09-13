@@ -57,6 +57,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Buffer.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/BufferAccessor.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Animation.h
@@ -138,6 +139,7 @@ set(ENGINE_CORE_SOURCES
     core/windows.cpp
     core/x11.cpp
     core/MemoryPool.cpp
+    core/BufferAccessor.cpp
     # core/Octree.cpp
     )
 
