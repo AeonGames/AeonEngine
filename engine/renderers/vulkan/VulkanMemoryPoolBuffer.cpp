@@ -119,4 +119,17 @@ namespace AeonGames
             mVkDescriptorSet = VK_NULL_HANDLE;
         }
     }
+
+    BufferAccessor VulkanMemoryPoolBuffer::Allocate ( size_t aSize )
+    {
+        ///@todo DO NOT USE LIKE THIS! ALIGNMENT NEEDS TO BE TAKEN INTO CONSIDERATION
+        size_t offset = mOffset;
+        mOffset += aSize;
+        return BufferAccessor{&mUniformBuffer, offset, aSize};
+    }
+
+    void VulkanMemoryPoolBuffer::Reset()
+    {
+        mOffset = 0;
+    }
 }
