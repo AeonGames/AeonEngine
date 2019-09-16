@@ -33,17 +33,18 @@ namespace AeonGames
         VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         ~VulkanWindow() final;
         void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
-        void BeginRender() const final;
-        void EndRender() const final;
+        void BeginRender() final;
+        void EndRender() final;
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
                         const Material* aMaterial = nullptr,
-                        const Buffer* aSkeleton = nullptr,
+                        const BufferAccessor* aSkeleton = nullptr,
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0 ) const final;
+        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
     private:
         void Initialize();
         void Finalize();

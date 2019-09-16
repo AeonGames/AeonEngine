@@ -163,7 +163,7 @@ namespace AeonGames
         return mStartingFrame;
     }
 
-    void ModelComponent::Update ( Node& aNode, double aDelta, const Window* aWindow )
+    void ModelComponent::Update ( Node& aNode, double aDelta, Window* aWindow )
     {
         if ( auto model = mModel.Cast<Model>() )
         {
@@ -176,10 +176,10 @@ namespace AeonGames
                 }
             }
             aNode.SetAABB ( aabb );
-#if 0
-            if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
+            if ( aWindow != nullptr && model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
             {
-                auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+                mSkeleton = aWindow->AllocateSingleFrameUniformMemory ( model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16 );
+                auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeleton.Map ( 0, mSkeleton.GetSize() ) );
                 auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
                 mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
                 for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
@@ -188,9 +188,8 @@ namespace AeonGames
                                         model->GetSkeleton()->GetJoints() [i].GetInvertedTransform() ) };
                     memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
                 }
-                mSkeletonBuffer->Unmap();
+                mSkeleton.Unmap();
             }
-#endif
         }
     }
 
@@ -204,7 +203,7 @@ namespace AeonGames
                                  *std::get<0> ( i ).Cast<Mesh>(),
                                  *std::get<1> ( i ).Cast<Pipeline>(),
                                  std::get<2> ( i ).Cast<Material>(),
-                                 nullptr );
+                                 ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) ) ? &mSkeleton : nullptr );
             }
         }
     }

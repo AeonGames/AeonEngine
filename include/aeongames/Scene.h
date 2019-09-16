@@ -59,7 +59,7 @@ namespace AeonGames
         DLL size_t GetChildIndex ( const Node* aNode ) const;
         DLL const Node& operator[] ( const std::size_t index ) const;
         DLL Node& operator[] ( const std::size_t index );
-        DLL void Update ( const double delta, const Window* aWindow = nullptr );
+        DLL void Update ( const double delta, Window* aWindow = nullptr );
         DLL void BroadcastMessage ( uint32_t aMessageType, const void* aMessageData );
         /** @copydoc Node::LoopTraverseDFSPreOrder(std::function<void(Node&) > aAction)*/
         DLL void LoopTraverseDFSPreOrder ( const std::function<void ( Node& ) >& aAction );

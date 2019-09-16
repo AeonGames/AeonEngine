@@ -22,6 +22,7 @@ namespace AeonGames
     class BufferAccessor
     {
     public:
+        DLL BufferAccessor ();
         DLL BufferAccessor ( Buffer* mBuffer, size_t aOffset, size_t aSize );
         DLL BufferAccessor ( const BufferAccessor& );
         DLL BufferAccessor ( BufferAccessor&& );
@@ -29,12 +30,15 @@ namespace AeonGames
         DLL BufferAccessor& operator = ( BufferAccessor&& );
 
         DLL void WriteMemory ( size_t aOffset, size_t aSize, const void *aData = nullptr ) const;
-        DLL void* Map ( size_t aOffset, size_t aSize ) const;
+        DLL void* Map ( size_t aOffset = 0, size_t aSize = 0 ) const;
         DLL void Unmap() const;
+        DLL size_t GetOffset() const;
+        DLL size_t GetSize() const;
+        DLL const Buffer* GetBuffer() const;
     private:
-        Buffer* mBuffer;
-        size_t mOffset;
-        size_t mSize;
+        Buffer* mBuffer{nullptr};
+        size_t mOffset{0};
+        size_t mSize{0};
     };
 }
 #endif

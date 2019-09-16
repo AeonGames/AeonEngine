@@ -26,6 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class BufferAccessor;
     class Matrix4x4;
     class VulkanBuffer;
     class VulkanRenderer;
@@ -44,7 +45,7 @@ namespace AeonGames
         void Use ( const VulkanMaterial* aMaterial,
                    const VulkanMaterial* aProjectionView,
                    const Matrix4x4* aModel,
-                   const VulkanBuffer* aSkeleton ) const;
+                   const BufferAccessor* aSkeleton ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >

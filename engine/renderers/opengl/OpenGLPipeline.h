@@ -23,6 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class BufferAccessor;
     class OpenGLBuffer;
     class OpenGLRenderer;
     class OpenGLTexture;
@@ -36,7 +37,7 @@ namespace AeonGames
         void Unload() final;
         ///@}
         ~OpenGLPipeline() final;
-        void Use ( const OpenGLMaterial* aMaterial = nullptr, const OpenGLBuffer* aSkeletonBuffer = nullptr ) const;
+        void Use ( const OpenGLMaterial* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const;
         GLenum GetTopology() const;
     private:
         void Initialize();

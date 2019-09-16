@@ -122,9 +122,13 @@ namespace AeonGames
 
     BufferAccessor VulkanMemoryPoolBuffer::Allocate ( size_t aSize )
     {
-        ///@todo DO NOT USE LIKE THIS! ALIGNMENT NEEDS TO BE TAKEN INTO CONSIDERATION
         size_t offset = mOffset;
-        mOffset += aSize;
+        mOffset += ( (  aSize - 1 ) | ( mVulkanRenderer.GetPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment - 1 ) ) + 1;
+        if ( mOffset > mUniformBuffer.GetSize() )
+        {
+            mOffset = offset;
+            throw std::runtime_error ( "Memory Pool Buffer cannot fulfill allocation request." );
+        }
         return BufferAccessor{&mUniformBuffer, offset, aSize};
     }
 
