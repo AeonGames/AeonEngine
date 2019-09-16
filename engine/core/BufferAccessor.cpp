@@ -21,6 +21,7 @@ namespace AeonGames
         mBuffer{aBuffer}, mOffset{aOffset}, mSize{aSize}
     {}
 
+    BufferAccessor::BufferAccessor () = default;
     BufferAccessor::BufferAccessor ( const BufferAccessor& ) = default;
     BufferAccessor::BufferAccessor ( BufferAccessor&& ) = default;
     BufferAccessor& BufferAccessor::operator = ( const BufferAccessor& ) = default;
@@ -28,14 +29,33 @@ namespace AeonGames
 
     void BufferAccessor::WriteMemory ( size_t aOffset, size_t aSize, const void *aData ) const
     {
-        return mBuffer->WriteMemory ( mOffset + aOffset, aSize, aData );
+        if ( mBuffer != nullptr )
+        {
+            mBuffer->WriteMemory ( mOffset + aOffset, aSize, aData );
+        }
     }
     void* BufferAccessor::Map ( size_t aOffset, size_t aSize ) const
     {
-        return mBuffer->Map ( mOffset + aOffset, aSize );
+        aSize = ( aSize != 0 ) ? aSize : mSize;
+        return ( mBuffer != nullptr ) ? mBuffer->Map ( mOffset + aOffset, aSize ) : nullptr;
     }
     void BufferAccessor::Unmap() const
     {
-        mBuffer->Unmap();
+        if ( mBuffer != nullptr )
+        {
+            mBuffer->Unmap();
+        }
+    }
+    size_t BufferAccessor::GetOffset() const
+    {
+        return mOffset;
+    }
+    size_t BufferAccessor::GetSize() const
+    {
+        return mSize;
+    }
+    const Buffer* BufferAccessor::GetBuffer() const
+    {
+        return mBuffer;
     }
 }

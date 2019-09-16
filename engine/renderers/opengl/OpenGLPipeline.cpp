@@ -18,6 +18,7 @@ limitations under the License.
 #include <vector>
 #include <array>
 #include "aeongames/AeonEngine.h"
+#include "aeongames/BufferAccessor.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
@@ -344,7 +345,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const OpenGLBuffer* aSkeletonBuffer ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const BufferAccessor* aSkeletonBuffer ) const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -370,11 +371,12 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_THROW;
             }
         }
-        if ( aSkeletonBuffer != nullptr && aSkeletonBuffer->GetBufferId() )
+        auto* buffer = ( aSkeletonBuffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer*> ( aSkeletonBuffer->GetBuffer() ) : nullptr;
+        if ( GLuint buffer_id = ( buffer != nullptr ) ? buffer->GetBufferId() : 0 )
         {
-            glBindBuffer ( GL_UNIFORM_BUFFER, aSkeletonBuffer->GetBufferId() );
+            glBindBuffer ( GL_UNIFORM_BUFFER, buffer_id );
             OPENGL_CHECK_ERROR_THROW;
-            glBindBufferBase ( GL_UNIFORM_BUFFER, index++, aSkeletonBuffer->GetBufferId() );
+            glBindBufferBase ( GL_UNIFORM_BUFFER, index++, buffer_id );
             OPENGL_CHECK_ERROR_THROW
         };
     }

@@ -76,7 +76,7 @@ namespace AeonGames
         const Mesh& aMesh,
         const Pipeline& aPipeline,
         const Material* aMaterial,
-        const Buffer* aSkeleton,
+        const BufferAccessor* aSkeleton,
         uint32_t aVertexStart,
         uint32_t aVertexCount,
         uint32_t aInstanceCount,

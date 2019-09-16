@@ -18,6 +18,7 @@ limitations under the License.
 #include <vector>
 #include <fstream>
 #include "aeongames/AeonEngine.h"
+#include "aeongames/BufferAccessor.h"
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
@@ -505,11 +506,10 @@ namespace AeonGames
     void VulkanPipeline::Use ( const VulkanMaterial* aMaterial,
                                const VulkanMaterial* aProjectionView,
                                const Matrix4x4* aModelMatrix,
-                               const VulkanBuffer* aSkeleton ) const
+                               const BufferAccessor* aSkeleton ) const
     {
         uint32_t descriptor_set_count = 0;
         std::array<VkDescriptorSet, 4> descriptor_sets{};
-        // Commenting while the matrix and materials are added.
         if ( aProjectionView )
         {
             for ( auto& i : aProjectionView->GetDescriptorSets() )
@@ -517,6 +517,9 @@ namespace AeonGames
                 descriptor_sets[descriptor_set_count++] = i;
             }
         }
+        /**@todo Pass only descriptor sets from the window.
+         * Push Constants can be set outside this function.
+        */
 #if 0
         if ( aSkeleton )
         {

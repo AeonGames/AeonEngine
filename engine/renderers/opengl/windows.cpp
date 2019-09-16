@@ -204,7 +204,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLWindow::BeginRender() const
+    void OpenGLWindow::BeginRender()
     {
         wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
         glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
@@ -212,7 +212,7 @@ namespace AeonGames
         glEnable ( GL_DEPTH_TEST );
     }
 
-    void OpenGLWindow::EndRender() const
+    void OpenGLWindow::EndRender()
     {
         glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
         OPENGL_CHECK_ERROR_NO_THROW;

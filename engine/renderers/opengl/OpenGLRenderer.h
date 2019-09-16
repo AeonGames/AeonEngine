@@ -17,7 +17,6 @@ limitations under the License.
 #define AEONGAMES_OPENGLRENDERER_H
 
 #include <unordered_map>
-#include "aeongames/Memory.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Matrix4x4.h"

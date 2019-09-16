@@ -185,7 +185,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLWindow::BeginRender() const
+    void OpenGLWindow::BeginRender()
     {
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ),
@@ -211,7 +211,7 @@ namespace AeonGames
         glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
     }
 
-    void OpenGLWindow::EndRender() const
+    void OpenGLWindow::EndRender()
     {
         glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ) );

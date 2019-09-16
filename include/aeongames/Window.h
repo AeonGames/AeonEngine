@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Frustum.h"
+#include "aeongames/BufferAccessor.h"
 
 namespace AeonGames
 {
@@ -37,15 +38,15 @@ namespace AeonGames
         DLL void Run ( Scene& aScene );
         ///@name Render Functions
         ///@{
-        virtual void BeginRender() const = 0;
-        virtual void EndRender() const = 0;
+        virtual void BeginRender() = 0;
+        virtual void EndRender() = 0;
         /** @todo Model matrix should be optional, the only required arguments should be pipeline and mesh... and I am not sure about pipeline. */
         virtual void Render (
             const Matrix4x4& aModelMatrix,
             const Mesh& aMesh,
             const Pipeline& aPipeline,
             const Material* aMaterial = nullptr,
-            const Buffer* aSkeleton = nullptr,
+            const BufferAccessor* aSkeleton = nullptr,
             uint32_t aVertexStart = 0,
             uint32_t aVertexCount = 0xffffffff,
             uint32_t aInstanceCount = 1,
@@ -55,7 +56,7 @@ namespace AeonGames
             const Mesh& aMesh,
             const Pipeline& aPipeline,
             const Material* aMaterial = nullptr,
-            const Buffer* aSkeleton = nullptr,
+            const BufferAccessor* aSkeleton = nullptr,
             uint32_t aVertexStart = 0,
             uint32_t aVertexCount = 0xffffffff,
             uint32_t aInstanceCount = 1,
@@ -75,6 +76,7 @@ namespace AeonGames
         ///@}
         DLL float GetAspectRatio() const;
         DLL const Frustum& GetFrustum() const;
+        virtual BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) = 0;
     protected:
         virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         void* mWindowId{};

@@ -65,7 +65,7 @@ namespace AeonGames
     {
     }
 
-    void PointLight::Update ( Node& aNode, double aDelta, const Window* aWindow )
+    void PointLight::Update ( Node& aNode, double aDelta, Window* aWindow )
     {
     }
 
