@@ -157,7 +157,7 @@ namespace AeonGames
         /** @name Abstract functions
          *  @todo decide if these should be private or public. */
         /** @{ */
-        DLL void Update ( const double delta, const Window* aWindow = nullptr );
+        DLL void Update ( const double delta, Window* aWindow = nullptr );
         DLL void Render ( const Window& aWindow ) const;
         DLL void ProcessMessage ( uint32_t aMessageType, const void* aMessageData );
         /** @} */

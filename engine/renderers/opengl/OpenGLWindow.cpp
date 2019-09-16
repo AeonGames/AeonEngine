@@ -320,7 +320,7 @@ const GLuint vertex_size{sizeof(vertices)};
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const Buffer* aSkeleton,
+                                const BufferAccessor* aSkeleton,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
@@ -328,8 +328,7 @@ const GLuint vertex_size{sizeof(vertices)};
     {
         const OpenGLMesh& opengl_mesh{reinterpret_cast<const OpenGLMesh&> ( aMesh ) };
         const OpenGLPipeline& opengl_pipeline{reinterpret_cast<const OpenGLPipeline&> ( aPipeline ) };
-        opengl_pipeline.Use (reinterpret_cast<const OpenGLMaterial*>(aMaterial),
-            reinterpret_cast<const OpenGLBuffer*> ( aSkeleton ) );
+        opengl_pipeline.Use (reinterpret_cast<const OpenGLMaterial*>(aMaterial), aSkeleton );
         OPENGL_CHECK_ERROR_NO_THROW;
 
         mMatrices.Set(0,aModelMatrix);
@@ -376,5 +375,11 @@ const GLuint vertex_size{sizeof(vertices)};
     void OpenGLWindow::OnSetViewMatrix()
     {
         mMatrices.Set ( 2, mViewMatrix );
+    }
+
+    BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory(size_t aSize)
+    {
+        ///@todo Properly implement
+        return BufferAccessor{};
     }
 }

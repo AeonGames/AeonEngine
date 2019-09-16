@@ -409,7 +409,7 @@ namespace AeonGames
         mMatrices.Set ( 1, mViewMatrix );
     }
 
-    void VulkanWindow::BeginRender() const
+    void VulkanWindow::BeginRender()
     {
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
@@ -468,7 +468,7 @@ namespace AeonGames
         vkCmdBeginRenderPass ( mVulkanRenderer.GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
     }
 
-    void VulkanWindow::EndRender() const
+    void VulkanWindow::EndRender()
     {
         vkCmdEndRenderPass ( mVulkanRenderer.GetCommandBuffer() );
         if ( VkResult result = vkEndCommandBuffer ( mVulkanRenderer.GetCommandBuffer() ) )
@@ -501,13 +501,14 @@ namespace AeonGames
         {
             std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
+        mMemoryPoolBuffer.Reset();
     }
 
     void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const Buffer* aSkeleton,
+                                const BufferAccessor* aSkeleton,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
@@ -517,7 +518,7 @@ namespace AeonGames
             reinterpret_cast<const VulkanMaterial*> ( aMaterial ),
             &mMatrices,
             &aModelMatrix,
-            reinterpret_cast<const VulkanBuffer*> ( aSkeleton ) );
+            aSkeleton );
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
@@ -607,5 +608,9 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
+    }
+    BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
+    {
+        return mMemoryPoolBuffer.Allocate ( aSize );
     }
 }
