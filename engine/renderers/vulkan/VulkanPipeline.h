@@ -46,6 +46,7 @@ namespace AeonGames
                    const VulkanMaterial* aProjectionView,
                    const Matrix4x4* aModel,
                    const BufferAccessor* aSkeleton ) const;
+        void Use ( std::initializer_list<VkDescriptorSet> aDescriptorSets ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >

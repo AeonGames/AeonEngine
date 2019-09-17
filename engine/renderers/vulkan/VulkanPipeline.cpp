@@ -512,14 +512,8 @@ namespace AeonGames
         std::array<VkDescriptorSet, 4> descriptor_sets{};
         if ( aProjectionView )
         {
-            for ( auto& i : aProjectionView->GetDescriptorSets() )
-            {
-                descriptor_sets[descriptor_set_count++] = i;
-            }
+            descriptor_sets[descriptor_set_count++] = aProjectionView->GetUniformDescriptorSet();
         }
-        /**@todo Pass only descriptor sets from the window.
-         * Push Constants can be set outside this function.
-        */
 #if 0
         if ( aSkeleton )
         {
@@ -528,12 +522,17 @@ namespace AeonGames
 #endif
         if ( aMaterial )
         {
-            for ( auto& i : aMaterial->GetDescriptorSets() )
+            if ( VkDescriptorSet ds = aMaterial->GetUniformDescriptorSet() )
             {
-                descriptor_sets[descriptor_set_count++] = i;
+                descriptor_sets[descriptor_set_count++] = ds;
+            }
+            if ( VkDescriptorSet ds = aMaterial->GetSamplerDescriptorSet() )
+            {
+                descriptor_sets[descriptor_set_count++] = ds;
             }
         }
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+#if 0
         if ( aModelMatrix )
         {
             vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
@@ -541,6 +540,44 @@ namespace AeonGames
                                  VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                  0, sizeof ( float ) * 16, aModelMatrix->GetMatrix4x4() );
         }
+#endif
+        if ( descriptor_set_count )
+        {
+            vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      mVkPipelineLayout,
+                                      0,
+                                      descriptor_set_count,
+                                      descriptor_sets.data(), 0, nullptr );
+        }
+    }
+
+    void VulkanPipeline::Use ( std::initializer_list<VkDescriptorSet> aDescriptorSets ) const
+    {
+        size_t descriptor_set_count = 0;
+        std::array<VkDescriptorSet, 8> descriptor_sets{};
+        for ( auto& i : aDescriptorSets )
+        {
+            if ( i != VK_NULL_HANDLE )
+            {
+                descriptor_sets[descriptor_set_count++] = i;
+            }
+            if ( descriptor_set_count >= 8 )
+            {
+                break;
+            }
+        }
+
+        vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mVkPipeline );
+#if 0
+        if ( aModelMatrix )
+        {
+            vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
+                                 mVkPipelineLayout,
+                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                 0, sizeof ( float ) * 16, aModelMatrix->GetMatrix4x4() );
+        }
+#endif
         if ( descriptor_set_count )
         {
             vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
