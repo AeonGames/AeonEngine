@@ -514,13 +514,31 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        reinterpret_cast<const VulkanPipeline&> ( aPipeline ).Use (
-            reinterpret_cast<const VulkanMaterial*> ( aMaterial ),
-            &mMatrices,
-            &aModelMatrix,
-            aSkeleton );
+        const VulkanPipeline& pipeline = reinterpret_cast<const VulkanPipeline&> ( aPipeline );
+        std::array<VkDescriptorSet, 4> descriptor_sets{ mMatrices.GetUniformDescriptorSet(),
+                reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetUniformDescriptorSet(),
+                ( aSkeleton != nullptr ) ? mMemoryPoolBuffer.GetDescriptorSet() : VK_NULL_HANDLE,
+                reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetSamplerDescriptorSet() };
+
+        uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), reinterpret_cast<VkDescriptorSet> ( VK_NULL_HANDLE ) ) - descriptor_sets.begin() );
+
+        vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.GetPipeline() );
+
+        if ( descriptor_set_count )
+        {
+            uint32_t offset_count = ( aSkeleton != nullptr ) ? 1 : 0;
+            uint32_t offset = ( offset_count != 0 ) ? static_cast<uint32_t> ( aSkeleton->GetOffset() ) : 0;
+            vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline.GetPipelineLayout(),
+                                      0,
+                                      descriptor_set_count,
+                                      descriptor_sets.data(), offset_count, ( offset_count != 0 ) ? &offset : nullptr );
+        }
+
+
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
-                             reinterpret_cast<const VulkanPipeline&> ( aPipeline ).GetPipelineLayout(),
+                             pipeline.GetPipelineLayout(),
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                              0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         {

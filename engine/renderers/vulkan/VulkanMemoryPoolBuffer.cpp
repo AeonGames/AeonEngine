@@ -136,4 +136,9 @@ namespace AeonGames
     {
         mOffset = 0;
     }
+
+    const VkDescriptorSet& VulkanMemoryPoolBuffer::GetDescriptorSet() const
+    {
+        return mVkDescriptorSet;
+    }
 }
