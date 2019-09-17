@@ -38,6 +38,7 @@ namespace AeonGames
         ~VulkanMemoryPoolBuffer();
         BufferAccessor Allocate ( size_t aSize );
         void Reset();
+        const VkDescriptorSet& GetDescriptorSet() const;
     private:
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
