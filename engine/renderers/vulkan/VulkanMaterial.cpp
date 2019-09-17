@@ -191,9 +191,14 @@ namespace AeonGames
         return ResourceId{"Image"_crc32, 0};
     }
 
-    const std::vector<VkDescriptorSet>& VulkanMaterial::GetDescriptorSets() const
+    const VkDescriptorSet& VulkanMaterial::GetUniformDescriptorSet() const
     {
-        return mVkDescriptorSets;
+        return mUniformDescriptorSet;
+    }
+
+    const VkDescriptorSet& VulkanMaterial::GetSamplerDescriptorSet() const
+    {
+        return mSamplerDescriptorSet;
     }
 
     void VulkanMaterial::InitializeDescriptorPool()
@@ -231,32 +236,39 @@ namespace AeonGames
 
     void VulkanMaterial::InitializeDescriptorSets()
     {
-        uint32_t descriptorset_layout_count = 0;
-        std::array<VkDescriptorSetLayout, 2> descriptorset_layouts{VK_NULL_HANDLE, VK_NULL_HANDLE};
-        if ( mUniformBuffer.GetSize() )
-        {
-            descriptorset_layouts[descriptorset_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
-        }
-        if ( mSamplers.size() )
-        {
-            descriptorset_layouts[descriptorset_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplers.size() );
-        }
-        if ( !descriptorset_layout_count )
+        if ( !mUniformBuffer.GetSize() && !mSamplers.size() )
         {
             return;
         }
-        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-        descriptor_set_allocate_info.descriptorSetCount = descriptorset_layout_count;
-        descriptor_set_allocate_info.pSetLayouts = descriptorset_layouts.data();
-        mVkDescriptorSets.resize ( descriptorset_layout_count, VK_NULL_HANDLE );
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, mVkDescriptorSets.data() ) )
+        if ( mUniformBuffer.GetSize() )
         {
-            std::ostringstream stream;
-            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
+            VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+            descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+            descriptor_set_allocate_info.descriptorSetCount = 1;
+            descriptor_set_allocate_info.pSetLayouts = &mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+            if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mUniformDescriptorSet ) )
+            {
+                std::ostringstream stream;
+                stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
         }
+        if ( mSamplers.size() )
+        {
+            VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+            descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+            descriptor_set_allocate_info.descriptorSetCount = 1;
+            descriptor_set_allocate_info.pSetLayouts = &mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplers.size() );
+            if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mSamplerDescriptorSet ) )
+            {
+                std::ostringstream stream;
+                stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+
         std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
         {
             {
@@ -267,15 +279,13 @@ namespace AeonGames
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
         write_descriptor_sets.reserve ( mUniformBuffer.GetSize() ? 1 : 0 + mSamplers.size() );
 
-        size_t descriptor_set_index = 0;
-
         if ( mUniformBuffer.GetSize() )
         {
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mVkDescriptorSets[descriptor_set_index++];
+            write_descriptor_set.dstSet = mUniformDescriptorSet;
             write_descriptor_set.dstBinding = 0;
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -291,7 +301,7 @@ namespace AeonGames
             write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptor_set.pNext = nullptr;
             // Note that the descriptor set does not change, we are setting multiple bindings on a single descriptor set.
-            write_descriptor_set.dstSet = mVkDescriptorSets[descriptor_set_index];
+            write_descriptor_set.dstSet = mSamplerDescriptorSet;
             write_descriptor_set.dstBinding = i;
             write_descriptor_set.dstArrayElement = 0;
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -300,8 +310,6 @@ namespace AeonGames
             write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSamplers[i] ).Get<Image>() )->GetDescriptorImageInfo();
             write_descriptor_set.pTexelBufferView = nullptr;
         }
-        /* Uncomment the following line if a third descriptor set is ever needed. */
-        //descriptor_set_index += 1;
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
     }
 
@@ -316,13 +324,19 @@ namespace AeonGames
 
     void VulkanMaterial::FinalizeDescriptorSets()
     {
-        if ( mVkDescriptorSets.size() )
+        if ( mUniformDescriptorSet )
         {
             vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(),
                                    mVkDescriptorPool,
-                                   static_cast<uint32_t> ( mVkDescriptorSets.size() ),
-                                   mVkDescriptorSets.data() );
-            mVkDescriptorSets.clear();
+                                   1,
+                                   &mUniformDescriptorSet );
+        }
+        if ( mSamplerDescriptorSet )
+        {
+            vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(),
+                                   mVkDescriptorPool,
+                                   1,
+                                   &mSamplerDescriptorSet );
         }
     }
 

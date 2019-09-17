@@ -519,6 +519,10 @@ namespace AeonGames
             &mMatrices,
             &aModelMatrix,
             aSkeleton );
+        vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
+                             reinterpret_cast<const VulkanPipeline&> ( aPipeline ).GetPipelineLayout(),
+                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
