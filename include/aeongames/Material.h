@@ -87,7 +87,6 @@ namespace AeonGames
             }
         private:
             std::string mName{};
-            size_t mType{};
             size_t mOffset{};
         };
         DLL size_t LoadVariables ( const MaterialBuffer& aMaterialBuffer );
