@@ -697,7 +697,6 @@ namespace AeonGames
             return std::get<1> ( *lb );
         }
         throw std::runtime_error ( "Sampler Count must be > 0" );
-        return VK_NULL_HANDLE;
     }
 
     void VulkanRenderer::InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType )
