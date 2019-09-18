@@ -515,10 +515,16 @@ namespace AeonGames
                                 uint32_t aFirstInstance ) const
     {
         const VulkanPipeline& pipeline = reinterpret_cast<const VulkanPipeline&> ( aPipeline );
-        std::array<VkDescriptorSet, 4> descriptor_sets{ mMatrices.GetUniformDescriptorSet(),
-                reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetUniformDescriptorSet(),
-                ( aSkeleton != nullptr ) ? mMemoryPoolBuffer.GetDescriptorSet() : VK_NULL_HANDLE,
-                reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetSamplerDescriptorSet() };
+        vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
+                             pipeline.GetPipelineLayout(),
+                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
+        std::array<VkDescriptorSet, 4> descriptor_sets
+        {
+            mMatrices.GetUniformDescriptorSet(),
+            ( aSkeleton != nullptr ) ? mMemoryPoolBuffer.GetDescriptorSet() : VK_NULL_HANDLE,
+            reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetUniformDescriptorSet(),
+            reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetSamplerDescriptorSet() };
 
         uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), reinterpret_cast<VkDescriptorSet> ( VK_NULL_HANDLE ) ) - descriptor_sets.begin() );
 
@@ -536,11 +542,6 @@ namespace AeonGames
                                       descriptor_sets.data(), offset_count, ( offset_count != 0 ) ? &offset : nullptr );
         }
 
-
-        vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
-                             pipeline.GetPipelineLayout(),
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         {
             const VkDeviceSize offset = 0;
             const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };

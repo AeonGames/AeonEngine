@@ -99,6 +99,7 @@ namespace AeonGames
     EngineWindow::~EngineWindow()
     {
         stop();
+        mTimer.disconnect();
         mWindow.reset();
     }
 

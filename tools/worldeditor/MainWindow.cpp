@@ -38,7 +38,12 @@ namespace AeonGames
         connect ( mCameraSettings, SIGNAL ( farChanged ( double ) ), this, SLOT ( farChanged ( double ) ) );
     }
 
-    MainWindow::~MainWindow() = default;
+    MainWindow::~MainWindow()
+    {
+        disconnect();
+        mCameraSettings->disconnect();
+        mCameraSettings->deleteLater();
+    }
 
     void MainWindow::on_actionExit_triggered()
     {

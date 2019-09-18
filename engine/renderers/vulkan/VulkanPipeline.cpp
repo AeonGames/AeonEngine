@@ -427,8 +427,7 @@ namespace AeonGames
 
         if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
-            // Skeleton Descriptor Set Layout
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
         }
         if ( aPipelineBuffer.uniform().size() )
         {
