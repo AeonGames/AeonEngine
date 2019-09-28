@@ -21,6 +21,8 @@ limitations under the License.
 #include "aeongames/Window.h"
 namespace AeonGames
 {
+    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+        mAspectRatio { static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) } {}
     DLL Window::~Window() = default;
     void Window::Run ( Scene& aScene )
     {
