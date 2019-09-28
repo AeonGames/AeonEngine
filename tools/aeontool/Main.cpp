@@ -66,7 +66,10 @@ int main ( int argc, char *argv[] )
         {
             std::cout << "Usage: " << argv[0] << " <tool> [-help | ...]" << std::endl;
         }
+#if defined(__linux__) && GOOGLE_PROTOBUF_VERSION > 3006001
+        // protobuf 3.6.1 on Linux has a bug in the Shutdown code
         google::protobuf::ShutdownProtobufLibrary();
+#endif
         return retval;
     }
     catch ( std::runtime_error &e )
@@ -77,6 +80,9 @@ int main ( int argc, char *argv[] )
     {
         std::cout << "Error: Unknown Exception caught." << std::endl;
     }
+#if defined(__linux__) && GOOGLE_PROTOBUF_VERSION > 3006001
+    // protobuf 3.6.1 on Linux has a bug in the Shutdown code
     google::protobuf::ShutdownProtobufLibrary();
+#endif
     return -1;
 }

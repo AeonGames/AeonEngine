@@ -232,7 +232,10 @@ namespace AeonGames
             dlclose ( std::get<0> ( i ) );
 #endif
         }
+#if defined(__linux__) && GOOGLE_PROTOBUF_VERSION > 3006001
+        // protobuf 3.6.1 on Linux has a bug in the Shutdown code
         google::protobuf::ShutdownProtobufLibrary();
+#endif
         gInitialized = false;
     }
 
