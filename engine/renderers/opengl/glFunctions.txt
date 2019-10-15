@@ -132,6 +132,7 @@ glGetBufferParameteriv
 glGetUniformBlockIndex
 glGetActiveUniformBlockiv
 glBindBufferBase
+glBindBufferRange
 glUniformBlockBinding
 glGetActiveUniformsiv
 glNamedBufferData

@@ -241,6 +241,7 @@ namespace AeonGames
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         OPENGL_CHECK_ERROR_NO_THROW;
         SwapBuffers ( reinterpret_cast<HDC> ( mDeviceContext ) );
+        mMemoryPoolBuffer.Reset();
     }
 
     void OpenGLWindow::InitializePlatform()

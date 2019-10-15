@@ -1,7 +1,7 @@
 AEONCFG
 PluginDirectory: ""
 Plugin: "AeonEngineComponents"
-Plugin: "VulkanRenderer"
+@PLUGINS@
 Plugin: "PngImage"
 Plugin: "PortAudioSoundSystem"
 Plugin: "OggSound"

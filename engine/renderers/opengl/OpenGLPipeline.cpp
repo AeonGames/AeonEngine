@@ -374,10 +374,8 @@ namespace AeonGames
         auto* buffer = ( aSkeletonBuffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer*> ( aSkeletonBuffer->GetBuffer() ) : nullptr;
         if ( GLuint buffer_id = ( buffer != nullptr ) ? buffer->GetBufferId() : 0 )
         {
-            glBindBuffer ( GL_UNIFORM_BUFFER, buffer_id );
+            glBindBufferRange ( GL_UNIFORM_BUFFER, index++, buffer_id, aSkeletonBuffer->GetOffset(), aSkeletonBuffer->GetSize() );
             OPENGL_CHECK_ERROR_THROW;
-            glBindBufferBase ( GL_UNIFORM_BUFFER, index++, buffer_id );
-            OPENGL_CHECK_ERROR_THROW
         };
     }
 
