@@ -23,6 +23,7 @@ limitations under the License.
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLMaterial.h"
+#include "OpenGLMemoryPoolBuffer.h"
 
 namespace AeonGames
 {
@@ -65,6 +66,7 @@ namespace AeonGames
         GLuint mProgram{};
         OpenGLBuffer mScreenQuad{};
         mutable OpenGLMaterial mMatrices{};
+        OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
         bool mOwnsWindowId{ false };
         bool mFullScreen{ false };
     };
