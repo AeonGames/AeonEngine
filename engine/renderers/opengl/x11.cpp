@@ -215,6 +215,7 @@ namespace AeonGames
     {
         glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ) );
+        mMemoryPoolBuffer.Reset();
     }
 
     void OpenGLWindow::InitializePlatform()

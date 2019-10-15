@@ -139,6 +139,17 @@ find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
 option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" OFF) # Temporarily disabling OpenGL to focus on Vulkan
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 
+set(PLUGINS "")
+if(BUILD_OPENGL_RENDERER)
+  set(PLUGINS "${PLUGINS}Plugin: \"OpenGLRenderer\"\n")
+endif()
+if(BUILD_VULKAN_RENDERER)
+  set(PLUGINS "${PLUGINS}Plugin: \"VulkanRenderer\"\n")
+endif()
+string(REGEX REPLACE "\n$" "" PLUGINS "${PLUGINS}")
+
+configure_file("${CMAKE_SOURCE_DIR}/cmake/config.in" "${CMAKE_SOURCE_DIR}/game/config" @ONLY)
+
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
          OFF)

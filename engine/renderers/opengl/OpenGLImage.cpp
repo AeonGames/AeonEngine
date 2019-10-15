@@ -66,6 +66,9 @@ namespace AeonGames
         mType = aType;
         glGenTextures ( 1, &mTexture );
         OPENGL_CHECK_ERROR_THROW;
+        // Binding The texture should cause glIsTexture to recognize the texture name as such.
+        glBindTexture ( GL_TEXTURE_2D, mTexture );
+        OPENGL_CHECK_ERROR_THROW;
         Resize ( aWidth, aHeight, aPixels );
     }
 

@@ -27,6 +27,7 @@ limitations under the License.
 #include "OpenGLMaterial.h"
 #include "OpenGLMesh.h"
 #include "OpenGLFunctions.h"
+#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -274,7 +275,7 @@ const GLuint vertex_size{sizeof(vertices)};
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer ( aOpenGLRenderer ),
+        Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer { aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb},
         mOwnsWindowId{ true }, mFullScreen{aFullScreen}
     {
         try
@@ -290,7 +291,7 @@ const GLuint vertex_size{sizeof(vertices)};
         }
     }
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
-        Window{aWindowId}, mOpenGLRenderer ( aOpenGLRenderer )
+        Window{aWindowId}, mOpenGLRenderer{ aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb}
     {
         try
         {
@@ -379,7 +380,6 @@ const GLuint vertex_size{sizeof(vertices)};
 
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory(size_t aSize)
     {
-        ///@todo Properly implement
-        return BufferAccessor{};
+        return mMemoryPoolBuffer.Allocate ( aSize );
     }
 }
