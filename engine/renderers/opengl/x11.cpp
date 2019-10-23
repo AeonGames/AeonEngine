@@ -190,29 +190,39 @@ namespace AeonGames
         glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ),
                          static_cast<GLXContext> ( mDeviceContext ) );
+        glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-        Matrix4x4 projection_matrix =
-            mProjectionMatrix * Matrix4x4
-        {
-            // Flip Matrix
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, -1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatricesBuffer );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 1, sizeof ( float ) * 16, ( projection_matrix ).GetMatrix4x4() );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBufferSubData ( GL_UNIFORM_BUFFER, ( sizeof ( float ) * 16 ) * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatricesBuffer );
+        glEnable ( GL_DEPTH_TEST );
     }
 
     void OpenGLWindow::EndRender()
     {
+        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDisable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glUseProgram ( mProgram );
+        OPENGL_CHECK_ERROR_NO_THROW;
+#ifndef SINGLE_VAO
+        glBindVertexArray ( mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+#endif
+        glBindBuffer ( GL_ARRAY_BUFFER, mScreenQuad.GetBufferId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, reinterpret_cast<const void*> ( sizeof ( float ) * 2 ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
                          reinterpret_cast<::Window> ( mWindowId ) );
         mMemoryPoolBuffer.Reset();
