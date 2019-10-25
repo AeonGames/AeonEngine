@@ -15,10 +15,11 @@ limitations under the License.
 */
 #include "OpenGLRenderer.h"
 #include "OpenGLImage.h"
-#include "OpenGLWindow.h"
 #include "OpenGLMesh.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLBuffer.h"
+#include "OpenGLX11Window.h"
+#include "OpenGLWinWindow.h"
 
 namespace AeonGames
 {
@@ -47,12 +48,12 @@ namespace AeonGames
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<OpenGLWindow> ( *this, aWindowId );
+        return std::make_unique<OpenGLPlatformWindow> ( *this, aWindowId );
     }
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
     {
-        return std::make_unique<OpenGLWindow> ( *this, aX, aY, aWidth, aHeight, aFullScreen );
+        return std::make_unique<OpenGLPlatformWindow> ( *this, aX, aY, aWidth, aHeight, aFullScreen );
     }
 
     std::unique_ptr<Mesh> OpenGLRenderer::CreateMesh ( uint32_t aPath ) const

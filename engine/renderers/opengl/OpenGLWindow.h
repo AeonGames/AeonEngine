@@ -34,7 +34,7 @@ namespace AeonGames
     public:
         OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
-        ~OpenGLWindow() final;
+        ~OpenGLWindow();
         void* GetWindowId() const;
         void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() final;
@@ -50,15 +50,15 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0 ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
         const GLuint GetMatricesBuffer() const;
+    protected:
+        const OpenGLRenderer& mOpenGLRenderer;
+        void Initialize();
+        void Finalize();
     private:
         void OnSetProjectionMatrix() final;
         void OnSetViewMatrix() final;
-        void InitializePlatform();
-        void InitializeCommon();
-        void FinalizeCommon();
-        void FinalizePlatform();
-        const OpenGLRenderer& mOpenGLRenderer;
-        mutable void* mDeviceContext{};
+        virtual void MakeCurrent() = 0;
+        virtual void SwapBuffers() = 0;
         GLuint mVAO {};
         GLuint mFBO {};
         GLuint mColorBuffer {};
