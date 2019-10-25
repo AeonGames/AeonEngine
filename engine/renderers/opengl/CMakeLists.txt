@@ -93,6 +93,8 @@ set(OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/glAssignments.h
     OpenGLRenderer.h
     OpenGLWindow.h
+    OpenGLWinWindow.h
+    OpenGLX11Window.h
     OpenGLFunctions.h
     OpenGLPipeline.h
     OpenGLBuffer.h
@@ -106,6 +108,8 @@ set(OPENGL_RENDERER_HEADERS
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
     OpenGLWindow.cpp
+    OpenGLWinWindow.cpp
+    OpenGLX11Window.cpp
     OpenGLBuffer.cpp
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
