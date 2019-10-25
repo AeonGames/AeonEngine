@@ -81,7 +81,7 @@ const float vertices[] = {
 };
 const GLuint vertex_size{sizeof(vertices)};
 
-    void OpenGLWindow::InitializeCommon()
+    void OpenGLWindow::Initialize()
     {
         glGenVertexArrays ( 1, &mVAO );
         OPENGL_CHECK_ERROR_THROW;
@@ -225,7 +225,7 @@ const GLuint vertex_size{sizeof(vertices)};
         mScreenQuad.Initialize(vertex_size, GL_STATIC_DRAW, vertices);
     }
 
-    void OpenGLWindow::FinalizeCommon()
+    void OpenGLWindow::Finalize()
     {
         if ( glIsRenderbuffer ( mRBO ) )
         {
@@ -278,38 +278,14 @@ const GLuint vertex_size{sizeof(vertices)};
         Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer { aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb},
         mOwnsWindowId{ true }, mFullScreen{aFullScreen}
     {
-        try
-        {
-            InitializePlatform();
-            InitializeCommon();
-        }
-        catch ( ... )
-        {
-            FinalizeCommon();
-            FinalizePlatform();
-            throw;
-        }
     }
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
         Window{aWindowId}, mOpenGLRenderer{ aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb}
     {
-        try
-        {
-            InitializePlatform();
-            InitializeCommon();
-        }
-        catch ( ... )
-        {
-            FinalizeCommon();
-            FinalizePlatform();
-            throw;
-        }
     }
 
     OpenGLWindow::~OpenGLWindow()
     {
-        FinalizeCommon();
-        FinalizePlatform();
     }
 
     void* OpenGLWindow::GetWindowId() const
@@ -381,5 +357,66 @@ const GLuint vertex_size{sizeof(vertices)};
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory(size_t aSize)
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
+    }
+
+    void OpenGLWindow::OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    {
+        if ( aWidth && aHeight )
+        {
+            MakeCurrent();
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glViewport ( aX, aY, aWidth, aHeight );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, aWidth, aHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
+            OPENGL_CHECK_ERROR_THROW;
+            glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, aWidth, aHeight );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+    }
+
+    void OpenGLWindow::BeginRender()
+    {
+        MakeCurrent();
+        glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
+        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        glEnable ( GL_DEPTH_TEST );
+    }
+
+    void OpenGLWindow::EndRender()
+    {
+        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glClear ( GL_COLOR_BUFFER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDisable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glUseProgram ( mProgram );
+        OPENGL_CHECK_ERROR_NO_THROW;
+#ifndef SINGLE_VAO
+        glBindVertexArray ( mVAO );
+        OPENGL_CHECK_ERROR_THROW;
+#endif
+        glBindBuffer ( GL_ARRAY_BUFFER, mScreenQuad.GetBufferId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, reinterpret_cast<const void*> ( sizeof ( float ) * 2 ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        SwapBuffers();
+        mMemoryPoolBuffer.Reset();
     }
 }
