@@ -67,7 +67,6 @@ namespace AeonGames
         OpenGLBuffer mScreenQuad{};
         mutable OpenGLMaterial mMatrices{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
-        bool mOwnsWindowId{ false };
         bool mFullScreen{ false };
     };
 }

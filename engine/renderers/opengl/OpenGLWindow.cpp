@@ -276,7 +276,7 @@ const GLuint vertex_size{sizeof(vertices)};
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer { aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb},
-        mOwnsWindowId{ true }, mFullScreen{aFullScreen}
+        mFullScreen{aFullScreen}
     {
     }
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
