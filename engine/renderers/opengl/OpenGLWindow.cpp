@@ -275,12 +275,12 @@ const GLuint vertex_size{sizeof(vertices)};
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer { aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb},
+        Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer { aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,static_cast<GLsizei>(8_mb)},
         mFullScreen{aFullScreen}
     {
     }
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
-        Window{aWindowId}, mOpenGLRenderer{ aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,8_mb}
+        Window{aWindowId}, mOpenGLRenderer{ aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,static_cast<GLsizei>(8_mb)}
     {
     }
 
