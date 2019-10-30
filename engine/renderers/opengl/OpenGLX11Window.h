@@ -16,8 +16,22 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLX11WINDOW_H
 #define AEONGAMES_OPENGLX11WINDOW_H
 #ifdef __unix__
+#include "OpenGLWindow.h"
 namespace AeonGames
 {
+    class OpenGLX11Window : public OpenGLWindow
+    {
+    public:
+        OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
+        ~OpenGLX11Window() final;
+    private:
+        void Initialize();
+        void Finalize();
+        void MakeCurrent() final;
+        void SwapBuffers() final;
+    };
+    using OpenGLPlatformWindow = OpenGLX11Window;
 }
 #endif
 #endif
