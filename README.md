@@ -2,15 +2,9 @@
 
 ## Aeon Games Flagship Game Engine
 
-Check out the [development blog](http://www.aeongames.com/AeonEngine/) for the engine's latest news.
-
 [![Follow us on Facebook](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/img/FB-FindUsonFacebook-online-100.png)](https://www.facebook.com/RealAeonGames/)
 
-[![Become a Patron!](https://c5.patreon.com/external/logo/become_a_patron_button.png)](https://www.patreon.com/user?u=3798744)
-
-Or
-
-<a href='https://ko-fi.com/U7U4Z1UP' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://az743702.vo.msecnd.net/cdn/kofi4.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+Read about development status and more at [Patreon](https://www.patreon.com/user?u=3798744)
 
 ![Aerin just chilling](https://raw.githubusercontent.com/AeonGames/AeonEngine/master/docs/static/screenshots/aerin_idle.png)
 
