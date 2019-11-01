@@ -33,38 +33,12 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            Load ( aPath );
+            FrameBuffer::Load ( aPath );
         }
     }
-
     VulkanFrameBuffer::~VulkanFrameBuffer()
     {
         Unload();
-    }
-    void VulkanFrameBuffer::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-    void VulkanFrameBuffer::Load ( uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-    void VulkanFrameBuffer::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static FrameBufferBuffer framebuffer_buffer;
-        LoadProtoBufObject ( framebuffer_buffer, aBuffer, aBufferSize, "AEONFBR" );
-        Load ( framebuffer_buffer );
-        framebuffer_buffer.Clear();
     }
     void VulkanFrameBuffer::Load ( const FrameBufferBuffer& aFrameBufferBuffer )
     {

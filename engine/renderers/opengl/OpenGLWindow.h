@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Window.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
+#include "OpenGLFrameBuffer.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLMemoryPoolBuffer.h"
 
@@ -59,13 +60,17 @@ namespace AeonGames
         void OnSetViewMatrix() final;
         virtual void MakeCurrent() = 0;
         virtual void SwapBuffers() = 0;
+#if 0
         GLuint mVAO {};
         GLuint mFBO {};
         GLuint mColorBuffer {};
         GLuint mRBO {};
         GLuint mProgram{};
         OpenGLBuffer mScreenQuad{};
-        mutable OpenGLMaterial mMatrices{};
+#else
+        OpenGLFrameBuffer mFrameBuffer {};
+#endif
+        mutable OpenGLMaterial mMatrices {};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
         bool mFullScreen{ false };
     };

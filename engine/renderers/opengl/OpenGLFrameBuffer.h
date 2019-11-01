@@ -27,12 +27,16 @@ namespace AeonGames
     public:
         OpenGLFrameBuffer ( uint32_t aPath = 0 );
         ~OpenGLFrameBuffer() final;
-        void Load ( uint32_t aId ) final;
-        void Load ( const std::string& aFilename ) final;
-        void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) final;
         void Unload () final;
+        void ReSize ( uint32_t aWidth, uint32_t aHeight ) final;
+        void Bind() final;
+        void Unbind() final;
+        GLuint GetFBO() const; /// This is temporary
     private:
+        GLuint mFBO {};
+        GLuint mColorBuffer {};
+        GLuint mRBO {};
     };
 }
 #endif
