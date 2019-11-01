@@ -25,12 +25,14 @@ namespace AeonGames
     {
     public:
         DLL virtual ~FrameBuffer() = 0;
-        virtual void Load ( uint32_t aId ) = 0;
-        virtual void Load ( const std::string& aFilename ) = 0;
-        virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
+        DLL void Load ( uint32_t aId );
+        DLL void Load ( const std::string& aFilename );
+        DLL void Load ( const void* aBuffer, size_t aBufferSize );
         virtual void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) = 0;
-        virtual void Unload () = 0;
+        virtual void Unload() = 0;
+        virtual void ReSize ( uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual void Bind() = 0;
+        virtual void Unbind() = 0;
     };
-
 }
 #endif

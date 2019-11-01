@@ -83,11 +83,12 @@ const GLuint vertex_size{sizeof(vertices)};
 
     void OpenGLWindow::Initialize()
     {
+#if 0
         glGenVertexArrays ( 1, &mVAO );
         OPENGL_CHECK_ERROR_THROW;
         glBindVertexArray ( mVAO );
         OPENGL_CHECK_ERROR_THROW;
-
+    //-----------------------------------------------------
         // Frame Buffer
         glGenFramebuffers ( 1, &mFBO );
         OPENGL_CHECK_ERROR_THROW;
@@ -130,7 +131,9 @@ const GLuint vertex_size{sizeof(vertices)};
 
         glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
         OPENGL_CHECK_ERROR_THROW;
+#endif
 //----------------------------------------------------------------
+#if 0
     GLint compile_status{};
     mProgram = glCreateProgram();
     OPENGL_CHECK_ERROR_THROW;
@@ -200,6 +203,7 @@ const GLuint vertex_size{sizeof(vertices)};
     OPENGL_CHECK_ERROR_THROW;
     glUniform1i ( 0, 0 );
     OPENGL_CHECK_ERROR_THROW;
+#endif
 //----------------------------------------------------------------
 
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -222,11 +226,14 @@ const GLuint vertex_size{sizeof(vertices)};
 
 		mMatrices.Load({ {"ModelMatrix", Matrix4x4{}},{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}},{});
 
+#if 0
         mScreenQuad.Initialize(vertex_size, GL_STATIC_DRAW, vertices);
+#endif
     }
 
     void OpenGLWindow::Finalize()
     {
+#if 0
         if ( glIsRenderbuffer ( mRBO ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -249,7 +256,6 @@ const GLuint vertex_size{sizeof(vertices)};
             mFBO = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
-
         if(glIsProgram(mProgram))
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -259,11 +265,7 @@ const GLuint vertex_size{sizeof(vertices)};
             OPENGL_CHECK_ERROR_NO_THROW;
             mProgram = 0;
         }
-
-        mMatrices.Unload();
-
         mScreenQuad.Finalize();
-
         if ( glIsVertexArray ( mVAO ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -272,7 +274,9 @@ const GLuint vertex_size{sizeof(vertices)};
             mVAO = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
-    }
+#endif
+        mMatrices.Unload();
+}
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window{aX, aY, aWidth, aHeight, aFullScreen}, mOpenGLRenderer { aOpenGLRenderer },mMemoryPoolBuffer{aOpenGLRenderer,static_cast<GLsizei>(8_mb)},
@@ -367,35 +371,26 @@ const GLuint vertex_size{sizeof(vertices)};
             OPENGL_CHECK_ERROR_NO_THROW;
             glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_THROW;
-            glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, aWidth, aHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
-            OPENGL_CHECK_ERROR_THROW;
-            glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, aWidth, aHeight );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
-            OPENGL_CHECK_ERROR_THROW;
+            mFrameBuffer.ReSize(aWidth,aHeight);
         }
     }
 
     void OpenGLWindow::BeginRender()
     {
         MakeCurrent();
-        glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
+        mFrameBuffer.Bind();
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
     }
 
     void OpenGLWindow::EndRender()
     {
-        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
-        OPENGL_CHECK_ERROR_NO_THROW;
+        mFrameBuffer.Unbind();
         glClear ( GL_COLOR_BUFFER_BIT );
         OPENGL_CHECK_ERROR_NO_THROW;
         glDisable ( GL_DEPTH_TEST );
         OPENGL_CHECK_ERROR_NO_THROW;
+#if 0
         glUseProgram ( mProgram );
         OPENGL_CHECK_ERROR_NO_THROW;
 #ifndef SINGLE_VAO
@@ -416,6 +411,25 @@ const GLuint vertex_size{sizeof(vertices)};
         OPENGL_CHECK_ERROR_NO_THROW;
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         OPENGL_CHECK_ERROR_NO_THROW;
+#else
+        GLint dims[4] = {0};
+        glGetIntegerv(GL_VIEWPORT, dims);
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBlitNamedFramebuffer(
+            mFrameBuffer.GetFBO(),
+            0,
+            dims[0],
+            dims[1],
+            dims[2],
+            dims[3],
+            dims[0],
+            dims[1],
+            dims[2],
+            dims[3],
+            GL_COLOR_BUFFER_BIT,
+            GL_LINEAR);
+            OPENGL_CHECK_ERROR_NO_THROW;
+#endif
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
     }
