@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-include_directories(${GLSlang_INCLUDE_DIR})
+include_directories(${GLSLANG_SPIRV_INCLUDE_DIR})
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
