@@ -17,7 +17,8 @@ find_program(GLSLANG_VALIDATOR_EXECUTABLE
              PATHS /usr/local)
 
 find_path(GLSLANG_SPIRV_INCLUDE_DIR SPIRV/spirv.hpp
-          PATHS /usr/local /mingw64 /mingw32)
+          PATHS /usr/local/include /mingw64/include/ /mingw32/include
+          PATH_SUFFIXES glslang)
 
 find_library(GLSLANG_LIB
              NAMES glslang glslangd

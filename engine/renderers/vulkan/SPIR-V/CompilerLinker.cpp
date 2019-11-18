@@ -1,7 +1,7 @@
 //
 // Copyright (C) 2002-2005  3Dlabs Inc. Ltd.
 // Copyright (C) 2013-2016 LunarG, Inc.
-// Copyright (C) 2017-2018 Aeon Games
+// Copyright (C) 2017-2019 Aeon Games
 //
 // All rights reserved.
 //
@@ -168,7 +168,9 @@ namespace AeonGames
             shaders.back().setShiftTextureBinding ( mBaseTextureBinding[i] );
             shaders.back().setShiftImageBinding ( mBaseImageBinding[i] );
             shaders.back().setShiftUboBinding ( mBaseUboBinding[i] );
+#ifdef ENABLE_HLSL
             shaders.back().setFlattenUniformArrays ( ( mOptions & EOptionFlattenUniformArrays ) != 0 );
+#endif
             shaders.back().setNoStorageFormat ( ( mOptions & EOptionNoStorageFormat ) != 0 );
             if ( mOptions & EOptionAutoMapBindings )
             {
