@@ -30,7 +30,7 @@ namespace AeonGames
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
         virtual void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) = 0;
         virtual void Unload() = 0;
-        virtual void ReSize ( uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void Bind() = 0;
         virtual void Unbind() = 0;
     };

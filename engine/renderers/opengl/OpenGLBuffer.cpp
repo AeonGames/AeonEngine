@@ -164,13 +164,11 @@ namespace AeonGames
     {
         if ( glIsBuffer ( mBuffer ) )
         {
-            OPENGL_CHECK_ERROR_NO_THROW;
             glDeleteBuffers ( 1, &mBuffer );
             OPENGL_CHECK_ERROR_NO_THROW;
             mBuffer = 0;
             mSize = 0;
             mUsage = 0;
         }
-        OPENGL_CHECK_ERROR_NO_THROW;
     }
 }
