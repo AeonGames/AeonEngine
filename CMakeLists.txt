@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -33,6 +33,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+include(AeonGUI)
 
 if(CMAKE_VERSION VERSION_LESS "3.12.4")
   add_definitions(-D_USE_MATH_DEFINES)
