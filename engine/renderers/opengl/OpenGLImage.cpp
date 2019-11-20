@@ -69,7 +69,10 @@ namespace AeonGames
         // Binding The texture should cause glIsTexture to recognize the texture name as such.
         glBindTexture ( GL_TEXTURE_2D, mTexture );
         OPENGL_CHECK_ERROR_THROW;
-        Resize ( aWidth, aHeight, aPixels );
+        if ( aWidth > 0 || aHeight > 0 )
+        {
+            Resize ( aWidth, aHeight, aPixels );
+        }
     }
 
     void OpenGLImage::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
@@ -82,12 +85,12 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( mFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA,
+                       ( mFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA, ///<@todo decide if this should be a separate variable
                        aWidth,
                        aHeight,
                        0,
-                       ( mFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA,
-                       ( mType == Image::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                       ( mFormat == Image::Format::RGB ) ? GL_RGB : ( mFormat == Image::Format::BGRA ) ? GL_BGRA : GL_RGBA,
+                       ( mType == Image::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( mType == Image::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
                        aPixels );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -105,8 +108,9 @@ namespace AeonGames
             throw std::runtime_error ( "OpenGLImage: Trying to bit blit an uninitialized image." );
         }
         glTextureSubImage2D ( mTexture, 0, aXOffset, aYOffset, aWidth, aHeight,
-                              ( aFormat == Image::Format::RGB ) ? GL_RGB : GL_RGBA,
-                              ( aType == Image::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT, aPixels );
+                              ( aFormat == Image::Format::RGB ) ? GL_RGB : ( aFormat == Image::Format::BGRA ) ? GL_BGRA : GL_RGBA,
+                              ( aType == Image::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( aType == Image::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
+                              aPixels );
         OPENGL_CHECK_ERROR_THROW;
     }
 

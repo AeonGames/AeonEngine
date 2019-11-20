@@ -52,7 +52,6 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/FrameBuffer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Overlay.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
@@ -126,7 +125,6 @@ set(ENGINE_CORE_SOURCES
     core/SoundSystem.cpp
     core/Utilities.cpp
     core/FrameBuffer.cpp
-    core/Overlay.cpp
     core/Model.cpp
     core/Window.cpp
     core/Scene.cpp

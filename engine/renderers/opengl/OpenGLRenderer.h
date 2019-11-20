@@ -21,7 +21,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Matrix4x4.h"
 #include "OpenGLFunctions.h"
-#include "OpenGLPipeline.h"
+#include "OpenGLBuffer.h"
 
 namespace AeonGames
 {
@@ -43,23 +43,39 @@ namespace AeonGames
         void* GetWindowId() const;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
-
         std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
         std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
         std::unique_ptr<Image> CreateImage ( uint32_t aPath ) const final;
         std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
+        GLuint GetVertexArrayObject() const;
+        GLuint GetOverlayProgram() const;
+        GLuint GetOverlayQuad() const;
     private:
         void Initialize();
         void Finalize();
+        void InitializeOverlay();
+        void FinalizeOverlay();
         /// Internal Window Id, required to create initial shared context
         void* mWindowId{};
         /// Internal OpenGL context, shared with all other contexts
         void* mOpenGLContext{};
         /// Internal OpenGL Device Context used on Windows only for now.
         void* mDeviceContext{};
-        /// Overlay Pipeline
-        OpenGLPipeline mOverlayPipeline{};
+        /// General VAO
+        GLuint mVertexArrayObject{};
+        /** \addtogroup Overlay functionality.
+         * Both the shader program and the buffer descriving the window/screen quad are
+         * pretty much constant and usable without modifications by any Opengl window,
+         * so it makes sence that they reside inside the renderer object from which the windows
+         * are creatted.
+         *
+         @{*/
+        /// Raw overlay shader program.
+        GLuint mOverlayProgram{};
+        /// Overlay quadrilateral.
+        OpenGLBuffer mOverlayQuad{};
+        /**@}*/
     };
 }
 #endif

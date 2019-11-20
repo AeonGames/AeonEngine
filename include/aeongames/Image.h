@@ -29,13 +29,15 @@ namespace AeonGames
         {
             Unknown = 0,
             RGB,
-            RGBA
+            RGBA,
+            BGRA
         };
         enum class Type : uint32_t
         {
             Unknown = 0,
             UNSIGNED_BYTE,
-            UNSIGNED_SHORT
+            UNSIGNED_SHORT,
+            UNSIGNED_INT_8_8_8_8_REV
         };
         DLL virtual ~Image() = 0;
         virtual void Load ( const std::string& aPath ) = 0;

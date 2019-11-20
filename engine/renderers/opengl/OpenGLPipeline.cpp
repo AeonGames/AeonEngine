@@ -309,7 +309,6 @@ namespace AeonGames
 
         // Samplers
 #if 1
-
         for ( GLint i = 0; i < aPipelineBuffer.sampler().size(); ++i )
         {
             glUniform1i ( i, i );

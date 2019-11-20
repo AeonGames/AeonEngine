@@ -102,8 +102,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLImage.h
     OpenGLMesh.h
     OpenGLFrameBuffer.h
-    OpenGLMemoryPoolBuffer.h
-    OpenGLOverlay.h)
+    OpenGLMemoryPoolBuffer.h)
 
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
@@ -118,7 +117,6 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp
-    OpenGLOverlay.cpp
     windows.cpp
     x11.cpp
     Plugin.cpp)
