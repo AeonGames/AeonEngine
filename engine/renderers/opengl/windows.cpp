@@ -169,10 +169,15 @@ namespace AeonGames
 
     void OpenGLRenderer::Finalize()
     {
-        wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLContext ) );
-        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), NULL ) != TRUE )
+        {
+            std::cout << LogLevel::Error << "wglMakeCurrent failed." << std::endl;
+        }
         ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
-        wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+        if ( wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) ) != TRUE )
+        {
+            std::cout << LogLevel::Error << "wglDeleteContext failed." << std::endl;
+        }
         mOpenGLContext = nullptr;
         ReleaseDC ( static_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
         DestroyWindow ( static_cast<HWND> ( mWindowId ) );

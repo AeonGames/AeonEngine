@@ -29,7 +29,7 @@ namespace AeonGames
         ~OpenGLFrameBuffer() final;
         void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) final;
         void Unload () final;
-        void ReSize ( uint32_t aWidth, uint32_t aHeight ) final;
+        void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
         void Bind() final;
         void Unbind() final;
         GLuint GetFBO() const; /// This is temporary

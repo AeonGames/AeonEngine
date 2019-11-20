@@ -117,7 +117,7 @@ namespace AeonGames
         }
         OPENGL_CHECK_ERROR_NO_THROW;
     }
-    void OpenGLFrameBuffer::ReSize ( uint32_t aWidth, uint32_t aHeight )
+    void OpenGLFrameBuffer::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
         OPENGL_CHECK_ERROR_THROW;
