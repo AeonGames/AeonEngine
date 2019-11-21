@@ -126,10 +126,10 @@ include(FindPythonModule)
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
-find_package(PythonInterp 3)
+find_package (Python3 COMPONENTS Interpreter)
 find_package(ImageMagick COMPONENTS convert)
 
-get_filename_component(PYTHON_PATH "${PYTHON_EXECUTABLE}" DIRECTORY)
+get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8
              HINTS ENV
                    MINGW_PREFIX
@@ -436,7 +436,7 @@ if(BLENDER_EXECUTABLE)
                  "\\1"
                  BLENDER_VERSION
                  "${BLENDER_VERSION}")
-  find_program(BLENDER_PYTHON_EXECUTABLE
+  find_program(BLENDER_Python3_EXECUTABLE
                NAMES python python.exe
                PATHS "${BLENDER_PATH}/${BLENDER_VERSION}/python/bin"
                NO_DEFAULT_PATH)

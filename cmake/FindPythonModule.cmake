@@ -11,7 +11,7 @@ function(find_python_module module)
     # .so file.
     execute_process(
       COMMAND
-        "${PYTHON_EXECUTABLE}" "-c"
+        "${Python3_EXECUTABLE}" "-c"
         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
       RESULT_VARIABLE _${module}_status
       OUTPUT_VARIABLE _${module}_location
