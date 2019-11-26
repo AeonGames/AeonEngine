@@ -28,14 +28,24 @@ namespace AeonGames
     class Mesh;
     class Pipeline;
     class Material;
+    class GraphicalUserInterface;
+    class StringId;
     class Window
     {
     public:
         DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen, uint32_t aGraphicalUserInterfaceId );
+        DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen, const std::string& aGraphicalUserInterfaceId );
+        DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen, const StringId& aGraphicalUserInterfaceId );
         DLL Window ( void* aWindowId );
+        DLL Window ( void* aWindowId, uint32_t aGraphicalUserInterfaceId );
+        DLL Window ( void* aWindowId, const std::string& aGraphicalUserInterfaceId );
+        DLL Window ( void* aWindowId, const StringId& aGraphicalUserInterfaceId );
+
         DLL virtual ~Window() = 0;
         DLL void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
         DLL void Run ( Scene& aScene );
+
         ///@name Render Functions
         ///@{
         virtual void BeginRender() = 0;
@@ -87,6 +97,7 @@ namespace AeonGames
         virtual void OnSetViewMatrix() = 0;
         Frustum mFrustum{};
         float mAspectRatio{1.0f};
+        std::unique_ptr<GraphicalUserInterface> mGraphicalUserInterface{};
     };
 }
 #endif
