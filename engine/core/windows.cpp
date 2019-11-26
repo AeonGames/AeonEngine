@@ -22,6 +22,8 @@ limitations under the License.
 #include "aeongames/Window.h"
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
+#include "aeongames/GraphicalUserInterface.h"
+
 namespace AeonGames
 {
     LRESULT CALLBACK AeonEngineWindowProc (
