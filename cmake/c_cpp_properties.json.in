@@ -6,8 +6,9 @@
             "compilerPath": "@CMAKE_C_COMPILER@",
             "includePath": [
                 @INCLIST@,
-                "${workspaceFolder}/include",
-                "${workspaceFolder}/engine/include"
+                "${workspace}/include",
+                "${workspace}/include/aeongames",
+                "${workspace}/engine/include"
             ],
             "defines": [],
             "cStandard": "c11",

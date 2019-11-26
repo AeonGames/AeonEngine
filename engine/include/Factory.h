@@ -21,6 +21,14 @@ limitations under the License.
 #include <algorithm>
 #include "aeongames/StringId.h"
 
+#define FactoryDefinition(X) \
+    std::unique_ptr<X> Construct##X ( uint32_t aIdentifier );\
+    std::unique_ptr<X> Construct##X ( const std::string& aIdentifier );\
+    std::unique_ptr<X> Construct##X ( const StringId& aIdentifier );\
+    bool Register##X##Constructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ); \
+    bool Unregister##X##Constructor ( const StringId& aIdentifier );\
+    void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
+
 #define FactoryImplementation(X) \
     std::unique_ptr<X> Construct##X ( uint32_t aIdentifier )\
     { \
