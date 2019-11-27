@@ -29,6 +29,10 @@ enable_testing()
 enable_language(CXX)
 enable_language(C)
 
+define_property(GLOBAL PROPERTY PLUGINS INHERITED
+    BRIEF_DOCS "Built Plugin List"
+    FULL_DOCS "Plugin Targets should add an entry to this list in order to be included into the configuration file.")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -540,17 +544,9 @@ add_custom_target(create-cover
                   DEPENDS "${COVER_BACKGROUND}"
                   COMMENT "Creating Cover")
 
-# TODO: Make a list each plugin can append to, and process at the end of file
-set(PLUGINS "")
-if(BUILD_OPENGL_RENDERER)
-  set(PLUGINS "${PLUGINS}Plugin: \"OpenGLRenderer\"\n")
-endif()
-if(BUILD_VULKAN_RENDERER)
-  set(PLUGINS "${PLUGINS}Plugin: \"VulkanRenderer\"\n")
-endif()
-if(USE_AEONGUI)
-  set(PLUGINS "${PLUGINS}Plugin: \"AeonGamesGUI\"\n")
-endif()
+get_property(PLUGIN_LIST GLOBAL PROPERTY PLUGINS)
+foreach(PLUGIN ${PLUGIN_LIST})
+  string(APPEND PLUGINS "Plugin: \"${PLUGIN}\"\n")
+endforeach()
 string(REGEX REPLACE "\n$" "" PLUGINS "${PLUGINS}")
-
 configure_file("${CMAKE_SOURCE_DIR}/cmake/config.in" "${CMAKE_SOURCE_DIR}/game/config" @ONLY)

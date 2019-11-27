@@ -29,6 +29,9 @@ elseif(MINGW OR MSYS)
                                    "")
 endif()
 target_link_libraries(AeonGamesGUI AeonEngine AeonGUI)
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS AeonGamesGUI)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     AeonGamesGUI

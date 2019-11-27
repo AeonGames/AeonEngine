@@ -87,6 +87,9 @@ elseif(UNIX)
     PROPERTIES COMPILE_FLAGS
                "-fpic -Wall -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
 endif()
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS VulkanRenderer)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     VulkanRenderer

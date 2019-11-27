@@ -150,6 +150,9 @@ elseif(UNIX)
                         PROPERTIES COMPILE_FLAGS
                                    "-fpic -Wall  -Werror -Wfatal-errors")
 endif()
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS OpenGLRenderer)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     OpenGLRenderer

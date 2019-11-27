@@ -14,6 +14,9 @@ elseif(MINGW OR MSYS)
                                    "")
 endif()
 target_link_libraries(PngImage AeonEngine ${PNG_LIBRARIES})
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS PngImage)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     PngImage

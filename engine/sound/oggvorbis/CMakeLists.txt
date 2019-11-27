@@ -15,6 +15,9 @@ elseif(MINGW OR MSYS)
                                    "")
 endif()
 target_link_libraries(OggSound AeonEngine ${OGGVORBIS_LIBRARIES})
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS OggSound)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     OggSound
