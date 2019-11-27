@@ -33,8 +33,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-include(AeonGUI)
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 
 if(CMAKE_VERSION VERSION_LESS "3.12.4")
   add_definitions(-D_USE_MATH_DEFINES)
@@ -46,7 +45,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /DPROTOBUF_WARNINGS=\"4251 4996\"")
 else()
-  set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/msys64/mingw64;C:/msys64/usr")
+  list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64" "C:/msys64/usr")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -140,17 +139,7 @@ find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
 
 option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
-
-set(PLUGINS "")
-if(BUILD_OPENGL_RENDERER)
-  set(PLUGINS "${PLUGINS}Plugin: \"OpenGLRenderer\"\n")
-endif()
-if(BUILD_VULKAN_RENDERER)
-  set(PLUGINS "${PLUGINS}Plugin: \"VulkanRenderer\"\n")
-endif()
-string(REGEX REPLACE "\n$" "" PLUGINS "${PLUGINS}")
-
-configure_file("${CMAKE_SOURCE_DIR}/cmake/config.in" "${CMAKE_SOURCE_DIR}/game/config" @ONLY)
+option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
@@ -550,3 +539,18 @@ add_custom_target(create-cover
                           'image over 0,0 1920,1080 overlay.png' cover.png
                   DEPENDS "${COVER_BACKGROUND}"
                   COMMENT "Creating Cover")
+
+# TODO: Make a list each plugin can append to, and process at the end of file
+set(PLUGINS "")
+if(BUILD_OPENGL_RENDERER)
+  set(PLUGINS "${PLUGINS}Plugin: \"OpenGLRenderer\"\n")
+endif()
+if(BUILD_VULKAN_RENDERER)
+  set(PLUGINS "${PLUGINS}Plugin: \"VulkanRenderer\"\n")
+endif()
+if(USE_AEONGUI)
+  set(PLUGINS "${PLUGINS}Plugin: \"AeonGamesGUI\"\n")
+endif()
+string(REGEX REPLACE "\n$" "" PLUGINS "${PLUGINS}")
+
+configure_file("${CMAKE_SOURCE_DIR}/cmake/config.in" "${CMAKE_SOURCE_DIR}/game/config" @ONLY)
