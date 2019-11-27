@@ -18,6 +18,9 @@ elseif(MINGW OR MSYS)
                                    "")
 endif()
 target_link_libraries(PortAudioSoundSystem AeonEngine ${PORTAUDIO_LIBRARY})
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS PortAudioSoundSystem)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     PortAudioSoundSystem
