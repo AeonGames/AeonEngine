@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_AEONGAMESGUI_H
 #define AEONGAMES_AEONGAMESGUI_H
 #include "aeongames/GraphicalUserInterface.h"
+#include "aeongui/Window.h"
 namespace AeonGames
 {
     class AeonGamesGUI : public GraphicalUserInterface

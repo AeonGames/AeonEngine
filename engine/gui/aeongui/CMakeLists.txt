@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-include_directories(${AEONGUI_INCLUDE_DIR})
 set(AEONGAMESGUI_HEADERS AeonGamesGUI.h)
 set(AEONGAMESGUI_SOURCES AeonGamesGUI.cpp Plugin.cpp)
 add_library(AeonGamesGUI SHARED ${AEONGAMESGUI_HEADERS} ${AEONGAMESGUI_SOURCES})
@@ -29,7 +28,7 @@ elseif(MINGW OR MSYS)
                                    PREFIX
                                    "")
 endif()
-target_link_libraries(AeonGamesGUI AeonEngine ${AEONGUI_LIBRARIES})
+target_link_libraries(AeonGamesGUI AeonEngine AeonGUI)
 if(USE_CLANG_TIDY)
   set_target_properties(
     AeonGamesGUI
