@@ -1,8 +1,4 @@
 AEONCFG
 PluginDirectory: ""
-Plugin: "AeonEngineComponents"
 @PLUGINS@
-Plugin: "PngImage"
-Plugin: "PortAudioSoundSystem"
-Plugin: "OggSound"
 Package: "game"

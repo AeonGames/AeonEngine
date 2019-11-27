@@ -14,6 +14,9 @@ elseif(MINGW OR MSYS)
                                    "")
 endif()
 target_link_libraries(AeonEngineComponents AeonEngine)
+
+set_property(GLOBAL APPEND PROPERTY PLUGINS AeonEngineComponents)
+
 if(USE_CLANG_TIDY)
   set_target_properties(
     AeonEngineComponents
