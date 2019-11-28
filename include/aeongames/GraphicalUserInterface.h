@@ -29,6 +29,11 @@ namespace AeonGames
     {
     public:
         virtual void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual const uint8_t* GetPixels() const = 0;
+        virtual size_t GetWidth() const = 0;
+        virtual size_t GetHeight() const = 0;
+        virtual size_t GetStride() const = 0;
+        virtual void Draw() = 0;
         DLL virtual ~GraphicalUserInterface() = 0;
     };
     /**@name Factory Functions */

@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_AEONGAMESGUI_H
 #include "aeongames/GraphicalUserInterface.h"
 #include "aeongui/Window.h"
+
 namespace AeonGames
 {
     class AeonGamesGUI : public GraphicalUserInterface
@@ -24,7 +25,14 @@ namespace AeonGames
     public:
         AeonGamesGUI();
         ~AeonGamesGUI() final;
-        void ResizeViewport ( uint32_t aWidth, uint32_t aHeight );
+        void ResizeViewport ( uint32_t aWidth, uint32_t aHeight ) final;
+        const uint8_t* GetPixels() const final;
+        size_t GetWidth() const final;
+        size_t GetHeight() const final;
+        size_t GetStride() const final;
+        void Draw() final;
+    public:
+        AeonGUI::Window mAeonGUIWindow{};
     };
 }
 #endif

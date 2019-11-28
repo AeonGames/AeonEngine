@@ -97,6 +97,7 @@ namespace AeonGames
         virtual void OnSetViewMatrix() = 0;
         Frustum mFrustum{};
         float mAspectRatio{1.0f};
+    protected:
         std::unique_ptr<GraphicalUserInterface> mGraphicalUserInterface{};
     };
 }

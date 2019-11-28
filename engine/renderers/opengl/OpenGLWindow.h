@@ -63,7 +63,7 @@ namespace AeonGames
         virtual void SwapBuffers() = 0;
         OpenGLFrameBuffer mFrameBuffer {};
         mutable OpenGLMaterial mMatrices {};
-        OpenGLImage mOverlayPixels;
+        GLuint mOverlayPixels{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
         bool mFullScreen{ false };
     };
