@@ -24,5 +24,26 @@ namespace AeonGames
     }
     void AeonGamesGUI::ResizeViewport ( uint32_t aWidth, uint32_t aHeight )
     {
+        mAeonGUIWindow.ResizeViewport ( aWidth, aHeight );
+    }
+    const uint8_t* AeonGamesGUI::GetPixels() const
+    {
+        return mAeonGUIWindow.GetPixels();
+    }
+    size_t AeonGamesGUI::GetWidth() const
+    {
+        return mAeonGUIWindow.GetWidth();
+    }
+    size_t AeonGamesGUI::GetHeight() const
+    {
+        return mAeonGUIWindow.GetHeight();
+    }
+    size_t AeonGamesGUI::GetStride() const
+    {
+        return mAeonGUIWindow.GetStride();
+    }
+    void AeonGamesGUI::Draw()
+    {
+        mAeonGUIWindow.Draw();
     }
 }

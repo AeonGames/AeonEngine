@@ -93,6 +93,7 @@ namespace AeonGames
             }
         } );
     }
+
     void Window::Render (
         const Transform& aModelTransform,
         const Mesh& aMesh,
