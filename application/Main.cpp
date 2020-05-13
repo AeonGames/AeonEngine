@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ int Main ( int argc, char *argv[] )
         const AeonGames::Renderer* renderer{};
         AeonGames::Scene scene{};
 
-        ///@todo Have a function return a vector of strings?
+        ///@todo We now have a function returning a vector of strings, use it here
         AeonGames::EnumerateRendererConstructors ( [&renderer, &renderer_name] ( const AeonGames::StringId & aIdentifier ) -> bool
         {
             if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )

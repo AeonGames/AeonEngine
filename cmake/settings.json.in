@@ -1,6 +1,7 @@
 {
     "git.path": "${GIT_EXECUTABLE}",
     "git.ignoreLimitWarning": true,
+    "terminal.integrated.automationShell.windows": "C:\\Windows\\System32\\cmd.exe",
     "terminal.integrated.shell.windows": "${BASH_EXECUTABLE}",
     "terminal.integrated.shellArgs.windows": ["--login", "-i"],
     "terminal.integrated.env.windows":

@@ -12,6 +12,18 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+find_package(Qt5
+             COMPONENTS LinguistTools
+                        Core
+                        Gui
+                        Widgets)
+if(WIN32)
+  find_package(Qt5 COMPONENTS WinExtras)
+elseif(UNIX)
+  find_package(Qt5 COMPONENTS X11Extras)
+endif()
+if(Qt5_FOUND)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_BINARY_DIR}
                     models
@@ -162,3 +174,4 @@ target_link_libraries(worldeditor
                       ${OPENGL_LIBRARIES}
                       ${CMAKE_DL_LIBS}
                       ${CMAKE_THREAD_LIBS_INIT})
+endif()
