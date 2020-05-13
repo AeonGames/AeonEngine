@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <vector>
+#include <string>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -27,7 +28,8 @@ limitations under the License.
     std::unique_ptr<X> Construct##X ( const StringId& aIdentifier );\
     bool Register##X##Constructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<X>() >& aConstructor ); \
     bool Unregister##X##Constructor ( const StringId& aIdentifier );\
-    void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator );
+    void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator ); \
+    void std::vector<std::string> Get##X##ConstructorNames();
 
 #define FactoryImplementation(X) \
     std::unique_ptr<X> Construct##X ( uint32_t aIdentifier )\
@@ -53,6 +55,10 @@ limitations under the License.
     void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator )\
     {\
         Factory<X>::EnumerateConstructors ( aEnumerator );\
+    }\
+    std::vector<std::string> Get##X##ConstructorNames()\
+    {\
+        return Factory<X>::GetConstructorNames();\
     }
 
 namespace AeonGames
@@ -117,6 +123,18 @@ namespace AeonGames
                 }
             }
         }
+
+        static std::vector<std::string> GetConstructorNames()
+        {
+            std::vector<std::string> names{Constructors.size() };
+            std::transform ( Constructors.begin(), Constructors.end(), names.begin(),
+                             [] ( const Constructor & constructor )
+            {
+                return std::get<0> ( constructor ).GetString();
+            } );
+            return names;
+        }
+
     private:
         static std::vector < Constructor > Constructors;
     };

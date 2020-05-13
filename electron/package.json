@@ -1,0 +1,17 @@
+{
+  "name": "aeonengine",
+  "version": "1.0.0",
+  "description": "AeonEngine bindings for Electron",
+  "main": "main.js",
+  "keywords": [
+    "AeonEngine",
+    "Game",
+    "UI",
+    "Electron"
+  ],
+  "author": "Rodrigo Hernandez",
+  "license": "Apache2",
+  "devDependencies": {
+    "electron": "^8.2.5"
+  }
+}

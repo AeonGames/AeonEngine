@@ -7,17 +7,17 @@
                 "request": "launch",
                 "args": [],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
-                    ${QT_QPA_PLATFORM}
+                    @QT_QPA_PLATFORM@
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/worldeditor${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                        "program": "@CMAKE_BINARY_DIR@/bin/worldeditor@CMAKE_EXECUTABLE_SUFFIX@",
+                        "miDebuggerPath": "@GDB_EXECUTABLE@",
                         "MIMode": "gdb",
                         "setupCommands": [
                             {
@@ -33,16 +33,16 @@
                 "request": "launch",
                 "args": ["-r","OpenGL","-s","scenes/main.txt"],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }                    
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                        "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
+                        "miDebuggerPath": "@GDB_EXECUTABLE@",
                         "MIMode": "gdb",
                         "setupCommands": [
                             {
@@ -58,16 +58,16 @@
                 "request": "launch",
                 "args": ["-f","-r","OpenGL","-s","scenes/main.txt"],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }                    
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                        "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
+                        "miDebuggerPath": "@GDB_EXECUTABLE@",
                         "MIMode": "gdb",
                         "setupCommands": [
                             {
@@ -83,24 +83,24 @@
                 "request": "launch",
                 "args": ["-r","Vulkan","-s","scenes/main.txt"],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }                    
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
+                "miDebuggerPath": "@GDB_EXECUTABLE@",
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
             },
             {
                 "name": "Game FullScreen Vulkan",
@@ -108,24 +108,71 @@
                 "request": "launch",
                 "args": ["-f","-r","Vulkan","-s","scenes/main.txt"],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }                    
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
+                "miDebuggerPath": "@GDB_EXECUTABLE@",
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                    ]
+            },
+            {
+                "name": "Electron JavaScript",
+                "type": "node",
+                "request": "launch",
+                "cwd": "@CMAKE_SOURCE_DIR@",
+                "console": "integratedTerminal",
+                "runtimeExecutable": "@ELECTRON_EXECUTABLE@",
+                "windows": {
+                    "runtimeExecutable": "@ELECTRON_EXECUTABLE@"
+                },
+                "args" : ["--js-flags=\"--expose-gc\"","@CMAKE_SOURCE_DIR@/electron"],
+                "outputCapture": "std",
+                "localRoot": "@CMAKE_SOURCE_DIR@/electron",
+                "remoteRoot": "@CMAKE_BINARY_DIR@/bin/resources/app",
+                "env":{
+                    "NODE_PATH":"@DEBUG_PATH@",
+                    "PATH":"@DEBUG_PATH@"
+                }
+            },
+            {
+                "name": "Electron C++",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "@ELECTRON_EXECUTABLE@",
+                "MIMode": "gdb",
+                "miDebuggerPath": "@GDB_EXECUTABLE@",
+                "cwd": "@CMAKE_SOURCE_DIR@",
+                "args" : ["--js-flags=\"--expose-gc\"","@CMAKE_SOURCE_DIR@/electron"],
+                "externalConsole": false,
+                "environment": [
+                    {
+                        "name":"NODE_PATH",
+                        "value":"@DEBUG_PATH@"
+                    },
+                    {
+                        "name":"PATH",
+                        "value":"@DEBUG_PATH@"
+                    }
+                ],
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
             },
             {
                 "name": "Unit Tests",
@@ -133,24 +180,24 @@
                 "request": "launch",
                 "args": [],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }                    
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/unit-tests${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                "program": "@CMAKE_BINARY_DIR@/bin/unit-tests@CMAKE_EXECUTABLE_SUFFIX@",
+                "miDebuggerPath": "@GDB_EXECUTABLE@",
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                    ]
             },
             {
                 "name": "Aeon Tool",
@@ -160,16 +207,16 @@
                     "convert","-i","game/meshes/cube.txt","-o","game/meshes/cube.msh"
                 ],
                 "stopAtEntry": false,
-                "cwd": "${CMAKE_SOURCE_DIR}",
+                "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     {
                         "name":"PATH",
-                        "value":"${DEBUG_PATH}"
+                        "value":"@DEBUG_PATH@"
                     }                    
                 ],
-                "externalConsole": ${USE_EXTERNAL_CONSOLE},
-                        "program": "${CMAKE_BINARY_DIR}/bin/aeontool${CMAKE_EXECUTABLE_SUFFIX}",
-                        "miDebuggerPath": "${GDB_EXECUTABLE}",
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@",
+                        "miDebuggerPath": "@GDB_EXECUTABLE@",
                         "MIMode": "gdb",
                         "setupCommands": [
                             {
