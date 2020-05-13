@@ -6,14 +6,13 @@
             "compilerPath": "@CMAKE_C_COMPILER@",
             "includePath": [
                 @INCLIST@,
-                "${workspace}/include",
-                "${workspace}/include/aeongames",
-                "${workspace}/engine/include"
+                "@CMAKE_SOURCE_DIR@/include",
+                "@CMAKE_SOURCE_DIR@/include/aeongames",
+                "@CMAKE_SOURCE_DIR@/engine/include"
             ],
             "defines": [],
             "cStandard": "c11",
-            "cppStandard": "c++17",
-            "compileCommands": "@CMAKE_BINARY_DIR@/compile_commands.json"
+            "cppStandard": "c++17"
         }
     ],
     "version": 4

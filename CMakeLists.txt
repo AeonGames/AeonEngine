@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -30,8 +30,19 @@ enable_language(CXX)
 enable_language(C)
 
 define_property(GLOBAL PROPERTY PLUGINS INHERITED
-    BRIEF_DOCS "Built Plugin List"
-    FULL_DOCS "Plugin Targets should add an entry to this list in order to be included into the configuration file.")
+  BRIEF_DOCS "Built Plugin List"
+  FULL_DOCS "Plugin Targets should add an entry to this list in order to be included into the configuration file.")
+
+define_property(GLOBAL PROPERTY SHARED_LIBRARIES INHERITED
+  BRIEF_DOCS "List of shared library targets"
+  FULL_DOCS "List of shared library targets")
+
+function (add_library)
+  if(NOT ARGV0 MATCHES "::" AND ARGV1 STREQUAL "SHARED")
+    set_property(GLOBAL APPEND PROPERTY SHARED_LIBRARIES ${ARGV0})
+  endif()
+  _add_library(${ARGV})
+endfunction (add_library)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -39,30 +50,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 
-if(CMAKE_VERSION VERSION_LESS "3.12.4")
-  add_definitions(-D_USE_MATH_DEFINES)
-else()
-  add_compile_definitions(_USE_MATH_DEFINES)
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /DPROTOBUF_WARNINGS=\"4251 4996\"")
-else()
-  list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64" "C:/msys64/usr")
-endif()
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to 'Debug' as none was specified.")
-  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE
-               PROPERTY STRINGS
-                        "Debug"
-                        "Release"
-                        "MinSizeRel"
-                        "RelWithDebInfo")
-endif()
+include(compiler_settings)
 
 set(PROXY "" CACHE STRING "Proxy server string for downloads.")
 if(PROXY)
@@ -70,19 +58,6 @@ if(PROXY)
   set(ENV{https_proxy} "${PROXY}")
   set(ENV{ftp_proxy} "${PROXY}")
 endif()
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
-  set(CMAKE_CXX_FLAGS_RELEASE
-      "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer")
-endif()
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON
-    CACHE INTERNAL "Force compilation database")
 
 set(Portaudio_FIND_QUIETLY ON)
 
@@ -117,13 +92,9 @@ endif()
 
 find_package(ZLIB)
 find_package(Threads)
-find_package(Vulkan)
-find_package(OpenGL)
-find_package(GLslang)
 find_package(Protobuf)
 find_package(Portaudio)
 find_package(OggVorbis)
-include(AeonEngineFunctions)
 include(FindProtobufExp)
 include(FindPythonModule)
 include(CheckIncludeFile)
@@ -144,6 +115,7 @@ find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
 option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
+option(BUILD_ELECTRON_APPLICATION "Build Electron Application" OFF)
 
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
@@ -219,18 +191,10 @@ endif()
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
-find_package(Qt5
-             COMPONENTS LinguistTools
-                        Core
-                        Gui
-                        Widgets)
-if(WIN32)
-  find_package(Qt5 COMPONENTS WinExtras)
-elseif(UNIX)
-  find_package(Qt5 COMPONENTS X11Extras)
-endif()
-if(Qt5_FOUND)
-  add_subdirectory(tools/worldeditor)
+add_subdirectory(tools/worldeditor)
+
+if(BUILD_ELECTRON_APPLICATION)
+  add_subdirectory(electron)
 endif()
 
 find_path(GTEST_SOURCE_PATH googletest PATHS /usr/src/googletest)
@@ -492,6 +456,9 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
   list(APPEND INCLIST ${Protobuf_INCLUDE_DIR})
   list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine)
   list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine/renderers/opengl)
+  if(BUILD_ELECTRON_APPLICATION)
+    list(APPEND INCLIST ${NODE_INCLUDE_DIR})
+  endif()
 
   list(REMOVE_DUPLICATES INCLIST)
   set(INCLIST "\"${INCLIST}\"")
@@ -515,14 +482,9 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/settings.json.in"
                  "${CMAKE_SOURCE_DIR}/.vscode/settings.json")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/launch.json.in"
-                 "${CMAKE_SOURCE_DIR}/.vscode/launch.json")
+                 "${CMAKE_SOURCE_DIR}/.vscode/launch.json" @ONLY)
   configure_file("${CMAKE_SOURCE_DIR}/cmake/c_cpp_properties.json.in"
                  "${CMAKE_SOURCE_DIR}/.vscode/c_cpp_properties.json" @ONLY)
-  add_custom_target(fix-compile-commands
-                    COMMAND ${SED_EXECUTABLE} -i 's/\\/C\\//C:\\//g'
-                            ${CMAKE_BINARY_DIR}/compile_commands.json
-                    DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-                    COMMENT "Fixing Compile Commands Database")
 endif()
 
 set(COVER_BACKGROUND "${CMAKE_BINARY_DIR}/wallpaper.png"

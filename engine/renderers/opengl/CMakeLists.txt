@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+find_package(OpenGL)
+
 option(SINGLE_VAO "Use a single Vertex Array per OpenGL context." OFF)
 
 if(SINGLE_VAO)
