@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
-#include "aeongames/GraphicalUserInterface.h" ///<- This is here just for the literals
 #include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
@@ -69,6 +68,7 @@ namespace AeonGames
         mMatrices.Unload();
     }
 
+#if 0
     static GLuint InitializeOverlayTexture ( uint32_t aWidth, uint32_t aHeight )
     {
         GLuint result{};
@@ -94,11 +94,11 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         return result;
     }
+#endif
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window{aX, aY, aWidth, aHeight, aFullScreen},
         mOpenGLRenderer { aOpenGLRenderer },
-        mOverlayPixels{mGraphicalUserInterface ? InitializeOverlayTexture ( aWidth, aHeight ) : 0 },
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) },
         mFullScreen{aFullScreen}
     {
@@ -107,7 +107,6 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
         Window{aWindowId},
         mOpenGLRenderer{ aOpenGLRenderer },
-        mOverlayPixels{mGraphicalUserInterface ? InitializeOverlayTexture ( 32, 32 ) : 0 },
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
@@ -243,19 +242,19 @@ namespace AeonGames
             GL_COLOR_BUFFER_BIT,
             GL_LINEAR );
         OPENGL_CHECK_ERROR_NO_THROW;
+#if 0
         // Overlay code
-        if ( mGraphicalUserInterface )
+        if ( false )
         {
-            mGraphicalUserInterface->Draw();
             glTextureSubImage2D ( mOverlayPixels,
                                   0,
                                   0,
                                   0,
-                                  static_cast<GLsizei> ( mGraphicalUserInterface->GetWidth() ),
-                                  static_cast<GLsizei> ( mGraphicalUserInterface->GetHeight() ),
+                                  static_cast<GLsizei> ( GetWidth() ),
+                                  static_cast<GLsizei> ( GetHeight() ),
                                   GL_BGRA,
                                   GL_UNSIGNED_INT_8_8_8_8_REV,
-                                  mGraphicalUserInterface->GetPixels() );
+                                  GetPixels() );
 #ifndef SINGLE_VAO
             glBindVertexArray ( mOpenGLRenderer.GetVertexArrayObject() );
             OPENGL_CHECK_ERROR_THROW;
@@ -277,6 +276,7 @@ namespace AeonGames
             glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
+#endif
         //---------------
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
