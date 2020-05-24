@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,18 +18,18 @@ limitations under the License.
 #include <limits>
 #include <cstring>
 #include <utility>
-#include "VulkanImage.h"
+#include "VulkanTexture.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
-#include "aeongames/Image.h"
+#include "aeongames/Texture.h"
 #include "aeongames/Utilities.h"
 
 namespace AeonGames
 {
-    VulkanImage::VulkanImage ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
-        Image(), mVulkanRenderer (  aVulkanRenderer  ), mWidth{}, mHeight{},
+    VulkanTexture::VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
+        Texture(), mVulkanRenderer (  aVulkanRenderer  ), mWidth{}, mHeight{},
         mVkImage { VK_NULL_HANDLE },
         mImageMemory { VK_NULL_HANDLE }
     {
@@ -42,28 +42,28 @@ namespace AeonGames
         }
     }
 
-    VulkanImage::~VulkanImage()
+    VulkanTexture::~VulkanTexture()
     {
         Finalize();
     }
 
-    void VulkanImage::Load ( const std::string& aPath )
+    void VulkanTexture::Load ( const std::string& aPath )
     {
         Load ( crc32i ( aPath.data(), aPath.size() ) );
     }
-    void VulkanImage::Load ( uint32_t aId )
+    void VulkanTexture::Load ( uint32_t aId )
     {
         std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
         LoadResource ( aId, buffer.data(), buffer.size() );
         DecodeImage ( *this, buffer.data(), buffer.size() );
     }
 
-    void VulkanImage::Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
+    void VulkanTexture::Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
     {
         mWidth = aWidth;
         mHeight = aHeight;
-        InitializeImage ( aWidth, aHeight, aFormat, aType );
-        InitializeImageView();
+        InitializeTexture ( aWidth, aHeight, aFormat, aType );
+        InitializeTextureView();
         VkSamplerCreateInfo sampler_create_info{};
         sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         sampler_create_info.pNext = nullptr;
@@ -95,38 +95,38 @@ namespace AeonGames
         }
     }
 
-    uint32_t VulkanImage::GetWidth() const
+    uint32_t VulkanTexture::GetWidth() const
     {
         return mWidth;
     }
 
-    uint32_t VulkanImage::GetHeight() const
+    uint32_t VulkanTexture::GetHeight() const
     {
         return mHeight;
     }
 
-    Image::Format VulkanImage::GetFormat() const
+    Texture::Format VulkanTexture::GetFormat() const
     {
-        return Image::Format::RGBA;
+        return Texture::Format::RGBA;
     }
 
-    Image::Type VulkanImage::GetType() const
+    Texture::Type VulkanTexture::GetType() const
     {
-        return Image::Type::UNSIGNED_BYTE;
+        return Texture::Type::UNSIGNED_BYTE;
     }
 
-    void VulkanImage::Finalize()
+    void VulkanTexture::Finalize()
     {
         if ( mVkDescriptorImageInfo.sampler != VK_NULL_HANDLE )
         {
             vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkDescriptorImageInfo.sampler, nullptr );
             mVkDescriptorImageInfo.sampler = VK_NULL_HANDLE;
         }
-        FinalizeImageView();
-        FinalizeImage();
+        FinalizeTextureView();
+        FinalizeTexture();
     }
 
-    void VulkanImage::InitializeImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType )
+    void VulkanTexture::InitializeTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType )
     {
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -181,13 +181,13 @@ namespace AeonGames
         }
     }
 
-    void VulkanImage::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
+    void VulkanTexture::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
     {
         /** @todo Implement. */
     }
 
 
-    void VulkanImage::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
+    void VulkanTexture::WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
     {
         // -----------------------------
         // Write Memory
@@ -236,9 +236,9 @@ namespace AeonGames
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        if ( aFormat == Image::Format::RGBA )
+        if ( aFormat == Texture::Format::RGBA )
         {
-            if ( aType == Image::Type::UNSIGNED_BYTE )
+            if ( aType == Texture::Type::UNSIGNED_BYTE )
             {
                 memcpy ( image_memory, aPixels, aWidth * aHeight * GetPixelSize ( aFormat, aType ) );
             }
@@ -267,7 +267,7 @@ namespace AeonGames
         }
         else
         {
-            if ( aType == Image::Type::UNSIGNED_BYTE )
+            if ( aType == Texture::Type::UNSIGNED_BYTE )
             {
                 const uint8_t* read_pointer = aPixels;
                 auto* write_pointer = static_cast<uint8_t*> ( image_memory );
@@ -352,7 +352,7 @@ namespace AeonGames
         vkFreeMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory, nullptr );
     }
 
-    void VulkanImage::FinalizeImage()
+    void VulkanTexture::FinalizeTexture()
     {
         if ( mVkImage != VK_NULL_HANDLE )
         {
@@ -366,7 +366,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanImage::InitializeImageView()
+    void VulkanTexture::InitializeTextureView()
     {
         VkImageViewCreateInfo image_view_create_info = {};
         image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -386,7 +386,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanImage::FinalizeImageView()
+    void VulkanTexture::FinalizeTextureView()
     {
         if ( mVkDescriptorImageInfo.imageView != VK_NULL_HANDLE )
         {
@@ -395,7 +395,7 @@ namespace AeonGames
         }
     }
 
-    const VkDescriptorImageInfo& VulkanImage::GetDescriptorImageInfo() const
+    const VkDescriptorImageInfo& VulkanTexture::GetDescriptorImageInfo() const
     {
         return mVkDescriptorImageInfo;
     }

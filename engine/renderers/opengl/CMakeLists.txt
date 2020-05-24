@@ -101,7 +101,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLPipeline.h
     OpenGLBuffer.h
     OpenGLMaterial.h
-    OpenGLImage.h
+    OpenGLTexture.h
     OpenGLMesh.h
     OpenGLFrameBuffer.h
     OpenGLMemoryPoolBuffer.h)
@@ -114,7 +114,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLBuffer.cpp
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
-    OpenGLImage.cpp
+    OpenGLTexture.cpp
     OpenGLMesh.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp

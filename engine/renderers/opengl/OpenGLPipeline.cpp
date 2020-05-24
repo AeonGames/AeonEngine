@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ limitations under the License.
 #endif
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
-#include "OpenGLImage.h"
+#include "OpenGLTexture.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFunctions.h"
 
@@ -358,7 +358,7 @@ namespace AeonGames
             {
                 glActiveTexture ( GL_TEXTURE0 + i );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLImage*> ( std::get<1> ( aMaterial->GetSamplers() [i] ).Cast<Image>() )->GetTextureId() );
+                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLTexture*> ( std::get<1> ( aMaterial->GetSamplers() [i] ).Cast<Texture>() )->GetTextureId() );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
 

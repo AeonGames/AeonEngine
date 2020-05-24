@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ limitations under the License.
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
 #include "VulkanMaterial.h"
-#include "VulkanImage.h"
+#include "VulkanTexture.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 
@@ -307,7 +307,7 @@ namespace AeonGames
             write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             write_descriptor_set.descriptorCount = 1;
             write_descriptor_set.pBufferInfo = nullptr;
-            write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanImage*> ( std::get<1> ( mSamplers[i] ).Get<Image>() )->GetDescriptorImageInfo();
+            write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( std::get<1> ( mSamplers[i] ).Get<Texture>() )->GetDescriptorImageInfo();
             write_descriptor_set.pTexelBufferView = nullptr;
         }
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
