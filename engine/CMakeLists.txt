@@ -60,7 +60,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Animation.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Image.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Texture.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Sound.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.h
@@ -116,7 +116,7 @@ set(ENGINE_CORE_SOURCES
     core/CRC.cpp
     core/Component.cpp
     core/Renderer.cpp
-    core/Image.cpp
+    core/Texture.cpp
     core/Sound.cpp
     core/Pipeline.cpp
     core/Material.cpp

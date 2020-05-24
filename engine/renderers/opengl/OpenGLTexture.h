@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLIMAGE_H
-#define AEONGAMES_OPENGLIMAGE_H
-#include "aeongames/Image.h"
+#ifndef AEONGAMES_OPENGLTEXTURE_H
+#define AEONGAMES_OPENGLTEXTURE_H
+#include "aeongames/Texture.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -24,17 +24,17 @@ limitations under the License.
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLImage : public Image
+    class OpenGLTexture : public Texture
     {
     public:
-        OpenGLImage ( uint32_t aPath = 0 );
-        OpenGLImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr );
-        ~OpenGLImage() final;
+        OpenGLTexture ( uint32_t aPath = 0 );
+        OpenGLTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr );
+        ~OpenGLTexture() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
-        void Initialize ( uint32_t aWidth, uint32_t aHeight, Image::Format aFormat, Image::Type aType, const uint8_t* aPixels = nullptr ) final;
+        void Initialize ( uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels = nullptr ) final;
         void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr ) final;
-        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Image::Format aFormat, Image::Type aType, const uint8_t* aPixels ) final;
+        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
         void Finalize() final;
         uint32_t GetWidth() const final;
         uint32_t GetHeight() const final;

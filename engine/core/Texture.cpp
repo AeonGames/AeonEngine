@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018,2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,30 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <string>
-#include "aeongames/Image.h"
+#include "aeongames/Texture.h"
 #include "Decoder.h"
 
 namespace AeonGames
 {
-    Image::~Image() = default;
+    Texture::~Texture() = default;
 
-    bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Image&, size_t, const void* ) > & aDecoder )
+    bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Texture&, size_t, const void* ) > & aDecoder )
     {
-        return Decoder<Image>::RegisterDecoder ( aMagick, aDecoder );
+        return Decoder<Texture>::RegisterDecoder ( aMagick, aDecoder );
     }
 
     bool UnregisterImageDecoder ( const std::string& aMagick )
     {
-        return Decoder<Image>::UnregisterDecoder ( aMagick );
+        return Decoder<Texture>::UnregisterDecoder ( aMagick );
     }
 
-    bool DecodeImage ( Image& aImage, const void* aBuffer, size_t aBufferSize )
+    bool DecodeImage ( Texture& aTexture, const void* aBuffer, size_t aBufferSize )
     {
-        return Decoder<Image>::Decode ( aImage, aBuffer, aBufferSize );
+        return Decoder<Texture>::Decode ( aTexture, aBuffer, aBufferSize );
     }
 
-    bool DecodeImage ( Image& aImage, const std::string& aFileName )
+    bool DecodeImage ( Texture& aTexture, const std::string& aFileName )
     {
-        return Decoder<Image>::Decode ( aImage, aFileName );
+        return Decoder<Texture>::Decode ( aTexture, aFileName );
     }
 }

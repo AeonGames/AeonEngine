@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Buffer.h"
-#include "aeongames/Image.h"
+#include "aeongames/Texture.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
@@ -343,10 +343,10 @@ namespace AeonGames
         gRenderer = ConstructRenderer ( aIdentifier );
 
         // Register default resource constructors related to renderer
-        RegisterResourceConstructor ( "Image"_crc32,
+        RegisterResourceConstructor ( "Texture"_crc32,
                                       [] ( uint32_t aPath )
         {
-            return GetRenderer()->CreateImage ( aPath );
+            return GetRenderer()->CreateTexture ( aPath );
         } );
 
         RegisterResourceConstructor ( "Mesh"_crc32,

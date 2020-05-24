@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,17 +20,17 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <memory>
-#include "aeongames/Image.h"
+#include "aeongames/Texture.h"
 
 namespace AeonGames
 {
-    class Image;
+    class Texture;
     class VulkanRenderer;
-    class VulkanImage : public Image
+    class VulkanTexture : public Texture
     {
     public:
-        VulkanImage ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath = 0 );
-        ~VulkanImage() final;
+        VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath = 0 );
+        ~VulkanTexture() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
         void Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr ) final;
@@ -44,10 +44,10 @@ namespace AeonGames
 
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
-        void InitializeImage ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType );
-        void FinalizeImage();
-        void InitializeImageView();
-        void FinalizeImageView();
+        void InitializeTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType );
+        void FinalizeTexture();
+        void InitializeTextureView();
+        void FinalizeTextureView();
         const VulkanRenderer& mVulkanRenderer;
         uint32_t mWidth{};
         uint32_t mHeight{};

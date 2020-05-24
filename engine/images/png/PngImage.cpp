@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ namespace AeonGames
         }
         read_struct->pointer += real_length;
     }
-    bool DecodePNG ( Image& aImage, size_t aBufferSize, const void* aBuffer )
+    bool DecodePNG ( Texture& aTexture, size_t aBufferSize, const void* aBuffer )
     {
         if ( png_sig_cmp ( static_cast<uint8_t*> ( const_cast<void*> ( aBuffer ) ), 0, 8 ) != 0 )
         {
@@ -93,12 +93,12 @@ namespace AeonGames
             png_byte color_type = png_get_color_type ( png_ptr, info_ptr );
             png_byte bit_depth = png_get_bit_depth ( png_ptr, info_ptr );
 
-            Image::Format format;
-            Image::Type type;
+            Texture::Format format;
+            Texture::Type type;
             if ( ( color_type == PNG_COLOR_TYPE_RGB ) || ( color_type == PNG_COLOR_TYPE_RGBA ) )
             {
-                format = ( color_type == PNG_COLOR_TYPE_RGB ) ? Image::Format::RGB : Image::Format::RGBA;
-                type   = ( bit_depth == 8 ) ? Image::Type::UNSIGNED_BYTE : Image::Type::UNSIGNED_SHORT;
+                format = ( color_type == PNG_COLOR_TYPE_RGB ) ? Texture::Format::RGB : Texture::Format::RGBA;
+                type   = ( bit_depth == 8 ) ? Texture::Type::UNSIGNED_BYTE : Texture::Type::UNSIGNED_SHORT;
             }
             else
             {
@@ -124,7 +124,7 @@ namespace AeonGames
             // --------------------------------------
             png_read_image ( png_ptr, row_pointers.data() );
             png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) nullptr );
-            aImage.Initialize ( width, height, format, type, pixels.data() );
+            aTexture.Initialize ( width, height, format, type, pixels.data() );
         }
         catch ( std::runtime_error& e )
         {
