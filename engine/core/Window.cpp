@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,29 +19,11 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Frustum.h"
-#include "aeongames/GraphicalUserInterface.h"
 #include "Factory.h"
 
 namespace AeonGames
 {
     Window::Window ( void* aWindowId ) : mWindowId{aWindowId} {}
-    Window::Window ( void* aWindowId, uint32_t aGraphicalUserInterfaceId ) : mWindowId{aWindowId}, mGraphicalUserInterface{Factory<GraphicalUserInterface>::Construct ( aGraphicalUserInterfaceId ) } {}
-    Window::Window ( void* aWindowId, const std::string& aGraphicalUserInterfaceId ) : mWindowId{aWindowId}, mGraphicalUserInterface{Factory<GraphicalUserInterface>::Construct ( aGraphicalUserInterfaceId ) } {}
-    Window::Window ( void* aWindowId, const StringId& aGraphicalUserInterfaceId ) : Window{aWindowId, aGraphicalUserInterfaceId.GetId() } {}
-
-    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen, uint32_t aGraphicalUserInterfaceId ) :
-        Window {aX, aY, aWidth, aHeight, aFullScreen }
-    {
-        mGraphicalUserInterface = {Factory<GraphicalUserInterface>::Construct ( aGraphicalUserInterfaceId ) };
-    }
-    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen, const std::string& aGraphicalUserInterfaceId ) :
-        Window {aX, aY, aWidth, aHeight, aFullScreen }
-    {
-        mGraphicalUserInterface = {Factory<GraphicalUserInterface>::Construct ( aGraphicalUserInterfaceId ) };
-    }
-    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen, const StringId& aGraphicalUserInterfaceId ) :
-        Window {aX, aY, aWidth, aHeight, aFullScreen, aGraphicalUserInterfaceId.GetId() } {}
-
     void Window::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
         mProjectionMatrix = aMatrix;
@@ -74,10 +56,6 @@ namespace AeonGames
     void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
-        if ( mGraphicalUserInterface )
-        {
-            mGraphicalUserInterface->ResizeViewport ( aWidth, aHeight );
-        }
         OnResizeViewport ( aX, aY, aWidth, aHeight );
     }
 
