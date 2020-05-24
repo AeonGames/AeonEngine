@@ -25,7 +25,7 @@ namespace AeonGames
 {
     class StringId;
     class Buffer;
-    class Image;
+    class Texture;
     class Mesh;
     class Pipeline;
     class Material;
@@ -53,7 +53,7 @@ namespace AeonGames
         virtual std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) const = 0;
-        virtual std::unique_ptr<Image> CreateImage ( uint32_t aPath = 0 ) const = 0;
+        virtual std::unique_ptr<Texture> CreateTexture ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const = 0;
         DLL virtual ~Renderer() = 0;
     };

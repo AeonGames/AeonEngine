@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ limitations under the License.
 #endif
 #include <vulkan/vulkan.h>
 #include "VulkanPipeline.h"
-#include "VulkanImage.h"
+#include "VulkanTexture.h"
 #include "VulkanRenderer.h"
 #include "VulkanMaterial.h"
 #include "VulkanUtilities.h"

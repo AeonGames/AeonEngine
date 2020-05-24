@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ namespace AeonGames
         std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
         std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
-        std::unique_ptr<Image> CreateImage ( uint32_t aPath ) const final;
+        std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
         std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
         GLuint GetVertexArrayObject() const;
         GLuint GetOverlayProgram() const;

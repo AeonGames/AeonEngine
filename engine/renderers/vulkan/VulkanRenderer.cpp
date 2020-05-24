@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ limitations under the License.
 #include "VulkanMesh.h"
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
-#include "VulkanImage.h"
+#include "VulkanTexture.h"
 #include "VulkanBuffer.h"
 #include "VulkanBuffer.h"
 #include "VulkanUtilities.h"
@@ -630,9 +630,9 @@ namespace AeonGames
         return std::make_unique<VulkanMaterial> ( *this, aPath );
     }
 
-    std::unique_ptr<Image> VulkanRenderer::CreateImage ( uint32_t aPath ) const
+    std::unique_ptr<Texture> VulkanRenderer::CreateTexture ( uint32_t aPath ) const
     {
-        return std::make_unique<VulkanImage> ( *this, aPath );
+        return std::make_unique<VulkanTexture> ( *this, aPath );
     }
 
     std::unique_ptr<Buffer> VulkanRenderer::CreateBuffer ( size_t aSize, const void* aData ) const

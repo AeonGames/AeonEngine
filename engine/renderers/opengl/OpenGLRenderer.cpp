@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "OpenGLRenderer.h"
-#include "OpenGLImage.h"
+#include "OpenGLTexture.h"
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
@@ -222,9 +222,9 @@ void main()
         return std::make_unique<OpenGLMaterial> ( aPath );
     }
 
-    std::unique_ptr<Image> OpenGLRenderer::CreateImage ( uint32_t aPath ) const
+    std::unique_ptr<Texture> OpenGLRenderer::CreateTexture ( uint32_t aPath ) const
     {
-        return std::make_unique<OpenGLImage> ( aPath );
+        return std::make_unique<OpenGLTexture> ( aPath );
     }
 
     std::unique_ptr<Buffer> OpenGLRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
