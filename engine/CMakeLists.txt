@@ -106,7 +106,6 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Clock.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/GraphicalUserInterface.h
     # ${CMAKE_SOURCE_DIR}/include/aeongames/Octree.h
     )
 
@@ -139,7 +138,6 @@ set(ENGINE_CORE_SOURCES
     core/x11.cpp
     core/MemoryPool.cpp
     core/BufferAccessor.cpp
-    core/GraphicalUserInterface.cpp
     # core/Octree.cpp
     )
 
@@ -239,9 +237,3 @@ endif()
 add_subdirectory(images)
 add_subdirectory(sound/portaudio)
 add_subdirectory(sound/oggvorbis)
-
-if(USE_AEONGUI)
-  message(STATUS "Using AeonGUI")
-  find_package(AeonGUI)
-  add_subdirectory(gui/aeongui)
-endif()
