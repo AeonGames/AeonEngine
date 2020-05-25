@@ -18,7 +18,7 @@ set(NODE_RUNTIME_VERSION "v12.13.0")
 
 if(WIN32)
     set(SUFFIX "win32-x64")
-elseif(LINUX)
+elseif(UNIX)
     set(SUFFIX "linux-x64")
 endif()
 
