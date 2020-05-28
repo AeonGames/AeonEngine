@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -98,6 +98,14 @@ namespace AeonGames
                           reinterpret_cast<::Window> ( mWindowId ),
                           static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
         OPENGL_CHECK_ERROR_NO_THROW;
+    }
+    uint32_t OpenGLX11Window::GetWidth() const
+    {
+        return 0;
+    }
+    uint32_t OpenGLX11Window::GetHeight() const
+    {
+        return 0;
     }
 }
 #endif
