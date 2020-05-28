@@ -60,45 +60,14 @@ namespace AeonGames
 
     void OpenGLWindow::Finalize()
     {
-        if ( glIsTexture ( mOverlayPixels ) )
-        {
-            glDeleteTextures ( 1, &mOverlayPixels );
-            mOverlayPixels = 0;
-        }
+        mOverlay.Finalize();
         mMatrices.Unload();
     }
-
-#if 0
-    static GLuint InitializeOverlayTexture ( uint32_t aWidth, uint32_t aHeight )
-    {
-        GLuint result{};
-        glGenTextures ( 1, &result );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindTexture ( GL_TEXTURE_2D, result );
-        OPENGL_CHECK_ERROR_THROW;
-        glTexImage2D ( GL_TEXTURE_2D,
-                       0,
-                       GL_RGBA,
-                       aWidth,
-                       aHeight,
-                       0,
-                       GL_BGRA,
-                       GL_UNSIGNED_INT_8_8_8_8_REV,
-                       nullptr );
-        OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-        OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-        OPENGL_CHECK_ERROR_THROW;
-        glActiveTexture ( GL_TEXTURE0 );
-        OPENGL_CHECK_ERROR_THROW;
-        return result;
-    }
-#endif
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         Window{aX, aY, aWidth, aHeight, aFullScreen},
         mOpenGLRenderer { aOpenGLRenderer },
+        mOverlay{aWidth, aHeight, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) },
         mFullScreen{aFullScreen}
     {
@@ -107,6 +76,7 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
         Window{aWindowId},
         mOpenGLRenderer{ aOpenGLRenderer },
+        mOverlay{},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
@@ -195,18 +165,7 @@ namespace AeonGames
             glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_THROW;
             mFrameBuffer.Resize ( aWidth, aHeight );
-            glBindTexture ( GL_TEXTURE_2D, mOverlayPixels );
-            OPENGL_CHECK_ERROR_THROW;
-            glTexImage2D ( GL_TEXTURE_2D,
-                           0,
-                           GL_RGBA,
-                           aWidth,
-                           aHeight,
-                           0,
-                           GL_BGRA,
-                           GL_UNSIGNED_INT_8_8_8_8_REV,
-                           nullptr );
-            OPENGL_CHECK_ERROR_THROW;
+            mOverlay.Resize ( aWidth, aHeight );
         }
     }
 
@@ -242,43 +201,34 @@ namespace AeonGames
             GL_COLOR_BUFFER_BIT,
             GL_LINEAR );
         OPENGL_CHECK_ERROR_NO_THROW;
-#if 0
-        // Overlay code
-        if ( false )
-        {
-            glTextureSubImage2D ( mOverlayPixels,
-                                  0,
-                                  0,
-                                  0,
-                                  static_cast<GLsizei> ( GetWidth() ),
-                                  static_cast<GLsizei> ( GetHeight() ),
-                                  GL_BGRA,
-                                  GL_UNSIGNED_INT_8_8_8_8_REV,
-                                  GetPixels() );
+#if 1
+        /* Bind and render overlay texture */
 #ifndef SINGLE_VAO
-            glBindVertexArray ( mOpenGLRenderer.GetVertexArrayObject() );
-            OPENGL_CHECK_ERROR_THROW;
+        glBindVertexArray ( mOpenGLRenderer.GetVertexArrayObject() );
+        OPENGL_CHECK_ERROR_THROW;
 #endif
-            glUseProgram ( mOpenGLRenderer.GetOverlayProgram() );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glBindBuffer ( GL_ARRAY_BUFFER, mOpenGLRenderer.GetOverlayQuad() );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D, mOverlayPixels );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glEnableVertexAttribArray ( 0 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, 0 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glEnableVertexAttribArray ( 1 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, reinterpret_cast<const void*> ( sizeof ( float ) * 2 ) );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-        }
+        glUseProgram ( mOpenGLRenderer.GetOverlayProgram() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_ARRAY_BUFFER, mOpenGLRenderer.GetOverlayQuad() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindTexture ( GL_TEXTURE_2D, mOverlay.GetTextureId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, sizeof ( float ) * 4, reinterpret_cast<const void*> ( sizeof ( float ) * 2 ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
+        OPENGL_CHECK_ERROR_NO_THROW;
 #endif
-        //---------------
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
+    }
+    void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
+    {
+        mOverlay.WritePixels ( aXOffset, aYOffset, aWidth, aHeight, aFormat, aType, aPixels );
     }
 }

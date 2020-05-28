@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -105,6 +105,25 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), mDeviceContext );
         mDeviceContext = nullptr;
+    }
+
+    uint32_t OpenGLWinWindow::GetWidth() const
+    {
+        RECT rect;
+        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
+        {
+            return rect.right - rect.left;
+        }
+        return 0;
+    }
+    uint32_t OpenGLWinWindow::GetHeight() const
+    {
+        RECT rect;
+        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
+        {
+            return rect.bottom - rect.top;
+        }
+        return 0;
     }
 }
 #endif

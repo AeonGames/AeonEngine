@@ -59,64 +59,93 @@ napi_value SetRenderer ( napi_env env, napi_callback_info info )
     return nullptr;
 }
 
-napi_value CreateWindowProxy ( napi_env env, napi_callback_info info )
+napi_value Window ( napi_env env, napi_callback_info info )
 {
-    size_t argc{1};
+    size_t argc{5};
+    std::array<napi_value, 5> argv{};
     napi_value this_arg{};
-    napi_value argv{};
     napi_value target;
     napi_status status{};
+
+    const AeonGames::Renderer* renderer{AeonGames::GetRenderer() };
+    if ( !renderer )
+    {
+        return nullptr;
+    }
 
     status = napi_get_new_target ( env, info, &target );
     assert ( status == napi_ok );
     if ( target != nullptr )
     {
-
-        status = napi_get_cb_info ( env, info, &argc, &argv, &this_arg, nullptr );
+        status = napi_get_cb_info ( env, info, &argc, argv.data(), &this_arg, nullptr );
         assert ( status == napi_ok );
         void* window_id{nullptr};
-        if ( argc > 0 )
+        if ( argc == 1 )
         {
             bool is_buffer{};
-            napi_is_buffer ( env, argv, &is_buffer );
+            napi_is_buffer ( env, argv[0], &is_buffer );
             if ( is_buffer )
             {
                 size_t size{sizeof ( void* ) };
-                status = napi_get_buffer_info ( env, argv, &window_id, &size );
+                status = napi_get_buffer_info ( env, argv[0], &window_id, &size );
                 window_id = reinterpret_cast<void*> ( *reinterpret_cast<uintptr_t*> ( window_id ) );
                 assert ( status == napi_ok );
+                status = napi_wrap ( env,
+                                     this_arg,
+                                     renderer->CreateWindowProxy ( window_id ).release(),
+                                     [] ( napi_env env, void* finalize_data, void* finalize_hint )->void
+                {
+                    delete reinterpret_cast<AeonGames::Window*> ( finalize_data );
+                },
+                nullptr,
+                nullptr );
+                assert ( status == napi_ok );
+                return this_arg;
             }
         }
-        if ( window_id == nullptr )
+        else if ( argc > 2 )
         {
-            return nullptr;
-        }
+            int32_t x;
+            int32_t y;
+            uint32_t width;
+            uint32_t height;
+            bool fullScreen{false};
 
-        const AeonGames::Renderer* renderer{AeonGames::GetRenderer() };
-        if ( !renderer )
-        {
-            return nullptr;
-        }
+            status = napi_get_value_int32 ( env, argv[0], &x );
+            assert ( status == napi_ok );
+            status = napi_get_value_int32 ( env, argv[1], &y );
+            assert ( status == napi_ok );
+            status = napi_get_value_uint32 ( env, argv[2], &width );
+            assert ( status == napi_ok );
+            status = napi_get_value_uint32 ( env, argv[3], &height );
+            assert ( status == napi_ok );
+            if ( argc > 4 )
+            {
+                status = napi_get_value_bool ( env, argv[4], &fullScreen );
+                assert ( status == napi_ok );
+            }
 
-        status = napi_wrap ( env,
-                             this_arg,
-                             renderer->CreateWindowProxy ( window_id ).release(),
-                             [] ( napi_env env, void* finalize_data, void* finalize_hint )->void
-        {
-            delete reinterpret_cast<AeonGames::Window*> ( finalize_data );
-        },
-        nullptr,
-        nullptr );
-        assert ( status == napi_ok );
-        return this_arg;
+            status = napi_wrap ( env,
+                                 this_arg,
+                                 renderer->CreateWindowInstance ( x, y, width, height, fullScreen ).release(),
+                                 [] ( napi_env env, void* finalize_data, void* finalize_hint )->void
+            {
+                delete reinterpret_cast<AeonGames::Window*> ( finalize_data );
+            },
+            nullptr,
+            nullptr );
+            assert ( status == napi_ok );
+            return this_arg;
+        }
+        return nullptr;
     }
     napi_value constructor{};
     napi_value instance{};
-    status = napi_get_cb_info ( env, info, &argc, &argv, nullptr, nullptr );
+    status = napi_get_cb_info ( env, info, &argc, argv.data(), nullptr, nullptr );
     assert ( status == napi_ok );
     status = napi_get_reference_value ( env, WindowConstructor, &constructor );
     assert ( status == napi_ok );
-    status = napi_new_instance ( env, constructor, argc, &argv, &instance );
+    status = napi_new_instance ( env, constructor, argc, argv.data(), &instance );
     assert ( status == napi_ok );
     return instance;
 }
@@ -143,7 +172,6 @@ napi_value CreateScene ( napi_env env, napi_callback_info info )
             napi_get_value_string_utf8 ( env, argv, nullptr, 0, &bufsize );
             scene_file.resize ( size_t{bufsize + 1} );
             napi_get_value_string_utf8 ( env, argv, scene_file.data(), scene_file.size(), &bufsize );
-            AeonGames::SetRenderer ( scene_file.data() );
         }
 
         //@todo Add scene constructor taking a scene filename
@@ -177,6 +205,55 @@ napi_value CreateScene ( napi_env env, napi_callback_info info )
     return instance;
 }
 
+napi_value Run ( napi_env env, napi_callback_info info )
+{
+    return nullptr;
+}
+
+void InitializeWindow ( napi_env env, napi_value exports )
+{
+    napi_value constructor{};
+
+    static napi_property_descriptor descriptors[] =
+    {
+        { "run", 0, Run, 0, 0, 0, napi_default, 0 }
+    };
+
+    napi_status status = napi_define_class ( env,
+                         "Window",
+                         NAPI_AUTO_LENGTH,
+                         Window,
+                         nullptr,
+                         sizeof ( descriptors ) / sizeof ( descriptors[0] ),
+                         descriptors,
+                         &constructor );
+    assert ( status == napi_ok );
+    status = napi_set_named_property ( env, exports, "Window", constructor );
+    assert ( status == napi_ok );
+
+    status = napi_create_reference ( env, constructor, 1, &WindowConstructor );
+    assert ( status == napi_ok );
+}
+
+void InitializeScene ( napi_env env, napi_value exports )
+{
+    napi_value constructor = nullptr;
+    napi_status status = napi_define_class ( env,
+                         "Scene",
+                         NAPI_AUTO_LENGTH,
+                         CreateScene,
+                         nullptr,
+                         0,
+                         nullptr,
+                         &constructor );
+    assert ( status == napi_ok );
+    status = napi_set_named_property ( env, exports, "Scene", constructor );
+    assert ( status == napi_ok );
+
+    status = napi_create_reference ( env, constructor, 1, &SceneConstructor );
+    assert ( status == napi_ok );
+}
+
 napi_value Initialize ( napi_env env, napi_value exports )
 {
     std::cout << __func__ << std::endl;
@@ -194,49 +271,19 @@ napi_value Initialize ( napi_env env, napi_value exports )
             AeonGames::FinalizeGlobalEnvironment();
         }, nullptr );
     }
-    static std::array<napi_property_descriptor, 3> descriptors
+    static std::array<napi_property_descriptor, 2> descriptors
     {
         {
             { "getRendererConstructorNames", 0, GetRendererConstructorNames, 0, 0, 0, napi_default, 0 },
             { "setRenderer", 0, SetRenderer, 0, 0, 0, napi_default, 0 },
-            { "createWindowProxy", 0, CreateWindowProxy, 0, 0, 0, napi_default, 0 },
         }
     };
     status = napi_define_properties ( env, exports, descriptors.size(), descriptors.data() );
     assert ( status == napi_ok );
 
-    napi_value constructor{};
+    InitializeWindow ( env, exports );
+    InitializeScene ( env, exports );
 
-    status = napi_define_class ( env,
-                                 "Window",
-                                 NAPI_AUTO_LENGTH,
-                                 CreateWindowProxy,
-                                 nullptr,
-                                 0,
-                                 nullptr,
-                                 &constructor );
-    assert ( status == napi_ok );
-    status = napi_set_named_property ( env, exports, "Window", constructor );
-    assert ( status == napi_ok );
-
-    status = napi_create_reference ( env, constructor, 1, &WindowConstructor );
-    assert ( status == napi_ok );
-
-    constructor = nullptr;
-    status = napi_define_class ( env,
-                                 "Scene",
-                                 NAPI_AUTO_LENGTH,
-                                 CreateScene,
-                                 nullptr,
-                                 0,
-                                 nullptr,
-                                 &constructor );
-    assert ( status == napi_ok );
-    status = napi_set_named_property ( env, exports, "Scene", constructor );
-    assert ( status == napi_ok );
-
-    status = napi_create_reference ( env, constructor, 1, &SceneConstructor );
-    assert ( status == napi_ok );
     return exports;
 }
 
