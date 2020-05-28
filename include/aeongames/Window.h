@@ -20,6 +20,7 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "aeongames/Frustum.h"
 #include "aeongames/BufferAccessor.h"
+#include "aeongames/Texture.h"
 
 namespace AeonGames
 {
@@ -77,7 +78,10 @@ namespace AeonGames
         ///@}
         DLL float GetAspectRatio() const;
         DLL const Frustum& GetFrustum() const;
+        virtual uint32_t GetWidth() const = 0;
+        virtual uint32_t GetHeight() const = 0;
         virtual BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) = 0;
+        virtual void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) = 0;
     protected:
         virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         void* mWindowId{};

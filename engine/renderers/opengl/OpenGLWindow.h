@@ -51,6 +51,7 @@ namespace AeonGames
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0 ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
+        void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
         const GLuint GetMatricesBuffer() const;
     protected:
         const OpenGLRenderer& mOpenGLRenderer;
@@ -63,7 +64,7 @@ namespace AeonGames
         virtual void SwapBuffers() = 0;
         OpenGLFrameBuffer mFrameBuffer {};
         mutable OpenGLMaterial mMatrices {};
-        GLuint mOverlayPixels{};
+        OpenGLTexture mOverlay{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
         bool mFullScreen{ false };
     };

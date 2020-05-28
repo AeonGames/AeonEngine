@@ -4,7 +4,7 @@ const {
   getRendererConstructorNames,
   setRenderer,
   Scene,
-  createWindowProxy,
+  Window,
 } = require('AeonEngineModule.node');
 
 app.disableHardwareAcceleration()
@@ -44,9 +44,10 @@ function createWindow () {
   rendererNames = getRendererConstructorNames();
   console.log(rendererNames);
   setRenderer(rendererNames[0]);
-  console.log(win.getNativeWindowHandle());
-  win["proxy"] = createWindowProxy(win.getNativeWindowHandle());
+  win["proxy"] = new Window(0,0,800,600,false);
+  //win["proxy"] = new Window(win.getNativeWindowHandle());
   win["scene"] = new Scene("scenes/main.txt");
+  win["proxy"].run(win["scene"]);
   win.on('close', function() {
     console.log("Window Closing");
     win["scene"] = null;

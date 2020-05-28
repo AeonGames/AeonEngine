@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -80,6 +80,29 @@ namespace AeonGames
     VulkanWindow::~VulkanWindow()
     {
         Finalize();
+    }
+
+    uint32_t VulkanWindow::GetWidth() const
+    {
+#if _WIN32
+        RECT rect;
+        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
+        {
+            return rect.right - rect.left;
+        }
+#endif
+        return 0;
+    }
+    uint32_t VulkanWindow::GetHeight() const
+    {
+#if _WIN32
+        RECT rect;
+        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
+        {
+            return rect.bottom - rect.top;
+        }
+#endif
+        return 0;
     }
 
     void VulkanWindow::InitializeSurface()
@@ -635,5 +658,11 @@ namespace AeonGames
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
+    }
+
+    void VulkanWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
+    {
+        ///@todo Add Overlay Texture
+        //mOverlay.WritePixels(aXOffset,aYOffset,aWidth,aHeight,aFormat, aType,aPixels);
     }
 }
