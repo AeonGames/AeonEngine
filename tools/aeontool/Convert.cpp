@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -159,22 +159,21 @@ namespace AeonGames
         pattern += "\\s*\\)";
         return pattern;
     }
-    class CodeFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
+    class CodeFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
-        CodeFieldValuePrinter() : google::protobuf::TextFormat::FieldValuePrinter()
+        CodeFieldValuePrinter() : google::protobuf::TextFormat::FastFieldValuePrinter()
         {
         };
-        std::string PrintString ( const std::string & val ) const override
+        void PrintString ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
         {
             std::string pattern ( "\\\\n" );
             std::string format ( "$&\"\n\"" );
             try
             {
                 std::regex newline ( pattern );
-                std::string printed ( google::protobuf::TextFormat::FieldValuePrinter::PrintString ( val ) );
-                printed = std::regex_replace ( printed, newline, format );
-                return printed;
+                std::string printed = std::regex_replace ( val, newline, format );
+                google::protobuf::TextFormat::FastFieldValuePrinter::PrintString ( printed, base_text_generator );
             }
             catch ( std::regex_error& e )
             {
@@ -184,15 +183,15 @@ namespace AeonGames
         }
     };
 
-    class VertexBufferFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
+    class VertexBufferFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
         VertexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
-            google::protobuf::TextFormat::FieldValuePrinter(),
+            google::protobuf::TextFormat::FastFieldValuePrinter(),
             mMeshBuffer{ aMeshBuffer }
         {
         };
-        std::string PrintBytes ( const std::string & val ) const override
+        void PrintBytes ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
         {
             const uint8_t* cursor = reinterpret_cast<const uint8_t*> ( val.data() );
             std::ostringstream stream;
@@ -246,21 +245,21 @@ namespace AeonGames
                 }
                 stream << " )\"" << std::endl;
             }
-            return stream.str();
+            base_text_generator->PrintString ( stream.str() );
         }
     private:
         const MeshBuffer& mMeshBuffer;
     };
 
-    class IndexBufferFieldValuePrinter : public google::protobuf::TextFormat::FieldValuePrinter
+    class IndexBufferFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
         IndexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
-            google::protobuf::TextFormat::FieldValuePrinter(),
+            google::protobuf::TextFormat::FastFieldValuePrinter(),
             mMeshBuffer{ aMeshBuffer }
         {
         };
-        std::string PrintBytes ( const std::string & val ) const override
+        void PrintBytes ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
         {
             const uint8_t* cursor8;
             const uint16_t* cursor16;
@@ -297,7 +296,7 @@ namespace AeonGames
                     stream << " ";
                 }
             }
-            return stream.str();
+            base_text_generator->PrintString ( stream.str() );
         }
     private:
         const MeshBuffer& mMeshBuffer;
