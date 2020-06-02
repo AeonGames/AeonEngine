@@ -32,16 +32,12 @@
 *.swp
 
 # Possible build directories
-msvc64
-msvc32
-mingw64
-mingw32
-make64
-make32
-codeblocks32
-codeblocks64
-clang32*
+msvc*
+ming*
+make*
+codeblocks*
 clang64*
+gcc*
 .vscode
 
 # CTags
