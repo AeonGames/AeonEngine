@@ -37,13 +37,6 @@ define_property(GLOBAL PROPERTY SHARED_LIBRARIES INHERITED
   BRIEF_DOCS "List of shared library targets"
   FULL_DOCS "List of shared library targets")
 
-function (add_library)
-  if(NOT ARGV0 MATCHES "::" AND ARGV1 STREQUAL "SHARED")
-    set_property(GLOBAL APPEND PROPERTY SHARED_LIBRARIES ${ARGV0})
-  endif()
-  _add_library(${ARGV})
-endfunction (add_library)
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

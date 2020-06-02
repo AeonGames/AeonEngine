@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_MESH_H
 #define AEONGAMES_MESH_H
 #include <cstdint>
+#include <string>
 #include <memory>
 #include "aeongames/AABB.h"
 
