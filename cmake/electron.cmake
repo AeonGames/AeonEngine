@@ -86,7 +86,7 @@ endif()
 
 if(WIN32 AND MSVC)
     download(https://nodejs.org/download/release/${NODE_RUNTIME_VERSION}/win-x64/node.lib "${CMAKE_BINARY_DIR}/lib")
-    set(NODE_LIBRARY ${CMAKE_BINARY_DIR}/node.lib CACHE PATH "Node headers location")
+    set(NODE_LIBRARY ${CMAKE_BINARY_DIR}/lib/node.lib CACHE PATH "Node headers location")
 elseif(WIN32 AND MINGW)
 	find_program(GENDEF gendef HINTS ENV MINGW_PREFIX MSYS2_PATH)
 	find_program(DLLTOOL dlltool HINTS ENV MINGW_PREFIX MSYS2_PATH)
