@@ -2,6 +2,10 @@ include(electron)
 
 set(MODULE_SRCS
     Module.cpp
+    Window.h
+    Window.cpp
+    Scene.h
+    Scene.cpp
     WinDelayLoadHook.cpp
 )
 

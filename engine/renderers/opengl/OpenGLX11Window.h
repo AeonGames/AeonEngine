@@ -27,6 +27,7 @@ namespace AeonGames
         ~OpenGLX11Window() final;
         uint32_t GetWidth() const final;
         uint32_t GetHeight() const final;
+        void Show ( bool aShow ) const final;
     private:
         void Initialize();
         void Finalize();

@@ -47,6 +47,7 @@ namespace AeonGames
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
         uint32_t GetWidth() const final;
         uint32_t GetHeight() const final;
+        void Show ( bool aShow ) const final;
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
     private:
         void Initialize();

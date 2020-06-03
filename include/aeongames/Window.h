@@ -80,6 +80,7 @@ namespace AeonGames
         DLL const Frustum& GetFrustum() const;
         virtual uint32_t GetWidth() const = 0;
         virtual uint32_t GetHeight() const = 0;
+        virtual void Show ( bool aShow ) const = 0;
         virtual BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) = 0;
         virtual void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) = 0;
     protected:
