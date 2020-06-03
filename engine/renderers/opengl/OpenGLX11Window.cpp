@@ -99,37 +99,5 @@ namespace AeonGames
                           static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
-    uint32_t OpenGLX11Window::GetWidth() const
-    {
-        int x_return, y_return;
-        ::Window root_return;
-        unsigned int width_return, height_return;
-        unsigned int border_width_return;
-        unsigned int depth_return;
-
-        XGetGeometry ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                       reinterpret_cast<::Window> ( mWindowId ),
-                       &root_return, &x_return, &y_return, &width_return,
-                       &height_return, &border_width_return, &depth_return );
-        return width_return;
-    }
-    uint32_t OpenGLX11Window::GetHeight() const
-    {
-        int x_return, y_return;
-        ::Window root_return;
-        unsigned int width_return, height_return;
-        unsigned int border_width_return;
-        unsigned int depth_return;
-
-        XGetGeometry ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                       reinterpret_cast<::Window> ( mWindowId ),
-                       &root_return, &x_return, &y_return, &width_return,
-                       &height_return, &border_width_return, &depth_return );
-        return height_return;
-    }
-    void OpenGLX11Window::Show ( bool aShow ) const
-    {
-
-    }
 }
 #endif

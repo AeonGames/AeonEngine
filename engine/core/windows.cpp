@@ -158,6 +158,29 @@ namespace AeonGames
                 EndRender();
             }
         }
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
+    }
+    void Window::Show ( bool aShow ) const
+    {
+        ShowWindow ( static_cast<HWND> ( mWindowId ), aShow ? SW_SHOW : SW_HIDE );
+    }
+    uint32_t Window::GetWidth() const
+    {
+        RECT rect;
+        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
+        {
+            return rect.right - rect.left;
+        }
+        return 0;
+    }
+    uint32_t Window::GetHeight() const
+    {
+        RECT rect;
+        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
+        {
+            return rect.bottom - rect.top;
+        }
+        return 0;
     }
 }
 #endif

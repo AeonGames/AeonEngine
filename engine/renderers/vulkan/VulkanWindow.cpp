@@ -82,29 +82,6 @@ namespace AeonGames
         Finalize();
     }
 
-    uint32_t VulkanWindow::GetWidth() const
-    {
-#if _WIN32
-        RECT rect;
-        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
-        {
-            return rect.right - rect.left;
-        }
-#endif
-        return 0;
-    }
-    uint32_t VulkanWindow::GetHeight() const
-    {
-#if _WIN32
-        RECT rect;
-        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
-        {
-            return rect.bottom - rect.top;
-        }
-#endif
-        return 0;
-    }
-
     void VulkanWindow::InitializeSurface()
     {
 #if defined ( VK_USE_PLATFORM_WIN32_KHR )
@@ -664,10 +641,5 @@ namespace AeonGames
     {
         ///@todo Add Overlay Texture
         //mOverlay.WritePixels(aXOffset,aYOffset,aWidth,aHeight,aFormat, aType,aPixels);
-    }
-
-    void VulkanWindow::Show ( bool aShow ) const
-    {
-
     }
 }

@@ -25,8 +25,6 @@ namespace AeonGames
         OpenGLWinWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         OpenGLWinWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLWinWindow() final;
-        uint32_t GetWidth() const final;
-        uint32_t GetHeight() const final;
     private:
         void Initialize();
         void Finalize();
