@@ -665,4 +665,9 @@ namespace AeonGames
         ///@todo Add Overlay Texture
         //mOverlay.WritePixels(aXOffset,aYOffset,aWidth,aHeight,aFormat, aType,aPixels);
     }
+
+    void VulkanWindow::Show ( bool aShow ) const
+    {
+
+    }
 }

@@ -127,5 +127,9 @@ namespace AeonGames
                        &height_return, &border_width_return, &depth_return );
         return height_return;
     }
+    void OpenGLX11Window::Show ( bool aShow ) const
+    {
+
+    }
 }
 #endif
