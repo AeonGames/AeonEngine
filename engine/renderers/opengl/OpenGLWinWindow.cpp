@@ -106,24 +106,5 @@ namespace AeonGames
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), mDeviceContext );
         mDeviceContext = nullptr;
     }
-
-    uint32_t OpenGLWinWindow::GetWidth() const
-    {
-        RECT rect;
-        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
-        {
-            return rect.right - rect.left;
-        }
-        return 0;
-    }
-    uint32_t OpenGLWinWindow::GetHeight() const
-    {
-        RECT rect;
-        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
-        {
-            return rect.bottom - rect.top;
-        }
-        return 0;
-    }
 }
 #endif
