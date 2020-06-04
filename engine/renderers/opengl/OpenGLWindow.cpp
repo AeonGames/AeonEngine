@@ -79,15 +79,13 @@ namespace AeonGames
         mOverlay{},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
+        RECT rect{};
+        GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
+        mOverlay.Initialize ( rect.right - rect.left, rect.bottom - rect.top, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
     }
 
     OpenGLWindow::~OpenGLWindow()
     {
-    }
-
-    void* OpenGLWindow::GetWindowId() const
-    {
-        return mWindowId;
     }
 
     void OpenGLWindow::Render ( const Matrix4x4& aModelMatrix,

@@ -20,6 +20,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Window.h"
+#include "aeongames/Scene.h"
 #include "Window.h"
 
 static napi_ref WindowConstructor{};
@@ -115,6 +116,27 @@ napi_value Window ( napi_env env, napi_callback_info info )
     return instance;
 }
 
+napi_value SetScene ( napi_env env, napi_callback_info info )
+{
+    size_t argc{1};
+    napi_value argv{};
+    napi_value this_arg{};
+    napi_status status = napi_get_cb_info ( env, info, &argc, &argv, &this_arg, nullptr );
+    assert ( status == napi_ok );
+    if ( argc > 0 )
+    {
+        AeonGames::Window* window{};
+        AeonGames::Scene* scene{};
+        napi_unwrap ( env, this_arg, reinterpret_cast<void**> ( &window ) );
+        assert ( status == napi_ok );
+        napi_unwrap ( env, argv, reinterpret_cast<void**> ( &scene ) );
+        assert ( status == napi_ok );
+        window->SetScene ( scene );
+        window->StartRenderTimer();
+    }
+    return nullptr;
+}
+
 napi_value Show ( napi_env env, napi_callback_info info )
 {
     size_t argc{1};
@@ -141,7 +163,8 @@ void InitializeWindow ( napi_env env, napi_value exports )
 
     static napi_property_descriptor descriptors[] =
     {
-        { "show", 0, Show, 0, 0, 0, napi_default, 0 }
+        { "show", 0, Show, 0, 0, 0, napi_default, 0 },
+        { "setScene", 0, SetScene, 0, 0, 0, napi_default, 0 },
     };
 
     napi_status status = napi_define_class ( env,

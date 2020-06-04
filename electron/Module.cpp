@@ -30,7 +30,7 @@ napi_value GetRendererConstructorNames ( napi_env env, napi_callback_info info )
     std::vector<std::string> renderers = AeonGames::GetRendererConstructorNames();
     napi_status status = napi_create_array_with_length ( env, renderers.size(), &renderer_array );
     assert ( status == napi_ok );
-    for ( size_t i = 0; i < renderers.size(); ++i )
+    for ( uint32_t i = 0; i < renderers.size(); ++i )
     {
         napi_value renderer_name;
         status = napi_create_string_utf8 ( env, renderers[i].c_str(), renderers[i].size(), &renderer_name );
