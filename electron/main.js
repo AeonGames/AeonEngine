@@ -45,12 +45,15 @@ function createWindow () {
   console.log(rendererNames);
   setRenderer(rendererNames[0]);
   win["proxy"] = new Window(0,0,800,600,false);
+  //console.log(win.getNativeWindowHandle());
   //win["proxy"] = new Window(win.getNativeWindowHandle());
   win["scene"] = new Scene("scenes/main.txt");
-  win["proxy"].run(win["scene"]);
+  win["proxy"].setScene(win["scene"]);
+  win["proxy"].show(true);
   win.on('close', function() {
     console.log("Window Closing");
     win["scene"] = null;
+    win["proxy"].show(false);
     win["proxy"] = null;
     if (global.gc) {global.gc(true);}
     else{console.log("No global.gc");}

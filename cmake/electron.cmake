@@ -86,7 +86,7 @@ endif()
 
 if(WIN32 AND MSVC)
     download(https://nodejs.org/download/release/${NODE_RUNTIME_VERSION}/win-x64/node.lib "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-    set(NODE_LIBRARY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/node.lib CACHE PATH "Node headers location")
+    set(NODE_LIBRARY delayimp.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/node.lib CACHE PATH "Node headers location")
 elseif(WIN32 AND MINGW)
 	find_program(GENDEF gendef HINTS ENV MINGW_PREFIX MSYS2_PATH)
 	find_program(DLLTOOL dlltool HINTS ENV MINGW_PREFIX MSYS2_PATH)

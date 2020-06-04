@@ -44,6 +44,7 @@ namespace AeonGames
         {
             Initialize();
             OpenGLWindow::Initialize();
+            MakeCurrent();
         }
         catch ( ... )
         {
@@ -81,7 +82,7 @@ namespace AeonGames
         pfd.iLayerType = PFD_MAIN_PLANE;
         int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
         SetPixelFormat ( mDeviceContext, pf, &pfd );
-        wglMakeCurrent ( mDeviceContext, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        MakeCurrent();
         RECT rect;
         GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
         glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );

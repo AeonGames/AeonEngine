@@ -25,6 +25,29 @@ limitations under the License.
 
 namespace AeonGames
 {
+    enum
+    {
+        RENDER_LOOP = 1
+    };
+
+    void AeonEngineTimerProc (
+        HWND hwnd,
+        UINT uMsg,
+        UINT_PTR wParam,
+        DWORD ms )
+    {
+        switch ( uMsg )
+        {
+        case WM_TIMER:
+            if ( wParam == RENDER_LOOP )
+            {
+                Window* window = Window::GetWindowFromId ( hwnd );
+                window->RenderLoop();
+            }
+            break;
+        }
+    }
+
     LRESULT CALLBACK AeonEngineWindowProc (
         _In_ HWND   hwnd,
         _In_ UINT   uMsg,
@@ -35,14 +58,15 @@ namespace AeonGames
         switch ( uMsg )
         {
         case WM_CLOSE:
-        //DestroyWindow(hwnd);
-        //break;
+            ShowWindow ( hwnd, SW_HIDE );
+            PostQuitMessage ( 0 );
+            break;
         case WM_DESTROY:
             PostQuitMessage ( 0 );
             break;
         case WM_SIZE:
         {
-            Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
+            Window* window = Window::GetWindowFromId ( hwnd );
             if ( window )
             {
                 window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
@@ -53,6 +77,11 @@ namespace AeonGames
             return DefWindowProc ( hwnd, uMsg, wParam, lParam );
         }
         return 0;
+    }
+
+    Window::Window ( void* aWindowId ) : mWindowId{ aWindowId }
+    {
+        WindowMap.emplace ( std::pair<void*, Window*> {mWindowId, this} );
     }
 
     Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
@@ -108,10 +137,11 @@ namespace AeonGames
                                      nullptr,
                                      GetModuleHandle ( nullptr ),
                                      nullptr );
-        SetWindowLongPtr ( reinterpret_cast<HWND> ( mWindowId ), GWLP_USERDATA, reinterpret_cast<LONG_PTR> ( this ) );
+        WindowMap.emplace ( std::pair<void*, Window*> {mWindowId, this} );
     }
     DLL Window::~Window()
     {
+        WindowMap.erase ( static_cast<HWND> ( mWindowId ) );
         ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
         DestroyWindow ( static_cast<HWND> ( mWindowId ) );
         UnregisterClass ( reinterpret_cast<LPCSTR> (
@@ -126,6 +156,7 @@ namespace AeonGames
         bool done = false;
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        SetScene ( &aScene );
         while ( !done )
         {
             if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
@@ -146,19 +177,11 @@ namespace AeonGames
                 std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
                 aScene.Update ( delta.count() );
                 last_time = current_time;
-                if ( const Node* camera = aScene.GetCamera() )
-                {
-                    SetViewMatrix ( camera->GetGlobalTransform().GetInverted().GetMatrix() );
-                    Matrix4x4 projection {};
-                    projection.Perspective ( aScene.GetFieldOfView(), GetAspectRatio(), aScene.GetNear(), aScene.GetFar() );
-                    SetProjectionMatrix ( projection );
-                }
-                BeginRender();
-                Window::Render ( aScene );
-                EndRender();
+                RenderLoop();
             }
         }
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
+        SetScene ( nullptr );
     }
     void Window::Show ( bool aShow ) const
     {
@@ -181,6 +204,15 @@ namespace AeonGames
             return rect.bottom - rect.top;
         }
         return 0;
+    }
+
+    void Window::StartRenderTimer() const
+    {
+        SetTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP, USER_TIMER_MINIMUM, static_cast<TIMERPROC> ( AeonEngineTimerProc ) );
+    }
+    void Window::StopRenderTimer() const
+    {
+        KillTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP );
     }
 }
 #endif

@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_WINDOW_H
 #define AEONGAMES_WINDOW_H
 #include <memory>
+#include <unordered_map>
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
 #include "aeongames/Frustum.h"
@@ -38,6 +39,11 @@ namespace AeonGames
         DLL virtual ~Window() = 0;
         DLL void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
         DLL void Run ( Scene& aScene );
+        /** Set Scene for rendering.
+         * @param aScene Pointer to the scene to be rendering
+         * @note The aScene argument may be nullptr, in which case no rendering takes place.
+         */
+        DLL void SetScene ( const Scene* aScene );
         ///@name Render Functions
         ///@{
         virtual void BeginRender() = 0;
@@ -68,6 +74,8 @@ namespace AeonGames
          * @note must be called between calls to BeginRender and EndRender
         */
         DLL void Render ( const Scene& aScene ) const;
+        /** Run a single render loop of the previously set scene.*/
+        DLL void RenderLoop ();
         ///@}
         ///@name Matrix Functions
         ///@{
@@ -81,6 +89,9 @@ namespace AeonGames
         DLL uint32_t GetWidth() const;
         DLL uint32_t GetHeight() const;
         DLL void Show ( bool aShow ) const;
+        DLL void StartRenderTimer() const;
+        DLL void StopRenderTimer() const;
+        DLL static Window* GetWindowFromId ( void* aId );
         virtual BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) = 0;
         virtual void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) = 0;
     protected:
@@ -93,6 +104,13 @@ namespace AeonGames
         virtual void OnSetViewMatrix() = 0;
         Frustum mFrustum{};
         float mAspectRatio{1.0f};
+        /* @todo mScene may be a unique_ptr,
+            passing ownership from where ever it came
+            to the window and back,
+            that way if it gets deleted ouside the window
+            we won't have a lingering pointer here.*/
+        const Scene* mScene{nullptr};
+        static std::unordered_map<void*, Window*> WindowMap;
     };
 }
 #endif
