@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <unordered_map>
 #include "aeongames/Window.h"
 #include "aeongames/Platform.h"
 #include "aeongames/Scene.h"
@@ -23,7 +24,18 @@ limitations under the License.
 
 namespace AeonGames
 {
-    Window::Window ( void* aWindowId ) : mWindowId{aWindowId} {}
+    std::unordered_map<void*, Window*> Window::WindowMap{};
+
+    Window* Window::GetWindowFromId ( void* aId )
+    {
+        auto i = WindowMap.find ( aId );
+        if ( i != WindowMap.end() )
+        {
+            return ( *i ).second;
+        }
+        return nullptr;
+    }
+
     void Window::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
         mProjectionMatrix = aMatrix;
@@ -52,7 +64,10 @@ namespace AeonGames
     {
         return mFrustum;
     }
-
+    void Window::SetScene ( const Scene* aScene )
+    {
+        mScene = aScene;
+    }
     void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
@@ -70,6 +85,24 @@ namespace AeonGames
                 aNode.Render ( *this );
             }
         } );
+    }
+
+    void Window::RenderLoop()
+    {
+        if ( mScene == nullptr )
+        {
+            return;
+        }
+        if ( const Node* camera = mScene->GetCamera() )
+        {
+            SetViewMatrix ( camera->GetGlobalTransform().GetInverted().GetMatrix() );
+            Matrix4x4 projection {};
+            projection.Perspective ( mScene->GetFieldOfView(), GetAspectRatio(), mScene->GetNear(), mScene->GetFar() );
+            SetProjectionMatrix ( projection );
+        }
+        BeginRender();
+        Render ( *mScene );
+        EndRender();
     }
 
     void Window::Render (

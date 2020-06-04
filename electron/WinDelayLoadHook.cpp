@@ -24,7 +24,6 @@ limitations under the License.
 
 static FARPROC WINAPI load_exe_hook ( unsigned int event, DelayLoadInfo* info )
 {
-    HMODULE m;
     if ( event != dliNotePreLoadLibrary )
     {
         return nullptr;
