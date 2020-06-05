@@ -15,11 +15,11 @@ before_build:
 
     set VULKAN_SDK=C:\VulkanSDK\1.2.135.0
 
-    dir C:\VulkanSDK\1.2.135.0
-
     dir vulkan-sdk.exe
 
     start "" /WAIT vulkan-sdk.exe /S
+
+    dir C:\VulkanSDK\1.2.135.0
 
     set VCPKG_DEFAULT_TRIPLET=x64-windows
 
