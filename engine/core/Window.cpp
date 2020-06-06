@@ -26,6 +26,11 @@ namespace AeonGames
 {
     std::unordered_map<void*, Window*> Window::WindowMap{};
 
+    Window::Window ( void* aWindowId ) : mWindowId{ aWindowId }
+    {
+        WindowMap.emplace ( std::pair<void*, Window*> {mWindowId, this} );
+    }
+
     Window* Window::GetWindowFromId ( void* aId )
     {
         auto i = WindowMap.find ( aId );

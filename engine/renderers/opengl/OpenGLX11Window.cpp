@@ -18,6 +18,7 @@ limitations under the License.
 #include "OpenGLRenderer.h"
 #include "OpenGLFunctions.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 
 namespace AeonGames
 {
@@ -51,6 +52,24 @@ namespace AeonGames
             Finalize();
             throw;
         }
+    }
+
+    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
+        Window{aWindowId},
+        mOpenGLRenderer{ aOpenGLRenderer },
+        mOverlay{},
+        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
+    {
+        int x_return, y_return;
+        ::Window root_return;
+        unsigned int width_return, height_return;
+        unsigned int border_width_return;
+        unsigned int depth_return;
+        XGetGeometry ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
+                       reinterpret_cast<::Window> ( mWindowId ),
+                       &root_return, &x_return, &y_return, &width_return,
+                       &height_return, &border_width_return, &depth_return );
+        mOverlay.Initialize ( width_return, height_return, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
     }
 
     OpenGLX11Window::~OpenGLX11Window()
@@ -87,6 +106,7 @@ namespace AeonGames
                                 reinterpret_cast<::Window> ( mWindowId ),
                                 static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
         {
+            XSetErrorHandler ( nullptr );
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
         XSetErrorHandler ( nullptr );
