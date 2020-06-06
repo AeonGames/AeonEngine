@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #ifdef _WIN32
+#include "aeongames/MemoryPool.h"
 #include "OpenGLWinWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLFunctions.h"
