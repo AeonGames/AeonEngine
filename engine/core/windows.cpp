@@ -79,11 +79,6 @@ namespace AeonGames
         return 0;
     }
 
-    Window::Window ( void* aWindowId ) : mWindowId{ aWindowId }
-    {
-        WindowMap.emplace ( std::pair<void*, Window*> {mWindowId, this} );
-    }
-
     Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         mAspectRatio { static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) }
     {

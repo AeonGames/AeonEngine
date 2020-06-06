@@ -54,6 +54,17 @@ namespace AeonGames
         }
     }
 
+    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
+        Window{aWindowId},
+        mOpenGLRenderer{ aOpenGLRenderer },
+        mOverlay{},
+        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
+    {
+        RECT rect{};
+        GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
+        mOverlay.Initialize ( rect.right - rect.left, rect.bottom - rect.top, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
+    }
+
     OpenGLWinWindow::~OpenGLWinWindow()
     {
         OpenGLWindow::Finalize();
