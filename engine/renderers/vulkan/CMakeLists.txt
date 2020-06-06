@@ -15,7 +15,7 @@
 find_package(Vulkan)
 find_package(GLslang)
 
-include_directories(${GLSLANG_SPIRV_INCLUDE_DIR})
+include_directories(${GLSLANG_SPIRV_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR})
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
