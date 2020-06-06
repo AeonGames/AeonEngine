@@ -12,6 +12,10 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+if(UNIX)
+  find_package(X11 REQUIRED)
+  find_package(OpenGL REQUIRED COMPONENTS GLX)
+endif(UNIX)
 include_directories(${ZLIB_INCLUDE_DIR}
                     ${PNG_PNG_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/engine
@@ -213,6 +217,8 @@ elseif(UNIX)
     PROPERTIES COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
   target_link_libraries(AeonEngine
                         ${ZLIB_LIBRARIES}
+                        ${X11_LIBRARIES}
+                        ${OPENGL_glx_LIBRARY}
                         ProtoBufClasses
                         dl
                         stdc++fs)
