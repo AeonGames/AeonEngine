@@ -87,8 +87,6 @@ namespace AeonGames
         int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
         SetPixelFormat ( mDeviceContext, pf, &pfd );
         MakeCurrent();
-        RECT rect;
-        GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
         glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
     }
