@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 #include "aeongames/Window.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/LogLevel.h"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -27,11 +28,19 @@ limitations under the License.
 #include <string>
 #include <stdexcept>
 #include <cassert>
+#include <X11/Xlib.h>
 
 int Main ( int argc, char *argv[] );
 
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
+    XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
+    {
+        char error_string[1024];
+        XGetErrorText ( display, error_event->error_code, error_string, 1024 );
+        std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
+        return 0;
+    } );
     return Main ( argc, argv );
 }
 #endif

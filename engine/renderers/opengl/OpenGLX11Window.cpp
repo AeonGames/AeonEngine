@@ -82,21 +82,12 @@ namespace AeonGames
     void OpenGLX11Window::Initialize()
     {
         mGLXContext = CreateGLXContext ( mDisplay, reinterpret_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
-        XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
-        {
-            char error_string[1024];
-            XGetErrorText ( display, error_event->error_code, error_string, 1024 );
-            std::cout << LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
-            return 0;
-        } );
         if ( !glXMakeCurrent (  mDisplay,
                                 mWindowId,
                                 mGLXContext ) )
         {
-            XSetErrorHandler ( nullptr );
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
-        XSetErrorHandler ( nullptr );
     }
 
     void OpenGLX11Window::Finalize()
