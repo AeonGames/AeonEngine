@@ -23,7 +23,6 @@ limitations under the License.
 #include "aeongames/BufferAccessor.h"
 #include "aeongames/Texture.h"
 #include "aeongames/Window.h"
-#include <windef.h>
 namespace AeonGames
 {
     class Scene;

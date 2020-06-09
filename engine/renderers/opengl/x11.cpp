@@ -76,14 +76,9 @@ namespace AeonGames
         None
     };
 
-    void OpenGLRenderer::Initialize()
+    GLXContext CreateGLXContext ( Display* display, GLXContext share_context )
     {
-        // Retrieve Display
-        mWindowId = XOpenDisplay ( std::getenv ( "DISPLAY" ) );
-        if ( !mWindowId )
-        {
-            throw std::runtime_error ( "Failed retrieving X Display." );
-        }
+        GLXContext context{};
         // Retrieve Create Context function
         if ( !glXCreateContextAttribsARB )
         {
@@ -97,8 +92,8 @@ namespace AeonGames
         // Get best frame buffer configuration.
         int frame_buffer_config_count;
         GLXFBConfig *frame_buffer_configs =
-            glXChooseFBConfig ( static_cast<Display*> ( mWindowId ),
-                                DefaultScreen ( static_cast<Display*> ( mWindowId )  ),
+            glXChooseFBConfig ( display,
+                                DefaultScreen ( display  ),
                                 visual_attribs, &frame_buffer_config_count );
         if ( !frame_buffer_configs )
         {
@@ -111,8 +106,8 @@ namespace AeonGames
         for ( int i = 0; i < frame_buffer_config_count; ++i )
         {
             int samp_buf, samples;
-            glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
-            glXGetFBConfigAttrib ( static_cast<Display*> ( mWindowId ), frame_buffer_configs[i], GLX_SAMPLES, &samples  );
+            glXGetFBConfigAttrib ( display, frame_buffer_configs[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+            glXGetFBConfigAttrib ( display, frame_buffer_configs[i], GLX_SAMPLES, &samples  );
 
             std::cout << LogLevel::Info << "Matching fbconfig " << i << " SAMPLE_BUFFERS = " << samp_buf <<
                       " SAMPLES = " << samples << std::endl;
@@ -125,17 +120,29 @@ namespace AeonGames
 
         GLXFBConfig bestFbc = frame_buffer_configs[ best_fbc ];
         XFree ( frame_buffer_configs );
-        if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( static_cast<Display*> ( mWindowId ), bestFbc, 0,
-                                  True, context_attribs ) ) )
+        if ( ! ( context = glXCreateContextAttribsARB ( display, bestFbc, share_context,
+                           True, context_attribs ) ) )
         {
             context_attribs[1] = 1;
             context_attribs[3] = 0;
-            if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( static_cast<Display*> ( mWindowId ), bestFbc, 0,
-                                      True, context_attribs ) ) )
+            if ( ! ( context = glXCreateContextAttribsARB ( display, bestFbc, share_context,
+                               True, context_attribs ) ) )
             {
                 throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
             }
         }
+        return context;
+    }
+
+    void OpenGLRenderer::Initialize()
+    {
+        // Retrieve Display
+        mWindowId = XOpenDisplay ( nullptr );
+        if ( !mWindowId )
+        {
+            throw std::runtime_error ( "Failed retrieving X Display." );
+        }
+        mOpenGLContext = CreateGLXContext ( static_cast<Display*> ( mWindowId ), nullptr );
 
         // Verifying that context is a direct context
         if ( ! glXIsDirect (  static_cast<Display*> ( mWindowId ),  static_cast<GLXContext> ( mOpenGLContext ) ) )

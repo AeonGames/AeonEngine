@@ -26,6 +26,7 @@ namespace AeonGames
         OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLX11Window() final;
     private:
+        GLXContext mGLXContext{};
         void Initialize();
         void Finalize();
         void MakeCurrent() final;
