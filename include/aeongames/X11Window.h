@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_WINDOW_H
 #define AEONGAMES_WINDOW_H
+#include <memory>
 #include <unordered_map>
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Transform.h"
@@ -33,14 +34,16 @@ namespace AeonGames
     class Window
     {
     public:
+        DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        DLL Window ( void* aWindowId );
         DLL virtual ~Window() = 0;
-        virtual void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
-        virtual void Run ( Scene& aScene ) = 0;
+        DLL void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
+        DLL void Run ( Scene& aScene );
         /** Set Scene for rendering.
          * @param aScene Pointer to the scene to be rendering
          * @note The aScene argument may be nullptr, in which case no rendering takes place.
          */
-        virtual void SetScene ( const Scene* aScene ) = 0;
+        DLL void SetScene ( const Scene* aScene );
         ///@name Render Functions
         ///@{
         virtual void BeginRender() = 0;
@@ -56,7 +59,7 @@ namespace AeonGames
             uint32_t aVertexCount = 0xffffffff,
             uint32_t aInstanceCount = 1,
             uint32_t aFirstInstance = 0 ) const = 0;
-        virtual void Render (
+        DLL void Render (
             const Transform& aModelTransform,
             const Mesh& aMesh,
             const Pipeline& aPipeline,
@@ -65,34 +68,48 @@ namespace AeonGames
             uint32_t aVertexStart = 0,
             uint32_t aVertexCount = 0xffffffff,
             uint32_t aInstanceCount = 1,
-            uint32_t aFirstInstance = 0 ) const = 0;
+            uint32_t aFirstInstance = 0 ) const;
         /** Render Scene in Full
          * @param aScene Scene to render
          * @note must be called between calls to BeginRender and EndRender
         */
-        virtual void Render ( const Scene& aScene ) const = 0;
+        DLL void Render ( const Scene& aScene ) const;
         /** Run a single render loop of the previously set scene.*/
-        virtual void RenderLoop () = 0;
+        DLL void RenderLoop ();
         ///@}
         ///@name Matrix Functions
         ///@{
-        virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
-        virtual void SetViewMatrix ( const Matrix4x4& aMatrix ) = 0;
-        virtual const Matrix4x4& GetProjectionMatrix() const = 0;
-        virtual const Matrix4x4& GetViewMatrix() const = 0;
+        DLL void SetProjectionMatrix ( const Matrix4x4& aMatrix );
+        DLL void SetViewMatrix ( const Matrix4x4& aMatrix );
+        DLL const Matrix4x4& GetProjectionMatrix() const;
+        DLL const Matrix4x4& GetViewMatrix() const;
         ///@}
-        virtual float GetAspectRatio() const = 0;
-        virtual const Frustum& GetFrustum() const = 0;
-        virtual void Show ( bool aShow ) const = 0;
-        virtual void StartRenderTimer() const = 0;
-        virtual void StopRenderTimer() const = 0;
+        DLL float GetAspectRatio() const;
+        DLL const Frustum& GetFrustum() const;
+        DLL uint32_t GetWidth() const;
+        DLL uint32_t GetHeight() const;
+        DLL void Show ( bool aShow ) const;
+        DLL void StartRenderTimer() const;
+        DLL void StopRenderTimer() const;
         DLL static Window* GetWindowFromId ( void* aId );
         virtual BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) = 0;
         virtual void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) = 0;
     protected:
-        DLL static void SetWindowForId ( void* aId, Window* aWindow );
-        DLL static void RemoveWindowForId ( void* aId );
+        virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
+        void* mWindowId{};
+        Matrix4x4 mProjectionMatrix{};
+        Matrix4x4 mViewMatrix{};
     private:
+        virtual void OnSetProjectionMatrix() = 0;
+        virtual void OnSetViewMatrix() = 0;
+        Frustum mFrustum{};
+        float mAspectRatio{1.0f};
+        /* @todo mScene may be a unique_ptr,
+            passing ownership from where ever it came
+            to the window and back,
+            that way if it gets deleted ouside the window
+            we won't have a lingering pointer here.*/
+        const Scene* mScene{nullptr};
         static std::unordered_map<void*, Window*> WindowMap;
     };
 }

@@ -13,18 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLWINWINDOW_H
-#define AEONGAMES_OPENGLWINWINDOW_H
+#ifndef AEONGAMES_OPENGLWINAPIWINDOW_H
+#define AEONGAMES_OPENGLWINAPIWINDOW_H
 #ifdef _WIN32
 #include "OpenGLWindow.h"
 namespace AeonGames
 {
-    class OpenGLWinWindow : public OpenGLWindow
+    class OpenGLWinAPIWindow : public OpenGLWindow
     {
     public:
-        OpenGLWinWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        OpenGLWinWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
-        ~OpenGLWinWindow() final;
+        OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
+        ~OpenGLWinAPIWindow() final;
     private:
         void Initialize();
         void Finalize();
@@ -32,7 +32,7 @@ namespace AeonGames
         void SwapBuffers() final;
         HDC mDeviceContext{};
     };
-    using OpenGLPlatformWindow = OpenGLWinWindow;
+    using OpenGLPlatformWindow = OpenGLWinAPIWindow;
 }
 #endif
 #endif

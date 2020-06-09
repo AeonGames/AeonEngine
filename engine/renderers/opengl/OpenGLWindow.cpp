@@ -65,11 +65,10 @@ namespace AeonGames
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        Window{aX, aY, aWidth, aHeight, aFullScreen},
+        NativeWindow{aX, aY, aWidth, aHeight, aFullScreen},
         mOpenGLRenderer { aOpenGLRenderer },
         mOverlay{aWidth, aHeight, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
-        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) },
-        mFullScreen{aFullScreen}
+        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
 
@@ -122,38 +121,9 @@ namespace AeonGames
         return mMatrices.GetPropertiesBufferId();
     }
 
-    void OpenGLWindow::OnSetProjectionMatrix()
-    {
-        mMatrices.Set ( 1, mProjectionMatrix * Matrix4x4
-        {
-            // Flip Matrix
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, -1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        } );
-    }
-    void OpenGLWindow::OnSetViewMatrix()
-    {
-        mMatrices.Set ( 2, mViewMatrix );
-    }
-
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
-    }
-
-    void OpenGLWindow::OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
-    {
-        if ( aWidth && aHeight )
-        {
-            MakeCurrent();
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glViewport ( aX, aY, aWidth, aHeight );
-            OPENGL_CHECK_ERROR_THROW;
-            mFrameBuffer.Resize ( aWidth, aHeight );
-            mOverlay.Resize ( aWidth, aHeight );
-        }
     }
 
     void OpenGLWindow::BeginRender()
@@ -217,5 +187,48 @@ namespace AeonGames
     void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
     {
         mOverlay.WritePixels ( aXOffset, aYOffset, aWidth, aHeight, aFormat, aType, aPixels );
+    }
+
+    void OpenGLWindow::SetProjectionMatrix ( const Matrix4x4& aMatrix )
+    {
+        mProjectionMatrix = aMatrix;
+        mFrustum = mProjectionMatrix * mViewMatrix;
+        mMatrices.Set ( 1, mProjectionMatrix * Matrix4x4
+        {
+            // Flip Matrix
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        } );
+    }
+    void OpenGLWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
+    {
+        mViewMatrix = aMatrix;
+        mFrustum = mProjectionMatrix * mViewMatrix;
+        mMatrices.Set ( 2, mViewMatrix );
+    }
+
+    const Matrix4x4 & OpenGLWindow::GetProjectionMatrix() const
+    {
+        return mProjectionMatrix;
+    }
+    const Matrix4x4 & OpenGLWindow::GetViewMatrix() const
+    {
+        return mViewMatrix;
+    }
+
+    void OpenGLWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    {
+        mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
+        if ( aWidth && aHeight )
+        {
+            MakeCurrent();
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glViewport ( aX, aY, aWidth, aHeight );
+            OPENGL_CHECK_ERROR_THROW;
+            mFrameBuffer.Resize ( aWidth, aHeight );
+            mOverlay.Resize ( aWidth, aHeight );
+        }
     }
 }

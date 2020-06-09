@@ -13,24 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <unordered_map>
+#include <stdexcept>
+#include <iostream>
 #include "aeongames/Window.h"
-#include "aeongames/Platform.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Frustum.h"
-#include "Factory.h"
-
+#include "aeongames/LogLevel.h"
 namespace AeonGames
 {
     std::unordered_map<void*, Window*> Window::WindowMap{};
-
-    Window::Window ( void* aWindowId ) : mWindowId{ aWindowId }
-    {
-        WindowMap.emplace ( std::pair<void*, Window*> {mWindowId, this} );
-    }
-
     Window* Window::GetWindowFromId ( void* aId )
     {
         auto i = WindowMap.find ( aId );
@@ -40,95 +29,26 @@ namespace AeonGames
         }
         return nullptr;
     }
-
-    void Window::SetProjectionMatrix ( const Matrix4x4& aMatrix )
+    void Window::SetWindowForId ( void* aId, Window* aWindow )
     {
-        mProjectionMatrix = aMatrix;
-        mFrustum = mProjectionMatrix * mViewMatrix;
-        OnSetProjectionMatrix();
-    }
-    void Window::SetViewMatrix ( const Matrix4x4& aMatrix )
-    {
-        mViewMatrix = aMatrix;
-        mFrustum = mProjectionMatrix * mViewMatrix;
-        OnSetViewMatrix();
-    }
-    const Matrix4x4 & Window::GetProjectionMatrix() const
-    {
-        return mProjectionMatrix;
-    }
-    const Matrix4x4 & Window::GetViewMatrix() const
-    {
-        return mViewMatrix;
-    }
-    float Window::GetAspectRatio() const
-    {
-        return mAspectRatio;
-    }
-    const Frustum& Window::GetFrustum() const
-    {
-        return mFrustum;
-    }
-    void Window::SetScene ( const Scene* aScene )
-    {
-        mScene = aScene;
-    }
-    void Window::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
-    {
-        mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
-        OnResizeViewport ( aX, aY, aWidth, aHeight );
-    }
-
-    void Window::Render ( const Scene& aScene ) const
-    {
-        aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+        auto i = WindowMap.find ( aId );
+        if ( i != WindowMap.end() )
         {
-            AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-            if ( mFrustum.Intersects ( transformed_aabb ) )
-            {
-                // Call Node specific rendering function.
-                aNode.Render ( *this );
-            }
-        } );
-    }
-
-    void Window::RenderLoop()
-    {
-        if ( mScene == nullptr )
-        {
-            return;
+            throw std::runtime_error ( "Window Id already set." );
         }
-        if ( const Node* camera = mScene->GetCamera() )
-        {
-            SetViewMatrix ( camera->GetGlobalTransform().GetInverted().GetMatrix() );
-            Matrix4x4 projection {};
-            projection.Perspective ( mScene->GetFieldOfView(), GetAspectRatio(), mScene->GetNear(), mScene->GetFar() );
-            SetProjectionMatrix ( projection );
-        }
-        BeginRender();
-        Render ( *mScene );
-        EndRender();
+        WindowMap.emplace ( std::pair<void*, Window*> {aId, aWindow} );
     }
-
-    void Window::Render (
-        const Transform& aModelTransform,
-        const Mesh& aMesh,
-        const Pipeline& aPipeline,
-        const Material* aMaterial,
-        const BufferAccessor* aSkeleton,
-        uint32_t aVertexStart,
-        uint32_t aVertexCount,
-        uint32_t aInstanceCount,
-        uint32_t aFirstInstance ) const
+    void Window::RemoveWindowForId ( void* aId )
     {
-        Render ( aModelTransform.GetMatrix(),
-                 aMesh,
-                 aPipeline,
-                 aMaterial,
-                 aSkeleton,
-                 aVertexStart,
-                 aVertexCount,
-                 aInstanceCount,
-                 aFirstInstance );
+        auto i = WindowMap.find ( aId );
+        if ( i != WindowMap.end() )
+        {
+            WindowMap.erase ( aId );
+        }
+        else
+        {
+            std::cout << LogLevel::Warning << "Window not found." << std::endl;
+        }
     }
+    Window::~Window() = default;
 }

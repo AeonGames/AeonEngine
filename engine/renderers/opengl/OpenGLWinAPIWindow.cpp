@@ -16,13 +16,13 @@ limitations under the License.
 
 #ifdef _WIN32
 #include "aeongames/MemoryPool.h"
-#include "OpenGLWinWindow.h"
+#include "OpenGLWinAPIWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
-    OpenGLWinWindow::OpenGLWinWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+    OpenGLWinAPIWindow::OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
         try
@@ -38,7 +38,7 @@ namespace AeonGames
         }
     }
 
-    OpenGLWinWindow::OpenGLWinWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
+    OpenGLWinAPIWindow::OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
         OpenGLWindow{aOpenGLRenderer, aWindowId}
     {
         try
@@ -56,7 +56,7 @@ namespace AeonGames
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
-        Window{aWindowId},
+        NativeWindow{aWindowId},
         mOpenGLRenderer{ aOpenGLRenderer },
         mOverlay{},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
@@ -66,22 +66,22 @@ namespace AeonGames
         mOverlay.Initialize ( rect.right - rect.left, rect.bottom - rect.top, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
     }
 
-    OpenGLWinWindow::~OpenGLWinWindow()
+    OpenGLWinAPIWindow::~OpenGLWinAPIWindow()
     {
         OpenGLWindow::Finalize();
         Finalize();
     }
 
-    void OpenGLWinWindow::MakeCurrent()
+    void OpenGLWinAPIWindow::MakeCurrent()
     {
         wglMakeCurrent ( mDeviceContext, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
     }
-    void OpenGLWinWindow::SwapBuffers()
+    void OpenGLWinAPIWindow::SwapBuffers()
     {
         ::SwapBuffers ( mDeviceContext );
     }
 
-    void OpenGLWinWindow::Initialize()
+    void OpenGLWinAPIWindow::Initialize()
     {
         mDeviceContext = GetDC ( static_cast<HWND> ( mWindowId ) );
         PIXELFORMATDESCRIPTOR pfd{};
@@ -101,7 +101,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLWinWindow::Finalize()
+    void OpenGLWinAPIWindow::Finalize()
     {
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( !wglMakeCurrent ( reinterpret_cast<HDC> ( mOpenGLRenderer.GetDeviceContext() ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) ) )

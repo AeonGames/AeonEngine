@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ namespace AeonGames
         mSamplers.reserve ( aMaterialBuffer.sampler().size() );
         for ( auto& i : aMaterialBuffer.sampler() )
         {
-            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Image"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
+            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Texture"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
         }
     }
 
