@@ -20,7 +20,7 @@ limitations under the License.
 #include "OpenGLMaterial.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLX11Window.h"
-#include "OpenGLWinWindow.h"
+#include "OpenGLWinAPIWindow.h"
 
 namespace AeonGames
 {

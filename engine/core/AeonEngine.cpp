@@ -212,7 +212,7 @@ namespace AeonGames
         if ( gRenderer )
         {
             // Register default resource constructors related to renderer
-            UnregisterResourceConstructor ( "Image"_crc32 );
+            UnregisterResourceConstructor ( "Texture"_crc32 );
             UnregisterResourceConstructor ( "Mesh"_crc32 );
             UnregisterResourceConstructor ( "Pipeline"_crc32 );
             UnregisterResourceConstructor ( "Material"_crc32 );

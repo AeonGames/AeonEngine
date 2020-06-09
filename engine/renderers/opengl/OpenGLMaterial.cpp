@@ -157,7 +157,7 @@ namespace AeonGames
         {
             return std::get<1> ( *i );
         }
-        return ResourceId{"Image"_crc32, 0};
+        return ResourceId{"Texture"_crc32, 0};
     }
 
     OpenGLMaterial::~OpenGLMaterial()

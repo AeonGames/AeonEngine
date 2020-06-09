@@ -38,7 +38,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        Window { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
+        NativeWindow { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
         mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}},
     mMemoryPoolBuffer{mVulkanRenderer, 8_mb}
     {
@@ -50,7 +50,7 @@ namespace AeonGames
             {
                 RECT rect;
                 GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
-                OnResizeViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
+                ResizeViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
             }
 #endif
         }
@@ -62,7 +62,7 @@ namespace AeonGames
     }
 
     VulkanWindow::VulkanWindow ( const VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
-        Window { aWindowId }, mVulkanRenderer { aVulkanRenderer },
+        NativeWindow { aWindowId }, mVulkanRenderer { aVulkanRenderer },
         mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}},
     mMemoryPoolBuffer{mVulkanRenderer, 8_mb}
     {
@@ -362,8 +362,9 @@ namespace AeonGames
         FinalizeSurface();
     }
 
-    void VulkanWindow::OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    void VulkanWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
+        mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
         VkSurfaceCapabilitiesKHR surface_capabilities{};
         VkResult result {vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_capabilities ) };
         if ( result == VK_SUCCESS && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) != 0 )
@@ -400,13 +401,28 @@ namespace AeonGames
         mVkScissor.extent.height = ( aY + aHeight > mVkSurfaceCapabilitiesKHR.currentExtent.height ) ? mVkSurfaceCapabilitiesKHR.currentExtent.height : aY + aHeight;
     }
 
-    void VulkanWindow::OnSetProjectionMatrix()
+    void VulkanWindow::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
+        mProjectionMatrix = aMatrix;
+        mFrustum = mProjectionMatrix * mViewMatrix;
         mMatrices.Set ( 0, mProjectionMatrix );
     }
-    void VulkanWindow::OnSetViewMatrix()
+
+    void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
+        mViewMatrix = aMatrix;
+        mFrustum = mProjectionMatrix * mViewMatrix;
         mMatrices.Set ( 1, mViewMatrix );
+    }
+
+    const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
+    {
+        return mProjectionMatrix;
+    }
+
+    const Matrix4x4 & VulkanWindow::GetViewMatrix() const
+    {
+        return mViewMatrix;
     }
 
     void VulkanWindow::BeginRender()

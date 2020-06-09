@@ -95,7 +95,7 @@ set(OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/glAssignments.h
     OpenGLRenderer.h
     OpenGLWindow.h
-    OpenGLWinWindow.h
+    OpenGLWinAPIWindow.h
     OpenGLX11Window.h
     OpenGLFunctions.h
     OpenGLPipeline.h
@@ -109,7 +109,7 @@ set(OPENGL_RENDERER_HEADERS
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
     OpenGLWindow.cpp
-    OpenGLWinWindow.cpp
+    OpenGLWinAPIWindow.cpp
     OpenGLX11Window.cpp
     OpenGLBuffer.cpp
     OpenGLPipeline.cpp

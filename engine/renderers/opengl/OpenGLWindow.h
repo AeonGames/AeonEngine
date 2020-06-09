@@ -19,7 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <mutex>
-#include "aeongames/Window.h"
+#include "aeongames/WinAPIWindow.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFrameBuffer.h"
@@ -31,14 +31,13 @@ namespace AeonGames
 {
     class Buffer;
     class OpenGLRenderer;
-    class OpenGLWindow : public Window
+    class OpenGLWindow : public NativeWindow
     {
     public:
         OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLWindow();
         void* GetWindowId() const;
-        void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() final;
         void EndRender() final;
         void Render (   const Matrix4x4& aModelMatrix,
@@ -53,20 +52,25 @@ namespace AeonGames
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
         const GLuint GetMatricesBuffer() const;
+
+        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
+        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
+        const Matrix4x4 & GetProjectionMatrix() const final;
+        const Matrix4x4 & GetViewMatrix() const final;
+        void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
     protected:
         const OpenGLRenderer& mOpenGLRenderer;
+        Matrix4x4 mProjectionMatrix{};
+        Matrix4x4 mViewMatrix{};
         void Initialize();
         void Finalize();
     private:
-        void OnSetProjectionMatrix() final;
-        void OnSetViewMatrix() final;
         virtual void MakeCurrent() = 0;
         virtual void SwapBuffers() = 0;
         OpenGLFrameBuffer mFrameBuffer {};
         mutable OpenGLMaterial mMatrices {};
         OpenGLTexture mOverlay{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
-        bool mFullScreen{ false };
     };
 }
 #endif

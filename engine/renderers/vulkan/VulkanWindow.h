@@ -19,20 +19,19 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "aeongames/Window.h"
+#include "aeongames/WinAPIWindow.h"
 #include "VulkanMaterial.h"
 #include "VulkanMemoryPoolBuffer.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanWindow : public Window
+    class VulkanWindow : public NativeWindow
     {
     public:
         VulkanWindow ( const VulkanRenderer& aVulkanRenderer, void* aWindowId );
         VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         ~VulkanWindow() final;
-        void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender() final;
         void EndRender() final;
         void Render (   const Matrix4x4& aModelMatrix,
@@ -46,6 +45,12 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0 ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
+        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
+        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
+        const Matrix4x4 & GetProjectionMatrix() const final;
+        const Matrix4x4 & GetViewMatrix() const final;
+        void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
+
     private:
         void Initialize();
         void Finalize();
@@ -59,8 +64,8 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
-        void OnSetProjectionMatrix() final;
-        void OnSetViewMatrix() final;
+        Matrix4x4 mProjectionMatrix{};
+        Matrix4x4 mViewMatrix{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         const VulkanRenderer& mVulkanRenderer;
         VulkanMaterial mMatrices;

@@ -73,6 +73,8 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceId.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CommonWindow.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/WinAPIWindow.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/MemoryPool.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h)
 
@@ -131,6 +133,8 @@ set(ENGINE_CORE_SOURCES
     core/FrameBuffer.cpp
     core/Model.cpp
     core/Window.cpp
+    core/CommonWindow.cpp
+    core/WinAPIWindow.cpp
     core/Scene.cpp
     core/Node.cpp
     core/Package.cpp
@@ -138,7 +142,6 @@ set(ENGINE_CORE_SOURCES
     core/ResourceCache.cpp
     core/ProtoBufUtils.cpp
     core/Clock.cpp
-    core/windows.cpp
     core/x11.cpp
     core/MemoryPool.cpp
     core/BufferAccessor.cpp

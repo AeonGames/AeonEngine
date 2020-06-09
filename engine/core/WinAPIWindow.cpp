@@ -13,15 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifdef _WIN32
-#include <ctime>
-#include <ratio>
-#include <chrono>
+#if _WIN32
+#include <unordered_map>
 #include <iostream>
+#include "aeongames/WinAPIWindow.h"
 #include "aeongames/Platform.h"
-#include "aeongames/Window.h"
-#include "aeongames/Node.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Node.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Frustum.h"
+#include "Factory.h"
 
 namespace AeonGames
 {
@@ -41,7 +42,7 @@ namespace AeonGames
         case WM_TIMER:
             if ( wParam == RENDER_LOOP )
             {
-                Window* window = Window::GetWindowFromId ( hwnd );
+                Window* window = WinAPIWindow::GetWindowFromId ( hwnd );
                 window->RenderLoop();
             }
             break;
@@ -79,12 +80,16 @@ namespace AeonGames
         return 0;
     }
 
-    Window::Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        mAspectRatio { static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) }
+    WinAPIWindow::WinAPIWindow ( void* aWindowId ) : mWindowId{ static_cast<HWND> ( aWindowId ) }
+    {
+        SetWindowForId ( aWindowId, this );
+    }
+
+    WinAPIWindow::WinAPIWindow ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
     {
         DWORD dwExStyle{WS_EX_APPWINDOW | WS_EX_WINDOWEDGE};
         DWORD dwStyle{WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN};
-        if ( aFullScreen )
+        if ( mFullScreen )
         {
             dwExStyle = WS_EX_APPWINDOW;
             dwStyle = {WS_POPUP};
@@ -104,7 +109,7 @@ namespace AeonGames
                 aY = device_mode.dmPosition.y;
                 aWidth = device_mode.dmPelsWidth;
                 aHeight = device_mode.dmPelsHeight;
-                mAspectRatio = static_cast<float> ( aWidth ) / static_cast<float> ( aHeight );
+                mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
                 ChangeDisplaySettings ( &device_mode, CDS_FULLSCREEN );
             }
         }
@@ -132,11 +137,12 @@ namespace AeonGames
                                      nullptr,
                                      GetModuleHandle ( nullptr ),
                                      nullptr );
-        WindowMap.emplace ( std::pair<void*, Window*> {mWindowId, this} );
+        SetWindowForId ( mWindowId, this );
     }
-    DLL Window::~Window()
+
+    WinAPIWindow::~WinAPIWindow()
     {
-        WindowMap.erase ( static_cast<HWND> ( mWindowId ) );
+        RemoveWindowForId ( mWindowId );
         ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
         DestroyWindow ( static_cast<HWND> ( mWindowId ) );
         UnregisterClass ( reinterpret_cast<LPCSTR> (
@@ -145,7 +151,7 @@ namespace AeonGames
 #endif
                               MAKELONG ( atom, 0 ) ), nullptr );
     }
-    void Window::Run ( Scene& aScene )
+    void WinAPIWindow::Run ( Scene& aScene )
     {
         MSG msg;
         bool done = false;
@@ -175,37 +181,18 @@ namespace AeonGames
                 RenderLoop();
             }
         }
-        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
+        ShowWindow ( mWindowId, SW_HIDE );
         SetScene ( nullptr );
     }
-    void Window::Show ( bool aShow ) const
+    void WinAPIWindow::Show ( bool aShow ) const
     {
         ShowWindow ( static_cast<HWND> ( mWindowId ), aShow ? SW_SHOW : SW_HIDE );
     }
-    uint32_t Window::GetWidth() const
-    {
-        RECT rect;
-        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
-        {
-            return rect.right - rect.left;
-        }
-        return 0;
-    }
-    uint32_t Window::GetHeight() const
-    {
-        RECT rect;
-        if ( GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect ) )
-        {
-            return rect.bottom - rect.top;
-        }
-        return 0;
-    }
-
-    void Window::StartRenderTimer() const
+    void WinAPIWindow::StartRenderTimer() const
     {
         SetTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP, USER_TIMER_MINIMUM, static_cast<TIMERPROC> ( AeonEngineTimerProc ) );
     }
-    void Window::StopRenderTimer() const
+    void WinAPIWindow::StopRenderTimer() const
     {
         KillTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP );
     }
