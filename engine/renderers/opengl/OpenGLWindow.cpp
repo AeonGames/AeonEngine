@@ -72,6 +72,14 @@ namespace AeonGames
     {
     }
 
+    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
+        NativeWindow{aWindowId},
+        mOpenGLRenderer{ aOpenGLRenderer },
+        mOverlay{},
+        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
+    {
+    }
+
     OpenGLWindow::~OpenGLWindow()
     {
     }
