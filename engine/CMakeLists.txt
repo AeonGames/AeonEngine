@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -14,7 +14,6 @@
 
 if(UNIX)
   find_package(X11 REQUIRED)
-  find_package(OpenGL REQUIRED COMPONENTS GLX)
 endif(UNIX)
 include_directories(${ZLIB_INCLUDE_DIR}
                     ${PNG_PNG_INCLUDE_DIR}
@@ -75,6 +74,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CommonWindow.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/WinAPIWindow.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/X11Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/MemoryPool.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h)
 
@@ -142,7 +142,7 @@ set(ENGINE_CORE_SOURCES
     core/ResourceCache.cpp
     core/ProtoBufUtils.cpp
     core/Clock.cpp
-    core/x11.cpp
+    core/X11Window.cpp
     core/MemoryPool.cpp
     core/BufferAccessor.cpp
     # core/Octree.cpp

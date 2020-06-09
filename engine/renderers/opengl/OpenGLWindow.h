@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <mutex>
 #include "aeongames/WinAPIWindow.h"
+#include "aeongames/X11Window.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFrameBuffer.h"
@@ -62,6 +63,7 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
+        OpenGLTexture mOverlay{};
         void Initialize();
         void Finalize();
     private:
@@ -69,7 +71,6 @@ namespace AeonGames
         virtual void SwapBuffers() = 0;
         OpenGLFrameBuffer mFrameBuffer {};
         mutable OpenGLMaterial mMatrices {};
-        OpenGLTexture mOverlay{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
     };
 }

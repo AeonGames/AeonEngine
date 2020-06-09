@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/WinAPIWindow.h"
+#include "aeongames/X11Window.h"
 #include "VulkanMaterial.h"
 #include "VulkanMemoryPoolBuffer.h"
 

@@ -13,104 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_WINDOW_H
-#define AEONGAMES_WINDOW_H
-#include <memory>
-#include <unordered_map>
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Transform.h"
-#include "aeongames/Frustum.h"
-#include "aeongames/BufferAccessor.h"
-#include "aeongames/Texture.h"
+#ifndef AEONGAMES_X11WINDOW_H
+#define AEONGAMES_X11WINDOW_H
+#ifdef __unix__
+#include <X11/Xlib.h>
+#include "aeongames/Platform.h"
+#include "aeongames/CommonWindow.h"
 
 namespace AeonGames
 {
     class Scene;
-    class Buffer;
-    class Mesh;
-    class Pipeline;
-    class Material;
-    class StringId;
-    class Window
+    class X11Window : public CommonWindow
     {
     public:
-        DLL Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        DLL Window ( void* aWindowId );
-        DLL virtual ~Window() = 0;
-        DLL void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
-        DLL void Run ( Scene& aScene );
-        /** Set Scene for rendering.
-         * @param aScene Pointer to the scene to be rendering
-         * @note The aScene argument may be nullptr, in which case no rendering takes place.
-         */
-        DLL void SetScene ( const Scene* aScene );
-        ///@name Render Functions
-        ///@{
-        virtual void BeginRender() = 0;
-        virtual void EndRender() = 0;
-        /** @todo Model matrix should be optional, the only required arguments should be pipeline and mesh... and I am not sure about pipeline. */
-        virtual void Render (
-            const Matrix4x4& aModelMatrix,
-            const Mesh& aMesh,
-            const Pipeline& aPipeline,
-            const Material* aMaterial = nullptr,
-            const BufferAccessor* aSkeleton = nullptr,
-            uint32_t aVertexStart = 0,
-            uint32_t aVertexCount = 0xffffffff,
-            uint32_t aInstanceCount = 1,
-            uint32_t aFirstInstance = 0 ) const = 0;
-        DLL void Render (
-            const Transform& aModelTransform,
-            const Mesh& aMesh,
-            const Pipeline& aPipeline,
-            const Material* aMaterial = nullptr,
-            const BufferAccessor* aSkeleton = nullptr,
-            uint32_t aVertexStart = 0,
-            uint32_t aVertexCount = 0xffffffff,
-            uint32_t aInstanceCount = 1,
-            uint32_t aFirstInstance = 0 ) const;
-        /** Render Scene in Full
-         * @param aScene Scene to render
-         * @note must be called between calls to BeginRender and EndRender
-        */
-        DLL void Render ( const Scene& aScene ) const;
-        /** Run a single render loop of the previously set scene.*/
-        DLL void RenderLoop ();
-        ///@}
-        ///@name Matrix Functions
-        ///@{
-        DLL void SetProjectionMatrix ( const Matrix4x4& aMatrix );
-        DLL void SetViewMatrix ( const Matrix4x4& aMatrix );
-        DLL const Matrix4x4& GetProjectionMatrix() const;
-        DLL const Matrix4x4& GetViewMatrix() const;
-        ///@}
-        DLL float GetAspectRatio() const;
-        DLL const Frustum& GetFrustum() const;
-        DLL uint32_t GetWidth() const;
-        DLL uint32_t GetHeight() const;
-        DLL void Show ( bool aShow ) const;
-        DLL void StartRenderTimer() const;
-        DLL void StopRenderTimer() const;
-        DLL static Window* GetWindowFromId ( void* aId );
-        virtual BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) = 0;
-        virtual void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) = 0;
+        DLL X11Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        DLL X11Window ( void* aWindowId );
+        DLL virtual ~X11Window() = 0;
+        DLL void Run ( Scene& aScene ) final;
+        DLL void Show ( bool aShow ) const final;
+        DLL void StartRenderTimer() const final;
+        DLL void StopRenderTimer() const final;
     protected:
-        virtual void OnResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
-        void* mWindowId{};
-        Matrix4x4 mProjectionMatrix{};
-        Matrix4x4 mViewMatrix{};
-    private:
-        virtual void OnSetProjectionMatrix() = 0;
-        virtual void OnSetViewMatrix() = 0;
-        Frustum mFrustum{};
-        float mAspectRatio{1.0f};
-        /* @todo mScene may be a unique_ptr,
-            passing ownership from where ever it came
-            to the window and back,
-            that way if it gets deleted ouside the window
-            we won't have a lingering pointer here.*/
-        const Scene* mScene{nullptr};
-        static std::unordered_map<void*, Window*> WindowMap;
+        ::Window mWindowId{};
+        Display* mDisplay{nullptr};
     };
+    using NativeWindow = X11Window;
 }
+#endif
 #endif

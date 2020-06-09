@@ -22,6 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    GLXContext CreateGLXContext ( Display* display, GLXContext share_context );
     OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
@@ -43,6 +44,9 @@ namespace AeonGames
     {
         try
         {
+            XWindowAttributes xwindowattributes{};
+            XGetWindowAttributes ( mDisplay, mWindowId, &xwindowattributes );
+            mOverlay.Initialize ( xwindowattributes.width, xwindowattributes.height, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
             Initialize();
             OpenGLWindow::Initialize();
         }
@@ -54,24 +58,6 @@ namespace AeonGames
         }
     }
 
-    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
-        Window{aWindowId},
-        mOpenGLRenderer{ aOpenGLRenderer },
-        mOverlay{},
-        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
-    {
-        int x_return, y_return;
-        ::Window root_return;
-        unsigned int width_return, height_return;
-        unsigned int border_width_return;
-        unsigned int depth_return;
-        XGetGeometry ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                       reinterpret_cast<::Window> ( mWindowId ),
-                       &root_return, &x_return, &y_return, &width_return,
-                       &height_return, &border_width_return, &depth_return );
-        mOverlay.Initialize ( width_return, height_return, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
-    }
-
     OpenGLX11Window::~OpenGLX11Window()
     {
         OpenGLWindow::Finalize();
@@ -80,7 +66,7 @@ namespace AeonGames
 
     void OpenGLX11Window::MakeCurrent()
     {
-        if ( !glXMakeCurrent ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ), reinterpret_cast<::Window> ( mWindowId ), static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
+        if ( !glXMakeCurrent ( mDisplay, reinterpret_cast<::Window> ( mWindowId ), mGLXContext ) )
         {
             std::cout << LogLevel ( LogLevel::Warning ) <<
                       "glxMakeCurrent Failed." << std::endl;
@@ -89,12 +75,13 @@ namespace AeonGames
 
     void OpenGLX11Window::SwapBuffers()
     {
-        glXSwapBuffers ( static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
+        glXSwapBuffers ( mDisplay,
                          reinterpret_cast<::Window> ( mWindowId ) );
     }
 
     void OpenGLX11Window::Initialize()
     {
+        mGLXContext = CreateGLXContext ( mDisplay, reinterpret_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
         XSetErrorHandler ( [] ( Display * display, XErrorEvent * error_event ) -> int
         {
             char error_string[1024];
@@ -102,9 +89,9 @@ namespace AeonGames
             std::cout << LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
             return 0;
         } );
-        if ( !glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                                reinterpret_cast<::Window> ( mWindowId ),
-                                static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
+        if ( !glXMakeCurrent (  mDisplay,
+                                mWindowId,
+                                mGLXContext ) )
         {
             XSetErrorHandler ( nullptr );
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
@@ -114,9 +101,9 @@ namespace AeonGames
 
     void OpenGLX11Window::Finalize()
     {
-        glXMakeCurrent (  static_cast<Display*> ( mOpenGLRenderer.GetWindowId() ),
-                          reinterpret_cast<::Window> ( mWindowId ),
-                          static_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        glXMakeCurrent (  mDisplay,
+                          None,
+                          mGLXContext );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 }
