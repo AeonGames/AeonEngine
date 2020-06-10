@@ -63,8 +63,9 @@ namespace AeonGames
 
     void OpenGLWinAPIWindow::MakeCurrent()
     {
-        wglMakeCurrent ( mDeviceContext, static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) );
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
     }
+
     void OpenGLWinAPIWindow::SwapBuffers()
     {
         ::SwapBuffers ( mDeviceContext );
@@ -74,7 +75,6 @@ namespace AeonGames
     {
         RECT rect{};
         GetWindowRect ( reinterpret_cast<HWND> ( mWindowId ), &rect );
-        mOverlay.Initialize ( rect.right - rect.left, rect.bottom - rect.top, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
         mDeviceContext = GetDC ( static_cast<HWND> ( mWindowId ) );
         PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
@@ -94,7 +94,7 @@ namespace AeonGames
     void OpenGLWinAPIWindow::Finalize()
     {
         OPENGL_CHECK_ERROR_NO_THROW;
-        if ( !wglMakeCurrent ( reinterpret_cast<HDC> ( mOpenGLRenderer.GetDeviceContext() ), static_cast<HGLRC> ( mOpenGLRenderer.GetOpenGLContext() ) ) )
+        if ( !mOpenGLRenderer.MakeCurrent() )
         {
             LPSTR pBuffer = NULL;
             FormatMessage ( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,

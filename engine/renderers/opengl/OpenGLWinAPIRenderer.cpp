@@ -24,7 +24,7 @@ limitations under the License.
 #include <algorithm>
 #include "math/3DMath.h"
 #include "OpenGLFunctions.h"
-#include "OpenGLRenderer.h"
+#include "OpenGLWinAPIRenderer.h"
 #include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLTexture.h"
@@ -50,7 +50,7 @@ namespace AeonGames
         0
     };
 
-    void OpenGLRenderer::Initialize()
+    void OpenGLWinAPIRenderer::Initialize()
     {
         // Initialize Internal Window
         PIXELFORMATDESCRIPTOR pfd;
@@ -167,7 +167,7 @@ namespace AeonGames
         }
     }
 
-    void OpenGLRenderer::Finalize()
+    void OpenGLWinAPIRenderer::Finalize()
     {
         if ( wglMakeCurrent ( reinterpret_cast<HDC> ( mDeviceContext ), NULL ) != TRUE )
         {
@@ -186,6 +186,34 @@ namespace AeonGames
                               0x0ULL +
 #endif
                               MAKELONG ( atom, 0 ) ), nullptr );
+    }
+    OpenGLWinAPIRenderer::OpenGLWinAPIRenderer()
+    {
+        try
+        {
+            Initialize();
+            if ( !LoadOpenGLAPI() )
+            {
+                throw std::runtime_error ( "Unable to Load OpenGL functions." );
+            }
+            InitializeOverlay();
+        }
+        catch ( ... )
+        {
+            FinalizeOverlay();
+            Finalize();
+            throw;
+        }
+    }
+    OpenGLWinAPIRenderer::~OpenGLWinAPIRenderer()
+    {
+        FinalizeOverlay();
+        Finalize();
+    }
+
+    bool OpenGLWinAPIRenderer::MakeCurrent ( void* aDrawable ) const
+    {
+        return wglMakeCurrent ( ( aDrawable != nullptr ) ? static_cast<HDC> ( aDrawable ) : mDeviceContext, mOpenGLContext );
     }
 }
 #endif

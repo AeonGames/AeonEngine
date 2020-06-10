@@ -172,30 +172,8 @@ void main()
         }
     }
 
-    OpenGLRenderer::OpenGLRenderer()
-    {
-        try
-        {
-            Initialize();
-            if ( !LoadOpenGLAPI() )
-            {
-                throw std::runtime_error ( "Unable to Load OpenGL functions." );
-            }
-            InitializeOverlay();
-        }
-        catch ( ... )
-        {
-            FinalizeOverlay();
-            Finalize();
-            throw;
-        }
-    }
-
-    OpenGLRenderer::~OpenGLRenderer()
-    {
-        FinalizeOverlay();
-        Finalize();
-    }
+    OpenGLRenderer::OpenGLRenderer() = default;
+    OpenGLRenderer::~OpenGLRenderer() = default;
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
@@ -230,21 +208,6 @@ void main()
     std::unique_ptr<Buffer> OpenGLRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
     {
         return std::make_unique<OpenGLBuffer> ( static_cast<GLsizei> ( aSize ), GL_DYNAMIC_DRAW, aData );
-    }
-
-    void* OpenGLRenderer::GetOpenGLContext() const
-    {
-        return mOpenGLContext;
-    }
-
-    void* OpenGLRenderer::GetDeviceContext() const
-    {
-        return mDeviceContext;
-    }
-
-    void* OpenGLRenderer::GetWindowId() const
-    {
-        return mWindowId;
     }
 
     GLuint OpenGLRenderer::GetVertexArrayObject() const

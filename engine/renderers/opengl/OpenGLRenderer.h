@@ -37,10 +37,7 @@ namespace AeonGames
     {
     public:
         OpenGLRenderer();
-        ~OpenGLRenderer() override;
-        void* GetOpenGLContext() const;
-        void* GetDeviceContext() const;
-        void* GetWindowId() const;
+        virtual ~OpenGLRenderer() = 0;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
         std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
@@ -48,20 +45,13 @@ namespace AeonGames
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
         std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
         std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
+        virtual bool MakeCurrent ( void* aDrawable = nullptr ) const = 0;
         GLuint GetVertexArrayObject() const;
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
-    private:
-        void Initialize();
-        void Finalize();
+    protected:
         void InitializeOverlay();
         void FinalizeOverlay();
-        /// Internal Window Id, required to create initial shared context
-        void* mWindowId{};
-        /// Internal OpenGL context, shared with all other contexts
-        void* mOpenGLContext{};
-        /// Internal OpenGL Device Context used on Windows only for now.
-        void* mDeviceContext{};
         /// General VAO
         GLuint mVertexArrayObject{};
         /** \addtogroup Overlay functionality.
