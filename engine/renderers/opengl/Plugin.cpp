@@ -20,6 +20,7 @@ limitations under the License.
 #include "aeongames/Plugin.h"
 #include "aeongames/StringId.h"
 #include "OpenGLWinAPIRenderer.h"
+#include "OpenGLX11Renderer.h"
 
 extern "C"
 {
