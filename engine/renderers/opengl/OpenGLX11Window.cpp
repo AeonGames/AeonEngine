@@ -22,7 +22,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    GLXContext CreateGLXContext ( Display* display, GLXContext share_context );
     OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
@@ -66,7 +65,7 @@ namespace AeonGames
 
     void OpenGLX11Window::MakeCurrent()
     {
-        if ( !glXMakeCurrent ( mDisplay, reinterpret_cast<::Window> ( mWindowId ), mGLXContext ) )
+        if ( !mOpenGLRenderer.MakeCurrent ( reinterpret_cast<void*> ( mWindowId ) ) )
         {
             std::cout << LogLevel ( LogLevel::Warning ) <<
                       "glxMakeCurrent Failed." << std::endl;
@@ -81,10 +80,7 @@ namespace AeonGames
 
     void OpenGLX11Window::Initialize()
     {
-        mGLXContext = CreateGLXContext ( mDisplay, reinterpret_cast<GLXContext> ( mOpenGLRenderer.GetOpenGLContext() ) );
-        if ( !glXMakeCurrent (  mDisplay,
-                                mWindowId,
-                                mGLXContext ) )
+        if ( !mOpenGLRenderer.MakeCurrent ( reinterpret_cast<void*> ( mWindowId ) ) )
         {
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
@@ -92,9 +88,7 @@ namespace AeonGames
 
     void OpenGLX11Window::Finalize()
     {
-        glXMakeCurrent (  mDisplay,
-                          None,
-                          mGLXContext );
+        mOpenGLRenderer.MakeCurrent();
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 }
