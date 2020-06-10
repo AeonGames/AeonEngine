@@ -90,7 +90,7 @@ namespace AeonGames
             }
         }
         // Get best frame buffer configuration.
-        int frame_buffer_config_count;
+        int frame_buffer_config_count{};
         GLXFBConfig *frame_buffer_configs =
             glXChooseFBConfig ( display,
                                 DefaultScreen ( display  ),
@@ -155,20 +155,13 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-
-        if ( !glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, static_cast<GLXContext> ( mOpenGLContext ) ) )
-        {
-
-            std::cout << LogLevel ( LogLevel::Warning ) <<
-                      "glxMakeCurrent Failed." << std::endl;
-        }
     }
 
     void OpenGLRenderer::Finalize()
     {
         if ( mWindowId )
         {
-            glXMakeCurrent ( static_cast<Display*> ( mWindowId ), 0, 0 );
+            glXMakeCurrent ( static_cast<Display*> ( mWindowId ), None, nullptr );
             if ( mOpenGLContext != nullptr )
             {
                 glXDestroyContext ( static_cast<Display*> ( mWindowId ), static_cast<GLXContext> ( mOpenGLContext ) );

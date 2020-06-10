@@ -38,7 +38,11 @@
                     {
                         "name":"PATH",
                         "value":"@DEBUG_PATH@"
-                    }                    
+                    },
+                    {
+                        "name":"_Xdebug",
+                        "value": "1"
+                    }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
                         "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",

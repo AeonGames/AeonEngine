@@ -46,7 +46,7 @@ namespace AeonGames
                         0,
                         vi.depth, InputOutput, vi.visual, CWColormap | CWEventMask, &swa
                     );
-        XMapWindow ( mDisplay, mWindowId );
+        //XMapWindow ( mDisplay, mWindowId );
     }
 
     DLL X11Window::~X11Window()
