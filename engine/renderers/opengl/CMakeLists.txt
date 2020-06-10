@@ -94,6 +94,7 @@ set(OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/glDefinitions.h
     ${CMAKE_CURRENT_BINARY_DIR}/glAssignments.h
     OpenGLRenderer.h
+    OpenGLWinAPIRenderer.h
     OpenGLWindow.h
     OpenGLWinAPIWindow.h
     OpenGLX11Window.h
@@ -108,6 +109,7 @@ set(OPENGL_RENDERER_HEADERS
 
 set(OPENGL_RENDERER_SOURCES
     OpenGLRenderer.cpp
+    OpenGLWinAPIRenderer.cpp
     OpenGLWindow.cpp
     OpenGLWinAPIWindow.cpp
     OpenGLX11Window.cpp
@@ -119,7 +121,6 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp
-    windows.cpp
     x11.cpp
     Plugin.cpp)
 

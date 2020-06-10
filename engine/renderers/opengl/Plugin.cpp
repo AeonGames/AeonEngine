@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/StringId.h"
-#include "OpenGLRenderer.h"
+#include "OpenGLWinAPIRenderer.h"
 
 extern "C"
 {
@@ -28,7 +28,7 @@ extern "C"
         return AeonGames::RegisterRendererConstructor ( "OpenGL",
                 [] ()
         {
-            return std::make_unique<AeonGames::OpenGLRenderer>();
+            return std::make_unique<AeonGames::OpenGLNativeRenderer>();
         } );
     }
 
