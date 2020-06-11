@@ -148,7 +148,7 @@ namespace AeonGames
             std::cout << LogLevel ( LogLevel::Info ) <<
                       "Direct GLX rendering context obtained" << std::endl;
         }
-        mPixmap = XCreatePixmap ( mDisplay, DefaultScreen ( mDisplay ), 16, 16, 32 );
+        mPixmap = XCreatePixmap ( mDisplay, DefaultRootWindow ( mDisplay ), 16, 16, 32 );
         if ( !mPixmap )
         {
             throw std::runtime_error ( "Failed creating pixmap." );
@@ -215,7 +215,7 @@ namespace AeonGames
 
     bool OpenGLX11Renderer::MakeCurrent ( void* aDrawable ) const
     {
-        return glXMakeCurrent ( mDisplay, ( aDrawable != nullptr ) ? reinterpret_cast<GLXDrawable> ( aDrawable ) : None, mOpenGLContext );
+        return glXMakeCurrent ( mDisplay, ( aDrawable != nullptr ) ? reinterpret_cast<GLXDrawable> ( aDrawable ) : mGLXPixmap, mOpenGLContext );
     }
 }
 #endif
