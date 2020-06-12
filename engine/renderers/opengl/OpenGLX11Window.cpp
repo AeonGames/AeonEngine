@@ -22,6 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo );
     OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
@@ -67,6 +68,7 @@ namespace AeonGames
     {
         if ( !mOpenGLRenderer.MakeCurrent ( reinterpret_cast<void*> ( mWindowId ) ) )
         {
+            XSync ( mDisplay, True );
             std::cout << LogLevel ( LogLevel::Warning ) <<
                       "glxMakeCurrent Failed." << std::endl;
         }
