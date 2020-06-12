@@ -124,7 +124,6 @@ namespace AeonGames
         }
 
         mGLXFBConfig = GetGLXConfig ( mDisplay );
-
         if ( ! ( mOpenGLContext = glXCreateContextAttribsARB ( mDisplay, mGLXFBConfig, nullptr,
                                   True, context_attribs ) ) )
         {
@@ -136,7 +135,6 @@ namespace AeonGames
                 throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
             }
         }
-
         // Verifying that context is a direct context
         if ( ! glXIsDirect (  mDisplay,  static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
@@ -215,7 +213,8 @@ namespace AeonGames
 
     bool OpenGLX11Renderer::MakeCurrent ( void* aDrawable ) const
     {
-        return glXMakeCurrent ( mDisplay, ( aDrawable != nullptr ) ? reinterpret_cast<GLXDrawable> ( aDrawable ) : mGLXPixmap, mOpenGLContext );
+        bool retval = glXMakeCurrent ( mDisplay, ( aDrawable != nullptr ) ? reinterpret_cast<GLXDrawable> ( aDrawable ) : mGLXPixmap, mOpenGLContext );
+        return retval;
     }
 }
 #endif
