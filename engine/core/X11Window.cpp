@@ -30,16 +30,18 @@ namespace AeonGames
         SetWindowForId ( aWindowId, this );
     }
 
-    X11Window::X11Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
+    X11Window::X11Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+        CommonWindow ( aX, aY, aWidth, aHeight, aFullScreen )
     {
+#if 0
         mDisplay = XOpenDisplay ( nullptr );
         ::Window root = DefaultRootWindow ( mDisplay );
-        XVisualInfo vi{};
-        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), 32, TrueColor, &vi ) )
+        XVisualInfo xvisualid{};
+        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), TrueColor, &xvisualid ) )
         {
             throw std::runtime_error ( "No appropriate visual found" );
         }
-        Colormap cmap = XCreateColormap ( mDisplay, root, vi.visual, AllocNone );
+        Colormap cmap = XCreateColormap ( mDisplay, root, xvisualid.visual, AllocNone );
         XSetWindowAttributes swa
         {
             .background_pixmap = None,
@@ -54,23 +56,15 @@ namespace AeonGames
                         aX, aY,
                         aWidth, aHeight,
                         0,
-                        vi.depth, InputOutput, vi.visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
+                        DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), InputOutput, xvisualid.visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
                     );
         SetWindowForId ( reinterpret_cast<void*> ( mWindowId ), this );
         XMapWindow ( mDisplay, mWindowId );
         XStoreName ( mDisplay, mWindowId, "AeonGames" );
+#endif
     }
 
-    DLL X11Window::~X11Window()
-    {
-        RemoveWindowForId ( reinterpret_cast<void*> ( mWindowId ) );
-        if ( mDisplay != nullptr )
-        {
-            XDestroyWindow ( mDisplay, mWindowId );
-            XCloseDisplay ( mDisplay );
-        }
-    }
-
+    DLL X11Window::~X11Window() = default;
     void X11Window::Run ( Scene& aScene )
     {
         bool running{true};
@@ -79,6 +73,8 @@ namespace AeonGames
         XSetWMProtocols ( mDisplay, mWindowId, &wm_delete_window, 1 );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
 
+        SetScene ( &aScene );
+        Show ( true );
         while ( running )
         {
             while ( ( XPending ( mDisplay ) > 0 ) && running )
@@ -109,14 +105,13 @@ namespace AeonGames
                 case MotionNotify:
                     //engine.MouseMove ( xEvent.xmotion.x, xEvent.xmotion.y );
                     break;
-                case ResizeRequest:
-                    ResizeViewport ( 0, 0, xevent.xresizerequest.width, xevent.xresizerequest.height );
-                    break;
                 case ClientMessage:
                     if ( static_cast<Atom> ( xevent.xclient.data.l[0] ) == wm_delete_window )
                     {
                         running = false;
                     }
+                    break;
+                case ConfigureNotify:
                     break;
                 default:
                     std::cout << LogLevel::Info <<  "Received Event Type: " <<  xevent.type << std::endl;
@@ -129,9 +124,20 @@ namespace AeonGames
             last_time = current_time;
             RenderLoop();
         }
+        Show ( false );
+        SetScene ( nullptr );
     }
+
     void X11Window::Show ( bool aShow ) const
     {
+        if ( aShow )
+        {
+            XMapWindow ( mDisplay, mWindowId );
+        }
+        else
+        {
+            XUnmapWindow ( mDisplay, mWindowId );
+        }
     }
 
     void X11Window::StartRenderTimer() const

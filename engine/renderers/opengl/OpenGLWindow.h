@@ -67,7 +67,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
     private:
-        virtual void MakeCurrent() = 0;
+        virtual bool MakeCurrent() = 0;
         virtual void SwapBuffers() = 0;
         OpenGLFrameBuffer mFrameBuffer {};
         mutable OpenGLMaterial mMatrices {};

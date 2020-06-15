@@ -16,7 +16,6 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLX11RENDERER_H
 #define AEONGAMES_OPENGLX11RENDERER_H
 #ifdef __unix__
-
 #include <unordered_map>
 #include <X11/Xlib.h>
 #include "aeongames/Renderer.h"
@@ -33,7 +32,9 @@ namespace AeonGames
     public:
         OpenGLX11Renderer();
         ~OpenGLX11Renderer() final;
-        bool MakeCurrent ( void* aDrawable = nullptr ) const final;
+        bool MakeCurrent () const final;
+        void* GetContext() const final;
+        GLXFBConfig GetGLXFBConfig() const;
     private:
         void Initialize();
         void Finalize();
@@ -41,12 +42,10 @@ namespace AeonGames
         Display* mDisplay{nullptr};
         /// Internal GLXFBConfig
         GLXFBConfig mGLXFBConfig{};
-        /// Internal Pixmap, required to create initial shared context
-        Pixmap mPixmap{};
-        /// Internal GLXPixmap, required to create initial shared context
-        GLXPixmap mGLXPixmap{};
         /// Internal OpenGL context, shared with all other contexts
-        GLXContext mOpenGLContext{};
+        GLXContext mGLXContext{};
+        /// Internal hidden OpenGL window, required because of how OpenGL works.
+        ::Window mWindow{None};
         /// General VAO
         GLuint mVertexArrayObject{};
     };

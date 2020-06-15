@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #ifdef __unix__
+#include <cstring>
 #include "OpenGLX11Window.h"
 #include "OpenGLRenderer.h"
+#include "OpenGLX11Renderer.h"
 #include "OpenGLFunctions.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/MemoryPool.h" ///<- This is here just for the literals
@@ -26,6 +28,30 @@ namespace AeonGames
     OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
+        mDisplay = XOpenDisplay ( nullptr );
+        ::Window root = DefaultRootWindow ( mDisplay );
+        GLXFBConfig config = reinterpret_cast<const OpenGLX11Renderer*> ( &mOpenGLRenderer )->GetGLXFBConfig();
+        XVisualInfo* xvisualid = glXGetVisualFromFBConfig ( mDisplay, config );
+        Colormap cmap = XCreateColormap ( mDisplay, root, xvisualid->visual, AllocNone );
+        XSetWindowAttributes swa
+        {
+            .background_pixmap = None,
+            .background_pixel  = 0,
+            .border_pixel      = 0,
+            .event_mask = StructureNotifyMask | KeyPressMask | ExposureMask,
+            .colormap = cmap,
+        };
+        mWindowId = XCreateWindow (
+                        mDisplay,
+                        root,
+                        aX, aY,
+                        aWidth, aHeight,
+                        0,
+                        DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), InputOutput, xvisualid->visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
+                    );
+        XFree ( xvisualid );
+        SetWindowForId ( reinterpret_cast<void*> ( mWindowId ), this );
+        XStoreName ( mDisplay, mWindowId, "AeonGames" );
         try
         {
             Initialize();
@@ -64,25 +90,19 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLX11Window::MakeCurrent()
+    bool OpenGLX11Window::MakeCurrent()
     {
-        if ( !mOpenGLRenderer.MakeCurrent ( reinterpret_cast<void*> ( mWindowId ) ) )
-        {
-            XSync ( mDisplay, True );
-            std::cout << LogLevel ( LogLevel::Warning ) <<
-                      "glxMakeCurrent Failed." << std::endl;
-        }
+        return glXMakeCurrent ( mDisplay, mWindowId, reinterpret_cast<GLXContext> ( mOpenGLRenderer.GetContext() ) );
     }
 
     void OpenGLX11Window::SwapBuffers()
     {
-        glXSwapBuffers ( mDisplay,
-                         reinterpret_cast<::Window> ( mWindowId ) );
+        glXSwapBuffers ( mDisplay, mWindowId );
     }
 
     void OpenGLX11Window::Initialize()
     {
-        if ( !mOpenGLRenderer.MakeCurrent ( reinterpret_cast<void*> ( mWindowId ) ) )
+        if ( !MakeCurrent() )
         {
             throw std::runtime_error ( "glXMakeCurrent call Failed." );
         }
@@ -92,6 +112,12 @@ namespace AeonGames
     {
         mOpenGLRenderer.MakeCurrent();
         OPENGL_CHECK_ERROR_NO_THROW;
+        RemoveWindowForId ( reinterpret_cast<void*> ( mWindowId ) );
+        if ( mDisplay != nullptr )
+        {
+            XDestroyWindow ( mDisplay, mWindowId );
+            XCloseDisplay ( mDisplay );
+        }
     }
 }
 #endif
