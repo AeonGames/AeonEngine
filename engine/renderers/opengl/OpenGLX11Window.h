@@ -28,7 +28,7 @@ namespace AeonGames
     private:
         void Initialize();
         void Finalize();
-        void MakeCurrent() final;
+        bool MakeCurrent() final;
         void SwapBuffers() final;
     };
     using OpenGLPlatformWindow = OpenGLX11Window;

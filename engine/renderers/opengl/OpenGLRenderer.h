@@ -45,7 +45,8 @@ namespace AeonGames
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
         std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
         std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
-        virtual bool MakeCurrent ( void* aDrawable = nullptr ) const = 0;
+        virtual bool MakeCurrent() const = 0;
+        virtual void* GetContext() const = 0;
         GLuint GetVertexArrayObject() const;
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
