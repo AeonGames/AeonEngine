@@ -61,9 +61,9 @@ namespace AeonGames
         Finalize();
     }
 
-    void OpenGLWinAPIWindow::MakeCurrent()
+    bool OpenGLWinAPIWindow::MakeCurrent()
     {
-        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+        return wglMakeCurrent ( mDeviceContext, reinterpret_cast<HGLRC> ( mOpenGLRenderer.GetContext() ) );
     }
 
     void OpenGLWinAPIWindow::SwapBuffers()
