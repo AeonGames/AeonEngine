@@ -40,15 +40,16 @@ namespace AeonGames
     public:
         OpenGLWinAPIRenderer();
         ~OpenGLWinAPIRenderer() final;
-        bool MakeCurrent ( void* aDrawable = nullptr ) const final;
+        bool MakeCurrent() const final;
+        void* GetContext() const final;
     private:
         void Initialize();
         void Finalize();
         /// Internal Window Id, required to create initial shared context
-        HWND mWindowId{};
+        HWND mWindow{};
         /// Internal OpenGL context, shared with all other contexts
-        HGLRC mOpenGLContext{};
-        /// Internal OpenGL Device Context used on Windows only for now.
+        HGLRC mGLContext{};
+        /// Internal OpenGL Device Context.
         HDC mDeviceContext{};
         /// General VAO
         GLuint mVertexArrayObject{};

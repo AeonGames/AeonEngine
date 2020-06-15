@@ -69,16 +69,16 @@ namespace AeonGames
         wcex.lpszClassName = "AeonEngineOpenGLInternalWindow";
         wcex.hIconSm = nullptr;
         ATOM atom = RegisterClassEx ( &wcex );
-        mWindowId = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
-                                     MAKEINTATOM ( atom ), "AeonEngine OpenGL Internal Window",
-                                     WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-                                     0, 0, // Location
-                                     rect.right - rect.left, rect.bottom - rect.top, // dimensions
-                                     nullptr,
-                                     nullptr,
-                                     GetModuleHandle ( nullptr ),
-                                     nullptr );
-        mDeviceContext = GetDC ( static_cast<HWND> ( mWindowId ) );
+        mWindow = CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+                                   MAKEINTATOM ( atom ), "AeonEngine OpenGL Internal Window",
+                                   WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                   0, 0, // Location
+                                   rect.right - rect.left, rect.bottom - rect.top, // dimensions
+                                   nullptr,
+                                   nullptr,
+                                   GetModuleHandle ( nullptr ),
+                                   nullptr );
+        mDeviceContext = GetDC ( static_cast<HWND> ( mWindow ) );
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -109,18 +109,18 @@ namespace AeonGames
         SetPixelFormat ( static_cast<HDC> ( mDeviceContext ), pf, &pfd );
 
         // Create OpenGL Context
-        mOpenGLContext = wglCreateContext ( static_cast<HDC> ( mDeviceContext ) );
-        wglMakeCurrent ( static_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mOpenGLContext ) );
+        mGLContext = wglCreateContext ( static_cast<HDC> ( mDeviceContext ) );
+        wglMakeCurrent ( static_cast<HDC> ( mDeviceContext ), static_cast<HGLRC> ( mGLContext ) );
 
         // Get newer functions if needed
         if ( !wglGetExtensionsString )
         {
             if ( ! ( wglGetExtensionsString = ( PFNWGLGETEXTENSIONSSTRINGARBPROC ) wglGetProcAddress ( "wglGetExtensionsStringARB" ) ) )
             {
-                wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
-                mOpenGLContext = nullptr;
-                ReleaseDC ( static_cast<HWND> ( mWindowId ), static_cast<HDC> ( mDeviceContext ) );
-                DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+                wglDeleteContext ( static_cast<HGLRC> ( mGLContext ) );
+                mGLContext = nullptr;
+                ReleaseDC ( static_cast<HWND> ( mWindow ), static_cast<HDC> ( mDeviceContext ) );
+                DestroyWindow ( static_cast<HWND> ( mWindow ) );
                 throw std::runtime_error ( "Failed retrieving a pointer to wglGetExtensionsString" );
             }
         }
@@ -128,33 +128,33 @@ namespace AeonGames
         {
             if ( ! ( wglCreateContextAttribs = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" ) ) )
             {
-                wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
-                mOpenGLContext = nullptr;
-                ReleaseDC ( static_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
-                DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+                wglDeleteContext ( static_cast<HGLRC> ( mGLContext ) );
+                mGLContext = nullptr;
+                ReleaseDC ( static_cast<HWND> ( mWindow ), reinterpret_cast<HDC> ( mDeviceContext ) );
+                DestroyWindow ( static_cast<HWND> ( mWindow ) );
                 throw std::runtime_error ( "Failed retrieving a pointer to wglCreateContextAttribsARB" );
             }
         }
         if ( strstr ( wglGetExtensionsString ( reinterpret_cast<HDC> ( mDeviceContext ) ), "WGL_ARB_create_context" ) != nullptr )
         {
-            wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
-            if ( ! ( mOpenGLContext = wglCreateContextAttribs ( reinterpret_cast<HDC> ( mDeviceContext ), nullptr, ContextAttribs ) ) )
+            wglDeleteContext ( static_cast<HGLRC> ( mGLContext ) );
+            if ( ! ( mGLContext = wglCreateContextAttribs ( reinterpret_cast<HDC> ( mDeviceContext ), nullptr, ContextAttribs ) ) )
             {
-                ReleaseDC ( static_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
-                DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+                ReleaseDC ( static_cast<HWND> ( mWindow ), reinterpret_cast<HDC> ( mDeviceContext ) );
+                DestroyWindow ( static_cast<HWND> ( mWindow ) );
                 throw std::runtime_error ( "wglCreateContextAttribs Failed" );
             }
         }
         else
         {
-            wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
-            mOpenGLContext = nullptr;
-            ReleaseDC ( static_cast<HWND> ( mWindowId ), static_cast<HDC> ( mDeviceContext ) );
-            DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+            wglDeleteContext ( static_cast<HGLRC> ( mGLContext ) );
+            mGLContext = nullptr;
+            ReleaseDC ( static_cast<HWND> ( mWindow ), static_cast<HDC> ( mDeviceContext ) );
+            DestroyWindow ( static_cast<HWND> ( mWindow ) );
             throw std::runtime_error ( "WGL_ARB_create_context is not available" );
         }
         // Make OpenGL Context current.
-        if ( !wglMakeCurrent ( static_cast<HDC> ( mDeviceContext ), reinterpret_cast<HGLRC> ( mOpenGLContext ) ) )
+        if ( !wglMakeCurrent ( static_cast<HDC> ( mDeviceContext ), reinterpret_cast<HGLRC> ( mGLContext ) ) )
         {
             LPSTR pBuffer = NULL;
             FormatMessage ( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -173,14 +173,14 @@ namespace AeonGames
         {
             std::cout << LogLevel::Error << "wglMakeCurrent failed." << std::endl;
         }
-        ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
-        if ( wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) ) != TRUE )
+        ATOM atom = GetClassWord ( static_cast<HWND> ( mWindow ), GCW_ATOM );
+        if ( wglDeleteContext ( static_cast<HGLRC> ( mGLContext ) ) != TRUE )
         {
             std::cout << LogLevel::Error << "wglDeleteContext failed." << std::endl;
         }
-        mOpenGLContext = nullptr;
-        ReleaseDC ( static_cast<HWND> ( mWindowId ), reinterpret_cast<HDC> ( mDeviceContext ) );
-        DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+        mGLContext = nullptr;
+        ReleaseDC ( static_cast<HWND> ( mWindow ), reinterpret_cast<HDC> ( mDeviceContext ) );
+        DestroyWindow ( static_cast<HWND> ( mWindow ) );
         UnregisterClass ( reinterpret_cast<LPCSTR> (
 #if defined(_M_X64) || defined(__amd64__)
                               0x0ULL +
@@ -211,9 +211,14 @@ namespace AeonGames
         Finalize();
     }
 
-    bool OpenGLWinAPIRenderer::MakeCurrent ( void* aDrawable ) const
+    bool OpenGLWinAPIRenderer::MakeCurrent () const
     {
-        return wglMakeCurrent ( ( aDrawable != nullptr ) ? static_cast<HDC> ( aDrawable ) : mDeviceContext, mOpenGLContext );
+        return wglMakeCurrent ( mDeviceContext, mGLContext );
+    }
+
+    void* OpenGLWinAPIRenderer::GetContext() const
+    {
+        return mGLContext;
     }
 }
 #endif
