@@ -25,13 +25,16 @@ limitations under the License.
 
 namespace AeonGames
 {
-    X11Window::X11Window ( void* aWindowId ) : mWindowId{ reinterpret_cast<::Window> ( aWindowId ) }
+    X11Window::X11Window ( void* aWindowId ) :
+        mWindowId{ reinterpret_cast<::Window> ( aWindowId ) },
+        mDisplay{XOpenDisplay ( nullptr ) }
     {
         SetWindowForId ( aWindowId, this );
     }
 
     X11Window::X11Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        CommonWindow ( aX, aY, aWidth, aHeight, aFullScreen )
+        CommonWindow ( aX, aY, aWidth, aHeight, aFullScreen ),
+        mDisplay{XOpenDisplay ( nullptr ) }
     {
 #if 0
         mDisplay = XOpenDisplay ( nullptr );
