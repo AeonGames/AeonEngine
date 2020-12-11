@@ -28,7 +28,6 @@ namespace AeonGames
     OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
-        mDisplay = XOpenDisplay ( nullptr );
         ::Window root = DefaultRootWindow ( mDisplay );
         GLXFBConfig config = reinterpret_cast<const OpenGLX11Renderer*> ( &mOpenGLRenderer )->GetGLXFBConfig();
         XVisualInfo* xvisualid = glXGetVisualFromFBConfig ( mDisplay, config );
