@@ -30,11 +30,11 @@ namespace AeonGames
     {
     public:
         VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath = 0 );
+        VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, Format aFormat, Type aType, uint32_t aWidth = 0, uint32_t aHeight = 0, const uint8_t* aPixels = nullptr );
         ~VulkanTexture() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
-        void Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr ) final;
-        void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels ) final;
+        void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels, Format aFormat = Format::Unknown, Type aType = Type::Unknown ) final;
         void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels ) final;
         void Finalize() final;
         uint32_t GetWidth() const final;
@@ -44,11 +44,13 @@ namespace AeonGames
 
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
-        void InitializeTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType );
+        void InitializeTexture ( Format aFormat, Type aType );
         void FinalizeTexture();
         void InitializeTextureView();
         void FinalizeTextureView();
         const VulkanRenderer& mVulkanRenderer;
+        Format mFormat{};
+        Type mType{};
         uint32_t mWidth{};
         uint32_t mHeight{};
         VkImage mVkImage{};

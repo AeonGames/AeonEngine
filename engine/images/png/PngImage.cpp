@@ -124,7 +124,7 @@ namespace AeonGames
             // --------------------------------------
             png_read_image ( png_ptr, row_pointers.data() );
             png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) nullptr );
-            aTexture.Initialize ( width, height, format, type, pixels.data() );
+            aTexture.Resize ( width, height, pixels.data(), format, type );
         }
         catch ( std::runtime_error& e )
         {
