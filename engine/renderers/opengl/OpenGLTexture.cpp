@@ -26,9 +26,9 @@ limitations under the License.
 namespace AeonGames
 {
 
-    OpenGLTexture::OpenGLTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
+    OpenGLTexture::OpenGLTexture ( Format aFormat, Type aType, uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels ) : mFormat{aFormat}, mType{aType}
     {
-        Initialize ( aWidth, aHeight, aFormat, aType, aPixels );
+        Resize ( aWidth, aHeight, aPixels );
     }
 
     OpenGLTexture::OpenGLTexture ( uint32_t aPath )
@@ -56,38 +56,32 @@ namespace AeonGames
         DecodeImage ( *this, buffer.data(), buffer.size() );
     }
 
-    void OpenGLTexture::Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
+    void OpenGLTexture::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels, Format aFormat, Type aType )
     {
-        if ( glIsTexture ( mTexture ) == GL_TRUE )
-        {
-            throw std::runtime_error ( "OpenGLTexture: Image already initiaized." );
-        }
+        aFormat = ( aFormat == Format::Unknown ) ? mFormat : aFormat;
+        aType = ( aType == Type::Unknown ) ? mType : aType;
         mFormat = aFormat;
         mType = aType;
-        glGenTextures ( 1, &mTexture );
-        OPENGL_CHECK_ERROR_THROW;
-        // Binding The texture should cause glIsTexture to recognize the texture name as such.
-        glBindTexture ( GL_TEXTURE_2D, mTexture );
-        OPENGL_CHECK_ERROR_THROW;
-        if ( aWidth > 0 || aHeight > 0 )
-        {
-            Resize ( aWidth, aHeight, aPixels );
-        }
-    }
+        mWidth = aWidth;
+        mHeight = aHeight;
 
-    void OpenGLTexture::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
-    {
-        if ( glIsTexture ( mTexture ) != GL_TRUE )
+        if ( mWidth == 0 || mHeight == 0 )
         {
-            throw std::runtime_error ( "OpenGLTexture: Image Not initiaized." );
+            Finalize();
+            return;
+        }
+        else if ( glIsTexture ( mTexture ) != GL_TRUE )
+        {
+            glGenTextures ( 1, &mTexture );
+            OPENGL_CHECK_ERROR_THROW;
         }
         glBindTexture ( GL_TEXTURE_2D, mTexture );
         OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
                        ( mFormat == Texture::Format::RGB ) ? GL_RGB : GL_RGBA, ///<@todo decide if this should be a separate variable
-                       aWidth,
-                       aHeight,
+                       mWidth,
+                       mHeight,
                        0,
                        ( mFormat == Texture::Format::RGB ) ? GL_RGB : ( mFormat == Texture::Format::BGRA ) ? GL_BGRA : GL_RGBA,
                        ( mType == Texture::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( mType == Texture::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
@@ -116,34 +110,22 @@ namespace AeonGames
 
     uint32_t OpenGLTexture::GetWidth() const
     {
-        GLint width{};
-        glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_WIDTH, &width );
-        return static_cast<uint32_t> ( width );
+        return mWidth;
     }
 
     uint32_t OpenGLTexture::GetHeight() const
     {
-        GLint height{};
-        glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_HEIGHT, &height );
-        return static_cast<uint32_t> ( height );
+        return mHeight;
     }
 
     Texture::Format OpenGLTexture::GetFormat() const
     {
-        GLint format{};
-        glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_INTERNAL_FORMAT, &format );
-        return ( format == GL_RGB ) ? Texture::Format::RGB : Texture::Format::RGBA;
+        return mFormat;
     }
 
     Texture::Type OpenGLTexture::GetType() const
     {
-        GLint red{};
-        //GLint green{};
-        //GLint blue{};
-        glGetTextureLevelParameteriv ( mTexture, 0, GL_TEXTURE_RED_TYPE, &red );
-        //glGetTextureLevelParameteriv(mTexture,0,GL_TEXTURE_GREEN_TYPE,&green);
-        //glGetTextureLevelParameteriv(mTexture,0,GL_TEXTURE_BLUE_TYPE,&blue);
-        return ( red == GL_UNSIGNED_BYTE ) ? Texture::Type::UNSIGNED_BYTE : Texture::Type::UNSIGNED_SHORT;
+        return mType;
     }
 
     void OpenGLTexture::Finalize()

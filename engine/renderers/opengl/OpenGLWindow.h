@@ -63,7 +63,7 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
-        OpenGLTexture mOverlay{};
+        OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
         void Initialize();
         void Finalize();
     private:

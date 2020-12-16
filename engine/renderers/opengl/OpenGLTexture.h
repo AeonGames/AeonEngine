@@ -27,13 +27,12 @@ namespace AeonGames
     class OpenGLTexture : public Texture
     {
     public:
-        OpenGLTexture ( uint32_t aPath = 0 );
-        OpenGLTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels = nullptr );
+        OpenGLTexture ( uint32_t aPath );
+        OpenGLTexture ( Format aFormat, Type aType, uint32_t aWidth = 0, uint32_t aHeight = 0, const uint8_t* aPixels = nullptr );
         ~OpenGLTexture() final;
         void Load ( const std::string& aPath ) final;
         void Load ( uint32_t aId ) final;
-        void Initialize ( uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels = nullptr ) final;
-        void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr ) final;
+        void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr, Format aFormat = Format::Unknown, Type aType = Type::Unknown ) final;
         void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
         void Finalize() final;
         uint32_t GetWidth() const final;
@@ -46,6 +45,8 @@ namespace AeonGames
     private:
         Format mFormat{};
         Type mType{};
+        uint32_t mWidth{};
+        uint32_t mHeight{};
         uint32_t mTexture{};
     };
 }

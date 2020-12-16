@@ -67,7 +67,7 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         NativeWindow{aX, aY, aWidth, aHeight, aFullScreen},
         mOpenGLRenderer { aOpenGLRenderer },
-        mOverlay{aWidth, aHeight, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
+        mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV, aWidth, aHeight},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
@@ -75,7 +75,7 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
         NativeWindow{aWindowId},
         mOpenGLRenderer{ aOpenGLRenderer },
-        mOverlay{},
+        mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }

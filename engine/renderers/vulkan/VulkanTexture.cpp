@@ -29,7 +29,7 @@ limitations under the License.
 namespace AeonGames
 {
     VulkanTexture::VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
-        Texture(), mVulkanRenderer (  aVulkanRenderer  ), mWidth{}, mHeight{},
+        Texture(), mVulkanRenderer (  aVulkanRenderer  ), mFormat{}, mType{}, mWidth{}, mHeight{},
         mVkImage { VK_NULL_HANDLE },
         mImageMemory { VK_NULL_HANDLE }
     {
@@ -40,6 +40,14 @@ namespace AeonGames
         {
             Load ( aPath );
         }
+    }
+
+    VulkanTexture::VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, Format aFormat, Type aType, uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels ) :
+        Texture(), mVulkanRenderer (  aVulkanRenderer  ), mFormat{aFormat}, mType{aType}, mWidth{}, mHeight{},
+        mVkImage { VK_NULL_HANDLE },
+        mImageMemory { VK_NULL_HANDLE }
+    {
+        Resize ( aWidth, aHeight, aPixels );
     }
 
     VulkanTexture::~VulkanTexture()
@@ -58,43 +66,6 @@ namespace AeonGames
         DecodeImage ( *this, buffer.data(), buffer.size() );
     }
 
-    void VulkanTexture::Initialize ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels )
-    {
-        mWidth = aWidth;
-        mHeight = aHeight;
-        InitializeTexture ( aWidth, aHeight, aFormat, aType );
-        InitializeTextureView();
-        VkSamplerCreateInfo sampler_create_info{};
-        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        sampler_create_info.pNext = nullptr;
-        sampler_create_info.flags = 0;
-        sampler_create_info.magFilter = VK_FILTER_NEAREST;
-        sampler_create_info.minFilter = VK_FILTER_NEAREST;
-        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        sampler_create_info.mipLodBias = 0.0f;
-        sampler_create_info.anisotropyEnable = VK_FALSE;
-        sampler_create_info.maxAnisotropy = 1.0f;
-        sampler_create_info.compareEnable = VK_FALSE;
-        sampler_create_info.compareOp = VK_COMPARE_OP_NEVER;
-        sampler_create_info.minLod = 0.0f;
-        sampler_create_info.maxLod = 1.0f;
-        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
-        sampler_create_info.unnormalizedCoordinates = VK_FALSE;
-        if ( VkResult result = vkCreateSampler ( mVulkanRenderer.GetDevice(), &sampler_create_info, nullptr, &mVkDescriptorImageInfo.sampler ) )
-        {
-            std::ostringstream stream;
-            stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        if ( aPixels )
-        {
-            WritePixels ( 0, 0, aWidth, aHeight, aFormat, aType, aPixels );
-        }
-    }
-
     uint32_t VulkanTexture::GetWidth() const
     {
         return mWidth;
@@ -107,12 +78,12 @@ namespace AeonGames
 
     Texture::Format VulkanTexture::GetFormat() const
     {
-        return Texture::Format::RGBA;
+        return mFormat;
     }
 
     Texture::Type VulkanTexture::GetType() const
     {
-        return Texture::Type::UNSIGNED_BYTE;
+        return mType;
     }
 
     void VulkanTexture::Finalize()
@@ -126,7 +97,7 @@ namespace AeonGames
         FinalizeTexture();
     }
 
-    void VulkanTexture::InitializeTexture ( uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType )
+    void VulkanTexture::InitializeTexture ( Format aFormat, Type aType )
     {
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -136,8 +107,8 @@ namespace AeonGames
         image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM; // This field contains both format and type, calculate rather than hardcode
         VkFormatProperties format_properties{};
         vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer.GetPhysicalDevice(), image_create_info.format, &format_properties );
-        image_create_info.extent.width = aWidth;
-        image_create_info.extent.height = aHeight;
+        image_create_info.extent.width = mWidth;
+        image_create_info.extent.height = mHeight;
         image_create_info.extent.depth = 1;
         image_create_info.mipLevels = 1;
         image_create_info.arrayLayers = 1;
@@ -181,9 +152,53 @@ namespace AeonGames
         }
     }
 
-    void VulkanTexture::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels )
+    void VulkanTexture::Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels, Format aFormat, Type aType )
     {
-        /** @todo Implement. */
+        aFormat = ( aFormat == Format::Unknown ) ? mFormat : aFormat;
+        aType = ( aType == Type::Unknown ) ? mType : aType;
+        if ( ( aWidth != mWidth ) && ( aHeight != mHeight ) && ( aFormat != mFormat ) && ( aType != mType ) )
+        {
+            Finalize();
+            mFormat = aFormat;
+            mType = aType;
+            mWidth = aWidth;
+            mHeight = aHeight;
+            if ( mWidth == 0 || mHeight == 0 )
+            {
+                return;
+            }
+            InitializeTexture ( mFormat, mType );
+            InitializeTextureView();
+            VkSamplerCreateInfo sampler_create_info{};
+            sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            sampler_create_info.pNext = nullptr;
+            sampler_create_info.flags = 0;
+            sampler_create_info.magFilter = VK_FILTER_NEAREST;
+            sampler_create_info.minFilter = VK_FILTER_NEAREST;
+            sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+            sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_create_info.mipLodBias = 0.0f;
+            sampler_create_info.anisotropyEnable = VK_FALSE;
+            sampler_create_info.maxAnisotropy = 1.0f;
+            sampler_create_info.compareEnable = VK_FALSE;
+            sampler_create_info.compareOp = VK_COMPARE_OP_NEVER;
+            sampler_create_info.minLod = 0.0f;
+            sampler_create_info.maxLod = 1.0f;
+            sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+            sampler_create_info.unnormalizedCoordinates = VK_FALSE;
+            if ( VkResult result = vkCreateSampler ( mVulkanRenderer.GetDevice(), &sampler_create_info, nullptr, &mVkDescriptorImageInfo.sampler ) )
+            {
+                std::ostringstream stream;
+                stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+        if ( aPixels )
+        {
+            WritePixels ( 0, 0, aWidth, aHeight, mFormat, mType, aPixels );
+        }
     }
 
 
