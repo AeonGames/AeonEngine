@@ -53,13 +53,14 @@ namespace AeonGames
         XStoreName ( mDisplay, mWindowId, "AeonGames" );
         try
         {
-            Initialize();
+            //OpenGLX11Window::Initialize();
+            MakeCurrent();
             OpenGLWindow::Initialize();
         }
         catch ( ... )
         {
             OpenGLWindow::Finalize();
-            Finalize();
+            OpenGLX11Window::Finalize();
             throw;
         }
     }
@@ -71,7 +72,7 @@ namespace AeonGames
         {
             XWindowAttributes xwindowattributes{};
             XGetWindowAttributes ( mDisplay, mWindowId, &xwindowattributes );
-            mOverlay.Initialize ( xwindowattributes.width, xwindowattributes.height, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
+            mOverlay.Resize ( xwindowattributes.width, xwindowattributes.height, nullptr, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
             Initialize();
             OpenGLWindow::Initialize();
         }
