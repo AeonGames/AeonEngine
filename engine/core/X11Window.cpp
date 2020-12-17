@@ -37,7 +37,6 @@ namespace AeonGames
         mDisplay{XOpenDisplay ( nullptr ) }
     {
 #if 0
-        mDisplay = XOpenDisplay ( nullptr );
         ::Window root = DefaultRootWindow ( mDisplay );
         XVisualInfo xvisualid{};
         if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), TrueColor, &xvisualid ) )
@@ -145,10 +144,12 @@ namespace AeonGames
 
     void X11Window::StartRenderTimer() const
     {
+        std::cout << __FUNCTION__ << std::endl;
     }
 
     void X11Window::StopRenderTimer() const
     {
+        std::cout << __FUNCTION__ << std::endl;
     }
 }
 #endif
