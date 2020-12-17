@@ -99,7 +99,7 @@ namespace AeonGames
     {
         if ( glIsTexture ( mTexture ) != GL_TRUE )
         {
-            throw std::runtime_error ( "OpenGLTexture: Trying to bit blit an uninitialized image." );
+            throw std::runtime_error ( "OpenGLTexture: Trying to write to an uninitialized image." );
         }
         glTextureSubImage2D ( mTexture, 0, aXOffset, aYOffset, aWidth, aHeight,
                               ( aFormat == Texture::Format::RGB ) ? GL_RGB : ( aFormat == Texture::Format::BGRA ) ? GL_BGRA : GL_RGBA,
