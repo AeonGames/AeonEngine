@@ -108,7 +108,6 @@ find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
 option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
-option(BUILD_ELECTRON_APPLICATION "Build Electron Application" OFF)
 
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"
@@ -185,10 +184,6 @@ add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 add_subdirectory(application)
 add_subdirectory(tools/worldeditor)
-
-if(BUILD_ELECTRON_APPLICATION)
-  add_subdirectory(electron)
-endif()
 
 find_path(GTEST_SOURCE_PATH googletest PATHS /usr/src/googletest)
 if(GTEST_SOURCE_PATH)
@@ -449,9 +444,6 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
   list(APPEND INCLIST ${Protobuf_INCLUDE_DIR})
   list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine)
   list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine/renderers/opengl)
-  if(BUILD_ELECTRON_APPLICATION)
-    list(APPEND INCLIST ${NODE_INCLUDE_DIR})
-  endif()
 
   list(REMOVE_DUPLICATES INCLIST)
   set(INCLIST "\"${INCLIST}\"")
