@@ -39,7 +39,7 @@ namespace AeonGames
         void Initialize();
         void Finalize();
         /// Internal Display connection
-        Display* mDisplay{nullptr};
+        Display* mDisplay{XOpenDisplay ( nullptr ) };
         /// Internal GLXFBConfig
         GLXFBConfig mGLXFBConfig{};
         /// Internal OpenGL context, shared with all other contexts

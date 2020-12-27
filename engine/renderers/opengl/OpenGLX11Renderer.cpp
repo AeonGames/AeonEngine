@@ -84,15 +84,15 @@ namespace AeonGames
         std::sort ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
                     [display] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
         {
-            int asb{};
-            int as{};
-            int bsb{};
-            int bs{};
-            glXGetFBConfigAttrib ( display, a, GLX_SAMPLE_BUFFERS, &asb );
-            glXGetFBConfigAttrib ( display, a, GLX_SAMPLES, &as  );
-            glXGetFBConfigAttrib ( display, b, GLX_SAMPLE_BUFFERS, &bsb );
-            glXGetFBConfigAttrib ( display, b, GLX_SAMPLES, &bs  );
-            return asb >= bsb && as > bs;
+            int a_sample_buffers{};
+            int a_samples{};
+            int b_sample_buffers{};
+            int b_samples{};
+            glXGetFBConfigAttrib ( display, a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
+            glXGetFBConfigAttrib ( display, a, GLX_SAMPLES, &a_samples  );
+            glXGetFBConfigAttrib ( display, b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
+            glXGetFBConfigAttrib ( display, b, GLX_SAMPLES, &b_samples  );
+            return a_sample_buffers >= b_sample_buffers && a_samples > b_samples;
         } );
         GLXFBConfig result = frame_buffer_configs[ 0 ];
         XFree ( frame_buffer_configs );
@@ -101,8 +101,6 @@ namespace AeonGames
 
     void OpenGLX11Renderer::Initialize()
     {
-        // Retrieve Display
-        mDisplay = XOpenDisplay ( nullptr );
         if ( !mDisplay )
         {
             throw std::runtime_error ( "Failed retrieving X Display." );
@@ -119,17 +117,12 @@ namespace AeonGames
             }
         }
         mGLXFBConfig = GetGLXConfig ( mDisplay );
-        if ( ! ( mGLXContext = glXCreateContextAttribsARB ( mDisplay, mGLXFBConfig, nullptr,
-                               True, context_attribs ) ) )
+        if ( nullptr == ( mGLXContext = glXCreateContextAttribsARB ( mDisplay, mGLXFBConfig, nullptr,
+                                        True, context_attribs ) ) )
         {
-            context_attribs[1] = 3;
-            context_attribs[3] = 1;
-            if ( ! ( mGLXContext = glXCreateContextAttribsARB ( mDisplay, mGLXFBConfig, nullptr,
-                                   True, context_attribs ) ) )
-            {
-                throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
-            }
+            throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
         }
+
         // Verifying that context is a direct context
         if ( ! glXIsDirect (  mDisplay,  static_cast<GLXContext> ( mGLXContext ) ) )
         {
@@ -143,6 +136,7 @@ namespace AeonGames
         }
 
         XVisualInfo* xvi = glXGetVisualFromFBConfig ( mDisplay, mGLXFBConfig );
+
         std::cout << *xvi << std::endl;
 
         Colormap cmap = XCreateColormap ( mDisplay, DefaultRootWindow ( mDisplay ), xvi->visual, AllocNone );
