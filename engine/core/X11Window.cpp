@@ -26,15 +26,13 @@ limitations under the License.
 namespace AeonGames
 {
     X11Window::X11Window ( void* aWindowId ) :
-        mWindowId{ reinterpret_cast<::Window> ( aWindowId ) },
-        mDisplay{XOpenDisplay ( nullptr ) }
+        mWindowId{ reinterpret_cast<::Window> ( aWindowId ) }
     {
         SetWindowForId ( aWindowId, this );
     }
 
     X11Window::X11Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        CommonWindow ( aX, aY, aWidth, aHeight, aFullScreen ),
-        mDisplay{XOpenDisplay ( nullptr ) }
+        CommonWindow ( aX, aY, aWidth, aHeight, aFullScreen )
     {
 #if 0
         ::Window root = DefaultRootWindow ( mDisplay );
@@ -71,24 +69,24 @@ namespace AeonGames
     {
         bool running{true};
         XEvent xevent;
-        Atom wm_delete_window = XInternAtom ( mDisplay, "WM_DELETE_WINDOW", 0 );
-        XSetWMProtocols ( mDisplay, mWindowId, &wm_delete_window, 1 );
+        Atom wm_delete_window = XInternAtom ( GetDisplay(), "WM_DELETE_WINDOW", 0 );
+        XSetWMProtocols ( GetDisplay(), mWindowId, &wm_delete_window, 1 );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
 
         SetScene ( &aScene );
         Show ( true );
         while ( running )
         {
-            while ( ( XPending ( mDisplay ) > 0 ) && running )
+            while ( ( XPending ( GetDisplay() ) > 0 ) && running )
             {
-                XNextEvent ( mDisplay, &xevent );
+                XNextEvent ( GetDisplay(), &xevent );
                 switch ( xevent.type )
                 {
                 case Expose:
                 {
                     // Here is where window resize is required.
                     XWindowAttributes xwa;
-                    XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
+                    XGetWindowAttributes ( GetDisplay(), mWindowId, &xwa );
                     ResizeViewport ( 0, 0, xwa.width, xwa.height );
                 }
                 break;
@@ -134,11 +132,11 @@ namespace AeonGames
     {
         if ( aShow )
         {
-            XMapWindow ( mDisplay, mWindowId );
+            XMapWindow ( GetDisplay(), mWindowId );
         }
         else
         {
-            XUnmapWindow ( mDisplay, mWindowId );
+            XUnmapWindow ( GetDisplay(), mWindowId );
         }
     }
 
