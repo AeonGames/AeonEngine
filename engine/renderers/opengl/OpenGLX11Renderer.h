@@ -35,11 +35,11 @@ namespace AeonGames
         bool MakeCurrent () const final;
         void* GetContext() const final;
         GLXFBConfig GetGLXFBConfig() const;
+        Colormap GetColorMap() const;
     private:
         void Initialize();
         void Finalize();
-        /// Internal Display connection
-        Display* mDisplay{XOpenDisplay ( nullptr ) };
+        Colormap mColorMap{};
         /// Internal GLXFBConfig
         GLXFBConfig mGLXFBConfig{};
         /// Internal OpenGL context, shared with all other contexts

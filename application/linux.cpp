@@ -38,7 +38,14 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     {
         char error_string[1024];
         XGetErrorText ( display, error_event->error_code, error_string, 1024 );
-        std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << " " << error_string << std::endl;
+        std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
+        std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
         return 0;
     } );
     return Main ( argc, argv );

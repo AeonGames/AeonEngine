@@ -69,12 +69,12 @@ namespace AeonGames
         None
     };
 
-    static GLXFBConfig GetGLXConfig ( Display* display )
+    static GLXFBConfig GetGLXConfig()
     {
         int frame_buffer_config_count{};
         GLXFBConfig *frame_buffer_configs =
-            glXChooseFBConfig ( display,
-                                DefaultScreen ( display ),
+            glXChooseFBConfig ( GetDisplay(),
+                                DefaultScreen ( GetDisplay() ),
                                 visual_attribs, &frame_buffer_config_count );
         if ( !frame_buffer_configs )
         {
@@ -82,16 +82,16 @@ namespace AeonGames
         }
 
         std::sort ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
-                    [display] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
+                    [] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
         {
             int a_sample_buffers{};
             int a_samples{};
             int b_sample_buffers{};
             int b_samples{};
-            glXGetFBConfigAttrib ( display, a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
-            glXGetFBConfigAttrib ( display, a, GLX_SAMPLES, &a_samples  );
-            glXGetFBConfigAttrib ( display, b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
-            glXGetFBConfigAttrib ( display, b, GLX_SAMPLES, &b_samples  );
+            glXGetFBConfigAttrib ( GetDisplay(), a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
+            glXGetFBConfigAttrib ( GetDisplay(), a, GLX_SAMPLES, &a_samples  );
+            glXGetFBConfigAttrib ( GetDisplay(), b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
+            glXGetFBConfigAttrib ( GetDisplay(), b, GLX_SAMPLES, &b_samples  );
             return a_sample_buffers >= b_sample_buffers && a_samples > b_samples;
         } );
         GLXFBConfig result = frame_buffer_configs[ 0 ];
@@ -101,11 +101,6 @@ namespace AeonGames
 
     void OpenGLX11Renderer::Initialize()
     {
-        if ( !mDisplay )
-        {
-            throw std::runtime_error ( "Failed retrieving X Display." );
-        }
-
         // Retrieve Create Context function
         if ( !glXCreateContextAttribsARB )
         {
@@ -116,15 +111,15 @@ namespace AeonGames
                 throw std::runtime_error ( "Failed retrieving glXCreateContextAttribsARB." );
             }
         }
-        mGLXFBConfig = GetGLXConfig ( mDisplay );
-        if ( nullptr == ( mGLXContext = glXCreateContextAttribsARB ( mDisplay, mGLXFBConfig, nullptr,
+        mGLXFBConfig = GetGLXConfig();
+        if ( nullptr == ( mGLXContext = glXCreateContextAttribsARB ( GetDisplay(), mGLXFBConfig, nullptr,
                                         True, context_attribs ) ) )
         {
             throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
         }
 
         // Verifying that context is a direct context
-        if ( ! glXIsDirect (  mDisplay,  static_cast<GLXContext> ( mGLXContext ) ) )
+        if ( ! glXIsDirect (  GetDisplay(),  static_cast<GLXContext> ( mGLXContext ) ) )
         {
             std::cout << LogLevel ( LogLevel::Info ) <<
                       "Indirect GLX rendering context obtained" << std::endl;
@@ -135,17 +130,17 @@ namespace AeonGames
                       "Direct GLX rendering context obtained" << std::endl;
         }
 
-        XVisualInfo* xvi = glXGetVisualFromFBConfig ( mDisplay, mGLXFBConfig );
+        XVisualInfo* xvi = glXGetVisualFromFBConfig ( GetDisplay(), mGLXFBConfig );
 
         std::cout << *xvi << std::endl;
 
-        Colormap cmap = XCreateColormap ( mDisplay, DefaultRootWindow ( mDisplay ), xvi->visual, AllocNone );
+        mColorMap = XCreateColormap ( GetDisplay(), DefaultRootWindow ( GetDisplay() ), xvi->visual, AllocNone );
         XSetWindowAttributes swa
         {
-            .colormap = cmap,
+            .colormap = mColorMap,
         };
 
-        mWindow = XCreateWindow ( mDisplay, DefaultRootWindow ( mDisplay ),
+        mWindow = XCreateWindow ( GetDisplay(), DefaultRootWindow ( GetDisplay() ),
                                   0, 0,
                                   32, 32,
                                   0,
@@ -162,20 +157,24 @@ namespace AeonGames
 
     void OpenGLX11Renderer::Finalize()
     {
-        if ( mDisplay )
+        if ( GetDisplay() )
         {
-            glXMakeCurrent ( mDisplay, None, nullptr );
+            if ( mColorMap != 0 )
+            {
+                XFreeColormap ( GetDisplay(), mColorMap );
+                mColorMap = 0;
+            }
+            glXMakeCurrent ( GetDisplay(), None, nullptr );
             if ( mGLXContext != nullptr )
             {
-                glXDestroyContext ( mDisplay, mGLXContext );
+                glXDestroyContext ( GetDisplay(), mGLXContext );
                 mGLXContext = nullptr;
             }
             if ( mWindow != None )
             {
-                XDestroyWindow ( mDisplay, mWindow );
+                XDestroyWindow ( GetDisplay(), mWindow );
                 mWindow = None;
             }
-            XCloseDisplay ( mDisplay );
         }
     }
 
@@ -209,10 +208,16 @@ namespace AeonGames
         return mGLXContext;
     }
 
+    Colormap OpenGLX11Renderer::GetColorMap() const
+    {
+        return mColorMap;
+    }
+
     bool OpenGLX11Renderer::MakeCurrent () const
     {
-        return glXMakeCurrent ( mDisplay, mWindow, mGLXContext );
+        return glXMakeCurrent ( GetDisplay(), mWindow, mGLXContext );
     }
+
     GLXFBConfig OpenGLX11Renderer::GetGLXFBConfig() const
     {
         return mGLXFBConfig;
