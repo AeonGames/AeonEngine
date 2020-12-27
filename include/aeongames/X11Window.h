@@ -35,7 +35,6 @@ namespace AeonGames
         DLL void StopRenderTimer() const final;
     protected:
         ::Window mWindowId{};
-        Display* mDisplay{nullptr};
     };
     using NativeWindow = X11Window;
 }

@@ -239,6 +239,9 @@ namespace AeonGames
         /* The renderer code must reside in plugin address space,
          so reset before unloading any plugins. */
         gRenderer.reset();
+#ifdef __unix__
+        XCloseDisplay ( gDisplay );
+#endif
         for ( auto& i : gPlugInCache )
         {
             std::get<1> ( i )->ShutDown();
@@ -251,9 +254,6 @@ namespace AeonGames
 #if defined(__linux__) && GOOGLE_PROTOBUF_VERSION > 3006001
         // protobuf 3.6.1 on Linux has a bug in the Shutdown code
         google::protobuf::ShutdownProtobufLibrary();
-#endif
-#ifdef __unix__
-        XCloseDisplay ( gDisplay );
 #endif
         gInitialized = false;
     }
