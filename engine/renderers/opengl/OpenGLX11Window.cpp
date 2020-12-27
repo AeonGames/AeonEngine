@@ -53,8 +53,10 @@ namespace AeonGames
         XStoreName ( mDisplay, mWindowId, "AeonGames" );
         try
         {
-            //OpenGLX11Window::Initialize();
-            MakeCurrent();
+            if ( !MakeCurrent() )
+            {
+                throw std::runtime_error ( "glXMakeCurrent call Failed." );
+            }
             OpenGLWindow::Initialize();
         }
         catch ( ... )
@@ -70,10 +72,15 @@ namespace AeonGames
     {
         try
         {
-            XWindowAttributes xwindowattributes{};
+#if 0
+            if ( !MakeCurrent() )
+            {
+                throw std::runtime_error ( "glXMakeCurrent call Failed." );
+            }
+#endif
+            XWindowAttributes xwindowattributes {};
             XGetWindowAttributes ( mDisplay, mWindowId, &xwindowattributes );
             mOverlay.Resize ( xwindowattributes.width, xwindowattributes.height, nullptr, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
-            Initialize();
             OpenGLWindow::Initialize();
         }
         catch ( ... )
@@ -102,10 +109,6 @@ namespace AeonGames
 
     void OpenGLX11Window::Initialize()
     {
-        if ( !MakeCurrent() )
-        {
-            throw std::runtime_error ( "glXMakeCurrent call Failed." );
-        }
     }
 
     void OpenGLX11Window::Finalize()
