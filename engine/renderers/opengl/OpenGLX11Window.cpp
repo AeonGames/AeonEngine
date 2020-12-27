@@ -28,29 +28,29 @@ namespace AeonGames
     OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
-        ::Window root = DefaultRootWindow ( mDisplay );
+        ::Window root = DefaultRootWindow ( GetDisplay() );
         GLXFBConfig config = reinterpret_cast<const OpenGLX11Renderer*> ( &mOpenGLRenderer )->GetGLXFBConfig();
-        XVisualInfo* xvisualid = glXGetVisualFromFBConfig ( mDisplay, config );
-        Colormap cmap = XCreateColormap ( mDisplay, root, xvisualid->visual, AllocNone );
+        Colormap colormap = reinterpret_cast<const OpenGLX11Renderer*> ( &mOpenGLRenderer )->GetColorMap();
+        XVisualInfo* xvisualid = glXGetVisualFromFBConfig ( GetDisplay(), config );
         XSetWindowAttributes swa
         {
             .background_pixmap = None,
             .background_pixel  = 0,
             .border_pixel      = 0,
             .event_mask = StructureNotifyMask | KeyPressMask | ExposureMask,
-            .colormap = cmap,
+            .colormap = colormap,
         };
         mWindowId = XCreateWindow (
-                        mDisplay,
+                        GetDisplay(),
                         root,
                         aX, aY,
                         aWidth, aHeight,
                         0,
-                        DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), InputOutput, xvisualid->visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
+                        xvisualid->depth, InputOutput, xvisualid->visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
                     );
         XFree ( xvisualid );
         SetWindowForId ( reinterpret_cast<void*> ( mWindowId ), this );
-        XStoreName ( mDisplay, mWindowId, "AeonGames" );
+        XStoreName ( GetDisplay(), mWindowId, "AeonGames" );
         try
         {
             if ( !MakeCurrent() )
@@ -72,14 +72,12 @@ namespace AeonGames
     {
         try
         {
-#if 0
             if ( !MakeCurrent() )
             {
                 throw std::runtime_error ( "glXMakeCurrent call Failed." );
             }
-#endif
             XWindowAttributes xwindowattributes {};
-            XGetWindowAttributes ( mDisplay, mWindowId, &xwindowattributes );
+            XGetWindowAttributes ( GetDisplay(), mWindowId, &xwindowattributes );
             mOverlay.Resize ( xwindowattributes.width, xwindowattributes.height, nullptr, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
             OpenGLWindow::Initialize();
         }
@@ -99,12 +97,13 @@ namespace AeonGames
 
     bool OpenGLX11Window::MakeCurrent()
     {
-        return glXMakeCurrent ( mDisplay, mWindowId, reinterpret_cast<GLXContext> ( mOpenGLRenderer.GetContext() ) );
+        GLXContext context = reinterpret_cast<GLXContext> ( mOpenGLRenderer.GetContext() );
+        return glXMakeCurrent ( GetDisplay(), mWindowId, context );
     }
 
     void OpenGLX11Window::SwapBuffers()
     {
-        glXSwapBuffers ( mDisplay, mWindowId );
+        glXSwapBuffers ( GetDisplay(), mWindowId );
     }
 
     void OpenGLX11Window::Initialize()
@@ -116,11 +115,7 @@ namespace AeonGames
         mOpenGLRenderer.MakeCurrent();
         OPENGL_CHECK_ERROR_NO_THROW;
         RemoveWindowForId ( reinterpret_cast<void*> ( mWindowId ) );
-        if ( mDisplay != nullptr )
-        {
-            XDestroyWindow ( mDisplay, mWindowId );
-            XCloseDisplay ( mDisplay );
-        }
+        XDestroyWindow ( GetDisplay(), mWindowId );
     }
 }
 #endif

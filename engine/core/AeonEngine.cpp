@@ -16,7 +16,7 @@ limitations under the License.
 
 #include <iostream>
 #include <memory>
-
+#include <stdexcept>
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -46,7 +46,10 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 #include "aeongames/Utilities.h"
 #include "Factory.h"
-
+#ifdef __unix__
+#include <X11/Xlib.h>
+#include <X11/X.h>
+#endif
 #ifdef _WIN32
 extern "C" {
     __declspec ( dllexport ) DWORD NvOptimusEnablement{1};
@@ -56,6 +59,17 @@ extern "C" {
 
 namespace AeonGames
 {
+#ifdef __unix__
+    Display* gDisplay {};
+    Display* GetDisplay()
+    {
+        if ( gDisplay == nullptr )
+        {
+            throw std::runtime_error ( "Display not initialized." );
+        }
+        return gDisplay;
+    }
+#endif
     static bool gInitialized = false;
     static std::unique_ptr<Renderer> gRenderer{};
     static ConfigurationBuffer gConfigurationBuffer;
@@ -153,6 +167,8 @@ namespace AeonGames
         GetConsoleMode ( hOut, &dwMode );
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         SetConsoleMode ( hOut, dwMode );
+#elif __unix__
+        gDisplay = XOpenDisplay ( nullptr );
 #endif
         ProcessOpts ( argc, argv, gOptionHandlers.data(), gOptionHandlers.size() );
         try
@@ -235,6 +251,9 @@ namespace AeonGames
 #if defined(__linux__) && GOOGLE_PROTOBUF_VERSION > 3006001
         // protobuf 3.6.1 on Linux has a bug in the Shutdown code
         google::protobuf::ShutdownProtobufLibrary();
+#endif
+#ifdef __unix__
+        XCloseDisplay ( gDisplay );
 #endif
         gInitialized = false;
     }
