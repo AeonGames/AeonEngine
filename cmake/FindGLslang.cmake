@@ -36,6 +36,8 @@ find_library(HLSL_LIB NAMES HLSL PATHS /usr/local /mingw64 /mingw32)
 
 find_library(SPIRV_LIB NAMES SPIRV PATHS /usr/local /mingw64 /mingw32)
 
+find_library(SPIRV_TOOLS_OPT_LIB NAMES SPIRV-Tools-opt PATHS /usr/local /mingw64 /mingw32)
+
 find_library(SPIRV_REMAPPER_LIB
              NAMES SPVRemapper
              PATHS /usr/local /mingw64 /mingw32)
@@ -56,7 +58,7 @@ find_library(OSDependent_DEBUG_LIB
 
 find_library(HLSL_DEBUG_LIB NAMES HLSLd PATHS /usr/local /mingw64 /mingw32)
 
-find_library(SPIRV_DEBUG_LIB NAMES SPIRVd PATHS /usr/local /mingw64 /mingw32)
+find_library(SPIRV_TOOLS_OPT_DEBUG_LIB NAMES SPIRV-Tools-optd PATHS /usr/local /mingw64 /mingw32)
 
 find_library(SPIRV_REMAPPER_DEBUG_LIB
              NAMES SPVRemapperd
@@ -120,6 +122,18 @@ elseif(SPIRV_LIB)
   list(APPEND GLSLANG_LIBRARIES ${SPIRV_LIB})
 elseif(SPIRV_DEBUG_LIB)
   list(APPEND GLSLANG_LIBRARIES ${SPIRV_DEBUG_LIB})
+endif()
+
+if(SPIRV_TOOLS_OPT_LIB AND SPIRV_TOOLS_OPT_DEBUG_LIB)
+  list(APPEND GLSLANG_LIBRARIES
+              optimized
+              ${SPIRV_TOOLS_OPT_LIB}
+              debug
+              ${SPIRV_TOOLS_OPT_DEBUG_LIB})
+elseif(SPIRV_TOOLS_OPT_LIB)
+  list(APPEND GLSLANG_LIBRARIES ${SPIRV_TOOLS_OPT_LIB})
+elseif(SPIRV_TOOLS_OPT_DEBUG_LIB)
+  list(APPEND GLSLANG_LIBRARIES ${SPIRV_TOOLS_OPT_DEBUG_LIB})
 endif()
 
 if(SPIRV_REMAPPER_LIB AND SPIRV_REMAPPER_DEBUG_LIB)
