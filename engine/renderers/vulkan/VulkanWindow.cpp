@@ -98,7 +98,7 @@ namespace AeonGames
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
         xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        xlib_surface_create_info_khr.dpy = XOpenDisplay ( nullptr );
+        xlib_surface_create_info_khr.dpy = GetDisplay();
         xlib_surface_create_info_khr.window = reinterpret_cast<::Window> ( mWindowId );
         if ( VkResult result = vkCreateXlibSurfaceKHR ( mVulkanRenderer.GetInstance(), &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) )
         {

@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_X11WINDOW_H
 #ifdef __unix__
 #include <X11/Xlib.h>
+#include <GL/glx.h>
 #include "aeongames/Platform.h"
 #include "aeongames/CommonWindow.h"
 
@@ -33,8 +34,10 @@ namespace AeonGames
         DLL void Show ( bool aShow ) const final;
         DLL void StartRenderTimer() const final;
         DLL void StopRenderTimer() const final;
+        static GLXFBConfig GetGLXConfig();
     protected:
         ::Window mWindowId{};
+        Colormap mColorMap{};
     };
     using NativeWindow = X11Window;
 }
