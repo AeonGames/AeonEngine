@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -73,6 +73,7 @@ namespace AeonGames
                            tr ( "Open Scene" ),
                            tr ( "" ),
                            tr ( "Scene Files (*.scn *.txt)" ) );
+
         if ( ! ( filename.isEmpty() || filename.isNull() ) )
         {
             QFileInfo fileinfo ( filename );
@@ -126,6 +127,7 @@ namespace AeonGames
         }
         reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetFieldOfView ( static_cast<float> ( aFieldOfView ) );
     }
+
     void MainWindow::nearChanged ( double aNear )
     {
         QMdiSubWindow*
@@ -136,6 +138,7 @@ namespace AeonGames
         }
         reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetNear ( static_cast<float> ( aNear ) );
     }
+
     void MainWindow::farChanged ( double aFar )
     {
         QMdiSubWindow*

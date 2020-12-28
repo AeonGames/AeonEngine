@@ -80,9 +80,7 @@ namespace AeonGames
     {
     }
 
-    OpenGLWindow::~OpenGLWindow()
-    {
-    }
+    OpenGLWindow::~OpenGLWindow() = default;
 
     void OpenGLWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
