@@ -18,6 +18,7 @@ limitations under the License.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
+#include <GL/glx.h>
 #include <chrono>
 #include "aeongames/X11Window.h"
 #include "aeongames/LogLevel.h"
@@ -25,6 +26,52 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static const int visual_attribs[] =
+    {
+        GLX_X_RENDERABLE, True,
+        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+        GLX_RENDER_TYPE, GLX_RGBA_BIT,
+        GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+        GLX_RED_SIZE, 8,
+        GLX_GREEN_SIZE, 8,
+        GLX_BLUE_SIZE, 8,
+        GLX_ALPHA_SIZE, 8,
+        GLX_DEPTH_SIZE, 24,
+        GLX_STENCIL_SIZE, 8,
+        GLX_DOUBLEBUFFER, True,
+        None
+    };
+
+    GLXFBConfig X11Window::GetGLXConfig()
+    {
+        int frame_buffer_config_count{};
+        GLXFBConfig *frame_buffer_configs =
+            glXChooseFBConfig ( GetDisplay(),
+                                DefaultScreen ( GetDisplay() ),
+                                visual_attribs, &frame_buffer_config_count );
+        if ( !frame_buffer_configs )
+        {
+            throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
+        }
+
+        std::sort ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
+                    [] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
+        {
+            int a_sample_buffers{};
+            int a_samples{};
+            int b_sample_buffers{};
+            int b_samples{};
+            glXGetFBConfigAttrib ( GetDisplay(), a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
+            glXGetFBConfigAttrib ( GetDisplay(), a, GLX_SAMPLES, &a_samples  );
+            glXGetFBConfigAttrib ( GetDisplay(), b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
+            glXGetFBConfigAttrib ( GetDisplay(), b, GLX_SAMPLES, &b_samples  );
+            return a_sample_buffers >= b_sample_buffers && a_samples > b_samples;
+        } );
+        GLXFBConfig result = frame_buffer_configs[ 0 ];
+        XFree ( frame_buffer_configs );
+        return result;
+    }
+
     X11Window::X11Window ( void* aWindowId ) :
         mWindowId{ reinterpret_cast<::Window> ( aWindowId ) }
     {
@@ -34,37 +81,39 @@ namespace AeonGames
     X11Window::X11Window ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         CommonWindow ( aX, aY, aWidth, aHeight, aFullScreen )
     {
-#if 0
-        ::Window root = DefaultRootWindow ( mDisplay );
-        XVisualInfo xvisualid{};
-        if ( !XMatchVisualInfo ( mDisplay, XDefaultScreen ( mDisplay ), DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), TrueColor, &xvisualid ) )
-        {
-            throw std::runtime_error ( "No appropriate visual found" );
-        }
-        Colormap cmap = XCreateColormap ( mDisplay, root, xvisualid.visual, AllocNone );
+        ::Window root = DefaultRootWindow ( GetDisplay() );
+        XVisualInfo* xvi = glXGetVisualFromFBConfig ( GetDisplay(), GetGLXConfig() );
+        mColorMap = XCreateColormap ( GetDisplay(), DefaultRootWindow ( GetDisplay() ), xvi->visual, AllocNone );
         XSetWindowAttributes swa
         {
             .background_pixmap = None,
             .background_pixel  = 0,
             .border_pixel      = 0,
-            .event_mask = StructureNotifyMask | KeyPressMask,
-            .colormap = cmap,
+            .event_mask = StructureNotifyMask | KeyPressMask | ExposureMask,
+            .colormap = mColorMap,
         };
         mWindowId = XCreateWindow (
-                        mDisplay,
+                        GetDisplay(),
                         root,
                         aX, aY,
                         aWidth, aHeight,
                         0,
-                        DefaultDepth ( mDisplay, DefaultScreen ( mDisplay ) ), InputOutput, xvisualid.visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
+                        xvi->depth, InputOutput, xvi->visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
                     );
+        XFree ( xvi );
         SetWindowForId ( reinterpret_cast<void*> ( mWindowId ), this );
-        XMapWindow ( mDisplay, mWindowId );
-        XStoreName ( mDisplay, mWindowId, "AeonGames" );
-#endif
+        XStoreName ( GetDisplay(), mWindowId, "AeonGames" );
     }
 
-    DLL X11Window::~X11Window() = default;
+    DLL X11Window::~X11Window()
+    {
+        if ( mColorMap )
+        {
+            XDestroyWindow ( GetDisplay(), mWindowId );
+            XFreeColormap ( GetDisplay(), mColorMap );
+        }
+    }
+
     void X11Window::Run ( Scene& aScene )
     {
         bool running{true};

@@ -25,6 +25,7 @@ limitations under the License.
 #include "math/3DMath.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLX11Renderer.h"
+#include "OpenGLX11Window.h"
 #include "aeongames/LogLevel.h"
 
 namespace AeonGames
@@ -45,22 +46,6 @@ namespace AeonGames
         return out;
     }
 
-    static const int visual_attribs[] =
-    {
-        GLX_X_RENDERABLE, True,
-        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-        GLX_RENDER_TYPE, GLX_RGBA_BIT,
-        GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-        GLX_RED_SIZE, 8,
-        GLX_GREEN_SIZE, 8,
-        GLX_BLUE_SIZE, 8,
-        GLX_ALPHA_SIZE, 8,
-        GLX_DEPTH_SIZE, 24,
-        GLX_STENCIL_SIZE, 8,
-        GLX_DOUBLEBUFFER, True,
-        None
-    };
-
     static int context_attribs[] =
     {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
@@ -68,36 +53,6 @@ namespace AeonGames
         GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
         None
     };
-
-    static GLXFBConfig GetGLXConfig()
-    {
-        int frame_buffer_config_count{};
-        GLXFBConfig *frame_buffer_configs =
-            glXChooseFBConfig ( GetDisplay(),
-                                DefaultScreen ( GetDisplay() ),
-                                visual_attribs, &frame_buffer_config_count );
-        if ( !frame_buffer_configs )
-        {
-            throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
-        }
-
-        std::sort ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
-                    [] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
-        {
-            int a_sample_buffers{};
-            int a_samples{};
-            int b_sample_buffers{};
-            int b_samples{};
-            glXGetFBConfigAttrib ( GetDisplay(), a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
-            glXGetFBConfigAttrib ( GetDisplay(), a, GLX_SAMPLES, &a_samples  );
-            glXGetFBConfigAttrib ( GetDisplay(), b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
-            glXGetFBConfigAttrib ( GetDisplay(), b, GLX_SAMPLES, &b_samples  );
-            return a_sample_buffers >= b_sample_buffers && a_samples > b_samples;
-        } );
-        GLXFBConfig result = frame_buffer_configs[ 0 ];
-        XFree ( frame_buffer_configs );
-        return result;
-    }
 
     void OpenGLX11Renderer::Initialize()
     {
@@ -111,7 +66,7 @@ namespace AeonGames
                 throw std::runtime_error ( "Failed retrieving glXCreateContextAttribsARB." );
             }
         }
-        mGLXFBConfig = GetGLXConfig();
+        mGLXFBConfig = X11Window::GetGLXConfig();
         if ( nullptr == ( mGLXContext = glXCreateContextAttribsARB ( GetDisplay(), mGLXFBConfig, nullptr,
                                         True, context_attribs ) ) )
         {

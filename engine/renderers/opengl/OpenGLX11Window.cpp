@@ -25,32 +25,16 @@ limitations under the License.
 namespace AeonGames
 {
     std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo );
-    OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+
+    OpenGLX11Window::OpenGLX11Window (
+        const OpenGLRenderer& aOpenGLRenderer,
+        int32_t aX,
+        int32_t aY,
+        uint32_t aWidth,
+        uint32_t aHeight,
+        bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
-        ::Window root = DefaultRootWindow ( GetDisplay() );
-        GLXFBConfig config = reinterpret_cast<const OpenGLX11Renderer*> ( &mOpenGLRenderer )->GetGLXFBConfig();
-        Colormap colormap = reinterpret_cast<const OpenGLX11Renderer*> ( &mOpenGLRenderer )->GetColorMap();
-        XVisualInfo* xvisualid = glXGetVisualFromFBConfig ( GetDisplay(), config );
-        XSetWindowAttributes swa
-        {
-            .background_pixmap = None,
-            .background_pixel  = 0,
-            .border_pixel      = 0,
-            .event_mask = StructureNotifyMask | KeyPressMask | ExposureMask,
-            .colormap = colormap,
-        };
-        mWindowId = XCreateWindow (
-                        GetDisplay(),
-                        root,
-                        aX, aY,
-                        aWidth, aHeight,
-                        0,
-                        xvisualid->depth, InputOutput, xvisualid->visual, CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask, &swa
-                    );
-        XFree ( xvisualid );
-        SetWindowForId ( reinterpret_cast<void*> ( mWindowId ), this );
-        XStoreName ( GetDisplay(), mWindowId, "AeonGames" );
         try
         {
             if ( !MakeCurrent() )
@@ -115,7 +99,6 @@ namespace AeonGames
         mOpenGLRenderer.MakeCurrent();
         OPENGL_CHECK_ERROR_NO_THROW;
         RemoveWindowForId ( reinterpret_cast<void*> ( mWindowId ) );
-        XDestroyWindow ( GetDisplay(), mWindowId );
     }
 }
 #endif
