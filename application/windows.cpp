@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ extern int Main ( int argc, char *argv[] );
 int WINAPI ENTRYPOINT WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
     auto args = GetArgs ( lpCmdLine );
-    return Main ( std::get<0> ( args ).size(), std::get<0> ( args ).data() );
+    return Main ( static_cast<int> ( std::get<0> ( args ).size() ), std::get<0> ( args ).data() );
 }
 
 int ENTRYPOINT main ( int argc, char *argv[] )
