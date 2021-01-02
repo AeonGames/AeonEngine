@@ -29,7 +29,7 @@ before_build:
 
     C:\msys64\usr\bin\bash.exe -lc "pacman -Syu --noconfirm"
 
-    powershell -Command "Get-Process | Where-Object {$_.path -like 'C:\msys64*'} | Stop-Process"
+    rem powershell -Command "Get-Process | Where-Object {$_.path -like 'C:\msys64*'} | Stop-Process"
 
     C:\msys64\usr\bin\bash.exe -lc "pacman -Syuu --noconfirm"
 
