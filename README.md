@@ -17,7 +17,7 @@ THIS IS A WORK IN PROGRESS.
 ### Visual Studio Code with MSYS2 MinGW
 
 You do not need to install [Visual Studio Code](https://code.visualstudio.com/) just to build the project,
-but it is highly recomended that you do so if you intend on changing the code, or if you want to develop a game using MSYS2/MinGW.
+but it is highly recommended that you do so if you intend on changing the code, or if you want to develop a game using MSYS2/MinGW.
 
 #### Install MSYS2
 
@@ -192,7 +192,7 @@ or
 
 ### Why do you use protobuf for your data files?
 
-Because I've always felt human readability is not worth the price you pay in performace.
+Because I've always felt human readability is not worth the price you pay in performance.
 
 ### Why do you keep PB plain text files around then?
 
@@ -203,7 +203,7 @@ They're easier to modify. The idea is that you convert them to binary once you'r
 PB's text files are a build in feature, anything else would require a tool to either convert to it,
 directly to binary protocol buffers or use a proprietary format.
 That takes time and Google already solved the problem.
-Do feel free to write your own convertion tool though.
+Do feel free to write your own conversion tool though.
 
 ### Why are there so many "Linux Build Fix" commits?
 
@@ -218,4 +218,4 @@ While I do not hold a particular preference towards Windows, there are some thin
 * Most PC gamers game on Windows, that's probably not going to change anytime soon.
 
 * Windows is the OS I spend most time on, I tend to use a lot of open source code that was born on Linux, but most of it has native Windows ports,
-    shout out to [MSYS2](https://www.msys2.org/), which completelly replaced [Cygwin](https://www.cygwin.com/) on my setup.
+    shout out to [MSYS2](https://www.msys2.org/), which completely replaced [Cygwin](https://www.cygwin.com/) on my setup.
