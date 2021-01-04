@@ -218,17 +218,18 @@ elseif(UNIX)
   set_target_properties(
     AeonEngine
     PROPERTIES COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
-  # TODO: decouple the AeonEngine library from X11 and glx,
-  # either move the code to the renderer plugins or create a common X11 base for them..
-  target_link_libraries(AeonEngine
-			PUBLIC
-				${X11_LIBRARIES}
-	                        ${OPENGL_glx_LIBRARY}
-			PRIVATE
-	                        ProtoBufClasses
-        	                ${ZLIB_LIBRARIES}
-                	        dl
-                        	stdc++fs)
+    # TODO: decouple the AeonEngine library from X11 and glx,
+    # either move the code to the renderer plugins or create a common X11 base for them..
+    target_link_libraries(AeonEngine
+        PUBLIC
+          ${X11_LIBRARIES}
+          ${OPENGL_glx_LIBRARY}
+        PRIVATE
+          ProtoBufClasses
+          ${ZLIB_LIBRARIES}
+          dl
+          stdc++fs
+    )
 endif()
 
 if(USE_CLANG_TIDY)
