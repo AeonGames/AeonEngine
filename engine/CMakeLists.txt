@@ -222,8 +222,8 @@ elseif(UNIX)
     # either move the code to the renderer plugins or create a common X11 base for them..
     target_link_libraries(AeonEngine
         PUBLIC
-          ${X11_LIBRARIES}
-          ${OPENGL_glx_LIBRARY}
+        ${OPENGL_glx_LIBRARY}
+        ${X11_LIBRARIES}
         PRIVATE
           ProtoBufClasses
           ${ZLIB_LIBRARIES}
