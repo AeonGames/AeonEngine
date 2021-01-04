@@ -1,4 +1,4 @@
-version: 1.0.{build}
+version: 'aeonengine-linux64-{branch}-build-{build}'
 branches:
   only:
   - master
