@@ -27,7 +27,9 @@ before_build:
 
     cd vcpkg
 
-    rem git checkout 6e25f7e02ab2713a87d89ba6e55b00d683ce87a6
+    rem protobuf 3.14 has a warning that breaks the build, remove when a new version is up
+
+    git checkout 3fd7745
 
     rem powershell -Command "(Get-Content ports\libpng\portfile.cmake) | ForEach-Object { $_ -replace \"libpng16/\", \"libpng16/older-releases/\" } | Set-Content ports\libpng\portfile.cmake"
 
