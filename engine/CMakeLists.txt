@@ -215,6 +215,7 @@ elseif(MINGW OR MSYS)
                         ProtoBufClasses
                         stdc++fs)
 elseif(UNIX)
+  find_package(OpenGL)
   set_target_properties(
     AeonEngine
     PROPERTIES COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
@@ -222,8 +223,8 @@ elseif(UNIX)
     # either move the code to the renderer plugins or create a common X11 base for them..
     target_link_libraries(AeonEngine
         PUBLIC
-        ${OPENGL_glx_LIBRARY}
-        ${X11_LIBRARIES}
+          ${X11_LIBRARIES}
+	  OpenGL::GL
         PRIVATE
           ProtoBufClasses
           ${ZLIB_LIBRARIES}
