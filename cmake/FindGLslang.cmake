@@ -58,6 +58,8 @@ find_library(OSDependent_DEBUG_LIB
 
 find_library(HLSL_DEBUG_LIB NAMES HLSLd PATHS /usr/local /mingw64 /mingw32)
 
+find_library(SPIRV_DEBUG_LIB NAMES SPIRVd PATHS /usr/local /mingw64 /mingw32)
+
 find_library(SPIRV_TOOLS_OPT_DEBUG_LIB NAMES SPIRV-Tools-optd PATHS /usr/local /mingw64 /mingw32)
 
 find_library(SPIRV_REMAPPER_DEBUG_LIB
