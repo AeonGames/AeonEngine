@@ -66,9 +66,10 @@ add_library(VulkanRenderer
 target_link_libraries(VulkanRenderer
                       AeonEngine
                       ProtoBufClasses
-                      ${VULKAN_LIBRARY}
+                      Threads::Threads
                       ${GLSLANG_LIBRARIES}
-                      Threads::Threads)
+                      ${VULKAN_LIBRARY}
+                      )
 
 if(MSVC)
   set_target_properties(
