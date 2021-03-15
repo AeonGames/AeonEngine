@@ -1,6 +1,6 @@
 //
 // Copyright (C) 2016 Google, Inc.
-// Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,9 @@
 #include <cctype>
 
 #include "ResourceLimits.h"
-#include "glslang/Include/revision.h"
 
 namespace glslang
 {
-
     const TBuiltInResource DefaultTBuiltInResource =
     {
         /* .MaxLights = */ 32,
@@ -128,7 +126,6 @@ namespace glslang
         /* .MaxCullDistances = */ 8,
         /* .MaxCombinedClipAndCullDistances = */ 8,
         /* .MaxSamples = */ 4,
-#if defined(GLSLANG_PATCH_LEVEL) && (GLSLANG_PATCH_LEVEL > 2888)
         /* .maxMeshOutputVerticesNV = */ 256,
         /* .maxMeshOutputPrimitivesNV = */ 512,
         /* .maxMeshWorkGroupSizeX_NV = */ 32,
@@ -138,17 +135,18 @@ namespace glslang
         /* .maxTaskWorkGroupSizeY_NV = */ 1,
         /* .maxTaskWorkGroupSizeZ_NV = */ 1,
         /* .maxMeshViewCountNV = */ 4,
-#endif
+        /* .maxDualSourceDrawBuffersEXT = */ 1,
+
         /* .limits = */ {
-            /* .nonInductiveForLoops = */ true,
-            /* .whileLoops = */ true,
-            /* .doWhileLoops = */ true,
-            /* .generalUniformIndexing = */ true,
-            /* .generalAttributeMatrixVectorIndexing = */ true,
-            /* .generalVaryingIndexing = */ true,
-            /* .generalSamplerIndexing = */ true,
-            /* .generalVariableIndexing = */ true,
-            /* .generalConstantMatrixVectorIndexing = */ true,
+            /* .nonInductiveForLoops = */ 1,
+            /* .whileLoops = */ 1,
+            /* .doWhileLoops = */ 1,
+            /* .generalUniformIndexing = */ 1,
+            /* .generalAttributeMatrixVectorIndexing = */ 1,
+            /* .generalVaryingIndexing = */ 1,
+            /* .generalSamplerIndexing = */ 1,
+            /* .generalVariableIndexing = */ 1,
+            /* .generalConstantMatrixVectorIndexing = */ 1,
         }
     };
 
@@ -240,7 +238,6 @@ namespace glslang
                 << "MaxCombinedClipAndCullDistances "           << DefaultTBuiltInResource.maxCombinedClipAndCullDistances << "\n"
                 << "MaxSamples "                                << DefaultTBuiltInResource.maxSamples << "\n"
 
-#if defined(GLSLANG_PATCH_LEVEL) & GLSLANG_PATCH_LEVEL > 2888
                 << "MaxMeshOutputVerticesNV "                   << DefaultTBuiltInResource.maxMeshOutputVerticesNV << "\n"
                 << "MaxMeshOutputPrimitivesNV "                 << DefaultTBuiltInResource.maxMeshOutputPrimitivesNV << "\n"
                 << "MaxMeshWorkGroupSizeX_NV "                  << DefaultTBuiltInResource.maxMeshWorkGroupSizeX_NV << "\n"
@@ -250,7 +247,6 @@ namespace glslang
                 << "MaxTaskWorkGroupSizeY_NV "                  << DefaultTBuiltInResource.maxTaskWorkGroupSizeY_NV << "\n"
                 << "MaxTaskWorkGroupSizeZ_NV "                  << DefaultTBuiltInResource.maxTaskWorkGroupSizeZ_NV << "\n"
                 << "MaxMeshViewCountNV "                        << DefaultTBuiltInResource.maxMeshViewCountNV << "\n"
-#endif
 
                 << "nonInductiveForLoops "                      << DefaultTBuiltInResource.limits.nonInductiveForLoops << "\n"
                 << "whileLoops "                                << DefaultTBuiltInResource.limits.whileLoops << "\n"

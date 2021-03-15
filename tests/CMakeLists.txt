@@ -75,6 +75,7 @@ endif()
 
 target_link_libraries(unit-tests
                       AeonEngine
+                      Threads::Threads
                       ${GTEST_LIBRARIES}
                       ${GMOCK_LIBRARIES})
 if(MSVC)

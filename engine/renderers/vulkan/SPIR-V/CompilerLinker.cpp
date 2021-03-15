@@ -1,7 +1,7 @@
 //
 // Copyright (C) 2002-2005  3Dlabs Inc. Ltd.
 // Copyright (C) 2013-2016 LunarG, Inc.
-// Copyright (C) 2017-2019 Aeon Games
+// Copyright (C) 2017-2019,2021 Aeon Games
 //
 // All rights reserved.
 //
@@ -42,7 +42,6 @@
 
 #include "ResourceLimits.h"
 #include "glslang/Include/ShHandle.h"
-#include "glslang/Include/revision.h"
 #include "glslang/Public/ShaderLang.h"
 #include "SPIRV/GlslangToSpv.h"
 #include "SPIRV/GLSL.std.450.h"
