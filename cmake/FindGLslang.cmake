@@ -20,51 +20,51 @@ find_path(GLSLANG_SPIRV_INCLUDE_DIR SPIRV/spirv.hpp
           PATHS /usr/local/include /mingw64/include/ /mingw32/include
           PATH_SUFFIXES glslang)
 
-find_library(GLSLANG_LIB
-             NAMES glslang glslangd
-             PATHS /usr/local /mingw64 /mingw32)
-
-find_library(OGLCompiler_LIB
-             NAMES OGLCompiler
-             PATHS /usr/local /mingw64 /mingw32)
-
-find_library(OSDependent_LIB
-             NAMES OSDependent
-             PATHS /usr/local /mingw64 /mingw32)
-
-find_library(HLSL_LIB NAMES HLSL PATHS /usr/local /mingw64 /mingw32)
-
-find_library(SPIRV_LIB NAMES SPIRV PATHS /usr/local /mingw64 /mingw32)
-
-find_library(SPIRV_TOOLS_OPT_LIB NAMES SPIRV-Tools-opt PATHS /usr/local /mingw64 /mingw32)
-
-find_library(SPIRV_REMAPPER_LIB
-             NAMES SPVRemapper
-             PATHS /usr/local /mingw64 /mingw32)
+find_library(MACHINEINDEPENDENT_LIB MachineIndependent)
+find_library(GENERICCODEGEN_LIB GenericCodeGen)
+find_library(GLSLANG_LIB NAMES glslang)
+find_library(OGLCompiler_LIB NAMES OGLCompiler)
+find_library(OSDependent_LIB NAMES OSDependent)
+find_library(HLSL_LIB NAMES HLSL)
+find_library(SPIRV_LIB NAMES SPIRV)
+find_library(SPIRV_TOOLS_OPT_LIB NAMES SPIRV-Tools-opt)
+find_library(SPIRV_REMAPPER_LIB NAMES SPVRemapper)
 
 # * Locate Debug Libraries if they exist -
 
-find_library(GLSLANG_DEBUG_LIB
-             NAMES glslangd
-             PATHS /usr/local /mingw64 /mingw32)
+find_library(MACHINEINDEPENDENT_DEBUG_LIB MachineIndependentd)
+find_library(GENERICCODEGEN_DEBUG_LIB GenericCodeGend)
+find_library(GLSLANG_DEBUG_LIB NAMES glslangd)
+find_library(OGLCompiler_DEBUG_LIB NAMES OGLCompilerd)
+find_library(OSDependent_DEBUG_LIB NAMES OSDependentd)
+find_library(HLSL_DEBUG_LIB NAMES HLSLd)
+find_library(SPIRV_DEBUG_LIB NAMES SPIRVd)
+find_library(SPIRV_TOOLS_OPT_DEBUG_LIB NAMES SPIRV-Tools-optd)
+find_library(SPIRV_REMAPPER_DEBUG_LIB NAMES SPVRemapperd)
 
-find_library(OGLCompiler_DEBUG_LIB
-             NAMES OGLCompilerd
-             PATHS /usr/local /mingw64 /mingw32)
+if(MACHINEINDEPENDENT_LIB AND MACHINEINDEPENDENT_DEBUG_LIB)
+  list(APPEND GLSLANG_LIBRARIES
+              optimized
+              ${MACHINEINDEPENDENT_LIB}
+              debug
+              ${MACHINEINDEPENDENT_DEBUG_LIB})
+elseif(MACHINEINDEPENDENT_LIB)
+  list(APPEND GLSLANG_LIBRARIES ${MACHINEINDEPENDENT_LIB})
+elseif(SPIRV_REMAPPER_DEBUG_LIB)
+  list(APPEND GLSLANG_LIBRARIES ${MACHINEINDEPENDENT_DEBUG_LIB})
+endif()
 
-find_library(OSDependent_DEBUG_LIB
-             NAMES OSDependentd
-             PATHS /usr/local /mingw64 /mingw32)
-
-find_library(HLSL_DEBUG_LIB NAMES HLSLd PATHS /usr/local /mingw64 /mingw32)
-
-find_library(SPIRV_DEBUG_LIB NAMES SPIRVd PATHS /usr/local /mingw64 /mingw32)
-
-find_library(SPIRV_TOOLS_OPT_DEBUG_LIB NAMES SPIRV-Tools-optd PATHS /usr/local /mingw64 /mingw32)
-
-find_library(SPIRV_REMAPPER_DEBUG_LIB
-             NAMES SPVRemapperd
-             PATHS /usr/local /mingw64 /mingw32)
+if(GENERICCODEGEN_LIB AND GENERICCODEGEN_DEBUG_LIB)
+  list(APPEND GLSLANG_LIBRARIES
+              optimized
+              ${GENERICCODEGEN_LIB}
+              debug
+              ${GENERICCODEGEN_DEBUG_LIB})
+elseif(GENERICCODEGEN_LIB)
+  list(APPEND GLSLANG_LIBRARIES ${GENERICCODEGEN_LIB})
+elseif(SPIRV_REMAPPER_DEBUG_LIB)
+  list(APPEND GLSLANG_LIBRARIES ${GENERICCODEGEN_DEBUG_LIB})
+endif()
 
 if(GLSLANG_LIB AND GLSLANG_DEBUG_LIB)
   list(APPEND GLSLANG_LIBRARIES
@@ -159,6 +159,7 @@ find_package_handle_standard_args(GLslang
                                   HLSL_LIB
                                   SPIRV_LIB
                                   SPIRV_REMAPPER_LIB
+                                  MACHINEINDEPENDENT_LIB
                                   GLSLANG_VALIDATOR_EXECUTABLE
                                   GLSLANG_SPIRV_INCLUDE_DIR
                                   GLSLANG_LIBRARIES)
