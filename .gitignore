@@ -35,6 +35,7 @@
 msvc*
 ming*
 make*
+build*
 codeblocks*
 clang64*
 gcc*
