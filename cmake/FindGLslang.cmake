@@ -14,14 +14,25 @@
 
 find_program(GLSLANG_VALIDATOR_EXECUTABLE
              NAMES glslangValidator
-             PATHS /usr/local)
-
+             PATHS /usr/local
+)
+           
 find_path(GLSLANG_SPIRV_INCLUDE_DIR SPIRV/spirv.hpp
-          PATHS /usr/local/include /mingw64/include/ /mingw32/include
-          PATH_SUFFIXES glslang)
+  PATHS /usr/local/include /mingw64/include/ /mingw32/include
+  PATH_SUFFIXES glslang
+)
 
-find_library(MACHINEINDEPENDENT_LIB MachineIndependent)
-find_library(GENERICCODEGEN_LIB GenericCodeGen)
+find_path(GLSLANG_INCLUDE_DIR ResourceLimits.h
+  PATHS /usr/local/include /mingw64/include/ /mingw32/include
+  PATH_SUFFIXES glslang/Include
+)
+      
+if(GLSLANG_INCLUDE_DIR AND EXISTS "${GLSLANG_INCLUDE_DIR}/revision.h")
+  set(GLSLANG_HAS_REVISION_H ON CACHE BOOL "")
+else()
+  set(GLSLANG_HAS_REVISION_H OFF CACHE BOOL "")
+endif()
+
 find_library(GLSLANG_LIB NAMES glslang)
 find_library(OGLCompiler_LIB NAMES OGLCompiler)
 find_library(OSDependent_LIB NAMES OSDependent)
@@ -32,8 +43,6 @@ find_library(SPIRV_REMAPPER_LIB NAMES SPVRemapper)
 
 # * Locate Debug Libraries if they exist -
 
-find_library(MACHINEINDEPENDENT_DEBUG_LIB MachineIndependentd)
-find_library(GENERICCODEGEN_DEBUG_LIB GenericCodeGend)
 find_library(GLSLANG_DEBUG_LIB NAMES glslangd)
 find_library(OGLCompiler_DEBUG_LIB NAMES OGLCompilerd)
 find_library(OSDependent_DEBUG_LIB NAMES OSDependentd)
@@ -42,28 +51,36 @@ find_library(SPIRV_DEBUG_LIB NAMES SPIRVd)
 find_library(SPIRV_TOOLS_OPT_DEBUG_LIB NAMES SPIRV-Tools-optd)
 find_library(SPIRV_REMAPPER_DEBUG_LIB NAMES SPVRemapperd)
 
-if(MACHINEINDEPENDENT_LIB AND MACHINEINDEPENDENT_DEBUG_LIB)
-  list(APPEND GLSLANG_LIBRARIES
-              optimized
-              ${MACHINEINDEPENDENT_LIB}
-              debug
-              ${MACHINEINDEPENDENT_DEBUG_LIB})
-elseif(MACHINEINDEPENDENT_LIB)
-  list(APPEND GLSLANG_LIBRARIES ${MACHINEINDEPENDENT_LIB})
-elseif(SPIRV_REMAPPER_DEBUG_LIB)
-  list(APPEND GLSLANG_LIBRARIES ${MACHINEINDEPENDENT_DEBUG_LIB})
-endif()
+if(NOT GLSLANG_HAS_REVISION_H)
+  find_library(MACHINEINDEPENDENT_LIB MachineIndependent)
+  find_library(MACHINEINDEPENDENT_DEBUG_LIB MachineIndependentd)
+  find_library(GENERICCODEGEN_DEBUG_LIB GenericCodeGend)
+  find_library(GENERICCODEGEN_LIB GenericCodeGen)
 
-if(GENERICCODEGEN_LIB AND GENERICCODEGEN_DEBUG_LIB)
+  if(MACHINEINDEPENDENT_LIB AND MACHINEINDEPENDENT_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES
+                optimized
+                ${MACHINEINDEPENDENT_LIB}
+                debug
+                ${MACHINEINDEPENDENT_DEBUG_LIB})
+  elseif(MACHINEINDEPENDENT_LIB)
+    list(APPEND GLSLANG_LIBRARIES ${MACHINEINDEPENDENT_LIB})
+  elseif(SPIRV_REMAPPER_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES ${MACHINEINDEPENDENT_DEBUG_LIB})
+  endif()
+
+  if(GENERICCODEGEN_LIB AND GENERICCODEGEN_DEBUG_LIB)
   list(APPEND GLSLANG_LIBRARIES
               optimized
               ${GENERICCODEGEN_LIB}
               debug
               ${GENERICCODEGEN_DEBUG_LIB})
-elseif(GENERICCODEGEN_LIB)
-  list(APPEND GLSLANG_LIBRARIES ${GENERICCODEGEN_LIB})
-elseif(SPIRV_REMAPPER_DEBUG_LIB)
-  list(APPEND GLSLANG_LIBRARIES ${GENERICCODEGEN_DEBUG_LIB})
+  elseif(GENERICCODEGEN_LIB)
+    list(APPEND GLSLANG_LIBRARIES ${GENERICCODEGEN_LIB})
+  elseif(SPIRV_REMAPPER_DEBUG_LIB)
+    list(APPEND GLSLANG_LIBRARIES ${GENERICCODEGEN_DEBUG_LIB})
+  endif()
+
 endif()
 
 if(GLSLANG_LIB AND GLSLANG_DEBUG_LIB)
@@ -151,23 +168,29 @@ elseif(SPIRV_REMAPPER_DEBUG_LIB)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(GLslang
-                                  DEFAULT_MSG
-                                  GLSLANG_LIB
-                                  OGLCompiler_LIB
-                                  OSDependent_LIB
-                                  HLSL_LIB
-                                  SPIRV_LIB
-                                  SPIRV_REMAPPER_LIB
-                                  MACHINEINDEPENDENT_LIB
-                                  GLSLANG_VALIDATOR_EXECUTABLE
-                                  GLSLANG_SPIRV_INCLUDE_DIR
-                                  GLSLANG_LIBRARIES)
 
-mark_as_advanced(GLSLANG_LIB
-                 OGLCompiler_LIB
-                 OSDependent_LIB
-                 HLSL_LIB
-                 SPIRV_LIB
-                 SPIRV_REMAPPER_LIB
-                 GLSLANG_LIBRARIES)
+set(VARIABLES
+  GLSLANG_LIB
+  OGLCompiler_LIB
+  OSDependent_LIB
+  HLSL_LIB
+  SPIRV_LIB
+  SPIRV_REMAPPER_LIB
+  GLSLANG_VALIDATOR_EXECUTABLE
+  GLSLANG_INCLUDE_DIR
+  GLSLANG_SPIRV_INCLUDE_DIR
+  GLSLANG_LIBRARIES
+)
+
+if(NOT GLSLANG_HAS_REVISION_H)
+  list(APPEND VARIABLES MACHINEINDEPENDENT_LIB)
+endif()
+
+find_package_handle_standard_args(GLslang REQUIRED_VARS
+  ${VARIABLES}
+)
+
+mark_as_advanced(
+  GLSLANG_HAS_REVISION_H
+  ${VARIABLES}
+)
