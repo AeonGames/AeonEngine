@@ -135,8 +135,9 @@ namespace glslang
         /* .maxTaskWorkGroupSizeY_NV = */ 1,
         /* .maxTaskWorkGroupSizeZ_NV = */ 1,
         /* .maxMeshViewCountNV = */ 4,
+#ifndef GLSLANG_HAS_REVISION_H
         /* .maxDualSourceDrawBuffersEXT = */ 1,
-
+#endif
         /* .limits = */ {
             /* .nonInductiveForLoops = */ 1,
             /* .whileLoops = */ 1,
