@@ -124,20 +124,32 @@ elseif(CMAKE_HOST_WIN32)
 endif()
 
 find_program(SED_EXECUTABLE sed
-             HINTS ENV
-                   MINGW_PREFIX
-                   MSYS2_PATH
-                   ProgramFiles
-             PATH_SUFFIXES bin usr/bin Git/usr/bin)
+            HINTS
+                  "C:\\msys64"
+            ENV
+                  MINGW_PREFIX
+                  MSYS2_PATH
+                  ProgramFiles
+            PATH_SUFFIXES
+                  bin
+                  usr/bin
+                  Git/usr/bin
+)
+
 if(NOT SED_EXECUTABLE)
   message(FATAL_ERROR "Unable to find sed executable.")
 endif()
 find_program(GREP_EXECUTABLE grep
-             HINTS ENV
-                   MINGW_PREFIX
-                   MSYS2_PATH
-                   ProgramFiles
-             PATH_SUFFIXES usr/bin Git/usr/bin)
+            HINTS
+                  "C:\\msys64"
+            ENV
+                  MINGW_PREFIX
+                  MSYS2_PATH
+                  ProgramFiles
+            PATH_SUFFIXES
+                  usr/bin
+                  Git/usr/bin
+)
 if(NOT GREP_EXECUTABLE)
   message(FATAL_ERROR "Unable to find grep executable.")
 endif()
@@ -358,7 +370,7 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
-          ${CMAKE_SOURCE_DIR}/game/images/development.svg
+          ${CMAKE_SOURCE_DIR}/game/images/development.svg.in
   COMMENT "Generating binary game assets")
 
 #
