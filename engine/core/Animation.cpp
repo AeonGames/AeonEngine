@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -92,20 +92,20 @@ namespace AeonGames
 
     void Animation::Load ( const std::string& aFilename )
     {
-        static std::mutex m;
-        static AnimationBuffer skeleton_buffer;
+        static std::mutex m{};
+        static AnimationBuffer skeleton_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<AnimationBuffer> ( skeleton_buffer, aFilename, "AEONANM" );
+        LoadProtoBufObject ( skeleton_buffer, aFilename, "AEONANM" );
         Load ( skeleton_buffer );
         skeleton_buffer.Clear();
     }
 
     void Animation::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static std::mutex m;
-        static AnimationBuffer skeleton_buffer;
+        static std::mutex m{};
+        static AnimationBuffer skeleton_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<AnimationBuffer> ( skeleton_buffer, aBuffer, aBufferSize, "AEONANM" );
+        LoadProtoBufObject ( skeleton_buffer, aBuffer, aBufferSize, "AEONANM" );
         Load ( skeleton_buffer );
         skeleton_buffer.Clear();
     }
