@@ -15,7 +15,9 @@
 if(UNIX)
   find_package(X11 REQUIRED)
 endif(UNIX)
-include_directories(${ZLIB_INCLUDE_DIR}
+include_directories(
+                    ${PROTOBUF_INCLUDE_DIR}
+                    ${ZLIB_INCLUDE_DIR}
                     ${PNG_PNG_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/engine
                     ${CMAKE_SOURCE_DIR}/engine/include
@@ -23,8 +25,8 @@ include_directories(${ZLIB_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
                     ${CMAKE_SOURCE_DIR}/include
                     ${VULKAN_INCLUDE_DIR}
-                    ${PROTOBUF_INCLUDE_DIR}
-                    ${CMAKE_CURRENT_BINARY_DIR})
+                    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 protobuf_generate_export_cpp(PROTOBUF_SOURCES
                              PROTOBUF_HEADERS

@@ -36,7 +36,7 @@ foreach(color ${colors})
   if(INKSCAPE_EXECUTABLE)
     execute_process(
       COMMAND ${INKSCAPE_EXECUTABLE}
-              --export-png=${CMAKE_SOURCE_DIR}/game/images/${name}.png
+              --export-filename=${CMAKE_SOURCE_DIR}/game/images/${name}.png
               ${CMAKE_SOURCE_DIR}/game/images/${name}.svg)
   endif()
 endforeach()

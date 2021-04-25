@@ -85,16 +85,32 @@ endif()
 
 find_package(ZLIB)
 find_package(Threads)
-find_package(Protobuf)
 find_package(Portaudio)
 find_package(OggVorbis)
-include(FindProtobufExp)
 include(FindPythonModule)
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
 find_package (Python3 COMPONENTS Interpreter)
 find_package(ImageMagick COMPONENTS convert)
+
+set(PROTOBUF_SOURCE "PROTOBUF_SOURCE-NOTFOUND" CACHE PATH "Path to Protobuf source to be build as part of the project")
+if(PROTOBUF_SOURCE)
+  set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(protobuf_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+  add_subdirectory(${PROTOBUF_SOURCE}/cmake)
+
+  set(PROTOBUF_FOUND ON CACHE BOOL "" FORCE)
+  set(PROTOBUF_GENERATE_CPP_APPEND_PATH ON)
+  set(PROTOBUF_PROTOC_EXECUTABLE protobuf::protoc CACHE STRING "")
+
+  set(PROTOBUF_INCLUDE_DIR "${PROTOBUF_SOURCE}/src/" CACHE PATH "")
+  set(PROTOBUF_LIBRARIES protobuf::libprotobuf CACHE STRING "")
+
+else()
+  find_package(Protobuf)
+endif()
+include(FindProtobufExp)
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8
