@@ -24,8 +24,8 @@ include_directories(${GLSLANG_SPIRV_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR})
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
     SPIR-V/Worklist.h
-    SPIR-V/ResourceLimits.h)
-set(SPIRV_SOURCES SPIR-V/ResourceLimits.cpp SPIR-V/CompilerLinker.cpp)
+)
+set(SPIRV_SOURCES SPIR-V/CompilerLinker.cpp)
 
 set(VULKAN_RENDERER_HEADERS
     VulkanUtilities.h
