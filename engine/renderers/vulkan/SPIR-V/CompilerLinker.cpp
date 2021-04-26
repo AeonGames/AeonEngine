@@ -40,7 +40,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "ResourceLimits.h"
+#include "glslang/Include/ResourceLimits.h"
 #include "glslang/Include/ShHandle.h"
 #include "glslang/Public/ShaderLang.h"
 #include "SPIRV/GlslangToSpv.h"
@@ -54,6 +54,13 @@
 #include <array>
 #include <thread>
 #include "CompilerLinker.h"
+
+#include "aeongames/Platform.h"
+
+namespace glslang
+{
+    TBuiltInResource DefaultTBuiltInResource;
+}
 
 namespace AeonGames
 {
@@ -176,6 +183,7 @@ namespace AeonGames
                 shaders.back().setAutoMapBindings ( true );
             }
             const int defaultVersion = mOptions & EOptionDefaultDesktop ? 110 : 100;
+            glslang::DefaultTBuiltInResource.maxDrawBuffers = true;
             if ( !shaders.back().parse ( &glslang::DefaultTBuiltInResource, defaultVersion, false, messages ) )
             {
                 compile_failed = true;

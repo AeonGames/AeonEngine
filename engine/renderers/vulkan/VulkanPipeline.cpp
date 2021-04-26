@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -254,6 +254,9 @@ namespace AeonGames
             stream << fragment_shader_code << std::endl;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
                    " Error:" << std::endl << compiler_linker.GetLog();
+            std::cout << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
+                      " Error:" << std::endl << compiler_linker.GetLog();
+            std::cout << fragment_shader_code << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         {
