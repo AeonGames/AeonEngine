@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace AeonGames
 {
     class VulkanRenderer;
     class VulkanTexture;
-    class VulkanMaterial : public Material
+    class VulkanMaterial final : public Material
     {
     public:
         VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers );

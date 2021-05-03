@@ -22,8 +22,9 @@ limitations under the License.
 #include <cmath>
 #include <mutex>
 #include "aeongames/AeonEngine.h"
-#include "aeongames/ProtoBufClasses.h"
 #include "ProtoBufHelpers.h"
+#include "aeongames/ProtoBufUtils.h"
+#include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -46,17 +47,7 @@ namespace AeonGames
 
     Animation::Animation ( uint32_t aId )
     {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
+        Load ( aId );
     }
 
     Animation::Animation ( const std::string&  aFilename )
@@ -90,24 +81,34 @@ namespace AeonGames
         }
     }
 
+    void Animation::Load ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        try
+        {
+            Load ( buffer.data(), buffer.size() );
+        }
+        catch ( ... )
+        {
+            Unload();
+            throw;
+        }
+    }
+
     void Animation::Load ( const std::string& aFilename )
     {
-        static std::mutex m{};
-        static AnimationBuffer skeleton_buffer{};
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( skeleton_buffer, aFilename, "AEONANM" );
-        Load ( skeleton_buffer );
-        skeleton_buffer.Clear();
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
     }
 
     void Animation::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static std::mutex m{};
-        static AnimationBuffer skeleton_buffer{};
+        static AnimationBuffer animation_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( skeleton_buffer, aBuffer, aBufferSize, "AEONANM" );
-        Load ( skeleton_buffer );
-        skeleton_buffer.Clear();
+        LoadProtoBufObject<AnimationBuffer> ( animation_buffer, aBuffer, aBufferSize, "AEONANM" );
+        Load ( animation_buffer );
+        animation_buffer.Clear();
     }
 
     void Animation::Load ( const AnimationBuffer& aAnimationBuffer )
@@ -192,19 +193,8 @@ namespace AeonGames
         size_t frame2 = ( ( frame1 + 1 ) % mFrames.size() );
         size_t frame0 = frame1 == 0 ? mFrames.size() - 1 : ( ( frame1 - 1 ) % mFrames.size() );
         size_t frame3 = ( ( frame1 + 2 ) % mFrames.size() );
-#if 0
-        if ( interpolation <= 0.0 )
-        {
-            return mFrames[frame1][aBoneIndex];
-        }
-        else if ( interpolation >= 1.0 )
-        {
-            return mFrames[frame2][aBoneIndex];
-        }
-#else
         /// modf should guarantee interpolation to be in the range [0.0,1.0)
         assert ( ( interpolation >= 0.0 ) && ( interpolation < 1.0 ) && "Interpolation out of range [0.0,1.0)." );
-#endif
         return Interpolate ( mFrames[frame0][aBoneIndex], mFrames[frame1][aBoneIndex], mFrames[frame2][aBoneIndex], mFrames[frame3][aBoneIndex], interpolation );
     }
 }

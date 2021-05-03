@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ limitations under the License.
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLMesh : public Mesh
+    class OpenGLMesh final : public Mesh
     {
     public:
         OpenGLMesh ( uint32_t aPath = 0 );

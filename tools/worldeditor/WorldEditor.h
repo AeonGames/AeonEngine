@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ Q_DECLARE_METATYPE ( std::filesystem::path );
 namespace AeonGames
 {
     class Renderer;
-    class WorldEditor : public QApplication
+    class WorldEditor final : public QApplication
     {
     public:
         WorldEditor ( int &argc, char *argv[] );

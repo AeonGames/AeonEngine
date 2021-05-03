@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class OpenGLX11Renderer : public OpenGLRenderer
+    class OpenGLX11Renderer final : public OpenGLRenderer
     {
     public:
         OpenGLX11Renderer();
@@ -46,8 +46,6 @@ namespace AeonGames
         GLXContext mGLXContext{};
         /// Internal hidden OpenGL window, required because of how OpenGL works.
         ::Window mWindow{None};
-        /// General VAO
-        GLuint mVertexArrayObject{};
     };
     using OpenGLNativeRenderer = OpenGLX11Renderer;
 }

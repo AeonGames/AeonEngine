@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ namespace AeonGames
     class VulkanTexture;
     class VulkanWindow;
     class VulkanModel;
-    class VulkanRenderer : public Renderer
+    class VulkanRenderer final : public Renderer
     {
     public:
         VulkanRenderer ( bool aValidate = true );

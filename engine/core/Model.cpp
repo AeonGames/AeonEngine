@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -84,10 +84,10 @@ namespace AeonGames
 
     void Model::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static std::mutex m;
-        static ModelBuffer model_buffer;
+        static std::mutex m{};
+        static ModelBuffer model_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<ModelBuffer> ( model_buffer, aBuffer, aBufferSize, "AEONMDL" );
+        LoadProtoBufObject ( model_buffer, aBuffer, aBufferSize, "AEONMDL" );
         Load ( model_buffer );
         model_buffer.Clear();
     }
