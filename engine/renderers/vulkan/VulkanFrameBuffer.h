@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,13 +21,16 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanFrameBuffer : public FrameBuffer
+    class VulkanFrameBuffer final : public FrameBuffer
     {
     public:
         VulkanFrameBuffer ( uint32_t aPath = 0 );
         ~VulkanFrameBuffer() final;
         void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) final;
         void Unload () final;
+        void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
+        void Bind() final;
+        void Unbind() final;
     private:
     };
 }
