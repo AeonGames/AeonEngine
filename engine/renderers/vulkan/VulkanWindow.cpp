@@ -542,7 +542,7 @@ namespace AeonGames
             reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetUniformDescriptorSet(),
             reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetSamplerDescriptorSet() };
 
-        uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), VK_NULL_HANDLE ) - descriptor_sets.begin() );
+        uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
 
         vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.GetPipeline() );
 
