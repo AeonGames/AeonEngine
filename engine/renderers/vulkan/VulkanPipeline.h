@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace AeonGames
     class Matrix4x4;
     class VulkanBuffer;
     class VulkanRenderer;
-    class VulkanPipeline : public Pipeline
+    class VulkanPipeline final : public Pipeline
     {
     public:
         VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, uint32_t aPath = 0 );
