@@ -19,19 +19,19 @@ before_build:
 
     rem C:\msys64\usr\bin\bash.exe -lc "pacman -R --noconfirm catgets libcatgets"
 
-    C:\msys64\usr\bin\bash.exe -lc "curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz"
+    rem C:\msys64\usr\bin\bash.exe -lc "curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz"
 
-    C:\msys64\usr\bin\bash.exe -lc "curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig"
+    rem C:\msys64\usr\bin\bash.exe -lc "curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig"
 
-    C:\msys64\usr\bin\bash.exe -lc "pacman-key --verify msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig
+    rem C:\msys64\usr\bin\bash.exe -lc "pacman-key --verify msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig
 
-    C:\msys64\usr\bin\bash.exe -lc "pacman -U --noconfirm msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz"
+    rem C:\msys64\usr\bin\bash.exe -lc "pacman -U --noconfirm msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz"
 
-    C:\msys64\usr\bin\bash.exe -lc "pacman -Sydd --noconfirm pacman"
+    rem C:\msys64\usr\bin\bash.exe -lc "pacman -Sydd --noconfirm pacman"
 
     C:\msys64\usr\bin\bash.exe -lc "pacman -Syu --noconfirm"
 
-    powershell -Command "Get-Process | Where-Object {$_.path -like 'C:\msys64*'} | Stop-Process"
+    rem powershell -Command "Get-Process | Where-Object {$_.path -like 'C:\msys64*'} | Stop-Process"
 
     C:\msys64\usr\bin\bash.exe -lc "pacman -Syuu --noconfirm"
 
