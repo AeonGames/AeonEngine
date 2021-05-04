@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,7 +48,6 @@ namespace AeonGames
 {
     static const char float_pattern[] = "([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?)";
     static const char int_pattern[] = "([-+]?[0-9]+)";
-    static const char whitespace_pattern[] = "\\s*";
     static const char separator_pattern[] = "\\s+";
     uint32_t GetStride ( const MeshBuffer& aMeshBuffer )
     {
