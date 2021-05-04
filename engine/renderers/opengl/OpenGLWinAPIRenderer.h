@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace AeonGames
     class OpenGLPipeline;
     class OpenGLModel;
     class OpenGLMaterial;
-    class OpenGLWinAPIRenderer : public OpenGLRenderer
+    class OpenGLWinAPIRenderer final : public OpenGLRenderer
     {
     public:
         OpenGLWinAPIRenderer();
@@ -51,8 +51,6 @@ namespace AeonGames
         HGLRC mGLContext{};
         /// Internal OpenGL Device Context.
         HDC mDeviceContext{};
-        /// General VAO
-        GLuint mVertexArrayObject{};
     };
     using OpenGLNativeRenderer = OpenGLWinAPIRenderer;
 }
