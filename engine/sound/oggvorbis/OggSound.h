@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2018,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ limitations under the License.
 namespace AeonGames
 {
     bool DecodeOGG ( Sound& aSound, size_t aBufferSize, const void* aBuffer );
-    class OggSound : public Sound
+    class OggSound final : public Sound
     {
     public:
         OggSound ( const std::string & aFileName );
