@@ -17,8 +17,8 @@ limitations under the License.
 #define AEONGAMES_ANIMATION_H
 #include <cstdint>
 #include <vector>
-#include "aeongames/Transform.h"
 #include "aeongames/Platform.h"
+#include "aeongames/Transform.h"
 
 namespace AeonGames
 {

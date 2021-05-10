@@ -202,7 +202,7 @@ if(MSVC)
                         PROPERTIES COMPILE_FLAGS
                                    "-WX -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX")
   target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses)
-elseif(MINGW OR MSYS)
+elseif(MINGW OR MSYS OR UNIX)
   set_target_properties(
     ProtoBufClasses
     PROPERTIES
@@ -211,28 +211,18 @@ elseif(MINGW OR MSYS)
   set_target_properties(AeonEngine
                         PROPERTIES COMPILE_FLAGS
                                    "-Wall -Werror -Wfatal-errors -DNOMINMAX")
-  target_link_libraries(AeonEngine
-                        ${ZLIB_LIBRARIES}
-                        ${PROTOBUF_LIBRARIES}
-                        ProtoBufClasses
-                        stdc++fs)
-elseif(UNIX)
-  find_package(OpenGL)
-  set_target_properties(
-    AeonEngine
-    PROPERTIES COMPILE_FLAGS "-fpic -Wall -Werror -Wfatal-errors -DNOMINMAX")
+  if(UNIX)
     # TODO: decouple the AeonEngine library from X11 and glx,
     # either move the code to the renderer plugins or create a common X11 base for them..
-    target_link_libraries(AeonEngine
-        PUBLIC
-          ${X11_LIBRARIES}
-	  OpenGL::GL
-        PRIVATE
-          ProtoBufClasses
-          ${ZLIB_LIBRARIES}
-          dl
-          stdc++fs
-    )
+    find_package(X11)
+    find_package(OpenGL)
+    set(PLATFORM_SPECIFIC_LIBS ${X11_LIBRARIES} OpenGL::GL dl)
+  endif()
+  target_link_libraries(AeonEngine
+                        ${PLATFORM_SPECIFIC_LIBS}
+                        ${ZLIB_LIBRARIES}
+                        ProtoBufClasses
+                        stdc++fs)
 endif()
 
 if(USE_CLANG_TIDY)
