@@ -28,29 +28,29 @@ include_directories(
                     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-protobuf_generate_export_cpp(PROTOBUF_SOURCES
-                             PROTOBUF_HEADERS
-                             "DLL_PROTOBUF"
-                             ${CMAKE_SOURCE_DIR}/proto/configuration.proto
-                             ${CMAKE_SOURCE_DIR}/proto/vector2.proto
-                             ${CMAKE_SOURCE_DIR}/proto/vector3.proto
-                             ${CMAKE_SOURCE_DIR}/proto/vector4.proto
-                             ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
-                             ${CMAKE_SOURCE_DIR}/proto/property.proto
-                             ${CMAKE_SOURCE_DIR}/proto/sampler.proto
-                             ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-                             ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
-                             ${CMAKE_SOURCE_DIR}/proto/animation.proto
-                             ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
-                             ${CMAKE_SOURCE_DIR}/proto/material.proto
-                             ${CMAKE_SOURCE_DIR}/proto/model.proto
-                             ${CMAKE_SOURCE_DIR}/proto/modelcontroller.proto
-                             ${CMAKE_SOURCE_DIR}/proto/geometry.proto
-                             ${CMAKE_SOURCE_DIR}/proto/transform.proto
-                             ${CMAKE_SOURCE_DIR}/proto/scene.proto
-                             ${CMAKE_SOURCE_DIR}/proto/reference.proto
-                             ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
-                             ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
+protobuf_generate_cpp(PROTOBUF_SOURCES
+                      PROTOBUF_HEADERS
+                      EXPORT_MACRO DLL_PROTOBUF
+                      ${CMAKE_SOURCE_DIR}/proto/configuration.proto
+                      ${CMAKE_SOURCE_DIR}/proto/vector2.proto
+                      ${CMAKE_SOURCE_DIR}/proto/vector3.proto
+                      ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+                      ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
+                      ${CMAKE_SOURCE_DIR}/proto/property.proto
+                      ${CMAKE_SOURCE_DIR}/proto/sampler.proto
+                      ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+                      ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
+                      ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
+                      ${CMAKE_SOURCE_DIR}/proto/material.proto
+                      ${CMAKE_SOURCE_DIR}/proto/model.proto
+                      ${CMAKE_SOURCE_DIR}/proto/modelcontroller.proto
+                      ${CMAKE_SOURCE_DIR}/proto/geometry.proto
+                      ${CMAKE_SOURCE_DIR}/proto/transform.proto
+                      ${CMAKE_SOURCE_DIR}/proto/scene.proto
+                      ${CMAKE_SOURCE_DIR}/proto/reference.proto
+                      ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
+                      ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
+                      ${CMAKE_SOURCE_DIR}/proto/animation.proto
 )
 
 set(ENGINE_SDK_HEADERS
