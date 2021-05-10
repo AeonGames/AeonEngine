@@ -14,21 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <fstream>
 #include <exception>
 #include <vector>
 #include <cassert>
 #include <cstring>
 #include <cmath>
 #include <mutex>
-#include "aeongames/AeonEngine.h"
 #include "ProtoBufHelpers.h"
 #include "aeongames/ProtoBufUtils.h"
+#include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
+#include "vector3.pb.h"
+#include "quaternion.pb.h"
 #include "animation.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
@@ -106,7 +107,7 @@ namespace AeonGames
         static std::mutex m{};
         static AnimationBuffer animation_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<AnimationBuffer> ( animation_buffer, aBuffer, aBufferSize, "AEONANM" );
+        LoadProtoBufObject ( animation_buffer, aBuffer, aBufferSize, "AEONANM" );
         Load ( animation_buffer );
         animation_buffer.Clear();
     }
