@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,74 +31,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    /** Loads a Protocol Buffer Object from an AeonGames file into the provided reference.
-    @param t Reference to the object to be loaded with the file data.
-    @param aFilename Path to file to load object from.
-    @param aFormat Expected format of the file represented by its magick number.
-    @note ProtoBuf objects require dynamic memory and if those objects get constantly destroyed
-    and recreated, the allocations and deallocations may slow down the system so for temporary objects
-    it may be better to use a static variable which gets loaded by reference and then explicitly unloaded,
-    thus reusing its memory cache.
-    However, I have not yet confirmed or denied this as true, the RVO version may be the only one needed.
-    */
-    template<class T> void LoadProtoBufObject ( T& t, const std::string& aFilename, const std::string& aFormat )
-    {
-        if ( !FileExists ( aFilename ) )
-        {
-            std::ostringstream stream;
-            stream << "File " << aFilename << " not found.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        std::ifstream file;
-        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-        file.open ( aFilename, std::ifstream::in | std::ifstream::binary );
-        char magick_number[8] = { 0 };
-        file.read ( magick_number, sizeof ( magick_number ) );
-        file.exceptions ( std::ifstream::badbit );
-        if ( strncmp ( magick_number, aFormat.c_str(), 7 ) != 0 )
-        {
-            file.close();
-            std::ostringstream stream;
-            stream << "File " << aFilename << " Is not an AeonGames format.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        else if ( magick_number[7] == '\0' )
-        {
-            if ( !t.ParseFromIstream ( &file ) )
-            {
-                file.close();
-                std::ostringstream stream;
-                stream << "Binary parse failed on file " << aFilename;
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        else
-        {
-            std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
-            if ( !google::protobuf::TextFormat::ParseFromString ( text, &t ) )
-            {
-                file.close();
-                std::ostringstream stream;
-                stream << "Text parse failed on file " << aFilename;
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        file.close();
-    }
-
-    /** Loads a Protocol Buffer Object from an AeonGames file.
-    @param aFilename Path to file to load object from.
-    @param aFormat Expected format of the file represented by its magick number.
-    @return A fully loaded protocol buffer object.
-    @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
-    */
-    template<class T> T LoadProtoBufObject ( const std::string& aFilename, const std::string& aFormat )
-    {
-        T t;
-        LoadProtoBufObject ( t, aFilename, aFormat );
-        return t;
-    }
-
     // Helper class to read from a raw memory buffer.
     class BufferInputStream : public google::protobuf::io::ZeroCopyInputStream
     {
@@ -190,6 +122,46 @@ namespace AeonGames
     {
         T t;
         LoadProtoBufObject ( t, aData, aSize, aFormat );
+        return t;
+    }
+
+    /** Loads a Protocol Buffer Object from an AeonGames file into the provided reference.
+    @param t Reference to the object to be loaded with the file data.
+    @param aFilename Path to file to load object from.
+    @param aFormat Expected format of the file represented by its magick number.
+    @note ProtoBuf objects require dynamic memory and if those objects get constantly destroyed
+    and recreated, the allocations and deallocations may slow down the system so for temporary objects
+    it may be better to use a static variable which gets loaded by reference and then explicitly unloaded,
+    thus reusing its memory cache.
+    However, I have not yet confirmed or denied this as true, the RVO version may be the only one needed.
+    */
+    template<class T> void LoadProtoBufObject ( T& t, const std::string& aFilename, const std::string& aFormat )
+    {
+        if ( !FileExists ( aFilename ) )
+        {
+            std::ostringstream stream;
+            stream << "File " << aFilename << " not found.";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        std::ifstream file;
+        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+        file.open ( aFilename, std::ifstream::in | std::ifstream::binary );
+        file.exceptions ( std::ifstream::badbit );
+        std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
+        file.close();
+        LoadProtoBufObject ( t, text.data(), text.size(), aFormat );
+    }
+
+    /** Loads a Protocol Buffer Object from an AeonGames file.
+    @param aFilename Path to file to load object from.
+    @param aFormat Expected format of the file represented by its magick number.
+    @return A fully loaded protocol buffer object.
+    @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
+    */
+    template<class T> T LoadProtoBufObject ( const std::string& aFilename, const std::string& aFormat )
+    {
+        T t;
+        LoadProtoBufObject ( t, aFilename, aFormat );
         return t;
     }
 }
