@@ -5,7 +5,7 @@ Center {
 Radii {
 }
 VertexFlags: 1
-VertexCount: 8
+VertexCount: 4
 IndexSize: 0
 IndexCount: 0
 VertexBuffer:
