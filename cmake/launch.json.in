@@ -10,9 +10,14 @@
                 "cwd": "@CMAKE_SOURCE_DIR@",
                 "environment": [
                     @QT_QPA_PLATFORM@
+                    @LD_LIBRARY_PATH@
                     {
                         "name":"PATH",
                         "value":"@DEBUG_PATH@"
+                    },
+                    {
+                        "name":"ASAN_OPTIONS",
+                        "value":"detect_odr_violation=0"
                     }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
