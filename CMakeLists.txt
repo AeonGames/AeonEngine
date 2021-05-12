@@ -473,6 +473,9 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
     set(USE_EXTERNAL_CONSOLE "false")
     set(QT_QPA_PLATFORM "{\"name\":\"QT_QPA_PLATFORM\",\"value\":\"xcb\"},")
   endif()
+  if(Protobuf_ROOT)
+    set(LD_LIBRARY_PATH "{\"name\":\"LD_LIBRARY_PATH\",\"value\":\"${Protobuf_ROOT}/lib\"},")
+  endif()
   configure_file("${CMAKE_SOURCE_DIR}/cmake/tasks.json.in"
                  "${CMAKE_SOURCE_DIR}/.vscode/tasks.json")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/settings.json.in"
