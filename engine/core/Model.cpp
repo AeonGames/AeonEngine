@@ -85,41 +85,41 @@ namespace AeonGames
     void Model::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static std::mutex m{};
-        static ModelBuffer model_buffer{};
+        static ModelMsg model_buffer{};
         std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject ( model_buffer, aBuffer, aBufferSize, "AEONMDL" );
         Load ( model_buffer );
         model_buffer.Clear();
     }
 
-    void Model::Load ( const ModelBuffer& aModelBuffer )
+    void Model::Load ( const ModelMsg& aModelMsg )
     {
         ResourceId default_pipeline{};
         ResourceId default_material{};
 
         // Default Pipeline ---------------------------------------------------------------------
-        if ( aModelBuffer.has_default_pipeline() )
+        if ( aModelMsg.has_default_pipeline() )
         {
-            default_pipeline = {"Pipeline"_crc32, GetReferenceBufferId ( aModelBuffer.default_pipeline() ) } ;
+            default_pipeline = {"Pipeline"_crc32, GetReferenceMsgId ( aModelMsg.default_pipeline() ) } ;
             default_pipeline.Store();
         }
 
         // Default Material ---------------------------------------------------------------------
-        if ( aModelBuffer.has_default_material() )
+        if ( aModelMsg.has_default_material() )
         {
-            default_material = {"Material"_crc32, GetReferenceBufferId ( aModelBuffer.default_material() ) } ;
+            default_material = {"Material"_crc32, GetReferenceMsgId ( aModelMsg.default_material() ) } ;
             default_material.Store();
         }
 
         // Skeleton -----------------------------------------------------------------------------
-        if ( aModelBuffer.has_skeleton() )
+        if ( aModelMsg.has_skeleton() )
         {
-            mSkeleton = { "Skeleton"_crc32, GetReferenceBufferId ( aModelBuffer.skeleton() ) };
+            mSkeleton = { "Skeleton"_crc32, GetReferenceMsgId ( aModelMsg.skeleton() ) };
             mSkeleton.Store();
         }
         // Meshes -----------------------------------------------------------------------------
-        mAssemblies.reserve ( aModelBuffer.assembly_size() );
-        for ( auto& assembly : aModelBuffer.assembly() )
+        mAssemblies.reserve ( aModelMsg.assembly_size() );
+        for ( auto& assembly : aModelMsg.assembly() )
         {
             ResourceId mesh{};
             ResourceId pipeline{default_pipeline};
@@ -127,28 +127,28 @@ namespace AeonGames
 
             if ( assembly.has_mesh() )
             {
-                mesh = {"Mesh"_crc32, GetReferenceBufferId ( assembly.mesh() ) } ;
+                mesh = {"Mesh"_crc32, GetReferenceMsgId ( assembly.mesh() ) } ;
                 mesh.Store();
             }
 
             if ( assembly.has_pipeline() )
             {
-                pipeline = {"Pipeline"_crc32, GetReferenceBufferId ( assembly.pipeline() ) } ;
+                pipeline = {"Pipeline"_crc32, GetReferenceMsgId ( assembly.pipeline() ) } ;
                 pipeline.Store();
             }
 
             if ( assembly.has_material() )
             {
-                material = {"Material"_crc32, GetReferenceBufferId ( assembly.material() ) } ;
+                material = {"Material"_crc32, GetReferenceMsgId ( assembly.material() ) } ;
                 material.Store();
             }
             mAssemblies.emplace_back ( mesh, pipeline, material );
         }
         // Animations -----------------------------------------------------------------------------
-        mAnimations.reserve ( aModelBuffer.animation_size() );
-        for ( auto& animation : aModelBuffer.animation() )
+        mAnimations.reserve ( aModelMsg.animation_size() );
+        for ( auto& animation : aModelMsg.animation() )
         {
-            mAnimations.emplace_back ( ResourceId{"Animation"_crc32, GetReferenceBufferId ( animation ) } ).Store();
+            mAnimations.emplace_back ( ResourceId{"Animation"_crc32, GetReferenceMsgId ( animation ) } ).Store();
         }
     }
 

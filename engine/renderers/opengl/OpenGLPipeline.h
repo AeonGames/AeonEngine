@@ -33,11 +33,11 @@ namespace AeonGames
         OpenGLPipeline ( uint32_t aPath = 0 );
         ///@name Overrides
         ///@{
-        void Load ( const PipelineBuffer& aPipelineBuffer ) final;
+        void Load ( const PipelineMsg& aPipelineMsg ) final;
         void Unload() final;
         ///@}
         ~OpenGLPipeline() final;
-        void Use ( const OpenGLMaterial* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const;
+        void Use ( const OpenGLMaterial* aMaterial = nullptr, const BufferAccessor* aSkeletonMsg = nullptr ) const;
         GLenum GetTopology() const;
     private:
         void Initialize();

@@ -37,7 +37,7 @@ namespace AeonGames
         ~VulkanPipeline() final;
         ///@name Overrides
         ///@{
-        void Load ( const PipelineBuffer& aPipelineBuffer ) final;
+        void Load ( const PipelineMsg& aPipelineMsg ) final;
         void Unload() final;
         ///@}
         const VkPipelineLayout GetPipelineLayout() const;

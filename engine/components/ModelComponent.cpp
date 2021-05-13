@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ namespace AeonGames
     }
 
     ModelComponent::ModelComponent() : Component{}
-        //,mSkeletonBuffer{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
+        //,mSkeletonMsg{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
 #if 0
         const float identity[16] =
@@ -49,12 +49,12 @@ namespace AeonGames
             0.0f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
         };
-        auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonBuffer->Map ( 0, mSkeletonBuffer->GetSize() ) );
+        auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonMsg->Map ( 0, mSkeletonMsg->GetSize() ) );
         for ( size_t i = 0; i < 256; ++i )
         {
             memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
         }
-        mSkeletonBuffer->Unmap();
+        mSkeletonMsg->Unmap();
 #endif
     }
 

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ namespace AeonGames
         /** @todo This is temporary while I figure out the public interface */
         else
         {
-            FrameBufferBuffer frame_buffer_buffer;
+            FrameBufferMsg frame_buffer_buffer;
             Load ( frame_buffer_buffer );
         }
     }
@@ -46,7 +46,7 @@ namespace AeonGames
     {
         Unload();
     }
-    void OpenGLFrameBuffer::Load ( const FrameBufferBuffer& aFrameBufferBuffer )
+    void OpenGLFrameBuffer::Load ( const FrameBufferMsg& aFrameBufferMsg )
     {
         // Frame Buffer
         glGenFramebuffers ( 1, &mFBO );

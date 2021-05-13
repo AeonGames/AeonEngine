@@ -1,4 +1,4 @@
-// Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package AeonGames;
 
 import "transform.proto";
 
-message ComponentPropertyBuffer{
+message ComponentPropertyMsg{
     string name = 1;
     oneof value {
     sint32    int = 2;
@@ -33,30 +33,30 @@ message ComponentPropertyBuffer{
     }
 }
 
-message ComponentBuffer {
+message ComponentMsg {
     string name = 1;
-    repeated ComponentPropertyBuffer property = 2;
+    repeated ComponentPropertyMsg property = 2;
 }
 
-message NodeBuffer {
+message NodeMsg {
     string name = 1;
     oneof transform {
-        TransformBuffer local = 2;
-        TransformBuffer global = 3;
+        TransformMsg local = 2;
+        TransformMsg global = 3;
     }
-    repeated ComponentBuffer component = 4;
-    repeated NodeBuffer node = 5;
+    repeated ComponentMsg component = 4;
+    repeated NodeMsg node = 5;
 }
 
-message CameraBuffer {
+message CameraMsg {
     string              node          = 1;
     float               field_of_view = 2;
     float               near_plane    = 3;
     float               far_plane     = 4;
 }
 
-message SceneBuffer{
+message SceneMsg{
     string              name   = 1;
-    CameraBuffer        camera = 2;
-    repeated NodeBuffer node   = 3;
+    CameraMsg        camera = 2;
+    repeated NodeMsg node   = 3;
 }

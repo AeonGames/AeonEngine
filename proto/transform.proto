@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package AeonGames;
 import "vector3.proto";
 import "quaternion.proto";
 
-message TransformBuffer {
-    Vector3Buffer Scale               = 1;
-    QuaternionBuffer Rotation         = 2;
-    Vector3Buffer Translation         = 3;
+message TransformMsg {
+    Vector3Msg Scale               = 1;
+    QuaternionMsg Rotation         = 2;
+    Vector3Msg Translation         = 3;
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2017,2019,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,19 +18,19 @@ package AeonGames;
 import "vector3.proto";
 import "vector4.proto";
 
-message SixDOPBuffer
+message SixDOPMsg
 {
-    Vector3Buffer positive = 1;
-    Vector3Buffer negative = 2;
+    Vector3Msg positive = 1;
+    Vector3Msg negative = 2;
 }
 
-message BrushBuffer {
-    SixDOPBuffer six_dop = 1;
+message BrushMsg {
+    SixDOPMsg six_dop = 1;
     bytes plane_indices  = 2;
 }
 
-message GeometryBuffer {
+message GeometryMsg {
 	uint32 version = 1;
-	repeated Vector4Buffer plane = 2;
-	repeated BrushBuffer brush = 3;
+	repeated Vector4Msg plane = 2;
+	repeated BrushMsg brush = 3;
 }

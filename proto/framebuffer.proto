@@ -1,4 +1,4 @@
-// Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
 syntax = "proto3";
 package AeonGames;
 
-message RenderTargetBuffer {
+message RenderTargetMsg {
     enum Type
     {
-		RenderBuffer  =0;
+		RenderMsg  =0;
 		Texture       =1;
 	}
     enum Attachment
@@ -43,6 +43,6 @@ message RenderTargetBuffer {
 	Format format         = 3;
 }
 
-message FrameBufferBuffer {
-	repeated RenderTargetBuffer target = 1;
+message FrameBufferMsg {
+	repeated RenderTargetMsg target = 1;
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package AeonGames;
 
 import "vector3.proto";
 
-message MeshBuffer {
+message MeshMsg {
     enum AttributeBit
     {
         UNKNOWN_ATTRIBUTE = 0;
@@ -31,8 +31,8 @@ message MeshBuffer {
         COLOR_BIT = 128;
     }
 	uint32 Version         = 1;
-    Vector3Buffer Center   = 2;
-    Vector3Buffer Radii    = 3;
+    Vector3Msg Center   = 2;
+    Vector3Msg Radii    = 3;
     uint32 VertexFlags     = 4;
     uint32 VertexCount     = 5;
     uint32 IndexSize       = 6;		

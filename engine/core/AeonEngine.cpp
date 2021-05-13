@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ namespace AeonGames
 #endif
     static bool gInitialized = false;
     static std::unique_ptr<Renderer> gRenderer{};
-    static ConfigurationBuffer gConfigurationBuffer;
+    static ConfigurationMsg gConfigurationMsg;
 #if defined(WIN32)
     static std::vector<std::tuple<HMODULE, PluginModuleInterface*>> gPlugInCache;
 #else
@@ -173,24 +173,24 @@ namespace AeonGames
         ProcessOpts ( argc, argv, gOptionHandlers.data(), gOptionHandlers.size() );
         try
         {
-            LoadProtoBufObject<ConfigurationBuffer> ( gConfigurationBuffer, gConfigFile, "AEONCFG" );
+            LoadProtoBufObject<ConfigurationMsg> ( gConfigurationMsg, gConfigFile, "AEONCFG" );
         }
         catch ( std::runtime_error& e )
         {
             std::cerr << LogLevel::Warning << e.what() << std::endl;
         }
 
-        gPlugInCache.reserve ( gConfigurationBuffer.plugin_size() );
-        for ( auto& i : gConfigurationBuffer.plugin() )
+        gPlugInCache.reserve ( gConfigurationMsg.plugin_size() );
+        for ( auto& i : gConfigurationMsg.plugin() )
         {
-            LoadPlugin ( gConfigurationBuffer.plugindirectory(), i );
+            LoadPlugin ( gConfigurationMsg.plugindirectory(), i );
         }
 
-        if ( gConfigurationBuffer.package().size() )
+        if ( gConfigurationMsg.package().size() )
         {
             try
             {
-                SetResourcePath ( {gConfigurationBuffer.package().begin(), gConfigurationBuffer.package().end() } );
+                SetResourcePath ( {gConfigurationMsg.package().begin(), gConfigurationMsg.package().end() } );
             }
             catch ( std::runtime_error& e )
             {

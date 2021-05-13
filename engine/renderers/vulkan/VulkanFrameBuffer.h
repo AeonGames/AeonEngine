@@ -26,7 +26,7 @@ namespace AeonGames
     public:
         VulkanFrameBuffer ( uint32_t aPath = 0 );
         ~VulkanFrameBuffer() final;
-        void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) final;
+        void Load ( const FrameBufferMsg& aFrameBufferMsg ) final;
         void Unload () final;
         void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
         void Bind() final;

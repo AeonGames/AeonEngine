@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class MeshBuffer;
+    class MeshMsg;
     class Mesh
     {
     public:
@@ -57,7 +57,7 @@ namespace AeonGames
         virtual void Load ( uint32_t aId ) = 0;
         virtual void Load ( const std::string& aFilename ) = 0;
         virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
-        virtual void Load ( const MeshBuffer& aMeshBuffer ) = 0;
+        virtual void Load ( const MeshMsg& aMeshMsg ) = 0;
         virtual void Unload () = 0;
         virtual uint32_t GetIndexSize () const = 0;
         virtual uint32_t GetIndexCount() const = 0;

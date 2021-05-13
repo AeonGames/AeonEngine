@@ -66,12 +66,12 @@ namespace AeonGames
         return mVkPipeline;
     }
 
-    static std::string GetSamplersCode ( const PipelineBuffer& aPipelineBuffer, uint32_t aSetNumber )
+    static std::string GetSamplersCode ( const PipelineMsg& aPipelineMsg, uint32_t aSetNumber )
     {
         std::string samplers ( "//----SAMPLERS-START----\n" );
         {
             uint32_t sampler_binding = 0;
-            for ( auto& i : aPipelineBuffer.sampler() )
+            for ( auto& i : aPipelineMsg.sampler() )
             {
                 samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
@@ -81,10 +81,10 @@ namespace AeonGames
         return samplers;
     }
 
-    static std::string GetVertexShaderCode ( const PipelineBuffer& aPipelineBuffer )
+    static std::string GetVertexShaderCode ( const PipelineMsg& aPipelineMsg )
     {
         std::string vertex_shader{ "#version 450\n" };
-        vertex_shader.append ( GetAttributesGLSL ( aPipelineBuffer ) );
+        vertex_shader.append ( GetAttributesGLSL ( aPipelineMsg ) );
 
         uint32_t set_count = 0;
         std::string transforms (
@@ -97,7 +97,7 @@ namespace AeonGames
 
         vertex_shader.append ( transforms );
 
-        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
+        if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
@@ -112,14 +112,14 @@ namespace AeonGames
         vertex_shader.append (
             "layout(set = " + std::to_string ( set_count++ ) +
             ", binding = 0,std140) uniform Properties{\n" +
-            GetPropertiesGLSL ( aPipelineBuffer ) + "};\n" );
-        vertex_shader.append ( GetSamplersCode ( aPipelineBuffer, set_count++ ) );
+            GetPropertiesGLSL ( aPipelineMsg ) + "};\n" );
+        vertex_shader.append ( GetSamplersCode ( aPipelineMsg, set_count++ ) );
 
-        switch ( aPipelineBuffer.vertex_shader().source_case() )
+        switch ( aPipelineMsg.vertex_shader().source_case() )
         {
-        case ShaderBuffer::SourceCase::kCode:
+        case ShaderMsg::SourceCase::kCode:
         {
-            vertex_shader.append ( aPipelineBuffer.vertex_shader().code() );
+            vertex_shader.append ( aPipelineMsg.vertex_shader().code() );
         }
         break;
         default:
@@ -128,7 +128,7 @@ namespace AeonGames
         return vertex_shader;
     }
 
-    static std::string GetFragmentShaderCode ( const PipelineBuffer& aPipelineBuffer )
+    static std::string GetFragmentShaderCode ( const PipelineMsg& aPipelineMsg )
     {
         uint32_t set_count = 0;
         std::string fragment_shader{"#version 450\n"};
@@ -141,7 +141,7 @@ namespace AeonGames
         );
         fragment_shader.append ( transforms );
 
-        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
+        if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
@@ -154,13 +154,13 @@ namespace AeonGames
 
         fragment_shader.append ( "layout(set = " + std::to_string ( set_count++ ) +
                                  ", binding = 0,std140) uniform Properties{\n" +
-                                 GetPropertiesGLSL ( aPipelineBuffer ) + "};\n" );
-        fragment_shader.append ( GetSamplersCode ( aPipelineBuffer, set_count++ ) );
+                                 GetPropertiesGLSL ( aPipelineMsg ) + "};\n" );
+        fragment_shader.append ( GetSamplersCode ( aPipelineMsg, set_count++ ) );
 
-        switch ( aPipelineBuffer.fragment_shader().source_case() )
+        switch ( aPipelineMsg.fragment_shader().source_case() )
         {
-        case ShaderBuffer::SourceCase::kCode:
-            fragment_shader.append ( aPipelineBuffer.fragment_shader().code() );
+        case ShaderMsg::SourceCase::kCode:
+            fragment_shader.append ( aPipelineMsg.fragment_shader().code() );
             break;
         default:
             throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
@@ -207,31 +207,31 @@ namespace AeonGames
         return offset;
     }
 
-    static VkPrimitiveTopology GetVulkanTopology ( PipelineBuffer_Topology aTopology )
+    static VkPrimitiveTopology GetVulkanTopology ( PipelineMsg_Topology aTopology )
     {
         switch ( aTopology )
         {
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_POINT_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_POINT_LIST:
             return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_STRIP:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP:
             return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST:
             return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_STRIP:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP:
             return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_FAN:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_FAN:
             return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST:
             return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_LIST_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST_WITH_ADJACENCY:
             return VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_STRIP_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP_WITH_ADJACENCY:
             return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
             return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
             return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_PATCH_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_PATCH_LIST:
             return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
         default:
             break;
@@ -239,10 +239,10 @@ namespace AeonGames
         return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
     }
 
-    void VulkanPipeline::Load ( const PipelineBuffer& aPipelineBuffer )
+    void VulkanPipeline::Load ( const PipelineMsg& aPipelineMsg )
     {
-        std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
-        std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
+        std::string vertex_shader_code = GetVertexShaderCode ( aPipelineMsg );
+        std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineMsg );
 
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, vertex_shader_code.c_str() );
@@ -306,7 +306,7 @@ namespace AeonGames
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        uint32_t attributes = GetAttributes ( aPipelineBuffer );
+        uint32_t attributes = GetAttributes ( aPipelineMsg );
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
         for ( auto& i : vertex_input_attribute_descriptions )
         {
@@ -331,7 +331,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = GetVulkanTopology ( aPipelineBuffer.topology() );
+        pipeline_input_assembly_state_create_info.topology = GetVulkanTopology ( aPipelineMsg.topology() );
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
@@ -428,17 +428,17 @@ namespace AeonGames
         // Matrix Descriptor Set Layout
         descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
 
-        if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
+        if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
         }
-        if ( aPipelineBuffer.uniform().size() )
+        if ( aPipelineMsg.uniform().size() )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         }
-        if ( aPipelineBuffer.sampler().size() )
+        if ( aPipelineMsg.sampler().size() )
         {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( aPipelineBuffer.sampler().size() );
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( aPipelineMsg.sampler().size() );
         }
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};

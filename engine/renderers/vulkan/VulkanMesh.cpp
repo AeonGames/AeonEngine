@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -90,37 +90,37 @@ namespace AeonGames
     }
     void VulkanMesh::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static MeshBuffer mesh_buffer;
+        static MeshMsg mesh_buffer;
         LoadProtoBufObject ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
         Load ( mesh_buffer );
         mesh_buffer.Clear();
     }
 
-    void VulkanMesh::Load ( const MeshBuffer& aMeshBuffer )
+    void VulkanMesh::Load ( const MeshMsg& aMeshMsg )
     {
         mAABB = AABB
         {
             {
-                aMeshBuffer.center().x(),
-                aMeshBuffer.center().y(),
-                aMeshBuffer.center().z()
+                aMeshMsg.center().x(),
+                aMeshMsg.center().y(),
+                aMeshMsg.center().z()
             },
             {
-                aMeshBuffer.radii().x(),
-                aMeshBuffer.radii().y(),
-                aMeshBuffer.radii().z()
+                aMeshMsg.radii().x(),
+                aMeshMsg.radii().y(),
+                aMeshMsg.radii().z()
             }
         };
 
-        mVertexCount = aMeshBuffer.vertexcount();
-        mIndexCount = aMeshBuffer.indexcount();
-        mIndexSize = aMeshBuffer.indexsize();
-        mVertexFlags = aMeshBuffer.vertexflags();
+        mVertexCount = aMeshMsg.vertexcount();
+        mIndexCount = aMeshMsg.indexcount();
+        mIndexSize = aMeshMsg.indexsize();
+        mVertexFlags = aMeshMsg.vertexflags();
 
         // Vulkan Specific code
         const VkDeviceSize vertex_buffer_size = ( sizeof ( Vertex ) * GetVertexCount() );
         // We need to expand 1 byte indices to 2 since they're not supported on Vulkan
-        const VkDeviceSize index_buffer_size = aMeshBuffer.indexbuffer().size() * ( ( aMeshBuffer.indexsize() == 1 ) ? 2 : 1 );
+        const VkDeviceSize index_buffer_size = aMeshMsg.indexbuffer().size() * ( ( aMeshMsg.indexsize() == 1 ) ? 2 : 1 );
         VkDeviceSize buffer_size = vertex_buffer_size + index_buffer_size;
         VkBufferUsageFlags buffer_usage = ( ( mVertexCount ) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( ( mIndexCount ) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 );
         mBuffer.Initialize ( buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
@@ -134,49 +134,49 @@ namespace AeonGames
             {
                 if ( mVertexFlags & Mesh::POSITION_BIT )
                 {
-                    memcpy ( vertices[j].position, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::position ) );
+                    memcpy ( vertices[j].position, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::position ) );
                     offset += sizeof ( Vertex::position );
                 }
 
                 if ( mVertexFlags & Mesh::NORMAL_BIT )
                 {
-                    memcpy ( vertices[j].normal, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::normal ) );
+                    memcpy ( vertices[j].normal, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::normal ) );
                     offset += sizeof ( Vertex::normal );
                 }
 
                 if ( mVertexFlags & Mesh::TANGENT_BIT )
                 {
-                    memcpy ( vertices[j].tangent, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::tangent ) );
+                    memcpy ( vertices[j].tangent, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::tangent ) );
                     offset += sizeof ( Vertex::tangent );
                 }
 
                 if ( mVertexFlags & Mesh::BITANGENT_BIT )
                 {
-                    memcpy ( vertices[j].bitangent, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::bitangent ) );
+                    memcpy ( vertices[j].bitangent, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::bitangent ) );
                     offset += sizeof ( Vertex::bitangent );
                 }
 
                 if ( mVertexFlags & Mesh::UV_BIT )
                 {
-                    memcpy ( vertices[j].uv, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::uv ) );
+                    memcpy ( vertices[j].uv, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::uv ) );
                     offset += sizeof ( Vertex::uv );
                 }
 
                 if ( mVertexFlags & Mesh::WEIGHT_IDX_BIT )
                 {
-                    memcpy ( vertices[j].weight_indices, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
+                    memcpy ( vertices[j].weight_indices, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::weight_indices ) );
                     offset += sizeof ( Vertex::weight_indices );
                 }
 
                 if ( mVertexFlags & Mesh::WEIGHT_BIT )
                 {
-                    memcpy ( vertices[j].weight_influences, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
+                    memcpy ( vertices[j].weight_influences, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::weight_influences ) );
                     offset += sizeof ( Vertex::weight_influences );
                 }
 
                 if ( mVertexFlags & Mesh::COLOR_BIT )
                 {
-                    memcpy ( vertices[j].color, aMeshBuffer.vertexbuffer().data() + offset, sizeof ( Vertex::color ) );
+                    memcpy ( vertices[j].color, aMeshMsg.vertexbuffer().data() + offset, sizeof ( Vertex::color ) );
                     offset += sizeof ( Vertex::color );
                 }
             }
@@ -184,16 +184,16 @@ namespace AeonGames
         if ( mIndexCount )
         {
             void* data = buffer.data() + vertex_buffer_size;
-            if ( aMeshBuffer.indexsize() != 1 )
+            if ( aMeshMsg.indexsize() != 1 )
             {
-                memcpy ( data, aMeshBuffer.indexbuffer().data(), aMeshBuffer.indexbuffer().size() );
+                memcpy ( data, aMeshMsg.indexbuffer().data(), aMeshMsg.indexbuffer().size() );
             }
             else
             {
                 /**@note upcast to 16 bit indices.*/
                 for ( size_t j = 0; j < mIndexCount; ++j )
                 {
-                    ( reinterpret_cast<uint16_t*> ( data ) [j] ) = aMeshBuffer.indexbuffer() [j];
+                    ( reinterpret_cast<uint16_t*> ( data ) [j] ) = aMeshMsg.indexbuffer() [j];
                 }
             }
         }

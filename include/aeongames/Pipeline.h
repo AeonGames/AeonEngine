@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class MaterialBuffer;
-    class PipelineBuffer;
+    class MaterialMsg;
+    class PipelineMsg;
 
     enum AttributeBits
     {
@@ -61,7 +61,7 @@ namespace AeonGames
     {
     public:
         DLL virtual ~Pipeline() = 0;
-        virtual void Load ( const PipelineBuffer& aPipelineBuffer ) = 0;
+        virtual void Load ( const PipelineMsg& aPipelineMsg ) = 0;
         virtual void Unload() = 0;
         // Non Virtual
         DLL void Load ( const std::string& aFilename );

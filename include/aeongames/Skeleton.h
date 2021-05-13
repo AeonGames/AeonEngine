@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class SkeletonBuffer;
+    class SkeletonMsg;
     class Skeleton
     {
     public:
@@ -46,10 +46,11 @@ namespace AeonGames
         DLL ~Skeleton();
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
+        DLL void Load ( uint32_t aId );
         DLL void Unload ();
         DLL const std::vector<Joint>& GetJoints() const;
     private:
-        void Load ( const SkeletonBuffer& aSkeletonBuffer );
+        void Load ( const SkeletonMsg& aSkeletonMsg );
         std::vector<Joint> mJoints;
     };
 }

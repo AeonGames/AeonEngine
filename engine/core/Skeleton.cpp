@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -66,6 +66,11 @@ namespace AeonGames
 
     Skeleton::Skeleton ( uint32_t aId )
     {
+        Load ( aId );
+    }
+
+    void Skeleton::Load ( uint32_t aId )
+    {
         std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
         LoadResource ( aId, buffer.data(), buffer.size() );
         try
@@ -115,28 +120,23 @@ namespace AeonGames
 
     void Skeleton::Load ( const std::string& aFilename )
     {
-        static std::mutex m;
-        static SkeletonBuffer skeleton_buffer;
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<SkeletonBuffer> ( skeleton_buffer, aFilename, "AEONSKL" );
-        Load ( skeleton_buffer );
-        skeleton_buffer.Clear();
+        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
     }
 
     void Skeleton::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static std::mutex m;
-        static SkeletonBuffer skeleton_buffer;
+        static SkeletonMsg skeleton_buffer;
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject<SkeletonBuffer> ( skeleton_buffer, aBuffer, aBufferSize, "AEONSKL" );
+        LoadProtoBufObject ( skeleton_buffer, aBuffer, aBufferSize, "AEONSKL" );
         Load ( skeleton_buffer );
         skeleton_buffer.Clear();
     }
 
-    void Skeleton::Load ( const SkeletonBuffer& aSkeletonBuffer )
+    void Skeleton::Load ( const SkeletonMsg& aSkeletonMsg )
     {
-        mJoints.reserve ( aSkeletonBuffer.joint_size() );
-        for ( auto& joint : aSkeletonBuffer.joint() )
+        mJoints.reserve ( aSkeletonMsg.joint_size() );
+        for ( auto& joint : aSkeletonMsg.joint() )
         {
             mJoints.emplace_back (
                 ( joint.parentindex() < 0 ) ? nullptr : &mJoints[joint.parentindex()],

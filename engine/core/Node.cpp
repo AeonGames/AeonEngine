@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -215,27 +215,27 @@ namespace AeonGames
     // Helper for the Property visitor in Serialize/Deserialize
     template<class T> struct always_false : std::false_type {};
 
-    void Node::Serialize ( NodeBuffer& aNodeBuffer ) const
+    void Node::Serialize ( NodeMsg& aNodeMsg ) const
     {
-        *aNodeBuffer.mutable_name() = GetName();
-        aNodeBuffer.mutable_local()->mutable_scale()->set_x ( GetLocalTransform().GetScale() [0] );
-        aNodeBuffer.mutable_local()->mutable_scale()->set_y ( GetLocalTransform().GetScale() [1] );
-        aNodeBuffer.mutable_local()->mutable_scale()->set_z ( GetLocalTransform().GetScale() [2] );
-        aNodeBuffer.mutable_local()->mutable_rotation()->set_w ( GetLocalTransform().GetRotation() [0] );
-        aNodeBuffer.mutable_local()->mutable_rotation()->set_x ( GetLocalTransform().GetRotation() [1] );
-        aNodeBuffer.mutable_local()->mutable_rotation()->set_y ( GetLocalTransform().GetRotation() [2] );
-        aNodeBuffer.mutable_local()->mutable_rotation()->set_z ( GetLocalTransform().GetRotation() [3] );
-        aNodeBuffer.mutable_local()->mutable_translation()->set_x ( GetLocalTransform().GetTranslation() [0] );
-        aNodeBuffer.mutable_local()->mutable_translation()->set_y ( GetLocalTransform().GetTranslation() [1] );
-        aNodeBuffer.mutable_local()->mutable_translation()->set_z ( GetLocalTransform().GetTranslation() [2] );
+        *aNodeMsg.mutable_name() = GetName();
+        aNodeMsg.mutable_local()->mutable_scale()->set_x ( GetLocalTransform().GetScale() [0] );
+        aNodeMsg.mutable_local()->mutable_scale()->set_y ( GetLocalTransform().GetScale() [1] );
+        aNodeMsg.mutable_local()->mutable_scale()->set_z ( GetLocalTransform().GetScale() [2] );
+        aNodeMsg.mutable_local()->mutable_rotation()->set_w ( GetLocalTransform().GetRotation() [0] );
+        aNodeMsg.mutable_local()->mutable_rotation()->set_x ( GetLocalTransform().GetRotation() [1] );
+        aNodeMsg.mutable_local()->mutable_rotation()->set_y ( GetLocalTransform().GetRotation() [2] );
+        aNodeMsg.mutable_local()->mutable_rotation()->set_z ( GetLocalTransform().GetRotation() [3] );
+        aNodeMsg.mutable_local()->mutable_translation()->set_x ( GetLocalTransform().GetTranslation() [0] );
+        aNodeMsg.mutable_local()->mutable_translation()->set_y ( GetLocalTransform().GetTranslation() [1] );
+        aNodeMsg.mutable_local()->mutable_translation()->set_z ( GetLocalTransform().GetTranslation() [2] );
         for ( auto& i : mComponents )
         {
-            ComponentBuffer* component_buffer = aNodeBuffer.add_component();
+            ComponentMsg* component_buffer = aNodeMsg.add_component();
             ( *component_buffer->mutable_name() ) = i->GetId().GetString();
             const StringId* PropertyIds = i->GetPropertyInfoArray();
             for ( size_t j = 0; j < i->GetPropertyCount(); ++j )
             {
-                ComponentPropertyBuffer* component_property_buffer = component_buffer->add_property();
+                ComponentPropertyMsg* component_property_buffer = component_buffer->add_property();
                 ( *component_property_buffer->mutable_name() ) = PropertyIds[j].GetString();
 
                 std::visit (
@@ -293,18 +293,18 @@ namespace AeonGames
         }
     }
 
-    void Node::Deserialize ( const NodeBuffer& aNodeBuffer )
+    void Node::Deserialize ( const NodeMsg& aNodeMsg )
     {
-        SetName ( aNodeBuffer.name() );
-        if ( aNodeBuffer.has_local() )
+        SetName ( aNodeMsg.name() );
+        if ( aNodeMsg.has_local() )
         {
-            SetLocalTransform ( GetTransform ( aNodeBuffer.local() ) );
+            SetLocalTransform ( GetTransform ( aNodeMsg.local() ) );
         }
-        else if ( aNodeBuffer.has_global() )
+        else if ( aNodeMsg.has_global() )
         {
-            SetGlobalTransform ( GetTransform ( aNodeBuffer.global() ) );
+            SetGlobalTransform ( GetTransform ( aNodeMsg.global() ) );
         }
-        for ( auto& i : aNodeBuffer.component() )
+        for ( auto& i : aNodeMsg.component() )
         {
             Component* component = AddComponent ( ConstructComponent ( i.name() ) );
             for ( auto& j : i.property() )

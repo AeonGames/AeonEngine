@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ limitations under the License.
 namespace AeonGames
 {
     class Image;
-    class MaterialBuffer;
-    class PropertyBuffer;
+    class MaterialMsg;
+    class PropertyMsg;
     class Material
     {
     public:
@@ -55,7 +55,7 @@ namespace AeonGames
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const uint32_t aId );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
-        virtual void Load ( const MaterialBuffer& aMaterialBuffer ) = 0;
+        virtual void Load ( const MaterialMsg& aMaterialMsg ) = 0;
         virtual void Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) = 0;
         virtual void Unload() = 0;
         ///@}
@@ -89,8 +89,8 @@ namespace AeonGames
             std::string mName{};
             size_t mOffset{};
         };
-        DLL size_t LoadVariables ( const MaterialBuffer& aMaterialBuffer );
-        DLL void LoadSamplers ( const MaterialBuffer& aMaterialBuffer );
+        DLL size_t LoadVariables ( const MaterialMsg& aMaterialMsg );
+        DLL void LoadSamplers ( const MaterialMsg& aMaterialMsg );
         DLL size_t LoadVariables ( std::initializer_list<UniformKeyValue> aUniforms );
         DLL void LoadSamplers ( std::initializer_list<SamplerKeyValue> aSamplers );
         std::vector<UniformVariable> mVariables{};

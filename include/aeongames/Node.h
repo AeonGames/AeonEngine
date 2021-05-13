@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Window;
-    class NodeBuffer;
+    class NodeMsg;
     class Scene;
     using NodeParent = std::variant<Node*, Scene*>;
     inline Node* GetNodePtr ( const NodeParent& aNodeParent )
@@ -62,8 +62,8 @@ namespace AeonGames
         DLL Node ( uint32_t aFlags = AllBits );
         DLL void SetName ( const std::string& aName );
         DLL const std::string& GetName() const;
-        DLL void Serialize ( NodeBuffer& aNodeBuffer ) const;
-        DLL void Deserialize ( const NodeBuffer& aNodeBuffer );
+        DLL void Serialize ( NodeMsg& aNodeMsg ) const;
+        DLL void Deserialize ( const NodeMsg& aNodeMsg );
         /** Enables or disables a set of node flags.
         @param aFlagBits Flag bits to enable/disable.
         @param aEnabled true to enable, false to disable.

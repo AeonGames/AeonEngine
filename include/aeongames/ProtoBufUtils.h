@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,22 +25,22 @@ limitations under the License.
 #include "aeongames/Material.h"
 namespace AeonGames
 {
-    class ReferenceBuffer;
-    class PipelineBuffer;
-    class Vector3Buffer;
-    class QuaternionBuffer;
-    class TransformBuffer;
-    class ComponentPropertyBuffer;
-    class PipelineBuffer;
-    DLL uint32_t GetReferenceBufferId ( const ReferenceBuffer& reference_buffer );
-    DLL uint32_t GetAttributes ( const PipelineBuffer& aPipelineBuffer );
-    DLL std::string GetAttributesGLSL ( const PipelineBuffer& aPipelineBuffer );
-    DLL std::string GetPropertiesGLSL ( const PipelineBuffer& aPipelineBuffer );
-    Vector3 GetVector3 ( const Vector3Buffer& aVector3 );
-    Quaternion GetQuaternion ( const QuaternionBuffer& aQuaternion );
-    Transform GetTransform ( const TransformBuffer& aTransform );
-    Property GetProperty ( const ComponentPropertyBuffer& aComponentPropertyBuffer );
-    size_t GetUniformBufferSize ( const PipelineBuffer& aPipelineBuffer );
-    DLL Material::UniformKeyValue PropertyToKeyValue ( const PropertyBuffer& aProperty );
+    class ReferenceMsg;
+    class PipelineMsg;
+    class Vector3Msg;
+    class QuaternionMsg;
+    class TransformMsg;
+    class ComponentPropertyMsg;
+    class PipelineMsg;
+    DLL uint32_t GetReferenceMsgId ( const ReferenceMsg& reference_buffer );
+    DLL uint32_t GetAttributes ( const PipelineMsg& aPipelineMsg );
+    DLL std::string GetAttributesGLSL ( const PipelineMsg& aPipelineMsg );
+    DLL std::string GetPropertiesGLSL ( const PipelineMsg& aPipelineMsg );
+    Vector3 GetVector3 ( const Vector3Msg& aVector3 );
+    Quaternion GetQuaternion ( const QuaternionMsg& aQuaternion );
+    Transform GetTransform ( const TransformMsg& aTransform );
+    Property GetProperty ( const ComponentPropertyMsg& aComponentPropertyMsg );
+    size_t GetUniformBufferSize ( const PipelineMsg& aPipelineMsg );
+    DLL Material::UniformKeyValue PropertyToKeyValue ( const PropertyMsg& aProperty );
 }
 #endif

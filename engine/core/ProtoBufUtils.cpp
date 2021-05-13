@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,13 +35,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    uint32_t GetReferenceBufferId ( const ReferenceBuffer& reference_buffer )
+    uint32_t GetReferenceMsgId ( const ReferenceMsg& reference_buffer )
     {
         switch ( reference_buffer.reference_case() )
         {
-        case ReferenceBuffer::kPath:
+        case ReferenceMsg::kPath:
             return crc32i ( reference_buffer.path().c_str(), reference_buffer.path().size() );
-        case ReferenceBuffer::kId:
+        case ReferenceMsg::kId:
             return reference_buffer.id();
         default:
             return 0;
@@ -88,11 +88,11 @@ namespace AeonGames
         "\\bVertexWeights\\b|"
         "\\bVertexColor\\b" };
 
-    uint32_t GetAttributes ( const PipelineBuffer& aPipelineBuffer )
+    uint32_t GetAttributes ( const PipelineMsg& aPipelineMsg )
     {
         std::smatch attribute_matches;
         uint32_t attributes{};
-        std::string code = aPipelineBuffer.vertex_shader().code();
+        std::string code = aPipelineMsg.vertex_shader().code();
         while ( std::regex_search ( code, attribute_matches, AttributeRegex ) )
         {
             for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
@@ -111,10 +111,10 @@ namespace AeonGames
         return attributes;
     }
 
-    std::string GetAttributesGLSL ( const PipelineBuffer& aPipelineBuffer )
+    std::string GetAttributesGLSL ( const PipelineMsg& aPipelineMsg )
     {
         std::string attribute_code{};
-        uint32_t attributes{GetAttributes ( aPipelineBuffer ) };
+        uint32_t attributes{GetAttributes ( aPipelineMsg ) };
         for ( uint32_t i = 0; i < AttributeStrings.size(); ++i )
         {
             if ( attributes & ( 1 << i ) )
@@ -131,29 +131,29 @@ namespace AeonGames
         return attribute_code;
     }
 
-    std::string GetPropertiesGLSL ( const PipelineBuffer& aPipelineBuffer )
+    std::string GetPropertiesGLSL ( const PipelineMsg& aPipelineMsg )
     {
         std::string properties{};
-        for ( auto& i : aPipelineBuffer.uniform() )
+        for ( auto& i : aPipelineMsg.uniform() )
         {
             switch ( i.type() )
             {
-            case UniformDescriptorBuffer::SCALAR_FLOAT:
+            case UniformDescriptorMsg::SCALAR_FLOAT:
                 properties += "float " + i.name() + ";\n";
                 break;
-            case UniformDescriptorBuffer::SCALAR_UINT:
+            case UniformDescriptorMsg::SCALAR_UINT:
                 properties += "uint " + i.name() + ";\n";
                 break;
-            case UniformDescriptorBuffer::SCALAR_INT:
+            case UniformDescriptorMsg::SCALAR_INT:
                 properties += "int " + i.name() + ";\n";
                 break;
-            case UniformDescriptorBuffer::VECTOR_FLOAT_2:
+            case UniformDescriptorMsg::VECTOR_FLOAT_2:
                 properties += "vec2 " + i.name() + ";\n";
                 break;
-            case UniformDescriptorBuffer::VECTOR_FLOAT_3:
+            case UniformDescriptorMsg::VECTOR_FLOAT_3:
                 properties += "vec3 " + i.name() + ";\n";
                 break;
-            case UniformDescriptorBuffer::VECTOR_FLOAT_4:
+            case UniformDescriptorMsg::VECTOR_FLOAT_4:
                 properties += "vec4 " + i.name() + ";\n";
                 break;
             default:
@@ -163,16 +163,16 @@ namespace AeonGames
         return properties;
     }
 
-    Vector3 GetVector3 ( const Vector3Buffer& aVector3 )
+    Vector3 GetVector3 ( const Vector3Msg& aVector3 )
     {
         return {aVector3.x(), aVector3.y(), aVector3.z() };
     }
-    Quaternion GetQuaternion ( const QuaternionBuffer& aQuaternion )
+    Quaternion GetQuaternion ( const QuaternionMsg& aQuaternion )
     {
         return {aQuaternion.w(), aQuaternion.x(), aQuaternion.y(), aQuaternion.z() };
     }
 
-    Transform GetTransform ( const TransformBuffer& aTransform )
+    Transform GetTransform ( const TransformMsg& aTransform )
     {
         return
         {
@@ -182,31 +182,31 @@ namespace AeonGames
         };
     }
 
-    Property GetProperty ( const ComponentPropertyBuffer& aComponentPropertyBuffer )
+    Property GetProperty ( const ComponentPropertyMsg& aComponentPropertyMsg )
     {
-        switch ( aComponentPropertyBuffer.value_case() )
+        switch ( aComponentPropertyMsg.value_case() )
         {
-        case ComponentPropertyBuffer::kInt:
-            return static_cast<int> ( aComponentPropertyBuffer.int_() );
-        case ComponentPropertyBuffer::kLong:
-            return static_cast<long> ( aComponentPropertyBuffer.long_() );
-        case ComponentPropertyBuffer::kLongLong:
-            return static_cast<long long> ( aComponentPropertyBuffer.long_long() );
-        case ComponentPropertyBuffer::kUnsigned:
-            return static_cast<unsigned> ( aComponentPropertyBuffer.int_() );
-        case ComponentPropertyBuffer::kUnsignedLong:
-            return static_cast<long> ( aComponentPropertyBuffer.unsigned_long() );
-        case ComponentPropertyBuffer::kUnsignedLongLong:
-            return static_cast<long long> ( aComponentPropertyBuffer.unsigned_long_long() );
-        case ComponentPropertyBuffer::kFloat:
-            return static_cast<float> ( aComponentPropertyBuffer.float_() );
-        case ComponentPropertyBuffer::kDouble:
-            return static_cast<double> ( aComponentPropertyBuffer.double_() );
-        case ComponentPropertyBuffer::kString:
-            return aComponentPropertyBuffer.string();
-        case ComponentPropertyBuffer::kPath:
-            return std::filesystem::path ( aComponentPropertyBuffer.string() );
-        case ComponentPropertyBuffer::VALUE_NOT_SET:
+        case ComponentPropertyMsg::kInt:
+            return static_cast<int> ( aComponentPropertyMsg.int_() );
+        case ComponentPropertyMsg::kLong:
+            return static_cast<long> ( aComponentPropertyMsg.long_() );
+        case ComponentPropertyMsg::kLongLong:
+            return static_cast<long long> ( aComponentPropertyMsg.long_long() );
+        case ComponentPropertyMsg::kUnsigned:
+            return static_cast<unsigned> ( aComponentPropertyMsg.int_() );
+        case ComponentPropertyMsg::kUnsignedLong:
+            return static_cast<long> ( aComponentPropertyMsg.unsigned_long() );
+        case ComponentPropertyMsg::kUnsignedLongLong:
+            return static_cast<long long> ( aComponentPropertyMsg.unsigned_long_long() );
+        case ComponentPropertyMsg::kFloat:
+            return static_cast<float> ( aComponentPropertyMsg.float_() );
+        case ComponentPropertyMsg::kDouble:
+            return static_cast<double> ( aComponentPropertyMsg.double_() );
+        case ComponentPropertyMsg::kString:
+            return aComponentPropertyMsg.string();
+        case ComponentPropertyMsg::kPath:
+            return std::filesystem::path ( aComponentPropertyMsg.string() );
+        case ComponentPropertyMsg::VALUE_NOT_SET:
             /// @todo Add component and property names to the exception message.
             throw std::runtime_error ( "Component property value not set." );
             break;
@@ -214,34 +214,34 @@ namespace AeonGames
         return Property{};
     }
 
-    size_t GetUniformBufferSize ( const PipelineBuffer& aPipelineBuffer )
+    size_t GetUniformBufferSize ( const PipelineMsg& aPipelineMsg )
     {
         size_t size = 0;
-        for ( auto& i : aPipelineBuffer.uniform() )
+        for ( auto& i : aPipelineMsg.uniform() )
         {
             switch ( i.type() )
             {
-            case UniformDescriptorBuffer::SCALAR_FLOAT:
+            case UniformDescriptorMsg::SCALAR_FLOAT:
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
                 size += sizeof ( float );
                 break;
-            case UniformDescriptorBuffer::SCALAR_UINT:
+            case UniformDescriptorMsg::SCALAR_UINT:
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
                 size += sizeof ( uint32_t );
                 break;
-            case UniformDescriptorBuffer::SCALAR_INT:
+            case UniformDescriptorMsg::SCALAR_INT:
                 size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
                 size += sizeof ( int32_t );
                 break;
-            case UniformDescriptorBuffer::VECTOR_FLOAT_2:
+            case UniformDescriptorMsg::VECTOR_FLOAT_2:
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
                 size += sizeof ( float ) * 2;
                 break;
-            case UniformDescriptorBuffer::VECTOR_FLOAT_3:
+            case UniformDescriptorMsg::VECTOR_FLOAT_3:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 3;
                 break;
-            case UniformDescriptorBuffer::VECTOR_FLOAT_4:
+            case UniformDescriptorMsg::VECTOR_FLOAT_4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 size += sizeof ( float ) * 4;
                 break;
@@ -252,23 +252,23 @@ namespace AeonGames
         return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 float
     }
 
-    Material::UniformKeyValue PropertyToKeyValue ( const PropertyBuffer& aProperty )
+    Material::UniformKeyValue PropertyToKeyValue ( const PropertyMsg& aProperty )
     {
         switch ( aProperty.value_case() )
         {
-        case PropertyBuffer::ValueCase::kScalarFloat:
+        case PropertyMsg::ValueCase::kScalarFloat:
             return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_float() };
-        case PropertyBuffer::ValueCase::kScalarUint:
+        case PropertyMsg::ValueCase::kScalarUint:
             return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_uint() };
-        case PropertyBuffer::ValueCase::kScalarInt:
+        case PropertyMsg::ValueCase::kScalarInt:
             return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_int() };
-        case PropertyBuffer::ValueCase::kVector2:
+        case PropertyMsg::ValueCase::kVector2:
             return Material::UniformKeyValue{aProperty.name(), Vector2{aProperty.vector2().x(), aProperty.vector2().y() }};
-        case PropertyBuffer::ValueCase::kVector3:
+        case PropertyMsg::ValueCase::kVector3:
             return Material::UniformKeyValue{aProperty.name(), Vector3{aProperty.vector3().x(), aProperty.vector3().y(), aProperty.vector3().z() }};
-        case PropertyBuffer::ValueCase::kVector4:
+        case PropertyMsg::ValueCase::kVector4:
             return Material::UniformKeyValue{aProperty.name(), Vector4{aProperty.vector4().x(), aProperty.vector4().y(), aProperty.vector4().z(), aProperty.vector4().w() }};
-        case PropertyBuffer::ValueCase::kMatrix4X4:
+        case PropertyMsg::ValueCase::kMatrix4X4:
             return Material::UniformKeyValue{aProperty.name(), Matrix4x4
                 {
                     aProperty.matrix4x4().m0(),

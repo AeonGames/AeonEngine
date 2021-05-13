@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2017,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,19 +18,19 @@ package AeonGames;
 import "vector3.proto";
 import "quaternion.proto";
 
-message JointBuffer {
+message JointMsg {
     int32 ParentIndex                 = 1;
-    Vector3Buffer Scale               = 2;
-    QuaternionBuffer Rotation         = 3;
-    Vector3Buffer Translation         = 4;
+    Vector3Msg Scale               = 2;
+    QuaternionMsg Rotation         = 3;
+    Vector3Msg Translation         = 4;
     // These may be removed later
-    Vector3Buffer InvertedScale       = 5;
-    QuaternionBuffer InvertedRotation = 6;
-    Vector3Buffer InvertedTranslation = 7;
+    Vector3Msg InvertedScale       = 5;
+    QuaternionMsg InvertedRotation = 6;
+    Vector3Msg InvertedTranslation = 7;
     string Name                       = 8;
 }
 
-message SkeletonBuffer {
+message SkeletonMsg {
 	uint32 Version                    = 1;
-	repeated JointBuffer Joint        = 2;
+	repeated JointMsg Joint        = 2;
 }

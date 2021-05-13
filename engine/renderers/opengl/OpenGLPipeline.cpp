@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,31 +40,31 @@ limitations under the License.
 
 namespace AeonGames
 {
-    static GLenum GetGLTopology ( PipelineBuffer_Topology aTopology )
+    static GLenum GetGLTopology ( PipelineMsg_Topology aTopology )
     {
         switch ( aTopology )
         {
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_POINT_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_POINT_LIST:
             return GL_POINTS;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_STRIP:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP:
             return GL_LINE_STRIP;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST:
             return GL_LINES;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_STRIP:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP:
             return GL_TRIANGLE_STRIP;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_FAN:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_FAN:
             return GL_TRIANGLE_FAN;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST:
             return GL_TRIANGLES;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_LIST_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST_WITH_ADJACENCY:
             return GL_LINES_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_LINE_STRIP_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP_WITH_ADJACENCY:
             return GL_LINE_STRIP_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
             return GL_TRIANGLES_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
             return GL_TRIANGLE_STRIP_ADJACENCY;
-        case PipelineBuffer_Topology::PipelineBuffer_Topology_PATCH_LIST:
+        case PipelineMsg_Topology::PipelineMsg_Topology_PATCH_LIST:
             return GL_PATCHES;
         default:
             break;
@@ -85,10 +85,10 @@ namespace AeonGames
         Unload();
     }
 
-    static std::string GetVertexShaderCode ( const PipelineBuffer& aPipelineBuffer )
+    static std::string GetVertexShaderCode ( const PipelineMsg& aPipelineMsg )
     {
         std::string vertex_shader{ "#version 450\n" };
-        vertex_shader.append ( GetAttributesGLSL ( aPipelineBuffer ) );
+        vertex_shader.append ( GetAttributesGLSL ( aPipelineMsg ) );
 
         uint32_t uniform_block_binding{0};
 
@@ -101,14 +101,14 @@ namespace AeonGames
         );
         vertex_shader.append ( transforms );
 
-        if ( aPipelineBuffer.uniform().size() )
+        if ( aPipelineMsg.uniform().size() )
         {
             std::string properties (
                 "layout(binding = " + std::to_string ( uniform_block_binding++ ) +
                 ",std140) uniform Properties{\n" +
-                GetPropertiesGLSL ( aPipelineBuffer ) + "};\n" );
+                GetPropertiesGLSL ( aPipelineMsg ) + "};\n" );
 
-            if ( GetAttributes ( aPipelineBuffer ) & ( VertexWeightIdxBit | VertexWeightBit ) )
+            if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
             {
                 std::string skeleton (
                     "layout(std140, binding = " + std::to_string ( uniform_block_binding++ ) + ") uniform Skeleton{\n"
@@ -120,7 +120,7 @@ namespace AeonGames
 
             uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipelineBuffer.sampler() )
+            for ( auto& i : aPipelineMsg.sampler() )
             {
                 samplers += "layout(binding = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
@@ -131,11 +131,11 @@ namespace AeonGames
             vertex_shader.append ( samplers );
         }
 
-        switch ( aPipelineBuffer.vertex_shader().source_case() )
+        switch ( aPipelineMsg.vertex_shader().source_case() )
         {
-        case ShaderBuffer::SourceCase::kCode:
+        case ShaderMsg::SourceCase::kCode:
         {
-            vertex_shader.append ( aPipelineBuffer.vertex_shader().code() );
+            vertex_shader.append ( aPipelineMsg.vertex_shader().code() );
         }
         break;
         default:
@@ -144,7 +144,7 @@ namespace AeonGames
         return vertex_shader;
     }
 
-    static std::string GetFragmentShaderCode ( const PipelineBuffer& aPipelineBuffer )
+    static std::string GetFragmentShaderCode ( const PipelineMsg& aPipelineMsg )
     {
         std::string fragment_shader{"#version 450\n"};
         std::string transforms (
@@ -157,17 +157,17 @@ namespace AeonGames
 
         fragment_shader.append ( transforms );
 
-        if ( aPipelineBuffer.uniform().size() )
+        if ( aPipelineMsg.uniform().size() )
         {
             std::string properties
             {
                 "layout(binding = 1,std140) uniform Properties{\n" +
-                GetPropertiesGLSL ( aPipelineBuffer ) +
+                GetPropertiesGLSL ( aPipelineMsg ) +
                 "};\n"};
 
             uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipelineBuffer.sampler() )
+            for ( auto& i : aPipelineMsg.sampler() )
             {
                 samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
                 ++sampler_binding;
@@ -176,10 +176,10 @@ namespace AeonGames
             fragment_shader.append ( properties );
             fragment_shader.append ( samplers );
         }
-        switch ( aPipelineBuffer.fragment_shader().source_case() )
+        switch ( aPipelineMsg.fragment_shader().source_case() )
         {
-        case ShaderBuffer::SourceCase::kCode:
-            fragment_shader.append ( aPipelineBuffer.fragment_shader().code() );
+        case ShaderMsg::SourceCase::kCode:
+            fragment_shader.append ( aPipelineMsg.fragment_shader().code() );
             break;
         default:
             throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
@@ -187,16 +187,16 @@ namespace AeonGames
         return fragment_shader;
     }
 
-    void OpenGLPipeline::Load ( const PipelineBuffer& aPipelineBuffer )
+    void OpenGLPipeline::Load ( const PipelineMsg& aPipelineMsg )
     {
         if ( glIsProgram ( mProgramId ) )
         {
             throw std::runtime_error ( "OpenGL object already loaded." );
         }
 
-        mTopology = GetGLTopology ( aPipelineBuffer.topology() );
-        std::string vertex_shader_code = GetVertexShaderCode ( aPipelineBuffer );
-        std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineBuffer );
+        mTopology = GetGLTopology ( aPipelineMsg.topology() );
+        std::string vertex_shader_code = GetVertexShaderCode ( aPipelineMsg );
+        std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineMsg );
 
         //--------------------------------------------------
         // Begin OpenGL Specific code
@@ -309,7 +309,7 @@ namespace AeonGames
 
         // Samplers
 #if 1
-        for ( GLint i = 0; i < aPipelineBuffer.sampler().size(); ++i )
+        for ( GLint i = 0; i < aPipelineMsg.sampler().size(); ++i )
         {
             glUniform1i ( i, i );
             OPENGL_CHECK_ERROR_THROW;
@@ -344,7 +344,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const BufferAccessor* aSkeletonBuffer ) const
+    void OpenGLPipeline::Use ( const OpenGLMaterial* aMaterial, const BufferAccessor* aSkeletonMsg ) const
     {
         glUseProgram ( mProgramId );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -370,10 +370,10 @@ namespace AeonGames
                 OPENGL_CHECK_ERROR_THROW;
             }
         }
-        auto* buffer = ( aSkeletonBuffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer*> ( aSkeletonBuffer->GetBuffer() ) : nullptr;
+        auto* buffer = ( aSkeletonMsg != nullptr ) ? reinterpret_cast<const OpenGLBuffer*> ( aSkeletonMsg->GetBuffer() ) : nullptr;
         if ( GLuint buffer_id = ( buffer != nullptr ) ? buffer->GetBufferId() : 0 )
         {
-            glBindBufferRange ( GL_UNIFORM_BUFFER, index++, buffer_id, aSkeletonBuffer->GetOffset(), aSkeletonBuffer->GetSize() );
+            glBindBufferRange ( GL_UNIFORM_BUFFER, index++, buffer_id, aSkeletonMsg->GetOffset(), aSkeletonMsg->GetSize() );
             OPENGL_CHECK_ERROR_THROW;
         };
     }
