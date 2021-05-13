@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -113,21 +113,21 @@ namespace AeonGames
         InitializeDescriptorSets();
     }
 
-    void VulkanMaterial::Load ( const MaterialBuffer& aMaterialBuffer )
+    void VulkanMaterial::Load ( const MaterialMsg& aMaterialMsg )
     {
-        size_t size = LoadVariables ( aMaterialBuffer );
+        size_t size = LoadVariables ( aMaterialMsg );
         if ( size )
         {
             mUniformBuffer.Initialize (
                 static_cast<VkDeviceSize> ( size ),
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            for ( auto& i : aMaterialBuffer.property() )
+            for ( auto& i : aMaterialMsg.property() )
             {
                 Set ( PropertyToKeyValue ( i ) );
             }
         }
-        LoadSamplers ( aMaterialBuffer );
+        LoadSamplers ( aMaterialMsg );
         InitializeDescriptorPool();
         InitializeDescriptorSets();
     }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -107,31 +107,31 @@ namespace AeonGames
     }
     void OpenGLMesh::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static MeshBuffer mesh_buffer;
+        static MeshMsg mesh_buffer;
         LoadProtoBufObject ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
         Load ( mesh_buffer );
         mesh_buffer.Clear();
     }
-    void OpenGLMesh::Load ( const MeshBuffer& aMeshBuffer )
+    void OpenGLMesh::Load ( const MeshMsg& aMeshMsg )
     {
         mAABB = AABB
         {
             {
-                aMeshBuffer.center().x(),
-                aMeshBuffer.center().y(),
-                aMeshBuffer.center().z()
+                aMeshMsg.center().x(),
+                aMeshMsg.center().y(),
+                aMeshMsg.center().z()
             },
             {
-                aMeshBuffer.radii().x(),
-                aMeshBuffer.radii().y(),
-                aMeshBuffer.radii().z()
+                aMeshMsg.radii().x(),
+                aMeshMsg.radii().y(),
+                aMeshMsg.radii().z()
             }
         };
 
-        mVertexCount = aMeshBuffer.vertexcount();
-        mIndexCount = aMeshBuffer.indexcount();
-        mIndexSize = aMeshBuffer.indexsize();
-        mVertexFlags = aMeshBuffer.vertexflags();
+        mVertexCount = aMeshMsg.vertexcount();
+        mIndexCount = aMeshMsg.indexcount();
+        mIndexSize = aMeshMsg.indexsize();
+        mVertexFlags = aMeshMsg.vertexflags();
 
         // OpenGL Specific Code:
         ///@todo Use OpenGLBuffer class instead of raw GL ids
@@ -146,7 +146,7 @@ namespace AeonGames
 
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_ARRAY_BUFFER, aMeshBuffer.vertexbuffer().size(), aMeshBuffer.vertexbuffer().data(), GL_STATIC_DRAW );
+        glBufferData ( GL_ARRAY_BUFFER, aMeshMsg.vertexbuffer().size(), aMeshMsg.vertexbuffer().data(), GL_STATIC_DRAW );
         OPENGL_CHECK_ERROR_THROW;
 
         //---Index Buffer---
@@ -156,7 +156,7 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
             OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, aMeshBuffer.indexbuffer().size(), aMeshBuffer.indexbuffer().data(), GL_STATIC_DRAW );
+            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, aMeshMsg.indexbuffer().size(), aMeshMsg.indexbuffer().data(), GL_STATIC_DRAW );
             OPENGL_CHECK_ERROR_THROW;
         }
 #ifndef SINGLE_VAO

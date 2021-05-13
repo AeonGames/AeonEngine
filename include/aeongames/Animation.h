@@ -22,7 +22,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class AnimationBuffer;
+    class AnimationMsg;
     class Animation
     {
     public:
@@ -41,7 +41,7 @@ namespace AeonGames
         DLL double AddTimeToSample ( double aSample, double aTime ) const;
         DLL const Transform GetTransform ( size_t aBoneIndex, double aSample ) const;
     private:
-        void Load ( const AnimationBuffer& aAnimationBuffer );
+        void Load ( const AnimationMsg& aAnimationMsg );
         std::string mFilename;
         uint32_t mVersion;
         uint32_t mFrameRate;

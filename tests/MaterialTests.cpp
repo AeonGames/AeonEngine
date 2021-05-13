@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -87,8 +87,8 @@ namespace AeonGames
 
     TEST ( Material, Initialization )
     {
-        MaterialBuffer material_buffer =
-            LoadProtoBufObject<MaterialBuffer> ( material_text, sizeof ( material_text ) - 1, "AEONMTL" );
+        MaterialMsg material_buffer =
+            LoadProtoBufObject<MaterialMsg> ( material_text, sizeof ( material_text ) - 1, "AEONMTL" );
         Material material ( material_buffer );
         EXPECT_TRUE ( material.GetProperties() [0].GetName() == "Vector4" );
         EXPECT_TRUE ( material.GetProperties() [1].GetName() == "Vector3" );
@@ -137,8 +137,8 @@ namespace AeonGames
     }
     TEST ( Material, CopyConstruction )
     {
-        MaterialBuffer material_buffer =
-            LoadProtoBufObject<MaterialBuffer> ( material_text, sizeof ( material_text ) - 1, "AEONMTL" );
+        MaterialMsg material_buffer =
+            LoadProtoBufObject<MaterialMsg> ( material_text, sizeof ( material_text ) - 1, "AEONMTL" );
         Material original_material ( material_buffer );
         Material material ( original_material );
         EXPECT_TRUE ( material.GetProperties() [0].GetName() == "Vector4" );
@@ -188,8 +188,8 @@ namespace AeonGames
     }
     TEST ( Material, CopyOperator )
     {
-        MaterialBuffer material_buffer =
-            LoadProtoBufObject<MaterialBuffer> ( material_text, sizeof ( material_text ) - 1, "AEONMTL" );
+        MaterialMsg material_buffer =
+            LoadProtoBufObject<MaterialMsg> ( material_text, sizeof ( material_text ) - 1, "AEONMTL" );
         Material original_material ( material_buffer );
         Material material;
         material = original_material;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -54,7 +54,9 @@ namespace AeonGames
 
     void FrameBuffer::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static FrameBufferBuffer framebuffer_buffer;
+        static std::mutex m;
+        static FrameBufferMsg framebuffer_buffer;
+        std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject ( framebuffer_buffer, aBuffer, aBufferSize, "AEONFBR" );
         Load ( framebuffer_buffer );
         framebuffer_buffer.Clear();

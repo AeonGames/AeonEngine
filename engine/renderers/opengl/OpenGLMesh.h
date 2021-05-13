@@ -33,7 +33,7 @@ namespace AeonGames
         void Load ( uint32_t aId ) final;
         void Load ( const std::string& aFilename ) final;
         void Load ( const void* aBuffer, size_t aBufferSize ) final;
-        void Load ( const MeshBuffer& aMeshBuffer ) final;
+        void Load ( const MeshMsg& aMeshMsg ) final;
         void Unload () final;
         uint32_t GetIndexSize () const final;
         uint32_t GetIndexCount() const final;

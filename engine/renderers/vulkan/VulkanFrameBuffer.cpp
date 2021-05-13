@@ -40,7 +40,7 @@ namespace AeonGames
     {
         Unload();
     }
-    void VulkanFrameBuffer::Load ( const FrameBufferBuffer& aFrameBufferBuffer )
+    void VulkanFrameBuffer::Load ( const FrameBufferMsg& aFrameBufferMsg )
     {
         ///@todo Write Me
     }

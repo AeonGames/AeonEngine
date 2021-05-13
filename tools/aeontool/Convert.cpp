@@ -49,40 +49,40 @@ namespace AeonGames
     static const char float_pattern[] = "([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?)";
     static const char int_pattern[] = "([-+]?[0-9]+)";
     static const char separator_pattern[] = "\\s+";
-    uint32_t GetStride ( const MeshBuffer& aMeshBuffer )
+    uint32_t GetStride ( const MeshMsg& aMeshMsg )
     {
         uint32_t stride = 0;
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_POSITION_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_NORMAL_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_TANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_BITANGENT_BIT )
         {
             stride += sizeof ( float ) * 3;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_UV_BIT )
         {
             stride += sizeof ( float ) * 2;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_WEIGHT_BIT )
         {
             stride += sizeof ( uint8_t ) * 8;
         }
         return stride;
     }
-    std::string GetVertexBufferRegexPattern ( const MeshBuffer& aMeshBuffer )
+    std::string GetVertexBufferRegexPattern ( const MeshMsg& aMeshMsg )
     {
         std::string pattern{ "\\(\\s*" };
         bool want_initial_separator = false;
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_POSITION_BIT )
         {
             pattern += float_pattern;
             pattern += separator_pattern;
@@ -91,20 +91,7 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
-        {
-            if ( want_initial_separator )
-            {
-                pattern += separator_pattern;
-            }
-            pattern += float_pattern;
-            pattern += separator_pattern;
-            pattern += float_pattern;
-            pattern += separator_pattern;
-            pattern += float_pattern;
-            want_initial_separator = true;
-        }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_NORMAL_BIT )
         {
             if ( want_initial_separator )
             {
@@ -117,7 +104,7 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_TANGENT_BIT )
         {
             if ( want_initial_separator )
             {
@@ -130,7 +117,20 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_BITANGENT_BIT )
+        {
+            if ( want_initial_separator )
+            {
+                pattern += separator_pattern;
+            }
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            pattern += separator_pattern;
+            pattern += float_pattern;
+            want_initial_separator = true;
+        }
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_UV_BIT )
         {
             if ( want_initial_separator )
             {
@@ -141,7 +141,7 @@ namespace AeonGames
             pattern += float_pattern;
             want_initial_separator = true;
         }
-        if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
+        if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_WEIGHT_BIT )
         {
             if ( want_initial_separator )
             {
@@ -185,9 +185,9 @@ namespace AeonGames
     class VertexBufferFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
-        VertexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
+        VertexBufferFieldValuePrinter ( const MeshMsg& aMeshMsg ) :
             google::protobuf::TextFormat::FastFieldValuePrinter(),
-            mMeshBuffer{ aMeshBuffer }
+            mMeshMsg{ aMeshMsg }
         {
         };
         void PrintBytes ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
@@ -195,40 +195,40 @@ namespace AeonGames
             const uint8_t* cursor = reinterpret_cast<const uint8_t*> ( val.data() );
             std::ostringstream stream;
             stream << std::endl;
-            for ( std::size_t i = 0; i < mMeshBuffer.vertexcount(); ++i )
+            for ( std::size_t i = 0; i < mMeshMsg.vertexcount(); ++i )
             {
                 stream << "\"(";
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
+                if ( mMeshMsg.vertexflags() & MeshMsg_AttributeBit_POSITION_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
+                if ( mMeshMsg.vertexflags() & MeshMsg_AttributeBit_NORMAL_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
+                if ( mMeshMsg.vertexflags() & MeshMsg_AttributeBit_TANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
+                if ( mMeshMsg.vertexflags() & MeshMsg_AttributeBit_BITANGENT_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream << " " << values[0] << " " << values[1] << " " << values[2];
                     cursor += sizeof ( float ) * 3;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
+                if ( mMeshMsg.vertexflags() & MeshMsg_AttributeBit_UV_BIT )
                 {
                     const float* values = reinterpret_cast<const float*> ( cursor );
                     stream << " " << values[0] << " " << values[1];
                     cursor += sizeof ( float ) * 2;
                 }
-                if ( mMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
+                if ( mMeshMsg.vertexflags() & MeshMsg_AttributeBit_WEIGHT_BIT )
                 {
                     const uint8_t* values = cursor;
                     stream << " " <<
@@ -247,15 +247,15 @@ namespace AeonGames
             base_text_generator->PrintString ( stream.str() );
         }
     private:
-        const MeshBuffer& mMeshBuffer;
+        const MeshMsg& mMeshMsg;
     };
 
     class IndexBufferFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
-        IndexBufferFieldValuePrinter ( const MeshBuffer& aMeshBuffer ) :
+        IndexBufferFieldValuePrinter ( const MeshMsg& aMeshMsg ) :
             google::protobuf::TextFormat::FastFieldValuePrinter(),
-            mMeshBuffer{ aMeshBuffer }
+            mMeshMsg{ aMeshMsg }
         {
         };
         void PrintBytes ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
@@ -266,13 +266,13 @@ namespace AeonGames
                 reinterpret_cast<const uint32_t*> ( cursor16 = reinterpret_cast<const uint16_t*> ( cursor8 = reinterpret_cast<const uint8_t*> ( val.data() ) ) );
             std::ostringstream stream;
             stream << std::endl;
-            for ( size_t i = 0; i < mMeshBuffer.indexcount(); ++i )
+            for ( size_t i = 0; i < mMeshMsg.indexcount(); ++i )
             {
                 if ( i % 3 == 0 )
                 {
                     stream << "\"";
                 }
-                switch ( mMeshBuffer.indexsize() )
+                switch ( mMeshMsg.indexsize() )
                 {
                 case 1:
                     stream << static_cast<uint32_t> ( cursor8[i] );
@@ -298,23 +298,23 @@ namespace AeonGames
             base_text_generator->PrintString ( stream.str() );
         }
     private:
-        const MeshBuffer& mMeshBuffer;
+        const MeshMsg& mMeshMsg;
     };
 
-    std::string ParseVertexBuffer ( const MeshBuffer& aMeshBuffer )
+    std::string ParseVertexBuffer ( const MeshMsg& aMeshMsg )
     {
         std::string vertex_buffer;
         std::smatch match_results;
-        std::string vertex_string{ aMeshBuffer.vertexbuffer() };
+        std::string vertex_string{ aMeshMsg.vertexbuffer() };
         try
         {
-            std::regex vertex_regex ( GetVertexBufferRegexPattern ( aMeshBuffer ) );
+            std::regex vertex_regex ( GetVertexBufferRegexPattern ( aMeshMsg ) );
             while ( std::regex_search ( vertex_string, match_results, vertex_regex ) )
             {
                 float float_value;
                 uint8_t uint8_t_value;
                 size_t index = 1;
-                if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_POSITION_BIT )
+                if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_POSITION_BIT )
                 {
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
@@ -323,7 +323,7 @@ namespace AeonGames
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
                 }
-                if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_NORMAL_BIT )
+                if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_NORMAL_BIT )
                 {
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
@@ -332,7 +332,7 @@ namespace AeonGames
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
                 }
-                if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_TANGENT_BIT )
+                if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_TANGENT_BIT )
                 {
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
@@ -341,7 +341,7 @@ namespace AeonGames
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
                 }
-                if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_BITANGENT_BIT )
+                if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_BITANGENT_BIT )
                 {
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
@@ -350,14 +350,14 @@ namespace AeonGames
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
                 }
-                if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_UV_BIT )
+                if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_UV_BIT )
                 {
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
                     float_value = std::stof ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &float_value ), sizeof ( float ) );
                 }
-                if ( aMeshBuffer.vertexflags() & MeshBuffer_AttributeBit_WEIGHT_BIT )
+                if ( aMeshMsg.vertexflags() & MeshMsg_AttributeBit_WEIGHT_BIT )
                 {
                     uint8_t_value = std::stoi ( match_results[index++] );
                     vertex_buffer.append ( reinterpret_cast<char*> ( &uint8_t_value ), sizeof ( uint8_t ) );
@@ -383,16 +383,16 @@ namespace AeonGames
         catch ( std::regex_error& e )
         {
             std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
-            std::cout << "Regex: " << GetVertexBufferRegexPattern ( aMeshBuffer ) << std::endl;
+            std::cout << "Regex: " << GetVertexBufferRegexPattern ( aMeshMsg ) << std::endl;
             throw;
         }
     }
 
-    std::string ParseIndexBuffer ( const MeshBuffer& aMeshBuffer )
+    std::string ParseIndexBuffer ( const MeshMsg& aMeshMsg )
     {
         std::string index_buffer;
         std::smatch match_results;
-        std::string index_string{ aMeshBuffer.indexbuffer() };
+        std::string index_string{ aMeshMsg.indexbuffer() };
         try
         {
             std::regex index_regex ( int_pattern );
@@ -401,7 +401,7 @@ namespace AeonGames
                 uint8_t uint8_t_value;
                 uint16_t uint16_t_value;
                 uint32_t uint32_t_value;
-                switch ( aMeshBuffer.indexsize() )
+                switch ( aMeshMsg.indexsize() )
                 {
                 case 1:
                     uint8_t_value = static_cast<uint8_t> ( std::stoi ( match_results[1] ) );
@@ -490,10 +490,10 @@ namespace AeonGames
     int Convert::operator() ( int argc, char** argv )
     {
         ProcessArgs ( argc, argv );
-        PipelineBuffer pipeline_buffer;
-        MaterialBuffer material_buffer;
-        MeshBuffer mesh_buffer;
-        SkeletonBuffer skeleton_buffer;
+        PipelineMsg pipeline_buffer;
+        MaterialMsg material_buffer;
+        MeshMsg mesh_buffer;
+        SkeletonMsg skeleton_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };
         bool binary_input = false;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -52,7 +52,9 @@ namespace AeonGames
     }
     void Pipeline::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static PipelineBuffer pipeline_buffer;
+        static std::mutex m{};
+        static PipelineMsg pipeline_buffer{};
+        std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject ( pipeline_buffer, aBuffer, aBufferSize, "AEONPLN" );
         Load ( pipeline_buffer );
         pipeline_buffer.Clear();
