@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -371,7 +371,7 @@ namespace AeonGames
 
     std::string Scene::Serialize ( bool aAsBinary ) const
     {
-        static SceneBuffer scene_buffer;
+        static SceneMsg scene_buffer;
         *scene_buffer.mutable_name() = mName;
         if ( mCamera )
         {
@@ -380,11 +380,11 @@ namespace AeonGames
             scene_buffer.mutable_camera()->set_near_plane ( mNear );
             scene_buffer.mutable_camera()->set_far_plane ( mFar );
         }
-        std::unordered_map<const Node*, NodeBuffer*> node_map;
+        std::unordered_map<const Node*, NodeMsg*> node_map;
         LoopTraverseDFSPreOrder (
             [&node_map] ( const Node & node )
         {
-            NodeBuffer* node_buffer;
+            NodeMsg* node_buffer;
             auto parent = node_map.find ( GetNodePtr ( node.GetParent() ) );
             if ( parent != node_map.end() )
             {
@@ -416,23 +416,25 @@ namespace AeonGames
     }
     void Scene::Deserialize ( const std::string& aSerializedScene )
     {
-        static SceneBuffer scene_buffer;
+        static std::mutex m{};
+        static SceneMsg scene_buffer{};
+        std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCE" );
         mName = scene_buffer.name();
 
-        std::unordered_map<const NodeBuffer*, std::tuple<const NodeBuffer*, int, Node*>> node_map;
+        std::unordered_map<const NodeMsg*, std::tuple<const NodeMsg*, int, Node*>> node_map;
         for ( auto &i : scene_buffer.node() )
         {
-            const NodeBuffer* node = &i;
-            node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {nullptr, 0, Add ( std::make_unique<Node>() ) };
+            const NodeMsg* node = &i;
+            node_map[node] = std::tuple<const NodeMsg*, int, Node*> {nullptr, 0, Add ( std::make_unique<Node>() ) };
             std::get<2> ( node_map[node] )->Deserialize ( *node );
             while ( node )
             {
                 if ( std::get<1> ( node_map[node] ) < node->node().size() )
                 {
-                    const NodeBuffer* prev = node;
+                    const NodeMsg* prev = node;
                     node = &node->node ( std::get<1> ( node_map[node] ) );
-                    node_map[node] = std::tuple<const NodeBuffer*, int, Node*> {prev, 0, std::get<2> ( node_map[prev] )->Add ( std::make_unique<Node>() ) };
+                    node_map[node] = std::tuple<const NodeMsg*, int, Node*> {prev, 0, std::get<2> ( node_map[prev] )->Add ( std::make_unique<Node>() ) };
                     std::get<2> ( node_map[node] )->Deserialize ( *node );
                     ++std::get<1> ( node_map[prev] );
                 }

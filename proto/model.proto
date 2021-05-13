@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2018,2021 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@ package AeonGames;
 
 import "reference.proto";
 
-message AssemblyBuffer
+message AssemblyMsg
 {
-    ReferenceBuffer        mesh        = 1;
-	ReferenceBuffer        pipeline    = 2;
-	ReferenceBuffer        material    = 3;
+    ReferenceMsg        mesh        = 1;
+	ReferenceMsg        pipeline    = 2;
+	ReferenceMsg        material    = 3;
 }
 
-message ModelBuffer {
-	ReferenceBuffer             default_pipeline         = 1;
-	ReferenceBuffer             default_material         = 2;
-    ReferenceBuffer             skeleton                 = 3;
-    repeated AssemblyBuffer     assembly                 = 4;
-    repeated ReferenceBuffer    animation                = 5;
+message ModelMsg {
+	ReferenceMsg             default_pipeline         = 1;
+	ReferenceMsg             default_material         = 2;
+    ReferenceMsg             skeleton                 = 3;
+    repeated AssemblyMsg     assembly                 = 4;
+    repeated ReferenceMsg    animation                = 5;
 }

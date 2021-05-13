@@ -105,20 +105,20 @@ namespace AeonGames
     void Animation::Load ( const void* aBuffer, size_t aBufferSize )
     {
         static std::mutex m{};
-        static AnimationBuffer animation_buffer{};
+        static AnimationMsg animation_buffer{};
         std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject ( animation_buffer, aBuffer, aBufferSize, "AEONANM" );
         Load ( animation_buffer );
         animation_buffer.Clear();
     }
 
-    void Animation::Load ( const AnimationBuffer& aAnimationBuffer )
+    void Animation::Load ( const AnimationMsg& aAnimationMsg )
     {
-        mVersion = aAnimationBuffer.version();
-        mFrameRate = aAnimationBuffer.framerate();
-        mDuration = aAnimationBuffer.duration();
-        mFrames.reserve ( aAnimationBuffer.frame_size() );
-        for ( auto& frame : aAnimationBuffer.frame() )
+        mVersion = aAnimationMsg.version();
+        mFrameRate = aAnimationMsg.framerate();
+        mDuration = aAnimationMsg.duration();
+        mFrames.reserve ( aAnimationMsg.frame_size() );
+        for ( auto& frame : aAnimationMsg.frame() )
         {
             mFrames.emplace_back();
             mFrames.back().reserve ( frame.bone_size() );

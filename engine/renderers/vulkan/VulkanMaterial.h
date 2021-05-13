@@ -48,7 +48,7 @@ namespace AeonGames
         std::unique_ptr<Material> Clone() const final;
         ///@name Loaders
         ///@{
-        void Load ( const MaterialBuffer& aMaterialBuffer ) final;
+        void Load ( const MaterialMsg& aMaterialMsg ) final;
         void Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers );
         void Unload() final;
         ///@}

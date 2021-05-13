@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,45 +43,45 @@ namespace AeonGames
         return *this;
     }
 
-    size_t Material::LoadVariables ( const MaterialBuffer& aMaterialBuffer )
+    size_t Material::LoadVariables ( const MaterialMsg& aMaterialMsg )
     {
         size_t size = 0;
-        mVariables.reserve ( aMaterialBuffer.property().size() );
-        for ( auto& i : aMaterialBuffer.property() )
+        mVariables.reserve ( aMaterialMsg.property().size() );
+        for ( auto& i : aMaterialMsg.property() )
         {
             switch ( i.value_case() )
             {
-            case PropertyBuffer::ValueCase::kScalarFloat:
+            case PropertyMsg::ValueCase::kScalarFloat:
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float );
                 break;
-            case PropertyBuffer::ValueCase::kScalarUint:
+            case PropertyMsg::ValueCase::kScalarUint:
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( uint32_t );
                 break;
-            case PropertyBuffer::ValueCase::kScalarInt:
+            case PropertyMsg::ValueCase::kScalarInt:
                 size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( int32_t );
                 break;
-            case PropertyBuffer::ValueCase::kVector2:
+            case PropertyMsg::ValueCase::kVector2:
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 2;
                 break;
-            case PropertyBuffer::ValueCase::kVector3:
+            case PropertyMsg::ValueCase::kVector3:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 3;
                 break;
-            case PropertyBuffer::ValueCase::kVector4:
+            case PropertyMsg::ValueCase::kVector4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 4;
                 break;
-            case PropertyBuffer::ValueCase::kMatrix4X4:
+            case PropertyMsg::ValueCase::kMatrix4X4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 16;
@@ -94,12 +94,12 @@ namespace AeonGames
         return size;
     }
 
-    void Material::LoadSamplers ( const MaterialBuffer& aMaterialBuffer )
+    void Material::LoadSamplers ( const MaterialMsg& aMaterialMsg )
     {
-        mSamplers.reserve ( aMaterialBuffer.sampler().size() );
-        for ( auto& i : aMaterialBuffer.sampler() )
+        mSamplers.reserve ( aMaterialMsg.sampler().size() );
+        for ( auto& i : aMaterialMsg.sampler() )
         {
-            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Texture"_crc32, GetReferenceBufferId ( i.image() ) } ) ).Store();
+            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) } ) ).Store();
         }
     }
 
@@ -169,7 +169,9 @@ namespace AeonGames
 
     void Material::Load ( const void* aBuffer, size_t aBufferSize )
     {
-        static MaterialBuffer material_buffer;
+        static std::mutex m{};
+        static MaterialMsg material_buffer{};
+        std::lock_guard<std::mutex> hold ( m );
         LoadProtoBufObject ( material_buffer, aBuffer, aBufferSize, "AEONMTL" );
         Load ( material_buffer );
         material_buffer.Clear();

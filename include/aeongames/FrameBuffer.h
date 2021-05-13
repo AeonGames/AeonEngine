@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ limitations under the License.
 #include "aeongames/Platform.h"
 namespace AeonGames
 {
-    class FrameBufferBuffer;
+    class FrameBufferMsg;
     class FrameBuffer
     {
     public:
@@ -28,7 +28,7 @@ namespace AeonGames
         DLL void Load ( uint32_t aId );
         DLL void Load ( const std::string& aFilename );
         DLL void Load ( const void* aBuffer, size_t aBufferSize );
-        virtual void Load ( const FrameBufferBuffer& aFrameBufferBuffer ) = 0;
+        virtual void Load ( const FrameBufferMsg& aFrameBufferMsg ) = 0;
         virtual void Unload() = 0;
         virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void Bind() = 0;
