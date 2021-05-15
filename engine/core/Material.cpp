@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/Material.h"
-#include "aeongames/ProtobufUtils.h"
+#include "aeongames/ProtoBufUtils.h"
 
 namespace AeonGames
 {

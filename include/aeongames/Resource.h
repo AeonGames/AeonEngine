@@ -23,7 +23,7 @@ limitations under the License.
 #include <array>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/CRC.h"
-#include "aeongames/ProtobufHelpers.h"
+#include "aeongames/ProtoBufHelpers.h"
 
 namespace AeonGames
 {

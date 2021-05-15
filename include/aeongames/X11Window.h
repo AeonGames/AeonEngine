@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ limitations under the License.
 #ifdef __unix__
 #include <X11/Xlib.h>
 #include <GL/glx.h>
+#ifdef Status
+#undef Status
+#endif
 #include "aeongames/Platform.h"
 #include "aeongames/CommonWindow.h"
 
