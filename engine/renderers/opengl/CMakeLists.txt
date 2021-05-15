@@ -135,8 +135,8 @@ add_library(OpenGLRenderer
 
 target_link_libraries(OpenGLRenderer
                       ${OPENGL_LIBRARIES}
-                      AeonEngine
                       ProtoBufClasses
+                      AeonEngine
                       Threads::Threads)
 
 if(MSVC)
