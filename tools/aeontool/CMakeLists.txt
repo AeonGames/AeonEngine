@@ -27,8 +27,4 @@ if(MSVC)
   set_target_properties(
     aeontool
     PROPERTIES COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
-elseif(MINGW)
-  set_target_properties(aeontool PROPERTIES COMPILE_FLAGS "-Wall")
-elseif(UNIX)
-  set_target_properties(aeontool PROPERTIES COMPILE_FLAGS "-Wall")
 endif()

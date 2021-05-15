@@ -7,11 +7,7 @@ if(MSVC)
     PROPERTIES COMPILE_FLAGS
                "-WX -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
 elseif(MINGW OR MSYS)
-  set_target_properties(PngImage
-                        PROPERTIES COMPILE_FLAGS
-                                   "-Wall -DNOMINMAX -Werror -Wfatal-errors"
-                                   PREFIX
-                                   "")
+  set_target_properties(PngImage PROPERTIES PREFIX "")
 endif()
 target_link_libraries(PngImage AeonEngine ${PNG_LIBRARIES})
 

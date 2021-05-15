@@ -12,10 +12,9 @@ if(MSVC)
                "-WX -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
 elseif(MINGW OR MSYS)
   set_target_properties(PortAudioSoundSystem
-                        PROPERTIES COMPILE_FLAGS
-                                   "-Wall -DNOMINMAX -Werror -Wfatal-errors"
-                                   PREFIX
-                                   "")
+                          PROPERTIES
+                          PREFIX ""
+  )
 endif()
 target_link_libraries(PortAudioSoundSystem AeonEngine ${PORTAUDIO_LIBRARY})
 
