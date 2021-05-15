@@ -22,15 +22,6 @@ limitations under the License.
 #include <cassert>
 #include <cstring>
 #include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "mesh.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-#include "ProtoBufHelpers.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/CRC.h"
@@ -45,7 +36,7 @@ namespace AeonGames
     {
         if ( aId )
         {
-            Load ( aId );
+            Resource::Load ( aId );
         }
     }
 
@@ -69,31 +60,6 @@ namespace AeonGames
     const VkBuffer & VulkanMesh::GetBuffer() const
     {
         return mBuffer.GetBuffer();
-    }
-    void VulkanMesh::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-    void VulkanMesh::Load ( uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-    void VulkanMesh::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static MeshMsg mesh_buffer;
-        LoadProtoBufObject ( mesh_buffer, aBuffer, aBufferSize, "AEONMSH" );
-        Load ( mesh_buffer );
-        mesh_buffer.Clear();
     }
 
     void VulkanMesh::Load ( const MeshMsg& aMeshMsg )

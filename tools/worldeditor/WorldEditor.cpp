@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/Vector4.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/AeonEngine.h"
+#include "aeongames/Material.h"
 #include "RendererSelectDialog.h"
 #include <QMessageBox>
 #include <QFile>
@@ -94,7 +95,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open material." );
         }
         QByteArray material_byte_array = material_file.readAll();
-        aMaterial.Load ( material_byte_array.data(), material_byte_array.size() );
+        aMaterial.Resource::Load ( material_byte_array.data(), material_byte_array.size() );
     }
 
     static void LoadMesh ( Mesh& aMesh, const std::string& aFileName )
@@ -105,7 +106,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open mesh." );
         }
         QByteArray mesh_byte_array = mesh_file.readAll();
-        aMesh.Load ( mesh_byte_array.data(), mesh_byte_array.size() );
+        aMesh.Resource::Load ( mesh_byte_array.data(), mesh_byte_array.size() );
     }
 
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ),

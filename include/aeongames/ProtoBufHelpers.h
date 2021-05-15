@@ -13,7 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+#ifndef AEONGAMES_PROTOBUFHELPERS_H
+#define AEONGAMES_PROTOBUFHELPERS_H
 #include <fstream>
 #include <sstream>
 #include <exception>
@@ -70,23 +71,23 @@ namespace AeonGames
     @param t Reference to the object to be loaded with the file data.
     @param aData Pointer to the start of the buffer.
     @param aSize size of the provided buffer.
-    @param aFormat Expected format of the file represented by its magick number.
+    @param aMagick Expected format of the file represented by its magick number.
     @note ProtoBuf objects require dynamic memory and if those objects get constantly destroyed
     and recreated, the allocations and deallocations may slow down the system so for temporary objects
     it may be better to use a static variable which gets loaded by reference and then explicitly unloaded,
     thus reusing its memory cache.
     However, I have not yet confirmed or denied this as true, the RVO version may be the only one needed.
     */
-    template<class T> void LoadProtoBufObject ( T& t, const void * aData, size_t aSize, const std::string& aFormat )
+    template<class T> void LoadProtoBufObject ( T& t, const void * aData, size_t aSize, uint64_t aMagick )
     {
         if ( !aData || aSize < 8 )
         {
             throw std::runtime_error ( "Not enough data or null pointer passed to LoadProtoBufObject." );
         }
-        if ( strncmp ( reinterpret_cast<const char*> ( aData ), aFormat.c_str(), 7 ) != 0 )
+        if ( strncmp ( reinterpret_cast<const char*> ( aData ), reinterpret_cast<const char*> ( &aMagick ), 7 ) != 0 )
         {
             std::ostringstream stream;
-            stream << "Provided buffer does not contain " << aFormat << " information.";
+            stream << "Provided buffer does not contain " << reinterpret_cast<const char*> ( &aMagick ) << " information.";
             throw std::runtime_error ( stream.str().c_str() );
         }
         else if ( reinterpret_cast<const uint8_t*> ( aData ) [7] == '\0' )
@@ -95,7 +96,7 @@ namespace AeonGames
             if ( !t.ParseFromZeroCopyStream ( &buffer_input_stream ) )
             {
                 std::ostringstream stream;
-                stream << "Binary parse failed on " << aFormat << "buffer.";
+                stream << "Binary parse failed on " << reinterpret_cast<const char*> ( &aMagick ) << "buffer.";
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
@@ -105,7 +106,7 @@ namespace AeonGames
             if ( !google::protobuf::TextFormat::Parse ( &buffer_input_stream, &t ) )
             {
                 std::ostringstream stream;
-                stream << "Text parse failed on " << aFormat << " buffer.";
+                stream << "Text parse failed on " << reinterpret_cast<const char*> ( &aMagick ) << " buffer.";
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
@@ -114,28 +115,28 @@ namespace AeonGames
     /** Loads a Protocol Buffer Object from a memory buffer.
     @param aData Pointer to the start of the buffer.
     @param aSize size of the provided buffer.
-    @param aFormat Expected format of the file represented by its magick number.
+    @param aMagick Expected format of the file represented by its magick number.
     @return A fully loaded protocol buffer object.
     @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
     */
-    template<class T> T LoadProtoBufObject ( const void * aData, size_t aSize, const std::string& aFormat )
+    template<class T> T LoadProtoBufObject ( const void * aData, size_t aSize, uint64_t aMagick )
     {
         T t;
-        LoadProtoBufObject ( t, aData, aSize, aFormat );
+        LoadProtoBufObject ( t, aData, aSize, aMagick );
         return t;
     }
 
     /** Loads a Protocol Buffer Object from an AeonGames file into the provided reference.
     @param t Reference to the object to be loaded with the file data.
     @param aFilename Path to file to load object from.
-    @param aFormat Expected format of the file represented by its magick number.
+    @param aMagick Expected format of the file represented by its magick number.
     @note ProtoBuf objects require dynamic memory and if those objects get constantly destroyed
     and recreated, the allocations and deallocations may slow down the system so for temporary objects
     it may be better to use a static variable which gets loaded by reference and then explicitly unloaded,
     thus reusing its memory cache.
     However, I have not yet confirmed or denied this as true, the RVO version may be the only one needed.
     */
-    template<class T> void LoadProtoBufObject ( T& t, const std::string& aFilename, const std::string& aFormat )
+    template<class T> void LoadProtoBufObject ( T& t, const std::string& aFilename, uint64_t aMagick )
     {
         if ( !FileExists ( aFilename ) )
         {
@@ -149,19 +150,20 @@ namespace AeonGames
         file.exceptions ( std::ifstream::badbit );
         std::string text ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
         file.close();
-        LoadProtoBufObject ( t, text.data(), text.size(), aFormat );
+        LoadProtoBufObject ( t, text.data(), text.size(), aMagick );
     }
 
     /** Loads a Protocol Buffer Object from an AeonGames file.
     @param aFilename Path to file to load object from.
-    @param aFormat Expected format of the file represented by its magick number.
+    @param aMagick Expected format of the file represented by its magick number.
     @return A fully loaded protocol buffer object.
     @note This version is meant to take advantage of RVO, which should be useful when the object is meant to be persistent.
     */
-    template<class T> T LoadProtoBufObject ( const std::string& aFilename, const std::string& aFormat )
+    template<class T> T LoadProtoBufObject ( const std::string& aFilename, uint64_t aMagick )
     {
         T t;
-        LoadProtoBufObject ( t, aFilename, aFormat );
+        LoadProtoBufObject ( t, aFilename, aMagick );
         return t;
     }
 }
+#endif

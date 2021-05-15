@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,13 +22,7 @@ limitations under the License.
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
-#include "math/3DMath.h"
-#include "OpenGLFunctions.h"
-#include "OpenGLWinAPIRenderer.h"
-#include "OpenGLMesh.h"
-#include "OpenGLPipeline.h"
-#include "OpenGLTexture.h"
-#include "OpenGLWindow.h"
+#include "aeongames/ProtoBufClasses.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Pipeline.h"
@@ -36,6 +30,13 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/Model.h"
 #include "aeongames/Matrix4x4.h"
+#include "OpenGLFunctions.h"
+#include "OpenGLWinAPIRenderer.h"
+#include "OpenGLMesh.h"
+#include "OpenGLPipeline.h"
+#include "OpenGLTexture.h"
+#include "OpenGLWindow.h"
+#include "math/3DMath.h"
 
 namespace AeonGames
 {

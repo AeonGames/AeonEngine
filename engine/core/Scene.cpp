@@ -18,7 +18,7 @@ limitations under the License.
 #include "aeongames/Node.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/Renderer.h"
-#include "ProtoBufHelpers.h"
+#include "aeongames/ProtoBufHelpers.h"
 #include <cstring>
 #include <cassert>
 #include <algorithm>
@@ -35,6 +35,8 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
+
+#include "aeongames/Resource.h"
 
 namespace AeonGames
 {
@@ -419,7 +421,7 @@ namespace AeonGames
         static std::mutex m{};
         static SceneMsg scene_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCE" );
+        LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCE"_mgk );
         mName = scene_buffer.name();
 
         std::unordered_map<const NodeMsg*, std::tuple<const NodeMsg*, int, Node*>> node_map;

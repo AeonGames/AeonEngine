@@ -18,16 +18,22 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include "aeongames/Platform.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "framebuffer.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+#include "aeongames/Resource.h"
 namespace AeonGames
 {
     class FrameBufferMsg;
-    class FrameBuffer
+    class FrameBuffer : public Resource<FrameBufferMsg, "AEONFBR"_mgk>
     {
     public:
         DLL virtual ~FrameBuffer() = 0;
-        DLL void Load ( uint32_t aId );
-        DLL void Load ( const std::string& aFilename );
-        DLL void Load ( const void* aBuffer, size_t aBufferSize );
         virtual void Load ( const FrameBufferMsg& aFrameBufferMsg ) = 0;
         virtual void Unload() = 0;
         virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
