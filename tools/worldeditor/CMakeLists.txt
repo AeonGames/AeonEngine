@@ -155,10 +155,6 @@ add_executable(worldeditor
                ${WORLDEDITOR_RESOURCES}
                ${QM_FILES})
 
-if(UNIX OR MINGW OR MSYS)
-  set_target_properties(worldeditor PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif()
-
 if(MSVC)
   set_target_properties(worldeditor
                         PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")

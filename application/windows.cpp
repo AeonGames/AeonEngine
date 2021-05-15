@@ -73,15 +73,6 @@ static std::tuple<std::vector<char*>, const std::string> GetArgs ( char* aCmdLin
     return result;
 }
 
-static void GetArgumentIntoString ( const char* aArgument, void* aUserData )
-{
-    std::string* string_pointer = reinterpret_cast<std::string*> ( aUserData );
-    if ( aArgument && string_pointer )
-    {
-        *string_pointer = aArgument;
-    }
-}
-
 extern int Main ( int argc, char *argv[] );
 
 int WINAPI ENTRYPOINT WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )

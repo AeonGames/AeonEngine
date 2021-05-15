@@ -7,11 +7,7 @@ if(MSVC)
     PROPERTIES COMPILE_FLAGS
                "-WX -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
 elseif(MINGW OR MSYS)
-  set_target_properties(AeonEngineComponents
-                        PROPERTIES COMPILE_FLAGS
-                                   "-Wall -DNOMINMAX -Werror -Wfatal-errors"
-                                   PREFIX
-                                   "")
+  set_target_properties(AeonEngineComponents PROPERTIES PREFIX "")
 endif()
 target_link_libraries(AeonEngineComponents AeonEngine)
 

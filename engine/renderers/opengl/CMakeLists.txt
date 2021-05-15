@@ -144,15 +144,7 @@ if(MSVC)
     OpenGLRenderer
     PROPERTIES COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW OR MSYS)
-  set_target_properties(OpenGLRenderer
-                        PROPERTIES COMPILE_FLAGS
-                                   "-Wall -Werror -Wfatal-errors"
-                                   PREFIX
-                                   "")
-elseif(UNIX)
-  set_target_properties(OpenGLRenderer
-                        PROPERTIES COMPILE_FLAGS
-                                   "-fpic -Wall  -Werror -Wfatal-errors")
+  set_target_properties(OpenGLRenderer PROPERTIES PREFIX "")
 endif()
 
 set_property(GLOBAL APPEND PROPERTY PLUGINS OpenGLRenderer)

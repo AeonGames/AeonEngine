@@ -86,14 +86,16 @@ elseif(MINGW OR MSYS)
     VulkanRenderer
     PROPERTIES
       COMPILE_FLAGS
-      "-Wall -DNOMINMAX -Werror -Wfatal-errors -DVK_USE_PLATFORM_WIN32_KHR"
+        "-DVK_USE_PLATFORM_WIN32_KHR"
       PREFIX
-      "")
+        "")
 elseif(UNIX)
   set_target_properties(
     VulkanRenderer
-    PROPERTIES COMPILE_FLAGS
-               "-fpic -Wall -Werror -Wfatal-errors -DVK_USE_PLATFORM_XLIB_KHR")
+    PROPERTIES 
+      COMPILE_FLAGS
+        "-DVK_USE_PLATFORM_XLIB_KHR"
+  )
 endif()
 
 set_property(GLOBAL APPEND PROPERTY PLUGINS VulkanRenderer)

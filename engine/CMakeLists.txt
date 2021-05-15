@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -207,10 +207,7 @@ elseif(MINGW OR MSYS OR UNIX)
     ProtoBufClasses
     PROPERTIES
       COMPILE_FLAGS
-      "-include aeongames/ProtoBufClasses.h -Wall -Werror -Wfatal-errors")
-  set_target_properties(AeonEngine
-                        PROPERTIES COMPILE_FLAGS
-                                   "-Wall -Werror -Wfatal-errors -DNOMINMAX")
+      "-include aeongames/ProtoBufClasses.h")
   if(UNIX)
     # TODO: decouple the AeonEngine library from X11 and glx,
     # either move the code to the renderer plugins or create a common X11 base for them..
