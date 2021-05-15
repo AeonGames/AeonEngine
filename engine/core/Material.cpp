@@ -13,20 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/AeonEngine.h"
-#include "aeongames/CRC.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "ProtoBufHelpers.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "material.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 #include "aeongames/Material.h"
+#include "aeongames/ProtobufUtils.h"
 
 namespace AeonGames
 {
@@ -145,36 +133,6 @@ namespace AeonGames
         {
             std::get<1> ( mSamplers.emplace_back ( std::get<0> ( i ), std::get<1> ( i ) ) ).Store();
         }
-    }
-
-    void Material::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-
-    void Material::Load ( const uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    void Material::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static std::mutex m{};
-        static MaterialMsg material_buffer{};
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( material_buffer, aBuffer, aBufferSize, "AEONMTL" );
-        Load ( material_buffer );
-        material_buffer.Clear();
     }
 
     size_t GetUniformValueSize ( const Material::UniformValue& aValue )

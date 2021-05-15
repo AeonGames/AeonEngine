@@ -18,12 +18,21 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <memory>
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "mesh.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 #include "aeongames/AABB.h"
+#include "aeongames/Resource.h"
 
 namespace AeonGames
 {
     class MeshMsg;
-    class Mesh
+    class Mesh : public Resource<MeshMsg, "AEONMSH"_mgk>
     {
     public:
         enum AttributeMask
@@ -54,9 +63,6 @@ namespace AeonGames
             DOUBLE = 0x0A
         };
         DLL virtual ~Mesh() = 0;
-        virtual void Load ( uint32_t aId ) = 0;
-        virtual void Load ( const std::string& aFilename ) = 0;
-        virtual void Load ( const void* aBuffer, size_t aBufferSize ) = 0;
         virtual void Load ( const MeshMsg& aMeshMsg ) = 0;
         virtual void Unload () = 0;
         virtual uint32_t GetIndexSize () const = 0;

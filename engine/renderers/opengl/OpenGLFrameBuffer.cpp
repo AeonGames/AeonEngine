@@ -14,18 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "framebuffer.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-#include "ProtoBufHelpers.h"
 #include "OpenGLFrameBuffer.h"
-#include "aeongames/CRC.h"
-#include "aeongames/AeonEngine.h"
 
 namespace AeonGames
 {
@@ -33,7 +22,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            FrameBuffer::Load ( aPath );
+            Resource::Load ( aPath );
         }
         /** @todo This is temporary while I figure out the public interface */
         else

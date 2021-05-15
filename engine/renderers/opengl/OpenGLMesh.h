@@ -30,9 +30,6 @@ namespace AeonGames
     public:
         OpenGLMesh ( uint32_t aPath = 0 );
         ~OpenGLMesh() final;
-        void Load ( uint32_t aId ) final;
-        void Load ( const std::string& aFilename ) final;
-        void Load ( const void* aBuffer, size_t aBufferSize ) final;
         void Load ( const MeshMsg& aMeshMsg ) final;
         void Unload () final;
         uint32_t GetIndexSize () const final;

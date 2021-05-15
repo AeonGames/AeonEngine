@@ -25,6 +25,7 @@ endif()
 if(Qt5_FOUND)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${CMAKE_BINARY_DIR}/engine
                     ${CMAKE_CURRENT_BINARY_DIR}
                     models
                     delegates

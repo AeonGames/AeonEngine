@@ -20,21 +20,7 @@ limitations under the License.
 #include <cstring>
 #include <cmath>
 #include <mutex>
-#include "ProtoBufHelpers.h"
-#include "aeongames/ProtoBufUtils.h"
 #include "aeongames/AeonEngine.h"
-#include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "vector3.pb.h"
-#include "quaternion.pb.h"
-#include "animation.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-
 #include "aeongames/CRC.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Animation.h"
@@ -48,14 +34,14 @@ namespace AeonGames
 
     Animation::Animation ( uint32_t aId )
     {
-        Load ( aId );
+        Resource::Load ( aId );
     }
 
     Animation::Animation ( const std::string&  aFilename )
     {
         try
         {
-            Load ( aFilename );
+            Resource::Load ( aFilename );
         }
         catch ( ... )
         {
@@ -73,43 +59,13 @@ namespace AeonGames
         }
         try
         {
-            Load ( aBuffer, aBufferSize );
+            Resource::Load ( aBuffer, aBufferSize );
         }
         catch ( ... )
         {
             Unload();
             throw;
         }
-    }
-
-    void Animation::Load ( uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    void Animation::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-
-    void Animation::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static std::mutex m{};
-        static AnimationMsg animation_buffer{};
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( animation_buffer, aBuffer, aBufferSize, "AEONANM" );
-        Load ( animation_buffer );
-        animation_buffer.Clear();
     }
 
     void Animation::Load ( const AnimationMsg& aAnimationMsg )
