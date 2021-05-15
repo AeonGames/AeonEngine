@@ -9,7 +9,7 @@ if(MSVC)
                "-WX -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -DDLL_EXPORT")
 elseif(MINGW OR MSYS)
   set_target_properties(OggSound
-                        PROPERTIES 
+                        PROPERTIES
                           PREFIX
                             ""
   )

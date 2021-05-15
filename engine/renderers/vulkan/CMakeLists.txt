@@ -92,7 +92,7 @@ elseif(MINGW OR MSYS)
 elseif(UNIX)
   set_target_properties(
     VulkanRenderer
-    PROPERTIES 
+    PROPERTIES
       COMPILE_FLAGS
         "-DVK_USE_PLATFORM_XLIB_KHR"
   )

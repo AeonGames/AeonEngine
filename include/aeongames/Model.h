@@ -20,6 +20,16 @@ limitations under the License.
 #include <memory>
 #include "aeongames/Platform.h"
 #include "aeongames/ResourceId.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "reference.pb.h"
+#include "model.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+#include "aeongames/Resource.h"
 
 namespace AeonGames
 {
@@ -29,7 +39,7 @@ namespace AeonGames
     class Skeleton;
     class Animation;
     class ModelMsg;
-    class Model
+    class Model : public Resource<ModelMsg, "AEONMDL"_mgk>
     {
     public:
         using Assembly = typename std::tuple <

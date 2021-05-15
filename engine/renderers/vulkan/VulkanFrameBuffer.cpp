@@ -22,7 +22,6 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "ProtoBufHelpers.h"
 #include "VulkanFrameBuffer.h"
 #include "aeongames/CRC.h"
 #include "aeongames/AeonEngine.h"
@@ -33,7 +32,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            FrameBuffer::Load ( aPath );
+            Resource::Load ( aPath );
         }
     }
     VulkanFrameBuffer::~VulkanFrameBuffer()

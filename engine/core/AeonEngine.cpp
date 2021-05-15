@@ -27,8 +27,7 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "ProtoBufHelpers.h"
-
+#include "aeongames/ProtoBufHelpers.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/Node.h"
 #include "aeongames/AeonEngine.h"
@@ -36,8 +35,8 @@ limitations under the License.
 #include "aeongames/Buffer.h"
 #include "aeongames/Texture.h"
 #include "aeongames/Mesh.h"
-#include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
+#include "aeongames/Pipeline.h"
 #include "aeongames/Model.h"
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
@@ -45,6 +44,7 @@ limitations under the License.
 #include "aeongames/ResourceFactory.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/Resource.h"
 #include "Factory.h"
 #ifdef __unix__
 #include <X11/Xlib.h>
@@ -173,7 +173,7 @@ namespace AeonGames
         ProcessOpts ( argc, argv, gOptionHandlers.data(), gOptionHandlers.size() );
         try
         {
-            LoadProtoBufObject<ConfigurationMsg> ( gConfigurationMsg, gConfigFile, "AEONCFG" );
+            LoadProtoBufObject<ConfigurationMsg> ( gConfigurationMsg, gConfigFile, "AEONCFG"_mgk );
         }
         catch ( std::runtime_error& e )
         {

@@ -26,13 +26,25 @@ limitations under the License.
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
 #include "aeongames/Matrix4x4.h"
+#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "material.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
+#include "aeongames/Resource.h"
 
 namespace AeonGames
 {
     class Image;
     class MaterialMsg;
     class PropertyMsg;
-    class Material
+    class Material : public Resource<MaterialMsg, "AEONMTL"_mgk>
     {
     public:
         using UniformValue = std::variant<uint32_t, int32_t, float, Vector2, Vector3, Vector4, Matrix4x4>;
@@ -52,9 +64,6 @@ namespace AeonGames
         virtual std::unique_ptr<Material> Clone() const = 0;
         ///@name Loaders
         ///@{
-        DLL void Load ( const std::string& aFilename );
-        DLL void Load ( const uint32_t aId );
-        DLL void Load ( const void* aBuffer, size_t aBufferSize );
         virtual void Load ( const MaterialMsg& aMaterialMsg ) = 0;
         virtual void Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) = 0;
         virtual void Unload() = 0;

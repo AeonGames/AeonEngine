@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <mutex>
-#include "aeongames/Model.h"
+#include "aeongames/ProtoBufClasses.h"
 #include "aeongames/Node.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
@@ -22,23 +22,14 @@ limitations under the License.
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
 #include "aeongames/Utilities.h"
-#include "ProtoBufHelpers.h"
+#include "aeongames/ProtoBufHelpers.h"
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Window.h"
 #include "aeongames/CRC.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ResourceCache.h"
-#include "aeongames/ProtoBufClasses.h"
 #include "aeongames/Renderer.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "reference.pb.h"
-#include "model.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
+#include "aeongames/Model.h"
 
 namespace AeonGames
 {
@@ -49,47 +40,17 @@ namespace AeonGames
 
     Model::Model ( uint32_t aId )
     {
-        Load ( aId );
+        Resource::Load ( aId );
     }
 
     Model::Model ( const std::string&  aFilename )
     {
-        Load ( aFilename );
+        Resource::Load ( aFilename );
     }
 
     Model::Model ( const void * aBuffer, size_t aBufferSize )
     {
-        Load ( aBuffer, aBufferSize );
-    }
-
-    void Model::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-
-    void Model::Load ( uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    void Model::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static std::mutex m{};
-        static ModelMsg model_buffer{};
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( model_buffer, aBuffer, aBufferSize, "AEONMDL" );
-        Load ( model_buffer );
-        model_buffer.Clear();
+        Resource::Load ( aBuffer, aBufferSize );
     }
 
     void Model::Load ( const ModelMsg& aModelMsg )

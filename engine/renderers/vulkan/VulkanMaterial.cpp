@@ -21,12 +21,12 @@ limitations under the License.
 #include <cassert>
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
-#include "ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include "material.pb.h"
+#include "pipeline.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -50,7 +50,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            Material::Load ( aPath );
+            Resource::Load ( aPath );
         }
     }
 

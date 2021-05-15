@@ -19,7 +19,8 @@ limitations under the License.
 #include <exception>
 #include "Configuration.h"
 #include "aeongames/Utilities.h"
-#include "ProtoBufHelpers.h"
+#include "aeongames/Resource.h"
+#include "aeongames/ProtoBufHelpers.h"
 
 namespace AeonGames
 {
@@ -30,7 +31,7 @@ namespace AeonGames
         try
         {
             mConfigurationMsg =
-                LoadProtoBufObject<ConfigurationMsg> ( aFilename, "AEONCFG" );
+                LoadProtoBufObject<ConfigurationMsg> ( aFilename, "AEONCFG"_mgk );
         }
         catch ( std::runtime_error& e )
         {

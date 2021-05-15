@@ -90,12 +90,13 @@ set(ENGINE_MATH_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Frustum.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix3x3.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufHelpers.h
+)
 
 set(ENGINE_CORE_HEADERS
     include/Decoder.h
     include/Factory.h
-    include/ProtoBufHelpers.h
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h

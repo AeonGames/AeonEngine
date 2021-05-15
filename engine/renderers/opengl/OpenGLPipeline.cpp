@@ -22,7 +22,7 @@ limitations under the License.
 #include "aeongames/CRC.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
-#include "ProtoBufHelpers.h"
+#include "aeongames/ProtoBufHelpers.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )

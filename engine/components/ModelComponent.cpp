@@ -17,9 +17,8 @@ limitations under the License.
 #include <array>
 #include <cstring>
 #include <cmath>
-#include "ModelComponent.h"
+#include "aeongames/ProtoBufClasses.h"
 #include "aeongames/AeonEngine.h"
-#include "aeongames/Model.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Skeleton.h"
@@ -29,6 +28,8 @@ limitations under the License.
 #include "aeongames/Buffer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Node.h"
+#include "aeongames/Model.h"
+#include "ModelComponent.h"
 
 namespace AeonGames
 {

@@ -23,12 +23,23 @@ limitations under the License.
 #include <regex>
 #include "aeongames/Platform.h"
 #include "aeongames/Material.h"
+#include "aeongames/ProtoBufClasses.h"
+#include "ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "pipeline.pb.h"
+#include "property.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+#include "aeongames/Resource.h"
 
 namespace AeonGames
 {
     class MaterialMsg;
     class PipelineMsg;
-
     enum AttributeBits
     {
         VertexPositionBit = 0x1,
@@ -57,16 +68,11 @@ namespace AeonGames
         Vector4ByteNormalized,
     };
 
-    class Pipeline
+    class Pipeline : public Resource<PipelineMsg, "AEONPLN"_mgk>
     {
     public:
         DLL virtual ~Pipeline() = 0;
-        virtual void Load ( const PipelineMsg& aPipelineMsg ) = 0;
         virtual void Unload() = 0;
-        // Non Virtual
-        DLL void Load ( const std::string& aFilename );
-        DLL void Load ( uint32_t aId );
-        DLL void Load ( const void* aBuffer, size_t aBufferSize );
     };
 }
 #endif

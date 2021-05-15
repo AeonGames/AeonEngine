@@ -23,16 +23,7 @@ limitations under the License.
 #include <mutex>
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
-#include "ProtoBufHelpers.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "skeleton.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-
+#include "aeongames/ProtoBufHelpers.h"
 #include "aeongames/CRC.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Skeleton.h"
@@ -66,29 +57,14 @@ namespace AeonGames
 
     Skeleton::Skeleton ( uint32_t aId )
     {
-        Load ( aId );
-    }
-
-    void Skeleton::Load ( uint32_t aId )
-    {
-        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
-        LoadResource ( aId, buffer.data(), buffer.size() );
-        try
-        {
-            Load ( buffer.data(), buffer.size() );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
+        Resource::Load ( aId );
     }
 
     Skeleton::Skeleton ( const std::string&  aFilename )
     {
         try
         {
-            Load ( aFilename );
+            Resource::Load ( aFilename );
         }
         catch ( ... )
         {
@@ -106,7 +82,7 @@ namespace AeonGames
         }
         try
         {
-            Load ( aBuffer, aBufferSize );
+            Resource::Load ( aBuffer, aBufferSize );
         }
         catch ( ... )
         {
@@ -117,21 +93,6 @@ namespace AeonGames
 
 
     Skeleton::~Skeleton() = default;
-
-    void Skeleton::Load ( const std::string& aFilename )
-    {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
-    }
-
-    void Skeleton::Load ( const void* aBuffer, size_t aBufferSize )
-    {
-        static std::mutex m;
-        static SkeletonMsg skeleton_buffer;
-        std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( skeleton_buffer, aBuffer, aBufferSize, "AEONSKL" );
-        Load ( skeleton_buffer );
-        skeleton_buffer.Clear();
-    }
 
     void Skeleton::Load ( const SkeletonMsg& aSkeletonMsg )
     {
