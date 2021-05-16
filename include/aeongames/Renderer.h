@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,7 +50,9 @@ namespace AeonGames
         virtual std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const = 0;
 
         ///@}
-        virtual std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath = 0 ) const = 0;
+        virtual void LoadMesh ( const Mesh& aMesh ) = 0;
+        virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
+        virtual std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath = 0 ) = 0;
         virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Texture> CreateTexture ( uint32_t aPath = 0 ) const = 0;

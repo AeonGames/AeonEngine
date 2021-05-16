@@ -44,7 +44,9 @@ namespace AeonGames
         virtual ~OpenGLRenderer() = 0;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
-        std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) const final;
+        virtual void LoadMesh ( const Mesh& aMesh ) final;
+        virtual void UnloadMesh ( const Mesh& aMesh ) final;
+        std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) final;
         std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
         std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
@@ -54,6 +56,7 @@ namespace AeonGames
         GLuint GetVertexArrayObject() const;
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
+        void BindMeshBuffers ( const Mesh& aMesh ) const;
     protected:
         void InitializeOverlay();
         void FinalizeOverlay();
@@ -71,6 +74,7 @@ namespace AeonGames
         /// Overlay quadrilateral.
         OpenGLBuffer mOverlayQuad{};
         /**@}*/
+        std::unordered_map<size_t, std::vector<OpenGLBuffer>> mBufferStore{};
     };
 }
 #endif
