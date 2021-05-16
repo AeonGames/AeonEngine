@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ namespace AeonGames
     /** Retrieve a pointer to the current global renderer, may be null if not set.
      * @return Pointer to the current global renderer.
      */
-    DLL const Renderer* GetRenderer();
+    DLL Renderer* GetRenderer();
     /** Builds and stores a renderer object given its implementation identifier.
      * @param aIdentifier Implementation identifier for the renderer to construct,
      * usually retrived with EnumerateRendererConstructors.

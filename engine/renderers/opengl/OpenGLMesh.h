@@ -30,12 +30,7 @@ namespace AeonGames
     public:
         OpenGLMesh ( uint32_t aPath = 0 );
         ~OpenGLMesh() final;
-        void Load ( const MeshMsg& aMeshMsg ) final;
         void Unload () final;
-        uint32_t GetIndexSize () const final;
-        uint32_t GetIndexCount() const final;
-        uint32_t GetVertexCount() const final;
-        const AABB& GetAABB() const final;
         ///@name OpenGL Specific API
         ///@{
         GLenum GetIndexType() const;
@@ -45,12 +40,6 @@ namespace AeonGames
         ///@}
     private:
         void BindBuffers() const;
-        AABB mAABB;
-        uint32_t mVertexFlags{};
-        uint32_t mVertexCount{};
-        uint32_t mIndexCount{};
-        uint32_t mIndexSize{};
-        GLuint mVAO {}; ///< Only used on NON SINGLE_VAO configuration, but kept for structure consistency
         GLuint mVertexBuffer {};
         GLuint mIndexBuffer{};
     };

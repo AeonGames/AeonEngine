@@ -15,8 +15,133 @@ limitations under the License.
 */
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/Renderer.h"
 
 namespace AeonGames
 {
-    Mesh::~Mesh() = default;
+    Mesh::Mesh() = default;
+    Mesh::~Mesh()
+    {
+        Unload();
+    }
+    uint32_t Mesh::GetVertexFlags () const
+    {
+        return mVertexFlags;
+    }
+
+    uint32_t Mesh::GetIndexSize () const
+    {
+        return mIndexSize;
+    }
+
+    uint32_t Mesh::GetIndexCount() const
+    {
+        return mIndexCount;
+    }
+
+    uint32_t Mesh::GetVertexCount() const
+    {
+        return mVertexCount;
+    }
+
+    const std::vector<uint8_t>& Mesh::GetVertexBuffer() const
+    {
+        return mVertexBuffer;
+    }
+
+    const std::vector<uint8_t>& Mesh::GetIndexBuffer() const
+    {
+        return mIndexBuffer;
+    }
+
+    const AABB& Mesh::GetAABB() const
+    {
+        return mAABB;
+    }
+
+    uint32_t Mesh::GetStride () const
+    {
+        uint32_t stride = 0;
+        if ( mVertexFlags & Mesh::AttributeMask::POSITION_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::NORMAL_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::TANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::BITANGENT_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::UV_BIT )
+        {
+            stride += sizeof ( float ) * 2;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::WEIGHT_IDX_BIT )
+        {
+            stride += sizeof ( uint8_t ) * 4;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::WEIGHT_BIT )
+        {
+            stride += sizeof ( uint8_t ) * 4;
+        }
+        if ( mVertexFlags & Mesh::AttributeMask::COLOR_BIT )
+        {
+            stride += sizeof ( float ) * 3;
+        }
+        return stride;
+    }
+
+    void Mesh::Load ( const MeshMsg& aMeshMsg )
+    {
+        mAABB = AABB
+        {
+            {
+                aMeshMsg.center().x(),
+                aMeshMsg.center().y(),
+                aMeshMsg.center().z()
+            },
+            {
+                aMeshMsg.radii().x(),
+                aMeshMsg.radii().y(),
+                aMeshMsg.radii().z()
+            }
+        };
+
+        mVertexCount = aMeshMsg.vertexcount();
+        mIndexCount = aMeshMsg.indexcount();
+        mIndexSize = aMeshMsg.indexsize();
+        mVertexFlags = aMeshMsg.vertexflags();
+
+        mVertexBuffer.clear();
+        mVertexBuffer.reserve ( aMeshMsg.vertexbuffer().size() );
+        std::copy ( aMeshMsg.vertexbuffer().begin(), aMeshMsg.vertexbuffer().end(), std::back_inserter ( mVertexBuffer ) );
+
+        mIndexBuffer.clear();
+        mIndexBuffer.reserve ( aMeshMsg.indexbuffer().size() );
+        std::copy ( aMeshMsg.indexbuffer().begin(), aMeshMsg.indexbuffer().end(), std::back_inserter ( mIndexBuffer ) );
+    }
+    void Mesh::Unload()
+    {
+        mAABB = AABB{};
+
+        mVertexCount = 0;
+        mIndexCount = 0;
+        mIndexSize = 0;
+        mVertexFlags = 0;
+
+        mVertexBuffer.clear();
+        mIndexBuffer.clear();
+
+        auto* renderer = GetRenderer();
+        if ( renderer != nullptr )
+        {
+            renderer->UnloadMesh ( *this );
+        }
+    }
 }

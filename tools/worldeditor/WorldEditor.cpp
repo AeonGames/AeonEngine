@@ -107,6 +107,7 @@ namespace AeonGames
         }
         QByteArray mesh_byte_array = mesh_file.readAll();
         aMesh.Resource::Load ( mesh_byte_array.data(), mesh_byte_array.size() );
+        GetRenderer()->LoadMesh ( aMesh );
     }
 
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ),
@@ -233,8 +234,8 @@ namespace AeonGames
             }} );
         }
 
-        mGridMesh = GetRenderer()->CreateMesh();
-        mAABBWireMesh = GetRenderer()->CreateMesh();
+        mGridMesh = std::make_unique<Mesh>();
+        mAABBWireMesh = std::make_unique<Mesh>();
         LoadMesh ( *mGridMesh, ":/meshes/grid.msh" );
         LoadMesh ( *mAABBWireMesh, ":/meshes/aabb_wire.msh" );
     }
