@@ -43,11 +43,6 @@ namespace AeonGames
     private:
         const VulkanRenderer& mVulkanRenderer;
         VulkanBuffer mBuffer;
-        AABB mAABB{};
-        uint32_t mVertexFlags{};
-        uint32_t mVertexCount{};
-        uint32_t mIndexSize{};
-        uint32_t mIndexCount{};
     };
 }
 #endif

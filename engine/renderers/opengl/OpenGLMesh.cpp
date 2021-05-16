@@ -44,12 +44,7 @@ namespace AeonGames
 
     void OpenGLMesh::BindVertexArray() const
     {
-#ifdef SINGLE_VAO
         BindBuffers();
-#else
-        glBindVertexArray ( mVAO );
-        OPENGL_CHECK_ERROR_THROW;
-#endif
     }
 
     GLuint OpenGLMesh::GetVertexBufferId() const
@@ -64,7 +59,7 @@ namespace AeonGames
 
     GLenum OpenGLMesh::GetIndexType() const
     {
-        switch ( mIndexSize )
+        switch ( GetIndexSize() )
         {
         case 1:
             return GL_UNSIGNED_BYTE;
@@ -75,57 +70,6 @@ namespace AeonGames
         };
         throw std::runtime_error ( "Invalid Index Size." );
     }
-    void OpenGLMesh::Load ( const MeshMsg& aMeshMsg )
-    {
-        mAABB = AABB
-        {
-            {
-                aMeshMsg.center().x(),
-                aMeshMsg.center().y(),
-                aMeshMsg.center().z()
-            },
-            {
-                aMeshMsg.radii().x(),
-                aMeshMsg.radii().y(),
-                aMeshMsg.radii().z()
-            }
-        };
-
-        mVertexCount = aMeshMsg.vertexcount();
-        mIndexCount = aMeshMsg.indexcount();
-        mIndexSize = aMeshMsg.indexsize();
-        mVertexFlags = aMeshMsg.vertexflags();
-
-        // OpenGL Specific Code:
-        ///@todo Use OpenGLBuffer class instead of raw GL ids
-#ifndef SINGLE_VAO
-        glGenVertexArrays ( 1, &mVAO );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindVertexArray ( mVAO );
-        OPENGL_CHECK_ERROR_THROW;
-#endif
-        glGenBuffers ( 1, &mVertexBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-
-        glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer );
-        OPENGL_CHECK_ERROR_THROW;
-        glBufferData ( GL_ARRAY_BUFFER, aMeshMsg.vertexbuffer().size(), aMeshMsg.vertexbuffer().data(), GL_STATIC_DRAW );
-        OPENGL_CHECK_ERROR_THROW;
-
-        //---Index Buffer---
-        if ( mIndexCount )
-        {
-            glGenBuffers ( 1, &mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
-            OPENGL_CHECK_ERROR_THROW;
-            glBufferData ( GL_ELEMENT_ARRAY_BUFFER, aMeshMsg.indexbuffer().size(), aMeshMsg.indexbuffer().data(), GL_STATIC_DRAW );
-            OPENGL_CHECK_ERROR_THROW;
-        }
-#ifndef SINGLE_VAO
-        BindBuffers();
-#endif
-    }
 
     void OpenGLMesh::BindBuffers() const
     {
@@ -133,11 +77,11 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         size_t offset{0};
-        if ( mVertexFlags & Mesh::POSITION_BIT )
+        if ( GetVertexFlags() & Mesh::POSITION_BIT )
         {
             glEnableVertexAttribArray ( 0 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -146,11 +90,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 0 );
         }
 
-        if ( mVertexFlags & Mesh::NORMAL_BIT )
+        if ( GetVertexFlags() & Mesh::NORMAL_BIT )
         {
             glEnableVertexAttribArray ( 1 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -159,11 +103,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 1 );
         }
 
-        if ( mVertexFlags & Mesh::TANGENT_BIT )
+        if ( GetVertexFlags() & Mesh::TANGENT_BIT )
         {
             glEnableVertexAttribArray ( 2 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -172,11 +116,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 2 );
         }
 
-        if ( mVertexFlags & Mesh::BITANGENT_BIT )
+        if ( GetVertexFlags() & Mesh::BITANGENT_BIT )
         {
             glEnableVertexAttribArray ( 3 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -185,11 +129,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 3 );
         }
 
-        if ( mVertexFlags & Mesh::UV_BIT )
+        if ( GetVertexFlags() & Mesh::UV_BIT )
         {
             glEnableVertexAttribArray ( 4 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 2;
         }
@@ -198,11 +142,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 4 );
         }
 
-        if ( mVertexFlags & Mesh::WEIGHT_IDX_BIT )
+        if ( GetVertexFlags() & Mesh::WEIGHT_IDX_BIT )
         {
             glEnableVertexAttribArray ( 5 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
         }
@@ -211,11 +155,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 5 );
         }
 
-        if ( mVertexFlags & Mesh::WEIGHT_BIT )
+        if ( GetVertexFlags() & Mesh::WEIGHT_BIT )
         {
             glEnableVertexAttribArray ( 6 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( uint8_t ) * 4;
         }
@@ -224,11 +168,11 @@ namespace AeonGames
             glDisableVertexAttribArray ( 6 );
         }
 
-        if ( mVertexFlags & Mesh::COLOR_BIT )
+        if ( GetVertexFlags() & Mesh::COLOR_BIT )
         {
             glEnableVertexAttribArray ( 7 );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 7, 3, GL_FLOAT, GL_FALSE, GetStride ( mVertexFlags ), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( 7, 3, GL_FLOAT, GL_FALSE, GetStride ( GetVertexFlags() ), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += sizeof ( float ) * 3;
         }
@@ -238,7 +182,7 @@ namespace AeonGames
         }
 
         //---Index Buffer---
-        if ( mIndexCount )
+        if ( GetIndexCount() )
         {
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
         }
@@ -251,16 +195,6 @@ namespace AeonGames
 
     void OpenGLMesh::Unload ()
     {
-#ifndef SINGLE_VAO
-        OPENGL_CHECK_ERROR_NO_THROW;
-        if ( glIsVertexArray ( mVAO ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteVertexArrays ( 1, &mVAO );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mVAO = 0;
-        }
-#endif
         OPENGL_CHECK_ERROR_NO_THROW;
         if ( glIsBuffer ( mVertexBuffer ) )
         {
@@ -278,25 +212,5 @@ namespace AeonGames
             mIndexBuffer = 0;
         }
         OPENGL_CHECK_ERROR_NO_THROW;
-    }
-
-    uint32_t OpenGLMesh::GetIndexSize () const
-    {
-        return mIndexSize;
-    }
-
-    uint32_t OpenGLMesh::GetIndexCount() const
-    {
-        return mIndexCount;
-    }
-
-    uint32_t OpenGLMesh::GetVertexCount() const
-    {
-        return mVertexCount;
-    }
-
-    const AABB& OpenGLMesh::GetAABB() const
-    {
-        return mAABB;
     }
 }

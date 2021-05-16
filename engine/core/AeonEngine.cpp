@@ -349,10 +349,11 @@ namespace AeonGames
         std::cout << __func__ << std::endl;
     }
 
-    const Renderer* GetRenderer()
+    Renderer* GetRenderer()
     {
         return gRenderer.get();
     }
+
     const Renderer* SetRenderer ( const std::string& aIdentifier )
     {
         if ( gRenderer )

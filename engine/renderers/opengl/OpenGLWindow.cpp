@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ limitations under the License.
 #include "OpenGLRenderer.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
-#include "OpenGLMesh.h"
 #include "OpenGLFunctions.h"
 #include <sstream>
 #include <iostream>
@@ -82,6 +81,20 @@ namespace AeonGames
 
     OpenGLWindow::~OpenGLWindow() = default;
 
+    static GLenum GetIndexType ( const Mesh& aMesh )
+    {
+        switch ( aMesh.GetIndexSize() )
+        {
+        case 1:
+            return GL_UNSIGNED_BYTE;
+        case 2:
+            return GL_UNSIGNED_SHORT;
+        case 4:
+            return GL_UNSIGNED_INT;
+        };
+        throw std::runtime_error ( "Invalid Index Size." );
+    }
+
     void OpenGLWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
@@ -92,7 +105,6 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const OpenGLMesh& opengl_mesh{reinterpret_cast<const OpenGLMesh&> ( aMesh ) };
         const OpenGLPipeline& opengl_pipeline{reinterpret_cast<const OpenGLPipeline&> ( aPipeline ) };
         opengl_pipeline.Use ( reinterpret_cast<const OpenGLMaterial*> ( aMaterial ), aSkeleton );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -105,14 +117,11 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
-        opengl_mesh.BindVertexArray();
-        OPENGL_CHECK_ERROR_NO_THROW;
+        mOpenGLRenderer.BindMeshBuffers ( aMesh );
         if ( aMesh.GetIndexCount() )
         {
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, opengl_mesh.GetIndexBufferId() );
-            OPENGL_CHECK_ERROR_NO_THROW;
             glDrawElementsInstanced ( opengl_pipeline.GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                      opengl_mesh.GetIndexType(), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
+                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
@@ -164,12 +173,7 @@ namespace AeonGames
             GL_COLOR_BUFFER_BIT,
             GL_LINEAR );
         OPENGL_CHECK_ERROR_NO_THROW;
-#if 1
         /* Bind and render overlay texture */
-#ifndef SINGLE_VAO
-        glBindVertexArray ( mOpenGLRenderer.GetVertexArrayObject() );
-        OPENGL_CHECK_ERROR_THROW;
-#endif
         glUseProgram ( mOpenGLRenderer.GetOverlayProgram() );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, mOpenGLRenderer.GetOverlayQuad() );
@@ -186,7 +190,6 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         OPENGL_CHECK_ERROR_NO_THROW;
-#endif
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
     }

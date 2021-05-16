@@ -76,7 +76,29 @@ namespace AeonGames
             buffer.Clear();
         }
         virtual void Unload () = 0;
+        /**
+         * @brief Get the Consecutive Id for the resource object.
+         * The consecutive Id is different from the resource Id,
+         * it is a unique per instance number that increments as each
+         * object is created, as such it is a runtime value that will
+         * most likely change each run, and will collide between
+         * different specific resource types and cannot be realied uppon
+         * for serialization purposes, it is intended as an identifier
+         * for other classes who need to cache their own resource data
+         * linked to the original resource such as renderers.
+         * @return Unique Consecutive Id of the object.
+         */
+        size_t GetConsecutiveId() const
+        {
+            return mConsecutiveId;
+        }
     private:
+        static size_t GetNextConsecutiveId()
+        {
+            static std::atomic<std::size_t> consecutive{};
+            return consecutive++;
+        }
+        size_t mConsecutiveId{ GetNextConsecutiveId() };
         virtual void Load ( const T& aAnimationMsg ) = 0;
     };
 }

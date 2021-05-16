@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-
     std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo )
     {
         out << "Visual: " << aXVisualInfo.visual << std::endl;

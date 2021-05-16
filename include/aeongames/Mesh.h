@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <vector>
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -62,51 +63,26 @@ namespace AeonGames
             FOUR_BYTES = 0x09,
             DOUBLE = 0x0A
         };
-        DLL virtual ~Mesh() = 0;
-        virtual void Load ( const MeshMsg& aMeshMsg ) = 0;
-        virtual void Unload () = 0;
-        virtual uint32_t GetIndexSize () const = 0;
-        virtual uint32_t GetIndexCount() const = 0;
-        virtual uint32_t GetVertexCount() const = 0;
-        virtual const AABB& GetAABB() const = 0;
+        DLL Mesh();
+        DLL ~Mesh() final;
+        void Load ( const MeshMsg& aMeshMsg ) final;
+        DLL void Unload() final;
+        uint32_t GetVertexFlags() const;
+        uint32_t GetIndexSize() const;
+        uint32_t GetIndexCount() const;
+        uint32_t GetVertexCount() const;
+        const std::vector<uint8_t>& GetVertexBuffer() const;
+        const std::vector<uint8_t>& GetIndexBuffer() const;
+        const AABB& GetAABB() const;
+        uint32_t GetStride() const;
+    private:
+        AABB mAABB{};
+        std::vector<uint8_t> mVertexBuffer{};
+        std::vector<uint8_t> mIndexBuffer{};
+        uint32_t mVertexFlags{};
+        uint32_t mVertexCount{};
+        uint32_t mIndexSize{};
+        uint32_t mIndexCount{};
     };
-
-    inline uint32_t GetStride ( uint32_t aVertexFlags )
-    {
-        uint32_t stride = 0;
-        if ( aVertexFlags & Mesh::AttributeMask::POSITION_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::NORMAL_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::TANGENT_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::BITANGENT_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::UV_BIT )
-        {
-            stride += sizeof ( float ) * 2;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::WEIGHT_IDX_BIT )
-        {
-            stride += sizeof ( uint8_t ) * 4;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::WEIGHT_BIT )
-        {
-            stride += sizeof ( uint8_t ) * 4;
-        }
-        if ( aVertexFlags & Mesh::AttributeMask::COLOR_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        return stride;
-    }
 }
 #endif

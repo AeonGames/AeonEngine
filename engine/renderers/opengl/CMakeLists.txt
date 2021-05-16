@@ -13,13 +13,6 @@
 # the License.
 
 find_package(OpenGL)
-
-option(SINGLE_VAO "Use a single Vertex Array per OpenGL context." OFF)
-
-if(SINGLE_VAO)
-  add_definitions(-DSINGLE_VAO)
-endif()
-
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(CMAKE_REQUIRED_QUIET OFF)
@@ -104,7 +97,6 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLBuffer.h
     OpenGLMaterial.h
     OpenGLTexture.h
-    OpenGLMesh.h
     OpenGLFrameBuffer.h
     OpenGLMemoryPoolBuffer.h)
 
@@ -119,7 +111,6 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLPipeline.cpp
     OpenGLMaterial.cpp
     OpenGLTexture.cpp
-    OpenGLMesh.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp
