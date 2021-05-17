@@ -65,16 +65,16 @@ namespace AeonGames
         };
         DLL Mesh();
         DLL ~Mesh() final;
-        void Load ( const MeshMsg& aMeshMsg ) final;
+        DLL void Load ( const MeshMsg& aMeshMsg ) final;
         DLL void Unload() final;
-        uint32_t GetVertexFlags() const;
-        uint32_t GetIndexSize() const;
-        uint32_t GetIndexCount() const;
-        uint32_t GetVertexCount() const;
-        const std::vector<uint8_t>& GetVertexBuffer() const;
-        const std::vector<uint8_t>& GetIndexBuffer() const;
-        const AABB& GetAABB() const;
-        uint32_t GetStride() const;
+        DLL uint32_t GetVertexFlags() const;
+        DLL uint32_t GetIndexSize() const;
+        DLL uint32_t GetIndexCount() const;
+        DLL uint32_t GetVertexCount() const;
+        DLL const std::vector<uint8_t>& GetVertexBuffer() const;
+        DLL const std::vector<uint8_t>& GetIndexBuffer() const;
+        DLL const AABB& GetAABB() const;
+        DLL uint32_t GetStride() const;
     private:
         AABB mAABB{};
         std::vector<uint8_t> mVertexBuffer{};

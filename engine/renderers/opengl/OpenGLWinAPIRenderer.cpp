@@ -32,7 +32,6 @@ limitations under the License.
 #include "aeongames/Matrix4x4.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLWinAPIRenderer.h"
-#include "OpenGLMesh.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLTexture.h"
 #include "OpenGLWindow.h"
