@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017,2020 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2017,2020,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -31,7 +31,6 @@ set(VULKAN_RENDERER_HEADERS
     VulkanUtilities.h
     VulkanRenderer.h
     VulkanWindow.h
-    VulkanMesh.h
     VulkanPipeline.h
     VulkanMaterial.h
     VulkanTexture.h
@@ -44,7 +43,6 @@ set(VULKAN_RENDERER_SOURCES
     VulkanUtilities.cpp
     VulkanRenderer.cpp
     VulkanWindow.cpp
-    VulkanMesh.cpp
     VulkanPipeline.cpp
     VulkanMaterial.cpp
     VulkanTexture.cpp
