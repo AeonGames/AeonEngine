@@ -207,8 +207,16 @@ void main()
             }
         }
     }
+    void OpenGLRenderer::UnloadMesh ( const Mesh& aMesh )
+    {
+        auto it = mBufferStore.find(aMesh.GetConsecutiveId());
+        if(it!=mBufferStore.end())
+        {
+            mBufferStore.erase(it);
+        }
+    }
 
-    void OpenGLRenderer::BindMeshBuffers(const Mesh& aMesh) const
+    void OpenGLRenderer::BindMesh(const Mesh& aMesh) const
     {
         auto it = mBufferStore.find(aMesh.GetConsecutiveId());
         if(it==mBufferStore.end())
@@ -333,15 +341,6 @@ void main()
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0 );
         }
         OPENGL_CHECK_ERROR_THROW;
-    }
-
-    void OpenGLRenderer::UnloadMesh ( const Mesh& aMesh )
-    {
-        auto it = mBufferStore.find(aMesh.GetConsecutiveId());
-        if(it!=mBufferStore.end())
-        {
-            mBufferStore.erase(it);
-        }
     }
 
     std::unique_ptr<Mesh> OpenGLRenderer::CreateMesh ( uint32_t aPath )

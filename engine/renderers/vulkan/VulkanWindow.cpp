@@ -18,7 +18,6 @@ limitations under the License.
 #include "VulkanUtilities.h"
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
-#include "VulkanMesh.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -33,6 +32,7 @@ limitations under the License.
 #include "aeongames/AABB.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/Mesh.h"
 #include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 
 namespace AeonGames
@@ -559,14 +559,9 @@ namespace AeonGames
         }
 
         {
-            const VkDeviceSize offset = 0;
-            const VulkanMesh& vulkan_mesh{reinterpret_cast<const VulkanMesh&> ( aMesh ) };
-            vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &vulkan_mesh.GetBuffer(), &offset );
+            mVulkanRenderer.BindMesh ( aMesh );
             if ( aMesh.GetIndexCount() )
             {
-                vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
-                                       vulkan_mesh.GetBuffer(), ( sizeof ( Vertex ) * aMesh.GetVertexCount() ),
-                                       vulkan_mesh.GetIndexType() );
                 vkCmdDrawIndexed (
                     mVulkanRenderer.GetCommandBuffer(),
                     ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),

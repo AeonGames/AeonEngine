@@ -117,7 +117,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
-        mOpenGLRenderer.BindMeshBuffers ( aMesh );
+        mOpenGLRenderer.BindMesh ( aMesh );
         if ( aMesh.GetIndexCount() )
         {
             glDrawElementsInstanced ( opengl_pipeline.GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
