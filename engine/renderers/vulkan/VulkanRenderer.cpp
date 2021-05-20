@@ -762,14 +762,6 @@ namespace AeonGames
         }
     }
 
-    std::unique_ptr<Mesh> VulkanRenderer::CreateMesh ( uint32_t aPath )
-    {
-        auto mesh = std::make_unique<Mesh>();
-        mesh->Resource::Load ( aPath );
-        LoadMesh ( *mesh );
-        return mesh;
-    }
-
     std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline ( uint32_t aPath ) const
     {
         return std::make_unique<VulkanPipeline> ( *this, aPath );
