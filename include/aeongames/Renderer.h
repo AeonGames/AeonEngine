@@ -52,7 +52,6 @@ namespace AeonGames
         ///@}
         virtual void LoadMesh ( const Mesh& aMesh ) = 0;
         virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
-        virtual std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath = 0 ) = 0;
         virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Texture> CreateTexture ( uint32_t aPath = 0 ) const = 0;

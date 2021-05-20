@@ -343,15 +343,6 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    std::unique_ptr<Mesh> OpenGLRenderer::CreateMesh ( uint32_t aPath )
-    {
-        /// @todo Remove CreateMesh from renderer code. 
-        auto mesh = std::make_unique<Mesh>();
-        mesh->Resource::Load(aPath);
-        LoadMesh(*mesh);
-        return mesh;
-    }
-
     std::unique_ptr<Pipeline> OpenGLRenderer::CreatePipeline ( uint32_t aPath ) const
     {
         return std::make_unique<OpenGLPipeline> ( aPath );

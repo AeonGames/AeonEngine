@@ -59,7 +59,6 @@ namespace AeonGames
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
-        std::unique_ptr<Mesh> CreateMesh ( uint32_t aPath ) final;
         std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
         std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
         std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
