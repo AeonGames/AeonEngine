@@ -30,6 +30,7 @@ namespace AeonGames
     class Pipeline;
     class Material;
     class Window;
+    class BufferAccessor;
     class Renderer
     {
     public:
@@ -52,11 +53,16 @@ namespace AeonGames
         ///@}
         virtual void LoadMesh ( const Mesh& aMesh ) = 0;
         virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
-        virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) const = 0;
-        virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) const = 0;
+        virtual std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath = 0 ) = 0;
+        virtual std::unique_ptr<Material> CreateMaterial ( uint32_t aPath = 0 ) = 0;
         virtual std::unique_ptr<Texture> CreateTexture ( uint32_t aPath = 0 ) const = 0;
         virtual std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const = 0;
         virtual void BindMesh ( const Mesh& aMesh ) const = 0;
+        virtual void UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const = 0;
+        virtual void LoadPipeline ( const Pipeline& aPipeline ) = 0;
+        virtual void UnloadPipeline ( const Pipeline& aPipeline ) = 0;
+        virtual void LoadMaterial ( const Material& aMaterial ) = 0;
+        virtual void UnloadMaterial ( const Material& aMaterial ) = 0;
         DLL virtual ~Renderer() = 0;
     };
     /**@name Factory Functions */

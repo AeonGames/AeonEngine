@@ -46,8 +46,8 @@ namespace AeonGames
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
-        std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
-        std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
+        std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) final;
+        std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) final;
         std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
         std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
         virtual bool MakeCurrent() const = 0;
@@ -56,6 +56,11 @@ namespace AeonGames
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
         void BindMesh ( const Mesh& aMesh ) const final;
+        void UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
+        void LoadPipeline ( const Pipeline& aPipeline ) final;
+        void UnloadPipeline ( const Pipeline& aPipeline ) final;
+        void LoadMaterial ( const Material& aMaterial ) final;
+        void UnloadMaterial ( const Material& aMaterial ) final;
     protected:
         void InitializeOverlay();
         void FinalizeOverlay();
@@ -74,6 +79,7 @@ namespace AeonGames
         OpenGLBuffer mOverlayQuad{};
         /**@}*/
         std::unordered_map<size_t, std::vector<OpenGLBuffer>> mBufferStore{};
+        std::unordered_map<size_t, GLuint> mProgramStore{};
     };
 }
 #endif

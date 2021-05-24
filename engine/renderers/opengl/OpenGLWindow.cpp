@@ -21,11 +21,10 @@ limitations under the License.
 #include "aeongames/LogLevel.h"
 #include "aeongames/Node.h"
 #include "aeongames/Scene.h"
+#include "aeongames/Material.h"
 #include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
-#include "OpenGLPipeline.h"
-#include "OpenGLMaterial.h"
 #include "OpenGLFunctions.h"
 #include <sstream>
 #include <iostream>
@@ -54,13 +53,13 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         OPENGL_CHECK_ERROR_THROW;
-        mMatrices.Load ( { {"ModelMatrix", Matrix4x4{}}, {"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {} );
+        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
     }
 
     void OpenGLWindow::Finalize()
     {
         mOverlay.Finalize();
-        mMatrices.Unload();
+        mMatrices.Finalize();
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
@@ -95,6 +94,21 @@ namespace AeonGames
         throw std::runtime_error ( "Invalid Index Size." );
     }
 
+    static const std::unordered_map<Topology, GLenum> TopologyMap
+    {
+        {POINT_LIST, GL_POINTS},
+        {LINE_STRIP, GL_LINE_STRIP},
+        {LINE_LIST, GL_LINES},
+        {TRIANGLE_STRIP, GL_TRIANGLE_STRIP},
+        {TRIANGLE_FAN, GL_TRIANGLE_FAN},
+        {TRIANGLE_LIST, GL_TRIANGLES},
+        {LINE_LIST_WITH_ADJACENCY, GL_LINES_ADJACENCY},
+        {LINE_STRIP_WITH_ADJACENCY, GL_LINE_STRIP_ADJACENCY},
+        {TRIANGLE_LIST_WITH_ADJACENCY, GL_TRIANGLES_ADJACENCY},
+        {TRIANGLE_STRIP_WITH_ADJACENCY, GL_TRIANGLE_STRIP_ADJACENCY},
+        {PATCH_LIST, GL_PATCHES},
+    };
+
     void OpenGLWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
@@ -105,35 +119,34 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const OpenGLPipeline& opengl_pipeline{reinterpret_cast<const OpenGLPipeline&> ( aPipeline ) };
-        opengl_pipeline.Use ( reinterpret_cast<const OpenGLMaterial*> ( aMaterial ), aSkeleton );
+        mOpenGLRenderer.UsePipeline ( aPipeline, aMaterial, aSkeleton );
         OPENGL_CHECK_ERROR_NO_THROW;
 
-        mMatrices.Set ( 0, aModelMatrix );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
 
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetPropertiesBufferId() );
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatrices.GetPropertiesBufferId() );
+        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatrices.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
         mOpenGLRenderer.BindMesh ( aMesh );
         if ( aMesh.GetIndexCount() )
         {
-            glDrawElementsInstanced ( opengl_pipeline.GetTopology(), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+            glDrawElementsInstanced ( TopologyMap.at ( aPipeline.GetTopology() ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                                       GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            glDrawArraysInstanced ( opengl_pipeline.GetTopology(), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+            glDrawArraysInstanced ( TopologyMap.at ( aPipeline.GetTopology() ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }
 
     const GLuint OpenGLWindow::GetMatricesBuffer() const
     {
-        return mMatrices.GetPropertiesBufferId();
+        return mMatrices.GetBufferId();
     }
 
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
@@ -200,22 +213,22 @@ namespace AeonGames
 
     void OpenGLWindow::SetProjectionMatrix ( const Matrix4x4& aMatrix )
     {
-        mProjectionMatrix = aMatrix;
-        mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.Set ( 1, mProjectionMatrix * Matrix4x4
+        mProjectionMatrix = aMatrix * Matrix4x4
         {
             // Flip Matrix
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
             0.0f, 0.0f, -1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
-        } );
+        };
+        mFrustum = mProjectionMatrix * mViewMatrix;
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
     }
     void OpenGLWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.Set ( 2, mViewMatrix );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & OpenGLWindow::GetProjectionMatrix() const

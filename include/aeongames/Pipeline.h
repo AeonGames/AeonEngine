@@ -21,6 +21,7 @@ limitations under the License.
 #include <vector>
 #include <array>
 #include <regex>
+#include <tuple>
 #include "aeongames/Platform.h"
 #include "aeongames/Material.h"
 #include "aeongames/ProtoBufClasses.h"
@@ -40,6 +41,22 @@ namespace AeonGames
 {
     class MaterialMsg;
     class PipelineMsg;
+    enum Topology
+    {
+        UNDEFINED = 0,
+        POINT_LIST,
+        LINE_STRIP,
+        LINE_LIST,
+        TRIANGLE_STRIP,
+        TRIANGLE_FAN,
+        TRIANGLE_LIST,
+        LINE_LIST_WITH_ADJACENCY,
+        LINE_STRIP_WITH_ADJACENCY,
+        TRIANGLE_LIST_WITH_ADJACENCY,
+        TRIANGLE_STRIP_WITH_ADJACENCY,
+        PATCH_LIST,
+    };
+
     enum AttributeBits
     {
         VertexPositionBit = 0x1,
@@ -68,11 +85,36 @@ namespace AeonGames
         Vector4ByteNormalized,
     };
 
+    enum UniformType
+    {
+        SCALAR_FLOAT,
+        SCALAR_UINT,
+        SCALAR_INT,
+        VECTOR_FLOAT_2,
+        VECTOR_FLOAT_3,
+        VECTOR_FLOAT_4,
+    };
+
     class Pipeline : public Resource<PipelineMsg, "AEONPLN"_mgk>
     {
     public:
-        DLL virtual ~Pipeline() = 0;
-        virtual void Unload() = 0;
+        DLL virtual ~Pipeline();
+        void Load ( const PipelineMsg& aPipelineMsg ) final;
+        void Unload() final;
+        Topology GetTopology() const;
+        const std::string& GetVertexShaderCode() const;
+        const std::string& GetFragmentShaderCode() const;
+        const std::vector<std::tuple<UniformType, std::string>>& GetUniformDescriptors() const;
+        const std::vector<std::string>& GetSamplerDescriptors() const;
+        std::string GetProperties () const;
+        std::string GetAttributes () const;
+        uint32_t GetAttributeBitmap() const;
+    private:
+        Topology mTopology{};
+        std::string mVertexShaderCode{};
+        std::string mFragmentShaderCode{};
+        std::vector<std::tuple<UniformType, std::string>> mUniformDescriptors{};
+        std::vector<std::string> mSamplerDescriptors{};
     };
 }
 #endif

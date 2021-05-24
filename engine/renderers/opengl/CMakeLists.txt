@@ -93,9 +93,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLWinAPIWindow.h
     OpenGLX11Window.h
     OpenGLFunctions.h
-    OpenGLPipeline.h
     OpenGLBuffer.h
-    OpenGLMaterial.h
     OpenGLTexture.h
     OpenGLFrameBuffer.h
     OpenGLMemoryPoolBuffer.h)
@@ -108,8 +106,6 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLWinAPIWindow.cpp
     OpenGLX11Window.cpp
     OpenGLBuffer.cpp
-    OpenGLPipeline.cpp
-    OpenGLMaterial.cpp
     OpenGLTexture.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
