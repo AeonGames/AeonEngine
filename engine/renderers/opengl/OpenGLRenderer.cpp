@@ -561,7 +561,7 @@ void main()
 
         // Samplers
 #if 1
-        for ( size_t i = 0; i < aPipeline.GetSamplerDescriptors().size(); ++i )
+        for ( GLint i = 0; i < static_cast<GLint>(aPipeline.GetSamplerDescriptors().size()); ++i )
         {
             glUniform1i ( i, i );
             OPENGL_CHECK_ERROR_THROW;
