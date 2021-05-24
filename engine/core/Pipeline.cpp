@@ -44,6 +44,8 @@ namespace AeonGames
         {UniformDescriptorMsg_Type::UniformDescriptorMsg_Type_VECTOR_FLOAT_4, VECTOR_FLOAT_4},
     };
 
+    Pipeline::Pipeline() = default;
+
     Pipeline::~Pipeline()
         = default;
 
