@@ -31,6 +31,11 @@ namespace AeonGames
         return *this;
     }
 
+    const std::vector<uint8_t>& Material::GetUniformBuffer() const
+    {
+        return mUniformBuffer;
+    }
+
     size_t Material::LoadVariables ( const MaterialMsg& aMaterialMsg )
     {
         size_t size = 0;
@@ -165,5 +170,83 @@ namespace AeonGames
         {
             return reinterpret_cast<const void*> ( &value );
         }, aValue );
+    }
+
+    void Material::Load ( const MaterialMsg& aMaterialMsg )
+    {
+        size_t size = LoadVariables ( aMaterialMsg );
+        if ( size )
+        {
+            mUniformBuffer.resize ( size );
+            for ( auto& i : aMaterialMsg.property() )
+            {
+                Set ( PropertyToKeyValue ( i ) );
+            }
+        }
+        LoadSamplers ( aMaterialMsg );
+    }
+
+    void Material::Set ( size_t aIndex, const UniformValue& aValue )
+    {
+        memcpy ( mUniformBuffer.data() + mVariables.at ( aIndex ).GetOffset(), GetUniformValuePointer ( aValue ), GetUniformValueSize ( aValue ) );
+    }
+
+    void Material::Set ( const UniformKeyValue& aValue )
+    {
+        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
+                                [&aValue] ( const UniformVariable & variable )
+        {
+            return variable.GetName() == std::get<std::string> ( aValue );
+        } );
+        if ( i != mVariables.end() )
+        {
+            size_t value_size = GetUniformValueSize ( std::get<UniformValue> ( aValue ) );
+            // Do some bounds checking
+            auto j = i + 1;
+            if ( ( ( j != mVariables.end() ) ? ( j->GetOffset() - i->GetOffset() ) : ( mUniformBuffer.size() - i->GetOffset() ) ) < value_size )
+            {
+                throw std::runtime_error ( "Value type size exceeds original type size." );
+            }
+            memcpy ( mUniformBuffer.data() + i->GetOffset(), GetUniformValuePointer ( std::get<UniformValue> ( aValue ) ), value_size );
+        }
+    }
+
+    void Material::SetSampler ( const std::string& aName, const ResourceId& aValue )
+    {
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+        {
+            return std::get<0> ( aTuple ) == aName;
+        } );
+        if ( i != mSamplers.end() )
+        {
+            std::get<1> ( *i ) = aValue;
+        }
+    }
+
+    const std::vector<std::tuple<std::string, ResourceId>>& Material::GetSamplers() const
+    {
+        return mSamplers;
+    }
+
+    ResourceId Material::GetSampler ( const std::string& aName )
+    {
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+        {
+            return std::get<0> ( aTuple ) == aName;
+        } );
+        if ( i != mSamplers.end() )
+        {
+            return std::get<1> ( *i );
+        }
+        return ResourceId{"Texture"_crc32, 0};
+    }
+
+    void Material::Unload()
+    {
+        mVariables.clear();
+        mSamplers.clear();
+        mUniformBuffer.clear();
     }
 }

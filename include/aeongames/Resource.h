@@ -41,6 +41,8 @@ namespace AeonGames
             static_cast<uint64_t> ( literal[0] );
     }
 
+    DLL size_t GetNextConsecutiveId();
+
     template<class T, uint64_t Magick>
     class Resource
     {
@@ -79,10 +81,9 @@ namespace AeonGames
         /**
          * @brief Get the Consecutive Id for the resource object.
          * The consecutive Id is different from the resource Id,
-         * it is a unique per instance number that increments as each
+         * it is a unique number per resource that increments as each
          * object is created, as such it is a runtime value that will
-         * most likely change each run, and will collide between
-         * different specific resource types and cannot be realied uppon
+         * most likely change each run and cannot be relied on
          * for serialization purposes, it is intended as an identifier
          * for other classes who need to cache their own resource data
          * linked to the original resource such as renderers.
@@ -93,11 +94,6 @@ namespace AeonGames
             return mConsecutiveId;
         }
     private:
-        static size_t GetNextConsecutiveId()
-        {
-            static std::atomic<std::size_t> consecutive{};
-            return consecutive++;
-        }
         size_t mConsecutiveId{ GetNextConsecutiveId() };
         virtual void Load ( const T& aAnimationMsg ) = 0;
     };

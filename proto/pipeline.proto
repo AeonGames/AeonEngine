@@ -54,7 +54,7 @@ message PipelineMsg {
 		TRIANGLE_STRIP_WITH_ADJACENCY	 = 9;
 		PATCH_LIST						 = 10;
     }
-	Topology       topology                  = 1;
+	Topology    topology                  = 1;
 	repeated UniformDescriptorMsg uniform = 2;
 	repeated SamplerDescriptorMsg sampler = 3;
 	ShaderMsg vertex_shader               = 4;
