@@ -59,27 +59,25 @@ namespace AeonGames
         Material& operator = ( Material&& ) = delete;
         /// No move allowed
         Material ( Material&& ) = delete;
-        DLL virtual ~Material() = 0;
-        /// Virtual Copy Constructor
-        virtual std::unique_ptr<Material> Clone() const = 0;
+        DLL ~Material() final;
         ///@name Loaders
         ///@{
-        virtual void Load ( const MaterialMsg& aMaterialMsg ) = 0;
-        virtual void Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) = 0;
-        virtual void Unload() = 0;
+        DLL void Load ( const MaterialMsg& aMaterialMsg ) final;
+        DLL void Unload() final;
         ///@}
         ///@name Property and Sampler Setters
         ///@{
-        virtual void Set ( size_t aIndex, const UniformValue& aValue ) = 0;
-        virtual void Set ( const UniformKeyValue& aValue ) = 0;
-        virtual void SetSampler ( const std::string& aName, const ResourceId& aValue ) = 0;
+        DLL void Set ( size_t aIndex, const UniformValue& aValue );
+        DLL void Set ( const UniformKeyValue& aValue );
+        DLL void SetSampler ( const std::string& aName, const ResourceId& aValue );
         ///@}
         ///@name Property and Sampler Getters
         ///@{
-        virtual ResourceId GetSampler ( const std::string& aName ) = 0;
-        virtual const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const = 0;
+        DLL ResourceId GetSampler ( const std::string& aName );
+        DLL const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const;
         ///@}
-    protected:
+        DLL const std::vector<uint8_t>& GetUniformBuffer() const;
+    private:
         class UniformVariable
         {
         public:
@@ -104,6 +102,7 @@ namespace AeonGames
         DLL void LoadSamplers ( std::initializer_list<SamplerKeyValue> aSamplers );
         std::vector<UniformVariable> mVariables{};
         std::vector<std::tuple<std::string, ResourceId>> mSamplers{};
+        std::vector<uint8_t> mUniformBuffer{};
     };
     DLL size_t GetUniformValueSize ( const Material::UniformValue& aValue );
     DLL const void* GetUniformValuePointer ( const Material::UniformValue& aValue );

@@ -85,7 +85,8 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open pipeline." );
         }
         QByteArray pipeline_byte_array = pipeline_file.readAll();
-        aPipeline.Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
+        aPipeline.Resource::Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
+        GetRenderer()->LoadPipeline ( aPipeline );
     }
     static void LoadMaterial ( Material& aMaterial, const std::string& aFileName )
     {
@@ -147,11 +148,11 @@ namespace AeonGames
         }
 
         {
-            mGridPipeline = GetRenderer()->CreatePipeline();
-            mWirePipeline = GetRenderer()->CreatePipeline();
-            mXGridMaterial = GetRenderer()->CreateMaterial();
-            mYGridMaterial = GetRenderer()->CreateMaterial();
-            mWireMaterial = GetRenderer()->CreateMaterial();
+            mGridPipeline = std::make_unique<Pipeline>();
+            mWirePipeline = std::make_unique<Pipeline>();
+            mXGridMaterial = std::make_unique<Material>();
+            mYGridMaterial = std::make_unique<Material>();
+            mWireMaterial = std::make_unique<Material>();
 
             LoadMaterial ( *mWireMaterial, ":/materials/solidcolor.mtl" );
             LoadPipeline ( *mGridPipeline, ":/pipelines/grid.pln" );
@@ -238,6 +239,9 @@ namespace AeonGames
         mAABBWireMesh = std::make_unique<Mesh>();
         LoadMesh ( *mGridMesh, ":/meshes/grid.msh" );
         LoadMesh ( *mAABBWireMesh, ":/meshes/aabb_wire.msh" );
+        GetRenderer()->LoadMaterial ( *mXGridMaterial );
+        GetRenderer()->LoadMaterial ( *mYGridMaterial );
+        GetRenderer()->LoadMaterial ( *mWireMaterial );
     }
 
     WorldEditor::~WorldEditor()

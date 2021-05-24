@@ -143,6 +143,7 @@ set(ENGINE_CORE_SOURCES
     core/Package.cpp
     core/ResourceFactory.cpp
     core/ResourceCache.cpp
+    core/Resource.cpp
     core/ProtoBufUtils.cpp
     core/Clock.cpp
     core/X11Window.cpp
