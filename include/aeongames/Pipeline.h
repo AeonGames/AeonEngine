@@ -98,17 +98,18 @@ namespace AeonGames
     class Pipeline : public Resource<PipelineMsg, "AEONPLN"_mgk>
     {
     public:
+        DLL Pipeline();
         DLL virtual ~Pipeline();
-        void Load ( const PipelineMsg& aPipelineMsg ) final;
-        void Unload() final;
-        Topology GetTopology() const;
-        const std::string& GetVertexShaderCode() const;
-        const std::string& GetFragmentShaderCode() const;
-        const std::vector<std::tuple<UniformType, std::string>>& GetUniformDescriptors() const;
-        const std::vector<std::string>& GetSamplerDescriptors() const;
-        std::string GetProperties () const;
-        std::string GetAttributes () const;
-        uint32_t GetAttributeBitmap() const;
+        DLL void Load ( const PipelineMsg& aPipelineMsg ) final;
+        DLL void Unload() final;
+        DLL Topology GetTopology() const;
+        DLL const std::string& GetVertexShaderCode() const;
+        DLL const std::string& GetFragmentShaderCode() const;
+        DLL const std::vector<std::tuple<UniformType, std::string>>& GetUniformDescriptors() const;
+        DLL const std::vector<std::string>& GetSamplerDescriptors() const;
+        DLL std::string GetProperties () const;
+        DLL std::string GetAttributes () const;
+        DLL uint32_t GetAttributeBitmap() const;
     private:
         Topology mTopology{};
         std::string mVertexShaderCode{};
