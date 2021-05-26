@@ -385,13 +385,27 @@ namespace AeonGames
         RegisterResourceConstructor ( "Pipeline"_crc32,
                                       [] ( uint32_t aPath )
         {
-            return GetRenderer()->CreatePipeline ( aPath );
+            auto pipeline = std::make_unique<Pipeline>();
+            pipeline->Resource::Load ( aPath );
+            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
+            if ( auto* renderer = GetRenderer() )
+            {
+                renderer->LoadPipeline ( *pipeline );
+            }
+            return pipeline;
         } );
 
         RegisterResourceConstructor ( "Material"_crc32,
                                       [] ( uint32_t aPath )
         {
-            return GetRenderer()->CreateMaterial ( aPath );
+            auto material = std::make_unique<Material>();
+            material->Resource::Load ( aPath );
+            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
+            if ( auto* renderer = GetRenderer() )
+            {
+                renderer->LoadMaterial ( *material );
+            }
+            return material;
         } );
 
         return gRenderer.get();
