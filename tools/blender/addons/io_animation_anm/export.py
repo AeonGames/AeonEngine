@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@ import bpy
 import os
 import struct
 import mathutils
-import math
 import animation_pb2
 import google.protobuf.text_format
-from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 
 class Bone():
@@ -114,7 +112,7 @@ class ANM_OT_exporter(bpy.types.Operator):
 
         for action in bpy.data.actions:
             # Create Protocol Buffer
-            animation_buffer = animation_pb2.AnimationBuffer()
+            animation_buffer = animation_pb2.AnimationMsg()
             # Initialize Protocol Buffer Message
             animation_buffer.Version = 1
             animation_buffer.FrameRate = context.scene.render.fps

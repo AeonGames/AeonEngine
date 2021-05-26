@@ -1,4 +1,4 @@
-# Copyright (C) 2012,2013,2015,2017,2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2012,2013,2015,2017,2019,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
 import bpy
 import os
 import struct
-import mathutils
 import math
 import time  # used to measure time taken during execution
-import itertools
 import geometry_pb2
 import google.protobuf.text_format
 
@@ -257,7 +255,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         bpy.ops.object.mode_set()
         scene = context.scene
         self.filepath = bpy.path.ensure_ext(self.filepath, ".cln")
-        geometry_buffer = geometry_pb2.GeometryBuffer()
+        geometry_buffer = geometry_pb2.GeometryMsg()
         for obj in scene.objects:
             if (obj.type == 'MESH'):
                 self.process_collision_mesh(obj, geometry_buffer)
