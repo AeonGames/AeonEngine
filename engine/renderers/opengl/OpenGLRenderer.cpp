@@ -345,14 +345,6 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    std::unique_ptr<Pipeline> OpenGLRenderer::CreatePipeline ( uint32_t aPath )
-    {
-        auto pipeline = std::make_unique<Pipeline>();
-        pipeline->Resource::Load(aPath);
-        LoadPipeline(*pipeline);
-        return pipeline;
-    }
-
     static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
     {
         std::string vertex_shader{ "#version 450\n" };
@@ -632,14 +624,6 @@ void main()
             glBindBufferRange ( GL_UNIFORM_BUFFER, index++, buffer_id, aSkeletonBuffer->GetOffset(), aSkeletonBuffer->GetSize() );
             OPENGL_CHECK_ERROR_THROW;
         };
-    }
-
-    std::unique_ptr<Material> OpenGLRenderer::CreateMaterial ( uint32_t aPath )
-    {
-        auto material = std::make_unique<Material>();
-        material->Resource::Load(aPath);
-        LoadMaterial(*material);
-        return material;
     }
 
     void OpenGLRenderer::LoadMaterial(const Material& aMaterial)
