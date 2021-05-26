@@ -4,6 +4,14 @@
     "terminal.integrated.automationShell.windows": "C:\\Windows\\System32\\cmd.exe",
     "terminal.integrated.shell.windows": "${BASH_EXECUTABLE}",
     "terminal.integrated.shellArgs.windows": ["--login", "-i"],
+    "terminal.integrated.profiles.windows": {
+        "PowerShell":null,
+        "Command Prompt":null,
+        "Bash": {
+            "path": "${BASH_EXECUTABLE}",
+            "args": ["--login", "-i"]
+        }
+    },  
     "terminal.integrated.env.windows":
     {
         "MSYSTEM": "MINGW64",
