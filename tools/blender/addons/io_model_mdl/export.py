@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import addon_utils
 import model_pb2
 import google.protobuf.text_format
 
-
 class MDL_OT_exporter(bpy.types.Operator):
 
     '''Exports an armature to an AeonGames Model (MDL) file'''
@@ -37,7 +36,7 @@ class MDL_OT_exporter(bpy.types.Operator):
         if not os.path.exists(self.directory + "meshes"):
             os.makedirs(self.directory + "meshes")
 
-        model_buffer = model_pb2.ModelBuffer()
+        model_buffer = model_pb2.ModelMsg()
         for object in context.scene.objects:
             if object.type == 'MESH':
                 assembly = model_buffer.assembly.add()

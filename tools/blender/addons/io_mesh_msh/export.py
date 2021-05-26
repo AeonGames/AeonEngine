@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,8 @@
 
 import bpy
 import os
-import sys
 import struct
 import mathutils
-import math
-import cProfile
-import timeit
 import mesh_pb2
 import operator
 import itertools
@@ -43,38 +39,38 @@ class MSH_OT_exporterCommon():
         mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
         vertex = []
         # this should be a single function
-        if self.flags & mesh_pb2.MeshBuffer.POSITION_BIT:
+        if self.flags & mesh_pb2.MeshMsg.POSITION_BIT:
             localpos = self.mesh.vertices[
                 loop.vertex_index].co @ mesh_world_matrix # @ is the matrix multiplication operator now
             vertex.extend([localpos[0],
                            localpos[1],
                            localpos[2]])
 
-        if self.flags & mesh_pb2.MeshBuffer.NORMAL_BIT:
+        if self.flags & mesh_pb2.MeshMsg.NORMAL_BIT:
             localnormal = self.mesh.vertices[
                 loop.vertex_index].normal @ mesh_world_matrix
             vertex.extend([localnormal[0],
                            localnormal[1],
                            localnormal[2]])
 
-        if self.flags & mesh_pb2.MeshBuffer.TANGENT_BIT:
+        if self.flags & mesh_pb2.MeshMsg.TANGENT_BIT:
             localtangent = loop.tangent @ mesh_world_matrix
             vertex.extend([localtangent[0],
                            localtangent[1],
                            localtangent[2]])
 
-        if self.flags & mesh_pb2.MeshBuffer.BITANGENT_BIT:
+        if self.flags & mesh_pb2.MeshMsg.BITANGENT_BIT:
             localbitangent = loop.bitangent @ mesh_world_matrix
             vertex.extend([localbitangent[0],
                            localbitangent[1],
                            localbitangent[2]])
 
-        if self.flags & mesh_pb2.MeshBuffer.UV_BIT:
+        if self.flags & mesh_pb2.MeshMsg.UV_BIT:
             vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
                            1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
 
-        if self.flags & (mesh_pb2.MeshBuffer.WEIGHT_IDX_BIT |
-                         mesh_pb2.MeshBuffer.WEIGHT_BIT):
+        if self.flags & (mesh_pb2.MeshMsg.WEIGHT_IDX_BIT |
+                         mesh_pb2.MeshMsg.WEIGHT_BIT):
             weights = []
             for group in self.mesh.vertices[
                     loop.vertex_index].groups:
@@ -126,7 +122,7 @@ class MSH_OT_exporterCommon():
             vertex.extend(weight_indices)
             vertex.extend(weight_values)
 
-        if self.flags & mesh_pb2.MeshBuffer.COLOR_BIT:
+        if self.flags & mesh_pb2.MeshMsg.COLOR_BIT:
             vertex.extend([self.mesh.vertex_colors[0].data[loop.index].color[0],
                            self.mesh.vertex_colors[0].data[loop.index].color[1],
                            self.mesh.vertex_colors[0].data[loop.index].color[2]])
@@ -228,33 +224,33 @@ class MSH_OT_exporterCommon():
         mesh_buffer.VertexFlags = 0
         vertex_struct_string = ''
         # Position and Normal aren't optional (for now)
-        mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.POSITION_BIT
+        mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.POSITION_BIT
         vertex_struct_string += '3f'
 
-        mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.NORMAL_BIT
+        mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.NORMAL_BIT
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
 
             mesh.calc_tangents(uvmap=mesh.uv_layers[0].name)
 
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.TANGENT_BIT
+            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.TANGENT_BIT
             vertex_struct_string += '3f'
 
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.BITANGENT_BIT
+            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.BITANGENT_BIT
             vertex_struct_string += '3f'
 
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.UV_BIT
+            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.UV_BIT
             vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier.
         if self.armature is not None:
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.WEIGHT_IDX_BIT
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.WEIGHT_BIT
+            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.WEIGHT_IDX_BIT
+            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.WEIGHT_BIT
             vertex_struct_string += '8B'
 
         if(len(mesh.vertex_colors) > 0):
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshBuffer.COLOR_BIT
+            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.COLOR_BIT
             vertex_struct_string += '3f'
 
         # Generate Vertex Buffer--------------------------------------
@@ -332,7 +328,7 @@ class MSH_OT_exporterCommon():
 
     def run(self, mesh_object):
         # Create Protocol Buffer
-        mesh_buffer = mesh_pb2.MeshBuffer()
+        mesh_buffer = mesh_pb2.MeshMsg()
         # Initialize Protocol Buffer Message
         mesh_buffer.Version = 1
 

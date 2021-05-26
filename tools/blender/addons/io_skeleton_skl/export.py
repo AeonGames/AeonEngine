@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +15,8 @@
 import bpy
 import os
 import struct
-import mathutils
-import math
 import skeleton_pb2
 import google.protobuf.text_format
-from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 
 class SKL_OT_exporter(bpy.types.Operator):
@@ -42,7 +39,7 @@ class SKL_OT_exporter(bpy.types.Operator):
         bpy.ops.object.mode_set()
         self.filepath = bpy.path.ensure_ext(self.filepath, ".skl")
         # Create Protocol Buffer
-        skeleton_buffer = skeleton_pb2.SkeletonBuffer()
+        skeleton_buffer = skeleton_pb2.SkeletonMsg()
         # Initialize Protocol Buffer Message
         skeleton_buffer.Version = 1
 
