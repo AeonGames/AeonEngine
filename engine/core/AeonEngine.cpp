@@ -199,20 +199,26 @@ namespace AeonGames
         }
 
         RegisterResourceConstructor ( "Model"_crc32,
-                                      [] ( uint32_t aPath ) -> UniqueAnyPtr
+                                      [] ( uint32_t aPath )
         {
-            return MakeUniqueAny<Model> ( aPath );
+            auto model = std::make_unique<Model>();
+            model->Resource::Load ( aPath );
+            return model;
         } );
 
         RegisterResourceConstructor ( "Skeleton"_crc32,
-                                      [] ( uint32_t aPath ) -> UniqueAnyPtr
+                                      [] ( uint32_t aPath )
         {
-            return MakeUniqueAny<Skeleton> ( aPath );
+            auto skeleton = std::make_unique<Skeleton>();
+            skeleton->Resource::Load ( aPath );
+            return skeleton;
         } );
         RegisterResourceConstructor ( "Animation"_crc32,
-                                      [] ( uint32_t aPath ) -> UniqueAnyPtr
+                                      [] ( uint32_t aPath )
         {
-            return MakeUniqueAny<Animation> ( aPath );
+            auto animation = std::make_unique<Animation>();
+            animation->Resource::Load ( aPath );
+            return animation;
         } );
 
         return gInitialized;

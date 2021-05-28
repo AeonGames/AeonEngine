@@ -51,47 +51,8 @@ namespace AeonGames
         return mParent;
     }
 
-
     Skeleton::Skeleton()
         = default;
-
-    Skeleton::Skeleton ( uint32_t aId )
-    {
-        Resource::Load ( aId );
-    }
-
-    Skeleton::Skeleton ( const std::string&  aFilename )
-    {
-        try
-        {
-            Resource::Load ( aFilename );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    Skeleton::Skeleton ( const void * aBuffer, size_t aBufferSize )
-    {
-        if ( !aBuffer && !aBufferSize )
-        {
-            throw std::runtime_error ( "Cannot initialize Skeleton object with null data." );
-            return;
-        }
-        try
-        {
-            Resource::Load ( aBuffer, aBufferSize );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-
     Skeleton::~Skeleton() = default;
 
     void Skeleton::Load ( const SkeletonMsg& aSkeletonMsg )

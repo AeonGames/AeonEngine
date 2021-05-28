@@ -38,21 +38,6 @@ namespace AeonGames
     Model::~Model()
         = default;
 
-    Model::Model ( uint32_t aId )
-    {
-        Resource::Load ( aId );
-    }
-
-    Model::Model ( const std::string&  aFilename )
-    {
-        Resource::Load ( aFilename );
-    }
-
-    Model::Model ( const void * aBuffer, size_t aBufferSize )
-    {
-        Resource::Load ( aBuffer, aBufferSize );
-    }
-
     void Model::Load ( const ModelMsg& aModelMsg )
     {
         ResourceId default_pipeline{};

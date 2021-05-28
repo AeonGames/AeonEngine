@@ -47,13 +47,7 @@ namespace AeonGames
                          ResourceId,
                          ResourceId >;
         DLL Model();
-        DLL Model ( uint32_t aId );
-        DLL Model ( const std::string& aFilename );
-        DLL Model ( const void* aBuffer, size_t aBufferSize );
         DLL ~Model();
-        DLL void Load ( uint32_t aId );
-        DLL void Load ( const std::string& aFilename );
-        DLL void Load ( const void* aBuffer, size_t aBufferSize );
         DLL void Unload ();
         DLL const std::vector<Assembly>& GetAssemblies() const;
         DLL const Skeleton* GetSkeleton() const;
