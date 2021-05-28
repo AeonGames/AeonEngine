@@ -49,9 +49,6 @@ namespace AeonGames
             std::string mName;
         };
         DLL Skeleton();
-        DLL Skeleton ( uint32_t aId );
-        DLL Skeleton ( const std::string& aFilename );
-        DLL Skeleton ( const void* aBuffer, size_t aBufferSize );
         DLL ~Skeleton();
         DLL void Unload () final;
         DLL const std::vector<Joint>& GetJoints() const;

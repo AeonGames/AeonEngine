@@ -41,9 +41,6 @@ namespace AeonGames
     {
     public:
         DLL Animation();
-        DLL Animation ( uint32_t aId );
-        DLL Animation ( const std::string& aFilename );
-        DLL Animation ( const void* aBuffer, size_t aBufferSize );
         DLL ~Animation();
         DLL void Unload () final;
         DLL uint32_t GetFrameRate() const;
