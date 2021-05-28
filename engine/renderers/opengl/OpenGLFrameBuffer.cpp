@@ -22,7 +22,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            Resource::Load ( aPath );
+            LoadFromId ( aPath );
         }
         /** @todo This is temporary while I figure out the public interface */
         else

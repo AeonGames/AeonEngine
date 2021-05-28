@@ -32,7 +32,7 @@ namespace AeonGames
     {
         if ( aPath )
         {
-            Resource::Load ( aPath );
+            LoadFromId ( aPath );
         }
     }
     VulkanFrameBuffer::~VulkanFrameBuffer()

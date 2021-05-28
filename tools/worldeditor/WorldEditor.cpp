@@ -85,7 +85,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open pipeline." );
         }
         QByteArray pipeline_byte_array = pipeline_file.readAll();
-        aPipeline.Resource::Load ( pipeline_byte_array.data(), pipeline_byte_array.size() );
+        aPipeline.LoadFromMemory ( pipeline_byte_array.data(), pipeline_byte_array.size() );
         GetRenderer()->LoadPipeline ( aPipeline );
     }
     static void LoadMaterial ( Material& aMaterial, const std::string& aFileName )
@@ -96,7 +96,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open material." );
         }
         QByteArray material_byte_array = material_file.readAll();
-        aMaterial.Resource::Load ( material_byte_array.data(), material_byte_array.size() );
+        aMaterial.LoadFromMemory ( material_byte_array.data(), material_byte_array.size() );
     }
 
     static void LoadMesh ( Mesh& aMesh, const std::string& aFileName )
@@ -107,7 +107,7 @@ namespace AeonGames
             throw std::runtime_error ( "Unable to open mesh." );
         }
         QByteArray mesh_byte_array = mesh_file.readAll();
-        aMesh.Resource::Load ( mesh_byte_array.data(), mesh_byte_array.size() );
+        aMesh.LoadFromMemory ( mesh_byte_array.data(), mesh_byte_array.size() );
         GetRenderer()->LoadMesh ( aMesh );
     }
 
