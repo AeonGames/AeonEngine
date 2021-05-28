@@ -31,43 +31,6 @@ namespace AeonGames
 
     Animation::Animation()
         = default;
-
-    Animation::Animation ( uint32_t aId )
-    {
-        Resource::Load ( aId );
-    }
-
-    Animation::Animation ( const std::string&  aFilename )
-    {
-        try
-        {
-            Resource::Load ( aFilename );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
-    Animation::Animation ( const void * aBuffer, size_t aBufferSize )
-    {
-        if ( !aBuffer && !aBufferSize )
-        {
-            throw std::runtime_error ( "Cannot initialize Animation object with null data." );
-            return;
-        }
-        try
-        {
-            Resource::Load ( aBuffer, aBufferSize );
-        }
-        catch ( ... )
-        {
-            Unload();
-            throw;
-        }
-    }
-
     void Animation::Load ( const AnimationMsg& aAnimationMsg )
     {
         mVersion = aAnimationMsg.version();
