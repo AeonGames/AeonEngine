@@ -202,7 +202,7 @@ namespace AeonGames
                                       [] ( uint32_t aPath )
         {
             auto model = std::make_unique<Model>();
-            model->Resource::Load ( aPath );
+            model->LoadFromId ( aPath );
             return model;
         } );
 
@@ -210,14 +210,14 @@ namespace AeonGames
                                       [] ( uint32_t aPath )
         {
             auto skeleton = std::make_unique<Skeleton>();
-            skeleton->Resource::Load ( aPath );
+            skeleton->LoadFromId ( aPath );
             return skeleton;
         } );
         RegisterResourceConstructor ( "Animation"_crc32,
                                       [] ( uint32_t aPath )
         {
             auto animation = std::make_unique<Animation>();
-            animation->Resource::Load ( aPath );
+            animation->LoadFromId ( aPath );
             return animation;
         } );
 
@@ -379,7 +379,7 @@ namespace AeonGames
                                       [] ( uint32_t aPath )
         {
             auto mesh = std::make_unique<Mesh>();
-            mesh->Resource::Load ( aPath );
+            mesh->LoadFromId ( aPath );
             /// @todo Remove renderer loading after all resources have been decoupled from the renderer
             if ( auto* renderer = GetRenderer() )
             {
@@ -392,7 +392,7 @@ namespace AeonGames
                                       [] ( uint32_t aPath )
         {
             auto pipeline = std::make_unique<Pipeline>();
-            pipeline->Resource::Load ( aPath );
+            pipeline->LoadFromId ( aPath );
             /// @todo Remove renderer loading after all resources have been decoupled from the renderer
             if ( auto* renderer = GetRenderer() )
             {
@@ -405,7 +405,7 @@ namespace AeonGames
                                       [] ( uint32_t aPath )
         {
             auto material = std::make_unique<Material>();
-            material->Resource::Load ( aPath );
+            material->LoadFromId ( aPath );
             /// @todo Remove renderer loading after all resources have been decoupled from the renderer
             if ( auto* renderer = GetRenderer() )
             {

@@ -48,13 +48,13 @@ namespace AeonGames
     {
     public:
         virtual ~Resource() {}
-        void Load ( uint32_t aId )
+        void LoadFromId ( uint32_t aId )
         {
             std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
             LoadResource ( aId, buffer.data(), buffer.size() );
             try
             {
-                Load ( buffer.data(), buffer.size() );
+                LoadFromMemory ( buffer.data(), buffer.size() );
             }
             catch ( ... )
             {
@@ -63,12 +63,12 @@ namespace AeonGames
             }
         }
 
-        void Load ( const std::string& aFilename )
+        void LoadFromFile ( const std::string& aFilename )
         {
-            Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+            LoadFromId ( crc32i ( aFilename.c_str(), aFilename.size() ) );
         }
 
-        void Load ( const void* aBuffer, size_t aBufferSize )
+        void LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
         {
             static std::mutex m{};
             static T buffer{};
