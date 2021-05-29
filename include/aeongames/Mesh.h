@@ -19,21 +19,13 @@ limitations under the License.
 #include <string>
 #include <memory>
 #include <vector>
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "mesh.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 #include "aeongames/AABB.h"
 #include "aeongames/Resource.h"
 
 namespace AeonGames
 {
     class MeshMsg;
-    class Mesh : public Resource<MeshMsg, "AEONMSH"_mgk>
+    class Mesh : public Resource
     {
     public:
         enum AttributeMask
@@ -65,7 +57,8 @@ namespace AeonGames
         };
         DLL Mesh();
         DLL ~Mesh() final;
-        DLL void Load ( const MeshMsg& aMeshMsg ) final;
+        DLL void LoadFromPBMsg ( const MeshMsg& aMeshMsg );
+        DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload() final;
         DLL uint32_t GetVertexFlags() const;
         DLL uint32_t GetIndexSize() const;

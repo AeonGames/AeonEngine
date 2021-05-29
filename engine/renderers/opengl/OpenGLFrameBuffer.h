@@ -17,21 +17,18 @@ limitations under the License.
 #define AEONGAMES_OPENGLFRAMEBUFFER_H
 #include <cstddef>
 #include "OpenGLFunctions.h"
-#include "aeongames/FrameBuffer.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLFrameBuffer final: public FrameBuffer
+    class OpenGLFrameBuffer
     {
     public:
-        OpenGLFrameBuffer ( uint32_t aPath = 0 );
-        ~OpenGLFrameBuffer() final;
-        void Load ( const FrameBufferMsg& aFrameBufferMsg ) final;
-        void Unload () final;
-        void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
-        void Bind() final;
-        void Unbind() final;
+        OpenGLFrameBuffer();
+        ~OpenGLFrameBuffer();
+        void Resize ( uint32_t aWidth, uint32_t aHeight );
+        void Bind();
+        void Unbind();
         GLuint GetFBO() const; /// This is temporary
     private:
         GLuint mFBO {};

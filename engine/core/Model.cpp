@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <mutex>
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufHelpers.h"
 #include "aeongames/Node.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
@@ -30,6 +31,14 @@ limitations under the License.
 #include "aeongames/ResourceCache.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Model.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "model.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
@@ -38,7 +47,12 @@ namespace AeonGames
     Model::~Model()
         = default;
 
-    void Model::Load ( const ModelMsg& aModelMsg )
+    void Model::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
+    {
+        LoadFromProtoBufObject<Model, ModelMsg, "AEONMDL"_mgk> ( *this, aBuffer, aBufferSize );
+    }
+
+    void Model::LoadFromPBMsg ( const ModelMsg& aModelMsg )
     {
         ResourceId default_pipeline{};
         ResourceId default_material{};

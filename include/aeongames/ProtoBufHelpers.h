@@ -32,6 +32,20 @@ limitations under the License.
 
 namespace AeonGames
 {
+    constexpr uint64_t operator "" _mgk ( const char* literal, const std::size_t ) noexcept
+    {
+        /// @todo add support for Big Endian
+        return
+            ( static_cast<uint64_t> ( literal[7] ) << 56 ) |
+            ( static_cast<uint64_t> ( literal[6] ) << 48 ) |
+            ( static_cast<uint64_t> ( literal[5] ) << 40 ) |
+            ( static_cast<uint64_t> ( literal[4] ) << 32 ) |
+            ( static_cast<uint64_t> ( literal[3] ) << 24 ) |
+            ( static_cast<uint64_t> ( literal[2] ) << 16 ) |
+            ( static_cast<uint64_t> ( literal[1] ) << 8 )  |
+            static_cast<uint64_t> ( literal[0] );
+    }
+
     // Helper class to read from a raw memory buffer.
     class BufferInputStream : public google::protobuf::io::ZeroCopyInputStream
     {
@@ -164,6 +178,17 @@ namespace AeonGames
         T t;
         LoadProtoBufObject ( t, aFilename, aMagick );
         return t;
+    }
+
+    template<class T, class U, uint64_t Magick>
+    void LoadFromProtoBufObject ( T& aTarget, const void* aBuffer, size_t aBufferSize )
+    {
+        static std::mutex m{};
+        static U buffer{};
+        std::lock_guard<std::mutex> hold ( m );
+        LoadProtoBufObject ( buffer, aBuffer, aBufferSize, Magick );
+        aTarget.LoadFromPBMsg ( buffer );
+        buffer.Clear();
     }
 }
 #endif

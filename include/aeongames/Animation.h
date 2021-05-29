@@ -19,37 +19,25 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Platform.h"
 #include "aeongames/Transform.h"
-#include "ProtoBufHelpers.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "aeongames/ProtoBufClasses.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "vector3.pb.h"
-#include "quaternion.pb.h"
-#include "animation.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 #include "aeongames/Resource.h"
 
 namespace AeonGames
 {
     class AnimationMsg;
-    class Animation : public Resource<AnimationMsg, "AEONANM"_mgk>
+    class Animation : public Resource
     {
     public:
         DLL Animation();
         DLL ~Animation();
+        DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload () final;
         DLL uint32_t GetFrameRate() const;
         DLL double GetDuration() const;
         DLL double GetSample ( double aTime ) const;
         DLL double AddTimeToSample ( double aSample, double aTime ) const;
         DLL const Transform GetTransform ( size_t aBoneIndex, double aSample ) const;
+        DLL void LoadFromPBMsg ( const AnimationMsg& aAnimationMsg );
     private:
-        void Load ( const AnimationMsg& aAnimationMsg ) final;
         std::string mFilename;
         uint32_t mVersion;
         uint32_t mFrameRate;

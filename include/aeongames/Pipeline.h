@@ -24,17 +24,6 @@ limitations under the License.
 #include <tuple>
 #include "aeongames/Platform.h"
 #include "aeongames/Material.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "ProtoBufHelpers.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "pipeline.pb.h"
-#include "property.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 #include "aeongames/Resource.h"
 
 namespace AeonGames
@@ -95,12 +84,12 @@ namespace AeonGames
         VECTOR_FLOAT_4,
     };
 
-    class Pipeline : public Resource<PipelineMsg, "AEONPLN"_mgk>
+    class Pipeline : public Resource
     {
     public:
         DLL Pipeline();
         DLL virtual ~Pipeline();
-        DLL void Load ( const PipelineMsg& aPipelineMsg ) final;
+        DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload() final;
         DLL Topology GetTopology() const;
         DLL const std::string& GetVertexShaderCode() const;
@@ -110,6 +99,7 @@ namespace AeonGames
         DLL std::string GetProperties () const;
         DLL std::string GetAttributes () const;
         DLL uint32_t GetAttributeBitmap() const;
+        DLL void LoadFromPBMsg ( const PipelineMsg& aPipelineMsg );
     private:
         Topology mTopology{};
         std::string mVertexShaderCode{};

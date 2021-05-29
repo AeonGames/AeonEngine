@@ -16,6 +16,17 @@ limitations under the License.
 
 #include <unordered_map>
 #include "aeongames/Pipeline.h"
+#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "pipeline.pb.h"
+#include "property.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
@@ -186,7 +197,12 @@ namespace AeonGames
         return attribute_code;
     }
 
-    void Pipeline::Load ( const PipelineMsg& aPipelineMsg )
+    void Pipeline::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
+    {
+        LoadFromProtoBufObject<Pipeline, PipelineMsg, "AEONPLN"_mgk> ( *this, aBuffer, aBufferSize );
+    }
+
+    void Pipeline::LoadFromPBMsg ( const PipelineMsg& aPipelineMsg )
     {
         mTopology = TopologyMap.at ( aPipelineMsg.topology() );
         mVertexShaderCode = aPipelineMsg.vertex_shader().code();

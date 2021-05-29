@@ -19,20 +19,12 @@ limitations under the License.
 #include <vector>
 #include <string>
 #include "aeongames/Transform.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "skeleton.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 #include "aeongames/Resource.h"
 
 namespace AeonGames
 {
     class SkeletonMsg;
-    class Skeleton : public Resource<SkeletonMsg, "AEONSKL"_mgk>
+    class Skeleton : public Resource
     {
     public:
         class Joint
@@ -50,10 +42,11 @@ namespace AeonGames
         };
         DLL Skeleton();
         DLL ~Skeleton();
+        DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
+        DLL void LoadFromPBMsg ( const SkeletonMsg& aSkeletonMsg );
         DLL void Unload () final;
         DLL const std::vector<Joint>& GetJoints() const;
     private:
-        void Load ( const SkeletonMsg& aSkeletonMsg );
         std::vector<Joint> mJoints{};
     };
 }

@@ -20,5 +20,6 @@ limitations under the License.
 
 namespace AeonGames
 {
+    //<FrameBufferMsg, "AEONFBR"_mgk>
     FrameBuffer::~FrameBuffer() = default;
 }
