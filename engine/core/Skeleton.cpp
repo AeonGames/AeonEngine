@@ -24,10 +24,16 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufHelpers.h"
-#include "aeongames/CRC.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "skeleton.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 #include "aeongames/Utilities.h"
 #include "aeongames/Skeleton.h"
-#include "aeongames/ResourceCache.h"
 
 namespace AeonGames
 {
@@ -55,7 +61,12 @@ namespace AeonGames
         = default;
     Skeleton::~Skeleton() = default;
 
-    void Skeleton::Load ( const SkeletonMsg& aSkeletonMsg )
+    void Skeleton::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
+    {
+        LoadFromProtoBufObject<Skeleton, SkeletonMsg, "AEONSKL"_mgk> ( *this, aBuffer, aBufferSize );
+    }
+
+    void Skeleton::LoadFromPBMsg ( const SkeletonMsg& aSkeletonMsg )
     {
         mJoints.reserve ( aSkeletonMsg.joint_size() );
         for ( auto& joint : aSkeletonMsg.joint() )

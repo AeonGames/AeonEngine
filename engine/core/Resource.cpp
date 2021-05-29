@@ -13,7 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <atomic>
 #include "aeongames/Resource.h"
+#include "aeongames/ResourceCache.h"
+#include "aeongames/AeonEngine.h"
+#include "aeongames/CRC.h"
 
 namespace AeonGames
 {
@@ -21,5 +25,22 @@ namespace AeonGames
     {
         static std::atomic<std::size_t> consecutive{};
         return consecutive++;
+    }
+
+    void Resource::LoadFromId ( uint32_t aId )
+    {
+        std::vector<uint8_t> buffer ( GetResourceSize ( aId ), 0 );
+        LoadResource ( aId, buffer.data(), buffer.size() );
+        LoadFromMemory ( buffer.data(), buffer.size() );
+    }
+
+    void Resource::LoadFromFile ( const std::string& aFilename )
+    {
+        LoadFromId ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+    }
+
+    size_t Resource::GetConsecutiveId() const
+    {
+        return mConsecutiveId;
     }
 }
