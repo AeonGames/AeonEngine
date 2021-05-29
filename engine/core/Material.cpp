@@ -15,6 +15,16 @@ limitations under the License.
 */
 #include "aeongames/Material.h"
 #include "aeongames/ProtoBufUtils.h"
+#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "material.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
@@ -172,7 +182,12 @@ namespace AeonGames
         }, aValue );
     }
 
-    void Material::Load ( const MaterialMsg& aMaterialMsg )
+    void Material::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
+    {
+        LoadFromProtoBufObject<Material, MaterialMsg, "AEONMTL"_mgk> ( *this, aBuffer, aBufferSize );
+    }
+
+    void Material::LoadFromPBMsg ( const MaterialMsg& aMaterialMsg )
     {
         size_t size = LoadVariables ( aMaterialMsg );
         if ( size )

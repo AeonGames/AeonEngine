@@ -21,17 +21,30 @@ limitations under the License.
 #include <cmath>
 #include <mutex>
 #include "aeongames/AeonEngine.h"
-#include "aeongames/CRC.h"
+#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/ProtoBufUtils.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Animation.h"
-#include "aeongames/ResourceCache.h"
+#include "aeongames/ProtoBufClasses.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "animation.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace AeonGames
 {
-
     Animation::Animation()
         = default;
-    void Animation::Load ( const AnimationMsg& aAnimationMsg )
+    void Animation::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
+    {
+        LoadFromProtoBufObject<Animation, AnimationMsg, "AEONANM"_mgk> ( *this, aBuffer, aBufferSize );
+    }
+
+    void Animation::LoadFromPBMsg ( const AnimationMsg& aAnimationMsg )
     {
         mVersion = aAnimationMsg.version();
         mFrameRate = aAnimationMsg.framerate();

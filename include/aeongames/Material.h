@@ -26,17 +26,6 @@ limitations under the License.
 #include "aeongames/Vector3.h"
 #include "aeongames/Vector4.h"
 #include "aeongames/Matrix4x4.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufHelpers.h"
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "material.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-
 #include "aeongames/Resource.h"
 
 namespace AeonGames
@@ -44,7 +33,7 @@ namespace AeonGames
     class Image;
     class MaterialMsg;
     class PropertyMsg;
-    class Material : public Resource<MaterialMsg, "AEONMTL"_mgk>
+    class Material : public Resource
     {
     public:
         using UniformValue = std::variant<uint32_t, int32_t, float, Vector2, Vector3, Vector4, Matrix4x4>;
@@ -62,7 +51,8 @@ namespace AeonGames
         DLL ~Material() final;
         ///@name Loaders
         ///@{
-        DLL void Load ( const MaterialMsg& aMaterialMsg ) final;
+        DLL void LoadFromPBMsg ( const MaterialMsg& aMaterialMsg );
+        DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload() final;
         ///@}
         ///@name Property and Sampler Setters

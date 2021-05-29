@@ -18,24 +18,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLFrameBuffer::OpenGLFrameBuffer ( uint32_t aPath )
-    {
-        if ( aPath )
-        {
-            LoadFromId ( aPath );
-        }
-        /** @todo This is temporary while I figure out the public interface */
-        else
-        {
-            FrameBufferMsg frame_buffer_buffer;
-            Load ( frame_buffer_buffer );
-        }
-    }
-    OpenGLFrameBuffer::~OpenGLFrameBuffer()
-    {
-        Unload();
-    }
-    void OpenGLFrameBuffer::Load ( const FrameBufferMsg& aFrameBufferMsg )
+    OpenGLFrameBuffer::OpenGLFrameBuffer()
     {
         // Frame Buffer
         glGenFramebuffers ( 1, &mFBO );
@@ -81,7 +64,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLFrameBuffer::Unload ()
+    OpenGLFrameBuffer::~OpenGLFrameBuffer()
     {
         if ( glIsRenderbuffer ( mRBO ) )
         {
@@ -106,6 +89,7 @@ namespace AeonGames
         }
         OPENGL_CHECK_ERROR_NO_THROW;
     }
+
     void OpenGLFrameBuffer::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );

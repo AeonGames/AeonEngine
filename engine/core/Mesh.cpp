@@ -14,8 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufHelpers.h"
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "mesh.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 #include "aeongames/Mesh.h"
 #include "aeongames/Renderer.h"
+#include "aeongames/AeonEngine.h"
 
 namespace AeonGames
 {
@@ -97,7 +107,12 @@ namespace AeonGames
         return stride;
     }
 
-    void Mesh::Load ( const MeshMsg& aMeshMsg )
+    void Mesh::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
+    {
+        LoadFromProtoBufObject<Mesh, MeshMsg, "AEONMSH"_mgk> ( *this, aBuffer, aBufferSize );
+    }
+
+    void Mesh::LoadFromPBMsg ( const MeshMsg& aMeshMsg )
     {
         mAABB = AABB
         {

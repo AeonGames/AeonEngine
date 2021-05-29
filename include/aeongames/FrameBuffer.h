@@ -30,11 +30,11 @@ limitations under the License.
 namespace AeonGames
 {
     class FrameBufferMsg;
-    class FrameBuffer : public Resource<FrameBufferMsg, "AEONFBR"_mgk>
+    class FrameBuffer : public Resource
     {
     public:
         DLL virtual ~FrameBuffer() = 0;
-        virtual void Load ( const FrameBufferMsg& aFrameBufferMsg ) = 0;
+        virtual void LoadFromPBMsg ( const FrameBufferMsg& aFrameBufferMsg ) = 0;
         virtual void Unload() = 0;
         virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void Bind() = 0;
