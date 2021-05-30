@@ -24,7 +24,6 @@ limitations under the License.
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFrameBuffer.h"
-#include "OpenGLTexture.h"
 #include "OpenGLMemoryPoolBuffer.h"
 
 namespace AeonGames
@@ -62,7 +61,7 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
-        OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
+        //OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
         void Initialize();
         void Finalize();
     private:

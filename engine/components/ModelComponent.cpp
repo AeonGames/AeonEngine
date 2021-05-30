@@ -40,7 +40,6 @@ namespace AeonGames
     }
 
     ModelComponent::ModelComponent() : Component{}
-        //,mSkeletonMsg{GetRenderer()->CreateBuffer ( sizeof ( float ) * 16 /*(16 floats in a matrix)*/ * 256 /*(256 maximum bones)*/ ) }
     {
 #if 0
         const float identity[16] =
