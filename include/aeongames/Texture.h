@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <functional>
+#include <vector>
 #include "aeongames/Platform.h"
+#include "aeongames/Resource.h"
 
 namespace AeonGames
 {
-    class Texture
+    class Texture : public Resource
     {
     public:
         enum class Format : uint32_t
@@ -39,16 +41,22 @@ namespace AeonGames
             UNSIGNED_SHORT,
             UNSIGNED_INT_8_8_8_8_REV
         };
-        DLL virtual ~Texture() = 0;
-        virtual void Load ( const std::string& aPath ) = 0;
-        virtual void Load ( uint32_t aId ) = 0;
-        virtual void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr, Format aFormat = Format::Unknown, Type aType = Type::Unknown ) = 0;
-        virtual void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels ) = 0;
-        virtual void Finalize() = 0;
-        virtual uint32_t GetWidth() const = 0;
-        virtual uint32_t GetHeight() const = 0;
-        virtual Format GetFormat() const = 0;
-        virtual Type GetType() const = 0;
+        DLL ~Texture();
+        DLL void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels = nullptr, Format aFormat = Format::Unknown, Type aType = Type::Unknown );
+        DLL void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels );
+        DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
+        DLL void Unload() final;
+        DLL uint32_t GetWidth() const;
+        DLL uint32_t GetHeight() const;
+        DLL Format GetFormat() const;
+        DLL Type GetType() const;
+        DLL const std::vector<uint8_t>& GetPixels() const;
+    private:
+        std::vector<uint8_t> mPixels{};
+        uint32_t mWidth{};
+        uint32_t mHeight{};
+        Format mFormat{};
+        Type mType{};
     };
     /**@name Decoder Functions */
     /*@{*/

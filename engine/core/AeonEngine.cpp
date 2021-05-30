@@ -372,7 +372,14 @@ namespace AeonGames
         RegisterResourceConstructor ( "Texture"_crc32,
                                       [] ( uint32_t aPath )
         {
-            return GetRenderer()->CreateTexture ( aPath );
+            auto texture = std::make_unique<Texture>();
+            texture->LoadFromId ( aPath );
+            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
+            if ( auto* renderer = GetRenderer() )
+            {
+                renderer->LoadTexture ( *texture );
+            }
+            return texture;
         } );
 
         RegisterResourceConstructor ( "Mesh"_crc32,

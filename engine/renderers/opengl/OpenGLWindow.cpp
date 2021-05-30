@@ -58,14 +58,14 @@ namespace AeonGames
 
     void OpenGLWindow::Finalize()
     {
-        mOverlay.Finalize();
+        //mOverlay.Finalize();
         mMatrices.Finalize();
     }
 
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         NativeWindow{aX, aY, aWidth, aHeight, aFullScreen},
         mOpenGLRenderer { aOpenGLRenderer },
-        mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV, aWidth, aHeight},
+        //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV, aWidth, aHeight},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
@@ -73,7 +73,7 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer, void* aWindowId ) :
         NativeWindow{aWindowId},
         mOpenGLRenderer{ aOpenGLRenderer },
-        mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
+        //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
@@ -186,6 +186,7 @@ namespace AeonGames
             GL_COLOR_BUFFER_BIT,
             GL_LINEAR );
         OPENGL_CHECK_ERROR_NO_THROW;
+#if 0
         /* Bind and render overlay texture */
         glUseProgram ( mOpenGLRenderer.GetOverlayProgram() );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -203,12 +204,13 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         OPENGL_CHECK_ERROR_NO_THROW;
+#endif
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
     }
     void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
     {
-        mOverlay.WritePixels ( aXOffset, aYOffset, aWidth, aHeight, aFormat, aType, aPixels );
+        //mOverlay.WritePixels ( aXOffset, aYOffset, aWidth, aHeight, aFormat, aType, aPixels );
     }
 
     void OpenGLWindow::SetProjectionMatrix ( const Matrix4x4& aMatrix )
@@ -250,7 +252,7 @@ namespace AeonGames
             glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_THROW;
             mFrameBuffer.Resize ( aWidth, aHeight );
-            mOverlay.Resize ( aWidth, aHeight );
+            //mOverlay.Resize ( aWidth, aHeight );
         }
     }
 }
