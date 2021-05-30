@@ -15,13 +15,13 @@ limitations under the License.
 */
 
 #include "OpenGLRenderer.h"
-#include "OpenGLTexture.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLX11Window.h"
 #include "OpenGLWinAPIWindow.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
+#include "aeongames/Texture.h"
 #include <unordered_map>
 
 namespace AeonGames
@@ -552,26 +552,11 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
 
         // Samplers
-#if 1
         for ( GLint i = 0; i < static_cast<GLint>(aPipeline.GetSamplerDescriptors().size()); ++i )
         {
             glUniform1i ( i, i );
             OPENGL_CHECK_ERROR_THROW;
         }
-#else
-        // Keeping this code for reference
-        GLuint uniform = 0;
-        for ( auto& i : GetDefaultMaterial().GetPropertyMetaData() )
-        {
-            if ( i.GetType() == Property::SAMPLER_2D )
-            {
-                auto location = glGetPropertyLocation ( mProgramId, i.GetName().c_str() );
-                OPENGL_CHECK_ERROR_THROW;
-                glProperty1i ( location, uniform++ );
-                OPENGL_CHECK_ERROR_THROW;
-            }
-        }
-#endif
         mProgramStore.emplace(aPipeline.GetConsecutiveId(),program);
     }
 
@@ -607,7 +592,8 @@ void main()
             {
                 glActiveTexture ( GL_TEXTURE0 + i );
                 OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D, reinterpret_cast<OpenGLTexture*> ( std::get<1> ( aMaterial->GetSamplers() [i] ).Cast<Texture>() )->GetTextureId() );
+                glBindTexture ( GL_TEXTURE_2D,
+                    mTextureStore.at(std::get<1> ( aMaterial->GetSamplers() [i] ).Cast<Texture>()->GetConsecutiveId()));
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             if ( GLuint buffer = mBufferStore.at( aMaterial->GetConsecutiveId() )[0].GetBufferId() )
@@ -630,7 +616,6 @@ void main()
     {
         auto it = mBufferStore.find(aMaterial.GetConsecutiveId());
         if(it!=mBufferStore.end()){return;}
-
         mBufferStore.emplace(
             aMaterial.GetConsecutiveId(),
             std::vector<OpenGLBuffer>
@@ -646,14 +631,65 @@ void main()
         mBufferStore.erase(it);
     }
 
-    std::unique_ptr<Texture> OpenGLRenderer::CreateTexture ( uint32_t aPath ) const
+    void OpenGLRenderer::LoadTexture(const Texture& aTexture)
     {
-        return std::make_unique<OpenGLTexture> ( aPath );
+        if ( aTexture.GetWidth() == 0 || aTexture.GetHeight() == 0 )
+        {
+            return;
+        }
+        auto it = mTextureStore.find(aTexture.GetConsecutiveId());
+        if(it==mTextureStore.end())
+        {
+            it = mTextureStore.emplace(aTexture.GetConsecutiveId(),0).first;
+            glGenTextures ( 1, &it->second );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+
+        if(glIsTexture(it->second))
+        {
+            GLint w, h;
+            glGetTextureLevelParameteriv(it->second, 0, GL_TEXTURE_WIDTH, &w);
+            glGetTextureLevelParameteriv(it->second, 0, GL_TEXTURE_HEIGHT, &h);
+            if(aTexture.GetWidth()==static_cast<uint32_t>(w) && aTexture.GetHeight()==static_cast<uint32_t>(h))
+            {
+                glTextureSubImage2D ( it->second, 0, 0, 0, aTexture.GetWidth(), aTexture.GetHeight(),
+                                    ( aTexture.GetFormat() == Texture::Format::RGB ) ? GL_RGB : ( aTexture.GetFormat() == Texture::Format::BGRA ) ? GL_BGRA : GL_RGBA,
+                                    ( aTexture.GetType() == Texture::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( aTexture.GetType() == Texture::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
+                                    aTexture.GetPixels().data() );
+                return;
+            }
+        }
+
+        glBindTexture ( GL_TEXTURE_2D, it->second );
+        OPENGL_CHECK_ERROR_THROW;
+        glTexImage2D ( GL_TEXTURE_2D,
+                       0,
+                       ( aTexture.GetFormat() == Texture::Format::RGB ) ? GL_RGB : GL_RGBA, ///<@todo decide if this should be a separate variable
+                       aTexture.GetWidth(),
+                       aTexture.GetHeight(),
+                       0,
+                       ( aTexture.GetFormat() == Texture::Format::RGB ) ? GL_RGB : ( aTexture.GetFormat() == Texture::Format::BGRA ) ? GL_BGRA : GL_RGBA,
+                       ( aTexture.GetType() == Texture::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( aTexture.GetType() == Texture::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
+                       aTexture.GetPixels().data());
+        OPENGL_CHECK_ERROR_THROW;
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        OPENGL_CHECK_ERROR_THROW;
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindTexture ( GL_TEXTURE_2D, 0 );
+        OPENGL_CHECK_ERROR_THROW;
     }
 
-    std::unique_ptr<Buffer> OpenGLRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
+    void OpenGLRenderer::UnloadTexture(const Texture& aTexture)
     {
-        return std::make_unique<OpenGLBuffer> ( static_cast<GLsizei> ( aSize ), GL_DYNAMIC_DRAW, aData );
+        auto it = mTextureStore.find(aTexture.GetConsecutiveId());
+        if(it==mTextureStore.end()){return;}
+        if(glIsTexture(it->second)==GL_TRUE)
+        {
+            glDeleteTextures ( 1, &it->second );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mTextureStore.erase(it);
+        }
     }
 
     GLuint OpenGLRenderer::GetVertexArrayObject() const

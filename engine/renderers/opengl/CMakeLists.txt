@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -94,7 +94,6 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLX11Window.h
     OpenGLFunctions.h
     OpenGLBuffer.h
-    OpenGLTexture.h
     OpenGLFrameBuffer.h
     OpenGLMemoryPoolBuffer.h)
 
@@ -106,7 +105,6 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLWinAPIWindow.cpp
     OpenGLX11Window.cpp
     OpenGLBuffer.cpp
-    OpenGLTexture.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp

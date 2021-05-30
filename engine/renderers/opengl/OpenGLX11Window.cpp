@@ -63,7 +63,7 @@ namespace AeonGames
             }
             XWindowAttributes xwindowattributes {};
             XGetWindowAttributes ( GetDisplay(), mWindowId, &xwindowattributes );
-            mOverlay.Resize ( xwindowattributes.width, xwindowattributes.height, nullptr, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
+            //mOverlay.Resize ( xwindowattributes.width, xwindowattributes.height, nullptr, Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV );
             OpenGLWindow::Initialize();
         }
         catch ( ... )
