@@ -12,9 +12,12 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+if(UNIX)
+  find_package(X11)
+endif()
 set(EXECUTABLE_HEADERS)
 set(EXECUTABLE_SOURCES Main.cpp windows.cpp linux.cpp)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
-target_link_libraries(game AeonEngine)
+target_link_libraries(game ${X11_LIBRARIES} AeonEngine)
 add_dependencies(game AeonEngine)

@@ -59,17 +59,6 @@ extern "C" {
 
 namespace AeonGames
 {
-#ifdef __unix__
-    Display* gDisplay {};
-    Display* GetDisplay()
-    {
-        if ( gDisplay == nullptr )
-        {
-            throw std::runtime_error ( "Display not initialized." );
-        }
-        return gDisplay;
-    }
-#endif
     static bool gInitialized = false;
     static std::unique_ptr<Renderer> gRenderer{};
     static ConfigurationMsg gConfigurationMsg;
@@ -167,8 +156,6 @@ namespace AeonGames
         GetConsoleMode ( hOut, &dwMode );
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         SetConsoleMode ( hOut, dwMode );
-#elif __unix__
-        gDisplay = XOpenDisplay ( nullptr );
 #endif
         ProcessOpts ( argc, argv, gOptionHandlers.data(), gOptionHandlers.size() );
         try
@@ -245,9 +232,6 @@ namespace AeonGames
         /* The renderer code must reside in plugin address space,
          so reset before unloading any plugins. */
         gRenderer.reset();
-#ifdef __unix__
-        XCloseDisplay ( gDisplay );
-#endif
         for ( auto& i : gPlugInCache )
         {
             std::get<1> ( i )->ShutDown();
