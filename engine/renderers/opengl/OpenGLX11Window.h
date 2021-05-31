@@ -25,7 +25,14 @@ namespace AeonGames
         OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLX11Window() final;
+        DLL void Run ( Scene& aScene ) final;
+        DLL void Show ( bool aShow ) const final;
+        DLL void StartRenderTimer() const final;
+        DLL void StopRenderTimer() const final;
+        static GLXFBConfig GetGLXConfig ( Display* display );
     private:
+        ::Window mWindowId{};
+        Colormap mColorMap{};
         void Initialize();
         void Finalize();
         bool MakeCurrent() final;

@@ -19,8 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <mutex>
-#include "aeongames/WinAPIWindow.h"
-#include "aeongames/X11Window.h"
+#include "aeongames/CommonWindow.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFrameBuffer.h"
@@ -30,11 +29,11 @@ namespace AeonGames
 {
     class Buffer;
     class OpenGLRenderer;
-    class OpenGLWindow : public NativeWindow
+    class OpenGLWindow : public CommonWindow
     {
     public:
         OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
+        OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer );
         ~OpenGLWindow();
         void* GetWindowId() const;
         void BeginRender() final;
