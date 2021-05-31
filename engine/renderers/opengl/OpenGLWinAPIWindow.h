@@ -25,11 +25,16 @@ namespace AeonGames
         OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLWinAPIWindow() final;
+        void Run ( Scene& aScene ) final;
+        void Show ( bool aShow ) const final;
+        void StartRenderTimer() const final;
+        void StopRenderTimer() const final;
     private:
         void Initialize();
         void Finalize();
         bool MakeCurrent() final;
         void SwapBuffers() final;
+        HWND mWindowId{};
         HDC mDeviceContext{};
     };
     using OpenGLPlatformWindow = OpenGLWinAPIWindow;
