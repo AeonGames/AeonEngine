@@ -36,9 +36,11 @@ namespace AeonGames
         void* GetContext() const final;
         GLXFBConfig GetGLXFBConfig() const;
         Colormap GetColorMap() const;
+        Display* GetDisplay() const;
     private:
         void Initialize();
         void Finalize();
+        Display* mDisplay{XOpenDisplay ( nullptr ) };
         Colormap mColorMap{};
         /// Internal GLXFBConfig
         GLXFBConfig mGLXFBConfig{};

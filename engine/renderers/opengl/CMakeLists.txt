@@ -13,6 +13,10 @@
 # the License.
 
 find_package(OpenGL)
+if(UNIX)
+  find_package(X11)
+endif()
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(CMAKE_REQUIRED_QUIET OFF)
@@ -120,6 +124,7 @@ add_library(OpenGLRenderer
 
 target_link_libraries(OpenGLRenderer
                       ${OPENGL_LIBRARIES}
+                      ${X11_LIBRARIES}
                       ProtoBufClasses
                       AeonEngine
                       Threads::Threads)

@@ -12,9 +12,6 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-if(UNIX)
-  find_package(X11 REQUIRED)
-endif(UNIX)
 include_directories(
                     ${PROTOBUF_INCLUDE_DIR}
                     ${ZLIB_INCLUDE_DIR}
@@ -75,8 +72,6 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CommonWindow.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/WinAPIWindow.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/X11Window.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/MemoryPool.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h)
 
@@ -137,7 +132,6 @@ set(ENGINE_CORE_SOURCES
     core/Model.cpp
     core/Window.cpp
     core/CommonWindow.cpp
-    core/WinAPIWindow.cpp
     core/Scene.cpp
     core/Node.cpp
     core/Package.cpp
@@ -146,7 +140,6 @@ set(ENGINE_CORE_SOURCES
     core/Resource.cpp
     core/ProtoBufUtils.cpp
     core/Clock.cpp
-    core/X11Window.cpp
     core/MemoryPool.cpp
     core/BufferAccessor.cpp
     # core/Octree.cpp
@@ -210,16 +203,9 @@ elseif(MINGW OR MSYS OR UNIX)
     PROPERTIES
       COMPILE_FLAGS
       "-include aeongames/ProtoBufClasses.h")
-  if(UNIX)
-    # TODO: decouple the AeonEngine library from X11 and glx,
-    # either move the code to the renderer plugins or create a common X11 base for them..
-    find_package(X11)
-    find_package(OpenGL)
-    set(PLATFORM_SPECIFIC_LIBS ${X11_LIBRARIES} OpenGL::GL dl)
-  endif()
   target_link_libraries(AeonEngine
-                        ${PLATFORM_SPECIFIC_LIBS}
                         ${ZLIB_LIBRARIES}
+                        ${CMAKE_DL_LIBS}
                         ProtoBufClasses
                         stdc++fs)
 endif()
