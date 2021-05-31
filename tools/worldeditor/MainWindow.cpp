@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,8 +29,17 @@ namespace AeonGames
     {
         setupUi ( this );
         QSurfaceFormat surface_format = QSurfaceFormat::defaultFormat();
-        surface_format.setDepthBufferSize ( 24 );
+
+        surface_format.setColorSpace ( QSurfaceFormat::sRGBColorSpace );
+        surface_format.setRenderableType ( QSurfaceFormat::OpenGL );
         surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
+        surface_format.setRedBufferSize ( 8 );
+        surface_format.setGreenBufferSize ( 8 );
+        surface_format.setBlueBufferSize ( 8 );
+        surface_format.setAlphaBufferSize ( 8 );
+        surface_format.setStencilBufferSize ( 8 );
+        surface_format.setDepthBufferSize ( 24 );
+        //surface_format.setSamples ( ? ); ///@< Find out what is a sensible value for multisampling
         QSurfaceFormat::setDefaultFormat ( surface_format );
         mCameraSettings = new CameraSettings ( this );
         connect ( mCameraSettings, SIGNAL ( fieldOfViewChanged ( double ) ), this, SLOT ( fieldOfViewChanged ( double ) ) );
