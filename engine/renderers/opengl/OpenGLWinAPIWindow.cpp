@@ -16,6 +16,7 @@ limitations under the License.
 
 #ifdef _WIN32
 #include "aeongames/MemoryPool.h"
+#include "aeongames/Scene.h"
 #include "aeongames/ProtobufClasses.h"
 #include "OpenGLWinAPIWindow.h"
 #include "OpenGLRenderer.h"
@@ -23,9 +24,115 @@ limitations under the License.
 
 namespace AeonGames
 {
+    enum
+    {
+        RENDER_LOOP = 1
+    };
+
+    void AeonEngineTimerProc (
+        HWND hwnd,
+        UINT uMsg,
+        UINT_PTR wParam,
+        DWORD ms )
+    {
+        switch ( uMsg )
+        {
+        case WM_TIMER:
+            if ( wParam == RENDER_LOOP )
+            {
+                Window* window = CommonWindow::GetWindowFromId ( hwnd );
+                window->RenderLoop();
+            }
+            break;
+        }
+    }
+
+    LRESULT CALLBACK AeonEngineWindowProc (
+        _In_ HWND   hwnd,
+        _In_ UINT   uMsg,
+        _In_ WPARAM wParam,
+        _In_ LPARAM lParam
+    )
+    {
+        switch ( uMsg )
+        {
+        case WM_CLOSE:
+            ShowWindow ( hwnd, SW_HIDE );
+            PostQuitMessage ( 0 );
+            break;
+        case WM_DESTROY:
+            PostQuitMessage ( 0 );
+            break;
+        case WM_SIZE:
+        {
+            Window* window = Window::GetWindowFromId ( hwnd );
+            if ( window )
+            {
+                window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            }
+            return 0;
+        }
+        default:
+            return DefWindowProc ( hwnd, uMsg, wParam, lParam );
+        }
+        return 0;
+    }
+
     OpenGLWinAPIWindow::OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
+        DWORD dwExStyle{WS_EX_APPWINDOW | WS_EX_WINDOWEDGE};
+        DWORD dwStyle{WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN};
+        if ( mFullScreen )
+        {
+            dwExStyle = WS_EX_APPWINDOW;
+            dwStyle = {WS_POPUP};
+            DEVMODE device_mode{};
+            device_mode.dmSize = sizeof ( DEVMODE );
+            if ( EnumDisplaySettingsEx ( nullptr, ENUM_CURRENT_SETTINGS, &device_mode, 0 ) )
+            {
+                std::cout <<
+                          "Position: " << device_mode.dmPosition.x << " " << device_mode.dmPosition.y << std::endl <<
+                          "Display Orientation: " << device_mode.dmDisplayOrientation << std::endl <<
+                          "Display Flags: " << device_mode.dmDisplayFlags << std::endl <<
+                          "Display Frecuency: " << device_mode.dmDisplayFrequency << std::endl <<
+                          "Bits Per Pixel: " << device_mode.dmBitsPerPel << std::endl <<
+                          "Width: " << device_mode.dmPelsWidth << std::endl <<
+                          "Height: " << device_mode.dmPelsHeight << std::endl;
+                aX = device_mode.dmPosition.x;
+                aY = device_mode.dmPosition.y;
+                aWidth = device_mode.dmPelsWidth;
+                aHeight = device_mode.dmPelsHeight;
+                mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
+                ChangeDisplaySettings ( &device_mode, CDS_FULLSCREEN );
+            }
+        }
+        RECT rect = { aX, aY, static_cast<int32_t> ( aWidth ), static_cast<int32_t> ( aHeight ) };
+        WNDCLASSEX wcex;
+        wcex.cbSize = sizeof ( WNDCLASSEX );
+        wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wcex.lpfnWndProc = ( WNDPROC ) AeonEngineWindowProc;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
+        wcex.hInstance = GetModuleHandle ( nullptr );
+        wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
+        wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
+        wcex.hbrBackground = nullptr;
+        wcex.lpszMenuName = nullptr;
+        wcex.lpszClassName = "AeonEngine";
+        wcex.hIconSm = nullptr;
+        ATOM atom = RegisterClassEx ( &wcex );
+        mWindowId = CreateWindowEx ( dwExStyle,
+                                     MAKEINTATOM ( atom ), "AeonEngine",
+                                     dwStyle,
+                                     rect.left, rect.top, // Location
+                                     rect.right - rect.left, rect.bottom - rect.top, // Dimensions
+                                     nullptr,
+                                     nullptr,
+                                     GetModuleHandle ( nullptr ),
+                                     nullptr );
+        SetWindowForId ( mWindowId, this );
+
         try
         {
             Initialize();
@@ -40,8 +147,9 @@ namespace AeonGames
     }
 
     OpenGLWinAPIWindow::OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
-        OpenGLWindow{aOpenGLRenderer, aWindowId}
+        OpenGLWindow{aOpenGLRenderer}, mWindowId{reinterpret_cast<HWND> ( aWindowId ) }
     {
+        SetWindowForId ( aWindowId, this );
         try
         {
             Initialize();
@@ -60,6 +168,14 @@ namespace AeonGames
     {
         OpenGLWindow::Finalize();
         Finalize();
+        RemoveWindowForId ( mWindowId );
+        ATOM atom = GetClassWord ( static_cast<HWND> ( mWindowId ), GCW_ATOM );
+        DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+        UnregisterClass ( reinterpret_cast<LPCSTR> (
+#if defined(_M_X64) || defined(__amd64__)
+                              0x0ULL +
+#endif
+                              MAKELONG ( atom, 0 ) ), nullptr );
     }
 
     bool OpenGLWinAPIWindow::MakeCurrent()
@@ -109,6 +225,51 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
         ReleaseDC ( reinterpret_cast<HWND> ( mWindowId ), mDeviceContext );
         mDeviceContext = nullptr;
+    }
+    void OpenGLWinAPIWindow::Run ( Scene& aScene )
+    {
+        MSG msg;
+        bool done = false;
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
+        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        SetScene ( &aScene );
+        while ( !done )
+        {
+            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+            {
+                if ( msg.message == WM_QUIT )
+                {
+                    done = true;
+                }
+                else
+                {
+                    TranslateMessage ( &msg );
+                    DispatchMessage ( &msg );
+                }
+            }
+            else
+            {
+                std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
+                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+                aScene.Update ( delta.count() );
+                last_time = current_time;
+                RenderLoop();
+            }
+        }
+        ShowWindow ( mWindowId, SW_HIDE );
+        SetScene ( nullptr );
+    }
+    void OpenGLWinAPIWindow::Show ( bool aShow ) const
+    {
+        ShowWindow ( static_cast<HWND> ( mWindowId ), aShow ? SW_SHOW : SW_HIDE );
+    }
+    void OpenGLWinAPIWindow::StartRenderTimer() const
+    {
+        SetTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP, USER_TIMER_MINIMUM, static_cast<TIMERPROC> ( AeonEngineTimerProc ) );
+    }
+    void OpenGLWinAPIWindow::StopRenderTimer() const
+    {
+        KillTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP );
     }
 }
 #endif
