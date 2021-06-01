@@ -19,15 +19,17 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "aeongames/WinAPIWindow.h"
-#include "aeongames/X11Window.h"
-#include "VulkanMaterial.h"
 #include "VulkanMemoryPoolBuffer.h"
+#include "aeongames/CommonWindow.h"
+#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
+#ifdef __unix__
+#include "X11/Xlib.h"
+#endif
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanWindow final : public NativeWindow
+    class VulkanWindow final : public CommonWindow
     {
     public:
         VulkanWindow ( const VulkanRenderer& aVulkanRenderer, void* aWindowId );
@@ -52,6 +54,13 @@ namespace AeonGames
         const Matrix4x4 & GetViewMatrix() const final;
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
 
+        void Run ( Scene& aScene ) final;
+        void Show ( bool aShow ) const final;
+        void StartRenderTimer() const final;
+        void StopRenderTimer() const final;
+#ifdef __unix__
+        static GLXFBConfig GetGLXConfig ( Display* display );
+#endif
     private:
         void Initialize();
         void Finalize();
@@ -65,12 +74,25 @@ namespace AeonGames
         void FinalizeImageViews();
         void FinalizeDepthStencil();
         void FinalizeFrameBuffers();
-        Matrix4x4 mProjectionMatrix{};
+        const VulkanRenderer& mVulkanRenderer;
+        void* mWindowId{};
+#if defined(__unix__)
+        Colormap mColorMap {};
+#elif defined(_WIN32)
+        HDC mDeviceContext {};
+#endif
+        Matrix4x4 mProjectionMatrix {};
         Matrix4x4 mViewMatrix{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
-        const VulkanRenderer& mVulkanRenderer;
-        VulkanMaterial mMatrices;
-        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
+
+        VulkanBuffer mMatrices
+        {
+            mVulkanRenderer,
+            sizeof ( float ) * 16 * 3,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        };
+        VulkanMemoryPoolBuffer mMemoryPoolBuffer{mVulkanRenderer, 8_mb};
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };

@@ -21,7 +21,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/Utilities.h"
 #include "aeongames/Pipeline.h"
-#include "VulkanMaterial.h"
+#include "aeongames/Material.h"
 #include "VulkanBuffer.h"
 
 namespace AeonGames

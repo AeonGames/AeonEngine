@@ -29,13 +29,14 @@ limitations under the License.
 #include <algorithm>
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
-#include "VulkanPipeline.h"
-#include "VulkanMaterial.h"
-#include "VulkanTexture.h"
 #include "VulkanBuffer.h"
 #include "VulkanUtilities.h"
 #include "aeongames/LogLevel.h"
 #include "aeongames/Mesh.h"
+#include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
+#include "aeongames/Texture.h"
+#include "aeongames/Utilities.h"
 
 namespace AeonGames
 {
@@ -762,29 +763,192 @@ namespace AeonGames
         }
     }
 
-    std::unique_ptr<Pipeline> VulkanRenderer::CreatePipeline ( uint32_t aPath ) const
+    /*-----------------Pipeline-----------------------*/
+
+    static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
-        return std::make_unique<VulkanPipeline> ( *this, aPath );
+        std::string samplers ( "//----SAMPLERS-START----\n" );
+        {
+            uint32_t sampler_binding = 0;
+            for ( auto& i : aPipeline.GetSamplerDescriptors() )
+            {
+                samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i + ";\n";
+                ++sampler_binding;
+            }
+        }
+        samplers.append ( "//----SAMPLERS-END----\n" );
+        return samplers;
     }
 
-    std::unique_ptr<Material> VulkanRenderer::CreateMaterial ( uint32_t aPath ) const
+    static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
     {
-        return std::make_unique<VulkanMaterial> ( *this, aPath );
+        std::string vertex_shader{ "#version 450\n" };
+        vertex_shader.append ( aPipeline.GetAttributes () );
+
+        uint32_t set_count = 0;
+        std::string transforms (
+            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
+            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
+            "mat4 ProjectionMatrix;\n"
+            "mat4 ViewMatrix;\n"
+            "};\n"
+        );
+
+        vertex_shader.append ( transforms );
+
+        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
+        {
+            // Skeleton
+            std::string skeleton (
+                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "mat4 skeleton[256];\n"
+                "};\n"
+            );
+            vertex_shader.append ( skeleton );
+        }
+
+        // Properties
+        vertex_shader.append (
+            "layout(set = " + std::to_string ( set_count++ ) +
+            ", binding = 0,std140) uniform Properties{\n" +
+            aPipeline.GetProperties( ) + "};\n" );
+        vertex_shader.append ( GetSamplersCode ( aPipeline, set_count++ ) );
+
+        vertex_shader.append ( aPipeline.GetVertexShaderCode() );
+        return vertex_shader;
     }
 
-    std::unique_ptr<Texture> VulkanRenderer::CreateTexture ( uint32_t aPath ) const
+    static std::string GetFragmentShaderCode ( const Pipeline& aPipeline )
     {
-        return std::make_unique<VulkanTexture> ( *this, aPath );
+        uint32_t set_count = 0;
+        std::string fragment_shader{"#version 450\n"};
+        std::string transforms (
+            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
+            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
+            "mat4 ProjectionMatrix;\n"
+            "mat4 ViewMatrix;\n"
+            "};\n"
+        );
+        fragment_shader.append ( transforms );
+
+        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
+        {
+            // Skeleton
+            std::string skeleton (
+                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "mat4 skeleton[256];\n"
+                "};\n"
+            );
+            fragment_shader.append ( skeleton );
+        }
+
+        fragment_shader.append ( "layout(set = " + std::to_string ( set_count++ ) +
+                                 ", binding = 0,std140) uniform Properties{\n" +
+                                 aPipeline.GetProperties() + "};\n" );
+        fragment_shader.append ( GetSamplersCode ( aPipeline, set_count++ ) );
+
+        fragment_shader.append ( aPipeline.GetFragmentShaderCode() );
+        return fragment_shader;
     }
 
-    std::unique_ptr<Buffer> VulkanRenderer::CreateBuffer ( size_t aSize, const void* aData ) const
+    static uint32_t GetLocation ( AttributeBits aAttributeBit )
     {
-        return std::make_unique<VulkanBuffer> ( *this, aSize,
-                                                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-                                                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                                aData );
+        return ffs ( aAttributeBit );
+    }
+
+    static VkFormat GetFormat ( AttributeBits aAttributeBit )
+    {
+        return ( aAttributeBit & VertexUVBit ) ? VK_FORMAT_R32G32_SFLOAT :
+               ( aAttributeBit & VertexWeightIdxBit ) ? VK_FORMAT_R8G8B8A8_UINT :
+               ( aAttributeBit & VertexWeightBit ) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R32G32B32_SFLOAT;
+    }
+
+    static uint32_t GetSize ( AttributeBits aAttributeBit )
+    {
+        switch ( GetFormat ( aAttributeBit ) )
+        {
+        case VK_FORMAT_R32G32_SFLOAT:
+            return sizeof ( float ) * 2;
+        case VK_FORMAT_R32G32B32_SFLOAT:
+            return sizeof ( float ) * 3;
+        case VK_FORMAT_R8G8B8A8_UINT:
+        case VK_FORMAT_R8G8B8A8_UNORM:
+            return sizeof ( uint8_t ) * 4;
+        default:
+            return 0;
+        }
+        return 0;
+    }
+
+    static uint32_t GetOffset ( AttributeBits aAttributeBit )
+    {
+        uint32_t offset = 0;
+        for ( uint32_t i = 1; i != aAttributeBit; i = i << 1 )
+        {
+            offset += GetSize ( static_cast<AttributeBits> ( i ) );
+        }
+        return offset;
+    }
+
+    static VkPrimitiveTopology GetVulkanTopology ( PipelineMsg_Topology aTopology )
+    {
+        switch ( aTopology )
+        {
+        case PipelineMsg_Topology::PipelineMsg_Topology_POINT_LIST:
+            return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_FAN:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST_WITH_ADJACENCY:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
+        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP_WITH_ADJACENCY:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
+        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
+        case PipelineMsg_Topology::PipelineMsg_Topology_PATCH_LIST:
+            return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+        default:
+            break;
+        }
+        return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+    }
+
+    void VulkanRenderer::UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial, const BufferAccessor* aSkeletonBuffer ) const
+    {
+
+    }
+    void VulkanRenderer::LoadPipeline ( const Pipeline& aPipeline )
+    {
+
+    }
+    void VulkanRenderer::UnloadPipeline ( const Pipeline& aPipeline )
+    {
+
+    }
+    void VulkanRenderer::LoadMaterial ( const Material& aMaterial )
+    {
+
+    }
+    void VulkanRenderer::UnloadMaterial ( const Material& aMaterial )
+    {
+
+    }
+    void VulkanRenderer::LoadTexture ( const Texture& aTexture )
+    {
+
+    }
+    void VulkanRenderer::UnloadTexture ( const Texture& aTexture )
+    {
+
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDescriptorSetLayout() const
