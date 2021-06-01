@@ -16,8 +16,6 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
-#include "VulkanPipeline.h"
-#include "VulkanMaterial.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -33,14 +31,13 @@ limitations under the License.
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
 #include "aeongames/Mesh.h"
-#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
+#include "aeongames/Pipeline.h"
+#include "aeongames/Material.h"
 
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        NativeWindow { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer },
-        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}},
-    mMemoryPoolBuffer{mVulkanRenderer, 8_mb}
+        CommonWindow { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer }
     {
         try
         {
@@ -62,9 +59,7 @@ namespace AeonGames
     }
 
     VulkanWindow::VulkanWindow ( const VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
-        NativeWindow { aWindowId }, mVulkanRenderer { aVulkanRenderer },
-        mMatrices{mVulkanRenderer, {{"ProjectionMatrix", Matrix4x4{}}, {"ViewMatrix", Matrix4x4{}}}, {}},
-    mMemoryPoolBuffer{mVulkanRenderer, 8_mb}
+        CommonWindow{}, mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId}
     {
         try
         {
@@ -405,14 +400,14 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.Set ( 0, mProjectionMatrix );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
     }
 
     void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.Set ( 1, mViewMatrix );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
@@ -530,7 +525,6 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        const VulkanPipeline& pipeline = reinterpret_cast<const VulkanPipeline&> ( aPipeline );
         vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
                              pipeline.GetPipelineLayout(),
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -653,4 +647,137 @@ namespace AeonGames
         ///@todo Add Overlay Texture
         //mOverlay.WritePixels(aXOffset,aYOffset,aWidth,aHeight,aFormat, aType,aPixels);
     }
+
+#ifdef __unix__
+    static const int visual_attribs[] =
+    {
+        GLX_X_RENDERABLE, True,
+        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+        GLX_RENDER_TYPE, GLX_RGBA_BIT,
+        GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+        GLX_RED_SIZE, 8,
+        GLX_GREEN_SIZE, 8,
+        GLX_BLUE_SIZE, 8,
+        GLX_ALPHA_SIZE, 8,
+        GLX_DEPTH_SIZE, 24,
+        GLX_STENCIL_SIZE, 8,
+        GLX_DOUBLEBUFFER, True,
+        None
+    };
+
+    GLXFBConfig VulkanWindow::GetGLXConfig ( Display* display )
+    {
+        int frame_buffer_config_count{};
+        GLXFBConfig *frame_buffer_configs =
+            glXChooseFBConfig ( display,
+                                DefaultScreen ( display ),
+                                visual_attribs, &frame_buffer_config_count );
+        if ( !frame_buffer_configs )
+        {
+            throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
+        }
+
+        std::sort ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
+                    [display] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
+        {
+            int a_sample_buffers{};
+            int a_samples{};
+            int b_sample_buffers{};
+            int b_samples{};
+            glXGetFBConfigAttrib ( display, a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
+            glXGetFBConfigAttrib ( display, a, GLX_SAMPLES, &a_samples  );
+            glXGetFBConfigAttrib ( display, b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
+            glXGetFBConfigAttrib ( display, b, GLX_SAMPLES, &b_samples  );
+            return a_sample_buffers >= b_sample_buffers && a_samples > b_samples;
+        } );
+        GLXFBConfig result = frame_buffer_configs[ 0 ];
+        XFree ( frame_buffer_configs );
+        return result;
+    }
+
+    void VulkanWindow::Run ( Scene& aScene )
+    {
+        bool running{true};
+        XEvent xevent;
+        Atom wm_delete_window = XInternAtom ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), "WM_DELETE_WINDOW", 0 );
+        XSetWMProtocols ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId, &wm_delete_window, 1 );
+        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+
+        SetScene ( &aScene );
+        Show ( true );
+        while ( running )
+        {
+            while ( ( XPending ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay() ) > 0 ) && running )
+            {
+                XNextEvent ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), &xevent );
+                switch ( xevent.type )
+                {
+                case Expose:
+                {
+                    // Here is where window resize is required.
+                    XWindowAttributes xwa;
+                    XGetWindowAttributes ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId, &xwa );
+                    ResizeViewport ( 0, 0, xwa.width, xwa.height );
+                }
+                break;
+                case KeyPress:
+                    //engine.KeyDown ( GetScancode ( XLookupKeysym ( &xEvent.xkey, 0 ) ) );
+                    break;
+                case KeyRelease:
+                    //engine.KeyUp ( GetScancode ( XLookupKeysym ( &xEvent.xkey, 0 ) ) );
+                    break;
+                case ButtonPress:
+                    //engine.ButtonDown ( xEvent.xbutton.button, xEvent.xbutton.x, xEvent.xbutton.y );
+                    break;
+                case ButtonRelease:
+                    //engine.ButtonUp ( xEvent.xbutton.button, xEvent.xbutton.x, xEvent.xbutton.y );
+                    break;
+                case MotionNotify:
+                    //engine.MouseMove ( xEvent.xmotion.x, xEvent.xmotion.y );
+                    break;
+                case ClientMessage:
+                    if ( static_cast<Atom> ( xevent.xclient.data.l[0] ) == wm_delete_window )
+                    {
+                        running = false;
+                    }
+                    break;
+                case ConfigureNotify:
+                    break;
+                default:
+                    std::cout << LogLevel::Info <<  "Received Event Type: " <<  xevent.type << std::endl;
+                    break;
+                }
+            }
+            std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
+            std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+            aScene.Update ( delta.count() );
+            last_time = current_time;
+            RenderLoop();
+        }
+        Show ( false );
+        SetScene ( nullptr );
+    }
+
+    void VulkanWindow::Show ( bool aShow ) const
+    {
+        if ( aShow )
+        {
+            XMapWindow ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId );
+        }
+        else
+        {
+            XUnmapWindow ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId );
+        }
+    }
+
+    void VulkanWindow::StartRenderTimer() const
+    {
+        std::cout << __FUNCTION__ << std::endl;
+    }
+
+    void VulkanWindow::StopRenderTimer() const
+    {
+        std::cout << __FUNCTION__ << std::endl;
+    }
+#endif
 }

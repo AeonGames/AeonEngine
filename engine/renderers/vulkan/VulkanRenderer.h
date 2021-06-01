@@ -20,6 +20,8 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include <unordered_map>
 #include <memory>
+#include <unordered_map>
+#include <tuple>
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Matrix4x4.h"
@@ -59,13 +61,16 @@ namespace AeonGames
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
         std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
-        std::unique_ptr<Pipeline> CreatePipeline ( uint32_t aPath ) const final;
-        std::unique_ptr<Material> CreateMaterial ( uint32_t aPath ) const final;
-        std::unique_ptr<Texture> CreateTexture ( uint32_t aPath ) const final;
-        std::unique_ptr<Buffer> CreateBuffer ( size_t aSize, const void* aData = nullptr ) const final;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
         void BindMesh ( const Mesh& aMesh ) const final;
+        void UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
+        void LoadPipeline ( const Pipeline& aPipeline ) final;
+        void UnloadPipeline ( const Pipeline& aPipeline ) final;
+        void LoadMaterial ( const Material& aMaterial ) final;
+        void UnloadMaterial ( const Material& aMaterial ) final;
+        void LoadTexture ( const Texture& aTexture ) final;
+        void UnloadTexture ( const Texture& aTexture ) final;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -115,6 +120,7 @@ namespace AeonGames
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
         std::unordered_map<size_t, std::vector<VulkanBuffer>> mBufferStore{};
+        std::unordered_map<uint64_t, std::tuple<VkPipelineLayout, VkPipeline>> mPipelineStore{};
 #if 0
         // Device Extension Functions
         PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE };

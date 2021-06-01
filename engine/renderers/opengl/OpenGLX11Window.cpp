@@ -135,6 +135,7 @@ namespace AeonGames
             XFreeColormap ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mColorMap );
         }
     }
+
     static const int visual_attribs[] =
     {
         GLX_X_RENDERABLE, True,
