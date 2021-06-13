@@ -54,7 +54,7 @@ namespace AeonGames
         virtual void LoadMesh ( const Mesh& aMesh ) = 0;
         virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
         virtual void BindMesh ( const Mesh& aMesh ) const = 0;
-        virtual void UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const = 0;
+        virtual void BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const = 0;
         virtual void LoadPipeline ( const Pipeline& aPipeline ) = 0;
         virtual void UnloadPipeline ( const Pipeline& aPipeline ) = 0;
         virtual void LoadMaterial ( const Material& aMaterial ) = 0;

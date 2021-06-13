@@ -18,6 +18,6 @@ package AeonGames;
 import "reference.proto";
 
 message ModelControllerMsg {
-    ReferenceMsg             model                    = 1;
-    uint32                      active_animation         = 2;
+    ReferenceMsg model            = 1;
+    uint32       active_animation = 2;
 }
