@@ -64,7 +64,7 @@ namespace AeonGames
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
         void BindMesh ( const Mesh& aMesh ) const final;
-        void UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
+        void BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -109,6 +109,7 @@ namespace AeonGames
         VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
+        mutable const std::tuple<VkPipelineLayout, VkPipeline>* mBoundPipeline{nullptr};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};
@@ -120,7 +121,8 @@ namespace AeonGames
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
         std::unordered_map<size_t, std::vector<VulkanBuffer>> mBufferStore{};
-        std::unordered_map<uint64_t, std::tuple<VkPipelineLayout, VkPipeline>> mPipelineStore{};
+        std::unordered_map<size_t, std::tuple<VkPipelineLayout, VkPipeline>> mPipelineStore{};
+        std::unordered_map<size_t, std::tuple<VkDescriptorPool, VkDescriptorSet, VkDescriptorSet, VulkanBuffer>> mMaterialStore{};
 #if 0
         // Device Extension Functions
         PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE };

@@ -13,6 +13,6 @@ install:
 
 build_script:
 - sh: >-
-    cmake -G "Unix Makefiles" -DBUILD_VULKAN_RENDERER:boolean=OFF .
+    cmake -G "Unix Makefiles" .
 
     make -j4 VERBOSE=1

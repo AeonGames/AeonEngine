@@ -39,7 +39,7 @@ before_build:
 
     C:\msys64\usr\bin\bash.exe -lc "sed -i 's/C:\/building\/msys32\/mingw64\/x86_64-w64-mingw32\/lib\///g' C:/msys64/mingw64/lib/cmake/Qt5Gui/Qt5GuiConfigExtras.cmake"
 
-    C:\msys64\usr\bin\bash.exe -lc "cmake -G\"MSYS Makefiles\" -DBUILD_VULKAN_RENDERER:boolean=OFF .."
+    C:\msys64\usr\bin\bash.exe -lc "cmake -G\"MSYS Makefiles\" .."
 
 build_script:
 - cmd: >-
