@@ -42,7 +42,7 @@ namespace AeonGames
         try
         {
             Initialize();
-#if _WIN32
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
             if ( aFullScreen )
             {
                 RECT rect;
@@ -525,54 +525,26 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        vkCmdPushConstants ( mVulkanRenderer.GetCommandBuffer(),
-                             pipeline.GetPipelineLayout(),
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
-        std::array<VkDescriptorSet, 4> descriptor_sets
+        mVulkanRenderer.BindPipeline ( aPipeline, aMaterial, aSkeleton );
+        mVulkanRenderer.BindMesh ( aMesh );
+        if ( aMesh.GetIndexCount() )
         {
-            mMatrices.GetUniformDescriptorSet(),
-            ( aSkeleton != nullptr ) ? mMemoryPoolBuffer.GetDescriptorSet() : VK_NULL_HANDLE,
-            reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetUniformDescriptorSet(),
-            reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetSamplerDescriptorSet() };
-
-        uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
-
-        vkCmdBindPipeline ( mVulkanRenderer.GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.GetPipeline() );
-
-        if ( descriptor_set_count )
-        {
-            uint32_t offset_count = ( aSkeleton != nullptr ) ? 1 : 0;
-            uint32_t offset = ( offset_count != 0 ) ? static_cast<uint32_t> ( aSkeleton->GetOffset() ) : 0;
-            vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline.GetPipelineLayout(),
-                                      0,
-                                      descriptor_set_count,
-                                      descriptor_sets.data(), offset_count, ( offset_count != 0 ) ? &offset : nullptr );
+            vkCmdDrawIndexed (
+                mVulkanRenderer.GetCommandBuffer(),
+                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                aInstanceCount,
+                aVertexStart,
+                0,
+                aFirstInstance );
         }
-
+        else
         {
-            mVulkanRenderer.BindMesh ( aMesh );
-            if ( aMesh.GetIndexCount() )
-            {
-                vkCmdDrawIndexed (
-                    mVulkanRenderer.GetCommandBuffer(),
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                    aInstanceCount,
-                    aVertexStart,
-                    0,
-                    aFirstInstance );
-            }
-            else
-            {
-                vkCmdDraw (
-                    mVulkanRenderer.GetCommandBuffer(),
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                    aInstanceCount,
-                    aVertexStart,
-                    aFirstInstance );
-            }
+            vkCmdDraw (
+                mVulkanRenderer.GetCommandBuffer(),
+                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                aInstanceCount,
+                aVertexStart,
+                aFirstInstance );
         }
     }
 
@@ -648,7 +620,108 @@ namespace AeonGames
         //mOverlay.WritePixels(aXOffset,aYOffset,aWidth,aHeight,aFormat, aType,aPixels);
     }
 
-#ifdef __unix__
+    /** @todo move each of the sections bellow into their own file and #include it */
+#if defined ( VK_USE_PLATFORM_WIN32_KHR )
+    enum
+    {
+        RENDER_LOOP = 1
+    };
+
+    void AeonEngineTimerProc (
+        HWND hwnd,
+        UINT uMsg,
+        UINT_PTR wParam,
+        DWORD ms )
+    {
+        switch ( uMsg )
+        {
+        case WM_TIMER:
+            if ( wParam == RENDER_LOOP )
+            {
+                Window* window = CommonWindow::GetWindowFromId ( hwnd );
+                window->RenderLoop();
+            }
+            break;
+        }
+    }
+
+    LRESULT CALLBACK AeonEngineWindowProc (
+        _In_ HWND   hwnd,
+        _In_ UINT   uMsg,
+        _In_ WPARAM wParam,
+        _In_ LPARAM lParam
+    )
+    {
+        switch ( uMsg )
+        {
+        case WM_CLOSE:
+            ShowWindow ( hwnd, SW_HIDE );
+            PostQuitMessage ( 0 );
+            break;
+        case WM_DESTROY:
+            PostQuitMessage ( 0 );
+            break;
+        case WM_SIZE:
+        {
+            Window* window = Window::GetWindowFromId ( hwnd );
+            if ( window )
+            {
+                window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
+            }
+            return 0;
+        }
+        default:
+            return DefWindowProc ( hwnd, uMsg, wParam, lParam );
+        }
+        return 0;
+    }
+
+    void VulkanWindow::Run ( Scene& aScene )
+    {
+        MSG msg;
+        bool done = false;
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
+        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        SetScene ( &aScene );
+        while ( !done )
+        {
+            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+            {
+                if ( msg.message == WM_QUIT )
+                {
+                    done = true;
+                }
+                else
+                {
+                    TranslateMessage ( &msg );
+                    DispatchMessage ( &msg );
+                }
+            }
+            else
+            {
+                std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
+                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+                aScene.Update ( delta.count() );
+                last_time = current_time;
+                RenderLoop();
+            }
+        }
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
+        SetScene ( nullptr );
+    }
+    void VulkanWindow::Show ( bool aShow ) const
+    {
+        ShowWindow ( static_cast<HWND> ( mWindowId ), aShow ? SW_SHOW : SW_HIDE );
+    }
+    void VulkanWindow::StartRenderTimer() const
+    {
+        SetTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP, USER_TIMER_MINIMUM, static_cast<TIMERPROC> ( AeonEngineTimerProc ) );
+    }
+    void VulkanWindow::StopRenderTimer() const
+    {
+        KillTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP );
+    }
+#elif defined( VK_USE_PLATFORM_XLIB_KHR )
     static const int visual_attribs[] =
     {
         GLX_X_RENDERABLE, True,

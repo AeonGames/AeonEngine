@@ -52,7 +52,7 @@ namespace AeonGames
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
         void BindMesh ( const Mesh& aMesh ) const final;
-        void UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
+        void BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;

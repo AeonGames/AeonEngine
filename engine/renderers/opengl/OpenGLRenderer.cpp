@@ -575,7 +575,7 @@ void main()
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLRenderer::UsePipeline ( const Pipeline& aPipeline, const Material* aMaterial, const BufferAccessor* aSkeletonBuffer) const
+    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial, const BufferAccessor* aSkeletonBuffer) const
     {
         auto it = mProgramStore.find(aPipeline.GetConsecutiveId());
         if(it==mProgramStore.end()){return;};

@@ -117,7 +117,7 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        mOpenGLRenderer.UsePipeline ( aPipeline, aMaterial, aSkeleton );
+        mOpenGLRenderer.BindPipeline ( aPipeline, aMaterial, aSkeleton );
         OPENGL_CHECK_ERROR_NO_THROW;
 
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );

@@ -28,18 +28,12 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanFrameBuffer::VulkanFrameBuffer ( uint32_t aPath )
-    {
-        if ( aPath )
-        {
-            LoadFromId ( aPath );
-        }
-    }
+    VulkanFrameBuffer::VulkanFrameBuffer() = default;
     VulkanFrameBuffer::~VulkanFrameBuffer()
     {
         Unload();
     }
-    void VulkanFrameBuffer::Load ( const FrameBufferMsg& aFrameBufferMsg )
+    void VulkanFrameBuffer::LoadFromPBMsg ( const FrameBufferMsg& aFrameBufferMsg )
     {
         ///@todo Write Me
     }
