@@ -71,6 +71,9 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+#if defined (VK_USE_PLATFORM_XLIB_KHR)
+        Display* GetDisplay() const;
+#endif
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -91,7 +94,10 @@ namespace AeonGames
         void FinalizeDebug();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
-        bool mValidate{ true };
+#if defined (VK_USE_PLATFORM_XLIB_KHR)
+        Display* mDisplay {XOpenDisplay ( nullptr ) };
+#endif
+        bool mValidate { true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
         VkPhysicalDevice mVkPhysicalDevice{ VK_NULL_HANDLE };

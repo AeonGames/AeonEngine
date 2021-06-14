@@ -27,6 +27,7 @@ limitations under the License.
 #include <sstream>
 #include <array>
 #include <algorithm>
+#include <limits>
 #include "VulkanRenderer.h"
 #include "VulkanWindow.h"
 #include "VulkanBuffer.h"
@@ -158,6 +159,13 @@ namespace AeonGames
     {
         return mQueueFamilyIndex;
     }
+
+#if defined (VK_USE_PLATFORM_XLIB_KHR)
+    Display* VulkanRenderer::GetDisplay() const
+    {
+        return mDisplay;
+    }
+#endif
 
     uint32_t VulkanRenderer::GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const
     {

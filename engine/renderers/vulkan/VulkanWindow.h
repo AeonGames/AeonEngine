@@ -23,7 +23,9 @@ limitations under the License.
 #include "aeongames/CommonWindow.h"
 #include "aeongames/MemoryPool.h" ///<- This is here just for the literals
 #ifdef __unix__
-#include "X11/Xlib.h"
+#include <X11/Xlib.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
 #endif
 
 namespace AeonGames

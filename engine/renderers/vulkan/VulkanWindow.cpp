@@ -33,6 +33,7 @@ limitations under the License.
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
+#include "aeongames/LogLevel.h"
 
 namespace AeonGames
 {
@@ -93,7 +94,7 @@ namespace AeonGames
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
         xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-        xlib_surface_create_info_khr.dpy = GetDisplay();
+        xlib_surface_create_info_khr.dpy = mVulkanRenderer.GetDisplay();
         xlib_surface_create_info_khr.window = reinterpret_cast<::Window> ( mWindowId );
         if ( VkResult result = vkCreateXlibSurfaceKHR ( mVulkanRenderer.GetInstance(), &xlib_surface_create_info_khr, nullptr, &mVkSurfaceKHR ) )
         {
@@ -772,24 +773,24 @@ namespace AeonGames
     {
         bool running{true};
         XEvent xevent;
-        Atom wm_delete_window = XInternAtom ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), "WM_DELETE_WINDOW", 0 );
-        XSetWMProtocols ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId, &wm_delete_window, 1 );
+        Atom wm_delete_window = XInternAtom ( mVulkanRenderer.GetDisplay(), "WM_DELETE_WINDOW", 0 );
+        XSetWMProtocols ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ), &wm_delete_window, 1 );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
 
         SetScene ( &aScene );
         Show ( true );
         while ( running )
         {
-            while ( ( XPending ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay() ) > 0 ) && running )
+            while ( ( XPending ( mVulkanRenderer.GetDisplay() ) > 0 ) && running )
             {
-                XNextEvent ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), &xevent );
+                XNextEvent ( mVulkanRenderer.GetDisplay(), &xevent );
                 switch ( xevent.type )
                 {
                 case Expose:
                 {
                     // Here is where window resize is required.
                     XWindowAttributes xwa;
-                    XGetWindowAttributes ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId, &xwa );
+                    XGetWindowAttributes ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ), &xwa );
                     ResizeViewport ( 0, 0, xwa.width, xwa.height );
                 }
                 break;
@@ -835,11 +836,11 @@ namespace AeonGames
     {
         if ( aShow )
         {
-            XMapWindow ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId );
+            XMapWindow ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ) );
         }
         else
         {
-            XUnmapWindow ( reinterpret_cast<const OpenGLX11Renderer&> ( mOpenGLRenderer ).GetDisplay(), mWindowId );
+            XUnmapWindow ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ) );
         }
     }
 
