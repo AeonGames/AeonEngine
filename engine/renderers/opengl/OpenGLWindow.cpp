@@ -53,23 +53,21 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         OPENGL_CHECK_ERROR_THROW;
-        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
     }
 
     void OpenGLWindow::Finalize()
     {
         //mOverlay.Finalize();
-        mMatrices.Finalize();
     }
 
-    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+    OpenGLWindow::OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         mOpenGLRenderer { aOpenGLRenderer },
         //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV, aWidth, aHeight},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
     {
     }
 
-    OpenGLWindow::OpenGLWindow ( const OpenGLRenderer&  aOpenGLRenderer ) :
+    OpenGLWindow::OpenGLWindow ( OpenGLRenderer&  aOpenGLRenderer ) :
         mOpenGLRenderer{ aOpenGLRenderer },
         //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
         mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
@@ -117,15 +115,19 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        mOpenGLRenderer.BindPipeline ( aPipeline, aMaterial, aSkeleton );
-        OPENGL_CHECK_ERROR_NO_THROW;
+        mOpenGLRenderer.BindPipeline ( aPipeline );
 
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
+        if ( aMaterial )
+        {
+            mOpenGLRenderer.SetMaterial ( *aMaterial );
+        }
 
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindBufferBase ( GL_UNIFORM_BUFFER, 0, mMatrices.GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
+        if ( aSkeleton )
+        {
+            mOpenGLRenderer.SetSkeleton ( *aSkeleton );
+        }
+
+        mOpenGLRenderer.SetModelMatrix ( aModelMatrix );
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
         mOpenGLRenderer.BindMesh ( aMesh );
@@ -142,11 +144,6 @@ namespace AeonGames
         }
     }
 
-    const GLuint OpenGLWindow::GetMatricesBuffer() const
-    {
-        return mMatrices.GetBufferId();
-    }
-
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
@@ -156,6 +153,8 @@ namespace AeonGames
     {
         MakeCurrent();
         mFrameBuffer.Bind();
+        mOpenGLRenderer.SetViewMatrix ( mViewMatrix );
+        mOpenGLRenderer.SetProjectionMatrix ( mProjectionMatrix );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
     }
@@ -222,13 +221,11 @@ namespace AeonGames
             0.0f, 0.0f, 0.0f, 1.0f
         };
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
     }
     void OpenGLWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & OpenGLWindow::GetProjectionMatrix() const

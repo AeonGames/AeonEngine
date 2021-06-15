@@ -22,8 +22,8 @@ namespace AeonGames
     class OpenGLWinAPIWindow final : public OpenGLWindow
     {
     public:
-        OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
+        OpenGLWinAPIWindow ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        OpenGLWinAPIWindow ( OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLWinAPIWindow() final;
         void Run ( Scene& aScene ) final;
         void Show ( bool aShow ) const final;

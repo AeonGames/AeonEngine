@@ -37,7 +37,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanWindow::VulkanWindow ( const VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+    VulkanWindow::VulkanWindow ( VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         CommonWindow { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer }
     {
         try
@@ -59,7 +59,7 @@ namespace AeonGames
         }
     }
 
-    VulkanWindow::VulkanWindow ( const VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
+    VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         CommonWindow{}, mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId}
     {
         try
@@ -401,14 +401,14 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        mVulkanRenderer.SetProjectionMatrix ( mProjectionMatrix );
     }
 
     void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
+        mVulkanRenderer.SetViewMatrix ( mViewMatrix );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
@@ -513,7 +513,7 @@ namespace AeonGames
         {
             std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
-        mMemoryPoolBuffer.Reset();
+        mVulkanRenderer.ResetMemoryPoolBuffer();
     }
 
     void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
@@ -526,7 +526,17 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        mVulkanRenderer.BindPipeline ( aPipeline, aMaterial, aSkeleton );
+        mVulkanRenderer.BindPipeline ( aPipeline );
+        mVulkanRenderer.SetModelMatrix ( aModelMatrix );
+        if ( aMaterial != nullptr )
+        {
+            mVulkanRenderer.SetMaterial ( *aMaterial );
+        }
+        if ( aSkeleton != nullptr )
+        {
+            mVulkanRenderer.SetSkeleton ( *aSkeleton );
+        }
+
         mVulkanRenderer.BindMesh ( aMesh );
         if ( aMesh.GetIndexCount() )
         {
@@ -612,7 +622,7 @@ namespace AeonGames
     }
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
-        return mMemoryPoolBuffer.Allocate ( aSize );
+        return mVulkanRenderer.AllocateSingleFrameUniformMemory ( aSize );
     }
 
     void VulkanWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )

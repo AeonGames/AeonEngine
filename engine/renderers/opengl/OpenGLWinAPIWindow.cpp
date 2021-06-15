@@ -78,7 +78,7 @@ namespace AeonGames
         return 0;
     }
 
-    OpenGLWinAPIWindow::OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+    OpenGLWinAPIWindow::OpenGLWinAPIWindow ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         OpenGLWindow { aOpenGLRenderer, aX, aY, aWidth, aHeight, aFullScreen }
     {
         DWORD dwExStyle{WS_EX_APPWINDOW | WS_EX_WINDOWEDGE};
@@ -146,7 +146,7 @@ namespace AeonGames
         }
     }
 
-    OpenGLWinAPIWindow::OpenGLWinAPIWindow ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
+    OpenGLWinAPIWindow::OpenGLWinAPIWindow ( OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
         OpenGLWindow{aOpenGLRenderer}, mWindowId{reinterpret_cast<HWND> ( aWindowId ) }
     {
         SetWindowForId ( aWindowId, this );
