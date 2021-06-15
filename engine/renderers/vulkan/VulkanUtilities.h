@@ -52,5 +52,10 @@ namespace AeonGames
         const char *aLayerPrefix,
         const char *aMsg,
         void *aUserData );
+
+    VkDescriptorPool CreateDescriptorPool ( const VkDevice& aVkDevice, const std::vector<VkDescriptorPoolSize>& aVkDescriptorPoolSizes );
+    void DestroyDescriptorPool ( const VkDevice& aVkDevice, VkDescriptorPool aVkDescriptorPool );
+    VkDescriptorSet CreateDescriptorSet ( const VkDevice& aVkDevice, const VkDescriptorPool& aVkDescriptorPool, const VkDescriptorSetLayout& aVkDescriptorSetLayout, uint32_t aDescriptorSetCount = 1 );
+    void DestroyDescriptorSet ( const VkDevice& aVkDevice, const VkDescriptorPool& aVkDescriptorPool, VkDescriptorSet aVkDescriptorSet );
 }
 #endif

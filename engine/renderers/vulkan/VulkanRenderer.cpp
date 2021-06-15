@@ -42,7 +42,16 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate )
+    enum  BindingLocations : uint32_t
+    {
+        MATRICES = 0,
+        MATERIAL,
+        SAMPLERS,
+        SKELETON,
+    };
+
+    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate ),
+        mMatrices ( *this ), mMemoryPoolBuffer ( *this )
     {
         try
         {
@@ -66,6 +75,29 @@ namespace AeonGames
             InitializeCommandPool();
             InitializeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
             InitializeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC );
+
+            mMatricesDescriptorPool = CreateDescriptorPool ( mVkDevice, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+            mMatricesDescriptorSet = CreateDescriptorSet ( mVkDevice, mMatricesDescriptorPool, mVkUniformBufferDescriptorSetLayout );
+            mMatrices.Initialize (
+                sizeof ( float ) * 16 * 2,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+            VkDescriptorBufferInfo descriptor_buffer_info = { mMatrices.GetBuffer(), 0, mMatrices.GetSize() };
+            VkWriteDescriptorSet write_descriptor_set{};
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mMatricesDescriptorSet;
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
+            vkUpdateDescriptorSets ( mVkDevice, 1, &write_descriptor_set, 0, nullptr );
+
+            mMemoryPoolBuffer.Initialize ( 8_mb );
         }
         catch ( ... )
         {
@@ -77,13 +109,16 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
-
         for ( auto& i : mVkSamplerDescriptorSetLayouts )
         {
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
         }
         mVkSamplerDescriptorSetLayouts.clear();
 
+        DestroyDescriptorSet ( mVkDevice, mMatricesDescriptorPool, mMatricesDescriptorSet );
+        DestroyDescriptorPool ( mVkDevice, mMatricesDescriptorPool );
+        mMemoryPoolBuffer.Finalize();
+        mMatrices.Finalize();
         FinalizeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout );
         FinalizeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
         FinalizeCommandPool();
@@ -616,12 +651,12 @@ namespace AeonGames
 
     std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<VulkanWindow> ( *this, aWindowId );
+        return std::make_unique<VulkanWindow> ( *const_cast<VulkanRenderer*> ( this ), aWindowId );
     }
 
     std::unique_ptr<Window> VulkanRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
     {
-        return std::make_unique<VulkanWindow> ( *this, aX, aY, aWidth, aHeight, aFullScreen );
+        return std::make_unique<VulkanWindow> ( *const_cast<VulkanRenderer*> ( this ), aX, aY, aWidth, aHeight, aFullScreen );
     }
 
     void VulkanRenderer::LoadMesh ( const Mesh& aMesh )
@@ -633,6 +668,7 @@ namespace AeonGames
         auto it = mBufferStore.find ( aMesh.GetConsecutiveId() );
         if ( it != mBufferStore.end() )
         {
+            std::cout << LogLevel::Warning << " Mesh " << aMesh.GetConsecutiveId() << " Already Loaded at: " << __FUNCTION__ << std::endl;
             return;
         }
 
@@ -794,10 +830,9 @@ namespace AeonGames
         std::string vertex_shader{ "#version 450\n" };
         vertex_shader.append ( aPipeline.GetAttributes () );
 
-        uint32_t set_count = 0;
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
+            "layout(set = " + std::to_string ( MATRICES ) + ", binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
@@ -805,23 +840,24 @@ namespace AeonGames
 
         vertex_shader.append ( transforms );
 
+        // Properties
+        vertex_shader.append (
+            "layout(set = " + std::to_string ( MATERIAL ) +
+            ", binding = 0,std140) uniform Properties{\n" +
+            aPipeline.GetProperties( ) + "};\n" );
+
+        vertex_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
+
         if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
-                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "layout(set = " + std::to_string ( SKELETON ) + ", binding = 0, std140) uniform Skeleton{\n"
                 "mat4 skeleton[256];\n"
                 "};\n"
             );
             vertex_shader.append ( skeleton );
         }
-
-        // Properties
-        vertex_shader.append (
-            "layout(set = " + std::to_string ( set_count++ ) +
-            ", binding = 0,std140) uniform Properties{\n" +
-            aPipeline.GetProperties( ) + "};\n" );
-        vertex_shader.append ( GetSamplersCode ( aPipeline, set_count++ ) );
 
         vertex_shader.append ( aPipeline.GetVertexShaderCode() );
         return vertex_shader;
@@ -829,32 +865,31 @@ namespace AeonGames
 
     static std::string GetFragmentShaderCode ( const Pipeline& aPipeline )
     {
-        uint32_t set_count = 0;
         std::string fragment_shader{"#version 450\n"};
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
+            "layout(set = " + std::to_string ( MATRICES ) + ", binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
         );
         fragment_shader.append ( transforms );
 
+        fragment_shader.append ( "layout(set = " + std::to_string ( MATERIAL ) +
+                                 ", binding = 0,std140) uniform Properties{\n" +
+                                 aPipeline.GetProperties() + "};\n" );
+        fragment_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
+
         if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
-                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "layout(set = " + std::to_string ( SKELETON ) + ", binding = 0, std140) uniform Skeleton{\n"
                 "mat4 skeleton[256];\n"
                 "};\n"
             );
             fragment_shader.append ( skeleton );
         }
-
-        fragment_shader.append ( "layout(set = " + std::to_string ( set_count++ ) +
-                                 ", binding = 0,std140) uniform Properties{\n" +
-                                 aPipeline.GetProperties() + "};\n" );
-        fragment_shader.append ( GetSamplersCode ( aPipeline, set_count++ ) );
 
         fragment_shader.append ( aPipeline.GetFragmentShaderCode() );
         return fragment_shader;
@@ -914,44 +949,75 @@ namespace AeonGames
         {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
     };
 
-    void VulkanRenderer::BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial, const BufferAccessor* aSkeletonBuffer ) const
+    void VulkanRenderer::BindPipeline ( const Pipeline& aPipeline ) const
     {
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it == mPipelineStore.end() )
         {
+            std::cout << LogLevel::Warning << " Pipeline " << aPipeline.GetConsecutiveId() << " NOT found at: " << __FUNCTION__ << std::endl;
             return;
         }
         mBoundPipeline = & ( it->second );
         vkCmdBindPipeline ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, std::get<VkPipeline> ( it->second ) );
-#if 0
-        vkCmdPushConstants ( GetCommandBuffer(),
-                             std::get<VkPipelineLayout> ( it->second ),
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
+        ///@todo Move Matrices binding to BeginRender
+        vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  std::get<VkPipelineLayout> ( it->second ),
+                                  MATRICES,
+                                  1,
+                                  &mMatricesDescriptorSet, 0, nullptr );
+    }
 
-        std::array<VkDescriptorSet, 4> descriptor_sets
+    void VulkanRenderer::SetMaterial ( const Material& aMaterial ) const
+    {
+        auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+        if ( it == mMaterialStore.end() )
         {
-            mMatrices.GetUniformDescriptorSet(),
-            ( aSkeleton != nullptr ) ? mMemoryPoolBuffer.GetDescriptorSet() : VK_NULL_HANDLE,
-            reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetUniformDescriptorSet(),
-            reinterpret_cast<const VulkanMaterial*> ( aMaterial )->GetSamplerDescriptorSet()
+            std::cout << LogLevel::Warning << " Material " << aMaterial.GetConsecutiveId() << " NOT found at: " << __FUNCTION__ << std::endl;
+            return;
+        }
+
+        std::array<VkDescriptorSet, 2> descriptor_sets
+        {
+            std::get<1> ( it->second ),
+            std::get<2> ( it->second )
         };
 
         uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
+        vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  std::get<VkPipelineLayout> ( *mBoundPipeline ),
+                                  MATERIAL,
+                                  descriptor_set_count,
+                                  descriptor_sets.data(), 0, nullptr );
+    }
+    void VulkanRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const
+    {
+        uint32_t offset = static_cast<uint32_t> ( aSkeletonBuffer.GetOffset() );
+        vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  std::get<VkPipelineLayout> ( *mBoundPipeline ),
+                                  SKELETON,
+                                  1,
+                                  &mMemoryPoolBuffer.GetDescriptorSet(), 1, &offset );
+    }
+    void VulkanRenderer::SetModelMatrix ( const Matrix4x4& aMatrix )
+    {
+        vkCmdPushConstants ( GetCommandBuffer(),
+                             std::get<VkPipelineLayout> ( *mBoundPipeline ),
+                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                             0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
 
+    }
 
-        if ( descriptor_set_count )
-        {
-            uint32_t offset_count = ( aSkeleton != nullptr ) ? 1 : 0;
-            uint32_t offset = ( offset_count != 0 ) ? static_cast<uint32_t> ( aSkeleton->GetOffset() ) : 0;
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      std::get<VkPipelineLayout> ( it->second ),
-                                      0,
-                                      descriptor_set_count,
-                                      descriptor_sets.data(), offset_count, ( offset_count != 0 ) ? &offset : nullptr );
-        }
-#endif
+    void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
+    {
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+    }
+
+    void VulkanRenderer::SetViewMatrix ( const Matrix4x4& aMatrix )
+    {
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void VulkanRenderer::LoadPipeline ( const Pipeline& aPipeline )
@@ -959,6 +1025,7 @@ namespace AeonGames
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it != mPipelineStore.end() )
         {
+            std::cout << LogLevel::Warning << " Pipeline " << aPipeline.GetConsecutiveId() << " Already Loaded at: " << __FUNCTION__ << std::endl;
             return;
         }
 
@@ -1152,10 +1219,6 @@ namespace AeonGames
         // Matrix Descriptor Set Layout
         descriptor_set_layouts[descriptor_set_layout_count++] = GetUniformBufferDescriptorSetLayout();
 
-        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = GetUniformBufferDynamicDescriptorSetLayout();
-        }
         if ( aPipeline.GetUniformDescriptors().size() )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = GetUniformBufferDescriptorSetLayout();
@@ -1163,6 +1226,10 @@ namespace AeonGames
         if ( aPipeline.GetSamplerDescriptors().size() )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = GetSamplerDescriptorSetLayout ( aPipeline.GetSamplerDescriptors().size() );
+        }
+        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
+        {
+            descriptor_set_layouts[descriptor_set_layout_count++] = GetUniformBufferDynamicDescriptorSetLayout();
         }
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
@@ -1243,8 +1310,139 @@ namespace AeonGames
         {
             return;
         }
+        VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
+        VkDescriptorSet uniform_descriptor_set{VK_NULL_HANDLE};
+        VkDescriptorSet sampler_descriptor_set{VK_NULL_HANDLE};
 
+        // Initialize DescriptorPool
+        {
+            std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
+            uint32_t descriptor_pool_size_count = 0;
+
+            if ( aMaterial.GetUniformBuffer().size() )
+            {
+                descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = 1;
+            }
+            if ( aMaterial.GetSamplers().size() )
+            {
+                descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = static_cast<uint32_t> ( aMaterial.GetSamplers().size() );
+            }
+            if ( descriptor_pool_size_count )
+            {
+                VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+                descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+                descriptor_pool_create_info.pNext = nullptr;
+                descriptor_pool_create_info.flags = 0;
+                descriptor_pool_create_info.maxSets = descriptor_pool_size_count;
+                descriptor_pool_create_info.poolSizeCount = descriptor_pool_size_count;
+                descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+                if ( VkResult result = vkCreateDescriptorPool ( GetDevice(), &descriptor_pool_create_info, nullptr, &descriptor_pool ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+            }
+        }
+
+        // Initialize Descriptor Sets
+        {
+            if ( aMaterial.GetUniformBuffer().size() )
+            {
+                VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+                descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                descriptor_set_allocate_info.descriptorPool = descriptor_pool;
+                descriptor_set_allocate_info.descriptorSetCount = 1;
+                descriptor_set_allocate_info.pSetLayouts = &GetUniformBufferDescriptorSetLayout();
+                if ( VkResult result = vkAllocateDescriptorSets ( GetDevice(), &descriptor_set_allocate_info, &uniform_descriptor_set ) )
+                {
+                    std::ostringstream stream;
+                    stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+            }
+            if ( aMaterial.GetSamplers().size() )
+            {
+                VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+                descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                descriptor_set_allocate_info.descriptorPool = descriptor_pool;
+                descriptor_set_allocate_info.descriptorSetCount = 1;
+                descriptor_set_allocate_info.pSetLayouts = &GetSamplerDescriptorSetLayout ( aMaterial.GetSamplers().size() );
+                if ( VkResult result = vkAllocateDescriptorSets ( GetDevice(), &descriptor_set_allocate_info, &sampler_descriptor_set ) )
+                {
+                    std::ostringstream stream;
+                    stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+            }
+            /*-----------------------------------------------------------------*/
+
+            auto material = mMaterialStore.emplace (
+                                aMaterial.GetConsecutiveId(),
+                                std::tuple<VkDescriptorPool, VkDescriptorSet, VkDescriptorSet, std::unique_ptr<VulkanBuffer>>
+            {
+                descriptor_pool,
+                uniform_descriptor_set,
+                sampler_descriptor_set,
+                ( uniform_descriptor_set == VK_NULL_HANDLE ) ? nullptr : std::make_unique<VulkanBuffer> ( *this )
+            } );
+
+            if ( !material.second )
+            {
+                std::ostringstream stream;
+                stream << "Emplace failed at: ( " << __FUNCTION__ << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
+            write_descriptor_sets.reserve ( ( aMaterial.GetUniformBuffer().size() ? 1 : 0 ) + aMaterial.GetSamplers().size() );
+
+            if ( aMaterial.GetUniformBuffer().size() )
+            {
+                std::get<std::unique_ptr<VulkanBuffer>> ( material.first->second )->Initialize (
+                        aMaterial.GetUniformBuffer().size(),
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        aMaterial.GetUniformBuffer().data() );
+                VkDescriptorBufferInfo descriptor_buffer_info
+                {
+                    VkDescriptorBufferInfo{std::get<std::unique_ptr<VulkanBuffer>> ( material.first->second )->GetBuffer(), 0, aMaterial.GetUniformBuffer().size() }
+                };
+                write_descriptor_sets.emplace_back();
+                auto& write_descriptor_set = write_descriptor_sets.back();
+                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set.pNext = nullptr;
+                write_descriptor_set.dstSet = uniform_descriptor_set;
+                write_descriptor_set.dstBinding = 0;
+                write_descriptor_set.dstArrayElement = 0;
+                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                write_descriptor_set.descriptorCount = 1;
+                write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+                write_descriptor_set.pImageInfo = nullptr;
+                write_descriptor_set.pTexelBufferView = nullptr;
+            }
+            for ( uint32_t i = 0; i < aMaterial.GetSamplers().size(); ++i )
+            {
+                write_descriptor_sets.emplace_back();
+                auto& write_descriptor_set = write_descriptor_sets.back();
+                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set.pNext = nullptr;
+                // Note that the descriptor set does not change, we are setting multiple bindings on a single descriptor set.
+                write_descriptor_set.dstSet = sampler_descriptor_set;
+                write_descriptor_set.dstBinding = i;
+                write_descriptor_set.dstArrayElement = 0;
+                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write_descriptor_set.descriptorCount = 1;
+                write_descriptor_set.pBufferInfo = nullptr;
+                write_descriptor_set.pImageInfo = &std::get<VkDescriptorImageInfo> ( mTextureStore.at ( std::get<1> ( aMaterial.GetSamplers() [i] ).Get<Texture>()->GetConsecutiveId() ) );
+                write_descriptor_set.pTexelBufferView = nullptr;
+            }
+            vkUpdateDescriptorSets ( GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
+        }
     }
+
     void VulkanRenderer::UnloadMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
@@ -1252,14 +1450,343 @@ namespace AeonGames
         {
             return;
         }
+
+        // FinalizeDescriptorSets
+        {
+            if ( std::get<1> ( it->second ) )
+            {
+                vkFreeDescriptorSets ( GetDevice(),
+                                       std::get<VkDescriptorPool> ( it->second ),
+                                       1,
+                                       &std::get<1> ( it->second ) );
+            }
+            if ( std::get<2> ( it->second ) )
+            {
+                vkFreeDescriptorSets ( GetDevice(),
+                                       std::get<VkDescriptorPool> ( it->second ),
+                                       1,
+                                       &std::get<2> ( it->second ) );
+            }
+        }
+        // Finalize Descriptor Pool
+        if ( std::get<VkDescriptorPool> ( it->second ) != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( GetDevice(), std::get<VkDescriptorPool> ( it->second ), nullptr );
+        }
+        if ( std::get<std::unique_ptr<VulkanBuffer>> ( it->second ) != nullptr )
+        {
+            std::get<std::unique_ptr<VulkanBuffer>> ( it->second )->Finalize();
+        }
+        mMaterialStore.erase ( it );
     }
+
     void VulkanRenderer::LoadTexture ( const Texture& aTexture )
     {
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it != mTextureStore.end() )
+        {
+            std::cout << LogLevel::Warning << " Texture " << aTexture.GetConsecutiveId() << " Already Loaded at: " << __FUNCTION__ << std::endl;
+            return;
+        }
 
+        VkImage image{VK_NULL_HANDLE};
+        VkDeviceMemory device_memory{VK_NULL_HANDLE};
+        // InitializeTexture ( mFormat, mType );
+        VkImageCreateInfo image_create_info{};
+        image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.pNext = nullptr;
+        image_create_info.flags = 0;
+        image_create_info.imageType = VK_IMAGE_TYPE_2D;
+        image_create_info.format = VK_FORMAT_R8G8B8A8_UNORM; // This field contains both format and type, calculate rather than hardcode
+        VkFormatProperties format_properties{};
+        vkGetPhysicalDeviceFormatProperties ( GetPhysicalDevice(), image_create_info.format, &format_properties );
+        image_create_info.extent.width = aTexture.GetWidth();
+        image_create_info.extent.height = aTexture.GetHeight();
+        image_create_info.extent.depth = 1;
+        image_create_info.mipLevels = 1;
+        image_create_info.arrayLayers = 1;
+        image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_create_info.queueFamilyIndexCount = 0;
+        image_create_info.pQueueFamilyIndices = nullptr;
+        image_create_info.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+        if ( VkResult result = vkCreateImage ( GetDevice(), &image_create_info, nullptr, &image ) )
+        {
+            std::ostringstream stream;
+            stream << "Image creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkMemoryRequirements memory_requirements{};
+        vkGetImageMemoryRequirements ( GetDevice(), image, &memory_requirements );
+        VkMemoryAllocateInfo memory_allocate_info{};
+        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memory_allocate_info.pNext = nullptr;
+        memory_allocate_info.allocationSize = memory_requirements.size;
+        memory_allocate_info.memoryTypeIndex = FindMemoryTypeIndex ( memory_requirements.memoryTypeBits,
+                                               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+        if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
+        {
+            throw std::runtime_error ( "Unable to find a suitable memory type index" );
+        }
+        if ( VkResult result = vkAllocateMemory ( GetDevice(), &memory_allocate_info, nullptr, &device_memory ) )
+        {
+            std::ostringstream stream;
+            stream << "Image Memory Allocation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        if ( VkResult result = vkBindImageMemory ( GetDevice(), image, device_memory, 0 ) )
+        {
+            std::ostringstream stream;
+            stream << "Bind Image Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        ///InitializeTextureView();
+
+        auto texture = mTextureStore.emplace ( aTexture.GetConsecutiveId(),
+                                               std::tuple<VkImage, VkDeviceMemory, VkDescriptorImageInfo> {image, device_memory, {}} );
+        if ( !texture.second )
+        {
+            std::ostringstream stream;
+            stream << "Emplace failed at: ( " << __FUNCTION__ << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::get<VkDescriptorImageInfo> ( texture.first->second ).imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkImageViewCreateInfo image_view_create_info = {};
+        image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        image_view_create_info.image = image;
+        image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        image_view_create_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+        image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_view_create_info.subresourceRange.baseMipLevel = 0;
+        image_view_create_info.subresourceRange.levelCount = 1;
+        image_view_create_info.subresourceRange.baseArrayLayer = 0;
+        image_view_create_info.subresourceRange.layerCount = 1;
+        if ( VkResult result = vkCreateImageView ( GetDevice(), &image_view_create_info, nullptr, &std::get<VkDescriptorImageInfo> ( texture.first->second ).imageView ) )
+        {
+            std::ostringstream stream;
+            stream << "Create Image View failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        /*-----------------------------------------------------------------*/
+        VkSamplerCreateInfo sampler_create_info{};
+        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_create_info.pNext = nullptr;
+        sampler_create_info.flags = 0;
+        sampler_create_info.magFilter = VK_FILTER_NEAREST;
+        sampler_create_info.minFilter = VK_FILTER_NEAREST;
+        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.mipLodBias = 0.0f;
+        sampler_create_info.anisotropyEnable = VK_FALSE;
+        sampler_create_info.maxAnisotropy = 1.0f;
+        sampler_create_info.compareEnable = VK_FALSE;
+        sampler_create_info.compareOp = VK_COMPARE_OP_NEVER;
+        sampler_create_info.minLod = 0.0f;
+        sampler_create_info.maxLod = 1.0f;
+        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        sampler_create_info.unnormalizedCoordinates = VK_FALSE;
+        if ( VkResult result = vkCreateSampler ( GetDevice(), &sampler_create_info, nullptr, &std::get<VkDescriptorImageInfo> ( texture.first->second ).sampler ) )
+        {
+            std::ostringstream stream;
+            stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        // -----------------------------
+        // Write Image
+        VkBuffer image_buffer{};
+        VkDeviceMemory image_buffer_memory{};
+
+        VkBufferCreateInfo buffer_create_info = {};
+        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        buffer_create_info.size = static_cast<size_t> ( aTexture.GetWidth() ) * static_cast<size_t> ( aTexture.GetHeight() ) * 4; /// @todo Use format and type as well as GetPixelSize()
+        buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if ( VkResult result = vkCreateBuffer ( GetDevice(), &buffer_create_info, nullptr, &image_buffer ) )
+        {
+            std::ostringstream stream;
+            stream << "Create Buffer failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        memset ( &memory_requirements, 0, sizeof ( VkMemoryRequirements ) );
+        vkGetBufferMemoryRequirements ( GetDevice(), image_buffer, &memory_requirements );
+        memset ( &memory_allocate_info, 0, sizeof ( VkMemoryAllocateInfo ) );
+        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memory_allocate_info.allocationSize = memory_requirements.size;
+        memory_allocate_info.memoryTypeIndex = FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+        if ( VkResult result = vkAllocateMemory ( GetDevice(), &memory_allocate_info, nullptr, &image_buffer_memory ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        if ( VkResult result = vkBindBufferMemory ( GetDevice(), image_buffer, image_buffer_memory, 0 ) )
+        {
+            std::ostringstream stream;
+            stream << "Bind Buffer Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        void* image_memory = nullptr;
+        if ( VkResult result = vkMapMemory ( GetDevice(), image_buffer_memory, 0, VK_WHOLE_SIZE, 0, &image_memory ) )
+        {
+            std::ostringstream stream;
+            stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        if ( aTexture.GetFormat() == Texture::Format::RGBA )
+        {
+            if ( aTexture.GetType() == Texture::Type::UNSIGNED_BYTE )
+            {
+                memcpy ( image_memory, aTexture.GetPixels().data(), aTexture.GetWidth() * aTexture.GetHeight() * GetPixelSize ( aTexture.GetFormat(), aTexture.GetType() ) );
+            }
+            else
+            {
+                // Is this a temporary fix?
+                /** @note This code and the one bellow for RGB is too redundant,
+                    I do not want to have to add more and more cases for each format,
+                    specially when Vulkan is so picky about what format it supports
+                    and which one it doesn't.
+                    So, perhaps support only RGBA and let the Image class
+                    handle any conversions?
+                    We'll have to see when it comes to handling compressed and
+                    "hardware accelerated" formats.*/
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( aTexture.GetPixels().data() );
+                auto* write_pointer = static_cast<uint8_t*> ( image_memory );
+                auto data_size = aTexture.GetWidth() * aTexture.GetHeight() * GetPixelSize ( aTexture.GetFormat(), aTexture.GetType() ) / 2;
+                for ( uint32_t i = 0; i < data_size; i += 4 )
+                {
+                    write_pointer[i] = read_pointer[i] / 256;
+                    write_pointer[i + 1] = read_pointer[i + 1] / 256;
+                    write_pointer[i + 2] = read_pointer[i + 2] / 256;
+                    write_pointer[i + 3] = read_pointer[i + 3] / 256;
+                }
+            }
+        }
+        else
+        {
+            if ( aTexture.GetType() == Texture::Type::UNSIGNED_BYTE )
+            {
+                const uint8_t* read_pointer = aTexture.GetPixels().data();
+                auto* write_pointer = static_cast<uint8_t*> ( image_memory );
+                auto data_size = aTexture.GetWidth() * aTexture.GetHeight() * GetPixelSize ( aTexture.GetFormat(), aTexture.GetType() );
+                for ( uint32_t i = 0; i < data_size; i += 3 )
+                {
+                    write_pointer[0] = read_pointer[i];
+                    write_pointer[1] = read_pointer[i + 1];
+                    write_pointer[2] = read_pointer[i + 2];
+                    write_pointer[3] = 255;
+                    write_pointer += 4;
+                }
+            }
+            else
+            {
+                // Is this a temporary fix?
+                const auto* read_pointer = reinterpret_cast<const uint16_t*> ( aTexture.GetPixels().data() );
+                auto* write_pointer = static_cast<uint8_t*> ( image_memory );
+                auto data_size = aTexture.GetWidth() * aTexture.GetHeight() * GetPixelSize ( aTexture.GetFormat(), aTexture.GetType() ) / 2;
+                for ( uint32_t i = 0; i < data_size; i += 3 )
+                {
+                    write_pointer[0] = read_pointer[i] / 256;
+                    write_pointer[1] = read_pointer[i + 1] / 256;
+                    write_pointer[2] = read_pointer[i + 2] / 256;
+                    write_pointer[3] = 255;
+                    write_pointer += 4;
+                }
+            }
+        }
+        vkUnmapMemory ( GetDevice(), image_buffer_memory );
+        //--------------------------------------------------------
+        // Transition Image Layout
+        VkCommandBuffer command_buffer = BeginSingleTimeCommands();
+        VkImageMemoryBarrier image_memory_barrier{};
+        image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+        image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        image_memory_barrier.image = image;
+        image_memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_memory_barrier.subresourceRange.baseMipLevel = 0;
+        image_memory_barrier.subresourceRange.levelCount = 1;
+        image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+        image_memory_barrier.subresourceRange.layerCount = 1;
+        image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+        image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier (
+            command_buffer,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &image_memory_barrier
+        );
+        VkBufferImageCopy buffer_image_copy{};
+        buffer_image_copy.bufferOffset = 0;
+        buffer_image_copy.bufferRowLength = 0;
+        buffer_image_copy.bufferImageHeight = 0;
+        buffer_image_copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        buffer_image_copy.imageSubresource.mipLevel = 0;
+        buffer_image_copy.imageSubresource.baseArrayLayer = 0;
+        buffer_image_copy.imageSubresource.layerCount = 1;
+        buffer_image_copy.imageOffset = { 0, 0, 0 };
+        buffer_image_copy.imageExtent = { aTexture.GetWidth(), aTexture.GetHeight(), 1 };
+        vkCmdCopyBufferToImage ( command_buffer, image_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy );
+
+        image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        image_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier (
+            command_buffer,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &image_memory_barrier
+        );
+        EndSingleTimeCommands ( command_buffer );
+        vkDestroyBuffer ( GetDevice(), image_buffer, nullptr );
+        vkFreeMemory ( GetDevice(), image_buffer_memory, nullptr );
     }
+
     void VulkanRenderer::UnloadTexture ( const Texture& aTexture )
     {
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it == mTextureStore.end() )
+        {
+            return;
+        }
 
+        if ( std::get<VkDescriptorImageInfo> ( it->second ).sampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( GetDevice(), std::get<VkDescriptorImageInfo> ( it->second ).sampler, nullptr );
+        }
+        if ( std::get<VkDescriptorImageInfo> ( it->second ).imageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( GetDevice(), std::get<VkDescriptorImageInfo> ( it->second ).imageView, nullptr );
+        }
+        if ( std::get<VkImage> ( it->second ) != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( GetDevice(), std::get<VkImage> ( it->second ), nullptr );
+        }
+        if ( std::get<VkDeviceMemory> ( it->second ) != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( GetDevice(), std::get<VkDeviceMemory> ( it->second ), nullptr );
+        }
+        mTextureStore.erase ( it );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDescriptorSetLayout() const
@@ -1347,5 +1874,14 @@ namespace AeonGames
             vkDestroyDescriptorSetLayout ( mVkDevice, aVkDescriptorSetLayout, nullptr );
             aVkDescriptorSetLayout = VK_NULL_HANDLE;
         }
+    }
+
+    BufferAccessor VulkanRenderer::AllocateSingleFrameUniformMemory ( size_t aSize )
+    {
+        return mMemoryPoolBuffer.Allocate ( aSize );
+    }
+    void VulkanRenderer::ResetMemoryPoolBuffer()
+    {
+        mMemoryPoolBuffer.Reset();
     }
 }

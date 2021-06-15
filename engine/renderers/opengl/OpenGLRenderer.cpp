@@ -71,8 +71,16 @@ void main()
     };
     const GLuint vertex_size{sizeof(vertices)};
 
+    enum  BindingLocations : uint32_t {
+        MATRICES=0,
+        MATERIAL,
+        SKELETON
+    };
+
     void OpenGLRenderer::InitializeOverlay()
     {
+        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
+
         glGenVertexArrays ( 1, &mVertexArrayObject );
         OPENGL_CHECK_ERROR_THROW;
         glBindVertexArray ( mVertexArrayObject );
@@ -172,6 +180,7 @@ void main()
             OPENGL_CHECK_ERROR_NO_THROW;
             mVertexArrayObject = 0;
         }
+        mMatrices.Finalize();
     }
 
     OpenGLRenderer::OpenGLRenderer() = default;
@@ -179,12 +188,12 @@ void main()
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
     {
-        return std::make_unique<OpenGLPlatformWindow> ( *this, aWindowId );
+        return std::make_unique<OpenGLPlatformWindow> ( const_cast<OpenGLRenderer&>(*this), aWindowId );
     }
 
     std::unique_ptr<Window> OpenGLRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
     {
-        return std::make_unique<OpenGLPlatformWindow> ( *this, aX, aY, aWidth, aHeight, aFullScreen );
+        return std::make_unique<OpenGLPlatformWindow> ( const_cast<OpenGLRenderer&>(*this), aX, aY, aWidth, aHeight, aFullScreen );
     }
 
     void OpenGLRenderer::LoadMesh ( const Mesh& aMesh )
@@ -350,10 +359,8 @@ void main()
         std::string vertex_shader{ "#version 450\n" };
         vertex_shader.append ( aPipeline.GetAttributes() );
 
-        uint32_t uniform_block_binding{0};
-
         std::string transforms (
-            "layout(binding = " + std::to_string ( uniform_block_binding++ ) + ", std140) uniform Matrices{\n"
+            "layout(binding = " + std::to_string ( MATRICES ) + ", std140) uniform Matrices{\n"
             "mat4 ModelMatrix;\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
@@ -364,14 +371,14 @@ void main()
         if ( aPipeline.GetUniformDescriptors().size() )
         {
             std::string properties (
-                "layout(binding = " + std::to_string ( uniform_block_binding++ ) +
+                "layout(binding = " + std::to_string ( MATERIAL ) +
                 ",std140) uniform Properties{\n" +
                 aPipeline.GetProperties() + "};\n" );
 
             if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
             {
                 std::string skeleton (
-                    "layout(std140, binding = " + std::to_string ( uniform_block_binding++ ) + ") uniform Skeleton{\n"
+                    "layout(std140, binding = " + std::to_string ( SKELETON ) + ") uniform Skeleton{\n"
                     "mat4 skeleton[256];\n"
                     "};\n"
                 );
@@ -399,7 +406,7 @@ void main()
     {
         std::string fragment_shader{"#version 450\n"};
         std::string transforms (
-            "layout(binding = 0, std140) uniform Matrices{\n"
+            "layout(binding = " + std::to_string ( MATRICES ) + ", std140) uniform Matrices{\n"
             "mat4 ModelMatrix;\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
@@ -412,7 +419,7 @@ void main()
         {
             std::string properties
             {
-                "layout(binding = 1,std140) uniform Properties{\n" +
+                "layout(binding = " + std::to_string ( MATERIAL ) + ",std140) uniform Properties{\n" +
                 aPipeline.GetProperties() +
                 "};\n"};
 
@@ -575,7 +582,7 @@ void main()
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial, const BufferAccessor* aSkeletonBuffer) const
+    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline) const
     {
         auto it = mProgramStore.find(aPipeline.GetConsecutiveId());
         if(it==mProgramStore.end()){return;};
@@ -583,31 +590,38 @@ void main()
         glUseProgram ( it->second );
         OPENGL_CHECK_ERROR_NO_THROW;
 
-        // Binding 0 is the matrix buffer.
-        GLuint index{1};
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
 
-        if ( aMaterial )
+        glBindBufferBase ( GL_UNIFORM_BUFFER, MATRICES, mMatrices.GetBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
+    void OpenGLRenderer::SetMaterial ( const Material& aMaterial) const
+    {
+        for ( GLenum i = 0; i < aMaterial.GetSamplers().size(); ++i )
         {
-            for ( GLenum i = 0; i < aMaterial->GetSamplers().size(); ++i )
-            {
-                glActiveTexture ( GL_TEXTURE0 + i );
-                OPENGL_CHECK_ERROR_NO_THROW;
-                glBindTexture ( GL_TEXTURE_2D,
-                    mTextureStore.at(std::get<1> ( aMaterial->GetSamplers() [i] ).Cast<Texture>()->GetConsecutiveId()));
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            if ( GLuint buffer = mBufferStore.at( aMaterial->GetConsecutiveId() )[0].GetBufferId() )
-            {
-                glBindBuffer ( GL_UNIFORM_BUFFER, buffer );
-                OPENGL_CHECK_ERROR_THROW;
-                glBindBufferBase ( GL_UNIFORM_BUFFER, index++, buffer );
-                OPENGL_CHECK_ERROR_THROW;
-            }
+            glActiveTexture ( GL_TEXTURE0 + i );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glBindTexture ( GL_TEXTURE_2D,
+                mTextureStore.at(std::get<1> ( aMaterial.GetSamplers() [i] ).Cast<Texture>()->GetConsecutiveId()));
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
-        auto* buffer = ( aSkeletonBuffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer*> ( aSkeletonBuffer->GetBuffer() ) : nullptr;
+        if ( GLuint buffer = mBufferStore.at( aMaterial.GetConsecutiveId() )[0].GetBufferId() )
+        {
+            glBindBuffer ( GL_UNIFORM_BUFFER, buffer );
+            OPENGL_CHECK_ERROR_THROW;
+            glBindBufferBase ( GL_UNIFORM_BUFFER, MATERIAL, buffer );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+    }
+
+    void OpenGLRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer) const
+    {
+        const OpenGLBuffer* buffer = reinterpret_cast<const OpenGLBuffer*> ( aSkeletonBuffer.GetBuffer() );
         if ( GLuint buffer_id = ( buffer != nullptr ) ? buffer->GetBufferId() : 0 )
         {
-            glBindBufferRange ( GL_UNIFORM_BUFFER, index++, buffer_id, aSkeletonBuffer->GetOffset(), aSkeletonBuffer->GetSize() );
+            glBindBufferRange ( GL_UNIFORM_BUFFER, SKELETON, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
             OPENGL_CHECK_ERROR_THROW;
         };
     }
@@ -622,6 +636,19 @@ void main()
             {
                 {static_cast<GLsizei>(aMaterial.GetUniformBuffer().size()), GL_STATIC_DRAW, aMaterial.GetUniformBuffer().data()}
             });
+    }
+
+    void OpenGLRenderer::SetModelMatrix ( const Matrix4x4& aMatrix )
+    {
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+    }
+    void OpenGLRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
+    {
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+    }
+    void OpenGLRenderer::SetViewMatrix ( const Matrix4x4& aMatrix )
+    {
+        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void OpenGLRenderer::UnloadMaterial(const Material& aMaterial)
