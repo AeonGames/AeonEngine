@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -116,5 +116,50 @@ namespace AeonGames
         }
         std::cout << aLayerPrefix << ": " << aMsg << std::endl;
         return false;
+    }
+
+    VkDescriptorPool CreateDescriptorPool ( const VkDevice& aVkDevice, const std::vector<VkDescriptorPoolSize>& aVkDescriptorPoolSizes )
+    {
+        VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
+        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptor_pool_create_info.pNext = nullptr;
+        descriptor_pool_create_info.flags = 0;
+        descriptor_pool_create_info.maxSets = static_cast<uint32_t> ( aVkDescriptorPoolSizes.size() );
+        descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t> ( aVkDescriptorPoolSizes.size() );
+        descriptor_pool_create_info.pPoolSizes = aVkDescriptorPoolSizes.data();
+        if ( VkResult result = vkCreateDescriptorPool ( aVkDevice, &descriptor_pool_create_info, nullptr, &descriptor_pool ) )
+        {
+            std::ostringstream stream;
+            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        return descriptor_pool;
+    }
+
+    void DestroyDescriptorPool ( const VkDevice& aVkDevice, VkDescriptorPool aVkDescriptorPool )
+    {
+        vkDestroyDescriptorPool ( aVkDevice, aVkDescriptorPool, nullptr );
+    }
+
+    VkDescriptorSet CreateDescriptorSet ( const VkDevice& aVkDevice, const VkDescriptorPool& aVkDescriptorPool, const VkDescriptorSetLayout& aVkDescriptorSetLayout, uint32_t aDescriptorSetCount )
+    {
+        VkDescriptorSet descriptor_set{VK_NULL_HANDLE};
+        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptor_set_allocate_info.descriptorPool = aVkDescriptorPool;
+        descriptor_set_allocate_info.descriptorSetCount = aDescriptorSetCount;
+        descriptor_set_allocate_info.pSetLayouts = &aVkDescriptorSetLayout;
+        if ( VkResult result = vkAllocateDescriptorSets ( aVkDevice, &descriptor_set_allocate_info, &descriptor_set ) )
+        {
+            std::ostringstream stream;
+            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        return descriptor_set;
+    }
+    void DestroyDescriptorSet ( const VkDevice& aVkDevice, const VkDescriptorPool& aVkDescriptorPool, VkDescriptorSet aVkDescriptorSet )
+    {
+        vkFreeDescriptorSets ( aVkDevice, aVkDescriptorPool, 1, &aVkDescriptorSet );
     }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,7 +42,24 @@ namespace AeonGames
         InitializeDescriptorSet();
     }
 
+    VulkanMemoryPoolBuffer::VulkanMemoryPoolBuffer ( const VulkanRenderer&  aVulkanRenderer ) :
+        mVulkanRenderer { aVulkanRenderer } {}
+
+    void VulkanMemoryPoolBuffer::Initialize ( size_t aStackSize )
+    {
+        mUniformBuffer.Initialize ( ( ( aStackSize - 1 ) | ( mVulkanRenderer.GetPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment - 1 ) ) + 1, // Adjust for alignment
+                                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT );
+        InitializeDescriptorPool();
+        InitializeDescriptorSet();
+    }
+
     VulkanMemoryPoolBuffer::~VulkanMemoryPoolBuffer()
+    {
+        Finalize();
+    }
+
+    void VulkanMemoryPoolBuffer::Finalize()
     {
         FinalizeDescriptorSet();
         FinalizeDescriptorPool();

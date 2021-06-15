@@ -64,13 +64,20 @@ namespace AeonGames
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
         void BindMesh ( const Mesh& aMesh ) const final;
-        void BindPipeline ( const Pipeline& aPipeline, const Material* aMaterial = nullptr, const BufferAccessor* aSkeletonBuffer = nullptr ) const final;
+        void BindPipeline ( const Pipeline& aPipeline ) const final;
+        void SetMaterial ( const Material& aMaterial ) const final;
+        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
+        void SetModelMatrix ( const Matrix4x4& aMatrix ) final;
+        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
+        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        void ResetMemoryPoolBuffer();
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* GetDisplay() const;
 #endif
@@ -94,9 +101,13 @@ namespace AeonGames
         void FinalizeDebug();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
+
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* mDisplay {XOpenDisplay ( nullptr ) };
 #endif
+
+        VkDescriptorPool mMatricesDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
         bool mValidate { true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
@@ -128,7 +139,8 @@ namespace AeonGames
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
         std::unordered_map<size_t, std::vector<VulkanBuffer>> mBufferStore{};
         std::unordered_map<size_t, std::tuple<VkPipelineLayout, VkPipeline>> mPipelineStore{};
-        std::unordered_map<size_t, std::tuple<VkDescriptorPool, VkDescriptorSet, VkDescriptorSet, VulkanBuffer>> mMaterialStore{};
+        std::unordered_map<size_t, std::tuple<VkDescriptorPool, VkDescriptorSet, VkDescriptorSet, std::unique_ptr<VulkanBuffer>>> mMaterialStore{};
+        std::unordered_map<size_t, std::tuple<VkImage, VkDeviceMemory, VkDescriptorImageInfo>> mTextureStore{};
 #if 0
         // Device Extension Functions
         PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE };
@@ -137,6 +149,8 @@ namespace AeonGames
         PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT {VK_NULL_HANDLE };
         PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT { VK_NULL_HANDLE };
 #endif
+        VulkanBuffer mMatrices;
+        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
     };
 }
 #endif

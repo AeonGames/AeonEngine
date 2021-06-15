@@ -32,8 +32,8 @@ namespace AeonGames
     class OpenGLWindow : public CommonWindow
     {
     public:
-        OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        OpenGLWindow ( const OpenGLRenderer& aOpenGLRenderer );
+        OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer );
         ~OpenGLWindow();
         void* GetWindowId() const;
         void BeginRender() final;
@@ -49,15 +49,13 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0 ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
-        const GLuint GetMatricesBuffer() const;
-
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
         void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
         const Matrix4x4 & GetProjectionMatrix() const final;
         const Matrix4x4 & GetViewMatrix() const final;
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
     protected:
-        const OpenGLRenderer& mOpenGLRenderer;
+        OpenGLRenderer& mOpenGLRenderer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         //OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
@@ -67,7 +65,6 @@ namespace AeonGames
         virtual bool MakeCurrent() = 0;
         virtual void SwapBuffers() = 0;
         OpenGLFrameBuffer mFrameBuffer {};
-        mutable OpenGLBuffer mMatrices{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
     };
 }
