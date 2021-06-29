@@ -30,7 +30,7 @@ namespace AeonGames
     std::ostream &operator<< ( std::ostream &out, const XVisualInfo& aXVisualInfo );
 
     OpenGLX11Window::OpenGLX11Window (
-        const OpenGLRenderer& aOpenGLRenderer,
+        OpenGLRenderer& aOpenGLRenderer,
         int32_t aX,
         int32_t aY,
         uint32_t aWidth,
@@ -79,7 +79,7 @@ namespace AeonGames
         }
     }
 
-    OpenGLX11Window::OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
+    OpenGLX11Window::OpenGLX11Window ( OpenGLRenderer& aOpenGLRenderer, void* aWindowId ) :
         OpenGLWindow{aOpenGLRenderer}, mWindowId{ reinterpret_cast<::Window> ( aWindowId ) }
     {
         SetWindowForId ( aWindowId, this );
