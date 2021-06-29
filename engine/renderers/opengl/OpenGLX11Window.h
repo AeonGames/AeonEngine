@@ -22,8 +22,8 @@ namespace AeonGames
     class OpenGLX11Window final : public OpenGLWindow
     {
     public:
-        OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        OpenGLX11Window ( const OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
+        OpenGLX11Window ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
+        OpenGLX11Window ( OpenGLRenderer& aOpenGLRenderer, void* aWindowId );
         ~OpenGLX11Window() final;
         DLL void Run ( Scene& aScene ) final;
         DLL void Show ( bool aShow ) const final;
