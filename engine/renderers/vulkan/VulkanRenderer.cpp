@@ -256,7 +256,9 @@ namespace AeonGames
             VK_DEBUG_REPORT_ERROR_BIT_EXT |
             VK_DEBUG_REPORT_DEBUG_BIT_EXT;
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
-        mDeviceLayerNames.emplace_back ( "VK_LAYER_LUNARG_standard_validation" );
+        mInstanceExtensionNames.emplace_back ( VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME );
+        mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_UTILS_EXTENSION_NAME );
+        mInstanceLayerNames.emplace_back ( "VK_LAYER_KHRONOS_validation" );
     }
 
     void VulkanRenderer::InitializeDebug()
@@ -312,6 +314,23 @@ namespace AeonGames
             }
         }
 
+
+        std::array<VkValidationFeatureEnableEXT, 3> validation_feature_enable_exts
+        {
+            VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
+            VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT,
+            VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
+        };
+        VkValidationFeaturesEXT validation_features_ext
+        {
+            VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
+            nullptr,
+            static_cast<uint32_t> ( validation_feature_enable_exts.size() ),
+            validation_feature_enable_exts.data(),
+            0,
+            nullptr
+        };
+
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
         instance_create_info.enabledLayerCount = static_cast<uint32_t> ( mInstanceLayerNames.size() );
@@ -320,6 +339,7 @@ namespace AeonGames
         instance_create_info.ppEnabledExtensionNames = mInstanceExtensionNames.data();
         if ( mValidate )
         {
+            mDebugReportCallbackCreateInfo.pNext = &validation_features_ext;
             instance_create_info.pNext = &mDebugReportCallbackCreateInfo;
         }
         if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
@@ -1408,7 +1428,8 @@ namespace AeonGames
                         aMaterial.GetUniformBuffer().data() );
                 VkDescriptorBufferInfo descriptor_buffer_info
                 {
-                    VkDescriptorBufferInfo{std::get<std::unique_ptr<VulkanBuffer>> ( material.first->second )->GetBuffer(), 0, aMaterial.GetUniformBuffer().size() }
+                    std::get<std::unique_ptr<VulkanBuffer>> ( material.first->second )->GetBuffer(),
+                                                         0, aMaterial.GetUniformBuffer().size()
                 };
                 write_descriptor_sets.emplace_back();
                 auto& write_descriptor_set = write_descriptor_sets.back();
