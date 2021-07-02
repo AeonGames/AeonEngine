@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -119,7 +119,6 @@ namespace AeonGames
         {
             Property property;
             int user_type{value.userType() };
-            std::cout << __func__ << " UserType: " << user_type;
             switch ( user_type )
             {
             case QMetaType::Int:    // 2 int
