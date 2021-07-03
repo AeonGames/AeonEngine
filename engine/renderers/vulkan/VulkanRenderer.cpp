@@ -1595,6 +1595,7 @@ namespace AeonGames
             }
         }
         vkUnmapMemory ( GetDevice(), image_buffer_memory );
+
         //--------------------------------------------------------
         // Transition Image Layout
         VkCommandBuffer command_buffer = BeginSingleTimeCommands();
@@ -1610,11 +1611,11 @@ namespace AeonGames
         image_memory_barrier.subresourceRange.levelCount = 1;
         image_memory_barrier.subresourceRange.baseArrayLayer = 0;
         image_memory_barrier.subresourceRange.layerCount = 1;
-        image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+        image_memory_barrier.srcAccessMask = 0; //VK_ACCESS_HOST_WRITE_BIT;
         image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         vkCmdPipelineBarrier (
             command_buffer,
-            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
             0,
             0, nullptr,
             0, nullptr,
@@ -1638,7 +1639,7 @@ namespace AeonGames
         image_memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         vkCmdPipelineBarrier (
             command_buffer,
-            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
             0,
             0, nullptr,
             0, nullptr,
