@@ -17,14 +17,17 @@ limitations under the License.
 #include <sstream>
 #include <iostream>
 #include <limits>
+#include <cassert>
+#include "aeongames/LogLevel.h"
 #include "VulkanRenderer.h"
 #include "VulkanBuffer.h"
 #include "VulkanUtilities.h"
 
 namespace AeonGames
 {
-    VulkanBuffer::VulkanBuffer ( const VulkanRenderer & aVulkanRenderer ) : mVulkanRenderer ( aVulkanRenderer )
+    VulkanBuffer::VulkanBuffer ( const VulkanRenderer & aVulkanRenderer ) : mVulkanRenderer { aVulkanRenderer }
     {
+        std::cout << LogLevel::Info << __FUNCTION__ << std::endl;
     }
     VulkanBuffer::VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData ) :
         mVulkanRenderer { aVulkanRenderer },
@@ -74,10 +77,7 @@ namespace AeonGames
 
     VulkanBuffer& VulkanBuffer::operator= ( const VulkanBuffer& aBuffer )
     {
-        if ( &mVulkanRenderer != &aBuffer.mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Assigning buffers from different renderer instances." );
-        }
+        assert ( &mVulkanRenderer == &aBuffer.mVulkanRenderer );
         Finalize();
         mSize = aBuffer.mSize;
         mUsage = aBuffer.mUsage;
@@ -90,6 +90,28 @@ namespace AeonGames
         CopyBuffer ( aBuffer.mBuffer );
         return *this;
     }
+
+    VulkanBuffer::VulkanBuffer ( VulkanBuffer&& aBuffer ) :
+        mVulkanRenderer { aBuffer.mVulkanRenderer },
+        mBuffer{ aBuffer.mBuffer },
+        mSize{aBuffer.mSize},
+        mUsage{aBuffer.mUsage},
+        mProperties{aBuffer.mProperties}
+    {
+        aBuffer.mBuffer = VK_NULL_HANDLE;
+        aBuffer.mDeviceMemory = VK_NULL_HANDLE;
+    }
+
+    VulkanBuffer& VulkanBuffer::operator = ( VulkanBuffer&& aBuffer )
+    {
+        assert ( &mVulkanRenderer == &aBuffer.mVulkanRenderer );
+        std::swap ( mBuffer, aBuffer.mBuffer );
+        std::swap ( mSize, aBuffer.mSize );
+        std::swap ( mUsage, aBuffer.mUsage );
+        std::swap ( mProperties, aBuffer.mProperties );
+        return *this;
+    }
+
 
     void VulkanBuffer::Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void * aData )
     {

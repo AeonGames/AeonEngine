@@ -104,11 +104,6 @@ namespace AeonGames
         if ( aFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
         {
             std::cout << LogLevel::Error;
-#if _WIN32
-            std::cout << aLayerPrefix << ": " << aMsg << std::endl;
-            MessageBox ( nullptr, aMsg, aLayerPrefix, MB_ICONERROR | MB_OK );
-            return false;
-#endif
         }
         if ( aFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
         {
@@ -157,9 +152,5 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
         return descriptor_set;
-    }
-    void DestroyDescriptorSet ( const VkDevice& aVkDevice, const VkDescriptorPool& aVkDescriptorPool, VkDescriptorSet aVkDescriptorSet )
-    {
-        vkFreeDescriptorSets ( aVkDevice, aVkDescriptorPool, 1, &aVkDescriptorSet );
     }
 }

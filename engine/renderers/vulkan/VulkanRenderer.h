@@ -28,12 +28,12 @@ limitations under the License.
 #include "aeongames/Transform.h"
 #include "VulkanWindow.h"
 #include "VulkanBuffer.h"
+#include "VulkanMesh.h"
 
 namespace AeonGames
 {
     class VulkanTexture;
     class VulkanWindow;
-    class VulkanModel;
     class VulkanRenderer final : public Renderer
     {
     public:
@@ -137,7 +137,7 @@ namespace AeonGames
         bool mFunctionsLoaded = false;
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
-        std::unordered_map<size_t, std::vector<VulkanBuffer>> mBufferStore{};
+        std::unordered_map<size_t, VulkanMesh> mMeshStore{};
         std::unordered_map<size_t, std::tuple<VkPipelineLayout, VkPipeline>> mPipelineStore{};
         std::unordered_map<size_t, std::tuple<VkDescriptorPool, VkDescriptorSet, VkDescriptorSet, std::unique_ptr<VulkanBuffer>>> mMaterialStore{};
         std::unordered_map<size_t, std::tuple<VkImage, VkDeviceMemory, VkDescriptorImageInfo>> mTextureStore{};

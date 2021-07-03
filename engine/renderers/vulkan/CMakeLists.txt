@@ -32,6 +32,7 @@ set(VULKAN_RENDERER_HEADERS
     VulkanRenderer.h
     VulkanWindow.h
     VulkanBuffer.h
+    VulkanMesh.h
     VulkanMemoryPoolBuffer.h
     VulkanFrameBuffer.h
     )
@@ -41,6 +42,7 @@ set(VULKAN_RENDERER_SOURCES
     VulkanRenderer.cpp
     VulkanWindow.cpp
     VulkanBuffer.cpp
+    VulkanMesh.cpp
     VulkanMemoryPoolBuffer.cpp
     VulkanFrameBuffer.cpp
     Plugin.cpp)
