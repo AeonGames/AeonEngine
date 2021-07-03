@@ -97,7 +97,7 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
             vkUpdateDescriptorSets ( mVkDevice, 1, &write_descriptor_set, 0, nullptr );
 
-            mMemoryPoolBuffer.Initialize ( 8_mb );
+            mMemoryPoolBuffer.Initialize ( mVkPhysicalDeviceProperties.limits.maxUniformBufferRange );
         }
         catch ( ... )
         {
@@ -109,13 +109,13 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        mMeshStore.clear();
         for ( auto& i : mVkSamplerDescriptorSetLayouts )
         {
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
         }
         mVkSamplerDescriptorSetLayouts.clear();
 
-        DestroyDescriptorSet ( mVkDevice, mMatricesDescriptorPool, mMatricesDescriptorSet );
         DestroyDescriptorPool ( mVkDevice, mMatricesDescriptorPool );
         mMemoryPoolBuffer.Finalize();
         mMatrices.Finalize();
@@ -315,11 +315,10 @@ namespace AeonGames
         }
 
 
-        std::array<VkValidationFeatureEnableEXT, 3> validation_feature_enable_exts
+        std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
         {
             VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
-            VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT,
-            VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
+            VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
         };
         VkValidationFeaturesEXT validation_features_ext
         {
@@ -685,147 +684,32 @@ namespace AeonGames
         {
             return;
         }
-        auto it = mBufferStore.find ( aMesh.GetConsecutiveId() );
-        if ( it != mBufferStore.end() )
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it != mMeshStore.end() )
         {
             std::cout << LogLevel::Warning << " Mesh " << aMesh.GetConsecutiveId() << " Already Loaded at: " << __FUNCTION__ << std::endl;
             return;
         }
-
-        std::vector<uint8_t> vertex_buffer (  sizeof ( Vertex ) * aMesh.GetVertexCount() );
-        auto* vertices = reinterpret_cast<Vertex*> ( vertex_buffer.data() );
-        const auto* mesh_vertices = aMesh.GetVertexBuffer().data();
-        uintptr_t offset = 0;
-        for ( uint32_t j = 0; j < aMesh.GetVertexCount(); ++j )
-        {
-            if ( aMesh.GetVertexFlags() & Mesh::POSITION_BIT )
-            {
-                memcpy ( vertices[j].position, mesh_vertices + offset, sizeof ( Vertex::position ) );
-                offset += sizeof ( Vertex::position );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::NORMAL_BIT )
-            {
-                memcpy ( vertices[j].normal, mesh_vertices + offset, sizeof ( Vertex::normal ) );
-                offset += sizeof ( Vertex::normal );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::TANGENT_BIT )
-            {
-                memcpy ( vertices[j].tangent, mesh_vertices + offset, sizeof ( Vertex::tangent ) );
-                offset += sizeof ( Vertex::tangent );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::BITANGENT_BIT )
-            {
-                memcpy ( vertices[j].bitangent, mesh_vertices + offset, sizeof ( Vertex::bitangent ) );
-                offset += sizeof ( Vertex::bitangent );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::UV_BIT )
-            {
-                memcpy ( vertices[j].uv, mesh_vertices + offset, sizeof ( Vertex::uv ) );
-                offset += sizeof ( Vertex::uv );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::WEIGHT_IDX_BIT )
-            {
-                memcpy ( vertices[j].weight_indices, mesh_vertices + offset, sizeof ( Vertex::weight_indices ) );
-                offset += sizeof ( Vertex::weight_indices );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::WEIGHT_BIT )
-            {
-                memcpy ( vertices[j].weight_influences, mesh_vertices + offset, sizeof ( Vertex::weight_influences ) );
-                offset += sizeof ( Vertex::weight_influences );
-            }
-
-            if ( aMesh.GetVertexFlags() & Mesh::COLOR_BIT )
-            {
-                memcpy ( vertices[j].color, mesh_vertices + offset, sizeof ( Vertex::color ) );
-                offset += sizeof ( Vertex::color );
-            }
-        }
-
-        if ( aMesh.GetIndexCount() )
-        {
-            const uint8_t* buffer{};
-            size_t   buffer_size{};
-            std::vector<uint8_t> index_buffer{};
-            if ( aMesh.GetIndexSize() != 1 )
-            {
-                buffer = aMesh.GetIndexBuffer().data();
-                buffer_size = aMesh.GetIndexBuffer().size();
-            }
-            else
-            {
-                /**@note upcast to 16 bit indices.
-                   We need to expand 1 byte indices to 2 since they're not supported on Vulkan */
-                index_buffer.resize ( aMesh.GetIndexBuffer().size() * 2 );
-                uint8_t* index = index_buffer.data();
-                for ( size_t j = 0; j < aMesh.GetIndexCount(); ++j )
-                {
-                    ( reinterpret_cast<uint16_t*> ( index ) [j] ) = aMesh.GetIndexBuffer() [j];
-                }
-                buffer = index_buffer.data();
-                buffer_size = index_buffer.size();
-            }
-            mBufferStore.emplace ( aMesh.GetConsecutiveId(),
-                                   std::vector<VulkanBuffer>
-            {
-                {*this, vertex_buffer.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertex_buffer.data() },
-                {*this, buffer_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer}
-            } );
-        }
-        else
-        {
-            mBufferStore.emplace ( aMesh.GetConsecutiveId(),
-                                   std::vector<VulkanBuffer>
-            {
-                {*this, vertex_buffer.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertex_buffer.data() }
-            } );
-        }
+        mMeshStore.emplace ( aMesh.GetConsecutiveId(), VulkanMesh{*this, aMesh} );
     }
 
     void VulkanRenderer::UnloadMesh ( const Mesh& aMesh )
     {
-        auto it = mBufferStore.find ( aMesh.GetConsecutiveId() );
-        if ( it != mBufferStore.end() )
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it != mMeshStore.end() )
         {
-            mBufferStore.erase ( it );
+            mMeshStore.erase ( it );
         }
-    }
-
-    static VkIndexType GetIndexType ( const Mesh& aMesh )
-    {
-        switch ( aMesh.GetIndexSize() )
-        {
-        case 1:
-        case 2:
-            return VK_INDEX_TYPE_UINT16;
-        case 4:
-            return VK_INDEX_TYPE_UINT32;
-        default:
-            break;
-        };
-        throw std::runtime_error ( "Invalid Index Size." );
     }
 
     void VulkanRenderer::BindMesh ( const Mesh& aMesh ) const
     {
-        auto it = mBufferStore.find ( aMesh.GetConsecutiveId() );
-        if ( it == mBufferStore.end() )
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it == mMeshStore.end() )
         {
             return;
         }
-        const VkDeviceSize offset = 0;
-        vkCmdBindVertexBuffers ( GetCommandBuffer(), 0, 1, &it->second[0].GetBuffer(), &offset );
-        if ( aMesh.GetIndexCount() )
-        {
-            vkCmdBindIndexBuffer ( GetCommandBuffer(),
-                                   it->second[1].GetBuffer(), 0,
-                                   GetIndexType ( aMesh ) );
-        }
+        it->second.Bind();
     }
 
     /*-----------------Pipeline-----------------------*/
@@ -1470,24 +1354,6 @@ namespace AeonGames
         if ( it == mMaterialStore.end() )
         {
             return;
-        }
-
-        // FinalizeDescriptorSets
-        {
-            if ( std::get<1> ( it->second ) )
-            {
-                vkFreeDescriptorSets ( GetDevice(),
-                                       std::get<VkDescriptorPool> ( it->second ),
-                                       1,
-                                       &std::get<1> ( it->second ) );
-            }
-            if ( std::get<2> ( it->second ) )
-            {
-                vkFreeDescriptorSets ( GetDevice(),
-                                       std::get<VkDescriptorPool> ( it->second ),
-                                       1,
-                                       &std::get<2> ( it->second ) );
-            }
         }
         // Finalize Descriptor Pool
         if ( std::get<VkDescriptorPool> ( it->second ) != VK_NULL_HANDLE )
