@@ -45,7 +45,6 @@ namespace AeonGames
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
         void InitializeDescriptorSet();
-        void FinalizeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
         size_t mOffset{0};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };

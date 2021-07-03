@@ -61,7 +61,6 @@ namespace AeonGames
 
     void VulkanMemoryPoolBuffer::Finalize()
     {
-        FinalizeDescriptorSet();
         FinalizeDescriptorPool();
         mUniformBuffer.Finalize();
     }
@@ -122,18 +121,6 @@ namespace AeonGames
         {
             vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, nullptr );
             mVkDescriptorPool = VK_NULL_HANDLE;
-        }
-    }
-
-    void VulkanMemoryPoolBuffer::FinalizeDescriptorSet()
-    {
-        if ( mVkDescriptorSet != VK_NULL_HANDLE )
-        {
-            vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(),
-                                   mVkDescriptorPool,
-                                   1,
-                                   &mVkDescriptorSet );
-            mVkDescriptorSet = VK_NULL_HANDLE;
         }
     }
 
