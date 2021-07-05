@@ -97,7 +97,7 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
             vkUpdateDescriptorSets ( mVkDevice, 1, &write_descriptor_set, 0, nullptr );
 
-            mMemoryPoolBuffer.Initialize ( mVkPhysicalDeviceProperties.limits.maxUniformBufferRange );
+            mMemoryPoolBuffer.Initialize ( 64_kb ); // @todo this should be 16_kb for mobile
         }
         catch ( ... )
         {
@@ -314,7 +314,6 @@ namespace AeonGames
             }
         }
 
-
         std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
         {
             VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
@@ -345,7 +344,9 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer instance. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
+            std::string error_string = stream.str();
+            std::cout << LogLevel::Error << error_string << std::endl;
+            throw std::runtime_error ( error_string.c_str() );
         }
     }
 
@@ -468,8 +469,30 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeRenderPass()
     {
-        mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
-        mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+#if 0
+        uint32_t surface_format_count = 0;
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, nullptr );
+        if ( surface_format_count == 0 )
+        {
+            std::ostringstream stream;
+            stream << "Physical device reports no surface formats.";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
+        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
+        {
+#endif
+            mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+#if 0
+        }
+        else
+        {
+            mVkSurfaceFormatKHR = surface_format_list[0];
+        }
+#endif
         std::array<VkFormat, 5> try_formats
         {
             {
