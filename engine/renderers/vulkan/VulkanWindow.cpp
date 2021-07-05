@@ -116,27 +116,6 @@ namespace AeonGames
     void VulkanWindow::InitializeSwapchain()
     {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
-        uint32_t surface_format_count = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_format_count, nullptr );
-        if ( surface_format_count == 0 )
-        {
-            std::ostringstream stream;
-            stream << "Physical device reports no surface formats.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        VkSurfaceFormatKHR surface_format_khr;
-        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
-        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
-        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
-        {
-            surface_format_khr = mVulkanRenderer.GetSurfaceFormatKHR();
-        }
-        else
-        {
-            surface_format_khr = surface_format_list[0];
-        }
-
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
@@ -150,8 +129,8 @@ namespace AeonGames
         swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchain_create_info.surface = mVkSurfaceKHR;
         swapchain_create_info.minImageCount = mSwapchainImageCount;
-        swapchain_create_info.imageFormat = surface_format_khr.format;
-        swapchain_create_info.imageColorSpace = surface_format_khr.colorSpace;
+        swapchain_create_info.imageFormat = mVulkanRenderer.GetSurfaceFormatKHR().format;
+        swapchain_create_info.imageColorSpace = mVulkanRenderer.GetSurfaceFormatKHR().colorSpace;
         swapchain_create_info.imageExtent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
         swapchain_create_info.imageArrayLayers = 1;
