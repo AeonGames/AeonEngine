@@ -19,33 +19,33 @@ limitations under the License.
 #include <string>
 #include <array>
 #include <vulkan/vulkan.h>
-#include "aeongames/Utilities.h"
 #include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "VulkanBuffer.h"
 
 namespace AeonGames
 {
-    class BufferAccessor;
-    class Matrix4x4;
-    class VulkanBuffer;
+    enum  BindingLocations : uint32_t
+    {
+        MATRICES = 0,
+        MATERIAL,
+        SAMPLERS,
+        SKELETON,
+    };
+
     class VulkanRenderer;
-    class VulkanPipeline final : public Pipeline
+    class VulkanPipeline
     {
     public:
-        VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, uint32_t aPath = 0 );
-        ~VulkanPipeline() final;
-        ///@name Overrides
-        ///@{
-        void Load ( const PipelineMsg& aPipelineMsg ) final;
-        void Unload() final;
-        ///@}
+        VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline );
+        ~VulkanPipeline();
+        VulkanPipeline ( VulkanPipeline&& aVulkanPipeline );
+        VulkanPipeline ( const VulkanPipeline& ) = delete;
+        VulkanPipeline& operator= ( const VulkanPipeline& ) = delete;
+        VulkanPipeline& operator= ( VulkanPipeline&& ) = delete;
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
     private:
         const VulkanRenderer& mVulkanRenderer;
-        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
-        mVkShaderModules{ { VK_NULL_HANDLE } };
+        const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
     };
