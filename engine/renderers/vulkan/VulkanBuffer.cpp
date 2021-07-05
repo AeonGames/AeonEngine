@@ -202,7 +202,9 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "vkCreateBuffer failed for vertex buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
+            std::string error_string = stream.str();
+            std::cout << LogLevel::Error << error_string << std::endl;
+            throw std::runtime_error ( error_string.c_str() );
         }
 
         VkMemoryRequirements memory_requirements;
