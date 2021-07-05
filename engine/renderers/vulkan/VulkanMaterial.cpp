@@ -43,305 +43,158 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath ) :
-        Material{},
+    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
+        mMaterial{&aMaterial},
         mUniformBuffer { mVulkanRenderer }
     {
-        if ( aPath )
+        // Initialize DescriptorPool
         {
-            LoadFromId ( aPath );
-        }
-    }
+            std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
+            uint32_t descriptor_pool_size_count = 0;
 
-    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers ) :
-        Material{},
-        mVulkanRenderer { aVulkanRenderer },
-        mUniformBuffer { mVulkanRenderer }
-    {
-        VulkanMaterial::Load ( aUniforms, aSamplers );
+            if ( aMaterial.GetUniformBuffer().size() )
+            {
+                descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = 1;
+            }
+            if ( aMaterial.GetSamplers().size() )
+            {
+                descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = static_cast<uint32_t> ( aMaterial.GetSamplers().size() );
+            }
+            if ( descriptor_pool_size_count )
+            {
+                VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+                descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+                descriptor_pool_create_info.pNext = nullptr;
+                descriptor_pool_create_info.flags = 0;
+                descriptor_pool_create_info.maxSets = descriptor_pool_size_count;
+                descriptor_pool_create_info.poolSizeCount = descriptor_pool_size_count;
+                descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+                if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
+                {
+                    std::ostringstream stream;
+                    stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+            }
+        }
+
+        // Initialize Descriptor Sets
+        {
+            if ( aMaterial.GetUniformBuffer().size() )
+            {
+                VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+                descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+                descriptor_set_allocate_info.descriptorSetCount = 1;
+                descriptor_set_allocate_info.pSetLayouts = &mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+                if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mUniformDescriptorSet ) )
+                {
+                    std::ostringstream stream;
+                    stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+            }
+            if ( aMaterial.GetSamplers().size() )
+            {
+                VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+                descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+                descriptor_set_allocate_info.descriptorSetCount = 1;
+                descriptor_set_allocate_info.pSetLayouts = &mVulkanRenderer.GetSamplerDescriptorSetLayout ( aMaterial.GetSamplers().size() );
+                if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mSamplerDescriptorSet ) )
+                {
+                    std::ostringstream stream;
+                    stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                    throw std::runtime_error ( stream.str().c_str() );
+                }
+            }
+
+            /*-----------------------------------------------------------------*/
+            std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
+            write_descriptor_sets.reserve ( ( aMaterial.GetUniformBuffer().size() ? 1 : 0 ) + aMaterial.GetSamplers().size() );
+
+            if ( aMaterial.GetUniformBuffer().size() )
+            {
+                mUniformBuffer.Initialize (
+                    aMaterial.GetUniformBuffer().size(),
+                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    aMaterial.GetUniformBuffer().data() );
+                VkDescriptorBufferInfo descriptor_buffer_info
+                {
+                    mUniformBuffer.GetBuffer(),
+                    0,
+                    aMaterial.GetUniformBuffer().size()
+                };
+                write_descriptor_sets.emplace_back();
+                auto& write_descriptor_set = write_descriptor_sets.back();
+                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set.pNext = nullptr;
+                write_descriptor_set.dstSet = mUniformDescriptorSet;
+                write_descriptor_set.dstBinding = 0;
+                write_descriptor_set.dstArrayElement = 0;
+                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                write_descriptor_set.descriptorCount = 1;
+                write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+                write_descriptor_set.pImageInfo = nullptr;
+                write_descriptor_set.pTexelBufferView = nullptr;
+            }
+            for ( uint32_t i = 0; i < aMaterial.GetSamplers().size(); ++i )
+            {
+                write_descriptor_sets.emplace_back();
+                auto& write_descriptor_set = write_descriptor_sets.back();
+                write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write_descriptor_set.pNext = nullptr;
+                // Note that the descriptor set does not change, we are setting multiple bindings on a single descriptor set.
+                write_descriptor_set.dstSet = mSamplerDescriptorSet;
+                write_descriptor_set.dstBinding = i;
+                write_descriptor_set.dstArrayElement = 0;
+                write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write_descriptor_set.descriptorCount = 1;
+                write_descriptor_set.pBufferInfo = nullptr;
+                write_descriptor_set.pImageInfo = mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( aMaterial.GetSamplers() [i] ).Get<Texture>() );
+                write_descriptor_set.pTexelBufferView = nullptr;
+            }
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
+        }
     }
 
     VulkanMaterial::~VulkanMaterial()
     {
-        Unload();
-    }
-
-    VulkanMaterial::VulkanMaterial ( const VulkanMaterial& aMaterial ) :
-        Material{aMaterial},
-        mVulkanRenderer{aMaterial.mVulkanRenderer},
-        mUniformBuffer{aMaterial.mUniformBuffer}
-    {
-        InitializeDescriptorPool();
-        InitializeDescriptorSets();
-    }
-
-    VulkanMaterial& VulkanMaterial::operator= ( const VulkanMaterial& aMaterial )
-    {
-        if ( &mVulkanRenderer != &aMaterial.mVulkanRenderer )
-        {
-            throw std::runtime_error ( "Assigning materials from different renderer instances." );
-        }
-        this->Material::operator= ( aMaterial );
-        mUniformBuffer = aMaterial.mUniformBuffer;
-        InitializeDescriptorPool();
-        InitializeDescriptorSets();
-        return *this;
-    }
-
-    std::unique_ptr<Material> VulkanMaterial::Clone() const
-    {
-        return std::make_unique<VulkanMaterial> ( *this );
-    }
-
-    void VulkanMaterial::Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers )
-    {
-        size_t size = LoadVariables ( aUniforms );
-        if ( size )
-        {
-            mUniformBuffer.Initialize (
-                static_cast<VkDeviceSize> ( size ),
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            for ( auto& i : aUniforms )
-            {
-                Set ( i );
-            }
-        }
-        LoadSamplers ( aSamplers );
-        InitializeDescriptorPool();
-        InitializeDescriptorSets();
-    }
-
-    void VulkanMaterial::Load ( const MaterialMsg& aMaterialMsg )
-    {
-        size_t size = LoadVariables ( aMaterialMsg );
-        if ( size )
-        {
-            mUniformBuffer.Initialize (
-                static_cast<VkDeviceSize> ( size ),
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-            for ( auto& i : aMaterialMsg.property() )
-            {
-                Set ( PropertyToKeyValue ( i ) );
-            }
-        }
-        LoadSamplers ( aMaterialMsg );
-        InitializeDescriptorPool();
-        InitializeDescriptorSets();
-    }
-
-    void VulkanMaterial::Unload()
-    {
-        FinalizeDescriptorSets();
-        FinalizeDescriptorPool();
-        mUniformBuffer.Finalize();
-    }
-
-    void VulkanMaterial::Set ( size_t aIndex, const UniformValue& aValue )
-    {
-        mUniformBuffer.WriteMemory ( mVariables.at ( aIndex ).GetOffset(), GetUniformValueSize ( aValue ), GetUniformValuePointer ( aValue ) );
-    }
-
-    void VulkanMaterial::Set ( const UniformKeyValue& aValue )
-    {
-        auto i = std::find_if ( mVariables.begin(), mVariables.end(),
-                                [&aValue] ( const UniformVariable & variable )
-        {
-            return variable.GetName() == std::get<std::string> ( aValue );
-        } );
-        if ( i != mVariables.end() )
-        {
-            size_t value_size = GetUniformValueSize ( std::get<UniformValue> ( aValue ) );
-            // Do some bounds checking
-            auto j = i + 1;
-            if ( ( ( j != mVariables.end() ) ? ( j->GetOffset() - i->GetOffset() ) : ( mUniformBuffer.GetSize() - i->GetOffset() ) ) < value_size )
-            {
-                throw std::runtime_error ( "Value type size exceeds original type size." );
-            }
-            mUniformBuffer.WriteMemory ( i->GetOffset(), value_size, GetUniformValuePointer ( std::get<UniformValue> ( aValue ) ) );
-        }
-    }
-
-    void VulkanMaterial::SetSampler ( const std::string& aName, const ResourceId& aValue )
-    {
-        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
-        {
-            return std::get<0> ( aTuple ) == aName;
-        } );
-        if ( i != mSamplers.end() )
-        {
-            std::get<1> ( *i ) = aValue;
-        }
-    }
-
-    ResourceId VulkanMaterial::GetSampler ( const std::string& aName )
-    {
-        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
-        {
-            return std::get<0> ( aTuple ) == aName;
-        } );
-        if ( i != mSamplers.end() )
-        {
-            return std::get<1> ( *i );
-        }
-        return ResourceId{"Texture"_crc32, 0};
-    }
-
-    const VkDescriptorSet& VulkanMaterial::GetUniformDescriptorSet() const
-    {
-        return mUniformDescriptorSet;
-    }
-
-    const VkDescriptorSet& VulkanMaterial::GetSamplerDescriptorSet() const
-    {
-        return mSamplerDescriptorSet;
-    }
-
-    void VulkanMaterial::InitializeDescriptorPool()
-    {
-        std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
-        uint32_t descriptor_pool_size_count = 0;
-
-        if ( mUniformBuffer.GetSize() )
-        {
-            descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = 1;
-        }
-        if ( mSamplers.size() )
-        {
-            descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = static_cast<uint32_t> ( mSamplers.size() );
-        }
-        if ( descriptor_pool_size_count )
-        {
-            VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
-            descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            descriptor_pool_create_info.pNext = nullptr;
-            descriptor_pool_create_info.flags = 0;
-            descriptor_pool_create_info.maxSets = descriptor_pool_size_count;
-            descriptor_pool_create_info.poolSizeCount = descriptor_pool_size_count;
-            descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
-            if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
-            {
-                std::ostringstream stream;
-                stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-    }
-
-    void VulkanMaterial::InitializeDescriptorSets()
-    {
-        if ( !mUniformBuffer.GetSize() && !mSamplers.size() )
-        {
-            return;
-        }
-        if ( mUniformBuffer.GetSize() )
-        {
-            VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-            descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-            descriptor_set_allocate_info.descriptorSetCount = 1;
-            descriptor_set_allocate_info.pSetLayouts = &mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
-            if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mUniformDescriptorSet ) )
-            {
-                std::ostringstream stream;
-                stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        if ( mSamplers.size() )
-        {
-            VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-            descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-            descriptor_set_allocate_info.descriptorSetCount = 1;
-            descriptor_set_allocate_info.pSetLayouts = &mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplers.size() );
-            if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mSamplerDescriptorSet ) )
-            {
-                std::ostringstream stream;
-                stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-
-        std::array<VkDescriptorBufferInfo, 1> descriptor_buffer_infos =
-        {
-            {
-                VkDescriptorBufferInfo{mUniformBuffer.GetBuffer(), 0, mUniformBuffer.GetSize() }
-            }
-        };
-
-        std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( mUniformBuffer.GetSize() ? 1 : 0 + mSamplers.size() );
-
-        if ( mUniformBuffer.GetSize() )
-        {
-            write_descriptor_sets.emplace_back();
-            auto& write_descriptor_set = write_descriptor_sets.back();
-            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mUniformDescriptorSet;
-            write_descriptor_set.dstBinding = 0;
-            write_descriptor_set.dstArrayElement = 0;
-            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            write_descriptor_set.descriptorCount = 1;
-            write_descriptor_set.pBufferInfo = &descriptor_buffer_infos[0];
-            write_descriptor_set.pImageInfo = nullptr;
-            write_descriptor_set.pTexelBufferView = nullptr;
-        }
-        for ( uint32_t i = 0; i < mSamplers.size(); ++i )
-        {
-            write_descriptor_sets.emplace_back();
-            auto& write_descriptor_set = write_descriptor_sets.back();
-            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_set.pNext = nullptr;
-            // Note that the descriptor set does not change, we are setting multiple bindings on a single descriptor set.
-            write_descriptor_set.dstSet = mSamplerDescriptorSet;
-            write_descriptor_set.dstBinding = i;
-            write_descriptor_set.dstArrayElement = 0;
-            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            write_descriptor_set.descriptorCount = 1;
-            write_descriptor_set.pBufferInfo = nullptr;
-            write_descriptor_set.pImageInfo = &reinterpret_cast<const VulkanTexture*> ( std::get<1> ( mSamplers[i] ).Get<Texture>() )->GetDescriptorImageInfo();
-            write_descriptor_set.pTexelBufferView = nullptr;
-        }
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
-    }
-
-    void VulkanMaterial::FinalizeDescriptorPool()
-    {
+        // Finalize Descriptor Pool
         if ( mVkDescriptorPool != VK_NULL_HANDLE )
         {
             vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, nullptr );
-            mVkDescriptorPool = VK_NULL_HANDLE;
         }
+        mUniformBuffer.Finalize();
     }
 
-    void VulkanMaterial::FinalizeDescriptorSets()
+    VulkanMaterial::VulkanMaterial ( VulkanMaterial&& aVulkanMaterial ) :
+        mVulkanRenderer{aVulkanMaterial.mVulkanRenderer},
+        mUniformBuffer{std::move ( aVulkanMaterial.mUniformBuffer ) }
     {
-        if ( mUniformDescriptorSet )
-        {
-            vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(),
-                                   mVkDescriptorPool,
-                                   1,
-                                   &mUniformDescriptorSet );
-        }
-        if ( mSamplerDescriptorSet )
-        {
-            vkFreeDescriptorSets ( mVulkanRenderer.GetDevice(),
-                                   mVkDescriptorPool,
-                                   1,
-                                   &mSamplerDescriptorSet );
-        }
+        std::swap ( mVkDescriptorPool, aVulkanMaterial.mVkDescriptorPool );
+        std::swap ( mUniformDescriptorSet, aVulkanMaterial.mUniformDescriptorSet );
+        std::swap ( mSamplerDescriptorSet, aVulkanMaterial.mSamplerDescriptorSet );
     }
 
-    const std::vector<std::tuple<std::string, ResourceId>>& VulkanMaterial::GetSamplers() const
+    void VulkanMaterial::Bind ( const VkPipelineLayout aVkPipelineLayout ) const
     {
-        return mSamplers;
+        std::array<VkDescriptorSet, 2> descriptor_sets
+        {
+            mUniformDescriptorSet,
+            mSamplerDescriptorSet,
+        };
+
+        uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
+        vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  aVkPipelineLayout,
+                                  MATERIAL,
+                                  descriptor_set_count,
+                                  descriptor_sets.data(), 0, nullptr );
     }
 }

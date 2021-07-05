@@ -20,7 +20,6 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include <unordered_map>
 #include <memory>
-#include <unordered_map>
 #include <tuple>
 #include "aeongames/Platform.h"
 #include "aeongames/Renderer.h"
@@ -29,6 +28,9 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanBuffer.h"
 #include "VulkanMesh.h"
+#include "VulkanPipeline.h"
+#include "VulkanMaterial.h"
+#include "VulkanTexture.h"
 
 namespace AeonGames
 {
@@ -76,6 +78,7 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        const VkDescriptorImageInfo* GetTextureDescriptorImageInfo ( const Texture& aTexture ) const;
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
         void ResetMemoryPoolBuffer();
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
@@ -126,7 +129,7 @@ namespace AeonGames
         VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
-        mutable const std::tuple<VkPipelineLayout, VkPipeline>* mBoundPipeline{nullptr};
+        mutable const VulkanPipeline* mBoundPipeline{nullptr};
         VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};
@@ -138,9 +141,9 @@ namespace AeonGames
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
         PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
         std::unordered_map<size_t, VulkanMesh> mMeshStore{};
-        std::unordered_map<size_t, std::tuple<VkPipelineLayout, VkPipeline>> mPipelineStore{};
-        std::unordered_map<size_t, std::tuple<VkDescriptorPool, VkDescriptorSet, VkDescriptorSet, std::unique_ptr<VulkanBuffer>>> mMaterialStore{};
-        std::unordered_map<size_t, std::tuple<VkImage, VkDeviceMemory, VkDescriptorImageInfo>> mTextureStore{};
+        std::unordered_map<size_t, VulkanPipeline> mPipelineStore{};
+        std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};
+        std::unordered_map<size_t, VulkanTexture> mTextureStore{};
 #if 0
         // Device Extension Functions
         PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE };
