@@ -122,29 +122,9 @@ namespace AeonGames
         mMeshBuffer.Finalize();
     }
 
-    VulkanMesh::VulkanMesh ( const VulkanMesh& aVulkanMesh ) :
-        mVulkanRenderer{aVulkanMesh.mVulkanRenderer},
-        mMesh{aVulkanMesh.mMesh}, mMeshBuffer{aVulkanMesh.mMeshBuffer} {}
-
     VulkanMesh::VulkanMesh ( VulkanMesh&& aVulkanMesh ) :
         mVulkanRenderer{aVulkanMesh.mVulkanRenderer},
         mMesh{aVulkanMesh.mMesh}, mMeshBuffer{std::move ( aVulkanMesh.mMeshBuffer ) } {}
-
-    VulkanMesh& VulkanMesh::operator= ( const VulkanMesh& aVulkanMesh )
-    {
-        assert ( &mVulkanRenderer == &aVulkanMesh.mVulkanRenderer );
-        mMesh = aVulkanMesh.mMesh;
-        mMeshBuffer = aVulkanMesh.mMeshBuffer;
-        return *this;
-    }
-
-    VulkanMesh& VulkanMesh::operator= ( VulkanMesh&& aVulkanMesh )
-    {
-        assert ( &mVulkanRenderer == &aVulkanMesh.mVulkanRenderer );
-        std::swap ( mMesh, aVulkanMesh.mMesh );
-        std::swap ( mMeshBuffer, aVulkanMesh.mMeshBuffer );
-        return *this;
-    }
 
     static VkIndexType GetIndexType ( const Mesh* aMesh )
     {

@@ -18,60 +18,29 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <tuple>
-#include <initializer_list>
 #include <vulkan/vulkan.h>
 #include <memory>
 #include "aeongames/Material.h"
 #include "VulkanBuffer.h"
+#include "VulkanPipeline.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
     class VulkanTexture;
-    class VulkanMaterial final : public Material
+    class VulkanMaterial
     {
     public:
-        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers );
-        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, uint32_t aPath = 0 );
-        /// The Copy Contsructor is used for virtual copying.
-        VulkanMaterial ( const VulkanMaterial& aMaterial );
-        /// Assignment operator due to rule of zero/three/five.
-        VulkanMaterial& operator= ( const VulkanMaterial& aMaterial );
-        /// No move assignment allowed
-        VulkanMaterial& operator = ( VulkanMaterial&& ) = delete;
-        /// No move allowed
-        VulkanMaterial ( VulkanMaterial&& ) = delete;
-
-        ~VulkanMaterial() final;
-        /// @copydoc Material::Clone()
-        std::unique_ptr<Material> Clone() const final;
-        ///@name Loaders
-        ///@{
-        void Load ( const MaterialMsg& aMaterialMsg ) final;
-        void Load ( std::initializer_list<UniformKeyValue> aUniforms, std::initializer_list<SamplerKeyValue> aSamplers );
-        void Unload() final;
-        ///@}
-        ///@name Property and Sampler Setters
-        ///@{
-        void Set ( size_t aIndex, const UniformValue& aValue ) final;
-        void Set ( const UniformKeyValue& aValue ) final;
-        void SetSampler ( const std::string& aName, const ResourceId& aValue ) final;
-        ///@}
-        ///@name Property and Sampler Getters
-        ///@{
-        ResourceId GetSampler ( const std::string& aName ) final;
-        const std::vector<std::tuple<std::string, ResourceId>>& GetSamplers() const final;
-        ///@}
-        const VkDescriptorSet& GetUniformDescriptorSet() const;
-        const VkDescriptorSet& GetSamplerDescriptorSet() const;
-        const Material& GetMaterial() const;
+        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, const Material& aMaterial );
+        VulkanMaterial ( const VulkanMaterial& aMaterial ) = delete;
+        VulkanMaterial& operator= ( const VulkanMaterial& aMaterial ) = delete;
+        VulkanMaterial& operator= ( VulkanMaterial&& ) = delete;
+        VulkanMaterial ( VulkanMaterial&& aVulkanMaterial );
+        ~VulkanMaterial();
+        void Bind ( const VkPipelineLayout aVkPipelineLayout ) const;
     private:
-        void InitializeDescriptorPool();
-        void FinalizeDescriptorPool();
-        void InitializeDescriptorSets();
-        void FinalizeDescriptorSets();
         const VulkanRenderer& mVulkanRenderer;
+        const Material* mMaterial{nullptr};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorSet mSamplerDescriptorSet{VK_NULL_HANDLE};

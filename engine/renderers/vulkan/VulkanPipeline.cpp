@@ -17,53 +17,41 @@ limitations under the License.
 #include <utility>
 #include <vector>
 #include <fstream>
+#include <iostream>
 #include "aeongames/AeonEngine.h"
-#include "aeongames/BufferAccessor.h"
-#include "aeongames/CRC.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufUtils.h"
+#include "aeongames/Utilities.h"
 #include <vulkan/vulkan.h>
 #include "VulkanPipeline.h"
-#include "VulkanTexture.h"
 #include "VulkanRenderer.h"
-#include "VulkanMaterial.h"
 #include "VulkanUtilities.h"
-#include "VulkanBuffer.h"
 #include "SPIR-V/CompilerLinker.h"
 
 namespace AeonGames
 {
-    VulkanPipeline::VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, uint32_t aPath ) :
-        mVulkanRenderer { aVulkanRenderer }
-    {
-        if ( aPath )
-        {
-            Pipeline::Load ( aPath );
-        }
-    }
 
-    VulkanPipeline::~VulkanPipeline()
+    static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap
     {
-        Unload();
-    }
+        {POINT_LIST, VK_PRIMITIVE_TOPOLOGY_POINT_LIST},
+        {LINE_STRIP, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP},
+        {LINE_LIST, VK_PRIMITIVE_TOPOLOGY_LINE_LIST},
+        {TRIANGLE_STRIP, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP},
+        {TRIANGLE_FAN, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN},
+        {TRIANGLE_LIST, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST},
+        {LINE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY},
+        {LINE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY},
+        {TRIANGLE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY},
+        {TRIANGLE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY},
+        {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
+    };
 
-    const VkPipelineLayout VulkanPipeline::GetPipelineLayout() const
-    {
-        return mVkPipelineLayout;
-    }
-    const VkPipeline VulkanPipeline::GetPipeline() const
-    {
-        return mVkPipeline;
-    }
-
-    static std::string GetSamplersCode ( const PipelineMsg& aPipelineMsg, uint32_t aSetNumber )
+    static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
         std::string samplers ( "//----SAMPLERS-START----\n" );
         {
             uint32_t sampler_binding = 0;
-            for ( auto& i : aPipelineMsg.sampler() )
+            for ( auto& i : aPipeline.GetSamplerDescriptors() )
             {
-                samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i.name() + ";\n";
+                samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i + ";\n";
                 ++sampler_binding;
             }
         }
@@ -71,15 +59,14 @@ namespace AeonGames
         return samplers;
     }
 
-    static std::string GetVertexShaderCode ( const PipelineMsg& aPipelineMsg )
+    static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
     {
         std::string vertex_shader{ "#version 450\n" };
-        vertex_shader.append ( GetAttributesGLSL ( aPipelineMsg ) );
+        vertex_shader.append ( aPipeline.GetAttributes () );
 
-        uint32_t set_count = 0;
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
+            "layout(set = " + std::to_string ( MATRICES ) + ", binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
@@ -87,74 +74,58 @@ namespace AeonGames
 
         vertex_shader.append ( transforms );
 
-        if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
+        // Properties
+        vertex_shader.append (
+            "layout(set = " + std::to_string ( MATERIAL ) +
+            ", binding = 0,std140) uniform Properties{\n" +
+            aPipeline.GetProperties( ) + "};\n" );
+
+        vertex_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
+
+        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
-                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "layout(set = " + std::to_string ( SKELETON ) + ", binding = 0, std140) uniform Skeleton{\n"
                 "mat4 skeleton[256];\n"
                 "};\n"
             );
             vertex_shader.append ( skeleton );
         }
 
-        // Properties
-        vertex_shader.append (
-            "layout(set = " + std::to_string ( set_count++ ) +
-            ", binding = 0,std140) uniform Properties{\n" +
-            GetPropertiesGLSL ( aPipelineMsg ) + "};\n" );
-        vertex_shader.append ( GetSamplersCode ( aPipelineMsg, set_count++ ) );
-
-        switch ( aPipelineMsg.vertex_shader().source_case() )
-        {
-        case ShaderMsg::SourceCase::kCode:
-        {
-            vertex_shader.append ( aPipelineMsg.vertex_shader().code() );
-        }
-        break;
-        default:
-            throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
-        }
+        vertex_shader.append ( aPipeline.GetVertexShaderCode() );
         return vertex_shader;
     }
 
-    static std::string GetFragmentShaderCode ( const PipelineMsg& aPipelineMsg )
+    static std::string GetFragmentShaderCode ( const Pipeline& aPipeline )
     {
-        uint32_t set_count = 0;
         std::string fragment_shader{"#version 450\n"};
         std::string transforms (
             "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Matrices{\n"
+            "layout(set = " + std::to_string ( MATRICES ) + ", binding = 0, std140) uniform Matrices{\n"
             "mat4 ProjectionMatrix;\n"
             "mat4 ViewMatrix;\n"
             "};\n"
         );
         fragment_shader.append ( transforms );
 
-        if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
+        fragment_shader.append ( "layout(set = " + std::to_string ( MATERIAL ) +
+                                 ", binding = 0,std140) uniform Properties{\n" +
+                                 aPipeline.GetProperties() + "};\n" );
+        fragment_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
+
+        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             // Skeleton
             std::string skeleton (
-                "layout(set = " + std::to_string ( set_count++ ) + ", binding = 0, std140) uniform Skeleton{\n"
+                "layout(set = " + std::to_string ( SKELETON ) + ", binding = 0, std140) uniform Skeleton{\n"
                 "mat4 skeleton[256];\n"
                 "};\n"
             );
             fragment_shader.append ( skeleton );
         }
 
-        fragment_shader.append ( "layout(set = " + std::to_string ( set_count++ ) +
-                                 ", binding = 0,std140) uniform Properties{\n" +
-                                 GetPropertiesGLSL ( aPipelineMsg ) + "};\n" );
-        fragment_shader.append ( GetSamplersCode ( aPipelineMsg, set_count++ ) );
-
-        switch ( aPipelineMsg.fragment_shader().source_case() )
-        {
-        case ShaderMsg::SourceCase::kCode:
-            fragment_shader.append ( aPipelineMsg.fragment_shader().code() );
-            break;
-        default:
-            throw std::runtime_error ( "ByteCode Shader Type not implemented yet." );
-        }
+        fragment_shader.append ( aPipeline.GetFragmentShaderCode() );
         return fragment_shader;
     }
 
@@ -197,42 +168,22 @@ namespace AeonGames
         return offset;
     }
 
-    static VkPrimitiveTopology GetVulkanTopology ( PipelineMsg_Topology aTopology )
+    VulkanPipeline::VulkanPipeline ( VulkanPipeline&& aVulkanPipeline ) :
+        mVulkanRenderer{aVulkanPipeline.mVulkanRenderer}
     {
-        switch ( aTopology )
-        {
-        case PipelineMsg_Topology::PipelineMsg_Topology_POINT_LIST:
-            return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP:
-            return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST:
-            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP:
-            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_FAN:
-            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
-        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST:
-            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_LIST_WITH_ADJACENCY:
-            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
-        case PipelineMsg_Topology::PipelineMsg_Topology_LINE_STRIP_WITH_ADJACENCY:
-            return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
-        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_LIST_WITH_ADJACENCY:
-            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
-        case PipelineMsg_Topology::PipelineMsg_Topology_TRIANGLE_STRIP_WITH_ADJACENCY:
-            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
-        case PipelineMsg_Topology::PipelineMsg_Topology_PATCH_LIST:
-            return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
-        default:
-            break;
-        }
-        return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        std::swap ( mPipeline, aVulkanPipeline.mPipeline );
+        std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
+        std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
     }
 
-    void VulkanPipeline::Load ( const PipelineMsg& aPipelineMsg )
+    VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
+        mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
-        std::string vertex_shader_code = GetVertexShaderCode ( aPipelineMsg );
-        std::string fragment_shader_code = GetFragmentShaderCode ( aPipelineMsg );
+        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
+        shader_modules{ { VK_NULL_HANDLE } };
+
+        std::string vertex_shader_code = GetVertexShaderCode ( aPipeline );
+        std::string fragment_shader_code = GetFragmentShaderCode ( aPipeline );
 
         CompilerLinker compiler_linker;
         compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, vertex_shader_code.c_str() );
@@ -255,7 +206,7 @@ namespace AeonGames
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).data();
 
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -267,7 +218,7 @@ namespace AeonGames
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
             shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).data();
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &mVkShaderModules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )] ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -279,7 +230,7 @@ namespace AeonGames
         pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[0].pNext = nullptr;
         pipeline_shader_stage_create_infos[0].flags = 0;
-        pipeline_shader_stage_create_infos[0].module = mVkShaderModules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )];
+        pipeline_shader_stage_create_infos[0].module = shader_modules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )];
         pipeline_shader_stage_create_infos[0].pName = "main";
         pipeline_shader_stage_create_infos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
         pipeline_shader_stage_create_infos[0].pSpecializationInfo = nullptr;
@@ -287,7 +238,7 @@ namespace AeonGames
         pipeline_shader_stage_create_infos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[1].pNext = nullptr;
         pipeline_shader_stage_create_infos[1].flags = 0;
-        pipeline_shader_stage_create_infos[1].module = mVkShaderModules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )];
+        pipeline_shader_stage_create_infos[1].module = shader_modules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )];
         pipeline_shader_stage_create_infos[1].pName = "main";
         pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
@@ -296,7 +247,7 @@ namespace AeonGames
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        uint32_t attributes = GetAttributes ( aPipelineMsg );
+        uint32_t attributes = aPipeline.GetAttributeBitmap();
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
         for ( auto& i : vertex_input_attribute_descriptions )
         {
@@ -321,7 +272,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = GetVulkanTopology ( aPipelineMsg.topology() );
+        pipeline_input_assembly_state_create_info.topology = TopologyMap.at ( aPipeline.GetTopology() );
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
@@ -418,17 +369,17 @@ namespace AeonGames
         // Matrix Descriptor Set Layout
         descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
 
-        if ( GetAttributes ( aPipelineMsg ) & ( VertexWeightIdxBit | VertexWeightBit ) )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
-        }
-        if ( aPipelineMsg.uniform().size() )
+        if ( aPipeline.GetUniformDescriptors().size() )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         }
-        if ( aPipelineMsg.sampler().size() )
+        if ( aPipeline.GetSamplerDescriptors().size() )
         {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( aPipelineMsg.sampler().size() );
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( aPipeline.GetSamplerDescriptors().size() );
+        }
+        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
+        {
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
         }
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
@@ -465,27 +416,14 @@ namespace AeonGames
         graphics_pipeline_create_info.subpass = 0;
         graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
         graphics_pipeline_create_info.basePipelineIndex = 0;
+
         if ( VkResult result = vkCreateGraphicsPipelines ( mVulkanRenderer.GetDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_create_info, nullptr, &mVkPipeline ) )
         {
             std::ostringstream stream;
             stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
-    }
-
-    void VulkanPipeline::Unload()
-    {
-        if ( mVkPipeline != VK_NULL_HANDLE )
-        {
-            vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkPipeline, nullptr );
-            mVkPipeline = VK_NULL_HANDLE;
-        }
-        if ( mVkPipelineLayout != VK_NULL_HANDLE )
-        {
-            vkDestroyPipelineLayout ( mVulkanRenderer.GetDevice(), mVkPipelineLayout, nullptr );
-            mVkPipelineLayout = VK_NULL_HANDLE;
-        }
-        for ( auto& i : mVkShaderModules )
+        for ( auto& i : shader_modules )
         {
             if ( i != VK_NULL_HANDLE )
             {
@@ -493,5 +431,20 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
+    }
+
+    VulkanPipeline::~VulkanPipeline()
+    {
+        vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkPipeline, nullptr );
+        vkDestroyPipelineLayout ( mVulkanRenderer.GetDevice(), mVkPipelineLayout, nullptr );
+    }
+
+    const VkPipelineLayout VulkanPipeline::GetPipelineLayout() const
+    {
+        return mVkPipelineLayout;
+    }
+    const VkPipeline VulkanPipeline::GetPipeline() const
+    {
+        return mVkPipeline;
     }
 }

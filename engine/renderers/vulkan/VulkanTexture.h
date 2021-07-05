@@ -31,17 +31,16 @@ namespace AeonGames
     public:
         VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, const Texture& aTexture );
         ~VulkanTexture();
-        void Resize ( uint32_t aWidth, uint32_t aHeight, const uint8_t* aPixels, Format aFormat = Format::Unknown, Type aType = Type::Unknown ) final;
-        void WritePixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Format aFormat, Type aType, const uint8_t* aPixels ) final;
+        VulkanTexture ( VulkanTexture&& aVulkanTexture );
+        VulkanTexture ( const VulkanTexture& ) = delete;
+        VulkanTexture& operator= ( const VulkanTexture& ) = delete;
+        VulkanTexture& operator= ( VulkanTexture&& ) = delete;
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
-        void InitializeTexture ( Format aFormat, Type aType );
-        void FinalizeTexture();
-        void InitializeTextureView();
-        void FinalizeTextureView();
         const VulkanRenderer& mVulkanRenderer;
-        VkImage mVkImage{};
-        VkDeviceMemory mImageMemory{};
+        const Texture* mTexture{nullptr};
+        VkImage mVkImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkDeviceMemory{VK_NULL_HANDLE};
         VkDescriptorImageInfo mVkDescriptorImageInfo{};
     };
 }

@@ -26,14 +26,14 @@ namespace AeonGames
     public:
         VulkanBuffer ( const VulkanRenderer& aVulkanRenderer );
         VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
-        /// Copy constructor.
-        VulkanBuffer ( const VulkanBuffer& aBuffer );
         /// Move Constructor
         VulkanBuffer ( VulkanBuffer&& );
+        /// Copy constructor.
+        VulkanBuffer ( const VulkanBuffer& aBuffer ) = delete;
         /// Assignment operator due to rule of zero/three/five.
-        VulkanBuffer& operator= ( const VulkanBuffer& aBuffer );
+        VulkanBuffer& operator= ( const VulkanBuffer& aBuffer ) = delete;
         /// Move Assignment
-        VulkanBuffer& operator= ( VulkanBuffer&& );
+        VulkanBuffer& operator= ( VulkanBuffer&& ) = delete;
         ~VulkanBuffer();
         void Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
         void Finalize();

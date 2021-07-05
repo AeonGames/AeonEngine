@@ -28,10 +28,10 @@ namespace AeonGames
     public:
         VulkanMesh ( const VulkanRenderer&  aVulkanRenderer, const Mesh& aMesh );
         ~VulkanMesh();
-        VulkanMesh ( const VulkanMesh& aVulkanMesh );
         VulkanMesh ( VulkanMesh&& aVulkanMesh );
-        VulkanMesh& operator= ( const VulkanMesh& aVulkanMesh );
-        VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh );
+        VulkanMesh ( const VulkanMesh& aVulkanMesh ) = delete;
+        VulkanMesh& operator= ( const VulkanMesh& aVulkanMesh ) = delete;
+        VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh ) = delete;
         void Bind() const;
     private:
         const VulkanRenderer& mVulkanRenderer;

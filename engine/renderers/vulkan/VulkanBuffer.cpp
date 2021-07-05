@@ -60,7 +60,7 @@ namespace AeonGames
         vkCmdCopyBuffer ( command_buffer, aBuffer, mBuffer, 1, &copy_region );
         mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
     }
-
+#if 0
     VulkanBuffer::VulkanBuffer ( const VulkanBuffer& aBuffer ) :
         mVulkanRenderer { aBuffer.mVulkanRenderer },
         mSize{aBuffer.mSize},
@@ -90,18 +90,6 @@ namespace AeonGames
         CopyBuffer ( aBuffer.mBuffer );
         return *this;
     }
-
-    VulkanBuffer::VulkanBuffer ( VulkanBuffer&& aBuffer ) :
-        mVulkanRenderer { aBuffer.mVulkanRenderer },
-        mBuffer{ aBuffer.mBuffer },
-        mSize{aBuffer.mSize},
-        mUsage{aBuffer.mUsage},
-        mProperties{aBuffer.mProperties}
-    {
-        aBuffer.mBuffer = VK_NULL_HANDLE;
-        aBuffer.mDeviceMemory = VK_NULL_HANDLE;
-    }
-
     VulkanBuffer& VulkanBuffer::operator = ( VulkanBuffer&& aBuffer )
     {
         assert ( &mVulkanRenderer == &aBuffer.mVulkanRenderer );
@@ -111,7 +99,18 @@ namespace AeonGames
         std::swap ( mProperties, aBuffer.mProperties );
         return *this;
     }
+#endif
 
+    VulkanBuffer::VulkanBuffer ( VulkanBuffer&& aBuffer ) :
+        mVulkanRenderer { aBuffer.mVulkanRenderer }
+    {
+        std::swap ( mBuffer, aBuffer.mBuffer );
+        std::swap ( mSize, aBuffer.mSize );
+        std::swap ( mUsage, aBuffer.mUsage );
+        std::swap ( mProperties, aBuffer.mProperties );
+        std::swap ( mProperties, aBuffer.mProperties );
+        std::swap ( mDeviceMemory, aBuffer.mDeviceMemory );
+    }
 
     void VulkanBuffer::Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void * aData )
     {
