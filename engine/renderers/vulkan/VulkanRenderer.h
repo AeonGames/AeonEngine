@@ -117,7 +117,9 @@ namespace AeonGames
         VkPhysicalDevice mVkPhysicalDevice{ VK_NULL_HANDLE };
         VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties{};
         VkPhysicalDeviceMemoryProperties  mVkPhysicalDeviceMemoryProperties{};
-        VkDebugReportCallbackEXT mVkDebugReportCallbackEXT{ VK_NULL_HANDLE };
+        PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{nullptr};
+        PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{nullptr};
+        VkDebugUtilsMessengerEXT mVkDebugUtilsMessengerEXT{VK_NULL_HANDLE};
         VkCommandPool mVkCommandPool{ VK_NULL_HANDLE };
         VkCommandBuffer mVkCommandBuffer{ VK_NULL_HANDLE };
         VkQueue mVkQueue{ VK_NULL_HANDLE };
@@ -130,7 +132,6 @@ namespace AeonGames
         VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
-        VkDebugReportCallbackCreateInfoEXT mDebugReportCallbackCreateInfo {};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};
         std::vector<const char*> mInstanceExtensionNames{};
@@ -138,8 +139,6 @@ namespace AeonGames
         std::vector<const char*> mDeviceExtensionNames{};
         // Instance Functions
         bool mFunctionsLoaded = false;
-        PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT { VK_NULL_HANDLE };
-        PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT { VK_NULL_HANDLE };
         std::unordered_map<size_t, VulkanMesh> mMeshStore{};
         std::unordered_map<size_t, VulkanPipeline> mPipelineStore{};
         std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};

@@ -79,37 +79,38 @@ namespace AeonGames
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL
-    DebugCallback (
-        VkFlags aFlags,
-        VkDebugReportObjectTypeEXT aObjType,
-        uint64_t aSrcObject,
-        size_t aLocation,
-        int32_t aCode,
-        const char *aLayerPrefix,
-        const char *aMsg,
-        void *aUserData )
+    DebugCallback
+    (
+        VkDebugUtilsMessageSeverityFlagBitsEXT           aMessageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT                  aMessageTypes,
+        const VkDebugUtilsMessengerCallbackDataEXT*      aCallbackData,
+        void*                                            aUserData
+    )
     {
-        if ( aFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT )
+
+        if ( aMessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT )
         {
             std::cout << LogLevel::Info;
         }
-        if ( aFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT )
+        if ( aMessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT )
         {
             std::cout << LogLevel::Warning;
         }
-        if ( aFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
+#if 0
+        if ( aMessageSeverity & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT )
         {
             std::cout << LogLevel::Performance;
         }
-        if ( aFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT )
+#endif
+        if ( aMessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT )
         {
             std::cout << LogLevel::Error;
         }
-        if ( aFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT )
+        if ( aMessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT )
         {
             std::cout << LogLevel::Debug;
         }
-        std::cout << aLayerPrefix << ": " << aMsg << std::endl;
+        std::cout << aCallbackData->pMessageIdName << ": " << aCallbackData->pMessage << std::endl;
         return false;
     }
 
