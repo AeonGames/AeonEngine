@@ -18,7 +18,7 @@ limitations under the License.
     Vulkan SDK Demo code.
     https://www.youtube.com/playlist?list=PLUXvZMiAqNbK8jd7s52BIDtCbZnKNGp0P
     https://vulkan.lunarg.com/app/docs/v1.0.8.0/layers
-    http://gpuopen.com/using-the-vulkan-validation-layers/?utm_source=silverpop&utm_medium=email&utm_campaign=25324445&utm_term=link-article2&utm_content=p-global-developer-hcnewsflash-april-2016%20%281%29:&spMailingID=25324445&spUserID=NzI5Mzc5ODY4NjQS1&spJobID=783815030&spReportId=NzgzODE1MDMwS0
+    https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VK_EXT_debug_utils.html
 */
 
 #include <cassert>
@@ -227,13 +227,14 @@ namespace AeonGames
         assert ( mVkInstance && "mVkInstance is a nullptr." );
         if ( !mFunctionsLoaded && mVkInstance )
         {
-            if ( ( vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkCreateDebugReportCallbackEXT" ) ) ) == nullptr )
+
+            if ( ( vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkCreateDebugUtilsMessengerEXT" ) ) ) == nullptr )
             {
-                throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkCreateDebugReportCallbackEXT" );
+                throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkCreateDebugUtilsMessengerEXT" );
             }
-            if ( ( vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkDestroyDebugReportCallbackEXT" ) ) ) == nullptr )
+            if ( ( vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkDestroyDebugUtilsMessengerEXT" ) ) ) == nullptr )
             {
-                throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkDestroyDebugReportCallbackEXT" );
+                throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkDestroyDebugUtilsMessengerEXT" );
             }
             mFunctionsLoaded = true;
         }
@@ -242,15 +243,6 @@ namespace AeonGames
 
     void VulkanRenderer::SetupDebug()
     {
-        mDebugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        mDebugReportCallbackCreateInfo.pfnCallback = DebugCallback;
-        mDebugReportCallbackCreateInfo.flags =
-            VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
-            VK_DEBUG_REPORT_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-            VK_DEBUG_REPORT_ERROR_BIT_EXT |
-            VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
         mInstanceExtensionNames.emplace_back ( VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME );
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_UTILS_EXTENSION_NAME );
         mInstanceLayerNames.emplace_back ( "VK_LAYER_KHRONOS_validation" );
@@ -258,11 +250,29 @@ namespace AeonGames
 
     void VulkanRenderer::InitializeDebug()
     {
-        if ( VkResult result = vkCreateDebugReportCallbackEXT ( mVkInstance, &mDebugReportCallbackCreateInfo, nullptr, &mVkDebugReportCallbackEXT ) )
+        VkDebugUtilsMessengerCreateInfoEXT debug_utils_messenger_create_info_ext
+        {
+            VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            nullptr,
+            0,
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+            DebugCallback,
+            nullptr
+        };
+
+        if ( VkResult result = vkCreateDebugUtilsMessengerEXT ( mVkInstance, &debug_utils_messenger_create_info_ext, nullptr, &mVkDebugUtilsMessengerEXT ) )
         {
             std::ostringstream stream;
-            stream << "Could not create VulkanRenderer debug report callback. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
+            stream << "Could not create Debug Utils Messenger. error code: ( " << GetVulkanResultString ( result ) << " )";
+            std::string error_string = stream.str();
+            std::cout << LogLevel::Error << error_string << std::endl;
+            throw std::runtime_error ( error_string.c_str() );
         }
     }
 
@@ -332,8 +342,7 @@ namespace AeonGames
         instance_create_info.ppEnabledExtensionNames = mInstanceExtensionNames.data();
         if ( mValidate )
         {
-            mDebugReportCallbackCreateInfo.pNext = &validation_features_ext;
-            instance_create_info.pNext = &mDebugReportCallbackCreateInfo;
+            instance_create_info.pNext = &validation_features_ext;
         }
         if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
         {
@@ -603,10 +612,10 @@ namespace AeonGames
 
     void VulkanRenderer::FinalizeDebug()
     {
-        if ( mVkInstance && ( mVkDebugReportCallbackEXT != VK_NULL_HANDLE ) )
+        if ( mVkInstance && ( mVkDebugUtilsMessengerEXT != VK_NULL_HANDLE ) )
         {
-            vkDestroyDebugReportCallbackEXT ( mVkInstance, mVkDebugReportCallbackEXT, nullptr );
-            mVkDebugReportCallbackEXT = VK_NULL_HANDLE;
+            vkDestroyDebugUtilsMessengerEXT ( mVkInstance, mVkDebugUtilsMessengerEXT, nullptr );
+            mVkDebugUtilsMessengerEXT = VK_NULL_HANDLE;
         }
     }
 
