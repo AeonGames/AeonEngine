@@ -575,16 +575,15 @@ namespace AeonGames
             vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageView, nullptr );
             mVkDepthStencilImageView = VK_NULL_HANDLE;
         }
-        if ( mVkDepthStencilImageMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageMemory, nullptr );
-            mVkDepthStencilImageMemory = VK_NULL_HANDLE;
-        }
-
         if ( mVkDepthStencilImage != VK_NULL_HANDLE )
         {
             vkDestroyImage ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage, nullptr );
             mVkDepthStencilImage = VK_NULL_HANDLE;
+        }
+        if ( mVkDepthStencilImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageMemory, nullptr );
+            mVkDepthStencilImageMemory = VK_NULL_HANDLE;
         }
     }
 
