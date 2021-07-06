@@ -43,15 +43,13 @@ namespace AeonGames
         "Vertex Structure Contains Padding." );
 
     VKAPI_ATTR VkBool32 VKAPI_CALL
-    DebugCallback (
-        VkFlags aFlags,
-        VkDebugReportObjectTypeEXT aObjType,
-        uint64_t aSrcObject,
-        size_t aLocation,
-        int32_t aCode,
-        const char *aLayerPrefix,
-        const char *aMsg,
-        void *aUserData );
+    DebugCallback
+    (
+        VkDebugUtilsMessageSeverityFlagBitsEXT           aMessageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT                  aMessageTypes,
+        const VkDebugUtilsMessengerCallbackDataEXT*      aCallbackData,
+        void*                                            aUserData
+    );
 
     VkDescriptorPool CreateDescriptorPool ( const VkDevice& aVkDevice, const std::vector<VkDescriptorPoolSize>& aVkDescriptorPoolSizes );
     void DestroyDescriptorPool ( const VkDevice& aVkDevice, VkDescriptorPool aVkDescriptorPool );
