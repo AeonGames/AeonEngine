@@ -242,15 +242,15 @@ namespace AeonGames
                 std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
             }
         }
-        if ( mDeviceMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, nullptr );
-            mDeviceMemory = VK_NULL_HANDLE;
-        }
         if ( mBuffer != VK_NULL_HANDLE )
         {
             vkDestroyBuffer ( mVulkanRenderer.GetDevice(), mBuffer, nullptr );
             mBuffer = VK_NULL_HANDLE;
+        }
+        if ( mDeviceMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVulkanRenderer.GetDevice(), mDeviceMemory, nullptr );
+            mDeviceMemory = VK_NULL_HANDLE;
         }
     }
 }
