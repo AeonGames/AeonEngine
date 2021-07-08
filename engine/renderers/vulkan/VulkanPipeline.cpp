@@ -179,7 +179,7 @@ namespace AeonGames
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
-        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) >
+        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 >
         shader_modules{ { VK_NULL_HANDLE } };
 
         std::string vertex_shader_code = GetVertexShaderCode ( aPipeline );
