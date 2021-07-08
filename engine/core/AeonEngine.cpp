@@ -350,9 +350,10 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Global renderer already set." );
         }
-        gRenderer = ConstructRenderer ( aIdentifier );
+        /// @ todo remove gRenderer and all related code
+        gRenderer = ConstructRenderer ( aIdentifier, nullptr );
 
-        // Register default resource constructors related to renderer
+        // Register default resource constructors
         RegisterResourceConstructor ( "Texture"_crc32,
                                       [] ( uint32_t aPath )
         {

@@ -42,7 +42,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( bool aValidate ) : mValidate ( aValidate ),
+    VulkanRenderer::VulkanRenderer ( void* aWindow ) :
         mMatrices ( *this ), mMemoryPoolBuffer ( *this )
     {
         try
@@ -972,5 +972,14 @@ namespace AeonGames
     void VulkanRenderer::ResetMemoryPoolBuffer()
     {
         mMemoryPoolBuffer.Reset();
+    }
+
+    void VulkanRenderer::AttachWindow ( void* aWindowId )
+    {
+
+    }
+    void VulkanRenderer::DetachWindow ( void* aWindowId )
+    {
+
     }
 }
