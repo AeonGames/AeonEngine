@@ -64,6 +64,8 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        void AttachWindow ( void* aWindowId ) final;
+        void DetachWindow ( void* aWindowId ) final;
     protected:
         void InitializeOverlay();
         void FinalizeOverlay();

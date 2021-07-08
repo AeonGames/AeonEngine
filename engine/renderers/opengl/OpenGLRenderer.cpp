@@ -733,4 +733,6 @@ void main()
     {
         return mOverlayQuad.GetBufferId();
     }
+        void OpenGLRenderer::AttachWindow ( void* aWindowId ){}
+        void OpenGLRenderer::DetachWindow ( void* aWindowId ){}
 }

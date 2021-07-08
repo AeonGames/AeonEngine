@@ -39,7 +39,7 @@ namespace AeonGames
     class VulkanRenderer final : public Renderer
     {
     public:
-        VulkanRenderer ( bool aValidate = true );
+        VulkanRenderer ( void* aWindow );
         ~VulkanRenderer() final;
         const VkInstance& GetInstance() const;
         const VkPhysicalDevice& GetPhysicalDevice() const;
@@ -78,6 +78,8 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        void AttachWindow ( void* aWindowId ) final;
+        void DetachWindow ( void* aWindowId ) final;
         const VkDescriptorImageInfo* GetTextureDescriptorImageInfo ( const Texture& aTexture ) const;
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
         void ResetMemoryPoolBuffer();
