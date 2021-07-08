@@ -52,6 +52,16 @@ namespace AeonGames
         virtual std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const = 0;
 
         ///@}
+        /**
+         * Attach a Window as a rendering surface.
+         *
+        */
+        virtual void AttachWindow ( void* aWindowId ) = 0;
+        /**
+         * Detach a Window as a rendering surface.
+         *
+        */
+        virtual void DetachWindow ( void* aWindowId ) = 0;
         virtual void LoadMesh ( const Mesh& aMesh ) = 0;
         virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
         virtual void BindMesh ( const Mesh& aMesh ) const = 0;
@@ -71,11 +81,11 @@ namespace AeonGames
     };
     /**@name Factory Functions */
     /*@{*/
-    DLL std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier );
-    DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier );
-    DLL std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier, void* aWindow );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier, void* aWindow );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier, void* aWindow );
     /** Registers a Renderer loader for a specific identifier.*/
-    DLL bool RegisterRendererConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Renderer>() >& aConstructor );
+    DLL bool RegisterRendererConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Renderer> ( void* ) >& aConstructor );
     /** Unregisters a Renderer loader for a specific identifier.*/
     DLL bool UnregisterRendererConstructor ( const StringId& aIdentifier );
     /** Enumerates Renderer loader identifiers via an enumerator functor.*/

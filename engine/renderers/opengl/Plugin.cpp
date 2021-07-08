@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ extern "C"
     bool OpenGLStartUp()
     {
         return AeonGames::RegisterRendererConstructor ( "OpenGL",
-                [] ()
+                [] ( void* aWindow )
         {
             return std::make_unique<AeonGames::OpenGLNativeRenderer>();
         } );
