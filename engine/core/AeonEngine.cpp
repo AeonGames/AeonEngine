@@ -60,7 +60,6 @@ extern "C" {
 namespace AeonGames
 {
     static bool gInitialized = false;
-    static std::unique_ptr<Renderer> gRenderer{};
     static ConfigurationMsg gConfigurationMsg;
 #if defined(WIN32)
     static std::vector<std::tuple<HMODULE, PluginModuleInterface*>> gPlugInCache;
@@ -208,6 +207,38 @@ namespace AeonGames
             return animation;
         } );
 
+        RegisterResourceConstructor ( "Texture"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            auto texture = std::make_unique<Texture>();
+            texture->LoadFromId ( aPath );
+            return texture;
+        } );
+
+        RegisterResourceConstructor ( "Mesh"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            auto mesh = std::make_unique<Mesh>();
+            mesh->LoadFromId ( aPath );
+            return mesh;
+        } );
+
+        RegisterResourceConstructor ( "Pipeline"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            auto pipeline = std::make_unique<Pipeline>();
+            pipeline->LoadFromId ( aPath );
+            return pipeline;
+        } );
+
+        RegisterResourceConstructor ( "Material"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            auto material = std::make_unique<Material>();
+            material->LoadFromId ( aPath );
+            return material;
+        } );
+
         return gInitialized;
     }
 
@@ -218,20 +249,14 @@ namespace AeonGames
             return;
         }
         ClearAllResources();
-        if ( gRenderer )
-        {
-            // Register default resource constructors related to renderer
-            UnregisterResourceConstructor ( "Texture"_crc32 );
-            UnregisterResourceConstructor ( "Mesh"_crc32 );
-            UnregisterResourceConstructor ( "Pipeline"_crc32 );
-            UnregisterResourceConstructor ( "Material"_crc32 );
-        }
+        // Register default resource constructors related to renderer
+        UnregisterResourceConstructor ( "Texture"_crc32 );
+        UnregisterResourceConstructor ( "Mesh"_crc32 );
+        UnregisterResourceConstructor ( "Pipeline"_crc32 );
+        UnregisterResourceConstructor ( "Material"_crc32 );
         UnregisterResourceConstructor ( "Animation"_crc32 );
         UnregisterResourceConstructor ( "Skeleton"_crc32 );
         UnregisterResourceConstructor ( "Model"_crc32 );
-        /* The renderer code must reside in plugin address space,
-         so reset before unloading any plugins. */
-        gRenderer.reset();
         for ( auto& i : gPlugInCache )
         {
             std::get<1> ( i )->ShutDown();
@@ -331,81 +356,5 @@ namespace AeonGames
     void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size )
     {
         LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
-    }
-
-    // Renderer------------------------------------------------------------------------------
-    Buffer::~Buffer() //= default;
-    {
-        std::cout << __func__ << std::endl;
-    }
-
-    Renderer* GetRenderer()
-    {
-        return gRenderer.get();
-    }
-
-    const Renderer* SetRenderer ( const std::string& aIdentifier )
-    {
-        if ( gRenderer )
-        {
-            throw std::runtime_error ( "Global renderer already set." );
-        }
-        /// @ todo remove gRenderer and all related code
-        gRenderer = ConstructRenderer ( aIdentifier, nullptr );
-
-        // Register default resource constructors
-        RegisterResourceConstructor ( "Texture"_crc32,
-                                      [] ( uint32_t aPath )
-        {
-            auto texture = std::make_unique<Texture>();
-            texture->LoadFromId ( aPath );
-            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
-            if ( auto* renderer = GetRenderer() )
-            {
-                renderer->LoadTexture ( *texture );
-            }
-            return texture;
-        } );
-
-        RegisterResourceConstructor ( "Mesh"_crc32,
-                                      [] ( uint32_t aPath )
-        {
-            auto mesh = std::make_unique<Mesh>();
-            mesh->LoadFromId ( aPath );
-            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
-            if ( auto* renderer = GetRenderer() )
-            {
-                renderer->LoadMesh ( *mesh );
-            }
-            return mesh;
-        } );
-
-        RegisterResourceConstructor ( "Pipeline"_crc32,
-                                      [] ( uint32_t aPath )
-        {
-            auto pipeline = std::make_unique<Pipeline>();
-            pipeline->LoadFromId ( aPath );
-            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
-            if ( auto* renderer = GetRenderer() )
-            {
-                renderer->LoadPipeline ( *pipeline );
-            }
-            return pipeline;
-        } );
-
-        RegisterResourceConstructor ( "Material"_crc32,
-                                      [] ( uint32_t aPath )
-        {
-            auto material = std::make_unique<Material>();
-            material->LoadFromId ( aPath );
-            /// @todo Remove renderer loading after all resources have been decoupled from the renderer
-            if ( auto* renderer = GetRenderer() )
-            {
-                renderer->LoadMaterial ( *material );
-            }
-            return material;
-        } );
-
-        return gRenderer.get();
     }
 }

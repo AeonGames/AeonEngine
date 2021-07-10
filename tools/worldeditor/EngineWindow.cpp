@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-        mWindow = GetRenderer()->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
+        mWindow =  qWorldEditorApp->GetRenderer()->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
         if ( !mWindow )
         {
             throw std::runtime_error ( "Window creation failed." );
@@ -255,7 +255,7 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            if ( !geometry().width() || !geometry().height() || qWorldEditorApp->IsBlocked() || !GetRenderer() )
+            if ( !geometry().width() || !geometry().height() || qWorldEditorApp->IsBlocked() || !qWorldEditorApp->GetRenderer() )
             {
                 return QWindow::event ( aEvent );
             }
