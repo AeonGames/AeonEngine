@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ namespace AeonGames
     class Buffer
     {
     public:
-        DLL virtual ~Buffer() = 0;
+        virtual ~Buffer() = default;
         virtual void WriteMemory ( size_t aOffset, size_t aSize, const void *aData = nullptr ) const = 0;
         virtual void* Map ( size_t aOffset, size_t aSize ) const = 0;
         virtual void Unmap() const = 0;
