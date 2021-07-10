@@ -152,11 +152,5 @@ namespace AeonGames
 
         mVertexBuffer.clear();
         mIndexBuffer.clear();
-
-        auto* renderer = GetRenderer();
-        if ( renderer != nullptr )
-        {
-            renderer->UnloadMesh ( *this );
-        }
     }
 }

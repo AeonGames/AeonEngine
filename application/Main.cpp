@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2020,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ int Main ( int argc, char *argv[] )
 
         ProcessOpts ( argc, argv, option_handlers.data(), option_handlers.size() );
 
-        const AeonGames::Renderer* renderer{};
+        std::unique_ptr<AeonGames::Renderer> renderer{};
         AeonGames::Scene scene{};
 
         ///@todo We now have a function returning a vector of strings, use it here
@@ -85,7 +85,7 @@ int Main ( int argc, char *argv[] )
         {
             if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )
             {
-                renderer = AeonGames::SetRenderer ( aIdentifier.GetString() );
+                renderer = AeonGames::ConstructRenderer ( aIdentifier.GetString(), nullptr );
                 return false;
             }
             return true;

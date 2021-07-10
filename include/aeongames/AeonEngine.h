@@ -46,19 +46,5 @@ namespace AeonGames
      * needs not worry to initialize render resources and lazy loading of render resources
      * at the render loop is avoided at runtime.
      **/
-    ///@{
-    /** Retrieve a pointer to the current global renderer, may be null if not set.
-     * @return Pointer to the current global renderer.
-     */
-    DLL Renderer* GetRenderer();
-    /** Builds and stores a renderer object given its implementation identifier.
-     * @param aIdentifier Implementation identifier for the renderer to construct,
-     * usually retrived with EnumerateRendererConstructors.
-     * @return A Pointer to the newly constructed renderer.
-     * @note Will throw a runtime_error exception if the renderer is already set.
-     * This may change in the future if a reason to reset or change the renderer at runtime arises.
-    */
-    DLL const Renderer* SetRenderer ( const std::string& aIdentifier );
-    ///@}
 }
 #endif

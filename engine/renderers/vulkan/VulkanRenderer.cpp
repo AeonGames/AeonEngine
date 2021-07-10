@@ -829,6 +829,7 @@ namespace AeonGames
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         if ( it != mMaterialStore.end() )
         {
+            std::cout << LogLevel::Warning << " Material " << aMaterial.GetConsecutiveId() << " already loaded." << std::endl;
             return;
         }
         mMaterialStore.emplace ( aMaterial.GetConsecutiveId(), VulkanMaterial{*this, aMaterial} );
@@ -849,7 +850,7 @@ namespace AeonGames
         auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         if ( it != mTextureStore.end() )
         {
-            std::cout << LogLevel::Warning << " Texture " << aTexture.GetConsecutiveId() << " Already Loaded at: " << __FUNCTION__ << std::endl;
+            std::cout << LogLevel::Warning << " Texture " << aTexture.GetConsecutiveId() << " already loaded at: " << __FUNCTION__ << std::endl;
             return;
         }
         mTextureStore.emplace ( aTexture.GetConsecutiveId(), VulkanTexture{*this, aTexture} );
@@ -864,6 +865,7 @@ namespace AeonGames
         }
         mTextureStore.erase ( it );
     }
+
     const VkDescriptorImageInfo* VulkanRenderer::GetTextureDescriptorImageInfo ( const Texture& aTexture ) const
     {
         auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );

@@ -25,6 +25,7 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Material.h"
+#include "aeongames/Renderer.h"
 #include "aeongames/StringId.h"
 Q_DECLARE_METATYPE ( AeonGames::StringId );
 Q_DECLARE_METATYPE ( std::string );
@@ -34,7 +35,6 @@ Q_DECLARE_METATYPE ( std::filesystem::path );
 
 namespace AeonGames
 {
-    class Renderer;
     class WorldEditor final : public QApplication
     {
     public:
@@ -54,6 +54,7 @@ namespace AeonGames
         int GetStringMetaType() const;
         int GetPathMetaType() const;
         QSettings& GetSettings();
+        Renderer* GetRenderer();
     private:
         QSettings mSettings{"AeonGames", "AeonGames World Editor"};
         int mStringIdMetaType{};
@@ -62,6 +63,7 @@ namespace AeonGames
         bool mIsBlocked{false};
         QMutex mMutex{};
         GridSettings mGridSettings{};
+        std::unique_ptr<Renderer> mRenderer{};
         std::unique_ptr<Pipeline> mGridPipeline{};
         std::unique_ptr<Mesh> mGridMesh{};
         std::unique_ptr<Material> mXGridMaterial{};
