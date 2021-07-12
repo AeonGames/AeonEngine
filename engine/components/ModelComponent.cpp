@@ -39,25 +39,7 @@ namespace AeonGames
         return ModelStringId;
     }
 
-    ModelComponent::ModelComponent() : Component{}
-    {
-#if 0
-        const float identity[16] =
-        {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-        auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeletonMsg->Map ( 0, mSkeletonMsg->GetSize() ) );
-        for ( size_t i = 0; i < 256; ++i )
-        {
-            memcpy ( ( skeleton_buffer + ( i * 16 ) ), identity, sizeof ( float ) * 16 );
-        }
-        mSkeletonMsg->Unmap();
-#endif
-    }
-
+    ModelComponent::ModelComponent() = default;
     ModelComponent::~ModelComponent() = default;
 
     const StringId& ModelComponent::GetId() const
@@ -207,6 +189,7 @@ namespace AeonGames
             }
         }
     }
+
     void ModelComponent::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
     {
     }

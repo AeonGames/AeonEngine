@@ -133,4 +133,24 @@ namespace AeonGames
     {
         return mAnimations;
     }
+
+    void Model::LoadRendererResources ( Renderer& aRenderer ) const
+    {
+        for ( const auto i : mAssemblies )
+        {
+            aRenderer.LoadMesh ( *std::get<0> ( i ).Cast<Mesh>() );
+            aRenderer.LoadPipeline ( *std::get<1> ( i ).Cast<Pipeline>() );
+            aRenderer.LoadMaterial ( *std::get<2> ( i ).Cast<Material>() );
+        }
+    }
+
+    void Model::UnloadRendererResources ( Renderer& aRenderer ) const
+    {
+        for ( const auto i : mAssemblies )
+        {
+            aRenderer.UnloadMesh ( *std::get<0> ( i ).Cast<Mesh>() );
+            aRenderer.UnloadPipeline ( *std::get<1> ( i ).Cast<Pipeline>() );
+            aRenderer.UnloadMaterial ( *std::get<2> ( i ).Cast<Material>() );
+        }
+    }
 }
