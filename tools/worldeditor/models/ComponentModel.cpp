@@ -32,6 +32,7 @@ limitations under the License.
 #include "aeongames/Component.h"
 #include "aeongames/ToString.h"
 #include "aeongames/StringId.h"
+#include "aeongames/LogLevel.h"
 #include "ComponentModel.h"
 #include "WorldEditor.h"
 
@@ -149,7 +150,7 @@ namespace AeonGames
                 property = value.value<QString>().toStdString();
                 break;
             default:
-                std::cout << " No Change" << std::endl;
+                std::cout << LogLevel::Warning << " No Change" << std::endl;
                 return false;
             }
             try

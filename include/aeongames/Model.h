@@ -45,6 +45,8 @@ namespace AeonGames
         DLL const std::vector<Assembly>& GetAssemblies() const;
         DLL const Skeleton* GetSkeleton() const;
         DLL const std::vector<ResourceId>& GetAnimations() const;
+        DLL void LoadRendererResources ( Renderer& ) const;
+        DLL void UnloadRendererResources ( Renderer& ) const;
     private:
         ResourceId mSkeleton;
         std::vector<Assembly> mAssemblies{};
