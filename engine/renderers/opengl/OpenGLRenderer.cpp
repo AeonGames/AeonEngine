@@ -630,6 +630,16 @@ void main()
     {
         auto it = mBufferStore.find(aMaterial.GetConsecutiveId());
         if(it!=mBufferStore.end()){return;}
+        // Preload linked textures
+        for ( auto& i : aMaterial.GetSamplers() )
+        {
+            const Texture* texture = std::get<1> ( i ).Get<Texture>();
+            if ( mTextureStore.find ( texture->GetConsecutiveId() ) == mTextureStore.end() )
+            {
+                LoadTexture ( *texture );
+            }
+        }
+
         mBufferStore.emplace(
             aMaterial.GetConsecutiveId(),
             std::vector<OpenGLBuffer>
@@ -655,6 +665,15 @@ void main()
     {
         auto it = mBufferStore.find(aMaterial.GetConsecutiveId());
         if(it==mBufferStore.end()){return;}
+        // Unload linked textures
+        for ( auto& i : aMaterial.GetSamplers() )
+        {
+            const Texture* texture = std::get<1> ( i ).Get<Texture>();
+            if ( mTextureStore.find ( texture->GetConsecutiveId() ) != mTextureStore.end() )
+            {
+                UnloadTexture ( *texture );
+            }
+        }
         mBufferStore.erase(it);
     }
 

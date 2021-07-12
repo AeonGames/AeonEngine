@@ -832,6 +832,15 @@ namespace AeonGames
             std::cout << LogLevel::Warning << " Material " << aMaterial.GetConsecutiveId() << " already loaded." << std::endl;
             return;
         }
+        // Preload linked textures
+        for ( auto& i : aMaterial.GetSamplers() )
+        {
+            const Texture* texture = std::get<1> ( i ).Get<Texture>();
+            if ( mTextureStore.find ( texture->GetConsecutiveId() ) == mTextureStore.end() )
+            {
+                LoadTexture ( *texture );
+            }
+        }
         mMaterialStore.emplace ( aMaterial.GetConsecutiveId(), VulkanMaterial{*this, aMaterial} );
     }
 
@@ -841,6 +850,15 @@ namespace AeonGames
         if ( it == mMaterialStore.end() )
         {
             return;
+        }
+        // Unload linked textures
+        for ( auto& i : aMaterial.GetSamplers() )
+        {
+            const Texture* texture = std::get<1> ( i ).Get<Texture>();
+            if ( mTextureStore.find ( texture->GetConsecutiveId() ) != mTextureStore.end() )
+            {
+                UnloadTexture ( *texture );
+            }
         }
         mMaterialStore.erase ( it );
     }
