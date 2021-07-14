@@ -136,7 +136,7 @@ namespace AeonGames
 
     void Model::LoadRendererResources ( Renderer& aRenderer ) const
     {
-        for ( const auto i : mAssemblies )
+        for ( const auto& i : mAssemblies )
         {
             aRenderer.LoadMesh ( *std::get<0> ( i ).Cast<Mesh>() );
             aRenderer.LoadPipeline ( *std::get<1> ( i ).Cast<Pipeline>() );
@@ -146,7 +146,7 @@ namespace AeonGames
 
     void Model::UnloadRendererResources ( Renderer& aRenderer ) const
     {
-        for ( const auto i : mAssemblies )
+        for ( const auto& i : mAssemblies )
         {
             aRenderer.UnloadMesh ( *std::get<0> ( i ).Cast<Mesh>() );
             aRenderer.UnloadPipeline ( *std::get<1> ( i ).Cast<Pipeline>() );
