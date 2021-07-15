@@ -98,6 +98,7 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLX11Window.h
     OpenGLFunctions.h
     OpenGLBuffer.h
+    OpenGLMesh.h
     OpenGLFrameBuffer.h
     OpenGLMemoryPoolBuffer.h)
 
@@ -109,6 +110,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLWinAPIWindow.cpp
     OpenGLX11Window.cpp
     OpenGLBuffer.cpp
+    OpenGLMesh.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp
