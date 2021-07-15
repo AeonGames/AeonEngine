@@ -64,9 +64,11 @@ namespace AeonGames
         virtual void DetachWindow ( void* aWindowId ) = 0;
         virtual void LoadMesh ( const Mesh& aMesh ) = 0;
         virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
-        virtual void BindMesh ( const Mesh& aMesh ) const = 0;
-        virtual void BindPipeline ( const Pipeline& aPipeline ) const = 0;
-        virtual void SetMaterial ( const Material& aMaterial ) const = 0;
+
+        virtual void BindMesh ( const Mesh& aMesh ) = 0;
+        virtual void BindPipeline ( const Pipeline& aPipeline ) = 0;
+        virtual void SetMaterial ( const Material& aMaterial ) = 0;
+
         virtual void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const = 0;
         virtual void SetModelMatrix ( const Matrix4x4& aMatrix ) = 0;
         virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
