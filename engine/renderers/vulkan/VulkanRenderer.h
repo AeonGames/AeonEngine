@@ -65,9 +65,11 @@ namespace AeonGames
         std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
-        void BindMesh ( const Mesh& aMesh ) const final;
-        void BindPipeline ( const Pipeline& aPipeline ) const final;
-        void SetMaterial ( const Material& aMaterial ) const final;
+
+        void BindMesh ( const Mesh& aMesh ) final;
+        void BindPipeline ( const Pipeline& aPipeline ) final;
+        void SetMaterial ( const Material& aMaterial ) final;
+
         void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
         void SetModelMatrix ( const Matrix4x4& aMatrix ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
