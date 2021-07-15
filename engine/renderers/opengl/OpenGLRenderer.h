@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
+#include "OpenGLMesh.h"
 #ifdef Status
 #undef Status
 #endif
@@ -86,6 +87,7 @@ namespace AeonGames
         /// Overlay quadrilateral.
         OpenGLBuffer mOverlayQuad{};
         /**@}*/
+        std::unordered_map<size_t, OpenGLMesh> mMeshStore{};
         std::unordered_map<size_t, std::vector<OpenGLBuffer>> mBufferStore{};
         std::unordered_map<size_t, GLuint> mProgramStore{};
         std::unordered_map<size_t, GLuint> mTextureStore{};

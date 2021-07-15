@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
 #include "aeongames/Texture.h"
+#include "aeongames/LogLevel.h"
 #include <unordered_map>
 
 namespace AeonGames
@@ -198,161 +199,32 @@ void main()
 
     void OpenGLRenderer::LoadMesh ( const Mesh& aMesh )
     {
-        auto it = mBufferStore.find(aMesh.GetConsecutiveId());
-        if(it==mBufferStore.end())
+        auto it = mMeshStore.find(aMesh.GetConsecutiveId());
+        if(it!=mMeshStore.end())
         {
-            if(aMesh.GetIndexCount()>0)
-            {
-                mBufferStore.emplace(aMesh.GetConsecutiveId(),
-                std::vector<OpenGLBuffer>{
-                    {static_cast<GLsizei>(aMesh.GetVertexBuffer().size()), GL_STATIC_DRAW, aMesh.GetVertexBuffer().data()},
-                    {static_cast<GLsizei>(aMesh.GetIndexBuffer().size()), GL_STATIC_DRAW, aMesh.GetIndexBuffer().data()}
-                });
-            }
-            else
-            {
-                mBufferStore.emplace(aMesh.GetConsecutiveId(),
-                std::vector<OpenGLBuffer>{
-                    {static_cast<GLsizei>(aMesh.GetVertexBuffer().size()), GL_STATIC_DRAW, aMesh.GetVertexBuffer().data()}
-                });
-            }
+            std::cout << LogLevel::Warning << "Mesh with id " << aMesh.GetConsecutiveId() << " already loaded." << std::endl;
+            return;
         }
+        mMeshStore.emplace(aMesh.GetConsecutiveId(),OpenGLMesh{*this,aMesh});
     }
     void OpenGLRenderer::UnloadMesh ( const Mesh& aMesh )
     {
-        auto it = mBufferStore.find(aMesh.GetConsecutiveId());
-        if(it!=mBufferStore.end())
+        auto it = mMeshStore.find(aMesh.GetConsecutiveId());
+        if(it!=mMeshStore.end())
         {
-            mBufferStore.erase(it);
+            mMeshStore.erase(it);
         }
     }
 
     void OpenGLRenderer::BindMesh(const Mesh& aMesh)
     {
-        auto it = mBufferStore.find(aMesh.GetConsecutiveId());
-        if(it==mBufferStore.end())
+        auto it = mMeshStore.find(aMesh.GetConsecutiveId());
+        if(it==mMeshStore.end())
         {
             LoadMesh(aMesh);
-            it = mBufferStore.find(aMesh.GetConsecutiveId());
+            it = mMeshStore.find(aMesh.GetConsecutiveId());
         }
-        glBindBuffer ( GL_ARRAY_BUFFER, it->second[0].GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-
-        size_t offset{0};
-        if ( aMesh.GetVertexFlags() & Mesh::POSITION_BIT )
-        {
-            glEnableVertexAttribArray ( 0 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 0 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::NORMAL_BIT )
-        {
-            glEnableVertexAttribArray ( 1 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 1 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::TANGENT_BIT )
-        {
-            glEnableVertexAttribArray ( 2 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 2 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::BITANGENT_BIT )
-        {
-            glEnableVertexAttribArray ( 3 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 3 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::UV_BIT )
-        {
-            glEnableVertexAttribArray ( 4 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 2;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 4 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::WEIGHT_IDX_BIT )
-        {
-            glEnableVertexAttribArray ( 5 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( uint8_t ) * 4;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 5 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::WEIGHT_BIT )
-        {
-            glEnableVertexAttribArray ( 6 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( uint8_t ) * 4;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 6 );
-        }
-
-        if ( aMesh.GetVertexFlags() & Mesh::COLOR_BIT )
-        {
-            glEnableVertexAttribArray ( 7 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 7, 3, GL_FLOAT, GL_FALSE, aMesh.GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 7 );
-        }
-
-        //---Index Buffer---
-        if (it->second.size()==2)
-        {
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, it->second[1].GetBufferId() );
-        }
-        else
-        {
-            glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0 );
-        }
-        OPENGL_CHECK_ERROR_THROW;
+        it->second.Bind();
     }
 
     static std::string GetVertexShaderCode ( const Pipeline& aPipeline )

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -89,6 +89,13 @@ namespace AeonGames
     OpenGLBuffer::~OpenGLBuffer()
     {
         Finalize();
+    }
+
+    OpenGLBuffer::OpenGLBuffer ( OpenGLBuffer&& aBuffer )
+    {
+        std::swap ( mBuffer, aBuffer.mBuffer );
+        std::swap ( mSize, aBuffer.mSize );
+        std::swap ( mUsage, aBuffer.mUsage );
     }
 
     GLuint OpenGLBuffer::GetBufferId() const
