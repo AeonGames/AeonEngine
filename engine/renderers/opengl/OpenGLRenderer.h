@@ -51,9 +51,11 @@ namespace AeonGames
         GLuint GetVertexArrayObject() const;
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
-        void BindMesh ( const Mesh& aMesh ) const final;
-        void BindPipeline ( const Pipeline& aPipeline ) const final;
-        void SetMaterial ( const Material& aMaterial ) const final;
+
+        void BindMesh ( const Mesh& aMesh ) final;
+        void BindPipeline ( const Pipeline& aPipeline ) final;
+        void SetMaterial ( const Material& aMaterial ) final;
+
         void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
         void SetModelMatrix ( const Matrix4x4& aMatrix ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;

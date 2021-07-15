@@ -729,24 +729,25 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::BindMesh ( const Mesh& aMesh ) const
+    void VulkanRenderer::BindMesh ( const Mesh& aMesh )
     {
         auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         if ( it == mMeshStore.end() )
         {
-            return;
+            LoadMesh ( aMesh );
+            it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         }
         it->second.Bind();
     }
 
     /*-----------------Pipeline-----------------------*/
-    void VulkanRenderer::BindPipeline ( const Pipeline& aPipeline ) const
+    void VulkanRenderer::BindPipeline ( const Pipeline& aPipeline )
     {
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it == mPipelineStore.end() )
         {
-            std::cout << LogLevel::Warning << " Pipeline " << aPipeline.GetConsecutiveId() << " NOT found at: " << __FUNCTION__ << std::endl;
-            return;
+            LoadPipeline ( aPipeline );
+            it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         }
         mBoundPipeline = &it->second;
         vkCmdBindPipeline ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, it->second.GetPipeline() );
@@ -759,16 +760,17 @@ namespace AeonGames
                                   &mMatricesDescriptorSet, 0, nullptr );
     }
 
-    void VulkanRenderer::SetMaterial ( const Material& aMaterial ) const
+    void VulkanRenderer::SetMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         if ( it == mMaterialStore.end() )
         {
-            std::cout << LogLevel::Warning << " Material " << aMaterial.GetConsecutiveId() << " NOT found at: " << __FUNCTION__ << std::endl;
-            return;
+            LoadMaterial ( aMaterial );
+            it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         }
         it->second.Bind ( mBoundPipeline->GetPipelineLayout() );
     }
+
     void VulkanRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const
     {
         uint32_t offset = static_cast<uint32_t> ( aSkeletonBuffer.GetOffset() );

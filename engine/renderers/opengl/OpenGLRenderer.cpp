@@ -227,12 +227,13 @@ void main()
         }
     }
 
-    void OpenGLRenderer::BindMesh(const Mesh& aMesh) const
+    void OpenGLRenderer::BindMesh(const Mesh& aMesh)
     {
         auto it = mBufferStore.find(aMesh.GetConsecutiveId());
         if(it==mBufferStore.end())
         {
-            return;
+            LoadMesh(aMesh);
+            it = mBufferStore.find(aMesh.GetConsecutiveId());
         }
         glBindBuffer ( GL_ARRAY_BUFFER, it->second[0].GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
@@ -582,10 +583,14 @@ void main()
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline) const
+    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline)
     {
         auto it = mProgramStore.find(aPipeline.GetConsecutiveId());
-        if(it==mProgramStore.end()){return;};
+        if(it==mProgramStore.end())
+        {
+            LoadPipeline(aPipeline);
+            it = mProgramStore.find(aPipeline.GetConsecutiveId());
+        };
 
         glUseProgram ( it->second );
         OPENGL_CHECK_ERROR_NO_THROW;
@@ -597,8 +602,18 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLRenderer::SetMaterial ( const Material& aMaterial) const
+    void OpenGLRenderer::SetMaterial ( const Material& aMaterial)
     {
+        ///@todo Merge OpenGL material buffer and textures into a single material object
+        if(aMaterial.GetUniformBuffer().size())
+        {
+            auto it = mBufferStore.find(aMaterial.GetConsecutiveId());
+            if(it==mBufferStore.end())
+            {
+                LoadMaterial(aMaterial);
+            };
+        }
+
         for ( GLenum i = 0; i < aMaterial.GetSamplers().size(); ++i )
         {
             glActiveTexture ( GL_TEXTURE0 + i );
