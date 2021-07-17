@@ -99,6 +99,9 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLFunctions.h
     OpenGLBuffer.h
     OpenGLMesh.h
+    OpenGLPipeline.h
+    OpenGLMaterial.h
+    OpenGLTexture.h
     OpenGLFrameBuffer.h
     OpenGLMemoryPoolBuffer.h)
 
@@ -111,6 +114,9 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLX11Window.cpp
     OpenGLBuffer.cpp
     OpenGLMesh.cpp
+    OpenGLPipeline.cpp
+    OpenGLMaterial.cpp
+    OpenGLTexture.cpp
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp
@@ -123,6 +129,10 @@ add_library(OpenGLRenderer
             ${OPENGL_RENDERER_HEADERS}
             ${OPENGL_RENDERER_SOURCES}
             ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
+
+if(IWYU_PROGRAM)
+  set_property(TARGET OpenGLRenderer PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})
+endif()
 
 target_link_libraries(OpenGLRenderer
                       ${OPENGL_LIBRARIES}

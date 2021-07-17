@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ limitations under the License.
 #include "aeongames/AABB.h"
 #include "aeongames/Matrix4x4.h"
 #include "aeongames/Matrix3x3.h"
-#include "3DMath.h"
 
 namespace AeonGames
 {

@@ -21,3 +21,6 @@ if(USE_CLANG_TIDY)
       "${CLANG_TIDY_EXECUTABLE};-fix;-header-filter=aeongames/;${CLANG_TIDY_CHECKS}"
     )
 endif()
+if(IWYU_PROGRAM)
+  set_property(TARGET AeonEngineComponents PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})
+endif()

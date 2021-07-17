@@ -219,6 +219,10 @@ if(USE_CLANG_TIDY)
     )
 endif()
 
+if(IWYU_PROGRAM)
+  set_property(TARGET AeonEngine PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})
+endif()
+
 add_subdirectory(components)
 if(BUILD_OPENGL_RENDERER)
   add_subdirectory(renderers/opengl)
