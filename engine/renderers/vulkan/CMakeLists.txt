@@ -67,6 +67,10 @@ add_library(VulkanRenderer
             ${SPIRV_SOURCES}
             ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
 
+if(IWYU_PROGRAM)
+  set_property(TARGET VulkanRenderer PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})
+endif()
+
 target_link_libraries(VulkanRenderer
                       AeonEngine
                       ProtoBufClasses

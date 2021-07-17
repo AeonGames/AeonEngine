@@ -23,6 +23,9 @@ limitations under the License.
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLMesh.h"
+#include "OpenGLPipeline.h"
+#include "OpenGLMaterial.h"
+#include "OpenGLTexture.h"
 #ifdef Status
 #undef Status
 #endif
@@ -35,9 +38,7 @@ namespace AeonGames
     class Material;
     class UniformBuffer;
     class OpenGLMesh;
-    class OpenGLPipeline;
     class OpenGLModel;
-    class OpenGLMaterial;
     class OpenGLRenderer : public Renderer
     {
     public:
@@ -69,6 +70,7 @@ namespace AeonGames
         void UnloadTexture ( const Texture& aTexture ) final;
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
+        GLuint GetTextureId ( const Texture& aTexture );
     protected:
         void InitializeOverlay();
         void FinalizeOverlay();
@@ -87,10 +89,10 @@ namespace AeonGames
         /// Overlay quadrilateral.
         OpenGLBuffer mOverlayQuad{};
         /**@}*/
+        std::unordered_map<size_t, OpenGLPipeline> mPipelineStore{};
+        std::unordered_map<size_t, OpenGLMaterial> mMaterialStore{};
         std::unordered_map<size_t, OpenGLMesh> mMeshStore{};
-        std::unordered_map<size_t, std::vector<OpenGLBuffer>> mBufferStore{};
-        std::unordered_map<size_t, GLuint> mProgramStore{};
-        std::unordered_map<size_t, GLuint> mTextureStore{};
+        std::unordered_map<size_t, OpenGLTexture> mTextureStore{};
     };
 }
 #endif
