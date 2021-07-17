@@ -43,3 +43,9 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE
       "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${PROFILING_FLAGS}")
 endif()
+
+find_program(IWYU_PROGRAM NAMES include-what-you-use iwyu)
+if(IWYU_PROGRAM)
+  set(IWYU_COMMAND_LINE ${IWYU_PROGRAM};-Xiwyu;--keep=aeongames/ProtoBufClasses.h CACHE INTERNAL "IWYU Command Line" FORCE)
+endif()
+

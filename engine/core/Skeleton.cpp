@@ -14,14 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <fstream>
-#include <sstream>
-#include <exception>
 #include <vector>
-#include <cassert>
 #include <cstring>
-#include <mutex>
-#include "aeongames/AeonEngine.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufHelpers.h"
 #ifdef _MSC_VER
@@ -32,7 +26,6 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "aeongames/Utilities.h"
 #include "aeongames/Skeleton.h"
 
 namespace AeonGames
