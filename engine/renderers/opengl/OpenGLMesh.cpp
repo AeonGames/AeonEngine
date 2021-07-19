@@ -14,14 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <fstream>
-#include <sstream>
-#include <exception>
-#include <utility>
-#include <vector>
 #include <cassert>
-#include <cstring>
-#include "aeongames/Utilities.h"
 #include "OpenGLFunctions.h"
 #include "aeongames/Mesh.h"
 #include "OpenGLMesh.h"
