@@ -16,8 +16,6 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLPIPELINE_H
 #define AEONGAMES_OPENGLPIPELINE_H
 #include <cstdint>
-#include <string>
-#include "OpenGLFunctions.h"
 #include "aeongames/Pipeline.h"
 
 namespace AeonGames

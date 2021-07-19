@@ -15,19 +15,11 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OPENGLMATERIAL_H
 #define AEONGAMES_OPENGLMATERIAL_H
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <tuple>
-#include <memory>
-#include "aeongames/Material.h"
-#include "aeongames/Vector2.h"
-#include "aeongames/Vector3.h"
-#include "aeongames/Vector4.h"
 #include "OpenGLBuffer.h"
 
 namespace AeonGames
 {
+    class Material;
     class OpenGLRenderer;
     class OpenGLMaterial
     {

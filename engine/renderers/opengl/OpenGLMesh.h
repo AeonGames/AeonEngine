@@ -16,9 +16,6 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLMESH_H
 #define AEONGAMES_OPENGLMESH_H
 
-#include <exception>
-#include <string>
-#include <memory>
 #include "OpenGLBuffer.h"
 
 namespace AeonGames
