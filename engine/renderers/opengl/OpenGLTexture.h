@@ -15,14 +15,11 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OPENGLTEXTURE_H
 #define AEONGAMES_OPENGLTEXTURE_H
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <memory>
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
+    class Texture;
     class OpenGLRenderer;
     class OpenGLTexture
     {
