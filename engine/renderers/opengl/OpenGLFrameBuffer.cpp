@@ -18,7 +18,13 @@ limitations under the License.
 
 namespace AeonGames
 {
-    OpenGLFrameBuffer::OpenGLFrameBuffer()
+    OpenGLFrameBuffer::OpenGLFrameBuffer() = default;
+    OpenGLFrameBuffer::~OpenGLFrameBuffer()
+    {
+        Finalize();
+    }
+
+    void OpenGLFrameBuffer::Initialize()
     {
         // Frame Buffer
         glGenFramebuffers ( 1, &mFBO );
@@ -64,7 +70,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    OpenGLFrameBuffer::~OpenGLFrameBuffer()
+    void OpenGLFrameBuffer::Finalize()
     {
         if ( glIsRenderbuffer ( mRBO ) )
         {
@@ -93,26 +99,30 @@ namespace AeonGames
     void OpenGLFrameBuffer::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
-        OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, aWidth, aHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
-        OPENGL_CHECK_ERROR_THROW;
         glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
-        OPENGL_CHECK_ERROR_THROW;
         glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, aWidth, aHeight );
-        OPENGL_CHECK_ERROR_THROW;
         glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
-        OPENGL_CHECK_ERROR_THROW;
     }
     void OpenGLFrameBuffer::Bind()
     {
         glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
     void OpenGLFrameBuffer::Unbind()
     {
         glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
     GLuint OpenGLFrameBuffer::GetFBO() const
     {
         return mFBO;
+    }
+
+    OpenGLFrameBuffer::OpenGLFrameBuffer ( OpenGLFrameBuffer&& aOpenGLFrameBuffer )
+    {
+        std::swap ( mFBO, aOpenGLFrameBuffer.mFBO );
+        std::swap ( mColorBuffer, aOpenGLFrameBuffer.mColorBuffer );
+        std::swap ( mRBO, aOpenGLFrameBuffer.mRBO );
     }
 }

@@ -21,24 +21,29 @@ limitations under the License.
 #include <tuple>
 #include <initializer_list>
 #include "OpenGLFunctions.h"
-#include "aeongames/BufferAccessor.h"
 #include "OpenGLBuffer.h"
+#include "aeongames/MemoryPoolBuffer.h"
 
 namespace AeonGames
 {
     class OpenGLRenderer;
-    class OpenGLMemoryPoolBuffer
+    class OpenGLMemoryPoolBuffer : public MemoryPoolBuffer
     {
     public:
         OpenGLMemoryPoolBuffer ( const OpenGLRenderer&  aOpenGLRenderer, GLsizei aStackSize );
-        OpenGLMemoryPoolBuffer ( const OpenGLRenderer& ) = delete;
+        OpenGLMemoryPoolBuffer ( const OpenGLRenderer& aOpenGLRenderer );
+        OpenGLMemoryPoolBuffer ( OpenGLMemoryPoolBuffer&& );
+        OpenGLMemoryPoolBuffer ( const OpenGLMemoryPoolBuffer& ) = delete;
         OpenGLMemoryPoolBuffer& operator= ( const OpenGLMemoryPoolBuffer& ) = delete;
         OpenGLMemoryPoolBuffer& operator = ( OpenGLMemoryPoolBuffer&& ) = delete;
-        OpenGLMemoryPoolBuffer ( OpenGLMemoryPoolBuffer&& ) = delete;
         ~OpenGLMemoryPoolBuffer();
-        BufferAccessor Allocate ( size_t aSize );
-        void Reset();
+        BufferAccessor Allocate ( size_t aSize ) final;
+        void Reset() final;
+        const Buffer & GetBuffer() const final;
+        void Initialize ( GLsizei aStackSize );
+        void Finalize();
     private:
+        const OpenGLRenderer&  mOpenGLRenderer;
         size_t mOffset{0};
         OpenGLBuffer mUniformBuffer;
     };

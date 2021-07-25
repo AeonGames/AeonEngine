@@ -30,7 +30,6 @@ limitations under the License.
 #include "aeongames/StringId.h"
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
-#include "aeongames/Window.h"
 #include "aeongames/CRC.h"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -559,11 +558,11 @@ namespace AeonGames
         }
     }
 
-    void Node::Update ( const double aDelta, Window* aWindow )
+    void Node::Update ( const double aDelta )
     {
         for ( auto& i : mComponentDependencyMap )
         {
-            GetComponent ( i )->Update ( *this, aDelta, aWindow );
+            GetComponent ( i )->Update ( *this, aDelta );
         }
     }
 
@@ -575,11 +574,11 @@ namespace AeonGames
         }
     }
 
-    void Node::Render ( const Window& aWindow ) const
+    void Node::Render ( Renderer& aRenderer, void* aWindowId ) const
     {
         for ( auto& i : mComponentDependencyMap )
         {
-            GetComponent ( i )->Render ( *this, aWindow );
+            GetComponent ( i )->Render ( *this, aRenderer, aWindowId );
         }
     }
 

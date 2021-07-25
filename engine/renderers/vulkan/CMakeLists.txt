@@ -19,7 +19,7 @@ if(GLSLANG_HAS_REVISION_H)
     add_definitions(-DGLSLANG_HAS_REVISION_H)
 endif()
 
-include_directories(${GLSLANG_SPIRV_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR})
+include_directories(${GLSLANG_INCLUDE_DIR} ${GLSLANG_SPIRV_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR})
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
@@ -75,9 +75,9 @@ target_link_libraries(VulkanRenderer
                       AeonEngine
                       ProtoBufClasses
                       Threads::Threads
-                      ${GLSLANG_LIBRARIES}
                       ${VULKAN_LIBRARY}
-                      )
+                      ${GLSLANG_LIBRARIES}
+)
 
 if(MSVC)
   set_target_properties(

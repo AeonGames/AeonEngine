@@ -38,12 +38,13 @@ limitations under the License.
 #include "aeongames/Material.h"
 #include "aeongames/Texture.h"
 #include "aeongames/Utilities.h"
+#include "aeongames/MemoryPool.h"
 #include "SPIR-V/CompilerLinker.h"
 
 namespace AeonGames
 {
     VulkanRenderer::VulkanRenderer ( void* aWindow ) :
-        mMatrices ( *this ), mMemoryPoolBuffer ( *this )
+        mMatrices { *this }
     {
         try
         {
@@ -88,8 +89,7 @@ namespace AeonGames
             write_descriptor_set.pImageInfo = nullptr;
             write_descriptor_set.pTexelBufferView = nullptr;
             vkUpdateDescriptorSets ( mVkDevice, 1, &write_descriptor_set, 0, nullptr );
-
-            mMemoryPoolBuffer.Initialize ( 64_kb ); // @todo this should be 16_kb for mobile
+            AttachWindow ( aWindow );
         }
         catch ( ... )
         {
@@ -101,6 +101,7 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        mWindowStore.clear();
         mTextureStore.clear();
         mMaterialStore.clear();
         mPipelineStore.clear();
@@ -110,9 +111,7 @@ namespace AeonGames
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
         }
         mVkSamplerDescriptorSetLayouts.clear();
-
         DestroyDescriptorPool ( mVkDevice, mMatricesDescriptorPool );
-        mMemoryPoolBuffer.Finalize();
         mMatrices.Finalize();
         FinalizeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout );
         FinalizeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
@@ -695,16 +694,6 @@ namespace AeonGames
         vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
     }
 
-    std::unique_ptr<Window> VulkanRenderer::CreateWindowProxy ( void * aWindowId ) const
-    {
-        return std::make_unique<VulkanWindow> ( *const_cast<VulkanRenderer*> ( this ), aWindowId );
-    }
-
-    std::unique_ptr<Window> VulkanRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
-    {
-        return std::make_unique<VulkanWindow> ( *const_cast<VulkanRenderer*> ( this ), aX, aY, aWidth, aHeight, aFullScreen );
-    }
-
     void VulkanRenderer::LoadMesh ( const Mesh& aMesh )
     {
         if ( aMesh.GetVertexCount() == 0 )
@@ -773,14 +762,17 @@ namespace AeonGames
 
     void VulkanRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const
     {
+        const VulkanMemoryPoolBuffer* memory_pool_buffer =
+            reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
         uint32_t offset = static_cast<uint32_t> ( aSkeletonBuffer.GetOffset() );
         vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   mBoundPipeline->GetPipelineLayout(),
                                   SKELETON,
                                   1,
-                                  &mMemoryPoolBuffer.GetDescriptorSet(), 1, &offset );
+                                  &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
     }
+
     void VulkanRenderer::SetModelMatrix ( const Matrix4x4& aMatrix )
     {
         vkCmdPushConstants ( GetCommandBuffer(),
@@ -987,21 +979,110 @@ namespace AeonGames
         }
     }
 
-    BufferAccessor VulkanRenderer::AllocateSingleFrameUniformMemory ( size_t aSize )
-    {
-        return mMemoryPoolBuffer.Allocate ( aSize );
-    }
-    void VulkanRenderer::ResetMemoryPoolBuffer()
-    {
-        mMemoryPoolBuffer.Reset();
-    }
-
     void VulkanRenderer::AttachWindow ( void* aWindowId )
     {
-
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it != mWindowStore.end() )
+        {
+            std::cout << LogLevel::Warning << " Window " << aWindowId << " Already Loaded at: " << __FUNCTION__ << std::endl;
+            return;
+        }
+        mWindowStore.emplace ( aWindowId, VulkanWindow{*this, aWindowId} );
     }
     void VulkanRenderer::DetachWindow ( void* aWindowId )
     {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        mWindowStore.erase ( it );
+    }
 
+    void VulkanRenderer::SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetProjectionMatrix ( aMatrix );
+    }
+
+    void VulkanRenderer::SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetViewMatrix ( aMatrix );
+    }
+
+    void VulkanRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.ResizeViewport ( aX, aY, aWidth, aHeight );
+    }
+
+    void VulkanRenderer::BeginRender ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginRender();
+    }
+    void VulkanRenderer::EndRender ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndRender();
+    }
+    void VulkanRenderer::Render ( void* aWindowId,
+                                  const Matrix4x4& aModelMatrix,
+                                  const Mesh& aMesh,
+                                  const Pipeline& aPipeline,
+                                  const Material* aMaterial,
+                                  const BufferAccessor* aSkeleton,
+                                  uint32_t aVertexStart,
+                                  uint32_t aVertexCount,
+                                  uint32_t aInstanceCount,
+                                  uint32_t aFirstInstance ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
+    }
+
+    const Frustum& VulkanRenderer::GetFrustum ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.GetFrustum();
+    }
+
+    BufferAccessor VulkanRenderer::AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.AllocateSingleFrameUniformMemory ( aSize );
     }
 }
