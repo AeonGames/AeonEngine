@@ -17,6 +17,7 @@ limitations under the License.
 #include <array>
 #include <cstring>
 #include <cmath>
+#include <cassert>
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Mesh.h"
@@ -24,7 +25,6 @@ limitations under the License.
 #include "aeongames/Skeleton.h"
 #include "aeongames/Animation.h"
 #include "aeongames/Matrix4x4.h"
-#include "aeongames/Window.h"
 #include "aeongames/Buffer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Node.h"
@@ -145,7 +145,7 @@ namespace AeonGames
         return mStartingFrame;
     }
 
-    void ModelComponent::Update ( Node& aNode, double aDelta, Window* aWindow )
+    void ModelComponent::Update ( Node& aNode, double aDelta )
     {
         if ( auto model = mModel.Cast<Model>() )
         {
@@ -158,34 +158,46 @@ namespace AeonGames
                 }
             }
             aNode.SetAABB ( aabb );
-            if ( aWindow != nullptr && model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
+            if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
             {
-                mSkeleton = aWindow->AllocateSingleFrameUniformMemory ( model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16 );
-                auto* skeleton_buffer = reinterpret_cast<float*> ( mSkeleton.Map ( 0, mSkeleton.GetSize() ) );
+                float* skeleton_buffer = reinterpret_cast<float*> ( mSkeleton.data() );
                 auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
                 mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
+                size_t matrices_size = model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16;
+                assert ( matrices_size < mSkeleton.size() );
                 for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
                 {
                     Matrix4x4 matrix{ ( animation->GetTransform ( i, mCurrentSample ) *
                                         model->GetSkeleton()->GetJoints() [i].GetInvertedTransform() ) };
                     memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
                 }
-                mSkeleton.Unmap();
             }
         }
     }
 
-    void ModelComponent::Render ( const Node& aNode, const Window& aWindow ) const
+    void ModelComponent::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
     {
         if ( auto model = mModel.Cast<Model>() )
         {
+            BufferAccessor* skeleton_accessor_ptr{nullptr};
+            BufferAccessor skeleton_accessor{};
+            if ( ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) ) )
+            {
+                size_t used_bones_size = model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16;
+                assert ( used_bones_size <= mSkeleton.size() );
+                skeleton_accessor = aRenderer.AllocateSingleFrameUniformMemory ( aWindowId, used_bones_size );
+                skeleton_accessor.WriteMemory ( 0, used_bones_size, mSkeleton.data() );
+                skeleton_accessor_ptr = &skeleton_accessor;
+            }
             for ( auto& i : model->GetAssemblies() )
             {
-                aWindow.Render ( aNode.GetGlobalTransform(),
-                                 *std::get<0> ( i ).Cast<Mesh>(),
-                                 *std::get<1> ( i ).Cast<Pipeline>(),
-                                 std::get<2> ( i ).Cast<Material>(),
-                                 ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) ) ? &mSkeleton : nullptr );
+                aRenderer.Render (
+                    aWindowId,
+                    aNode.GetGlobalTransform(),
+                    *std::get<0> ( i ).Cast<Mesh>(),
+                    *std::get<1> ( i ).Cast<Pipeline>(),
+                    std::get<2> ( i ).Cast<Material>(),
+                    skeleton_accessor_ptr );
             }
         }
     }

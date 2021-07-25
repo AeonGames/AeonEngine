@@ -19,26 +19,29 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Frustum.h"
 #include "VulkanMemoryPoolBuffer.h"
-#include "aeongames/CommonWindow.h"
-#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
-#ifdef __unix__
-#include <X11/Xlib.h>
-#include <GL/glx.h>
-#include <GL/glxext.h>
-#endif
 
 namespace AeonGames
 {
+    class Mesh;
+    class Material;
+    class Pipeline;
+    class BufferAccessor;
     class VulkanRenderer;
-    class VulkanWindow final : public CommonWindow
+    class VulkanWindow
     {
     public:
         VulkanWindow ( VulkanRenderer& aVulkanRenderer, void* aWindowId );
-        VulkanWindow ( VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        ~VulkanWindow() final;
-        void BeginRender() final;
-        void EndRender() final;
+        ~VulkanWindow();
+        VulkanWindow ( VulkanWindow&& aVulkanWindow );
+        VulkanWindow ( const VulkanWindow& aVulkanWindow ) = delete;
+        VulkanWindow& operator= ( const VulkanWindow& aVulkanWindow ) = delete;
+        VulkanWindow& operator= ( VulkanWindow&& aVulkanWindow ) = delete;
+
+        void BeginRender();
+        void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -47,22 +50,14 @@ namespace AeonGames
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
-                        uint32_t aFirstInstance = 0 ) const final;
-        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
-        void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
-        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
-        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
-        const Matrix4x4 & GetProjectionMatrix() const final;
-        const Matrix4x4 & GetViewMatrix() const final;
-        void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
-
-        void Run ( Scene& aScene ) final;
-        void Show ( bool aShow ) const final;
-        void StartRenderTimer() const final;
-        void StopRenderTimer() const final;
-#ifdef __unix__
-        static GLXFBConfig GetGLXConfig ( Display* display );
-#endif
+                        uint32_t aFirstInstance = 0 ) const;
+        void SetProjectionMatrix ( const Matrix4x4& aMatrix );
+        void SetViewMatrix ( const Matrix4x4& aMatrix );
+        const Matrix4x4& GetProjectionMatrix() const;
+        const Matrix4x4& GetViewMatrix() const;
+        const Frustum& GetFrustum() const;
+        void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
+        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
     private:
         void Initialize();
         void Finalize();
@@ -78,11 +73,13 @@ namespace AeonGames
         void FinalizeFrameBuffers();
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
+        Frustum mFrustum{};
 #if defined(__unix__)
         Colormap mColorMap {};
 #elif defined(_WIN32)
         HDC mDeviceContext {};
 #endif
+        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
         Matrix4x4 mProjectionMatrix {};
         Matrix4x4 mViewMatrix{};
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
@@ -94,7 +91,7 @@ namespace AeonGames
         VkImageView mVkDepthStencilImageView { VK_NULL_HANDLE};
         bool mHasStencil{ false };
         uint32_t mActiveImageIndex{ UINT32_MAX };
-        VkViewport mVkViewport{0, 0, 0, 0, 0, 1};
+        VkViewport mVkViewport{0, 0, 1, 1, 0, 1};
         VkRect2D mVkScissor{};
         ::std::vector<VkImage> mVkSwapchainImages{};
         ::std::vector<VkImageView> mVkSwapchainImageViews{};

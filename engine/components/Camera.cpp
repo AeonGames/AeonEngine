@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ limitations under the License.
 #include "Camera.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Matrix4x4.h"
-#include "aeongames/Window.h"
 #include "aeongames/Buffer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Scene.h"
@@ -128,7 +127,7 @@ namespace AeonGames
         }
     }
 
-    void Camera::Update ( Node& aNode, double aDelta, Window* aWindow )
+    void Camera::Update ( Node& aNode, double aDelta )
     {
         auto scene = aNode.GetScene();
         if ( scene && scene->GetCamera() == &aNode )
@@ -139,7 +138,7 @@ namespace AeonGames
         }
     }
 
-    void Camera::Render ( const Node& aNode, const Window& aWindow ) const
+    void Camera::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
     {
     }
 

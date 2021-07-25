@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,10 +15,13 @@ limitations under the License.
 */
 
 #include "aeongames/BufferAccessor.h"
+#include "aeongames/Buffer.h"
+#include "aeongames/MemoryPoolBuffer.h"
+
 namespace AeonGames
 {
-    BufferAccessor::BufferAccessor ( Buffer* aBuffer, size_t aOffset, size_t aSize ) :
-        mBuffer{aBuffer}, mOffset{aOffset}, mSize{aSize}
+    BufferAccessor::BufferAccessor ( MemoryPoolBuffer* aMemoryPoolBuffer, size_t aOffset, size_t aSize ) :
+        mMemoryPoolBuffer{aMemoryPoolBuffer}, mOffset{aOffset}, mSize{aSize}
     {}
 
     BufferAccessor::BufferAccessor () = default;
@@ -29,21 +32,21 @@ namespace AeonGames
 
     void BufferAccessor::WriteMemory ( size_t aOffset, size_t aSize, const void *aData ) const
     {
-        if ( mBuffer != nullptr )
+        if ( mMemoryPoolBuffer != nullptr )
         {
-            mBuffer->WriteMemory ( mOffset + aOffset, aSize, aData );
+            mMemoryPoolBuffer->GetBuffer().WriteMemory ( mOffset + aOffset, aSize, aData );
         }
     }
     void* BufferAccessor::Map ( size_t aOffset, size_t aSize ) const
     {
         aSize = ( aSize != 0 ) ? aSize : mSize;
-        return ( mBuffer != nullptr ) ? mBuffer->Map ( mOffset + aOffset, aSize ) : nullptr;
+        return ( mMemoryPoolBuffer != nullptr ) ? mMemoryPoolBuffer->GetBuffer().Map ( mOffset + aOffset, aSize ) : nullptr;
     }
     void BufferAccessor::Unmap() const
     {
-        if ( mBuffer != nullptr )
+        if ( mMemoryPoolBuffer != nullptr )
         {
-            mBuffer->Unmap();
+            mMemoryPoolBuffer->GetBuffer().Unmap();
         }
     }
     size_t BufferAccessor::GetOffset() const
@@ -54,8 +57,8 @@ namespace AeonGames
     {
         return mSize;
     }
-    const Buffer* BufferAccessor::GetBuffer() const
+    const MemoryPoolBuffer* BufferAccessor::GetMemoryPoolBuffer() const
     {
-        return mBuffer;
+        return mMemoryPoolBuffer;
     }
 }

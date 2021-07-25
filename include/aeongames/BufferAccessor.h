@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@ limitations under the License.
 
 #ifndef AEONGAMES_BUFFERACCESSOR_H
 #define AEONGAMES_BUFFERACCESSOR_H
-#include "aeongames/Buffer.h"
+#include "aeongames/Platform.h"
 namespace AeonGames
 {
+    class MemoryPoolBuffer;
     class BufferAccessor
     {
     public:
         DLL BufferAccessor ();
-        DLL BufferAccessor ( Buffer* mBuffer, size_t aOffset, size_t aSize );
+        DLL BufferAccessor ( MemoryPoolBuffer* aMemoryPoolBuffer, size_t aOffset, size_t aSize );
         DLL BufferAccessor ( const BufferAccessor& );
         DLL BufferAccessor ( BufferAccessor&& );
         DLL BufferAccessor& operator= ( const BufferAccessor& );
@@ -34,9 +35,9 @@ namespace AeonGames
         DLL void Unmap() const;
         DLL size_t GetOffset() const;
         DLL size_t GetSize() const;
-        DLL const Buffer* GetBuffer() const;
+        DLL const MemoryPoolBuffer* GetMemoryPoolBuffer() const;
     private:
-        Buffer* mBuffer{nullptr};
+        MemoryPoolBuffer* mMemoryPoolBuffer{nullptr};
         size_t mOffset{0};
         size_t mSize{0};
     };

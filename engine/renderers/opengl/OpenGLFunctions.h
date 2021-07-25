@@ -40,9 +40,12 @@ limitations under the License.
 #endif // ANDROID
 #include <sstream>
 #include <iostream>
+#include "aeongames/LogLevel.h"
 namespace AeonGames
 {
 #include "glDeclarations.h"
+#include "glProxyFunctions.h"
+
     bool LoadOpenGLAPI();
 #define OPENGL_CHECK_ERROR_THROW \
  { \
@@ -71,10 +74,23 @@ namespace AeonGames
              (glError == GL_STACK_UNDERFLOW) ? "GL_STACK_UNDERFLOW" : \
              (glError == GL_OUT_OF_MEMORY) ? "GL_OUT_OF_MEMORY" : "Unknown Error Code"; \
          std::ostringstream stream; \
-         stream << "OpenGL Error " << error_string << " (Code " << glError << " ) " << __FILE__ << ":" << __LINE__; \
-         std::cout << stream.str() << std::endl; \
+         stream << " OpenGL " << __FUNCTION__ << error_string << " (Code " << glError << " ) " << __FILE__ << ":" << __LINE__; \
+         std::cout << LogLevel::Error << stream.str() << std::endl; \
      } \
  }
 
+#define OPENGL_CHECK_ERROR_NO_THROW_LINE_FILE_FUNCTION(LINE, FILE, FUNCTION) \
+ { \
+     if (int glError = glGetError()) \
+     { \
+         const char* error_string = (glError == GL_INVALID_ENUM) ? "GL_INVALID_ENUM" : \
+             (glError == GL_INVALID_VALUE) ? "GL_INVALID_VALUE" : \
+             (glError == GL_INVALID_OPERATION) ? "GL_INVALID_OPERATION" : \
+             (glError == GL_STACK_OVERFLOW) ? "GL_STACK_OVERFLOW" : \
+             (glError == GL_STACK_UNDERFLOW) ? "GL_STACK_UNDERFLOW" : \
+             (glError == GL_OUT_OF_MEMORY) ? "GL_OUT_OF_MEMORY" : "Unknown Error Code"; \
+         std::cout << LogLevel::Error << FILE << ":" << LINE << " " << FUNCTION << " " << error_string << " (Code " << glError << " ) " << std::endl; \
+     } \
+ }
 }
 #endif

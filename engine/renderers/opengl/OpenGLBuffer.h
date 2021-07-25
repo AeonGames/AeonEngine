@@ -26,17 +26,13 @@ namespace AeonGames
     {
     public:
         OpenGLBuffer ();
-        /// Copy contsructor.
-        OpenGLBuffer ( const OpenGLBuffer& aBuffer );
-        /// Move constructor.
-        OpenGLBuffer ( OpenGLBuffer&& aBuffer );
-        /// Assignment operator due to rule of zero/three/five.
-        OpenGLBuffer& operator= ( const OpenGLBuffer& aBuffer );
-        /// No move assignment allowed
-        OpenGLBuffer& operator = ( OpenGLBuffer&& ) = delete;
-
         OpenGLBuffer ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
+        OpenGLBuffer ( OpenGLBuffer&& aOpenGLBuffer );
+        OpenGLBuffer ( const OpenGLBuffer& aOpenGLBuffer ) = delete;
+        OpenGLBuffer& operator= ( const OpenGLBuffer& aOpenGLBuffer ) = delete;
+        OpenGLBuffer& operator= ( OpenGLBuffer&& aOpenGLBuffer ) = delete;
         ~OpenGLBuffer();
+
         void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
         void Finalize();
         /// @name Virtual functions

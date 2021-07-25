@@ -47,7 +47,6 @@ namespace AeonGames
         ///@}
     private:
         void Initialize ( const void *aData );
-        void CopyBuffer ( const VkBuffer& aBuffer );
         const VulkanRenderer& mVulkanRenderer;
         VkBuffer mBuffer{ VK_NULL_HANDLE };
         VkDeviceMemory mDeviceMemory{ VK_NULL_HANDLE };

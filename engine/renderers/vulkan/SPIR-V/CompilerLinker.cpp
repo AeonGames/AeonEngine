@@ -43,10 +43,10 @@
 #include "glslang/Include/ResourceLimits.h"
 #include "glslang/Include/ShHandle.h"
 #include "glslang/Public/ShaderLang.h"
-#include "SPIRV/GlslangToSpv.h"
-#include "SPIRV/GLSL.std.450.h"
-#include "SPIRV/doc.h"
-#include "SPIRV/disassemble.h"
+#include "glslang/SPIRV/GlslangToSpv.h"
+#include "glslang/SPIRV/GLSL.std.450.h"
+#include "glslang/SPIRV/doc.h"
+#include "glslang/SPIRV/disassemble.h"
 #include <cstring>
 #include <cstdlib>
 #include <cctype>

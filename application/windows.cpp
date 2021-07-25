@@ -14,9 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #ifdef _WIN32
+#include "aeongames/Platform.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/Scene.h"
+#include "aeongames/Node.h"
+#include "aeongames/Frustum.h"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -27,6 +31,8 @@ limitations under the License.
 #include <regex>
 #include <tuple>
 #include <shellapi.h>
+#include <chrono>
+#include "Window.h"
 
 /** Convert a WinMain command line (lpCmdLine) into a regular argc,argv pair.
  * @param aCmdLine Windows API WinMain format command line.
@@ -104,5 +110,165 @@ int ENTRYPOINT main ( int argc, char *argv[] )
     }
     std::string command_line = stream.str();
     return WinMain ( GetModuleHandle ( NULL ), NULL, stream.str().data(), 0 );
+}
+
+namespace AeonGames
+{
+    LRESULT CALLBACK AeonEngineWindowProc (
+        _In_ HWND   hwnd,
+        _In_ UINT   uMsg,
+        _In_ WPARAM wParam,
+        _In_ LPARAM lParam
+    )
+    {
+        switch ( uMsg )
+        {
+        case WM_CLOSE:
+            ShowWindow ( hwnd, SW_HIDE );
+            PostQuitMessage ( 0 );
+            break;
+        case WM_DESTROY:
+            PostQuitMessage ( 0 );
+            break;
+        case WM_SIZE:
+        {
+            Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
+            if ( window )
+            {
+                return window->Resize ( LOWORD ( lParam ), HIWORD ( lParam ) );
+            }
+            return 0;
+        }
+        default:
+            return DefWindowProc ( hwnd, uMsg, wParam, lParam );
+        }
+        return 0;
+    }
+
+    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
+    {
+        DWORD dwExStyle{WS_EX_APPWINDOW | WS_EX_WINDOWEDGE};
+        DWORD dwStyle{WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN};
+        if ( aFullScreen )
+        {
+            dwExStyle = WS_EX_APPWINDOW;
+            dwStyle = {WS_POPUP};
+            DEVMODE device_mode{};
+            device_mode.dmSize = sizeof ( DEVMODE );
+            if ( EnumDisplaySettingsEx ( nullptr, ENUM_CURRENT_SETTINGS, &device_mode, 0 ) )
+            {
+                std::cout <<
+                          "Position: " << device_mode.dmPosition.x << " " << device_mode.dmPosition.y << std::endl <<
+                          "Display Orientation: " << device_mode.dmDisplayOrientation << std::endl <<
+                          "Display Flags: " << device_mode.dmDisplayFlags << std::endl <<
+                          "Display Frecuency: " << device_mode.dmDisplayFrequency << std::endl <<
+                          "Bits Per Pixel: " << device_mode.dmBitsPerPel << std::endl <<
+                          "Width: " << device_mode.dmPelsWidth << std::endl <<
+                          "Height: " << device_mode.dmPelsHeight << std::endl;
+                aX = device_mode.dmPosition.x;
+                aY = device_mode.dmPosition.y;
+                aWidth = device_mode.dmPelsWidth;
+                aHeight = device_mode.dmPelsHeight;
+                ChangeDisplaySettings ( &device_mode, CDS_FULLSCREEN );
+            }
+        }
+
+        RECT rect = { aX, aY, static_cast<int32_t> ( aWidth ), static_cast<int32_t> ( aHeight ) };
+
+        WNDCLASSEX wcex;
+        wcex.cbSize = sizeof ( WNDCLASSEX );
+        wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wcex.lpfnWndProc = ( WNDPROC ) AeonEngineWindowProc;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
+        wcex.hInstance = GetModuleHandle ( nullptr );
+        wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
+        wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
+        wcex.hbrBackground = nullptr;
+        wcex.lpszMenuName = nullptr;
+        wcex.lpszClassName = "AeonEngine";
+        wcex.hIconSm = nullptr;
+        ATOM atom = RegisterClassEx ( &wcex );
+
+        mWindowId = CreateWindowEx ( dwExStyle,
+                                     MAKEINTATOM ( atom ), "AeonEngine",
+                                     dwStyle,
+                                     rect.left, rect.top, // Location
+                                     rect.right - rect.left, rect.bottom - rect.top, // Dimensions
+                                     nullptr,
+                                     nullptr,
+                                     GetModuleHandle ( nullptr ),
+                                     nullptr );
+        SetWindowLongPtr ( static_cast<HWND> ( mWindowId ), GWLP_USERDATA, ( LONG_PTR ) this );
+        mRenderer = ConstructRenderer ( aRendererName, mWindowId );
+    }
+
+    Window::~Window()
+    {
+        if ( mRenderer )
+        {
+            mRenderer->DetachWindow ( this );
+        }
+        DestroyWindow ( static_cast<HWND> ( mWindowId ) );
+    }
+
+    uint32_t Window::Resize ( uint32_t aWidth, uint32_t aHeight )
+    {
+        if ( aWidth && aHeight && mRenderer )
+        {
+            mRenderer->ResizeViewport ( mWindowId, 0, 0, aWidth, aHeight );
+            mAspectRatio = static_cast<float> ( aWidth ) / static_cast<float> ( aHeight );
+        }
+        return 0;
+    }
+
+    void Window::Run ( Scene& aScene )
+    {
+        MSG msg;
+        bool done = false;
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
+        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        while ( !done )
+        {
+            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
+            {
+                if ( msg.message == WM_QUIT )
+                {
+                    done = true;
+                }
+                else
+                {
+                    TranslateMessage ( &msg );
+                    DispatchMessage ( &msg );
+                }
+            }
+            else if ( mRenderer )
+            {
+                std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
+                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+                aScene.Update ( delta.count() );
+                last_time = current_time;
+                if ( const Node* camera = aScene.GetCamera() )
+                {
+                    mRenderer->SetViewMatrix ( mWindowId, camera->GetGlobalTransform().GetInverted().GetMatrix() );
+                    Matrix4x4 projection {};
+                    projection.Perspective ( aScene.GetFieldOfView(), mAspectRatio, aScene.GetNear(), aScene.GetFar() );
+                    mRenderer->SetProjectionMatrix ( mWindowId, projection );
+                }
+                mRenderer->BeginRender ( mWindowId );
+                aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                {
+                    AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
+                    if ( mRenderer->GetFrustum ( mWindowId ).Intersects ( transformed_aabb ) )
+                    {
+                        // Call Node specific rendering function.
+                        aNode.Render ( *mRenderer, mWindowId );
+                    }
+                } );
+                mRenderer->EndRender ( mWindowId );
+            }
+        }
+        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
+    }
 }
 #endif

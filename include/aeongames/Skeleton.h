@@ -24,6 +24,7 @@ limitations under the License.
 namespace AeonGames
 {
     class SkeletonMsg;
+    class Animation;
     class Skeleton : public Resource
     {
     public:

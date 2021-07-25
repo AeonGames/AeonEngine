@@ -55,27 +55,6 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLWindow::Finalize()
-    {
-        //mOverlay.Finalize();
-    }
-
-    OpenGLWindow::OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        mOpenGLRenderer { aOpenGLRenderer },
-        //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV, aWidth, aHeight},
-        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
-    {
-    }
-
-    OpenGLWindow::OpenGLWindow ( OpenGLRenderer&  aOpenGLRenderer ) :
-        mOpenGLRenderer{ aOpenGLRenderer },
-        //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
-        mMemoryPoolBuffer{aOpenGLRenderer, static_cast<GLsizei> ( 8_mb ) }
-    {
-    }
-
-    OpenGLWindow::~OpenGLWindow() = default;
-
     static GLenum GetIndexType ( const Mesh& aMesh )
     {
         switch ( aMesh.GetIndexSize() )
@@ -104,6 +83,112 @@ namespace AeonGames
         {TRIANGLE_STRIP_WITH_ADJACENCY, GL_TRIANGLE_STRIP_ADJACENCY},
         {PATCH_LIST, GL_PATCHES},
     };
+
+#if defined(__unix__)
+    OpenGLWindow::OpenGLWindow ( OpenGLRenderer&  aOpenGLRenderer, Display* aDisplay, ::Window aWindow ) :
+        mOpenGLRenderer{ aOpenGLRenderer },
+        mDisplay{aDisplay},
+        mWindowId{aWindow},
+        mFrameBuffer{},
+        mMemoryPoolBuffer{aOpenGLRenderer}
+    {
+        mOpenGLRenderer.MakeCurrent ( mWindowId );
+        mFrameBuffer.Initialize();
+        mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
+        XWindowAttributes xwa;
+        XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
+        glViewport ( xwa.x, xwa.y, xwa.width, xwa.height );
+        Initialize();
+    }
+
+    OpenGLWindow::OpenGLWindow ( OpenGLWindow&& aOpenGLWindow ) :
+        mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
+        mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
+        mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) }
+    {
+        std::swap ( mDisplay, aOpenGLWindow.mDisplay );
+        std::swap ( mWindowId, aOpenGLWindow.mWindowId );
+        std::swap ( mFrustum, aOpenGLWindow.mFrustum );
+        std::swap ( mProjectionMatrix, aOpenGLWindow.mProjectionMatrix );
+        std::swap ( mViewMatrix, aOpenGLWindow.mViewMatrix );
+    }
+
+    OpenGLWindow::~OpenGLWindow()
+    {
+        if ( mWindowId != None )
+        {
+            mOpenGLRenderer.MakeCurrent();
+            mMemoryPoolBuffer.Finalize();
+            mFrameBuffer.Finalize();
+            mDisplay =  nullptr;
+            mWindowId = None;
+        }
+    }
+
+    void OpenGLWindow::SwapBuffers()
+    {
+        glXSwapBuffers ( mDisplay, mWindowId );
+    }
+
+#elif defined(_WIN32)
+    OpenGLWindow::OpenGLWindow ( OpenGLRenderer&  aOpenGLRenderer, HWND aWindow ) :
+        mOpenGLRenderer{ aOpenGLRenderer },
+        mWindowId{ aWindow },
+        mDeviceContext{GetDC ( mWindowId ) },
+        //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
+        mFrameBuffer{},
+        mMemoryPoolBuffer{aOpenGLRenderer}
+    {
+        RECT rect{};
+        GetWindowRect ( mWindowId, &rect );
+        PIXELFORMATDESCRIPTOR pfd{};
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 32;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
+        SetPixelFormat ( mDeviceContext, pf, &pfd );
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+        mFrameBuffer.Initialize();
+        mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
+        glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
+        OPENGL_CHECK_ERROR_THROW;
+        Initialize();
+    }
+
+    OpenGLWindow::OpenGLWindow ( OpenGLWindow&& aOpenGLWindow ) :
+        mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
+        mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
+        mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) }
+    {
+        std::swap ( mWindowId, aOpenGLWindow.mWindowId );
+        std::swap ( mFrustum, aOpenGLWindow.mFrustum );
+        std::swap ( mDeviceContext, aOpenGLWindow.mDeviceContext );
+        std::swap ( mProjectionMatrix, aOpenGLWindow.mProjectionMatrix );
+        std::swap ( mViewMatrix, aOpenGLWindow.mViewMatrix );
+    }
+
+    OpenGLWindow::~OpenGLWindow()
+    {
+        if ( mWindowId != nullptr )
+        {
+            mOpenGLRenderer.MakeCurrent();
+            mMemoryPoolBuffer.Finalize();
+            mFrameBuffer.Finalize();
+            ReleaseDC ( mWindowId, mDeviceContext );
+            mWindowId = nullptr;
+        }
+    }
+
+    void OpenGLWindow::SwapBuffers()
+    {
+        ::SwapBuffers ( mDeviceContext );
+    }
+
+#endif
 
     void OpenGLWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
@@ -151,7 +236,11 @@ namespace AeonGames
 
     void OpenGLWindow::BeginRender()
     {
-        MakeCurrent();
+#if defined(_WIN32)
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+        mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
         mFrameBuffer.Bind();
         mOpenGLRenderer.SetViewMatrix ( mViewMatrix );
         mOpenGLRenderer.SetProjectionMatrix ( mProjectionMatrix );
@@ -237,12 +326,20 @@ namespace AeonGames
         return mViewMatrix;
     }
 
+    const Frustum & OpenGLWindow::GetFrustum() const
+    {
+        return mFrustum;
+    }
+
     void OpenGLWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
-        mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
         if ( aWidth && aHeight )
         {
-            MakeCurrent();
+#if defined(_WIN32)
+            mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+            mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
             OPENGL_CHECK_ERROR_NO_THROW;
             glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_THROW;

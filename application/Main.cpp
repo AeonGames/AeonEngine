@@ -18,10 +18,11 @@ limitations under the License.
 #include "aeongames/Renderer.h"
 #include "aeongames/StringId.h"
 #include "aeongames/LogLevel.h"
-#include "aeongames/Window.h"
 #include "aeongames/Utilities.h"
 #include "aeongames/Scene.h"
 #include "aeongames/Node.h"
+#include "aeongames/Platform.h"
+#include "Window.h"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -77,23 +78,23 @@ int Main ( int argc, char *argv[] )
 
         ProcessOpts ( argc, argv, option_handlers.data(), option_handlers.size() );
 
-        std::unique_ptr<AeonGames::Renderer> renderer{};
+        std::unique_ptr<AeonGames::Window> window{};
         AeonGames::Scene scene{};
 
         ///@todo We now have a function returning a vector of strings, use it here
-        AeonGames::EnumerateRendererConstructors ( [&renderer, &renderer_name] ( const AeonGames::StringId & aIdentifier ) -> bool
+        AeonGames::EnumerateRendererConstructors ( [&window, &renderer_name, &fullscreen] ( const AeonGames::StringId & aIdentifier ) -> bool
         {
             if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )
             {
-                renderer = AeonGames::ConstructRenderer ( aIdentifier.GetString(), nullptr );
+                window = std::make_unique<AeonGames::Window> ( aIdentifier.GetString(), 0, 0, 640, 480, fullscreen );
                 return false;
             }
             return true;
         } );
 
-        if ( renderer == nullptr )
+        if ( window == nullptr )
         {
-            std::cerr << AeonGames::LogLevel::Error << "No renderer available, cannot continue." << std::endl;
+            std::cerr << AeonGames::LogLevel::Error << "Renderer " << renderer_name << " not available, cannot continue." << std::endl;
             AeonGames::FinalizeGlobalEnvironment();
             return -1;
         }
@@ -103,8 +104,6 @@ int Main ( int argc, char *argv[] )
         {
             scene.Load ( scene_path );
         }
-
-        auto window = renderer->CreateWindowInstance ( 0, 0, 640, 480, fullscreen );
         window->Run ( scene );
     }
     AeonGames::FinalizeGlobalEnvironment();

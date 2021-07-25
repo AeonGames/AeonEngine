@@ -42,8 +42,17 @@ namespace AeonGames
         InitializeDescriptorSet();
     }
 
+    VulkanMemoryPoolBuffer::VulkanMemoryPoolBuffer ( VulkanMemoryPoolBuffer&& aVulkanMemoryPoolBuffer ) :
+        mVulkanRenderer { aVulkanMemoryPoolBuffer.mVulkanRenderer },
+        mUniformBuffer { std::move ( aVulkanMemoryPoolBuffer.mUniformBuffer ) }
+    {
+        std::swap ( mOffset, aVulkanMemoryPoolBuffer.mOffset );
+        std::swap ( mVkDescriptorPool, aVulkanMemoryPoolBuffer.mVkDescriptorPool );
+        std::swap ( mVkDescriptorSet, aVulkanMemoryPoolBuffer.mVkDescriptorSet );
+    }
+
     VulkanMemoryPoolBuffer::VulkanMemoryPoolBuffer ( const VulkanRenderer&  aVulkanRenderer ) :
-        mVulkanRenderer { aVulkanRenderer } {}
+        mVulkanRenderer { aVulkanRenderer }, mUniformBuffer{aVulkanRenderer} {}
 
     void VulkanMemoryPoolBuffer::Initialize ( size_t aStackSize )
     {
@@ -133,7 +142,7 @@ namespace AeonGames
             mOffset = offset;
             throw std::runtime_error ( "Memory Pool Buffer cannot fulfill allocation request." );
         }
-        return BufferAccessor{&mUniformBuffer, offset, aSize};
+        return BufferAccessor{this, offset, aSize};
     }
 
     void VulkanMemoryPoolBuffer::Reset()
@@ -144,5 +153,9 @@ namespace AeonGames
     const VkDescriptorSet& VulkanMemoryPoolBuffer::GetDescriptorSet() const
     {
         return mVkDescriptorSet;
+    }
+    const Buffer& VulkanMemoryPoolBuffer::GetBuffer() const
+    {
+        return mUniformBuffer;
     }
 }

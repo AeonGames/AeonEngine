@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ limitations under the License.
 #include "PointLight.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Matrix4x4.h"
-#include "aeongames/Window.h"
 #include "aeongames/Buffer.h"
 #include "aeongames/Renderer.h"
 #include "aeongames/Node.h"
@@ -65,11 +64,11 @@ namespace AeonGames
     {
     }
 
-    void PointLight::Update ( Node& aNode, double aDelta, Window* aWindow )
+    void PointLight::Update ( Node& aNode, double aDelta )
     {
     }
 
-    void PointLight::Render ( const Node& aNode, const Window& aWindow ) const
+    void PointLight::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
     {
     }
 

@@ -24,6 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Frustum;
     class StringId;
     class Buffer;
     class Texture;
@@ -35,51 +36,71 @@ namespace AeonGames
     class Renderer
     {
     public:
-        ///@name Window Factory
+        DLL virtual ~Renderer() = 0;
+        ///@name Renderer specific resource functions
         ///@{
-        /** Creates a Window object that acts as a wrapper for the Window Id provided.
-            This factory function is used when rendering is to be done in a previously
-            constructed window.
-            @param aWindowId Implementation depended window handle.
-            On Windows, a HWND, On X11 a Window handle.
-            @return A unique pointer to a Window object referencing the specific renderer implementation.
-        */
-        virtual std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const = 0;
-
-        /** Creates a standalone Window object based on the system the engine is running on.
-            @return A unique pointer to a Window object referencing the specific renderer implementation.
-        */
-        virtual std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const = 0;
-
-        ///@}
-        /**
-         * Attach a Window as a rendering surface.
-         *
-        */
-        virtual void AttachWindow ( void* aWindowId ) = 0;
-        /**
-         * Detach a Window as a rendering surface.
-         *
-        */
-        virtual void DetachWindow ( void* aWindowId ) = 0;
         virtual void LoadMesh ( const Mesh& aMesh ) = 0;
         virtual void UnloadMesh ( const Mesh& aMesh ) = 0;
-
-        virtual void BindMesh ( const Mesh& aMesh ) = 0;
-        virtual void BindPipeline ( const Pipeline& aPipeline ) = 0;
-        virtual void SetMaterial ( const Material& aMaterial ) = 0;
-
-        virtual void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const = 0;
-        virtual void SetModelMatrix ( const Matrix4x4& aMatrix ) = 0;
-        virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
-        virtual void SetViewMatrix ( const Matrix4x4& aMatrix ) = 0;
         virtual void LoadPipeline ( const Pipeline& aPipeline ) = 0;
         virtual void UnloadPipeline ( const Pipeline& aPipeline ) = 0;
         virtual void LoadMaterial ( const Material& aMaterial ) = 0;
         virtual void UnloadMaterial ( const Material& aMaterial ) = 0;
         virtual void LoadTexture ( const Texture& aTexture ) = 0;
         virtual void UnloadTexture ( const Texture& aTexture ) = 0;
-        DLL virtual ~Renderer() = 0;
+
+        virtual void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const = 0;
+        virtual void BindMesh ( const Mesh& aMesh ) = 0;
+        virtual void BindPipeline ( const Pipeline& aPipeline ) = 0;
+        virtual void SetMaterial ( const Material& aMaterial ) = 0;
+        virtual void SetModelMatrix ( const Matrix4x4& aMatrix ) = 0;
+        virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
+        virtual void SetViewMatrix ( const Matrix4x4& aMatrix ) = 0;
+        ///@}
+
+        ///@name Window surface related functions
+        ///@{
+        /**
+         * Attach a Window as a rendering surface.
+         * @param aWindowId Platform depended window handle.
+        */
+        virtual void AttachWindow ( void* aWindowId ) = 0;
+        /**
+         * Detach a Window as a rendering surface.
+         * @param aWindowId Platform depended window handle.
+        */
+        virtual void DetachWindow ( void* aWindowId ) = 0;
+        /** Sets the projection matrix matrix for a specific window surface.
+         * @param aWindowId Platform depended window handle.
+        */
+        virtual void SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) = 0;
+        /** Sets the view matrix matrix for a specific window surface.
+         * @param aWindowId Platform depended window handle.
+        */
+        virtual void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) = 0;
+        /** Resizes the specific window surface's viewport.
+         * @param aWindowId Platform depended window handle.
+         * @param aX X coordinate of the viewport.
+         * @param aY Y coordinate of the viewport.
+         * @param aWidth Width of the viewport.
+         * @param aHeight Height of the viewport.
+         */
+        virtual void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
+        virtual void BeginRender ( void* aWindowId ) = 0;
+        virtual void EndRender ( void* aWindowId ) = 0;
+        /** @todo Model matrix should be optional, the only required arguments should be pipeline and mesh... and I am not sure about pipeline. */
+        virtual void Render ( void* aWindowId,
+                              const Matrix4x4& aModelMatrix,
+                              const Mesh& aMesh,
+                              const Pipeline& aPipeline,
+                              const Material* aMaterial = nullptr,
+                              const BufferAccessor* aSkeleton = nullptr,
+                              uint32_t aVertexStart = 0,
+                              uint32_t aVertexCount = 0xffffffff,
+                              uint32_t aInstanceCount = 1,
+                              uint32_t aFirstInstance = 0 ) const = 0;
+        virtual const Frustum& GetFrustum ( void* aWindowId ) const = 0;
+        virtual BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) = 0;
+        ///@}
     };
     /**@name Factory Functions */
     /*@{*/

@@ -27,6 +27,8 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include "aeongames/Skeleton.h"
+#include "aeongames/Animation.h"
+#include "aeongames/Matrix4x4.h"
 
 namespace AeonGames
 {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ namespace AeonGames
 {
     class Node;
     class Window;
+    class Renderer;
     class Component
     {
     public:
@@ -43,8 +44,8 @@ namespace AeonGames
          * @note If the type of the value passed does not match the expected types no change should be made.
         */
         virtual void SetProperty ( uint32_t aId, const Property& aProperty ) = 0;
-        virtual void Update ( Node& aNode, double aDelta, Window* aWindow = nullptr ) = 0;
-        virtual void Render ( const Node& aNode, const Window& aWindow ) const = 0;
+        virtual void Update ( Node& aNode, double aDelta ) = 0;
+        virtual void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) = 0;
         virtual void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) = 0;
     };
     /**@name Factory Functions */

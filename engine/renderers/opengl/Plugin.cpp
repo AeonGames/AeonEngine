@@ -19,8 +19,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.h"
 #include "aeongames/Plugin.h"
 #include "aeongames/StringId.h"
-#include "OpenGLWinAPIRenderer.h"
-#include "OpenGLX11Renderer.h"
+#include "OpenGLRenderer.h"
 
 extern "C"
 {
@@ -29,7 +28,7 @@ extern "C"
         return AeonGames::RegisterRendererConstructor ( "OpenGL",
                 [] ( void* aWindow )
         {
-            return std::make_unique<AeonGames::OpenGLNativeRenderer>();
+            return std::make_unique<AeonGames::OpenGLRenderer> ( aWindow );
         } );
     }
 

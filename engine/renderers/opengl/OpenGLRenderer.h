@@ -26,6 +26,7 @@ limitations under the License.
 #include "OpenGLPipeline.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLTexture.h"
+#include "OpenGLWindow.h"
 #ifdef Status
 #undef Status
 #endif
@@ -42,14 +43,11 @@ namespace AeonGames
     class OpenGLRenderer : public Renderer
     {
     public:
-        OpenGLRenderer();
-        virtual ~OpenGLRenderer() = 0;
-        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-        std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
+        OpenGLRenderer ( void* aWindow );
+        ~OpenGLRenderer();
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
-        virtual bool MakeCurrent() const = 0;
-        virtual void* GetContext() const = 0;
+        void* GetContext() const;
         GLuint GetVertexArrayObject() const;
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
@@ -68,12 +66,45 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        GLuint GetTextureId ( const Texture& aTexture );
+
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
-        GLuint GetTextureId ( const Texture& aTexture );
+        void SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
+        void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
+        void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
+        void BeginRender ( void* aWindowId ) final;
+        void EndRender ( void* aWindowId ) final;
+        void Render ( void* aWindowId,
+                      const Matrix4x4& aModelMatrix,
+                      const Mesh& aMesh,
+                      const Pipeline& aPipeline,
+                      const Material* aMaterial = nullptr,
+                      const BufferAccessor* aSkeleton = nullptr,
+                      uint32_t aVertexStart = 0,
+                      uint32_t aVertexCount = 0xffffffff,
+                      uint32_t aInstanceCount = 1,
+                      uint32_t aFirstInstance = 0 ) const final;
+        const Frustum& GetFrustum ( void* aWindowId ) const final;
+        BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
+#if defined(_WIN32)
+        bool MakeCurrent ( HDC aDeviceContext = nullptr );
+#elif defined(__unix__)
+        Display* GetDisplay() const;
+        bool MakeCurrent ( ::Window aWindow = None );
+#endif
     protected:
         void InitializeOverlay();
         void FinalizeOverlay();
+#if defined(_WIN32)
+        HWND mWindowId {};
+        HDC mDeviceContext{};
+        HGLRC mOpenGLContext{};
+#elif defined(__unix__)
+        Colormap mColorMap {None};
+        ::Window mWindowId{None};
+        GLXContext mOpenGLContext{None};
+#endif
         /// General VAO
         GLuint mVertexArrayObject{};
         OpenGLBuffer mMatrices{};
@@ -93,6 +124,12 @@ namespace AeonGames
         std::unordered_map<size_t, OpenGLMaterial> mMaterialStore{};
         std::unordered_map<size_t, OpenGLMesh> mMeshStore{};
         std::unordered_map<size_t, OpenGLTexture> mTextureStore{};
+        std::unordered_map<void*, OpenGLWindow> mWindowStore{};
+    private:
+        static std::atomic<size_t> mRendererCount;
+#if defined(__unix__)
+        static Display* mDisplay;
+#endif
     };
 }
 #endif

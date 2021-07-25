@@ -154,13 +154,9 @@ namespace AeonGames
         DLL Component* GetComponent ( uint32_t aId ) const;
         DLL std::unique_ptr<Component> RemoveComponent ( uint32_t aId );
         /** @} */
-        /** @name Abstract functions
-         *  @todo decide if these should be private or public. */
-        /** @{ */
-        DLL void Update ( const double delta, Window* aWindow = nullptr );
-        DLL void Render ( const Window& aWindow ) const;
+        DLL void Update ( const double delta );
+        DLL void Render ( Renderer& aRenderer, void* aWindowId ) const;
         DLL void ProcessMessage ( uint32_t aMessageType, const void* aMessageData );
-        /** @} */
     private:
         friend class Scene;
         std::string mName{};

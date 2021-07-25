@@ -38,13 +38,27 @@ namespace AeonGames
     }
 
     OpenGLMemoryPoolBuffer::OpenGLMemoryPoolBuffer ( const OpenGLRenderer&  aOpenGLRenderer, GLsizei aStackSize ) :
+        mOpenGLRenderer { aOpenGLRenderer },
         mUniformBuffer { ( ( aStackSize - 1 ) | ( GetUniformBufferOffsetAlignment() - 1 ) ) + 1, GL_DYNAMIC_DRAW }
     {
     }
 
+    OpenGLMemoryPoolBuffer::OpenGLMemoryPoolBuffer ( const OpenGLRenderer& aOpenGLRenderer ) :
+        mOpenGLRenderer { aOpenGLRenderer },
+        mUniformBuffer {}
+    {
+    }
+
+    OpenGLMemoryPoolBuffer::OpenGLMemoryPoolBuffer ( OpenGLMemoryPoolBuffer&& aOpenGLMemoryPoolBuffer ) :
+        mOpenGLRenderer { aOpenGLMemoryPoolBuffer.mOpenGLRenderer },
+        mUniformBuffer { std::move ( aOpenGLMemoryPoolBuffer.mUniformBuffer ) }
+    {
+        std::swap ( mOffset, aOpenGLMemoryPoolBuffer.mOffset );
+    }
+
     OpenGLMemoryPoolBuffer::~OpenGLMemoryPoolBuffer()
     {
-        mUniformBuffer.Finalize();
+        Finalize();
     }
 
     BufferAccessor OpenGLMemoryPoolBuffer::Allocate ( size_t aSize )
@@ -56,11 +70,24 @@ namespace AeonGames
             mOffset = offset;
             throw std::runtime_error ( "Memory Pool Buffer cannot fulfill allocation request." );
         }
-        return BufferAccessor{&mUniformBuffer, offset, aSize};
+        return BufferAccessor{this, offset, aSize};
     }
 
     void OpenGLMemoryPoolBuffer::Reset()
     {
         mOffset = 0;
+    }
+    const Buffer& OpenGLMemoryPoolBuffer::GetBuffer() const
+    {
+        return mUniformBuffer;
+    }
+
+    void OpenGLMemoryPoolBuffer::Initialize ( GLsizei aStackSize )
+    {
+        mUniformBuffer.Initialize ( ( ( aStackSize - 1 ) | ( GetUniformBufferOffsetAlignment() - 1 ) ) + 1, GL_DYNAMIC_DRAW );
+    }
+    void OpenGLMemoryPoolBuffer::Finalize()
+    {
+        mUniformBuffer.Finalize();
     }
 }
