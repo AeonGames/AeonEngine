@@ -19,7 +19,10 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <mutex>
-#include "aeongames/CommonWindow.h"
+#include "aeongames/Platform.h"
+#include "aeongames/Matrix4x4.h"
+#include "aeongames/Frustum.h"
+#include "aeongames/Texture.h"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFrameBuffer.h"
@@ -29,15 +32,22 @@ namespace AeonGames
 {
     class Buffer;
     class OpenGLRenderer;
-    class OpenGLWindow : public CommonWindow
+    class OpenGLWindow
     {
     public:
-        OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
-        OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer );
+#if defined(_WIN32)
+        OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, HWND aWindowId );
+#elif defined(__unix__)
+        OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, Display* aDisplay, ::Window aWindowId );
+#endif
+        OpenGLWindow ( OpenGLWindow&& aOpenGLWindow );
+        OpenGLWindow ( const OpenGLWindow& aOpenGLWindow ) = delete;
+        OpenGLWindow& operator= ( const OpenGLWindow& aOpenGLWindow ) = delete;
+        OpenGLWindow& operator= ( OpenGLWindow&& aOpenGLWindow ) = delete;
         ~OpenGLWindow();
         void* GetWindowId() const;
-        void BeginRender() final;
-        void EndRender() final;
+        void BeginRender();
+        void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -46,25 +56,31 @@ namespace AeonGames
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
-                        uint32_t aFirstInstance = 0 ) const final;
-        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize ) final;
-        void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels ) final;
-        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
-        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
-        const Matrix4x4 & GetProjectionMatrix() const final;
-        const Matrix4x4 & GetViewMatrix() const final;
-        void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
-    protected:
+                        uint32_t aFirstInstance = 0 ) const;
+        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels );
+        void SetProjectionMatrix ( const Matrix4x4& aMatrix );
+        void SetViewMatrix ( const Matrix4x4& aMatrix );
+        const Matrix4x4 & GetProjectionMatrix() const;
+        const Matrix4x4 & GetViewMatrix() const;
+        const Frustum & GetFrustum() const;
+        void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
+    private:
+        void Initialize();
+        void SwapBuffers();
         OpenGLRenderer& mOpenGLRenderer;
+#if defined(_WIN32)
+        HWND mWindowId {};
+        HDC mDeviceContext{};
+#elif defined(__unix__)
+        Display* mDisplay {};
+        ::Window mWindowId{None};
+#endif
+        Frustum mFrustum {};
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         //OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
-        void Initialize();
-        void Finalize();
-    private:
-        virtual bool MakeCurrent() = 0;
-        virtual void SwapBuffers() = 0;
-        OpenGLFrameBuffer mFrameBuffer {};
+        OpenGLFrameBuffer mFrameBuffer{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
     };
 }

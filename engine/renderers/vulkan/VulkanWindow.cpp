@@ -34,23 +34,17 @@ limitations under the License.
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
 #include "aeongames/LogLevel.h"
+#include "aeongames/MemoryPool.h"
 
 namespace AeonGames
 {
-    VulkanWindow::VulkanWindow ( VulkanRenderer& aVulkanRenderer, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
-        CommonWindow { aX, aY, aWidth, aHeight, aFullScreen }, mVulkanRenderer { aVulkanRenderer }
+    VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
+        mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
+        mMemoryPoolBuffer{mVulkanRenderer, 64_kb}
     {
         try
         {
             Initialize();
-#if defined ( VK_USE_PLATFORM_WIN32_KHR )
-            if ( aFullScreen )
-            {
-                RECT rect;
-                GetClientRect ( static_cast<HWND> ( mWindowId ), &rect );
-                ResizeViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
-            }
-#endif
         }
         catch ( ... )
         {
@@ -59,18 +53,33 @@ namespace AeonGames
         }
     }
 
-    VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
-        CommonWindow{}, mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId}
+    VulkanWindow::VulkanWindow ( VulkanWindow&& aVulkanWindow ) :
+        mVulkanRenderer { aVulkanWindow.mVulkanRenderer },
+        mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) }
     {
-        try
-        {
-            Initialize();
-        }
-        catch ( ... )
-        {
-            Finalize();
-            throw;
-        }
+        std::swap ( mWindowId, aVulkanWindow.mWindowId );
+        std::swap ( mFrustum, aVulkanWindow.mFrustum );
+#if defined(__unix__)
+        std::swap ( mColorMap, aVulkanWindow.mColorMap );
+#elif defined(_WIN32)
+        std::swap ( mDeviceContext, aVulkanWindow.mDeviceContext );
+#endif
+        std::swap ( mProjectionMatrix, aVulkanWindow.mProjectionMatrix );
+        std::swap ( mViewMatrix, aVulkanWindow.mViewMatrix );
+        std::swap ( mVkSurfaceKHR, aVulkanWindow.mVkSurfaceKHR );
+        std::swap ( mVkSurfaceCapabilitiesKHR, aVulkanWindow.mVkSurfaceCapabilitiesKHR );
+        std::swap ( mSwapchainImageCount, aVulkanWindow.mSwapchainImageCount );
+        std::swap ( mVkSwapchainKHR, aVulkanWindow.mVkSwapchainKHR );
+        std::swap ( mVkDepthStencilImage, aVulkanWindow.mVkDepthStencilImage );
+        std::swap ( mVkDepthStencilImageMemory, aVulkanWindow.mVkDepthStencilImageMemory );
+        std::swap ( mVkDepthStencilImageView, aVulkanWindow.mVkDepthStencilImageView );
+        std::swap ( mHasStencil, aVulkanWindow.mHasStencil );
+        std::swap ( mActiveImageIndex, aVulkanWindow.mActiveImageIndex );
+        std::swap ( mVkViewport, aVulkanWindow.mVkViewport );
+        std::swap ( mVkScissor, aVulkanWindow.mVkScissor );
+        mVkSwapchainImages.swap ( aVulkanWindow.mVkSwapchainImages );
+        mVkSwapchainImageViews.swap ( aVulkanWindow.mVkSwapchainImageViews );
+        mVkFramebuffers.swap ( aVulkanWindow.mVkFramebuffers );
     }
 
     VulkanWindow::~VulkanWindow()
@@ -142,7 +151,7 @@ namespace AeonGames
         swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         swapchain_create_info.presentMode = VK_PRESENT_MODE_FIFO_KHR; // This may be reset below.
         swapchain_create_info.clipped = VK_TRUE;
-        swapchain_create_info.oldSwapchain = mVkSwapchainKHR; // Used for Resising.
+        swapchain_create_info.oldSwapchain = mVkSwapchainKHR; // Used for Resizing.
         {
             uint32_t present_mode_count = 0;
             vkGetPhysicalDeviceSurfacePresentModesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &present_mode_count, nullptr );
@@ -339,7 +348,6 @@ namespace AeonGames
 
     void VulkanWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
-        mAspectRatio = ( static_cast<float> ( aWidth ) / static_cast<float> ( aHeight ) );
         VkSurfaceCapabilitiesKHR surface_capabilities{};
         VkResult result {vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_capabilities ) };
         if ( result == VK_SUCCESS && std::memcmp ( &surface_capabilities, &mVkSurfaceCapabilitiesKHR, sizeof ( VkSurfaceCapabilitiesKHR ) ) != 0 )
@@ -380,6 +388,7 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
+        ///@todo No need to set projection matrix on the Renderer.
         mVulkanRenderer.SetProjectionMatrix ( mProjectionMatrix );
     }
 
@@ -387,6 +396,7 @@ namespace AeonGames
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
+        ///@todo No need to set view matrix on the Renderer.
         mVulkanRenderer.SetViewMatrix ( mViewMatrix );
     }
 
@@ -398,6 +408,11 @@ namespace AeonGames
     const Matrix4x4 & VulkanWindow::GetViewMatrix() const
     {
         return mViewMatrix;
+    }
+
+    const Frustum & VulkanWindow::GetFrustum() const
+    {
+        return mFrustum;
     }
 
     void VulkanWindow::BeginRender()
@@ -492,7 +507,7 @@ namespace AeonGames
         {
             std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
-        mVulkanRenderer.ResetMemoryPoolBuffer();
+        mMemoryPoolBuffer.Reset();
     }
 
     void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
@@ -598,248 +613,9 @@ namespace AeonGames
             }
         }
     }
+
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
-        return mVulkanRenderer.AllocateSingleFrameUniformMemory ( aSize );
+        return mMemoryPoolBuffer.Allocate ( aSize );
     }
-
-    void VulkanWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
-    {
-        ///@todo Add Overlay Texture
-        //mOverlay.WritePixels(aXOffset,aYOffset,aWidth,aHeight,aFormat, aType,aPixels);
-    }
-
-    /** @todo move each of the sections bellow into their own file and #include it */
-#if defined ( VK_USE_PLATFORM_WIN32_KHR )
-    enum
-    {
-        RENDER_LOOP = 1
-    };
-
-    void AeonEngineTimerProc (
-        HWND hwnd,
-        UINT uMsg,
-        UINT_PTR wParam,
-        DWORD ms )
-    {
-        switch ( uMsg )
-        {
-        case WM_TIMER:
-            if ( wParam == RENDER_LOOP )
-            {
-                Window* window = CommonWindow::GetWindowFromId ( hwnd );
-                window->RenderLoop();
-            }
-            break;
-        }
-    }
-
-    LRESULT CALLBACK AeonEngineWindowProc (
-        _In_ HWND   hwnd,
-        _In_ UINT   uMsg,
-        _In_ WPARAM wParam,
-        _In_ LPARAM lParam
-    )
-    {
-        switch ( uMsg )
-        {
-        case WM_CLOSE:
-            ShowWindow ( hwnd, SW_HIDE );
-            PostQuitMessage ( 0 );
-            break;
-        case WM_DESTROY:
-            PostQuitMessage ( 0 );
-            break;
-        case WM_SIZE:
-        {
-            Window* window = Window::GetWindowFromId ( hwnd );
-            if ( window )
-            {
-                window->ResizeViewport ( 0, 0, LOWORD ( lParam ), HIWORD ( lParam ) );
-            }
-            return 0;
-        }
-        default:
-            return DefWindowProc ( hwnd, uMsg, wParam, lParam );
-        }
-        return 0;
-    }
-
-    void VulkanWindow::Run ( Scene& aScene )
-    {
-        MSG msg;
-        bool done = false;
-        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
-        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
-        SetScene ( &aScene );
-        while ( !done )
-        {
-            if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
-            {
-                if ( msg.message == WM_QUIT )
-                {
-                    done = true;
-                }
-                else
-                {
-                    TranslateMessage ( &msg );
-                    DispatchMessage ( &msg );
-                }
-            }
-            else
-            {
-                std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
-                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
-                aScene.Update ( delta.count() );
-                last_time = current_time;
-                RenderLoop();
-            }
-        }
-        ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
-        SetScene ( nullptr );
-    }
-    void VulkanWindow::Show ( bool aShow ) const
-    {
-        ShowWindow ( static_cast<HWND> ( mWindowId ), aShow ? SW_SHOW : SW_HIDE );
-    }
-    void VulkanWindow::StartRenderTimer() const
-    {
-        SetTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP, USER_TIMER_MINIMUM, static_cast<TIMERPROC> ( AeonEngineTimerProc ) );
-    }
-    void VulkanWindow::StopRenderTimer() const
-    {
-        KillTimer ( reinterpret_cast<HWND> ( mWindowId ), RENDER_LOOP );
-    }
-#elif defined( VK_USE_PLATFORM_XLIB_KHR )
-    static const int visual_attribs[] =
-    {
-        GLX_X_RENDERABLE, True,
-        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-        GLX_RENDER_TYPE, GLX_RGBA_BIT,
-        GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-        GLX_RED_SIZE, 8,
-        GLX_GREEN_SIZE, 8,
-        GLX_BLUE_SIZE, 8,
-        GLX_ALPHA_SIZE, 8,
-        GLX_DEPTH_SIZE, 24,
-        GLX_STENCIL_SIZE, 8,
-        GLX_DOUBLEBUFFER, True,
-        None
-    };
-
-    GLXFBConfig VulkanWindow::GetGLXConfig ( Display* display )
-    {
-        int frame_buffer_config_count{};
-        GLXFBConfig *frame_buffer_configs =
-            glXChooseFBConfig ( display,
-                                DefaultScreen ( display ),
-                                visual_attribs, &frame_buffer_config_count );
-        if ( !frame_buffer_configs )
-        {
-            throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
-        }
-
-        std::sort ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
-                    [display] ( const GLXFBConfig & a, const GLXFBConfig & b )->bool
-        {
-            int a_sample_buffers{};
-            int a_samples{};
-            int b_sample_buffers{};
-            int b_samples{};
-            glXGetFBConfigAttrib ( display, a, GLX_SAMPLE_BUFFERS, &a_sample_buffers );
-            glXGetFBConfigAttrib ( display, a, GLX_SAMPLES, &a_samples  );
-            glXGetFBConfigAttrib ( display, b, GLX_SAMPLE_BUFFERS, &b_sample_buffers );
-            glXGetFBConfigAttrib ( display, b, GLX_SAMPLES, &b_samples  );
-            return a_sample_buffers >= b_sample_buffers && a_samples > b_samples;
-        } );
-        GLXFBConfig result = frame_buffer_configs[ 0 ];
-        XFree ( frame_buffer_configs );
-        return result;
-    }
-
-    void VulkanWindow::Run ( Scene& aScene )
-    {
-        bool running{true};
-        XEvent xevent;
-        Atom wm_delete_window = XInternAtom ( mVulkanRenderer.GetDisplay(), "WM_DELETE_WINDOW", 0 );
-        XSetWMProtocols ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ), &wm_delete_window, 1 );
-        std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
-
-        SetScene ( &aScene );
-        Show ( true );
-        while ( running )
-        {
-            while ( ( XPending ( mVulkanRenderer.GetDisplay() ) > 0 ) && running )
-            {
-                XNextEvent ( mVulkanRenderer.GetDisplay(), &xevent );
-                switch ( xevent.type )
-                {
-                case Expose:
-                {
-                    // Here is where window resize is required.
-                    XWindowAttributes xwa;
-                    XGetWindowAttributes ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ), &xwa );
-                    ResizeViewport ( 0, 0, xwa.width, xwa.height );
-                }
-                break;
-                case KeyPress:
-                    //engine.KeyDown ( GetScancode ( XLookupKeysym ( &xEvent.xkey, 0 ) ) );
-                    break;
-                case KeyRelease:
-                    //engine.KeyUp ( GetScancode ( XLookupKeysym ( &xEvent.xkey, 0 ) ) );
-                    break;
-                case ButtonPress:
-                    //engine.ButtonDown ( xEvent.xbutton.button, xEvent.xbutton.x, xEvent.xbutton.y );
-                    break;
-                case ButtonRelease:
-                    //engine.ButtonUp ( xEvent.xbutton.button, xEvent.xbutton.x, xEvent.xbutton.y );
-                    break;
-                case MotionNotify:
-                    //engine.MouseMove ( xEvent.xmotion.x, xEvent.xmotion.y );
-                    break;
-                case ClientMessage:
-                    if ( static_cast<Atom> ( xevent.xclient.data.l[0] ) == wm_delete_window )
-                    {
-                        running = false;
-                    }
-                    break;
-                case ConfigureNotify:
-                    break;
-                default:
-                    std::cout << LogLevel::Info <<  "Received Event Type: " <<  xevent.type << std::endl;
-                    break;
-                }
-            }
-            std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
-            std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
-            aScene.Update ( delta.count() );
-            last_time = current_time;
-            RenderLoop();
-        }
-        Show ( false );
-        SetScene ( nullptr );
-    }
-
-    void VulkanWindow::Show ( bool aShow ) const
-    {
-        if ( aShow )
-        {
-            XMapWindow ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ) );
-        }
-        else
-        {
-            XUnmapWindow ( mVulkanRenderer.GetDisplay(), reinterpret_cast<::Window> ( mWindowId ) );
-        }
-    }
-
-    void VulkanWindow::StartRenderTimer() const
-    {
-        std::cout << __FUNCTION__ << std::endl;
-    }
-
-    void VulkanWindow::StopRenderTimer() const
-    {
-        std::cout << __FUNCTION__ << std::endl;
-    }
-#endif
 }

@@ -25,7 +25,6 @@ limitations under the License.
 #include "aeongames/Utilities.h"
 #include "aeongames/ProtoBufHelpers.h"
 #include "aeongames/ProtoBufUtils.h"
-#include "aeongames/Window.h"
 #include "aeongames/CRC.h"
 #include "aeongames/AeonEngine.h"
 #include "aeongames/ResourceCache.h"

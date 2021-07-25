@@ -54,6 +54,8 @@ namespace AeonGames
         int GetStringMetaType() const;
         int GetPathMetaType() const;
         QSettings& GetSettings();
+        void AttachWindowToRenderer ( void* aWindow );
+        void DetachWindowFromRenderer ( void* aWindow );
         Renderer* GetRenderer();
     private:
         QSettings mSettings{"AeonGames", "AeonGames World Editor"};
@@ -63,6 +65,7 @@ namespace AeonGames
         bool mIsBlocked{false};
         QMutex mMutex{};
         GridSettings mGridSettings{};
+        std::string mRendererName{}; ///< @todo Multi-renderer support
         std::unique_ptr<Renderer> mRenderer{};
         std::unique_ptr<Pipeline> mGridPipeline{};
         std::unique_ptr<Mesh> mGridMesh{};

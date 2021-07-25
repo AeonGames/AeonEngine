@@ -25,10 +25,16 @@ namespace AeonGames
     {
     public:
         OpenGLFrameBuffer();
+        OpenGLFrameBuffer ( OpenGLFrameBuffer&& aOpenGLFrameBuffer );
+        OpenGLFrameBuffer ( const OpenGLFrameBuffer& aOpenGLFrameBuffer ) = delete;
+        OpenGLFrameBuffer& operator= ( const OpenGLFrameBuffer& aOpenGLFrameBuffer ) = delete;
+        OpenGLFrameBuffer& operator= ( OpenGLFrameBuffer&& aOpenGLFrameBuffer ) = delete;
         ~OpenGLFrameBuffer();
         void Resize ( uint32_t aWidth, uint32_t aHeight );
         void Bind();
         void Unbind();
+        void Initialize();
+        void Finalize();
         GLuint GetFBO() const; /// This is temporary
     private:
         GLuint mFBO {};

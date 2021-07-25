@@ -65,12 +65,13 @@ namespace AeonGames
         void wheelEvent ( QWheelEvent *event ) final;
         bool event ( QEvent* aEvent ) final;
         void updateViewMatrix();
+        void* mWinId{ nullptr };
         const Scene* mScene{nullptr};
         QPoint mLastCursorPosition;
         QTimer mTimer;
         QElapsedTimer mStopWatch;
-        std::unique_ptr<AeonGames::Window> mWindow;
         float mFrustumVerticalHalfAngle;
+        float mAspectRatio{1.0f};
         float mStep;
         float mFieldOfView{};
         float mNear{};

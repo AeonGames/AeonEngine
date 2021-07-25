@@ -31,7 +31,6 @@ limitations under the License.
 #include "aeongames/Animation.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/ResourceCache.h"
-#include "aeongames/Window.h"
 #include "aeongames/Frustum.h"
 #include "aeongames/CRC.h"
 #include "aeongames/Node.h"
@@ -39,10 +38,9 @@ limitations under the License.
 namespace AeonGames
 {
     EngineWindow::EngineWindow ( QWindow *parent ) :
-        QWindow ( parent ),
+        QWindow{ parent },
         mTimer(),
         mStopWatch(),
-        mWindow(),
         mFrustumVerticalHalfAngle ( 0 ), mStep ( 10 ),
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         // Stand back 3 meters.
@@ -70,11 +68,8 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
-        mWindow =  qWorldEditorApp->GetRenderer()->CreateWindowProxy ( reinterpret_cast<void*> ( winId() ) );
-        if ( !mWindow )
-        {
-            throw std::runtime_error ( "Window creation failed." );
-        }
+        mWinId = reinterpret_cast<void*> ( winId() );
+        qWorldEditorApp->AttachWindowToRenderer ( mWinId );
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
 
         auto& settings = qWorldEditorApp->GetSettings();
@@ -100,7 +95,7 @@ namespace AeonGames
     {
         stop();
         mTimer.disconnect();
-        mWindow.reset();
+        qWorldEditorApp->DetachWindowFromRenderer ( mWinId );
     }
 
     void EngineWindow::stop()
@@ -129,22 +124,22 @@ namespace AeonGames
     {
         mFieldOfView = aFieldOfView;
         Matrix4x4 projection{};
-        projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
-        mWindow->SetProjectionMatrix ( projection );
+        projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
+        qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, projection );
     }
     void EngineWindow::SetNear ( float aNear )
     {
         mNear = aNear;
         Matrix4x4 projection{};
-        projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
-        mWindow->SetProjectionMatrix ( projection );
+        projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
+        qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, projection );
     }
     void EngineWindow::SetFar ( float aFar )
     {
         mFar = aFar;
         Matrix4x4 projection{};
-        projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
-        mWindow->SetProjectionMatrix ( projection );
+        projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
+        qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, projection );
     }
 #if 0
     // Commented pending Refactor
@@ -192,24 +187,26 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        if ( aResizeEvent->size() != aResizeEvent->oldSize() && mWindow && aResizeEvent->size().width() && aResizeEvent->size().height() )
+        if ( qWorldEditorApp->GetRenderer() != nullptr && aResizeEvent->size() != aResizeEvent->oldSize() && aResizeEvent->size().width() && aResizeEvent->size().height() )
         {
 #ifdef Q_OS_WIN
             // This is a workaround
             QMargins margins{QWindow::frameMargins() };
-            mWindow->ResizeViewport (
-                margins.left(),
-                margins.top(),
-                aResizeEvent->size().width(), aResizeEvent->size().height() );
+            qWorldEditorApp->GetRenderer()->ResizeViewport ( mWinId,
+                    margins.left(),
+                    margins.top(),
+                    aResizeEvent->size().width(), aResizeEvent->size().height() );
 #else
-            mWindow->ResizeViewport (
-                0,
-                0,
-                aResizeEvent->size().width(), aResizeEvent->size().height() );
+            qWorldEditorApp->GetRenderer()->ResizeViewport ( mWinId,
+                    0,
+                    0,
+                    aResizeEvent->size().width(), aResizeEvent->size().height() );
 #endif
             Matrix4x4 projection {};
-            projection.Perspective ( mFieldOfView, mWindow->GetAspectRatio(), mNear, mFar );
-            mWindow->SetProjectionMatrix ( projection );
+            mAspectRatio = ( static_cast<float> ( aResizeEvent->size().width() ) /
+                             static_cast<float> ( aResizeEvent->size().height() ) );
+            projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
+            qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, projection );
 #if 0
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -220,7 +217,7 @@ namespace AeonGames
             float half_radius = ( static_cast<float> ( aResizeEvent->size().width() ) / static_cast<float> ( aResizeEvent->size().height() ) ) / 2;
             mProjectionMatrix.frustum ( -half_radius, half_radius, -0.5, 0.5, 1, 1600 );
             mProjectionMatrix = mProjectionMatrix * flipMatrix;
-            mWindow->SetProjectionMatrix ( mProjectionMatrix.constData() );
+            qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, mProjectionMatrix.constData() );
             // Calculate frustum half vertical angle (for fitting nodes into frustum)
             float v1[2] = { 1, 0 };
             float v2[2] = { 1, mWindow->GetHalfAspectRatio() };
@@ -271,64 +268,77 @@ namespace AeonGames
                 }
                 if ( mScene )
                 {
-                    const_cast<Scene*> ( mScene )->Update ( delta, mWindow.get() );
+                    const_cast<Scene*> ( mScene )->Update ( delta );
                 }
-                mWindow->BeginRender();
-                mWindow->Render ( Transform{},
-                                  qWorldEditorApp->GetGridMesh(),
-                                  qWorldEditorApp->GetGridPipeline(),
-                                  &qWorldEditorApp->GetXGridMaterial(), nullptr, 0, 2,
-                                  qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
-                mWindow->Render ( Transform{},
-                                  qWorldEditorApp->GetGridMesh(),
-                                  qWorldEditorApp->GetGridPipeline(),
-                                  &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
-                                  qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
+                qWorldEditorApp->GetRenderer()->BeginRender ( mWinId );
+                qWorldEditorApp->GetRenderer()->Render (
+                    mWinId,
+                    Matrix4x4{},
+                    qWorldEditorApp->GetGridMesh(),
+                    qWorldEditorApp->GetGridPipeline(),
+                    &qWorldEditorApp->GetXGridMaterial(), nullptr, 0, 2,
+                    qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
+                qWorldEditorApp->GetRenderer()->Render (
+                    mWinId,
+                    Matrix4x4{},
+                    qWorldEditorApp->GetGridMesh(),
+                    qWorldEditorApp->GetGridPipeline(),
+                    &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
+                    qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
                 /** @todo This should be the code path for edit mode,
                  * game mode should just render the scene using Window::Render(const Scene&)
                 */
                 if ( mScene && mScene->GetChildrenCount() )
                 {
-                    Frustum frustum ( mWindow->GetProjectionMatrix() * mWindow->GetViewMatrix() );
+                    const Frustum& frustum { qWorldEditorApp->GetRenderer()->GetFrustum ( mWinId ) };
                     mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
                     {
                         if ( &aNode == mScene->GetCamera() )
                         {
+                            /* This renders the scene current camera node's frustum */
                             Matrix4x4 projection_matrix{};
-                            projection_matrix.Perspective ( mScene->GetFieldOfView(), mWindow->GetAspectRatio(), mScene->GetNear(), mScene->GetFar() );
+                            projection_matrix.Perspective ( mScene->GetFieldOfView(), mAspectRatio, mScene->GetNear(), mScene->GetFar() );
                             projection_matrix.Invert();
-                            mWindow->Render ( aNode.GetGlobalTransform() * projection_matrix,
-                                              qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline(),
-                                              &qWorldEditorApp->GetWireMaterial() );
+                            qWorldEditorApp->GetRenderer()->Render (
+                                mWinId,
+                                aNode.GetGlobalTransform() * projection_matrix,
+                                qWorldEditorApp->GetAABBWireMesh(),
+                                qWorldEditorApp->GetWirePipeline(),
+                                &qWorldEditorApp->GetWireMaterial() );
                         }
 
                         AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
                         if ( frustum.Intersects ( transformed_aabb ) )
                         {
                             // Call Node specific rendering function.
-                            aNode.Render ( *mWindow );
+                            aNode.Render ( *qWorldEditorApp->GetRenderer(), mWinId );
                             // Render Node AABBss
-                            mWindow->Render ( transformed_aabb.GetTransform(),
-                                              qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline(),
-                                              &qWorldEditorApp->GetWireMaterial() );
+                            qWorldEditorApp->GetRenderer()->Render (
+                                mWinId,
+                                transformed_aabb.GetTransform(),
+                                qWorldEditorApp->GetAABBWireMesh(),
+                                qWorldEditorApp->GetWirePipeline(),
+                                &qWorldEditorApp->GetWireMaterial() );
                             // Render Node Root
-                            mWindow->Render ( aNode.GetGlobalTransform(),
-                                              qWorldEditorApp->GetAABBWireMesh(),
-                                              qWorldEditorApp->GetWirePipeline(),
-                                              &qWorldEditorApp->GetWireMaterial() );
+                            qWorldEditorApp->GetRenderer()->Render (
+                                mWinId,
+                                aNode.GetGlobalTransform(),
+                                qWorldEditorApp->GetAABBWireMesh(),
+                                qWorldEditorApp->GetWirePipeline(),
+                                &qWorldEditorApp->GetWireMaterial() );
                             // Render AABB Center
-                            mWindow->Render (   Transform{Vector3{1, 1, 1},
-                                                          Quaternion{1, 0, 0, 0},
-                                                          Vector3{transformed_aabb.GetCenter() }},
-                                                qWorldEditorApp->GetAABBWireMesh(),
-                                                qWorldEditorApp->GetWirePipeline(),
-                                                &qWorldEditorApp->GetWireMaterial() );
+                            qWorldEditorApp->GetRenderer()->Render (
+                                mWinId,
+                                Transform{Vector3{1, 1, 1},
+                                          Quaternion{1, 0, 0, 0},
+                                          Vector3{transformed_aabb.GetCenter() }},
+                                qWorldEditorApp->GetAABBWireMesh(),
+                                qWorldEditorApp->GetWirePipeline(),
+                                &qWorldEditorApp->GetWireMaterial() );
                         }
                     } );
                 }
-                mWindow->EndRender();
+                qWorldEditorApp->GetRenderer()->EndRender ( mWinId );
                 return true;
             }
         default:
@@ -341,7 +351,7 @@ namespace AeonGames
         Transform view_transform;
         view_transform.SetTranslation ( Vector3 ( mCameraLocation.x(), mCameraLocation.y(), mCameraLocation.z() ) );
         view_transform.SetRotation ( Quaternion ( mCameraRotation.scalar(), mCameraRotation.x(), mCameraRotation.y(), mCameraRotation.z() ) );
-        mWindow->SetViewMatrix ( view_transform.GetInverted().GetMatrix() );
+        qWorldEditorApp->GetRenderer()->SetViewMatrix ( mWinId, view_transform.GetInverted().GetMatrix() );
     }
 
     void EngineWindow::keyPressEvent ( QKeyEvent * event )

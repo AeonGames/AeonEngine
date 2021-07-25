@@ -21,26 +21,27 @@ limitations under the License.
 #include <tuple>
 #include <initializer_list>
 #include <vulkan/vulkan.h>
-#include "aeongames/BufferAccessor.h"
 #include "VulkanBuffer.h"
+#include "aeongames/MemoryPoolBuffer.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanMemoryPoolBuffer
+    class VulkanMemoryPoolBuffer : public MemoryPoolBuffer
     {
     public:
         VulkanMemoryPoolBuffer ( const VulkanRenderer&  aVulkanRenderer, size_t aStackSize );
         VulkanMemoryPoolBuffer ( const VulkanRenderer& );
+        VulkanMemoryPoolBuffer ( VulkanMemoryPoolBuffer&& );
         VulkanMemoryPoolBuffer& operator= ( const VulkanMemoryPoolBuffer& ) = delete;
         VulkanMemoryPoolBuffer& operator = ( VulkanMemoryPoolBuffer&& ) = delete;
-        VulkanMemoryPoolBuffer ( VulkanMemoryPoolBuffer&& ) = delete;
         ~VulkanMemoryPoolBuffer();
         void Initialize ( size_t aStackSize );
         void Finalize();
-        BufferAccessor Allocate ( size_t aSize );
-        void Reset();
         const VkDescriptorSet& GetDescriptorSet() const;
+        BufferAccessor Allocate ( size_t aSize ) final;
+        void Reset() final;
+        const Buffer& GetBuffer() const final;
     private:
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
@@ -49,7 +50,7 @@ namespace AeonGames
         size_t mOffset{0};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
-        VulkanBuffer mUniformBuffer{mVulkanRenderer};
+        VulkanBuffer mUniformBuffer;
     };
 }
 #endif

@@ -31,6 +31,7 @@ limitations under the License.
 #include "VulkanPipeline.h"
 #include "VulkanMaterial.h"
 #include "VulkanTexture.h"
+#include "VulkanMemoryPoolBuffer.h"
 
 namespace AeonGames
 {
@@ -61,8 +62,6 @@ namespace AeonGames
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
         VkCommandBuffer BeginSingleTimeCommands() const;
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
-        std::unique_ptr<Window> CreateWindowProxy ( void* aWindowId ) const final;
-        std::unique_ptr<Window> CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const final;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
 
@@ -70,7 +69,6 @@ namespace AeonGames
         void BindPipeline ( const Pipeline& aPipeline ) final;
         void SetMaterial ( const Material& aMaterial ) final;
 
-        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
         void SetModelMatrix ( const Matrix4x4& aMatrix ) final;
         void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
         void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
@@ -80,11 +78,29 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        const VkDescriptorImageInfo* GetTextureDescriptorImageInfo ( const Texture& aTexture ) const;
+
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
-        const VkDescriptorImageInfo* GetTextureDescriptorImageInfo ( const Texture& aTexture ) const;
-        BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
-        void ResetMemoryPoolBuffer();
+        void SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
+        void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
+        void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
+        void BeginRender ( void* aWindowId ) final;
+        void EndRender ( void* aWindowId ) final;
+        void Render ( void* aWindowId,
+                      const Matrix4x4& aModelMatrix,
+                      const Mesh& aMesh,
+                      const Pipeline& aPipeline,
+                      const Material* aMaterial = nullptr,
+                      const BufferAccessor* aSkeleton = nullptr,
+                      uint32_t aVertexStart = 0,
+                      uint32_t aVertexCount = 0xffffffff,
+                      uint32_t aInstanceCount = 1,
+                      uint32_t aFirstInstance = 0 ) const final;
+        const Frustum& GetFrustum ( void* aWindowId ) const final;
+        BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
+        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
+
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* GetDisplay() const;
 #endif
@@ -147,16 +163,8 @@ namespace AeonGames
         std::unordered_map<size_t, VulkanPipeline> mPipelineStore{};
         std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};
         std::unordered_map<size_t, VulkanTexture> mTextureStore{};
-#if 0
-        // Device Extension Functions
-        PFN_vkDebugMarkerSetObjectTagEXT vkDebugMarkerSetObjectTagEXT { VK_NULL_HANDLE };
-        PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectNameEXT { VK_NULL_HANDLE };
-        PFN_vkCmdDebugMarkerBeginEXT vkCmdDebugMarkerBeginEXT { VK_NULL_HANDLE };
-        PFN_vkCmdDebugMarkerEndEXT vkCmdDebugMarkerEndEXT {VK_NULL_HANDLE };
-        PFN_vkCmdDebugMarkerInsertEXT vkCmdDebugMarkerInsertEXT { VK_NULL_HANDLE };
-#endif
+        std::unordered_map<void*, VulkanWindow> mWindowStore{};
         VulkanBuffer mMatrices;
-        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
     };
 }
 #endif

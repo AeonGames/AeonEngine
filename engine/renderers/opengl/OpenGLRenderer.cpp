@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <atomic>
+#include <cassert>
 #include "OpenGLRenderer.h"
 #include "OpenGLBuffer.h"
-#include "OpenGLX11Window.h"
-#include "OpenGLWinAPIWindow.h"
+#include "OpenGLWindow.h"
+#include "OpenGLFunctions.h"
+#include "aeongames/Platform.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Material.h"
@@ -26,6 +29,10 @@ limitations under the License.
 
 namespace AeonGames
 {
+    std::atomic<size_t> OpenGLRenderer::mRendererCount{0};
+#if defined(__unix__)
+    Display* OpenGLRenderer::mDisplay {};
+#endif
     const GLchar vertex_shader_code[] =
         R"(#version 450 core
 layout (location = 0) in vec2 aPos;
@@ -69,17 +76,345 @@ void main()
         1.0f, -1.0f,  1.0f, 0.0f,
         1.0f,  1.0f,  1.0f, 1.0f
     };
-    const GLuint vertex_size{sizeof(vertices)};
+    constexpr GLuint vertex_size{sizeof(vertices)};
+
+#ifdef _WIN32
+    static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsString = nullptr;
+    static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribs = nullptr;
+    const int ContextAttribs[] =
+    {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+        WGL_CONTEXT_PROFILE_MASK_ARB,
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0
+    };
+
+    static ATOM gRendererWindowClass{0};
+    static std::atomic<size_t> mRendererCount{0};
+
+    static HWND CreateRendererWindow()
+    {
+        RECT rect = { 0, 0, 10, 10 };
+        if(gRendererWindowClass == 0)
+        {
+            WNDCLASSEX wcex;
+            wcex.cbSize = sizeof ( WNDCLASSEX );
+            wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+            wcex.lpfnWndProc = ( WNDPROC ) DefWindowProc;
+            wcex.cbClsExtra = 0;
+            wcex.cbWndExtra = 0;
+            wcex.hInstance = GetModuleHandle ( nullptr );
+            wcex.hIcon = LoadIcon ( nullptr, IDI_WINLOGO );
+            wcex.hCursor = LoadCursor ( nullptr, IDC_ARROW );
+            wcex.hbrBackground = nullptr;
+            wcex.lpszMenuName = nullptr;
+            wcex.lpszClassName = "AeonEngineOpenGLInternalWindow";
+            wcex.hIconSm = nullptr;
+            gRendererWindowClass = RegisterClassEx ( &wcex );
+        }
+        ++mRendererCount;
+        return CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+                                   MAKEINTATOM ( gRendererWindowClass ), "AeonEngine OpenGL Internal Window",
+                                   WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                   0, 0, // Location
+                                   rect.right - rect.left, rect.bottom - rect.top, // dimensions
+                                   nullptr,
+                                   nullptr,
+                                   GetModuleHandle ( nullptr ),
+                                   nullptr );
+}
+static void DestroyRendererWindow(HWND hWnd)
+{
+    assert(mRendererCount);
+    DestroyWindow ( hWnd );
+    if(--mRendererCount == 0)
+    {
+        UnregisterClass ( reinterpret_cast<LPCSTR> (
+#if defined(_M_X64) || defined(__amd64__)
+            0x0ULL +
+#endif
+            MAKELONG ( gRendererWindowClass, 0 ) ), nullptr );
+            gRendererWindowClass = 0;
+    }
+}
+    OpenGLRenderer::OpenGLRenderer(void* aWindow) :
+        mWindowId{CreateRendererWindow()},
+        mDeviceContext{GetDC(mWindowId)}
+    {
+        PIXELFORMATDESCRIPTOR pfd{};
+        pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 32;
+        pfd.cDepthBits = 32;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+        int pf = ChoosePixelFormat ( mDeviceContext, &pfd );
+        SetPixelFormat ( mDeviceContext, pf, &pfd );
+
+        // Create OpenGL Context
+        mOpenGLContext = wglCreateContext ( mDeviceContext );
+        MakeCurrent();
+
+        // Get newer functions if needed
+        if ( !wglGetExtensionsString )
+        {
+            if ( ! ( wglGetExtensionsString = ( PFNWGLGETEXTENSIONSSTRINGARBPROC ) wglGetProcAddress ( "wglGetExtensionsStringARB" ) ) )
+            {
+                wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+                mOpenGLContext = nullptr;
+                ReleaseDC ( mWindowId, mDeviceContext );
+                DestroyRendererWindow ( mWindowId );
+                throw std::runtime_error ( "Failed retrieving a pointer to wglGetExtensionsString" );
+            }
+        }
+        if ( !wglCreateContextAttribs )
+        {
+            if ( ! ( wglCreateContextAttribs = ( PFNWGLCREATECONTEXTATTRIBSARBPROC ) wglGetProcAddress ( "wglCreateContextAttribsARB" ) ) )
+            {
+                wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+                mOpenGLContext = nullptr;
+                ReleaseDC ( mWindowId, mDeviceContext );
+                DestroyRendererWindow ( mWindowId );
+                throw std::runtime_error ( "Failed retrieving a pointer to wglCreateContextAttribsARB" );
+            }
+        }
+        if ( strstr ( wglGetExtensionsString ( mDeviceContext ), "WGL_ARB_create_context" ) != nullptr )
+        {
+            wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+            if ( ! ( mOpenGLContext = wglCreateContextAttribs ( mDeviceContext, nullptr, ContextAttribs ) ) )
+            {
+                ReleaseDC ( mWindowId, mDeviceContext );
+                DestroyRendererWindow ( mWindowId );
+                throw std::runtime_error ( "wglCreateContextAttribs Failed" );
+            }
+        }
+        else
+        {
+            wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) );
+            mOpenGLContext = nullptr;
+            ReleaseDC ( mWindowId, mDeviceContext );
+            DestroyRendererWindow ( mWindowId );
+            throw std::runtime_error ( "WGL_ARB_create_context is not available" );
+        }
+        // Make OpenGL Context current.
+        MakeCurrent();
+        if ( !LoadOpenGLAPI() )
+        {
+            throw std::runtime_error ( "Unable to Load OpenGL functions." );
+        }
+        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
+        glGenVertexArrays ( 1, &mVertexArrayObject );
+        glBindVertexArray ( mVertexArrayObject );
+        AttachWindow ( static_cast<HWND> ( aWindow ) );
+    }
+
+    bool OpenGLRenderer::MakeCurrent(HDC aDeviceContext)
+    {
+        if ( !wglMakeCurrent ( (aDeviceContext==nullptr) ? mDeviceContext : aDeviceContext, mOpenGLContext ) )
+        {
+            LPSTR pBuffer = NULL;
+            FormatMessage ( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
+                            nullptr, GetLastError(), MAKELANGID ( LANG_NEUTRAL, SUBLANG_DEFAULT ), ( LPSTR ) &pBuffer, 0, nullptr );
+            if ( pBuffer != nullptr )
+            {
+                std::cout << pBuffer << std::endl;
+                LocalFree ( pBuffer );
+            }
+            return false;
+        }
+        return true;
+    }
+
+    OpenGLRenderer::~OpenGLRenderer()
+    {
+        mWindowStore.clear();
+        MakeCurrent();
+        mMatrices.Finalize();
+        mTextureStore.clear();
+        mMeshStore.clear();
+        mMaterialStore.clear();
+        mPipelineStore.clear();
+        wglMakeCurrent (nullptr, nullptr);
+        if ( wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) ) != TRUE )
+        {
+            std::cout << LogLevel::Error << "wglDeleteContext failed." << std::endl;
+        }
+        mOpenGLContext = nullptr;
+        ReleaseDC ( mWindowId, mDeviceContext );
+        DestroyRendererWindow ( mWindowId );
+        mDeviceContext = nullptr;
+        mWindowId = nullptr;
+    }
+#elif defined(__unix__)
+    static int context_attribs[] =
+    {
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+        None
+    };
+
+    static GLXFBConfig GetGLXConfig ( Display* display, ::Window window)
+    {
+        XWindowAttributes xwa{};
+        XGetWindowAttributes(display, window, &xwa);
+        VisualID xwvid = XVisualIDFromVisual(xwa.visual);
+
+        int frame_buffer_config_count{};
+        GLXFBConfig *frame_buffer_configs =
+            glXGetFBConfigs ( display,
+                                DefaultScreen ( display ),
+                                &frame_buffer_config_count );
+        if ( !frame_buffer_configs )
+        {
+            throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
+        }
+
+        std::remove_if(frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
+                    [display,xwvid] ( const GLXFBConfig & x ) -> bool
+        {
+            XVisualInfo *xvi = glXGetVisualFromFBConfig(display, x);
+            if(xvi && xvi->visualid == xwvid)
+            {
+                XFree(xvi);
+                return false;
+            }
+            XFree(xvi);
+            return true;
+        });
+
+        GLXFBConfig result = frame_buffer_configs[ 0 ];
+        XFree ( frame_buffer_configs );
+        return result;
+    }
+
+    OpenGLRenderer::OpenGLRenderer(void* aWindow)
+    {
+        if(mRendererCount==0)
+        {
+            if(mDisplay){XCloseDisplay(mDisplay);}
+            mDisplay = XOpenDisplay ( nullptr );
+        }
+
+        // Retrieve Create Context function
+        if ( !glXCreateContextAttribsARB )
+        {
+            if ( ! ( glXCreateContextAttribsARB =
+                         ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
+                         glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" ) ) )
+            {
+                throw std::runtime_error ( "Failed retrieving glXCreateContextAttribsARB." );
+            }
+        }
+
+        GLXFBConfig glxconfig = GetGLXConfig(mDisplay,reinterpret_cast<::Window>(aWindow));
+
+        if ( nullptr == ( mOpenGLContext = glXCreateContextAttribsARB ( mDisplay, glxconfig, nullptr,
+                                        True, context_attribs ) ) )
+        {
+            throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
+        }
+
+        // Verifying that context is a direct context
+        if ( ! glXIsDirect (  mDisplay,  static_cast<GLXContext> ( mOpenGLContext ) ) )
+        {
+            std::cout << LogLevel ( LogLevel::Info ) <<
+                      "Indirect GLX rendering context obtained" << std::endl;
+        }
+        else
+        {
+            std::cout << LogLevel ( LogLevel::Info ) <<
+                      "Direct GLX rendering context obtained" << std::endl;
+        }
+
+        XVisualInfo* xvi = glXGetVisualFromFBConfig ( mDisplay, glxconfig );
+
+        mColorMap = XCreateColormap ( mDisplay, DefaultRootWindow ( mDisplay ), xvi->visual, AllocNone );
+        XSetWindowAttributes swa
+        {
+            .colormap = mColorMap,
+        };
+
+        mWindowId =
+            XCreateWindow ( mDisplay, DefaultRootWindow ( mDisplay ),
+                            0, 0,
+                            32, 32,
+                            0,
+                            xvi->depth,
+                            InputOutput,
+                            xvi->visual,
+                            CWColormap, &swa );
+        XFree ( xvi );
+        if ( !MakeCurrent() )
+        {
+            throw std::runtime_error ( "glXMakeCurrent failed." );
+        }
+
+        MakeCurrent();
+
+        if ( !LoadOpenGLAPI() )
+        {
+            throw std::runtime_error ( "Unable to Load OpenGL functions." );
+        }
+
+        glGenVertexArrays ( 1, &mVertexArrayObject );
+        glBindVertexArray ( mVertexArrayObject );
+
+        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
+
+        AttachWindow(aWindow);
+        ++mRendererCount;
+    }
+
+
+    bool OpenGLRenderer::MakeCurrent(::Window aWindowId)
+    {
+        return glXMakeCurrent (
+            mDisplay,
+            (aWindowId==None) ?
+                mWindowId :
+                aWindowId,
+                mOpenGLContext);
+    }
+
+    OpenGLRenderer::~OpenGLRenderer()
+    {
+        mWindowStore.clear();
+        MakeCurrent();
+        mMatrices.Finalize();
+        mTextureStore.clear();
+        mMeshStore.clear();
+        mMaterialStore.clear();
+        mPipelineStore.clear();
+        glXMakeCurrent ( mDisplay, None, nullptr );
+
+        if ( mWindowId != None )
+        {
+            XDestroyWindow ( mDisplay, mWindowId );
+            mWindowId = None;
+        }
+        if ( mColorMap != None )
+        {
+            XFreeColormap ( mDisplay, mColorMap );
+            mColorMap = None;
+        }
+        if ( mOpenGLContext != None )
+        {
+            glXDestroyContext ( mDisplay, mOpenGLContext );
+            mOpenGLContext = None;
+        }
+        if(--mRendererCount == 0)
+        {
+            XCloseDisplay(mDisplay);
+            mDisplay = None;
+        }
+    }
+#endif
 
     void OpenGLRenderer::InitializeOverlay()
     {
-        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
-
-        glGenVertexArrays ( 1, &mVertexArrayObject );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindVertexArray ( mVertexArrayObject );
-        OPENGL_CHECK_ERROR_THROW;
-
         /* Initialize Overlay Program. Consider moving into a separate function. */
         GLint compile_status{};
         mOverlayProgram = glCreateProgram();
@@ -177,19 +512,6 @@ void main()
         mMatrices.Finalize();
     }
 
-    OpenGLRenderer::OpenGLRenderer() = default;
-    OpenGLRenderer::~OpenGLRenderer() = default;
-
-    std::unique_ptr<Window> OpenGLRenderer::CreateWindowProxy ( void * aWindowId ) const
-    {
-        return std::make_unique<OpenGLPlatformWindow> ( const_cast<OpenGLRenderer&>(*this), aWindowId );
-    }
-
-    std::unique_ptr<Window> OpenGLRenderer::CreateWindowInstance ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) const
-    {
-        return std::make_unique<OpenGLPlatformWindow> ( const_cast<OpenGLRenderer&>(*this), aX, aY, aWidth, aHeight, aFullScreen );
-    }
-
     void OpenGLRenderer::LoadMesh ( const Mesh& aMesh )
     {
         auto it = mMeshStore.find(aMesh.GetConsecutiveId());
@@ -200,6 +522,7 @@ void main()
         }
         mMeshStore.emplace(aMesh.GetConsecutiveId(),OpenGLMesh{*this,aMesh});
     }
+
     void OpenGLRenderer::UnloadMesh ( const Mesh& aMesh )
     {
         auto it = mMeshStore.find(aMesh.GetConsecutiveId());
@@ -269,8 +592,8 @@ void main()
 
     void OpenGLRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer) const
     {
-        const OpenGLBuffer* buffer = reinterpret_cast<const OpenGLBuffer*> ( aSkeletonBuffer.GetBuffer() );
-        if ( GLuint buffer_id = ( buffer != nullptr ) ? buffer->GetBufferId() : 0 )
+        const OpenGLMemoryPoolBuffer* memory_pool_buffer = reinterpret_cast<const OpenGLMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
+        if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&>(memory_pool_buffer->GetBuffer()).GetBufferId() : 0 )
         {
             glBindBufferRange ( GL_UNIFORM_BUFFER, SKELETON, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
             OPENGL_CHECK_ERROR_THROW;
@@ -348,6 +671,119 @@ void main()
     {
         return mOverlayQuad.GetBufferId();
     }
-    void OpenGLRenderer::AttachWindow ( void* aWindowId ){}
-    void OpenGLRenderer::DetachWindow ( void* aWindowId ){}
+
+    void OpenGLRenderer::AttachWindow ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it != mWindowStore.end() )
+        {
+            std::cout << LogLevel::Warning << " Window " << aWindowId << " Already Loaded at: " << __FUNCTION__ << std::endl;
+            return;
+        }
+#if defined(__unix__)
+        mWindowStore.emplace ( aWindowId, OpenGLWindow{*this, mDisplay, reinterpret_cast<::Window>(aWindowId)} );
+#elif defined(__WIN32__)
+        mWindowStore.emplace ( aWindowId, OpenGLWindow{*this, reinterpret_cast<::HWND>(aWindowId)} );
+#endif
+    }
+    void OpenGLRenderer::DetachWindow ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        mWindowStore.erase ( it );
+    }
+
+    void OpenGLRenderer::SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetProjectionMatrix ( aMatrix );
+    }
+
+    void OpenGLRenderer::SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetViewMatrix ( aMatrix );
+    }
+
+    void OpenGLRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.ResizeViewport ( aX, aY, aWidth, aHeight );
+    }
+
+    void OpenGLRenderer::BeginRender ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginRender();
+    }
+    void OpenGLRenderer::EndRender ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndRender();
+    }
+    void OpenGLRenderer::Render ( void* aWindowId,
+                                  const Matrix4x4& aModelMatrix,
+                                  const Mesh& aMesh,
+                                  const Pipeline& aPipeline,
+                                  const Material* aMaterial,
+                                  const BufferAccessor* aSkeleton,
+                                  uint32_t aVertexStart,
+                                  uint32_t aVertexCount,
+                                  uint32_t aInstanceCount,
+                                  uint32_t aFirstInstance ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
+    }
+
+    const Frustum& OpenGLRenderer::GetFrustum ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.GetFrustum();
+    }
+    BufferAccessor OpenGLRenderer::AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.AllocateSingleFrameUniformMemory ( aSize );
+    }
+
+    void* OpenGLRenderer::GetContext() const
+    {
+        return mOpenGLContext;
+    }
 }

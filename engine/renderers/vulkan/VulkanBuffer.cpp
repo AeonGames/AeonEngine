@@ -51,63 +51,12 @@ namespace AeonGames
         Finalize();
     }
 
-    void VulkanBuffer::CopyBuffer ( const VkBuffer& aBuffer )
-    {
-        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
-        VkBufferCopy copy_region = {};
-        copy_region.size = mSize;
-        copy_region.srcOffset  = copy_region.dstOffset = 0;
-        vkCmdCopyBuffer ( command_buffer, aBuffer, mBuffer, 1, &copy_region );
-        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
-    }
-#if 0
-    VulkanBuffer::VulkanBuffer ( const VulkanBuffer& aBuffer ) :
-        mVulkanRenderer { aBuffer.mVulkanRenderer },
-        mSize{aBuffer.mSize},
-        mUsage{aBuffer.mUsage},
-        mProperties{aBuffer.mProperties}
-    {
-        Initialize ( nullptr );
-        if ( !mSize )
-        {
-            return;
-        }
-        CopyBuffer ( aBuffer.mBuffer );
-    }
-
-    VulkanBuffer& VulkanBuffer::operator= ( const VulkanBuffer& aBuffer )
-    {
-        assert ( &mVulkanRenderer == &aBuffer.mVulkanRenderer );
-        Finalize();
-        mSize = aBuffer.mSize;
-        mUsage = aBuffer.mUsage;
-        mProperties = aBuffer.mProperties;
-        if ( !mSize )
-        {
-            return *this;
-        }
-        Initialize ( nullptr );
-        CopyBuffer ( aBuffer.mBuffer );
-        return *this;
-    }
-    VulkanBuffer& VulkanBuffer::operator = ( VulkanBuffer&& aBuffer )
-    {
-        assert ( &mVulkanRenderer == &aBuffer.mVulkanRenderer );
-        std::swap ( mBuffer, aBuffer.mBuffer );
-        std::swap ( mSize, aBuffer.mSize );
-        std::swap ( mUsage, aBuffer.mUsage );
-        std::swap ( mProperties, aBuffer.mProperties );
-        return *this;
-    }
-#endif
-
     VulkanBuffer::VulkanBuffer ( VulkanBuffer&& aBuffer ) :
         mVulkanRenderer { aBuffer.mVulkanRenderer }
     {
         std::swap ( mBuffer, aBuffer.mBuffer );
         std::swap ( mSize, aBuffer.mSize );
         std::swap ( mUsage, aBuffer.mUsage );
-        std::swap ( mProperties, aBuffer.mProperties );
         std::swap ( mProperties, aBuffer.mProperties );
         std::swap ( mDeviceMemory, aBuffer.mDeviceMemory );
     }

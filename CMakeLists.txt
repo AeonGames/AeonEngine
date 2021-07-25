@@ -193,7 +193,10 @@ endif()
 
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
-add_subdirectory(application)
+option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
+if(BUILD_STANDALONE_APPLICATION)
+  add_subdirectory(application)
+endif()
 add_subdirectory(tools/worldeditor)
 
 find_path(GTEST_SOURCE_PATH googletest PATHS /usr/src/googletest)

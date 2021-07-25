@@ -83,7 +83,7 @@ namespace AeonGames
         return mRenderer.get();
     }
 
-    static void LoadPipeline ( Renderer* aRenderer, Pipeline& aPipeline, const std::string& aFileName )
+    static void LoadPipeline ( Pipeline& aPipeline, const std::string& aFileName )
     {
         QFile pipeline_file ( aFileName.c_str() );
         if ( !pipeline_file.open ( QIODevice::ReadOnly ) )
@@ -92,9 +92,8 @@ namespace AeonGames
         }
         QByteArray pipeline_byte_array = pipeline_file.readAll();
         aPipeline.LoadFromMemory ( pipeline_byte_array.data(), pipeline_byte_array.size() );
-        aRenderer->LoadPipeline ( aPipeline );
     }
-    static void LoadMaterial ( Renderer* aRenderer,  Material& aMaterial, const std::string& aFileName )
+    static void LoadMaterial ( Material& aMaterial, const std::string& aFileName )
     {
         QFile material_file ( aFileName.c_str() );
         if ( !material_file.open ( QIODevice::ReadOnly ) )
@@ -105,7 +104,7 @@ namespace AeonGames
         aMaterial.LoadFromMemory ( material_byte_array.data(), material_byte_array.size() );
     }
 
-    static void LoadMesh ( Renderer* aRenderer,  Mesh& aMesh, const std::string& aFileName )
+    static void LoadMesh ( Mesh& aMesh, const std::string& aFileName )
     {
         QFile mesh_file ( aFileName.c_str() );
         if ( !mesh_file.open ( QIODevice::ReadOnly ) )
@@ -114,7 +113,6 @@ namespace AeonGames
         }
         QByteArray mesh_byte_array = mesh_file.readAll();
         aMesh.LoadFromMemory ( mesh_byte_array.data(), mesh_byte_array.size() );
-        aRenderer->LoadMesh ( aMesh );
     }
 
     WorldEditor::WorldEditor ( int &argc, char *argv[] ) : QApplication ( argc, argv ),
@@ -136,7 +134,7 @@ namespace AeonGames
         }
         if ( renderer_list.size() == 1 )
         {
-            mRenderer = AeonGames::ConstructRenderer ( renderer_list.at ( 0 ).toStdString(), nullptr );
+            mRendererName = renderer_list.at ( 0 ).toStdString();
         }
         else
         {
@@ -144,11 +142,11 @@ namespace AeonGames
             select_renderer.SetRenderers ( renderer_list );
             if ( select_renderer.exec() == QDialog::Accepted )
             {
-                mRenderer = AeonGames::ConstructRenderer ( select_renderer.GetSelected().toStdString(), nullptr );
+                mRendererName = select_renderer.GetSelected().toStdString();
             }
         }
 
-        if ( mRenderer == nullptr )
+        if ( mRendererName.empty() )
         {
             throw std::runtime_error ( "No renderer selected, cannot continue." );
         }
@@ -160,10 +158,10 @@ namespace AeonGames
             mYGridMaterial = std::make_unique<Material>();
             mWireMaterial = std::make_unique<Material>();
 
-            LoadMaterial ( mRenderer.get(), *mWireMaterial, ":/materials/solidcolor.mtl" );
-            LoadPipeline ( mRenderer.get(), *mGridPipeline, ":/pipelines/grid.pln" );
-            LoadPipeline ( mRenderer.get(), *mWirePipeline, ":/pipelines/solid_wire.pln" );
-            LoadMaterial ( mRenderer.get(), *mXGridMaterial, ":/materials/grid.mtl" );
+            LoadMaterial ( *mWireMaterial, ":/materials/solidcolor.mtl" );
+            LoadPipeline ( *mGridPipeline, ":/pipelines/grid.pln" );
+            LoadPipeline ( *mWirePipeline, ":/pipelines/solid_wire.pln" );
+            LoadMaterial ( *mXGridMaterial, ":/materials/grid.mtl" );
 
             mXGridMaterial->Set ( { "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} } );
             mXGridMaterial->Set ( { "StartingPosition", Vector3{0.0f, - ( mGridSettings.height() / 2 ), 0.0f} } );
@@ -202,7 +200,7 @@ namespace AeonGames
                 static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
             }} );
 
-            LoadMaterial ( mRenderer.get(), *mYGridMaterial, ":/materials/grid.mtl" );
+            LoadMaterial ( *mYGridMaterial, ":/materials/grid.mtl" );
             mYGridMaterial->Set ( { "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} } );
             mYGridMaterial->Set ( { "StartingPosition", Vector3{ - ( mGridSettings.width() / 2 ), 0.0f, 0.0f} } );
             mYGridMaterial->Set ( { "Offset", Vector3{ ( mGridSettings.width() / static_cast<float> ( mGridSettings.verticalSpacing() ) ), 0.0f, 0.0f} } );
@@ -243,11 +241,8 @@ namespace AeonGames
 
         mGridMesh = std::make_unique<Mesh>();
         mAABBWireMesh = std::make_unique<Mesh>();
-        LoadMesh ( mRenderer.get(), *mGridMesh, ":/meshes/grid.msh" );
-        LoadMesh ( mRenderer.get(), *mAABBWireMesh, ":/meshes/aabb_wire.msh" );
-        mRenderer->LoadMaterial ( *mXGridMaterial );
-        mRenderer->LoadMaterial ( *mYGridMaterial );
-        mRenderer->LoadMaterial ( *mWireMaterial );
+        LoadMesh ( *mGridMesh, ":/meshes/grid.msh" );
+        LoadMesh ( *mAABBWireMesh, ":/meshes/aabb_wire.msh" );
     }
 
     WorldEditor::~WorldEditor()
@@ -286,5 +281,20 @@ namespace AeonGames
             mMutex.unlock();
             return false;
         }
+    }
+    void WorldEditor::AttachWindowToRenderer ( void* aWindow )
+    {
+        if ( mRenderer == nullptr )
+        {
+            mRenderer = AeonGames::ConstructRenderer ( mRendererName, aWindow );
+        }
+        else
+        {
+            mRenderer->AttachWindow ( aWindow );
+        }
+    }
+    void WorldEditor::DetachWindowFromRenderer ( void* aWindow )
+    {
+        mRenderer->DetachWindow ( aWindow );
     }
 }

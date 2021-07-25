@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_MODELCOMPONENT_H
 #define AEONGAMES_MODELCOMPONENT_H
+#include <array>
 #include "aeongames/Component.h"
 #include "aeongames/ResourceId.h"
 #include "aeongames/BufferAccessor.h"
@@ -36,8 +37,8 @@ namespace AeonGames
         const StringId* GetPropertyInfoArray () const final;
         Property GetProperty ( const StringId& aId ) const final;
         void SetProperty ( uint32_t, const Property& aProperty ) final;
-        void Update ( Node& aNode, double aDelta, Window* aWindow = nullptr ) final;
-        void Render ( const Node& aNode, const Window& aWindow ) const final;
+        void Update ( Node& aNode, double aDelta ) final;
+        void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
 
@@ -58,7 +59,8 @@ namespace AeonGames
         double mStartingFrame{};
         // Private Data
         double mCurrentSample{};
-        BufferAccessor mSkeleton{};
+        // 128 is the maximum number of bones per model
+        std::array<uint8_t, 16 * 128 * sizeof ( float ) > mSkeleton{};
     };
 }
 #endif
