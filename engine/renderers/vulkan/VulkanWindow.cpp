@@ -59,11 +59,6 @@ namespace AeonGames
     {
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
         std::swap ( mFrustum, aVulkanWindow.mFrustum );
-#if defined(__unix__)
-        std::swap ( mColorMap, aVulkanWindow.mColorMap );
-#elif defined(_WIN32)
-        std::swap ( mDeviceContext, aVulkanWindow.mDeviceContext );
-#endif
         std::swap ( mProjectionMatrix, aVulkanWindow.mProjectionMatrix );
         std::swap ( mViewMatrix, aVulkanWindow.mViewMatrix );
         std::swap ( mVkSurfaceKHR, aVulkanWindow.mVkSurfaceKHR );
