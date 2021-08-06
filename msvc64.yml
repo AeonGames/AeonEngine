@@ -29,7 +29,7 @@ before_build:
 
     rem protobuf 3.14 has a warning that breaks the build, remove when a new version is up
 
-    git checkout 3fd7745
+    rem git checkout 3fd7745
 
     rem powershell -Command "(Get-Content ports\libpng\portfile.cmake) | ForEach-Object { $_ -replace \"libpng16/\", \"libpng16/older-releases/\" } | Set-Content ports\libpng\portfile.cmake"
 
