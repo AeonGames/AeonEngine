@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Each call to sed here makes committing slower,
+# So only add the emojis that are being used.
+${SED_EXECUTABLE} -i 's/:unamused:/😒/g' "$1"
+${SED_EXECUTABLE} -i 's/:expressionless:/😑/g' "$1"
+${SED_EXECUTABLE} -i 's/:raised_eyebrow:/🤨/g' "$1"
+${SED_EXECUTABLE} -i 's/:thinking:/🤔/g' "$1"
+${SED_EXECUTABLE} -i 's/:disappointed:/😞/g' "$1"
+${SED_EXECUTABLE} -i 's/:sweat:/😓/g' "$1"
+${SED_EXECUTABLE} -i 's/:smile:/😊/g' "$1"
+${SED_EXECUTABLE} -i 's/:bug:/🐛/g' "$1"

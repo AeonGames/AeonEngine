@@ -239,6 +239,8 @@ endif()
 set(ASTYLE_OPTIONS "--options=${CMAKE_SOURCE_DIR}/astylerc")
 configure_file("${CMAKE_SOURCE_DIR}/cmake/pre-commit.in"
                "${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit")
+configure_file("${CMAKE_SOURCE_DIR}/cmake/commit-msg.in"
+               "${CMAKE_SOURCE_DIR}/.git/hooks/commit-msg")
 
 #
 # Protobuf Python source generation target
