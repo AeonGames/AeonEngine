@@ -74,11 +74,6 @@ namespace AeonGames
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
         Frustum mFrustum{};
-#if defined(__unix__)
-        Colormap mColorMap {};
-#elif defined(_WIN32)
-        HDC mDeviceContext {};
-#endif
         VulkanMemoryPoolBuffer mMemoryPoolBuffer;
         Matrix4x4 mProjectionMatrix {};
         Matrix4x4 mViewMatrix{};
