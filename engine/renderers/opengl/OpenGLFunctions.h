@@ -25,7 +25,7 @@ limitations under the License.
 #ifndef NOMINMAX
 #define NOMINMAX 1
 #endif
-#include <Windows.h>
+#include <windows.h>
 #include <GL/gl.h>
 #include <GL/glcorearb.h>
 #include <GL/wglext.h>

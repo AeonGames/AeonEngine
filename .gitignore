@@ -33,7 +33,8 @@
 
 # Possible build directories
 msvc*
-ming*
+mingw64
+mingw32
 make*
 build*
 codeblocks*
