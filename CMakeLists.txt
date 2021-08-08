@@ -92,7 +92,7 @@ include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
 find_package (Python3 COMPONENTS Interpreter)
-find_package(ImageMagick COMPONENTS convert)
+find_package(ImageMagick OPTIONAL_COMPONENTS convert)
 find_package(Protobuf REQUIRED)
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)

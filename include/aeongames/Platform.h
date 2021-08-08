@@ -23,7 +23,7 @@ limitations under the License.
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <Windows.h>
+#include <windows.h>
 #ifdef __MINGW32__
 #include <sys/types.h>
 #include <sys/stat.h>
