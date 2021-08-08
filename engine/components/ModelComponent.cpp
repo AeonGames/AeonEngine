@@ -163,8 +163,7 @@ namespace AeonGames
                 float* skeleton_buffer = reinterpret_cast<float*> ( mSkeleton.data() );
                 auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
                 mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
-                size_t matrices_size = model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16;
-                assert ( matrices_size < mSkeleton.size() );
+                assert ( ( model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16 ) < mSkeleton.size() );
                 for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
                 {
                     Matrix4x4 matrix{ ( animation->GetTransform ( i, mCurrentSample ) *
