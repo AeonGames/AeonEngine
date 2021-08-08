@@ -318,11 +318,18 @@ namespace AeonGames
             }
         }
 
+#if VK_HEADER_VERSION >= 179
         std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
         {
             VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
             VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
         };
+#else
+        std::array<VkValidationFeatureEnableEXT, 1> validation_feature_enable_exts
+        {
+            VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT
+        };
+#endif
         VkValidationFeaturesEXT validation_features_ext
         {
             VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
