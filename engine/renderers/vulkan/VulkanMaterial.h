@@ -37,7 +37,7 @@ namespace AeonGames
         VulkanMaterial& operator= ( VulkanMaterial&& ) = delete;
         VulkanMaterial ( VulkanMaterial&& aVulkanMaterial );
         ~VulkanMaterial();
-        void Bind ( const VkPipelineLayout aVkPipelineLayout ) const;
+        void Bind ( VkCommandBuffer aVkCommandBuffer, const VkPipelineLayout aVkPipelineLayout ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;
         const Material* mMaterial{nullptr};

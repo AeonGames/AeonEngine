@@ -58,6 +58,8 @@ namespace AeonGames
         const Frustum& GetFrustum() const;
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        VkRenderPass GetRenderPass() const;
+        VkCommandBuffer GetCommandBuffer() const;
     private:
         void Initialize();
         void Finalize();
@@ -65,18 +67,29 @@ namespace AeonGames
         void InitializeSwapchain();
         void InitializeImageViews();
         void InitializeDepthStencil();
+        void InitializeRenderPass();
         void InitializeFrameBuffers();
+        void InitializeCommandBuffer();
+        void InitializeMatrices();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
         void FinalizeDepthStencil();
+        void FinalizeRenderPass();
         void FinalizeFrameBuffers();
+        void FinalizeCommandBuffer();
+        void FinalizeMatrices();
+
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
         Frustum mFrustum{};
         VulkanMemoryPoolBuffer mMemoryPoolBuffer;
-        Matrix4x4 mProjectionMatrix {};
+        Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
+        VulkanBuffer mMatrices;
+        VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
+        VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
+        VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
@@ -84,10 +97,16 @@ namespace AeonGames
         VkImage mVkDepthStencilImage{ VK_NULL_HANDLE };
         VkDeviceMemory mVkDepthStencilImageMemory{ VK_NULL_HANDLE };
         VkImageView mVkDepthStencilImageView { VK_NULL_HANDLE};
+        VkCommandPool mVkCommandPool{ VK_NULL_HANDLE };
+        VkCommandBuffer mVkCommandBuffer{ VK_NULL_HANDLE };
         bool mHasStencil{ false };
         uint32_t mActiveImageIndex{ UINT32_MAX };
         VkViewport mVkViewport{0, 0, 1, 1, 0, 1};
         VkRect2D mVkScissor{};
+
+        VkDescriptorPool mMatricesDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
+
         ::std::vector<VkImage> mVkSwapchainImages{};
         ::std::vector<VkImageView> mVkSwapchainImageViews{};
         ::std::vector<VkFramebuffer> mVkFramebuffers{};

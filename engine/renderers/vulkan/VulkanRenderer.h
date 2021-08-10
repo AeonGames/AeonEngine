@@ -49,10 +49,6 @@ namespace AeonGames
         const VkFence& GetFence() const;
         const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
-        const VkRenderPass& GetRenderPass() const;
-        const VkFormat& GetDepthStencilFormat() const;
-        const VkSurfaceFormatKHR& GetSurfaceFormatKHR() const;
-        const VkCommandBuffer& GetCommandBuffer() const;
         const VkSemaphore& GetSignalSemaphore() const;
         const VkDescriptorSetLayout& GetUniformBufferDescriptorSetLayout() const;
         const VkDescriptorSetLayout& GetUniformBufferDynamicDescriptorSetLayout() const;
@@ -64,14 +60,6 @@ namespace AeonGames
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
-
-        void BindMesh ( const Mesh& aMesh ) final;
-        void BindPipeline ( const Pipeline& aPipeline ) final;
-        void SetMaterial ( const Material& aMaterial ) final;
-
-        void SetModelMatrix ( const Matrix4x4& aMatrix ) final;
-        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
-        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -99,8 +87,10 @@ namespace AeonGames
                       uint32_t aFirstInstance = 0 ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
-        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
-
+        VkRenderPass GetRenderPass() const;
+        const VulkanPipeline* GetVulkanPipeline ( const Pipeline& aPipeline );
+        const VulkanMaterial* GetVulkanMaterial ( const Material& aMaterial );
+        const VulkanMesh* GetVulkanMesh ( const Mesh& aMesh );
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* GetDisplay() const;
 #endif
@@ -109,8 +99,7 @@ namespace AeonGames
         void InitializeDevice();
         void InitializeSemaphores();
         void InitializeFence();
-        void InitializeRenderPass();
-        void InitializeCommandPool();
+        void InitializeCommandPools();
         void InitializeDebug();
         void SetupLayersAndExtensions();
         void SetupDebug();
@@ -119,18 +108,13 @@ namespace AeonGames
         void FinalizeDevice();
         void FinalizeSemaphores();
         void FinalizeFence();
-        void FinalizeRenderPass();
-        void FinalizeCommandPool();
+        void FinalizeCommandPools();
         void FinalizeDebug();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
-
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* mDisplay {XOpenDisplay ( nullptr ) };
 #endif
-
-        VkDescriptorPool mMatricesDescriptorPool{VK_NULL_HANDLE};
-        VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
         bool mValidate { true };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
@@ -140,14 +124,10 @@ namespace AeonGames
         PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{nullptr};
         PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{nullptr};
         VkDebugUtilsMessengerEXT mVkDebugUtilsMessengerEXT{VK_NULL_HANDLE};
-        VkCommandPool mVkCommandPool{ VK_NULL_HANDLE };
-        VkCommandBuffer mVkCommandBuffer{ VK_NULL_HANDLE };
+        VkCommandPool mVkSingleTimeCommandPool{ VK_NULL_HANDLE };
         VkQueue mVkQueue{ VK_NULL_HANDLE };
         VkSemaphore mVkSignalSemaphore{ VK_NULL_HANDLE };
         VkFence mVkFence{ VK_NULL_HANDLE };
-        VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
-        VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
-        VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
@@ -164,7 +144,6 @@ namespace AeonGames
         std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};
         std::unordered_map<size_t, VulkanTexture> mTextureStore{};
         std::unordered_map<void*, VulkanWindow> mWindowStore{};
-        VulkanBuffer mMatrices;
     };
 }
 #endif

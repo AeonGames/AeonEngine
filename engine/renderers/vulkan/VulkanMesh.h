@@ -32,7 +32,7 @@ namespace AeonGames
         VulkanMesh ( const VulkanMesh& aVulkanMesh ) = delete;
         VulkanMesh& operator= ( const VulkanMesh& aVulkanMesh ) = delete;
         VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh ) = delete;
-        void Bind() const;
+        void Bind ( VkCommandBuffer aVkCommandBuffer ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;
         const Mesh* mMesh{nullptr};

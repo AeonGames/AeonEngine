@@ -82,6 +82,7 @@ namespace AeonGames
         //OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
         OpenGLFrameBuffer mFrameBuffer{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
+        OpenGLBuffer mMatrices{};
     };
 }
 #endif
