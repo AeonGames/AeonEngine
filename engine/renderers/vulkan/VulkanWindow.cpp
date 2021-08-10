@@ -15,7 +15,10 @@ limitations under the License.
 */
 #include "VulkanWindow.h"
 #include "VulkanRenderer.h"
+#include "VulkanPipeline.h"
+#include "VulkanMaterial.h"
 #include "VulkanUtilities.h"
+#include "VulkanMesh.h"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -40,7 +43,8 @@ namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
-        mMemoryPoolBuffer{mVulkanRenderer, 64_kb}
+        mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
+        mMatrices { aVulkanRenderer }
     {
         try
         {
@@ -55,7 +59,8 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( VulkanWindow&& aVulkanWindow ) :
         mVulkanRenderer { aVulkanWindow.mVulkanRenderer },
-        mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) }
+        mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
+        mMatrices{std::move ( aVulkanWindow.mMatrices ) }
     {
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
         std::swap ( mFrustum, aVulkanWindow.mFrustum );
@@ -72,6 +77,13 @@ namespace AeonGames
         std::swap ( mActiveImageIndex, aVulkanWindow.mActiveImageIndex );
         std::swap ( mVkViewport, aVulkanWindow.mVkViewport );
         std::swap ( mVkScissor, aVulkanWindow.mVkScissor );
+        std::swap ( mVkDepthStencilFormat, aVulkanWindow.mVkDepthStencilFormat );
+        std::swap ( mVkSurfaceFormatKHR, aVulkanWindow.mVkSurfaceFormatKHR );
+        std::swap ( mVkRenderPass, aVulkanWindow.mVkRenderPass );
+        std::swap ( mMatricesDescriptorPool, aVulkanWindow.mMatricesDescriptorPool );
+        std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
+        std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
+        std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
         mVkSwapchainImages.swap ( aVulkanWindow.mVkSwapchainImages );
         mVkSwapchainImageViews.swap ( aVulkanWindow.mVkSwapchainImageViews );
         mVkFramebuffers.swap ( aVulkanWindow.mVkFramebuffers );
@@ -133,8 +145,8 @@ namespace AeonGames
         swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchain_create_info.surface = mVkSurfaceKHR;
         swapchain_create_info.minImageCount = mSwapchainImageCount;
-        swapchain_create_info.imageFormat = mVulkanRenderer.GetSurfaceFormatKHR().format;
-        swapchain_create_info.imageColorSpace = mVulkanRenderer.GetSurfaceFormatKHR().colorSpace;
+        swapchain_create_info.imageFormat = mVkSurfaceFormatKHR.format;
+        swapchain_create_info.imageColorSpace = mVkSurfaceFormatKHR.colorSpace;
         swapchain_create_info.imageExtent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
         swapchain_create_info.imageArrayLayers = 1;
@@ -200,7 +212,7 @@ namespace AeonGames
             image_view_create_info.flags = 0;
             image_view_create_info.image = mVkSwapchainImages[i];
             image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            image_view_create_info.format = mVulkanRenderer.GetSurfaceFormatKHR().format;
+            image_view_create_info.format = mVkSurfaceFormatKHR.format;
             image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
             image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -217,13 +229,13 @@ namespace AeonGames
     void VulkanWindow::InitializeDepthStencil()
     {
         mHasStencil =
-            ( mVulkanRenderer.GetDepthStencilFormat() == VK_FORMAT_D32_SFLOAT_S8_UINT ||
-              mVulkanRenderer.GetDepthStencilFormat() == VK_FORMAT_D24_UNORM_S8_UINT ||
-              mVulkanRenderer.GetDepthStencilFormat() == VK_FORMAT_D16_UNORM_S8_UINT );
+            ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         image_create_info.flags = 0;
-        image_create_info.format = mVulkanRenderer.GetDepthStencilFormat();
+        image_create_info.format = mVkDepthStencilFormat;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
         image_create_info.extent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         image_create_info.extent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
@@ -278,7 +290,7 @@ namespace AeonGames
         image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         image_view_create_info.image = mVkDepthStencilImage;
         image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        image_view_create_info.format = mVulkanRenderer.GetDepthStencilFormat();
+        image_view_create_info.format = mVkDepthStencilFormat;
         image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -305,7 +317,7 @@ namespace AeonGames
             };
             VkFramebufferCreateInfo framebuffer_create_info{};
             framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebuffer_create_info.renderPass = mVulkanRenderer.GetRenderPass();
+            framebuffer_create_info.renderPass = mVkRenderPass;
             framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( attachments.size() );
             framebuffer_create_info.pAttachments = attachments.data();
             framebuffer_create_info.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
@@ -315,13 +327,170 @@ namespace AeonGames
         }
     }
 
+    void VulkanWindow::InitializeRenderPass()
+    {
+        uint32_t surface_format_count = 0;
+        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &surface_format_count, nullptr );
+        if ( surface_format_count == 0 )
+        {
+            std::ostringstream stream;
+            stream << "Physical device reports no surface formats.";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
+        vkGetPhysicalDeviceSurfaceFormatsKHR (
+            mVulkanRenderer.GetPhysicalDevice(),
+            mVkSurfaceKHR,
+            &surface_format_count,
+            surface_format_list.data() );
+
+        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
+        {
+            mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mVkSurfaceFormatKHR.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        }
+        else
+        {
+            mVkSurfaceFormatKHR = surface_format_list[0];
+        }
+        std::array<VkFormat, 5> try_formats
+        {
+            {
+                VK_FORMAT_D32_SFLOAT_S8_UINT,
+                VK_FORMAT_D24_UNORM_S8_UINT,
+                VK_FORMAT_D16_UNORM_S8_UINT,
+                VK_FORMAT_D32_SFLOAT,
+                VK_FORMAT_D16_UNORM
+            }
+        };
+        for ( auto format : try_formats )
+        {
+            VkFormatProperties format_properties{};
+            vkGetPhysicalDeviceFormatProperties ( mVulkanRenderer.GetPhysicalDevice(), format, &format_properties );
+            if ( format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT )
+            {
+                mVkDepthStencilFormat = format;
+                break;
+            }
+        }
+
+        if ( std::find ( try_formats.begin(), try_formats.end(), mVkDepthStencilFormat ) == try_formats.end() )
+        {
+            std::ostringstream stream;
+            stream << "Unable to find a suitable depth stencil format";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        std::array<VkAttachmentDescription, 2> attachment_descriptions{ {} };
+        attachment_descriptions[0].flags = 0;
+        attachment_descriptions[0].format = mVkSurfaceFormatKHR.format;
+        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        attachment_descriptions[1].flags = 0;
+        attachment_descriptions[1].format = mVkDepthStencilFormat;
+        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        std::array<VkAttachmentReference, 1> color_attachment_references{};
+        color_attachment_references[0].attachment = 0;
+        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depth_stencil_attachment_reference{};
+        depth_stencil_attachment_reference.attachment = 1;
+        depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        std::array<VkSubpassDescription, 1> subpass_descriptions{};
+        subpass_descriptions[0].flags = 0;
+        subpass_descriptions[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_descriptions[0].inputAttachmentCount = 0;
+        subpass_descriptions[0].pInputAttachments = nullptr;
+        subpass_descriptions[0].colorAttachmentCount = static_cast<uint32_t> ( color_attachment_references.size() );
+        subpass_descriptions[0].pColorAttachments = color_attachment_references.data();
+        subpass_descriptions[0].pResolveAttachments = nullptr;
+        subpass_descriptions[0].pDepthStencilAttachment = &depth_stencil_attachment_reference;
+        subpass_descriptions[0].preserveAttachmentCount = 0;
+        subpass_descriptions[0].pPreserveAttachments = nullptr;
+
+        VkSubpassDependency subpass_dependency = {};
+        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependency.dstSubpass = 0;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.srcAccessMask = 0;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkRenderPassCreateInfo render_pass_create_info{};
+        render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
+        render_pass_create_info.pAttachments = attachment_descriptions.data();
+        render_pass_create_info.dependencyCount = 1;
+        render_pass_create_info.pDependencies = &subpass_dependency;
+        render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
+        render_pass_create_info.pSubpasses = subpass_descriptions.data();
+        vkCreateRenderPass ( mVulkanRenderer.GetDevice(), &render_pass_create_info, nullptr, &mVkRenderPass );
+    }
+
+    void VulkanWindow::FinalizeRenderPass()
+    {
+        if ( mVkRenderPass != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass ( mVulkanRenderer.GetDevice(), mVkRenderPass, nullptr );
+        }
+    }
+
+    void VulkanWindow::InitializeMatrices()
+    {
+
+        mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout() );
+        mMatrices.Initialize (
+            sizeof ( float ) * 16 * 2,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+
+        VkDescriptorBufferInfo descriptor_buffer_info = { mMatrices.GetBuffer(), 0, mMatrices.GetSize() };
+        VkWriteDescriptorSet write_descriptor_set{};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.pNext = nullptr;
+        write_descriptor_set.dstSet = mMatricesDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = 1;
+        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+    }
+
+    void VulkanWindow::FinalizeMatrices()
+    {
+        DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool );
+        mMatrices.Finalize();
+    }
+
     void VulkanWindow::Initialize()
     {
+        InitializeMatrices();
         InitializeSurface();
+        InitializeRenderPass();
         InitializeSwapchain();
         InitializeImageViews();
         InitializeDepthStencil();
         InitializeFrameBuffers();
+        InitializeCommandBuffer();
     }
 
     void VulkanWindow::Finalize()
@@ -334,11 +503,14 @@ namespace AeonGames
         {
             std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
+        FinalizeCommandBuffer();
         FinalizeFrameBuffers();
         FinalizeDepthStencil();
         FinalizeImageViews();
         FinalizeSwapchain();
+        FinalizeRenderPass();
         FinalizeSurface();
+        FinalizeMatrices();
     }
 
     void VulkanWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
@@ -383,16 +555,14 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        ///@todo No need to set projection matrix on the Renderer.
-        mVulkanRenderer.SetProjectionMatrix ( mProjectionMatrix );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        ///@todo No need to set view matrix on the Renderer.
-        mVulkanRenderer.SetViewMatrix ( mViewMatrix );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
@@ -408,6 +578,36 @@ namespace AeonGames
     const Frustum & VulkanWindow::GetFrustum() const
     {
         return mFrustum;
+    }
+
+    void VulkanWindow::InitializeCommandBuffer()
+    {
+        VkCommandPoolCreateInfo command_pool_create_info{};
+        command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        /** @note Flags should be set to VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+         * but we get an annoying from the validation layers to reset the pool rather than
+         * each command buffer, since we're allocating a single buffer from this pool,
+         * lets indulge the layer.
+         */
+        command_pool_create_info.flags = /*VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT*/ 0;
+        command_pool_create_info.queueFamilyIndex = mVulkanRenderer.GetQueueFamilyIndex();
+        vkCreateCommandPool ( mVulkanRenderer.GetDevice(), &command_pool_create_info, nullptr, &mVkCommandPool );
+
+        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        command_buffer_allocate_info.commandPool = mVkCommandPool;
+        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        command_buffer_allocate_info.commandBufferCount = 1;
+        vkAllocateCommandBuffers ( mVulkanRenderer.GetDevice(), &command_buffer_allocate_info, &mVkCommandBuffer );
+    }
+
+    void VulkanWindow::FinalizeCommandBuffer()
+    {
+        if ( mVkCommandPool != VK_NULL_HANDLE )
+        {
+            vkDestroyCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPool, nullptr );
+            mVkCommandPool = VK_NULL_HANDLE;
+        }
     }
 
     void VulkanWindow::BeginRender()
@@ -441,13 +641,14 @@ namespace AeonGames
         VkCommandBufferBeginInfo command_buffer_begin_info{};
         command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        if ( VkResult result = vkBeginCommandBuffer ( mVulkanRenderer.GetCommandBuffer(), &command_buffer_begin_info ) )
+        vkResetCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPool, 0 );
+        if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
         {
             std::cout << GetVulkanResultString ( result ) << "  Error Code: " << result << " at " << __func__ << " line " << __LINE__ << " " << std::endl;
         }
 
-        vkCmdSetViewport ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mVkViewport );
-        vkCmdSetScissor ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mVkScissor );
+        vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &mVkViewport );
+        vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &mVkScissor );
 
         /* [0] is color, [1] is depth/stencil.*/
         /**@todo Allow for changing the clear values.*/
@@ -461,18 +662,18 @@ namespace AeonGames
 
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = mVulkanRenderer.GetRenderPass();
+        render_pass_begin_info.renderPass = mVkRenderPass;
         render_pass_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
         render_pass_begin_info.renderArea = mVkScissor;
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
-        vkCmdBeginRenderPass ( mVulkanRenderer.GetCommandBuffer(), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+        vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
     }
 
     void VulkanWindow::EndRender()
     {
-        vkCmdEndRenderPass ( mVulkanRenderer.GetCommandBuffer() );
-        if ( VkResult result = vkEndCommandBuffer ( mVulkanRenderer.GetCommandBuffer() ) )
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+        if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
         {
             std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
@@ -482,7 +683,7 @@ namespace AeonGames
         submit_info.pWaitSemaphores = nullptr;
         submit_info.pWaitDstStageMask = nullptr;
         submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &mVulkanRenderer.GetCommandBuffer();
+        submit_info.pCommandBuffers = &mVkCommandBuffer;
         submit_info.signalSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &mVulkanRenderer.GetSignalSemaphore();
         if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) )
@@ -515,22 +716,43 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
-        mVulkanRenderer.BindPipeline ( aPipeline );
-        mVulkanRenderer.SetModelMatrix ( aModelMatrix );
+        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+        assert ( pipeline );
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipeline() );
+        ///@todo Move Matrices binding to BeginRender
+        vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  pipeline->GetPipelineLayout(),
+                                  MATRICES,
+                                  1,
+                                  &mMatricesDescriptorSet, 0, nullptr );
+        vkCmdPushConstants ( mVkCommandBuffer,
+                             pipeline->GetPipelineLayout(),
+                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
+
         if ( aMaterial != nullptr )
         {
-            mVulkanRenderer.SetMaterial ( *aMaterial );
+            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, pipeline->GetPipelineLayout() );
         }
         if ( aSkeleton != nullptr )
         {
-            mVulkanRenderer.SetSkeleton ( *aSkeleton );
+            const VulkanMemoryPoolBuffer* memory_pool_buffer =
+                reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeleton->GetMemoryPoolBuffer() );
+            uint32_t offset = static_cast<uint32_t> ( aSkeleton->GetOffset() );
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      SKELETON,
+                                      1,
+                                      &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
         }
 
-        mVulkanRenderer.BindMesh ( aMesh );
+        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer );
         if ( aMesh.GetIndexCount() )
         {
             vkCmdDrawIndexed (
-                mVulkanRenderer.GetCommandBuffer(),
+                mVkCommandBuffer,
                 ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                 aInstanceCount,
                 aVertexStart,
@@ -540,7 +762,7 @@ namespace AeonGames
         else
         {
             vkCmdDraw (
-                mVulkanRenderer.GetCommandBuffer(),
+                mVkCommandBuffer,
                 ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
                 aInstanceCount,
                 aVertexStart,
@@ -612,5 +834,15 @@ namespace AeonGames
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
+    }
+
+    VkRenderPass VulkanWindow::GetRenderPass() const
+    {
+        return mVkRenderPass;
+    }
+
+    VkCommandBuffer VulkanWindow::GetCommandBuffer() const
+    {
+        return mVkCommandBuffer;
     }
 }

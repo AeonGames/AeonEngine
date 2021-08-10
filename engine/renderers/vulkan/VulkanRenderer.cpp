@@ -43,8 +43,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( void* aWindow ) :
-        mMatrices { *this }
+    VulkanRenderer::VulkanRenderer ( void* aWindow )
     {
         try
         {
@@ -64,31 +63,9 @@ namespace AeonGames
             InitializeDevice();
             InitializeSemaphores();
             InitializeFence();
-            InitializeRenderPass();
-            InitializeCommandPool();
+            InitializeCommandPools();
             InitializeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
             InitializeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC );
-
-            mMatricesDescriptorPool = CreateDescriptorPool ( mVkDevice, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-            mMatricesDescriptorSet = CreateDescriptorSet ( mVkDevice, mMatricesDescriptorPool, mVkUniformBufferDescriptorSetLayout );
-            mMatrices.Initialize (
-                sizeof ( float ) * 16 * 2,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
-            VkDescriptorBufferInfo descriptor_buffer_info = { mMatrices.GetBuffer(), 0, mMatrices.GetSize() };
-            VkWriteDescriptorSet write_descriptor_set{};
-            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor_set.pNext = nullptr;
-            write_descriptor_set.dstSet = mMatricesDescriptorSet;
-            write_descriptor_set.dstBinding = 0;
-            write_descriptor_set.dstArrayElement = 0;
-            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            write_descriptor_set.descriptorCount = 1;
-            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
-            write_descriptor_set.pImageInfo = nullptr;
-            write_descriptor_set.pTexelBufferView = nullptr;
-            vkUpdateDescriptorSets ( mVkDevice, 1, &write_descriptor_set, 0, nullptr );
             AttachWindow ( aWindow );
         }
         catch ( ... )
@@ -111,12 +88,9 @@ namespace AeonGames
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
         }
         mVkSamplerDescriptorSetLayouts.clear();
-        DestroyDescriptorPool ( mVkDevice, mMatricesDescriptorPool );
-        mMatrices.Finalize();
         FinalizeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout );
         FinalizeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
-        FinalizeCommandPool();
-        FinalizeRenderPass();
+        FinalizeCommandPools();
         FinalizeFence();
         FinalizeSemaphores();
         FinalizeDevice();
@@ -159,24 +133,15 @@ namespace AeonGames
         return mVkPhysicalDeviceMemoryProperties;
     }
 
-    const VkRenderPass & VulkanRenderer::GetRenderPass() const
+    VkRenderPass VulkanRenderer::GetRenderPass() const
     {
-        return mVkRenderPass;
-    }
-
-    const VkFormat & VulkanRenderer::GetDepthStencilFormat() const
-    {
-        return mVkDepthStencilFormat;
-    }
-
-    const VkSurfaceFormatKHR & VulkanRenderer::GetSurfaceFormatKHR() const
-    {
-        return mVkSurfaceFormatKHR;
-    }
-
-    const VkCommandBuffer & VulkanRenderer::GetCommandBuffer() const
-    {
-        return mVkCommandBuffer;
+        auto it = mWindowStore.begin();
+        if ( it != mWindowStore.end() )
+        {
+            return it->second.GetRenderPass();
+        }
+        std::cout << LogLevel::Error << __FUNCTION__ << " No RenderPass found!" << std::endl;
+        return VK_NULL_HANDLE;
     }
 
     const VkSemaphore & VulkanRenderer::GetSignalSemaphore() const
@@ -477,142 +442,21 @@ namespace AeonGames
         vkCreateFence ( mVkDevice, &fence_create_info, nullptr, &mVkFence );
     }
 
-    void VulkanRenderer::InitializeRenderPass()
-    {
-#if 0
-        uint32_t surface_format_count = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, nullptr );
-        if ( surface_format_count == 0 )
-        {
-            std::ostringstream stream;
-            stream << "Physical device reports no surface formats.";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        std::vector<VkSurfaceFormatKHR> surface_format_list ( surface_format_count );
-        vkGetPhysicalDeviceSurfaceFormatsKHR ( mVkPhysicalDevice, mVkSurfaceKHR, &surface_format_count, surface_format_list.data() );
-        if ( surface_format_list[0].format == VK_FORMAT_UNDEFINED )
-        {
-#endif
-            mVkSurfaceFormatKHR.format = VK_FORMAT_B8G8R8A8_UNORM;
-            mVkSurfaceFormatKHR.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-#if 0
-        }
-        else
-        {
-            mVkSurfaceFormatKHR = surface_format_list[0];
-        }
-#endif
-        std::array<VkFormat, 5> try_formats
-        {
-            {
-                VK_FORMAT_D32_SFLOAT_S8_UINT,
-                VK_FORMAT_D24_UNORM_S8_UINT,
-                VK_FORMAT_D16_UNORM_S8_UINT,
-                VK_FORMAT_D32_SFLOAT,
-                VK_FORMAT_D16_UNORM
-            }
-        };
-        for ( auto format : try_formats )
-        {
-            VkFormatProperties format_properties{};
-            vkGetPhysicalDeviceFormatProperties ( mVkPhysicalDevice, format, &format_properties );
-            if ( format_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT )
-            {
-                mVkDepthStencilFormat = format;
-                break;
-            }
-        }
-
-        if ( std::find ( try_formats.begin(), try_formats.end(), mVkDepthStencilFormat ) == try_formats.end() )
-        {
-            std::ostringstream stream;
-            stream << "Unable to find a suitable depth stencil format";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-
-        std::array<VkAttachmentDescription, 2> attachment_descriptions{ {} };
-        attachment_descriptions[0].flags = 0;
-        attachment_descriptions[0].format = mVkSurfaceFormatKHR.format;
-        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        attachment_descriptions[1].flags = 0;
-        attachment_descriptions[1].format = mVkDepthStencilFormat;
-        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_descriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        std::array<VkAttachmentReference, 1> color_attachment_references{};
-        color_attachment_references[0].attachment = 0;
-        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depth_stencil_attachment_reference{};
-        depth_stencil_attachment_reference.attachment = 1;
-        depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        std::array<VkSubpassDescription, 1> subpass_descriptions{};
-        subpass_descriptions[0].flags = 0;
-        subpass_descriptions[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass_descriptions[0].inputAttachmentCount = 0;
-        subpass_descriptions[0].pInputAttachments = nullptr;
-        subpass_descriptions[0].colorAttachmentCount = static_cast<uint32_t> ( color_attachment_references.size() );
-        subpass_descriptions[0].pColorAttachments = color_attachment_references.data();
-        subpass_descriptions[0].pResolveAttachments = nullptr;
-        subpass_descriptions[0].pDepthStencilAttachment = &depth_stencil_attachment_reference;
-        subpass_descriptions[0].preserveAttachmentCount = 0;
-        subpass_descriptions[0].pPreserveAttachments = nullptr;
-
-        VkSubpassDependency subpass_dependency = {};
-        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        subpass_dependency.dstSubpass = 0;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.srcAccessMask = 0;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        VkRenderPassCreateInfo render_pass_create_info{};
-        render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
-        render_pass_create_info.pAttachments = attachment_descriptions.data();
-        render_pass_create_info.dependencyCount = 1;
-        render_pass_create_info.pDependencies = &subpass_dependency;
-        render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
-        render_pass_create_info.pSubpasses = subpass_descriptions.data();
-        vkCreateRenderPass ( mVkDevice, &render_pass_create_info, nullptr, &mVkRenderPass );
-    }
-
-    void VulkanRenderer::InitializeCommandPool()
+    void VulkanRenderer::InitializeCommandPools()
     {
         VkCommandPoolCreateInfo command_pool_create_info{};
         command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         command_pool_create_info.queueFamilyIndex = mQueueFamilyIndex;
-        vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkCommandPool );
-
-        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        command_buffer_allocate_info.commandPool = mVkCommandPool;
-        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        command_buffer_allocate_info.commandBufferCount = 1;
-        vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &mVkCommandBuffer );
+        command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        vkCreateCommandPool ( mVkDevice, &command_pool_create_info, nullptr, &mVkSingleTimeCommandPool );
     }
 
-    void VulkanRenderer::FinalizeCommandPool()
+    void VulkanRenderer::FinalizeCommandPools()
     {
-        if ( mVkCommandPool != VK_NULL_HANDLE )
+        if ( mVkSingleTimeCommandPool != VK_NULL_HANDLE )
         {
-            vkDestroyCommandPool ( mVkDevice, mVkCommandPool, nullptr );
-            mVkCommandPool = VK_NULL_HANDLE;
+            vkDestroyCommandPool ( mVkDevice, mVkSingleTimeCommandPool, nullptr );
+            mVkSingleTimeCommandPool = VK_NULL_HANDLE;
         }
     }
 
@@ -665,13 +509,6 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::FinalizeRenderPass()
-    {
-        if ( mVkRenderPass != VK_NULL_HANDLE )
-        {
-            vkDestroyRenderPass ( mVkDevice, mVkRenderPass, nullptr );
-        }
-    }
 
     VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
     {
@@ -680,7 +517,7 @@ namespace AeonGames
         VkCommandBufferBeginInfo beginInfo{};
         command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        command_buffer_allocate_info.commandPool = mVkCommandPool;
+        command_buffer_allocate_info.commandPool = mVkSingleTimeCommandPool;
         command_buffer_allocate_info.commandBufferCount = 1;
         vkAllocateCommandBuffers ( mVkDevice, &command_buffer_allocate_info, &command_buffer );
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -698,7 +535,7 @@ namespace AeonGames
         submit_info.pCommandBuffers = &aVkCommandBuffer;
         vkQueueSubmit ( mVkQueue, 1, &submit_info, VK_NULL_HANDLE );
         vkQueueWaitIdle ( mVkQueue );
-        vkFreeCommandBuffers ( mVkDevice, mVkCommandPool, 1, &aVkCommandBuffer );
+        vkFreeCommandBuffers ( mVkDevice, mVkSingleTimeCommandPool, 1, &aVkCommandBuffer );
     }
 
     void VulkanRenderer::LoadMesh ( const Mesh& aMesh )
@@ -725,7 +562,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanRenderer::BindMesh ( const Mesh& aMesh )
+    const VulkanMesh* VulkanRenderer::GetVulkanMesh ( const Mesh& aMesh )
     {
         auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         if ( it == mMeshStore.end() )
@@ -733,11 +570,16 @@ namespace AeonGames
             LoadMesh ( aMesh );
             it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         }
-        it->second.Bind();
+        if ( it != mMeshStore.end() )
+        {
+            return &it->second;
+        }
+        return nullptr;
     }
 
     /*-----------------Pipeline-----------------------*/
-    void VulkanRenderer::BindPipeline ( const Pipeline& aPipeline )
+
+    const VulkanPipeline* VulkanRenderer::GetVulkanPipeline ( const Pipeline& aPipeline )
     {
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it == mPipelineStore.end() )
@@ -745,18 +587,14 @@ namespace AeonGames
             LoadPipeline ( aPipeline );
             it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         }
-        mBoundPipeline = &it->second;
-        vkCmdBindPipeline ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, it->second.GetPipeline() );
-        ///@todo Move Matrices binding to BeginRender
-        vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  it->second.GetPipelineLayout(),
-                                  MATRICES,
-                                  1,
-                                  &mMatricesDescriptorSet, 0, nullptr );
+        if ( it != mPipelineStore.end() )
+        {
+            return &it->second;
+        }
+        return nullptr;
     }
 
-    void VulkanRenderer::SetMaterial ( const Material& aMaterial )
+    const VulkanMaterial* VulkanRenderer::GetVulkanMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         if ( it == mMaterialStore.end() )
@@ -764,39 +602,12 @@ namespace AeonGames
             LoadMaterial ( aMaterial );
             it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         }
-        it->second.Bind ( mBoundPipeline->GetPipelineLayout() );
-    }
 
-    void VulkanRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const
-    {
-        const VulkanMemoryPoolBuffer* memory_pool_buffer =
-            reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
-        uint32_t offset = static_cast<uint32_t> ( aSkeletonBuffer.GetOffset() );
-        vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  mBoundPipeline->GetPipelineLayout(),
-                                  SKELETON,
-                                  1,
-                                  &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
-    }
-
-    void VulkanRenderer::SetModelMatrix ( const Matrix4x4& aMatrix )
-    {
-        vkCmdPushConstants ( GetCommandBuffer(),
-                             mBoundPipeline->GetPipelineLayout(),
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
-
-    }
-
-    void VulkanRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
-    {
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
-    }
-
-    void VulkanRenderer::SetViewMatrix ( const Matrix4x4& aMatrix )
-    {
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        if ( it != mMaterialStore.end() )
+        {
+            return &it->second;
+        }
+        return nullptr;
     }
 
     void VulkanRenderer::LoadPipeline ( const Pipeline& aPipeline )

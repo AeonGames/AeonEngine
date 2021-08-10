@@ -36,6 +36,7 @@ namespace AeonGames
 {
     void OpenGLWindow::Initialize()
     {
+        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_BLEND );
@@ -104,7 +105,8 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( OpenGLWindow&& aOpenGLWindow ) :
         mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
         mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
-        mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) }
+        mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
+        mMatrices{std::move ( aOpenGLWindow.mMatrices ) }
     {
         std::swap ( mDisplay, aOpenGLWindow.mDisplay );
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
@@ -119,6 +121,7 @@ namespace AeonGames
         {
             mOpenGLRenderer.MakeCurrent();
             mMemoryPoolBuffer.Finalize();
+            mMatrices.Finalize();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -162,7 +165,8 @@ namespace AeonGames
     OpenGLWindow::OpenGLWindow ( OpenGLWindow&& aOpenGLWindow ) :
         mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
         mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
-        mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) }
+        mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
+        mMatrices{std::move ( aOpenGLWindow.mMatrices ) }
     {
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
         std::swap ( mFrustum, aOpenGLWindow.mFrustum );
@@ -177,6 +181,7 @@ namespace AeonGames
         {
             mOpenGLRenderer.MakeCurrent();
             mMemoryPoolBuffer.Finalize();
+            mMatrices.Finalize();
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -202,6 +207,14 @@ namespace AeonGames
     {
         mOpenGLRenderer.BindPipeline ( aPipeline );
 
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
+
+        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
+
+        glBindBufferBase ( GL_UNIFORM_BUFFER, MATRICES, mMatrices.GetBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
+
         if ( aMaterial )
         {
             mOpenGLRenderer.SetMaterial ( *aMaterial );
@@ -211,8 +224,6 @@ namespace AeonGames
         {
             mOpenGLRenderer.SetSkeleton ( *aSkeleton );
         }
-
-        mOpenGLRenderer.SetModelMatrix ( aModelMatrix );
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
         mOpenGLRenderer.BindMesh ( aMesh );
@@ -242,8 +253,6 @@ namespace AeonGames
         mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
         mFrameBuffer.Bind();
-        mOpenGLRenderer.SetViewMatrix ( mViewMatrix );
-        mOpenGLRenderer.SetProjectionMatrix ( mProjectionMatrix );
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
     }
@@ -310,11 +319,14 @@ namespace AeonGames
             0.0f, 0.0f, 0.0f, 1.0f
         };
         mFrustum = mProjectionMatrix * mViewMatrix;
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
     }
+
     void OpenGLWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
+        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & OpenGLWindow::GetProjectionMatrix() const

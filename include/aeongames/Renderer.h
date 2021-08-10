@@ -47,14 +47,6 @@ namespace AeonGames
         virtual void UnloadMaterial ( const Material& aMaterial ) = 0;
         virtual void LoadTexture ( const Texture& aTexture ) = 0;
         virtual void UnloadTexture ( const Texture& aTexture ) = 0;
-
-        virtual void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const = 0;
-        virtual void BindMesh ( const Mesh& aMesh ) = 0;
-        virtual void BindPipeline ( const Pipeline& aPipeline ) = 0;
-        virtual void SetMaterial ( const Material& aMaterial ) = 0;
-        virtual void SetModelMatrix ( const Matrix4x4& aMatrix ) = 0;
-        virtual void SetProjectionMatrix ( const Matrix4x4& aMatrix ) = 0;
-        virtual void SetViewMatrix ( const Matrix4x4& aMatrix ) = 0;
         ///@}
 
         ///@name Window surface related functions
