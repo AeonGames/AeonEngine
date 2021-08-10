@@ -52,14 +52,11 @@ namespace AeonGames
         GLuint GetOverlayProgram() const;
         GLuint GetOverlayQuad() const;
 
-        void BindMesh ( const Mesh& aMesh ) final;
-        void BindPipeline ( const Pipeline& aPipeline ) final;
-        void SetMaterial ( const Material& aMaterial ) final;
+        void BindMesh ( const Mesh& aMesh );
+        void BindPipeline ( const Pipeline& aPipeline );
+        void SetMaterial ( const Material& aMaterial );
 
-        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const final;
-        void SetModelMatrix ( const Matrix4x4& aMatrix ) final;
-        void SetProjectionMatrix ( const Matrix4x4& aMatrix ) final;
-        void SetViewMatrix ( const Matrix4x4& aMatrix ) final;
+        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -107,7 +104,6 @@ namespace AeonGames
 #endif
         /// General VAO
         GLuint mVertexArrayObject{};
-        OpenGLBuffer mMatrices{};
         /** \addtogroup Overlay functionality.
          * Both the shader program and the buffer descriving the window/screen quad are
          * pretty much constant and usable without modifications by any Opengl window,

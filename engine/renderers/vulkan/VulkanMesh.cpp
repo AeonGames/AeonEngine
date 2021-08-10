@@ -141,13 +141,13 @@ namespace AeonGames
         throw std::runtime_error ( "Invalid Index Size." );
     }
 
-    void VulkanMesh::Bind() const
+    void VulkanMesh::Bind ( VkCommandBuffer aVkCommandBuffer ) const
     {
         const VkDeviceSize offset = 0;
-        vkCmdBindVertexBuffers ( mVulkanRenderer.GetCommandBuffer(), 0, 1, &mMeshBuffer.GetBuffer(), &offset );
+        vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &offset );
         if ( mMesh->GetIndexCount() )
         {
-            vkCmdBindIndexBuffer ( mVulkanRenderer.GetCommandBuffer(),
+            vkCmdBindIndexBuffer ( aVkCommandBuffer,
                                    mMeshBuffer.GetBuffer(), ( sizeof ( Vertex ) * mMesh->GetVertexCount() ),
                                    GetIndexType ( mMesh ) );
         }

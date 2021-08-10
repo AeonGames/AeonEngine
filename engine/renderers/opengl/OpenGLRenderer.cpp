@@ -204,7 +204,6 @@ static void DestroyRendererWindow(HWND hWnd)
         {
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
-        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
         AttachWindow ( static_cast<HWND> ( aWindow ) );
@@ -231,7 +230,6 @@ static void DestroyRendererWindow(HWND hWnd)
     {
         mWindowStore.clear();
         MakeCurrent();
-        mMatrices.Finalize();
         mTextureStore.clear();
         mMeshStore.clear();
         mMaterialStore.clear();
@@ -362,8 +360,6 @@ static void DestroyRendererWindow(HWND hWnd)
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
 
-        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
-
         AttachWindow(aWindow);
         ++mRendererCount;
     }
@@ -383,7 +379,6 @@ static void DestroyRendererWindow(HWND hWnd)
     {
         mWindowStore.clear();
         MakeCurrent();
-        mMatrices.Finalize();
         mTextureStore.clear();
         mMeshStore.clear();
         mMaterialStore.clear();
@@ -509,7 +504,6 @@ static void DestroyRendererWindow(HWND hWnd)
             OPENGL_CHECK_ERROR_NO_THROW;
             mVertexArrayObject = 0;
         }
-        mMatrices.Finalize();
     }
 
     void OpenGLRenderer::LoadMesh ( const Mesh& aMesh )
@@ -571,12 +565,6 @@ static void DestroyRendererWindow(HWND hWnd)
 
         glUseProgram ( it->second.GetProgramId() );
         OPENGL_CHECK_ERROR_NO_THROW;
-
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-
-        glBindBufferBase ( GL_UNIFORM_BUFFER, MATRICES, mMatrices.GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLRenderer::SetMaterial ( const Material& aMaterial)
@@ -607,19 +595,6 @@ static void DestroyRendererWindow(HWND hWnd)
         mMaterialStore.emplace(
             aMaterial.GetConsecutiveId(),
             OpenGLMaterial{*this,aMaterial});
-    }
-
-    void OpenGLRenderer::SetModelMatrix ( const Matrix4x4& aMatrix )
-    {
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
-    }
-    void OpenGLRenderer::SetProjectionMatrix ( const Matrix4x4& aMatrix )
-    {
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
-    }
-    void OpenGLRenderer::SetViewMatrix ( const Matrix4x4& aMatrix )
-    {
-        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void OpenGLRenderer::UnloadMaterial(const Material& aMaterial)

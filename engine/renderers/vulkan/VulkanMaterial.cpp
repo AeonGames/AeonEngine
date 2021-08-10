@@ -181,7 +181,7 @@ namespace AeonGames
         std::swap ( mSamplerDescriptorSet, aVulkanMaterial.mSamplerDescriptorSet );
     }
 
-    void VulkanMaterial::Bind ( const VkPipelineLayout aVkPipelineLayout ) const
+    void VulkanMaterial::Bind ( VkCommandBuffer aVkCommandBuffer, const VkPipelineLayout aVkPipelineLayout ) const
     {
         std::array<VkDescriptorSet, 2> descriptor_sets
         {
@@ -190,7 +190,7 @@ namespace AeonGames
         };
 
         uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
-        vkCmdBindDescriptorSets ( mVulkanRenderer.GetCommandBuffer(),
+        vkCmdBindDescriptorSets ( aVkCommandBuffer,
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   aVkPipelineLayout,
                                   MATERIAL,
