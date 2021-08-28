@@ -35,6 +35,8 @@ class MDL_OT_exporter(bpy.types.Operator):
     def execute(self, context):
         if not os.path.exists(self.directory + "meshes"):
             os.makedirs(self.directory + "meshes")
+        if not os.path.exists(self.directory + "images"):
+            os.makedirs(self.directory + "images")
 
         model_buffer = model_pb2.ModelMsg()
         for object in context.scene.objects:
@@ -44,7 +46,16 @@ class MDL_OT_exporter(bpy.types.Operator):
                 bpy.ops.export_mesh.msh(
                     'EXEC_DEFAULT',
                     filepath=self.directory + assembly.mesh.path)
-
+                # Export All images referenced by the mesh materials
+                for material in object.data.materials:
+                    print("Material:",material.name, material.use_nodes)
+                    for node in material.node_tree.nodes:
+                        print("\tNode:",node.bl_idname,node.label)
+                        if node.bl_idname == "ShaderNodeTexImage":
+                            filepath = node.image.filepath_raw
+                            node.image.filepath_raw = self.directory + os.sep + "images" + os.sep + os.path.basename(filepath)
+                            node.image.save()
+                            node.image.filepath_raw = filepath
         print(
             "Writting",
             self.directory +
@@ -63,7 +74,7 @@ class MDL_OT_exporter(bpy.types.Operator):
             self.directory +
             os.sep +
             context.scene.name +
-            ".anm.txt",
+            ".mdl.txt",
             ".")
         out = open(
             self.directory +
