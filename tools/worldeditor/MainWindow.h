@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class NodeEditor;
     class CameraSettings;
     class Renderer;
     class EngineWindow;
@@ -31,7 +32,8 @@ namespace AeonGames
         MainWindow();
         ~MainWindow();
     private slots:
-        void on_actionNew_triggered();
+        void on_actionNewScene_triggered();
+        void on_actionNewShader_triggered();
         void on_actionOpen_triggered();
         void on_actionSave_triggered();
         void on_actionExit_triggered();

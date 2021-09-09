@@ -53,6 +53,7 @@ set(WORLDEDITOR_QT_HEADERS
     RendererSelectDialog.h
     SettingsDialog.h
     CameraSettings.h
+    NodeEditor.h
     MainWindow.h
     SceneWindow.h
     EngineWindow.h)
@@ -75,6 +76,7 @@ set(WORLDEDITOR_SOURCES
     SceneWindow.cpp
     RendererSelectDialog.cpp
     CameraSettings.cpp
+    NodeEditor.cpp
     SettingsDialog.cpp
     EngineWindow.cpp
     GridSettings.cpp)
@@ -85,7 +87,9 @@ set(WORLDEDITOR_UI
     ui/RendererSelectDialog.ui
     ui/SettingsDialog.ui
     ui/ResourcesDialog.ui
-    ui/CameraSettings.ui)
+    ui/CameraSettings.ui
+    ui/NodeEditor.ui
+)
 
 if(WIN32)
   include_directories(${Qt5WinExtras_INCLUDE_DIRS})
