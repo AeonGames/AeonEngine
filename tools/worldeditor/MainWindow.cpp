@@ -22,6 +22,7 @@ limitations under the License.
 #include "SceneWindow.h"
 #include "EngineWindow.h"
 #include "CameraSettings.h"
+#include "NodeEditor.h"
 
 namespace AeonGames
 {
@@ -64,7 +65,7 @@ namespace AeonGames
         close();
     }
 
-    void MainWindow::on_actionNew_triggered()
+    void MainWindow::on_actionNewScene_triggered()
     {
         SceneWindow* sceneWindow;
         QMdiSubWindow*
@@ -124,6 +125,18 @@ namespace AeonGames
     void MainWindow::on_actionCamera_triggered()
     {
         mCameraSettings->show();
+    }
+
+    void MainWindow::on_actionNewShader_triggered()
+    {
+        NodeEditor* nodeEditor;
+        QMdiSubWindow*
+        mdiSubWindow = mdiArea->addSubWindow ( nodeEditor = new NodeEditor ( mdiArea ) );
+        mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
+        mdiSubWindow->setWindowTitle ( tr ( "Untitled Shader" ) );
+        mdiSubWindow->showMaximized();
+        mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
+        actionSave->setEnabled ( true );
     }
 
     void MainWindow::fieldOfViewChanged ( double aFieldOfView )

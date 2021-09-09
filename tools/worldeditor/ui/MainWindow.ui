@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1280</width>
-    <height>720</height>
+    <height>688</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,7 +48,14 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionNew"/>
+    <widget class="QMenu" name="menu_New">
+     <property name="title">
+      <string>&amp;New</string>
+     </property>
+     <addaction name="actionNewScene"/>
+     <addaction name="actionNewShader"/>
+    </widget>
+    <addaction name="menu_New"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
@@ -105,14 +112,6 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionNew">
-   <property name="text">
-    <string>&amp;New</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
   <action name="actionCamera">
    <property name="text">
     <string>Camera</string>
@@ -122,6 +121,21 @@
    </property>
    <property name="toolTip">
     <string>Camera Settings</string>
+   </property>
+  </action>
+  <action name="actionNodeEditor">
+   <property name="text">
+    <string>Node Editor</string>
+   </property>
+  </action>
+  <action name="actionNewScene">
+   <property name="text">
+    <string>Scene</string>
+   </property>
+  </action>
+  <action name="actionNewShader">
+   <property name="text">
+    <string>Shader</string>
    </property>
   </action>
  </widget>
