@@ -45,7 +45,6 @@ namespace AeonGames
 {
     VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
-        mMaterial{&aMaterial},
         mUniformBuffer { mVulkanRenderer }
     {
         // Initialize DescriptorPool

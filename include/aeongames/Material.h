@@ -33,7 +33,7 @@ namespace AeonGames
     class Image;
     class MaterialMsg;
     class PropertyMsg;
-    class Material : public Resource
+    class Material final : public Resource
     {
     public:
         using UniformValue = std::variant<uint32_t, int32_t, float, Vector2, Vector3, Vector4, Matrix4x4>;

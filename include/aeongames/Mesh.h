@@ -25,7 +25,7 @@ limitations under the License.
 namespace AeonGames
 {
     class MeshMsg;
-    class Mesh : public Resource
+    class Mesh final : public Resource
     {
     public:
         enum AttributeMask
