@@ -90,22 +90,22 @@ namespace AeonGames
         {
             switch ( std::get<0> ( i ) )
             {
-            case UniformDescriptorMsg::SCALAR_FLOAT:
+            case SCALAR_FLOAT:
                 properties += "float " + std::get<1> ( i ) + ";\n";
                 break;
-            case UniformDescriptorMsg::SCALAR_UINT:
+            case SCALAR_UINT:
                 properties += "uint " + std::get<1> ( i ) + ";\n";
                 break;
-            case UniformDescriptorMsg::SCALAR_INT:
+            case SCALAR_INT:
                 properties += "int " + std::get<1> ( i ) + ";\n";
                 break;
-            case UniformDescriptorMsg::VECTOR_FLOAT_2:
+            case VECTOR_FLOAT_2:
                 properties += "vec2 " + std::get<1> ( i ) + ";\n";
                 break;
-            case UniformDescriptorMsg::VECTOR_FLOAT_3:
+            case VECTOR_FLOAT_3:
                 properties += "vec3 " + std::get<1> ( i ) + ";\n";
                 break;
-            case UniformDescriptorMsg::VECTOR_FLOAT_4:
+            case VECTOR_FLOAT_4:
                 properties += "vec4 " + std::get<1> ( i ) + ";\n";
                 break;
             default:
