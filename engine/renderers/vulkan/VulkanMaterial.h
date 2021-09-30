@@ -40,7 +40,6 @@ namespace AeonGames
         void Bind ( VkCommandBuffer aVkCommandBuffer, const VkPipelineLayout aVkPipelineLayout ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;
-        const Material* mMaterial{nullptr};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorSet mSamplerDescriptorSet{VK_NULL_HANDLE};

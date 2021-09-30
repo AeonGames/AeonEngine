@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2021 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -51,10 +51,10 @@ namespace AeonGames
     {
         uint32_t path;
         uint32_t offset;
-        uint32_t extension_offset;
-        uint32_t compressed_size;
-        uint32_t uncompressed_size;
-        uint32_t compression_type;
+        uint64_t extension_offset;
+        uint64_t compressed_size;
+        uint64_t uncompressed_size;
+        uint64_t compression_type;
     };
     /*! \brief Package Class.
         Implements PKG file handling routines and management.

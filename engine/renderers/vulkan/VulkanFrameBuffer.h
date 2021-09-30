@@ -21,16 +21,16 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
-    class VulkanFrameBuffer final : public FrameBuffer
+    class VulkanFrameBuffer : public FrameBuffer
     {
     public:
         VulkanFrameBuffer ();
-        ~VulkanFrameBuffer() final;
-        void LoadFromPBMsg ( const FrameBufferMsg& aFrameBufferMsg ) final;
-        void Unload () final;
-        void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
-        void Bind() final;
-        void Unbind() final;
+        ~VulkanFrameBuffer();
+        void LoadFromPBMsg ( const FrameBufferMsg& aFrameBufferMsg );
+        void Unload ();
+        void Resize ( uint32_t aWidth, uint32_t aHeight );
+        void Bind();
+        void Unbind();
     private:
     };
 }
