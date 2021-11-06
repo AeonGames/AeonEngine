@@ -7,7 +7,11 @@ Radii {
   y: 1.0
   z: 1.0
 }
-VertexFlags: 1
+Attribute {
+    Semantic: POSITION
+    Size:     3
+    Type:     FLOAT
+}
 VertexCount: 8
 IndexSize: 1
 IndexCount: 24

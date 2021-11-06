@@ -7,7 +7,42 @@ Radii {
   y: 1.0
   z: 1.0
 }
-VertexFlags: 31
+Attribute {
+    Semantic: POSITION
+    Size:  3
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: NORMAL
+    Size:  3
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: TANGENT
+    Size:  3
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: BITANGENT
+    Size:  3
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: TEXCOORD
+    Size:  2
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: WEIGHT_INDEX
+    Size:  4
+    Type:  UNSIGNED_BYTE
+}
+Attribute {
+    Semantic: WEIGHT_VALUE
+    Size:  4
+    Type:  UNSIGNED_BYTE
+    Normalized: true
+}
 VertexCount: 24
 IndexSize: 1
 IndexCount: 36

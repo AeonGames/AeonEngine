@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <cassert>
+#include <unordered_map>
 #include "OpenGLFunctions.h"
 #include "aeongames/Mesh.h"
 #include "OpenGLMesh.h"
@@ -43,116 +44,40 @@ namespace AeonGames
         mIndexBuffer{std::move ( aOpenGLMesh.mIndexBuffer ) }
     {}
 
+    static std::unordered_map<const Mesh::AttributeType, const uint32_t> MeshTypeToOGL
+    {
+        {Mesh::BYTE, GL_BYTE},
+        {Mesh::UNSIGNED_BYTE, GL_UNSIGNED_BYTE},
+        {Mesh::SHORT, GL_SHORT},
+        {Mesh::UNSIGNED_SHORT, GL_UNSIGNED_SHORT},
+        {Mesh::HALF_FLOAT, GL_HALF_FLOAT},
+        {Mesh::INT, GL_INT},
+        {Mesh::UNSIGNED_INT, GL_UNSIGNED_INT},
+        {Mesh::FLOAT, GL_FLOAT},
+        {Mesh::FIXED, GL_FIXED},
+        {Mesh::DOUBLE, GL_DOUBLE},
+    };
+
     void OpenGLMesh::Bind() const
     {
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
 
+        /** @todo Find out what is best disable all or only unused */
+        for ( size_t i = 0; i < Mesh::SEMANTIC_COUNT; ++i )
+        {
+            glDisableVertexAttribArray ( i );
+        }
+
         size_t offset{0};
-        if ( mMesh->GetVertexFlags() & Mesh::POSITION_BIT )
+        for ( auto& attribute : mMesh->GetAttributes() )
         {
-            glEnableVertexAttribArray ( 0 );
+            glEnableVertexAttribArray ( std::get<0> ( attribute ) );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer ( std::get<0> ( attribute ), std::get<1> ( attribute ), MeshTypeToOGL[std::get<2> ( attribute )], std::get<3> ( attribute ), mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
+            offset += GetAttributeTotalSize ( attribute );
         }
-        else
-        {
-            glDisableVertexAttribArray ( 0 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::NORMAL_BIT )
-        {
-            glEnableVertexAttribArray ( 1 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 1, 3, GL_FLOAT, GL_FALSE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 1 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::TANGENT_BIT )
-        {
-            glEnableVertexAttribArray ( 2 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 2, 3, GL_FLOAT, GL_FALSE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 2 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::BITANGENT_BIT )
-        {
-            glEnableVertexAttribArray ( 3 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 3, 3, GL_FLOAT, GL_FALSE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 3 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::UV_BIT )
-        {
-            glEnableVertexAttribArray ( 4 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 4, 2, GL_FLOAT, GL_FALSE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 2;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 4 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::WEIGHT_IDX_BIT )
-        {
-            glEnableVertexAttribArray ( 5 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribIPointer ( 5, 4, GL_UNSIGNED_BYTE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( uint8_t ) * 4;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 5 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::WEIGHT_BIT )
-        {
-            glEnableVertexAttribArray ( 6 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 6, 4, GL_UNSIGNED_BYTE, GL_TRUE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( uint8_t ) * 4;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 6 );
-        }
-
-        if ( mMesh->GetVertexFlags() & Mesh::COLOR_BIT )
-        {
-            glEnableVertexAttribArray ( 7 );
-            OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( 7, 3, GL_FLOAT, GL_FALSE, mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
-            offset += sizeof ( float ) * 3;
-        }
-        else
-        {
-            glDisableVertexAttribArray ( 7 );
-        }
-
         //---Index Buffer---
         if ( mIndexBuffer.GetSize() != 0 )
         {

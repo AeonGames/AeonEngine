@@ -17,26 +17,46 @@ package AeonGames;
 
 import "vector3.proto";
 
-message MeshMsg {
-    enum AttributeBit
+message AttributeMsg
+{
+    enum AttributeSemantic
     {
-        UNKNOWN_ATTRIBUTE = 0;
-        POSITION_BIT = 1;
-        NORMAL_BIT = 2;
-        TANGENT_BIT = 4;
-        BITANGENT_BIT = 8;
-        UV_BIT = 16;
-        WEIGHT_IDX_BIT = 32;
-        WEIGHT_BIT = 64;
-        COLOR_BIT = 128;
+        POSITION            = 0;
+        NORMAL              = 1;
+        TANGENT             = 2;
+        BITANGENT           = 3;
+        TEXCOORD            = 4;
+        WEIGHT_INDEX        = 5;
+        WEIGHT_VALUE        = 6;
+        COLOR               = 7;
     }
-	uint32 Version         = 1;
-    Vector3Msg Center   = 2;
-    Vector3Msg Radii    = 3;
-    uint32 VertexFlags     = 4;
-    uint32 VertexCount     = 5;
-    uint32 IndexSize       = 6;		
-    uint32 IndexCount      = 7;
-    bytes VertexBuffer     = 8;
-    bytes IndexBuffer      = 9;
+    enum AttributeType
+    {
+        BYTE                   =  0;
+        UNSIGNED_BYTE          =  1;
+        SHORT                  =  2;
+        UNSIGNED_SHORT         =  3;
+        HALF_FLOAT             =  4;
+        INT                    =  5;
+        UNSIGNED_INT           =  6;
+        FLOAT                  =  7;
+        FIXED                  =  8;
+        DOUBLE                 =  9;
+    }
+    AttributeSemantic    Semantic    = 1;
+    uint32               Size        = 2;
+    AttributeType        Type        = 3;
+    bool                 Normalized  = 4;
+}
+
+message MeshMsg {
+	uint32 Version                   = 1;
+    Vector3Msg Center                = 2;
+    Vector3Msg Radii                 = 3;
+    repeated AttributeMsg Attribute  = 4;
+    uint32 VertexCount               = 5;
+    uint32 IndexSize                 = 6;		
+    uint32 IndexCount                = 7;
+    bytes VertexBuffer               = 8;
+    bytes IndexBuffer                = 9;
 }

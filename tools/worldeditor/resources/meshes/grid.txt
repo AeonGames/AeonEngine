@@ -4,7 +4,11 @@ Center {
 }
 Radii {
 }
-VertexFlags: 1
+Attribute {
+    Semantic: POSITION
+    Size:  3
+    Type:  FLOAT
+}
 VertexCount: 4
 IndexSize: 0
 IndexCount: 0

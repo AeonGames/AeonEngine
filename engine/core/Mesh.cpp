@@ -34,9 +34,10 @@ namespace AeonGames
     {
         Unload();
     }
-    uint32_t Mesh::GetVertexFlags () const
+
+    const std::vector<Mesh::AttributeTuple>& Mesh::GetAttributes () const
     {
-        return mVertexFlags;
+        return mAttributes;
     }
 
     uint32_t Mesh::GetIndexSize () const
@@ -69,40 +70,39 @@ namespace AeonGames
         return mAABB;
     }
 
+    size_t GetAttributeTotalSize ( const Mesh::AttributeTuple& aAttributeTuple )
+    {
+        switch ( std::get<Mesh::AttributeType> ( aAttributeTuple ) )
+        {
+        case Mesh::UNKNOWN_TYPE:
+            break;
+        case Mesh::BYTE:
+        case Mesh::UNSIGNED_BYTE:
+            return std::get<1> ( aAttributeTuple );
+            break;
+        case Mesh::SHORT:
+        case Mesh::UNSIGNED_SHORT:
+        case Mesh::HALF_FLOAT:
+            return 2 * std::get<1> ( aAttributeTuple );
+            break;
+        case Mesh::INT:
+        case Mesh::UNSIGNED_INT:
+        case Mesh::FLOAT:
+        case Mesh::FIXED:
+            return 4 * std::get<1> ( aAttributeTuple );
+        case Mesh::DOUBLE:
+            return 8 * std::get<1> ( aAttributeTuple );
+            break;
+        }
+        return 0;
+    }
+
     uint32_t Mesh::GetStride () const
     {
         uint32_t stride = 0;
-        if ( mVertexFlags & Mesh::AttributeMask::POSITION_BIT )
+        for ( const auto& i : mAttributes )
         {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::NORMAL_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::TANGENT_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::BITANGENT_BIT )
-        {
-            stride += sizeof ( float ) * 3;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::UV_BIT )
-        {
-            stride += sizeof ( float ) * 2;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::WEIGHT_IDX_BIT )
-        {
-            stride += sizeof ( uint8_t ) * 4;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::WEIGHT_BIT )
-        {
-            stride += sizeof ( uint8_t ) * 4;
-        }
-        if ( mVertexFlags & Mesh::AttributeMask::COLOR_BIT )
-        {
-            stride += sizeof ( float ) * 3;
+            stride += GetAttributeTotalSize ( i );
         }
         return stride;
     }
@@ -131,7 +131,16 @@ namespace AeonGames
         mVertexCount = aMeshMsg.vertexcount();
         mIndexCount = aMeshMsg.indexcount();
         mIndexSize = aMeshMsg.indexsize();
-        mVertexFlags = aMeshMsg.vertexflags();
+        mAttributes.reserve ( aMeshMsg.attribute().size() );
+        for ( const auto& i : aMeshMsg.attribute() )
+        {
+            mAttributes.emplace_back (
+                static_cast<AttributeSemantic> ( i.semantic() ),
+                static_cast<AttributeSize> ( i.size() ),
+                static_cast<AttributeType> ( i.type() ),
+                static_cast<AttributeNormalized> ( i.normalized() )
+            );
+        }
 
         mVertexBuffer.clear();
         mVertexBuffer.reserve ( aMeshMsg.vertexbuffer().size() );
@@ -148,8 +157,8 @@ namespace AeonGames
         mVertexCount = 0;
         mIndexCount = 0;
         mIndexSize = 0;
-        mVertexFlags = 0;
 
+        mAttributes.clear();
         mVertexBuffer.clear();
         mIndexBuffer.clear();
     }

@@ -28,39 +28,42 @@ namespace AeonGames
     class Mesh final : public Resource
     {
     public:
-        enum AttributeMask
+        enum AttributeSemantic : uint8_t
         {
-            POSITION_BIT =   0b1,
-            NORMAL_BIT =     0b10,
-            TANGENT_BIT =    0b100,
-            BITANGENT_BIT =  0b1000,
-            UV_BIT =         0b10000,
-            WEIGHT_IDX_BIT = 0b100000,
-            WEIGHT_BIT =     0b1000000,
-            COLOR_BIT =      0b10000000,
+            POSITION                      = 0,
+            NORMAL                        = 1,
+            TANGENT                       = 2,
+            BITANGENT                     = 3,
+            TEXCOORD                      = 4,
+            WEIGHT_INDEX                  = 5,
+            WEIGHT_VALUE                  = 6,
+            COLOR                         = 7,
+            SEMANTIC_COUNT
         };
-        enum IndexType
+
+        enum AttributeType : uint8_t
         {
-            /**@todo Refactor to store index size rather than type.
-               This will involve changing the exporter and the msh format specification.*/
-            BYTE = 0x00,
-            UNSIGNED_BYTE = 0x01,
-            SHORT = 0x02,
-            UNSIGNED_SHORT = 0x03,
-            INT = 0x04,
-            UNSIGNED_INT = 0x05,
-            FLOAT = 0x06,
-            TWO_BYTES = 0x07,
-            THREE_BYTES = 0x08,
-            FOUR_BYTES = 0x09,
-            DOUBLE = 0x0A
+            UNKNOWN_TYPE     =  0,
+            BYTE             =  1,
+            UNSIGNED_BYTE    =  2,
+            SHORT            =  3,
+            UNSIGNED_SHORT   =  4,
+            HALF_FLOAT       =  5,
+            INT              =  6,
+            UNSIGNED_INT     =  7,
+            FLOAT            =  8,
+            FIXED            =  9,
+            DOUBLE           = 10,
         };
+        using AttributeSize       = uint8_t;
+        using AttributeNormalized = uint8_t;
+        using AttributeTuple = std::tuple<AttributeSemantic, AttributeSize, AttributeType, AttributeNormalized>;
         DLL Mesh();
         DLL ~Mesh() final;
         DLL void LoadFromPBMsg ( const MeshMsg& aMeshMsg );
         DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload() final;
-        DLL uint32_t GetVertexFlags() const;
+        DLL const std::vector<AttributeTuple>& GetAttributes() const;
         DLL uint32_t GetIndexSize() const;
         DLL uint32_t GetIndexCount() const;
         DLL uint32_t GetVertexCount() const;
@@ -72,10 +75,11 @@ namespace AeonGames
         AABB mAABB{};
         std::vector<uint8_t> mVertexBuffer{};
         std::vector<uint8_t> mIndexBuffer{};
-        uint32_t mVertexFlags{};
+        std::vector<AttributeTuple> mAttributes{};
         uint32_t mVertexCount{};
         uint32_t mIndexSize{};
         uint32_t mIndexCount{};
     };
+    DLL size_t GetAttributeTotalSize ( const Mesh::AttributeTuple& aAttributeTuple );
 }
 #endif
