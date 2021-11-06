@@ -30,102 +30,84 @@ class MSH_OT_exporterCommon():
         self.mesh = None
         self.object = None
         self.armature = None
-        self.flags = None
         self.vertices = []
         self.indices = []
         self.filepath = filepath
 
-    def get_vertex(self, loop):
+    def get_vertex(self, loop_and_attributes):
+        loop = loop_and_attributes[0]
+        attributes = loop_and_attributes[1]
         mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
         vertex = []
-        # this should be a single function
-        if self.flags & mesh_pb2.MeshMsg.POSITION_BIT:
-            localpos = self.mesh.vertices[
-                loop.vertex_index].co @ mesh_world_matrix # @ is the matrix multiplication operator now
-            vertex.extend([localpos[0],
-                           localpos[1],
-                           localpos[2]])
 
-        if self.flags & mesh_pb2.MeshMsg.NORMAL_BIT:
-            localnormal = self.mesh.vertices[
-                loop.vertex_index].normal @ mesh_world_matrix
-            vertex.extend([localnormal[0],
-                           localnormal[1],
-                           localnormal[2]])
+        for attribute in attributes:
+            if attribute.Semantic == mesh_pb2.AttributeMsg.POSITION:
+                vertex.extend(list(self.mesh.vertices[loop.vertex_index].co @ mesh_world_matrix)[:3])
+            elif attribute.Semantic == mesh_pb2.AttributeMsg.NORMAL:
+                vertex.extend(list(self.mesh.vertices[loop.vertex_index].normal @ mesh_world_matrix)[:3])
+            elif attribute.Semantic == mesh_pb2.AttributeMsg.TANGENT:
+                vertex.extend(list(self.mesh.vertices[loop.vertex_index].normal @ mesh_world_matrix)[:3])
+            elif attribute.Semantic == mesh_pb2.AttributeMsg.BITANGENT:
+                vertex.extend(list(self.mesh.vertices[loop.vertex_index].normal @ mesh_world_matrix)[:3])
+            elif attribute.Semantic == mesh_pb2.AttributeMsg.TEXCOORD:
+                vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
+                            1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
+            elif attribute.Semantic == mesh_pb2.AttributeMsg.WEIGHT_INDEX:
+                # TODO: Allow for different index size.
+                weights = []
+                for group in self.mesh.vertices[loop.vertex_index].groups:
+                    if group.weight > 0:
+                        bone_index = self.armature.bones.find(
+                            self.object.vertex_groups[group.group].name)
+                        if bone_index < 0 or bone_index > 255:
+                            # If the vertex references a bone not in the armature
+                            # bone index will be -1
+                            print(
+                                "Bone index for group",
+                                self.object.vertex_groups[
+                                    group.group].name,
+                                "out of range:",
+                                str(bone_index))
+                        weights.append([group.weight, bone_index])
+                weights.sort()
+                weights.reverse()
 
-        if self.flags & mesh_pb2.MeshMsg.TANGENT_BIT:
-            localtangent = loop.tangent @ mesh_world_matrix
-            vertex.extend([localtangent[0],
-                           localtangent[1],
-                           localtangent[2]])
+                # Clip
+                if len(weights) > 4:
+                    weights = weights[:4]
 
-        if self.flags & mesh_pb2.MeshMsg.BITANGENT_BIT:
-            localbitangent = loop.bitangent @ mesh_world_matrix
-            vertex.extend([localbitangent[0],
-                           localbitangent[1],
-                           localbitangent[2]])
+                # Normalize
+                magnitude = 0
+                for weight in weights:
+                    magnitude = magnitude + weight[0]
 
-        if self.flags & mesh_pb2.MeshMsg.UV_BIT:
-            vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
-                           1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
+                byte_magnitude = 0
+                for weight in weights:
+                    weight[0] = weight[0] / magnitude
+                    weight[0] = int(weight[0] * 0xFF)
+                    byte_magnitude = byte_magnitude + weight[0]
 
-        if self.flags & (mesh_pb2.MeshMsg.WEIGHT_IDX_BIT |
-                         mesh_pb2.MeshMsg.WEIGHT_BIT):
-            weights = []
-            for group in self.mesh.vertices[
-                    loop.vertex_index].groups:
-                if group.weight > 0:
-                    bone_index = self.armature.bones.find(
-                        self.object.vertex_groups[group.group].name)
-                    if bone_index < 0 or bone_index > 255:
-                        # If the vertex references a bone not in the armature
-                        # bone index will be -1
-                        print(
-                            "Bone index for group",
-                            self.object.vertex_groups[
-                                group.group].name,
-                            "out of range:",
-                            str(bone_index))
-                    weights.append([group.weight, bone_index])
-            weights.sort()
-            weights.reverse()
+                weights[-1][0] = weights[-1][0] + \
+                    (0xFF - byte_magnitude)
 
-            # Clip
-            if len(weights) > 4:
-                weights = weights[:4]
+                if len(weights) < 4:
+                    weights = weights + \
+                        [[0, 0]] * (4 - len(weights))
 
-            # Normalize
-            magnitude = 0
-            for weight in weights:
-                magnitude = magnitude + weight[0]
-
-            byte_magnitude = 0
-            for weight in weights:
-                weight[0] = weight[0] / magnitude
-                weight[0] = int(weight[0] * 0xFF)
-                byte_magnitude = byte_magnitude + weight[0]
-
-            weights[-1][0] = weights[-1][0] + \
-                (0xFF - byte_magnitude)
-
-            if len(weights) < 4:
-                weights = weights + \
-                    [[0, 0]] * (4 - len(weights))
-
-            weight_indices = []
-            weight_values = []
-            weights.sort()
-            weights.reverse()
-            for weight in weights:
-                weight_indices.append(weight[1])
-                weight_values.append(weight[0])
-            vertex.extend(weight_indices)
-            vertex.extend(weight_values)
-
-        if self.flags & mesh_pb2.MeshMsg.COLOR_BIT:
-            vertex.extend([self.mesh.vertex_colors[0].data[loop.index].color[0],
-                           self.mesh.vertex_colors[0].data[loop.index].color[1],
-                           self.mesh.vertex_colors[0].data[loop.index].color[2]])
+                weight_indices = []
+                weight_values = []
+                weights.sort()
+                weights.reverse()
+                for weight in weights:
+                    weight_indices.append(weight[1])
+                    weight_values.append(weight[0])
+                vertex.extend(weight_indices)
+                vertex.extend(weight_values)
+            # Does nothing on mesh_pb2.MeshMsg.WEIGHT_VALUE:
+            elif attribute.Semantic == mesh_pb2.AttributeMsg.COLOR:
+                vertex.extend([self.mesh.vertex_colors[0].data[loop.index].color[0],
+                            self.mesh.vertex_colors[0].data[loop.index].color[1],
+                            self.mesh.vertex_colors[0].data[loop.index].color[2]])
 
         #print("Generating Vertex", loop.index)
         return [loop.index, vertex]
@@ -221,41 +203,72 @@ class MSH_OT_exporterCommon():
                     if armaturemodifier.object:
                         self.armature = armaturemodifier.object.data
                     break
-        mesh_buffer.VertexFlags = 0
         vertex_struct_string = ''
         # Position and Normal aren't optional (for now)
-        mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.POSITION_BIT
+        attribute = mesh_buffer.Attribute.add()
+        attribute.Semantic   = mesh_pb2.AttributeMsg.POSITION
+        attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+        attribute.Size       = 3
+        attribute.Normalized = False
+        
         vertex_struct_string += '3f'
 
-        mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.NORMAL_BIT
+        attribute = mesh_buffer.Attribute.add()
+        attribute.Semantic   = mesh_pb2.AttributeMsg.NORMAL
+        attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+        attribute.Size       = 3
+        attribute.Normalized = False
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
 
             mesh.calc_tangents(uvmap=mesh.uv_layers[0].name)
 
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.TANGENT_BIT
+            attribute = mesh_buffer.Attribute.add()
+            attribute.Semantic   = mesh_pb2.AttributeMsg.TANGENT
+            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+            attribute.Size       = 3
+            attribute.Normalized = False
             vertex_struct_string += '3f'
 
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.BITANGENT_BIT
+            attribute = mesh_buffer.Attribute.add()
+            attribute.Semantic   = mesh_pb2.AttributeMsg.BITANGENT
+            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+            attribute.Size       = 3
+            attribute.Normalized = False
             vertex_struct_string += '3f'
 
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.UV_BIT
+            attribute = mesh_buffer.Attribute.add()
+            attribute.Semantic   = mesh_pb2.AttributeMsg.TEXCOORD
+            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+            attribute.Size       = 2
+            attribute.Normalized = False
             vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier.
         if self.armature is not None:
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.WEIGHT_IDX_BIT
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.WEIGHT_BIT
+            attribute = mesh_buffer.Attribute.add()
+            attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_INDEX
+            attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
+            attribute.Size       = 4
+            attribute.Normalized = False
+            attribute = mesh_buffer.Attribute.add()
+            attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_VALUE
+            attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
+            attribute.Size       = 4
+            attribute.Normalized = True
             vertex_struct_string += '8B'
 
         if(len(mesh.vertex_colors) > 0):
-            mesh_buffer.VertexFlags |= mesh_pb2.MeshMsg.COLOR_BIT
+            attribute = mesh_buffer.Attribute.add()
+            attribute.Semantic   = mesh_pb2.AttributeMsg.COLOR
+            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+            attribute.Size       = 4
+            attribute.Normalized = False
             vertex_struct_string += '3f'
 
         # Generate Vertex Buffer--------------------------------------
-        self.flags = mesh_buffer.VertexFlags
-        self.vertices = list(pool.map(self.get_vertex, mesh.loops))
+        self.vertices = list(pool.map(self.get_vertex, zip(mesh.loops, itertools.repeat(mesh_buffer.Attribute))))
         self.vertices.sort(key=operator.itemgetter(1))
         # The next line of code is so dense;
         # every single statement has so many things going on...

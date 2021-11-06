@@ -10,7 +10,21 @@ Radii {
   y: 48.00000114696161
   z: 14.240006446838379
 }
-VertexFlags: 131
+Attribute {
+    Semantic: POSITION
+    Size:  3
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: NORMAL
+    Size:  3
+    Type:  FLOAT
+}
+Attribute {
+    Semantic: COLOR
+    Size:  3
+    Type:  FLOAT
+}
 VertexCount: 58
 IndexSize: 1
 IndexCount: 372

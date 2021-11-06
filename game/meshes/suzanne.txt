@@ -5,7 +5,16 @@ Radii {
   y: 4.2578125
   z: 4.921875
 }
-VertexFlags: 3
+Attribute {
+  Semantic: POSITION
+  Size:  3
+  Type:  FLOAT
+}
+Attribute {
+  Semantic: NORMAL
+  Size:  3
+  Type:  FLOAT
+}
 VertexCount: 507
 IndexSize: 2
 IndexCount: 2904

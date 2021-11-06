@@ -105,7 +105,7 @@ find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
              HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
 option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
-option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
+option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" OFF)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
 if(CLANG_TIDY_EXECUTABLE)
