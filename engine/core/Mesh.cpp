@@ -74,8 +74,6 @@ namespace AeonGames
     {
         switch ( std::get<Mesh::AttributeType> ( aAttributeTuple ) )
         {
-        case Mesh::UNKNOWN_TYPE:
-            break;
         case Mesh::BYTE:
         case Mesh::UNSIGNED_BYTE:
             return std::get<1> ( aAttributeTuple );

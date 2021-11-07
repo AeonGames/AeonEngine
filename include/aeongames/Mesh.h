@@ -43,17 +43,16 @@ namespace AeonGames
 
         enum AttributeType : uint8_t
         {
-            UNKNOWN_TYPE     =  0,
-            BYTE             =  1,
-            UNSIGNED_BYTE    =  2,
-            SHORT            =  3,
-            UNSIGNED_SHORT   =  4,
-            HALF_FLOAT       =  5,
-            INT              =  6,
-            UNSIGNED_INT     =  7,
-            FLOAT            =  8,
-            FIXED            =  9,
-            DOUBLE           = 10,
+            BYTE             =  0,
+            UNSIGNED_BYTE    =  1,
+            SHORT            =  2,
+            UNSIGNED_SHORT   =  3,
+            HALF_FLOAT       =  4,
+            INT              =  5,
+            UNSIGNED_INT     =  6,
+            FLOAT            =  7,
+            FIXED            =  8,
+            DOUBLE           =  9,
         };
         using AttributeSize       = uint8_t;
         using AttributeNormalized = uint8_t;
