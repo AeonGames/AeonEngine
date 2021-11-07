@@ -62,13 +62,11 @@ namespace AeonGames
     {
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
-
         /** @todo Find out what is best disable all or only unused */
         for ( size_t i = 0; i < Mesh::SEMANTIC_COUNT; ++i )
         {
             glDisableVertexAttribArray ( i );
         }
-
         size_t offset{0};
         for ( auto& attribute : mMesh->GetAttributes() )
         {

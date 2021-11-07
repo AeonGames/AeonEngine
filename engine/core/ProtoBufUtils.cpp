@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.h"
 #include "aeongames/ProtoBufUtils.h"
 #include "aeongames/CRC.h"
+#include "aeongames/Mesh.h"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -29,12 +30,33 @@ limitations under the License.
 #include "quaternion.pb.h"
 #include "transform.pb.h"
 #include "scene.pb.h"
+#include "mesh.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 
 namespace AeonGames
 {
+    static_assert ( static_cast<uint32_t> ( Mesh::BYTE ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_BYTE ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::UNSIGNED_BYTE ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_UNSIGNED_BYTE ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::HALF_FLOAT ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_HALF_FLOAT ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::INT ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_INT ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::UNSIGNED_INT ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_UNSIGNED_INT ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::FLOAT ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_FLOAT ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::FIXED ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_FIXED ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::DOUBLE ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_DOUBLE ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::SHORT ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_SHORT ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::UNSIGNED_SHORT ) == static_cast<uint32_t> ( AttributeMsg_AttributeType_UNSIGNED_SHORT ), "Mesh AttributeType and MeshMSG AttributeType do not match" );
+
+    static_assert ( static_cast<uint32_t> ( Mesh::POSITION ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_POSITION ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::NORMAL ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_NORMAL ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::TANGENT ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_TANGENT ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::BITANGENT ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_BITANGENT ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::TEXCOORD ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_TEXCOORD ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::WEIGHT_INDEX ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_WEIGHT_INDEX ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::WEIGHT_VALUE ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_WEIGHT_VALUE ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+    static_assert ( static_cast<uint32_t> ( Mesh::COLOR ) == static_cast<uint32_t> ( AttributeMsg_AttributeSemantic_COLOR ), "Mesh AttributeSemantic and MeshMSG AttributeSemantic do not match" );
+
     uint32_t GetReferenceMsgId ( const ReferenceMsg& reference_buffer )
     {
         switch ( reference_buffer.reference_case() )
