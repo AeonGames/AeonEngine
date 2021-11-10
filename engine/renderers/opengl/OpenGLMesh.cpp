@@ -44,7 +44,7 @@ namespace AeonGames
         mIndexBuffer{std::move ( aOpenGLMesh.mIndexBuffer ) }
     {}
 
-    static std::unordered_map<const Mesh::AttributeType, const uint32_t> MeshTypeToOGL
+    static std::unordered_map<Mesh::AttributeType, GLsizei> MeshTypeToOGL
     {
         {Mesh::BYTE, GL_BYTE},
         {Mesh::UNSIGNED_BYTE, GL_UNSIGNED_BYTE},
@@ -63,7 +63,7 @@ namespace AeonGames
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
         /** @todo Find out what is best disable all or only unused */
-        for ( size_t i = 0; i < Mesh::SEMANTIC_COUNT; ++i )
+        for ( GLuint i = 0; i < Mesh::SEMANTIC_COUNT; ++i )
         {
             glDisableVertexAttribArray ( i );
         }
@@ -72,7 +72,13 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( std::get<0> ( attribute ) );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer ( std::get<0> ( attribute ), std::get<1> ( attribute ), MeshTypeToOGL[std::get<2> ( attribute )], std::get<3> ( attribute ), mMesh->GetStride(), reinterpret_cast<const void*> ( offset ) );
+            glVertexAttribPointer (
+                std::get<0> ( attribute ),
+                std::get<1> ( attribute ),
+                MeshTypeToOGL[std::get<2> ( attribute )],
+                std::get<3> ( attribute ),
+                static_cast<GLsizei> ( mMesh->GetStride() ),
+                reinterpret_cast<const void*> ( offset ) );
             OPENGL_CHECK_ERROR_THROW;
             offset += GetAttributeTotalSize ( attribute );
         }
