@@ -95,9 +95,9 @@ namespace AeonGames
         return 0;
     }
 
-    uint32_t Mesh::GetStride () const
+    size_t Mesh::GetStride () const
     {
-        uint32_t stride = 0;
+        size_t stride = 0;
         for ( const auto& i : mAttributes )
         {
             stride += GetAttributeTotalSize ( i );

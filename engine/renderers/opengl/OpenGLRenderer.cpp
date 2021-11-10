@@ -657,7 +657,7 @@ static void DestroyRendererWindow(HWND hWnd)
         }
 #if defined(__unix__)
         mWindowStore.emplace ( aWindowId, OpenGLWindow{*this, mDisplay, reinterpret_cast<::Window>(aWindowId)} );
-#elif defined(__WIN32__)
+#elif defined(_WIN32)
         mWindowStore.emplace ( aWindowId, OpenGLWindow{*this, reinterpret_cast<::HWND>(aWindowId)} );
 #endif
     }

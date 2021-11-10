@@ -69,7 +69,7 @@ namespace AeonGames
         DLL const std::vector<uint8_t>& GetVertexBuffer() const;
         DLL const std::vector<uint8_t>& GetIndexBuffer() const;
         DLL const AABB& GetAABB() const;
-        DLL uint32_t GetStride() const;
+        DLL size_t GetStride() const;
     private:
         AABB mAABB{};
         std::vector<uint8_t> mVertexBuffer{};
