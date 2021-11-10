@@ -137,7 +137,7 @@ namespace AeonGames
             "vec3",
             "vec3",
             "vec2",
-            "uvec4",
+            "vec4",
             "vec4",
             "vec3"
         }

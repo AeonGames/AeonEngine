@@ -289,19 +289,19 @@ namespace AeonGames
         T value{};
         for ( size_t i = 0; i < count; ++i )
         {
-            if ( typeid ( T ) == typeid ( int32_t ) )
+            if constexpr ( std::is_same_v<T, int32_t> )
             {
                 value = stoi ( match_results[index++] );
             }
-            else if ( typeid ( T ) ==  typeid ( uint32_t ) )
+            else if constexpr ( std::is_same_v<T, uint32_t> )
             {
-                value = stoul ( match_results[index++] );
+                value = static_cast<T> ( stoul ( match_results[index++] ) );
             }
-            else if ( typeid ( T ) ==  typeid ( float ) )
+            else if constexpr ( std::is_same_v<T, float> )
             {
                 value = stof ( match_results[index++] );
             }
-            else if ( typeid ( T ) ==  typeid ( double ) )
+            else if constexpr ( std::is_same_v<T, double> )
             {
                 value = stod ( match_results[index++] );
             }
