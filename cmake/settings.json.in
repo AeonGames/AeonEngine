@@ -24,7 +24,7 @@
         "PowerShell":null,
         "Command Prompt":null
     },  
-    "python.pythonPath": "${Python3_EXECUTABLE}",
+    "python.defaultInterpreterPath": "${Python3_EXECUTABLE}",
     "clang.executable": "${CLANG_EXECUTABLE}",
     "cmake.cmakePath": "${CMAKE_COMMAND}",
     "window.zoomLevel": ${CODE_ZOOMLEVEL},
