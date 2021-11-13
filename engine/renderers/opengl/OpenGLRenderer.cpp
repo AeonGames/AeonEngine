@@ -290,8 +290,22 @@ static void DestroyRendererWindow(HWND hWnd)
 
     OpenGLRenderer::OpenGLRenderer(void* aWindow)
     {
-        if(mRendererCount==0)
+        if(mRendererCount == 0)
         {
+            XSetErrorHandler ( [] ( Display * mDisplay, XErrorEvent * error_event ) -> int
+            {
+                char error_string[1024];
+                XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
+                std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
+                return 0;
+            } );
             if(mDisplay){XCloseDisplay(mDisplay);}
             mDisplay = XOpenDisplay ( nullptr );
         }
@@ -327,30 +341,10 @@ static void DestroyRendererWindow(HWND hWnd)
                       "Direct GLX rendering context obtained" << std::endl;
         }
 
-        XVisualInfo* xvi = glXGetVisualFromFBConfig ( mDisplay, glxconfig );
-
-        mColorMap = XCreateColormap ( mDisplay, DefaultRootWindow ( mDisplay ), xvi->visual, AllocNone );
-        XSetWindowAttributes swa
-        {
-            .colormap = mColorMap,
-        };
-
-        mWindowId =
-            XCreateWindow ( mDisplay, DefaultRootWindow ( mDisplay ),
-                            0, 0,
-                            32, 32,
-                            0,
-                            xvi->depth,
-                            InputOutput,
-                            xvi->visual,
-                            CWColormap, &swa );
-        XFree ( xvi );
-        if ( !MakeCurrent() )
+        if ( !MakeCurrent(reinterpret_cast<::Window>(reinterpret_cast<::Window>(aWindow))) )
         {
             throw std::runtime_error ( "glXMakeCurrent failed." );
         }
-
-        MakeCurrent();
 
         if ( !LoadOpenGLAPI() )
         {
@@ -367,12 +361,7 @@ static void DestroyRendererWindow(HWND hWnd)
 
     bool OpenGLRenderer::MakeCurrent(::Window aWindowId)
     {
-        return glXMakeCurrent (
-            mDisplay,
-            (aWindowId==None) ?
-                mWindowId :
-                aWindowId,
-                mOpenGLContext);
+        return glXMakeCurrent (mDisplay, (aWindowId) ? aWindowId : None , (aWindowId) ? mOpenGLContext : nullptr );
     }
 
     OpenGLRenderer::~OpenGLRenderer()
@@ -383,18 +372,6 @@ static void DestroyRendererWindow(HWND hWnd)
         mMeshStore.clear();
         mMaterialStore.clear();
         mPipelineStore.clear();
-        glXMakeCurrent ( mDisplay, None, nullptr );
-
-        if ( mWindowId != None )
-        {
-            XDestroyWindow ( mDisplay, mWindowId );
-            mWindowId = None;
-        }
-        if ( mColorMap != None )
-        {
-            XFreeColormap ( mDisplay, mColorMap );
-            mColorMap = None;
-        }
         if ( mOpenGLContext != None )
         {
             glXDestroyContext ( mDisplay, mOpenGLContext );
