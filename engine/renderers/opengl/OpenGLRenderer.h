@@ -98,9 +98,7 @@ namespace AeonGames
         HDC mDeviceContext{};
         HGLRC mOpenGLContext{};
 #elif defined(__unix__)
-        Colormap mColorMap {None};
-        ::Window mWindowId{None};
-        GLXContext mOpenGLContext{None};
+        GLXContext mOpenGLContext {None};
 #endif
         /// General VAO
         GLuint mVertexArrayObject{};
