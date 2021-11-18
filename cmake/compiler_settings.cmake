@@ -58,3 +58,8 @@ if(USE_IWYU)
   endif()
 endif()
 
+option(USE_CPPCHECK "Use cppcheck static code analisys" OFF)
+find_program(CPPCHECK_PROGRAM NAMES cppcheck)
+if(CPPCHECK_PROGRAM AND USE_CPPCHECK)
+  set(CMAKE_CXX_CPPCHECK ${CPPCHECK_PROGRAM} --quiet)
+endif()
