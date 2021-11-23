@@ -43,10 +43,16 @@ message AttributeMsg
         FIXED                  =  8;
         DOUBLE                 =  9;
     }
+    enum AttributeFlags
+    {
+        NONE                   = 0x00;
+        NORMALIZED             = 0x01;
+        INTEGER                = 0x02;
+    }
     AttributeSemantic    Semantic    = 1;
     uint32               Size        = 2;
     AttributeType        Type        = 3;
-    bool                 Normalized  = 4;
+    uint32               Flags       = 4;
 }
 
 message MeshMsg {

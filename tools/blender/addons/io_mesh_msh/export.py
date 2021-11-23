@@ -209,7 +209,7 @@ class MSH_OT_exporterCommon():
         attribute.Semantic   = mesh_pb2.AttributeMsg.POSITION
         attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
         attribute.Size       = 3
-        attribute.Normalized = False
+        attribute.flags      = 0
         
         vertex_struct_string += '3f'
 
@@ -217,7 +217,7 @@ class MSH_OT_exporterCommon():
         attribute.Semantic   = mesh_pb2.AttributeMsg.NORMAL
         attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
         attribute.Size       = 3
-        attribute.Normalized = False
+        attribute.flags      = 0
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
@@ -228,21 +228,21 @@ class MSH_OT_exporterCommon():
             attribute.Semantic   = mesh_pb2.AttributeMsg.TANGENT
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 3
-            attribute.Normalized = False
+            attribute.flags      = 0
             vertex_struct_string += '3f'
 
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.BITANGENT
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 3
-            attribute.Normalized = False
+            attribute.flags      = 0
             vertex_struct_string += '3f'
 
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.TEXCOORD
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 2
-            attribute.Normalized = False
+            attribute.flags      = 0
             vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier.
@@ -251,12 +251,12 @@ class MSH_OT_exporterCommon():
             attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_INDEX
             attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
             attribute.Size       = 4
-            attribute.Normalized = False
+            attribute.flags      = 2
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_VALUE
             attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
             attribute.Size       = 4
-            attribute.Normalized = True
+            attribute.flags      = 1
             vertex_struct_string += '8B'
 
         if(len(mesh.vertex_colors) > 0):
@@ -264,7 +264,7 @@ class MSH_OT_exporterCommon():
             attribute.Semantic   = mesh_pb2.AttributeMsg.COLOR
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 4
-            attribute.Normalized = False
+            attribute.flags      = 0
             vertex_struct_string += '3f'
 
         # Generate Vertex Buffer--------------------------------------

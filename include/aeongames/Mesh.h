@@ -54,9 +54,16 @@ namespace AeonGames
             FIXED            =  8,
             DOUBLE           =  9,
         };
+
+        enum AttributeFlag : uint8_t
+        {
+            NORMALIZED       =  0b00000001,
+            INTEGER          =  0b00000010,
+        };
+
         using AttributeSize       = uint8_t;
-        using AttributeNormalized = uint8_t;
-        using AttributeTuple = std::tuple<AttributeSemantic, AttributeSize, AttributeType, AttributeNormalized>;
+        using AttributeFlags      = uint8_t;
+        using AttributeTuple = std::tuple<AttributeSemantic, AttributeSize, AttributeType, AttributeFlags>;
         DLL Mesh();
         DLL ~Mesh() final;
         DLL void LoadFromPBMsg ( const MeshMsg& aMeshMsg );
