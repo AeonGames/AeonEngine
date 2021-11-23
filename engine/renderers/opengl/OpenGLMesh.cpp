@@ -72,14 +72,26 @@ namespace AeonGames
         {
             glEnableVertexAttribArray ( std::get<0> ( attribute ) );
             OPENGL_CHECK_ERROR_THROW;
-            glVertexAttribPointer (
-                std::get<0> ( attribute ),
-                std::get<1> ( attribute ),
-                MeshTypeToOGL[std::get<2> ( attribute )],
-                std::get<3> ( attribute ),
-                static_cast<GLsizei> ( mMesh->GetStride() ),
-                reinterpret_cast<const void*> ( offset ) );
-            OPENGL_CHECK_ERROR_THROW;
+            if ( ! ( std::get<3> ( attribute ) & Mesh::AttributeFlag::INTEGER ) )
+            {
+                glVertexAttribPointer (
+                    std::get<0> ( attribute ),
+                    std::get<1> ( attribute ),
+                    MeshTypeToOGL[std::get<2> ( attribute )],
+                    std::get<3> ( attribute ) & Mesh::AttributeFlag::NORMALIZED,
+                    static_cast<GLsizei> ( mMesh->GetStride() ),
+                    reinterpret_cast<const void*> ( offset ) );
+                OPENGL_CHECK_ERROR_THROW;
+            }
+            else
+            {
+                glVertexAttribIPointer (
+                    std::get<0> ( attribute ),
+                    std::get<1> ( attribute ),
+                    MeshTypeToOGL[std::get<2> ( attribute )],
+                    static_cast<GLsizei> ( mMesh->GetStride() ),
+                    reinterpret_cast<const void*> ( offset ) );
+            }
             offset += GetAttributeTotalSize ( attribute );
         }
         //---Index Buffer---

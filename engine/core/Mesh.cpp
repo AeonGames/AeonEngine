@@ -136,7 +136,7 @@ namespace AeonGames
                 static_cast<AttributeSemantic> ( i.semantic() ),
                 static_cast<AttributeSize> ( i.size() ),
                 static_cast<AttributeType> ( i.type() ),
-                static_cast<AttributeNormalized> ( i.normalized() )
+                static_cast<AttributeFlags> ( i.flags() )
             );
         }
 
