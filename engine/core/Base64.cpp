@@ -69,7 +69,7 @@ namespace AeonGames
         result.reserve ( ( aDataSize / 4 ) * 3 );
         for ( size_t i = 0; i < aDataSize; i += 4 )
         {
-            uint32_t n =
+            size_t n =
                 ( Alphabeth.find ( aData[i + 0] ) << 18 ) +
                 ( Alphabeth.find ( aData[i + 1] ) << 12 ) +
                 ( Alphabeth.find ( ( aData[i + 2] == Padding ) ? 'A' : aData[i + 2] ) << 6 ) +
