@@ -30,6 +30,19 @@ if [ $EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
+# Remove Tabs
+for FILE in $TEXT_FILES; do
+	"${SED_EXECUTABLE}" -i 's/\t/    /' $FILE
+	if [ $? -ne 0 ]; then
+		echo "[!] $FILE" >&2
+        EXIT_CODE=1
+	fi
+done
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "[!] sed failed when removing tabs." >&2
+    exit 1
+fi
+
 # Format CMake Files only if the executable exists
 if [ -f "${CMAKE_FORMAT_EXECUTABLE}" ]; then
 	for FILE in $CMAKE_FILES; do

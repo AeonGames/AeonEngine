@@ -105,6 +105,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Base64.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Clock.h
@@ -115,6 +116,7 @@ set(ENGINE_CORE_SOURCES
     core/AeonEngine.cpp
     core/Configuration.cpp
     core/CRC.cpp
+    core/Base64.cpp
     core/Component.cpp
     core/Renderer.cpp
     core/Texture.cpp

@@ -32,6 +32,7 @@ limitations under the License.
 #include "Convert.h"
 #include "PipelineTool.h"
 #include "Pack.h"
+#include "Base64.h"
 
 int main ( int argc, char *argv[] )
 {
@@ -40,7 +41,8 @@ int main ( int argc, char *argv[] )
     {
         { "convert", [] { return std::make_unique<AeonGames::Convert>(); } },
         { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
-        { "pack", [] { return std::make_unique<AeonGames::Pack>(); } }
+        { "pack", [] { return std::make_unique<AeonGames::Pack>(); } },
+        { "base64", [] { return std::make_unique<AeonGames::Base64>(); } },
     };
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );

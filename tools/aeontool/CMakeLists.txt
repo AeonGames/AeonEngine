@@ -12,8 +12,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h Pack.h)
-set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp Pack.cpp)
+set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h Pack.h Base64.h)
+set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp Pack.cpp Base64.cpp)
 
 include_directories(${ZLIB_INCLUDE_DIR}
 					${PROTOBUF_INCLUDE_DIR}
