@@ -11,15 +11,15 @@ before_build:
 
     rem powershell -Command new-itemproperty -path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v4.0.30319" -name "SchUseStrongCrypto" -Value 1 -PropertyType "DWord"
 
-    curl -LfsS -o vulkan-sdk.exe https://sdk.lunarg.com/sdk/download/1.2.135.0/windows/VulkanSDK-1.2.135.0-Installer.exe?Human=true
+    curl -LfsS -o vulkan-sdk.exe https://sdk.lunarg.com/sdk/download/1.2.198.0/windows/VulkanSDK-1.2.198.0-Installer.exe
 
-    set VULKAN_SDK=C:\VulkanSDK\1.2.135.0
+    set VULKAN_SDK=C:\VulkanSDK\1.2.198.0
 
     dir vulkan-sdk.exe
 
-    start "" /WAIT vulkan-sdk.exe /S
+    start "" /WAIT vulkan-sdk.exe install --am --al --c
 
-    dir C:\VulkanSDK\1.2.135.0
+    dir C:\VulkanSDK\1.2.198.0
 
     set VCPKG_DEFAULT_TRIPLET=x64-windows
 
