@@ -161,34 +161,6 @@
                 }
             },
             {
-                "name": "Electron C++",
-                "type": "cppdbg",
-                "request": "launch",
-                "program": "@ELECTRON_EXECUTABLE@",
-                "MIMode": "gdb",
-                "miDebuggerPath": "@GDB_EXECUTABLE@",
-                "cwd": "@CMAKE_SOURCE_DIR@",
-                "args" : ["--js-flags=\"--expose-gc\"","@CMAKE_SOURCE_DIR@/electron"],
-                "externalConsole": false,
-                "environment": [
-                    {
-                        "name":"NODE_PATH",
-                        "value":"@DEBUG_PATH@"
-                    },
-                    {
-                        "name":"PATH",
-                        "value":"@DEBUG_PATH@"
-                    }
-                ],
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    }
-                ]
-            },
-            {
                 "name": "Unit Tests",
                 "type": "cppdbg",
                 "request": "launch",
@@ -214,11 +186,38 @@
                     ]
             },
             {
-                "name": "Aeon Tool",
+                "name": "Aeon Tool Convert",
                 "type": "cppdbg",
                 "request": "launch",
                 "args": [
                     "convert","-i","game/meshes/cube.txt","-o","game/meshes/cube.msh"
+                ],
+                "stopAtEntry": false,
+                "cwd": "@CMAKE_SOURCE_DIR@",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"@DEBUG_PATH@"
+                    }                    
+                ],
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@",
+                        "miDebuggerPath": "@GDB_EXECUTABLE@",
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                         ]
+            },
+            {
+                "name": "Aeon Tool Base64 Decode",
+                "type": "cppdbg",
+                "request": "launch",
+                "args": [
+                    "base64","decode","-i","game/aerin/textures/Aerin_Body_Diffuse.png.base64","-o","game/aerin/textures/Aerin_Body_Diffuse_TEST.png"
                 ],
                 "stopAtEntry": false,
                 "cwd": "@CMAKE_SOURCE_DIR@",

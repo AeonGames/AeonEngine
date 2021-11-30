@@ -23,7 +23,7 @@ namespace AeonGames
     const static std::string_view Alphabeth{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
     const static char Padding{'='};
 
-    std::string Base64Encode ( const uint8_t* aData, size_t aDataSize )
+    std::string Base64Encode ( const uint8_t* aData, size_t aDataSize, bool aSplit )
     {
         assert ( aData );
         assert ( aDataSize );
@@ -36,6 +36,10 @@ namespace AeonGames
             result.push_back ( Alphabeth[ ( n >> 12 ) & 63] );
             result.push_back ( Alphabeth[ ( n >> 6 ) & 63] );
             result.push_back ( Alphabeth[n & 63] );
+            if ( aSplit && ! ( ( i + 1 ) % 19 ) )
+            {
+                result.push_back ( '\n' );
+            }
         }
         switch ( aDataSize % 3 )
         {
@@ -67,17 +71,28 @@ namespace AeonGames
         assert ( aDataSize );
         std::string result;
         result.reserve ( ( aDataSize / 4 ) * 3 );
-        for ( size_t i = 0; i < aDataSize; i += 4 )
+        size_t block[4];
+        size_t occupancy = 0;
+        for ( size_t i = 0; i < aDataSize; ++i )
         {
-            size_t n =
-                ( Alphabeth.find ( aData[i + 0] ) << 18 ) +
-                ( Alphabeth.find ( aData[i + 1] ) << 12 ) +
-                ( Alphabeth.find ( ( aData[i + 2] == Padding ) ? 'A' : aData[i + 2] ) << 6 ) +
-                ( Alphabeth.find ( ( aData[i + 3] == Padding ) ? 'A' : aData[i + 3] ) );
-
-            result.push_back ( ( n >> 16 ) & 0xFF );
-            result.push_back ( ( n >> 8 ) & 0xFF );
-            result.push_back ( n & 0xFF );
+            if ( i > aDataSize - 2 && aData[i] == Padding )
+            {
+                block[occupancy++] = 0;
+                continue;
+            }
+            block[occupancy] = Alphabeth.find ( aData[i] );
+            if ( block[occupancy] != std::string::npos )
+            {
+                ++occupancy;
+            }
+            if ( occupancy == 4 )
+            {
+                size_t n = ( block[0] << 18 ) + ( block[1] << 12 ) + ( block[2] << 6 ) + ( block[3] );
+                result.push_back ( ( n >> 16 ) & 0xFF );
+                result.push_back ( ( n >> 8 ) & 0xFF );
+                result.push_back ( n & 0xFF );
+                occupancy = 0;
+            }
         }
         return result;
     }
