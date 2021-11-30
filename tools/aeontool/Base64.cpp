@@ -95,7 +95,6 @@ namespace AeonGames
         std::string buffer ( ( std::istreambuf_iterator<char> ( in ) ), ( std::istreambuf_iterator<char>() ) );
         in.close();
         std::string output{};
-        std::cout << buffer << std::endl;
         if ( mDecode )
         {
             output = Base64Decode ( buffer );
@@ -109,7 +108,6 @@ namespace AeonGames
         out.open ( mOutputFile, std::ofstream::out | std::ofstream::binary );
         out.write ( reinterpret_cast<char*> ( output.data() ), output.size() );
         out.close();
-        std::cout << output << std::endl;
         return 0;
     }
 }
