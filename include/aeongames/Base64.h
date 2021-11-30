@@ -24,7 +24,22 @@ limitations under the License.
 
 namespace AeonGames
 {
-    DLL std::string Base64Encode ( const uint8_t* aData, size_t aDataSize );
+    /**
+     * @brief Encode a binary string.
+     * @param aData The string to be encoded.
+     * @param aDataSize The size of the string.
+     * @param aSplit Whether the resulting string should be split each 76 characters.
+     * @return The encoded string.
+     * @note This implementation skips any invalid characters, not just whitespace.
+     */
+    DLL std::string Base64Encode ( const uint8_t* aData, size_t aDataSize, bool aSplit = true );
+    /**
+     * @brief Decode a base64 string.
+     * @param aData The base64 string.
+     * @param aDataSize The size of the base64 string.
+     * @return The decoded string.
+     * @note This implementation skips any invalid characters, not just whitespace.
+     */
     DLL std::string Base64Decode ( const uint8_t* aData, size_t aDataSize );
     DLL std::string Base64Encode ( std::string_view aData );
     DLL std::string Base64Decode ( std::string_view aData );
