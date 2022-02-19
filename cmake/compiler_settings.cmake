@@ -63,3 +63,21 @@ find_program(CPPCHECK_PROGRAM NAMES cppcheck)
 if(CPPCHECK_PROGRAM AND USE_CPPCHECK)
   set(CMAKE_CXX_CPPCHECK ${CPPCHECK_PROGRAM} --quiet)
 endif()
+
+
+find_package(PkgConfig)
+if(PKG_CONFIG_FOUND AND BASH_EXECUTABLE AND MSYS)
+  # In order to properly use pkg-config in a msys2 environment we need to jump
+  # through some hoops. CMake seems to call pkg-config without any of the bash
+  # environment set up, so we need to set the proper pkg config path inside the
+  # cmake process address space.
+  execute_process(COMMAND ${BASH_EXECUTABLE} --login -c "echo $PKG_CONFIG_PATH"
+                  OUTPUT_VARIABLE PKG_CONFIG_PATH)
+  set(ENV{PKG_CONFIG_PATH} ${PKG_CONFIG_PATH})
+endif()
+
+option(USE_JEMALLOC "Use jemalloc" OFF)
+if(USE_JEMALLOC)
+  find_library(JEMALLOC_LIB libjemalloc.a jemalloc)
+  link_libraries(${JEMALLOC_LIB})
+endif()

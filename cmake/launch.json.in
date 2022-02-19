@@ -18,6 +18,10 @@
                     {
                         "name":"ASAN_OPTIONS",
                         "value":"detect_odr_violation=0"
+                    },
+                    {
+                        "name":"MALLOC_CONF",
+                        "value":"prof:true,stats_print:true"
                     }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
