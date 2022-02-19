@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -71,18 +71,6 @@ find_program(CLANG_TIDY_EXECUTABLE
              HINTS ENV MINGW_PREFIX MSYS2_PATH)
 
 find_package(Git)
-
-find_package(PkgConfig)
-if(PKG_CONFIG_FOUND AND BASH_EXECUTABLE AND MSYS)
-  # In order to properly use pkg-config in a msys2 environment we need to jump
-  # through some hoops. CMake seems to call pkg-config without any of the bash
-  # environment set up, so we need to set the proper pkg config path inside the
-  # cmake process address space.
-  execute_process(COMMAND ${BASH_EXECUTABLE} --login -c "echo $PKG_CONFIG_PATH"
-                  OUTPUT_VARIABLE PKG_CONFIG_PATH)
-  set(ENV{PKG_CONFIG_PATH} ${PKG_CONFIG_PATH})
-endif()
-
 find_package(ZLIB)
 find_package(Threads)
 find_package(Portaudio)
