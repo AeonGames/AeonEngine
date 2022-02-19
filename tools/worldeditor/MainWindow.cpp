@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -58,10 +58,6 @@ namespace AeonGames
     void MainWindow::on_actionExit_triggered()
     {
         mdiArea->closeAllSubWindows();
-        for ( auto* i : mdiArea->subWindowList() )
-        {
-            delete i;
-        }
         close();
     }
 
