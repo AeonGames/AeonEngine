@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         retval = worldeditor.exec();
         delete mainWindow;
     }
-    catch ( std::runtime_error& e )
+    catch ( const std::runtime_error& e )
     {
         std::cout << e.what() << std::endl;
         retval = -1;

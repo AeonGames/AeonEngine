@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace AeonGames
             mConfigurationMsg =
                 LoadProtoBufObject<ConfigurationMsg> ( aFilename, "AEONCFG"_mgk );
         }
-        catch ( std::runtime_error& e )
+        catch ( const std::runtime_error& e )
         {
             std::cout << "Warning: " << e.what() << std::endl;
         }
