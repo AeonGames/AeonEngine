@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -126,7 +126,7 @@ namespace AeonGames
             png_destroy_read_struct ( &png_ptr, &info_ptr, ( png_infopp ) nullptr );
             aTexture.Resize ( width, height, pixels.data(), format, type );
         }
-        catch ( std::runtime_error& e )
+        catch ( const std::runtime_error& e )
         {
             std::cout << e.what() << std::endl;
             return false;
