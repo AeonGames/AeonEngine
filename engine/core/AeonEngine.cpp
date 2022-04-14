@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -161,7 +161,7 @@ namespace AeonGames
         {
             LoadProtoBufObject<ConfigurationMsg> ( gConfigurationMsg, gConfigFile, "AEONCFG"_mgk );
         }
-        catch ( std::runtime_error& e )
+        catch ( const std::runtime_error& e )
         {
             std::cerr << LogLevel::Warning << e.what() << std::endl;
         }
@@ -178,7 +178,7 @@ namespace AeonGames
             {
                 SetResourcePath ( {gConfigurationMsg.package().begin(), gConfigurationMsg.package().end() } );
             }
-            catch ( std::runtime_error& e )
+            catch ( const std::runtime_error& e )
             {
                 std::cerr << e.what() << std::endl;
             }
@@ -295,7 +295,7 @@ namespace AeonGames
             {
                 gResourcePath.emplace_back ( i );
             }
-            catch ( std::runtime_error& e )
+            catch ( const std::runtime_error& e )
             {
                 stream << e.what() << std::endl;
             }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ namespace AeonGames
                 std::string printed = std::regex_replace ( val, newline, format );
                 google::protobuf::TextFormat::FastFieldValuePrinter::PrintString ( printed, base_text_generator );
             }
-            catch ( std::regex_error& e )
+            catch ( const std::regex_error& e )
             {
                 std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
                 throw;
@@ -363,7 +363,7 @@ namespace AeonGames
             }
             return vertex_buffer;
         }
-        catch ( std::regex_error& e )
+        catch ( const std::regex_error& e )
         {
             std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
             std::cout << "Regex: " << GetVertexBufferRegexPattern ( aMeshMsg ) << std::endl;
@@ -403,7 +403,7 @@ namespace AeonGames
             }
             return index_buffer;
         }
-        catch ( std::regex_error& e )
+        catch ( const std::regex_error& e )
         {
             std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
             throw;

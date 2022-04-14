@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2019,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -293,7 +293,7 @@ namespace AeonGames
                 std::cout << std::setfill ( '0' ) << std::setw ( 10 ) << /*std::hex <<*/ i.first << "\t" << i.second << std::endl;
             }
         }
-        catch ( std::runtime_error& e )
+        catch ( const std::runtime_error& e )
         {
             std::cout << e.what();
             return -1;
