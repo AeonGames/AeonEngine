@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ namespace AeonGames
 
         /** @name Properties */
         ///@{
-        void SetModel ( const ResourceId& aModel ) noexcept;
+        void SetModel ( const ResourceId& aModel );
         const ResourceId& GetModel() const noexcept;
         void SetActiveAnimation ( size_t aActiveAnimation ) noexcept;
         const size_t& GetActiveAnimation() const noexcept;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ namespace AeonGames
         }
     }
 
-    void ModelComponent::SetModel ( const ResourceId& aModel ) noexcept
+    void ModelComponent::SetModel ( const ResourceId& aModel )
     {
         mModel = aModel;
         mModel.Store();
