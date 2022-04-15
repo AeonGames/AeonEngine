@@ -159,9 +159,9 @@ namespace AeonGames
             }
             catch ( const std::runtime_error& e )
             {
-                std::cout << e.what() << std::endl;
+                std::cout << LogLevel::Warning << e.what() << " No Change" << std::endl;
+                return false;
             }
-            std::cout << " Value Changed" << std::endl;
             emit dataChanged ( index, index );
             return true;
         }
