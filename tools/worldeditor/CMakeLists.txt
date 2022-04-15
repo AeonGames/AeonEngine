@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2018,2022 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -11,18 +11,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-
-find_package(Qt5
-             COMPONENTS LinguistTools
-                        Core
-                        Gui
-                        Widgets)
-if(WIN32)
-  find_package(Qt5 COMPONENTS WinExtras)
-elseif(UNIX)
-  find_package(Qt5 COMPONENTS X11Extras)
-endif()
-if(Qt5_FOUND)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_BINARY_DIR}/engine
@@ -175,4 +163,3 @@ target_link_libraries(worldeditor
                       ${OPENGL_LIBRARIES}
                       ${CMAKE_DL_LIBS}
                       ${CMAKE_THREAD_LIBS_INIT})
-endif()

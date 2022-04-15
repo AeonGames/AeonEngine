@@ -185,7 +185,20 @@ option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
 if(BUILD_STANDALONE_APPLICATION)
   add_subdirectory(application)
 endif()
-add_subdirectory(tools/worldeditor)
+
+find_package(Qt5
+             COMPONENTS LinguistTools
+                        Core
+                        Gui
+                        Widgets)
+if(WIN32)
+  find_package(Qt5 COMPONENTS WinExtras)
+elseif(UNIX)
+  find_package(Qt5 COMPONENTS X11Extras)
+endif()
+if(Qt5_FOUND)
+  add_subdirectory(tools/worldeditor)
+endif()
 
 find_path(GTEST_SOURCE_PATH googletest PATHS /usr/src/googletest)
 if(GTEST_SOURCE_PATH)

@@ -8,7 +8,8 @@
                 @INCLIST@,
                 "@CMAKE_SOURCE_DIR@/include",
                 "@CMAKE_SOURCE_DIR@/include/aeongames",
-                "@CMAKE_SOURCE_DIR@/engine/include"
+                "@CMAKE_SOURCE_DIR@/engine/include",
+                "@CMAKE_BINARY_DIR@/tools/worldeditor"
             ],
             "defines": [],
             "cStandard": "c11",
