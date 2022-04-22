@@ -16,6 +16,7 @@ limitations under the License.
 #include <cstdio>
 #include <iostream>
 #include <QMessageBox>
+#include <QDebug>
 #include <mutex>
 #include "MainWindow.h"
 #include "WorldEditor.h"
@@ -98,23 +99,24 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         return -1;
     }
     int retval = 0;
-    try
+    /*  Insanity Check note:
+        The following context within a context of stack variables
+        works to ensure that mainWindow is destroyed before worldEditor.
+        IT SHOULD JUST WORK. IF IT BREAKS AGAIN ONLY IN MINGW64,
+        BUT NOT ON CLANG64 or UCRT64 OR VISUAL STUDIO BLAME MINGW64
+        DLLS, UPDATE THEM AND DO NOT SPEND ANY MORE TIME ON THIS,
+        AS IT IS ALL WASTED TIME. */
     {
         AeonGames::WorldEditor worldeditor ( argc, argv );
         worldeditor.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
         worldeditor.setOrganizationName ( "AeonGames" );
         worldeditor.setOrganizationDomain ( "aeongames.com" );
         worldeditor.setApplicationName ( "AeonGames World Editor" );
-        AeonGames::MainWindow* mainWindow;
-        mainWindow = new AeonGames::MainWindow();
-        mainWindow->showNormal();
-        retval = worldeditor.exec();
-        delete mainWindow;
-    }
-    catch ( const std::runtime_error& e )
-    {
-        std::cout << e.what() << std::endl;
-        retval = -1;
+        {
+            AeonGames::MainWindow mainWindow{};
+            mainWindow.showNormal();
+            retval = worldeditor.exec();
+        }
     }
     AeonGames::FinalizeGlobalEnvironment();
 #ifdef _MSC_VER

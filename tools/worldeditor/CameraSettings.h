@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,13 +20,12 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class CameraSettings : public QDialog, public Ui::CameraSettings
+    class CameraSettings : public QDialog
     {
         Q_OBJECT
     public:
-        CameraSettings (
-            QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
-        ~CameraSettings();
+        CameraSettings ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
+        ~CameraSettings() override;
         float GetFieldOfView() const;
         float GetNear() const;
         float GetFar() const;
@@ -40,6 +39,7 @@ namespace AeonGames
         void nearChanged ( double aNear );
         void farChanged ( double aFar );
     private:
+        Ui::CameraSettings mUi;
     };
 }
 #endif

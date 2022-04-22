@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class NodeEditor : public QWidget, public Ui::NodeEditor
+    class NodeEditor : public QWidget
     {
         Q_OBJECT
     public:
@@ -29,6 +29,7 @@ namespace AeonGames
     private slots:
     signals:
     private:
+        Ui::NodeEditor mUi;
         QGraphicsScene* mScene;
     };
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -668,6 +668,15 @@ static void DestroyRendererWindow(HWND hWnd)
         it->second.SetViewMatrix ( aMatrix );
     }
 
+    void OpenGLRenderer::SetClearColor ( void* aWindowId, float R, float G, float B, float A )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetClearColor ( R, G, B, A );
+    }
     void OpenGLRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         auto it = mWindowStore.find ( aWindowId );

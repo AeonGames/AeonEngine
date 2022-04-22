@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace AeonGames
 {
     class Renderer;
     class EngineWindow;
-    class SceneWindow : public QWidget, public Ui::SceneWindow
+    class SceneWindow : public QWidget
     {
         Q_OBJECT
     public:
@@ -53,6 +53,7 @@ namespace AeonGames
     private:
         void UpdateLocalTransformData ( const Node* aNode );
         void UpdateGlobalTransformData ( const Node* aNode );
+        Ui::SceneWindow mUi;
         ///@todo SceneWindow should own the scene, not SceneModel
         SceneModel mSceneModel{};
         ComponentListModel mComponentListModel{};

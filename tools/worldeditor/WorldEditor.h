@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ namespace AeonGames
     public:
         WorldEditor ( int &argc, char *argv[] );
         ~WorldEditor() final;
-        bool notify ( QObject *receiver, QEvent *event ) override;
         const GridSettings& GetGridSettings() const;
         const Pipeline& GetGridPipeline() const;
         const Mesh& GetGridMesh() const;
@@ -49,7 +48,6 @@ namespace AeonGames
         const Pipeline& GetWirePipeline() const;
         const Material& GetWireMaterial() const;
         const Mesh& GetAABBWireMesh() const;
-        bool IsBlocked() const;
         int GetStringIdMetaType() const;
         int GetStringMetaType() const;
         int GetPathMetaType() const;
@@ -62,7 +60,6 @@ namespace AeonGames
         int mStringIdMetaType{};
         int mStringMetaType{};
         int mPathMetaType{};
-        bool mIsBlocked{false};
         QMutex mMutex{};
         GridSettings mGridSettings{};
         std::string mRendererName{}; ///< @todo Multi-renderer support

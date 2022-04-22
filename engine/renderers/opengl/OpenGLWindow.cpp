@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -54,6 +54,17 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         OPENGL_CHECK_ERROR_THROW;
+    }
+
+
+    void OpenGLWindow::SetClearColor ( float R, float G, float B, float A )
+    {
+#if defined(_WIN32)
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+        mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
+        glClearColor ( R, G, B, A );
     }
 
     static GLenum GetIndexType ( const Mesh& aMesh )
