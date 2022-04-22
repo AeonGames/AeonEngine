@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,21 +39,20 @@ limitations under the License.
 namespace AeonGames
 {
     SceneWindow::SceneWindow ( QWidget *parent, Qt::WindowFlags f ) :
-        QWidget ( parent, f ),
-        Ui::SceneWindow()
+        QWidget ( parent, f )
     {
-        setupUi ( this );
+        mUi.setupUi ( this );
         mEngineWindow = new EngineWindow();
-        QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, splitter );
+        QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, mUi.splitter );
         QSizePolicy size_policy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
         size_policy.setHorizontalStretch ( 1 );
         size_policy.setVerticalStretch ( 1 );
         widget->setSizePolicy ( size_policy );
-        splitter->addWidget ( widget );
-        sceneTreeView->setModel ( &mSceneModel );
-        componentListView->setModel ( &mComponentListModel );
-        componentPropertyTreeView->setModel ( &mComponentModel );
-        componentPropertyTreeView->setItemDelegate ( &mPropertyDelegate );
+        mUi.splitter->addWidget ( widget );
+        mUi.sceneTreeView->setModel ( &mSceneModel );
+        mUi.componentListView->setModel ( &mComponentListModel );
+        mUi.componentPropertyTreeView->setModel ( &mComponentModel );
+        mUi.componentPropertyTreeView->setItemDelegate ( &mPropertyDelegate );
         mEngineWindow->setScene ( &mSceneModel.GetScene() );
 
         EnumerateComponentConstructors ( [this] ( const StringId & aComponentConstructor )
@@ -67,7 +66,7 @@ namespace AeonGames
             connect ( action, &QAction::triggered, this,
                       [this, aComponentConstructor]()
             {
-                QModelIndex index = sceneTreeView->currentIndex();
+                QModelIndex index = mUi.sceneTreeView->currentIndex();
                 if ( index.isValid() )
                 {
                     Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
@@ -79,66 +78,65 @@ namespace AeonGames
         } );
     }
 
-    SceneWindow::~SceneWindow()
-        = default;
+    SceneWindow::~SceneWindow() = default;
 
     void SceneWindow::on_actionRemoveNode_triggered()
     {
-        QModelIndex index = sceneTreeView->currentIndex();
+        QModelIndex index = mUi.sceneTreeView->currentIndex();
         mSceneModel.RemoveNode ( index.row(), index.parent() );
     }
 
     void SceneWindow::on_actionSetCameraNode_triggered()
     {
-        QModelIndex index = sceneTreeView->currentIndex();
+        QModelIndex index = mUi.sceneTreeView->currentIndex();
         mSceneModel.SetCameraNode ( index );
     }
 
     void SceneWindow::on_actionRemoveComponent_triggered()
     {
-        QModelIndex index = componentListView->currentIndex();
+        QModelIndex index = mUi.componentListView->currentIndex();
         ///@todo implement removing data from node
         ( void ) index;
     }
 
     void SceneWindow::on_actionAddNode_triggered()
     {
-        QModelIndex index = sceneTreeView->currentIndex();
+        QModelIndex index = mUi.sceneTreeView->currentIndex();
         mSceneModel.InsertNode ( mSceneModel.rowCount ( index ), index, std::make_unique<Node>() );
-        sceneTreeView->expand ( index );
+        mUi.sceneTreeView->expand ( index );
     }
 
     void SceneWindow::on_sceneContextMenuRequested ( const QPoint& aPoint )
     {
         QList<QAction *> actions;
-        QModelIndex index = sceneTreeView->indexAt ( aPoint );
-        actions.append ( actionAddNode );
+        QModelIndex index = mUi.sceneTreeView->indexAt ( aPoint );
+        actions.append ( mUi.actionAddNode );
         if ( index.isValid() )
         {
-            actions.append ( actionRemoveNode );
-            actions.append ( actionSetCameraNode );
+            actions.append ( mUi.actionRemoveNode );
+            actions.append ( mUi.actionSetCameraNode );
         }
-        sceneTreeView->setCurrentIndex ( index );
-        QMenu::exec ( actions, sceneTreeView->mapToGlobal ( aPoint ) );
+        mUi.sceneTreeView->setCurrentIndex ( index );
+        QMenu::exec ( actions, mUi.sceneTreeView->mapToGlobal ( aPoint ) );
     }
 
     void SceneWindow::on_componentContextMenuRequested ( const QPoint& aPoint )
     {
-        if ( !sceneTreeView->currentIndex().isValid() )
+        if ( !mUi.sceneTreeView->currentIndex().isValid() )
         {
             return;
         }
         QList<QAction *> actions;
         actions.append ( mComponentAddActions );
-        QModelIndex index = componentListView->indexAt ( aPoint );
+        QModelIndex index = mUi.componentListView->indexAt ( aPoint );
         if ( index.isValid() )
         {
-            actions.append ( actionRemoveComponent );
+            actions.append ( mUi.actionRemoveComponent );
         }
-        componentListView->setCurrentIndex ( index );
+        mUi.componentListView->setCurrentIndex ( index );
         if ( actions.size() )
         {
-            QMenu::exec ( actions, componentListView->mapToGlobal ( aPoint ) );
+            QMenu::exec ( actions, mUi.componentListView->mapToGlobal ( aPoint ) );
         }
     }
 
@@ -147,15 +145,15 @@ namespace AeonGames
         static std::array<std::tuple<QWidget*, bool>, 9> widgets
         {
             {
-                {localScaleX, {}},
-                {localScaleY, {}},
-                {localScaleZ, {}},
-                {localRotationPitch, {}},
-                {localRotationRoll, {}},
-                {localRotationYaw, {}},
-                {localTranslationX, {}},
-                {localTranslationY, {}},
-                {localTranslationZ, {}}
+                {mUi.localScaleX, {}},
+                {mUi.localScaleY, {}},
+                {mUi.localScaleZ, {}},
+                {mUi.localRotationPitch, {}},
+                {mUi.localRotationRoll, {}},
+                {mUi.localRotationYaw, {}},
+                {mUi.localTranslationX, {}},
+                {mUi.localTranslationY, {}},
+                {mUi.localTranslationZ, {}}
             }
         };
         for ( auto& i : widgets )
@@ -165,27 +163,27 @@ namespace AeonGames
         if ( aNode )
         {
             const Transform& local = aNode->GetLocalTransform();
-            localScaleX->setValue ( local.GetScale() [0] );
-            localScaleY->setValue ( local.GetScale() [1] );
-            localScaleZ->setValue ( local.GetScale() [2] );
-            localRotationPitch->setValue ( local.GetRotation().GetEuler() [0] );
-            localRotationRoll->setValue ( local.GetRotation().GetEuler() [1] );
-            localRotationYaw->setValue ( local.GetRotation().GetEuler() [2] );
-            localTranslationX->setValue ( local.GetTranslation() [0] );
-            localTranslationY->setValue ( local.GetTranslation() [1] );
-            localTranslationZ->setValue ( local.GetTranslation() [2] );
+            mUi.localScaleX->setValue ( local.GetScale() [0] );
+            mUi.localScaleY->setValue ( local.GetScale() [1] );
+            mUi.localScaleZ->setValue ( local.GetScale() [2] );
+            mUi.localRotationPitch->setValue ( local.GetRotation().GetEuler() [0] );
+            mUi.localRotationRoll->setValue ( local.GetRotation().GetEuler() [1] );
+            mUi.localRotationYaw->setValue ( local.GetRotation().GetEuler() [2] );
+            mUi.localTranslationX->setValue ( local.GetTranslation() [0] );
+            mUi.localTranslationY->setValue ( local.GetTranslation() [1] );
+            mUi.localTranslationZ->setValue ( local.GetTranslation() [2] );
         }
         else
         {
-            localScaleX->setValue ( 1 );
-            localScaleY->setValue ( 1 );
-            localScaleZ->setValue ( 1 );
-            localRotationPitch->setValue ( 0 );
-            localRotationRoll->setValue ( 0 );
-            localRotationYaw->setValue ( 0 );
-            localTranslationX->setValue ( 0 );
-            localTranslationY->setValue ( 0 );
-            localTranslationZ->setValue ( 0 );
+            mUi.localScaleX->setValue ( 1 );
+            mUi.localScaleY->setValue ( 1 );
+            mUi.localScaleZ->setValue ( 1 );
+            mUi.localRotationPitch->setValue ( 0 );
+            mUi.localRotationRoll->setValue ( 0 );
+            mUi.localRotationYaw->setValue ( 0 );
+            mUi.localTranslationX->setValue ( 0 );
+            mUi.localTranslationY->setValue ( 0 );
+            mUi.localTranslationZ->setValue ( 0 );
         }
         for ( auto& i : widgets )
         {
@@ -198,15 +196,15 @@ namespace AeonGames
         static std::array<std::tuple<QWidget*, bool>, 9> widgets
         {
             {
-                {globalScaleX, {}},
-                {globalScaleY, {}},
-                {globalScaleZ, {}},
-                {globalRotationPitch, {}},
-                {globalRotationRoll, {}},
-                {globalRotationYaw, {}},
-                {globalTranslationX, {}},
-                {globalTranslationY, {}},
-                {globalTranslationZ, {}}
+                {mUi.globalScaleX, {}},
+                {mUi.globalScaleY, {}},
+                {mUi.globalScaleZ, {}},
+                {mUi.globalRotationPitch, {}},
+                {mUi.globalRotationRoll, {}},
+                {mUi.globalRotationYaw, {}},
+                {mUi.globalTranslationX, {}},
+                {mUi.globalTranslationY, {}},
+                {mUi.globalTranslationZ, {}}
             }
         };
         for ( auto& i : widgets )
@@ -216,27 +214,27 @@ namespace AeonGames
         if ( aNode )
         {
             const Transform& global = aNode->GetGlobalTransform();
-            globalScaleX->setValue ( global.GetScale() [0] );
-            globalScaleY->setValue ( global.GetScale() [1] );
-            globalScaleZ->setValue ( global.GetScale() [2] );
-            globalRotationPitch->setValue ( global.GetRotation().GetEuler() [0] );
-            globalRotationRoll->setValue ( global.GetRotation().GetEuler() [1] );
-            globalRotationYaw->setValue ( global.GetRotation().GetEuler() [2] );
-            globalTranslationX->setValue ( global.GetTranslation() [0] );
-            globalTranslationY->setValue ( global.GetTranslation() [1] );
-            globalTranslationZ->setValue ( global.GetTranslation() [2] );
+            mUi.globalScaleX->setValue ( global.GetScale() [0] );
+            mUi.globalScaleY->setValue ( global.GetScale() [1] );
+            mUi.globalScaleZ->setValue ( global.GetScale() [2] );
+            mUi.globalRotationPitch->setValue ( global.GetRotation().GetEuler() [0] );
+            mUi.globalRotationRoll->setValue ( global.GetRotation().GetEuler() [1] );
+            mUi.globalRotationYaw->setValue ( global.GetRotation().GetEuler() [2] );
+            mUi.globalTranslationX->setValue ( global.GetTranslation() [0] );
+            mUi.globalTranslationY->setValue ( global.GetTranslation() [1] );
+            mUi.globalTranslationZ->setValue ( global.GetTranslation() [2] );
         }
         else
         {
-            globalScaleX->setValue ( 1 );
-            globalScaleY->setValue ( 1 );
-            globalScaleZ->setValue ( 1 );
-            globalRotationPitch->setValue ( 0 );
-            globalRotationRoll->setValue ( 0 );
-            globalRotationYaw->setValue ( 0 );
-            globalTranslationX->setValue ( 0 );
-            globalTranslationY->setValue ( 0 );
-            globalTranslationZ->setValue ( 0 );
+            mUi.globalScaleX->setValue ( 1 );
+            mUi.globalScaleY->setValue ( 1 );
+            mUi.globalScaleZ->setValue ( 1 );
+            mUi.globalRotationPitch->setValue ( 0 );
+            mUi.globalRotationRoll->setValue ( 0 );
+            mUi.globalRotationYaw->setValue ( 0 );
+            mUi.globalTranslationX->setValue ( 0 );
+            mUi.globalTranslationY->setValue ( 0 );
+            mUi.globalTranslationZ->setValue ( 0 );
         }
         for ( auto& i : widgets )
         {
@@ -246,7 +244,7 @@ namespace AeonGames
 
     void SceneWindow::on_localTransformChanged()
     {
-        QModelIndex index = sceneTreeView->currentIndex();
+        QModelIndex index = mUi.sceneTreeView->currentIndex();
         if ( index.isValid() )
         {
             if ( Node* node = reinterpret_cast<Node*> ( index.internalPointer() ) )
@@ -254,19 +252,19 @@ namespace AeonGames
                 Transform local
                 {
                     {
-                        static_cast<float> ( localScaleX->value() ),
-                        static_cast<float> ( localScaleY->value() ),
-                        static_cast<float> ( localScaleZ->value() )
+                        static_cast<float> ( mUi.localScaleX->value() ),
+                        static_cast<float> ( mUi.localScaleY->value() ),
+                        static_cast<float> ( mUi.localScaleZ->value() )
                     },
                     {
-                        static_cast<float> ( localRotationPitch->value() ),
-                        static_cast<float> ( localRotationRoll->value() ),
-                        static_cast<float> ( localRotationYaw->value() )
+                        static_cast<float> ( mUi.localRotationPitch->value() ),
+                        static_cast<float> ( mUi.localRotationRoll->value() ),
+                        static_cast<float> ( mUi.localRotationYaw->value() )
                     },
                     {
-                        static_cast<float> ( localTranslationX->value() ),
-                        static_cast<float> ( localTranslationY->value() ),
-                        static_cast<float> ( localTranslationZ->value() )
+                        static_cast<float> ( mUi.localTranslationX->value() ),
+                        static_cast<float> ( mUi.localTranslationY->value() ),
+                        static_cast<float> ( mUi.localTranslationZ->value() )
                     }
                 };
                 node->SetLocalTransform ( local );
@@ -277,7 +275,7 @@ namespace AeonGames
 
     void SceneWindow::on_globalTransformChanged()
     {
-        QModelIndex index = sceneTreeView->currentIndex();
+        QModelIndex index = mUi.sceneTreeView->currentIndex();
         if ( index.isValid() )
         {
             if ( Node* node = reinterpret_cast<Node*> ( index.internalPointer() ) )
@@ -285,19 +283,19 @@ namespace AeonGames
                 Transform global
                 {
                     {
-                        static_cast<float> ( globalScaleX->value() ),
-                        static_cast<float> ( globalScaleY->value() ),
-                        static_cast<float> ( globalScaleZ->value() )
+                        static_cast<float> ( mUi.globalScaleX->value() ),
+                        static_cast<float> ( mUi.globalScaleY->value() ),
+                        static_cast<float> ( mUi.globalScaleZ->value() )
                     },
                     {
-                        static_cast<float> ( globalRotationPitch->value() ),
-                        static_cast<float> ( globalRotationRoll->value() ),
-                        static_cast<float> ( globalRotationYaw->value() )
+                        static_cast<float> ( mUi.globalRotationPitch->value() ),
+                        static_cast<float> ( mUi.globalRotationRoll->value() ),
+                        static_cast<float> ( mUi.globalRotationYaw->value() )
                     },
                     {
-                        static_cast<float> ( globalTranslationX->value() ),
-                        static_cast<float> ( globalTranslationY->value() ),
-                        static_cast<float> ( globalTranslationZ->value() )
+                        static_cast<float> ( mUi.globalTranslationX->value() ),
+                        static_cast<float> ( mUi.globalTranslationY->value() ),
+                        static_cast<float> ( mUi.globalTranslationZ->value() )
                     }
                 };
                 node->SetGlobalTransform ( global );

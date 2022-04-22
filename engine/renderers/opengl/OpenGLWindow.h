@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ namespace AeonGames
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels );
         void SetProjectionMatrix ( const Matrix4x4& aMatrix );
         void SetViewMatrix ( const Matrix4x4& aMatrix );
+        void SetClearColor ( float R, float G, float B, float A );
         const Matrix4x4 & GetProjectionMatrix() const;
         const Matrix4x4 & GetViewMatrix() const;
         const Frustum & GetFrustum() const;

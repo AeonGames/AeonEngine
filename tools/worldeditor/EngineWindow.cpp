@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -252,7 +252,7 @@ namespace AeonGames
         switch ( aEvent->type() )
         {
         case QEvent::UpdateRequest:
-            if ( !geometry().width() || !geometry().height() || qWorldEditorApp->IsBlocked() || !qWorldEditorApp->GetRenderer() )
+            if ( !geometry().width() || !geometry().height() || !qWorldEditorApp->GetRenderer() )
             {
                 return QWindow::event ( aEvent );
             }

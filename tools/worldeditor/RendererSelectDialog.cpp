@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ limitations under the License.
 namespace AeonGames
 {
     RendererSelectDialog::RendererSelectDialog ( QWidget *parent, Qt::WindowFlags f ) :
-        QDialog ( parent, f ), Ui::RendererSelectionDialog()
+        QDialog ( parent, f )
     {
-        setupUi ( this );
+        mUi.setupUi ( this );
     }
 
     RendererSelectDialog::~RendererSelectDialog()
@@ -29,11 +29,11 @@ namespace AeonGames
 
     void RendererSelectDialog::SetRenderers ( const QStringList & renderers )
     {
-        mRendererComboBox->clear();
-        mRendererComboBox->addItems ( renderers );
+        mUi.mRendererComboBox->clear();
+        mUi.mRendererComboBox->addItems ( renderers );
     }
     const QString RendererSelectDialog::GetSelected() const
     {
-        return mRendererComboBox->currentText();
+        return mUi.mRendererComboBox->currentText();
     }
 }

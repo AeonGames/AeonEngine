@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ namespace AeonGames
         void DetachWindow ( void* aWindowId ) final;
         void SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
         void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
+        void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) final;
         void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;

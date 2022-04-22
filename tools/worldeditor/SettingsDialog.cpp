@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014,2015,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014,2015,2018,2019,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ namespace AeonGames
 {
     SettingsDialog::SettingsDialog()
     {
-        setupUi ( this );
+        mUi.setupUi ( this );
         settings.beginGroup ( "MainWindow" );
-        backgroundColorPushButton->setPalette ( QPalette ( settings.value ( "background color", QColor ( 57, 57, 57 ) ).value<QColor>() ) );
+        mUi.backgroundColorPushButton->setPalette ( QPalette ( settings.value ( "background color", QColor ( 57, 57, 57 ) ).value<QColor>() ) );
         settings.endGroup();
     }
 
@@ -33,14 +33,14 @@ namespace AeonGames
     void SettingsDialog::onChangeBackgroundColor()
     {
 #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
-        QColor color = QColorDialog::getColor ( backgroundColorPushButton->palette().background().color() );
+        QColor color = QColorDialog::getColor ( mUi.backgroundColorPushButton->palette().background().color() );
 #else
-        QColor color = QColorDialog::getColor ( backgroundColorPushButton->palette().window().color() );
+        QColor color = QColorDialog::getColor ( mUi.backgroundColorPushButton->palette().window().color() );
 #endif
         settings.beginGroup ( "MainWindow" );
         settings.setValue ( "background color", color );
         settings.endGroup();
-        backgroundColorPushButton->setPalette ( QPalette ( color ) );
+        mUi.backgroundColorPushButton->setPalette ( QPalette ( color ) );
         emit backgroundColor ( color );
     }
 }

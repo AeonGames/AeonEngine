@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -69,6 +69,10 @@ namespace AeonGames
          * @param aWindowId Platform depended window handle.
         */
         virtual void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) = 0;
+        /** Sets the color to be used to clear the window background.
+         * @param aWindowId Platform depended window handle.
+        */
+        virtual void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) = 0;
         /** Resizes the specific window surface's viewport.
          * @param aWindowId Platform depended window handle.
          * @param aX X coordinate of the viewport.

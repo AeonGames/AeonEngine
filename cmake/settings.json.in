@@ -24,6 +24,15 @@
                 "CHERE_INVOKING":"1"
             }
         },
+        "MinGW UCRT64 Bash": {
+            "path": "${BASH_EXECUTABLE}",
+            "args": ["--login", "-i"],
+            "env":
+            {
+                "MSYSTEM": "UCRT64",
+                "CHERE_INVOKING":"1"
+            }
+        },
         "PowerShell":null,
         "Command Prompt":null
     },  
@@ -35,6 +44,8 @@
         "*.json.in": "json",
         "*.cap.in": "json",
         "*.cap": "json",
+        "*.cmake": "cmake",
+        "*.cmake.in": "cmake",
     },
     "editor.fontFamily": "'Fira Code', Consolas, 'Courier New', monospace"
 }

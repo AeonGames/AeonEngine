@@ -34,7 +34,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   option(USE_ASAN "Instrument the build to use ASAN sanitizers" OFF)
   option(PROFILING "Instrument the build to generate profiling binaries" OFF)
   if(USE_ASAN)
-    set(ASAN_SANITIZERS "-fsanitize=address -fsanitize=leak -fsanitize=undefined -fsanitize=null -fsanitize=return -fsanitize=vptr -fsanitize-address-use-after-scope")
+    # -fsanitize=leak
+    set(ASAN_SANITIZERS "-fsanitize=undefined -fsanitize=null -fsanitize=return -fsanitize=address -fsanitize=vptr -fsanitize-address-use-after-scope")
   endif()
   if(PROFILING)
     set(PROFILING_FLAGS "-pg")
@@ -64,7 +65,9 @@ if(CPPCHECK_PROGRAM AND USE_CPPCHECK)
   set(CMAKE_CXX_CPPCHECK ${CPPCHECK_PROGRAM} --quiet)
 endif()
 
-
+if(NOT ENV{MSYSTEM_PREFIX} STREQUAL "")
+  set(PkgConfig_ROOT $ENV{MSYSTEM_PREFIX})
+endif()
 find_package(PkgConfig)
 if(PKG_CONFIG_FOUND AND BASH_EXECUTABLE AND MSYS)
   # In order to properly use pkg-config in a msys2 environment we need to jump

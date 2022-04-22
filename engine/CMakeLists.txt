@@ -201,11 +201,14 @@ elseif(MINGW OR MSYS OR UNIX)
     PROPERTIES
       COMPILE_FLAGS
       "-include aeongames/ProtoBufClasses.h")
+  if(NOT ${CMAKE_CXX_COMPILER} MATCHES "clang")
+    set(STDXXFS stdc++fs)
+  endif()
   target_link_libraries(AeonEngine
                         ${ZLIB_LIBRARIES}
                         ${CMAKE_DL_LIBS}
-                        ProtoBufClasses
-                        stdc++fs)
+                        ${STDXXFS}
+                        ProtoBufClasses)
 endif()
 
 if(USE_CLANG_TIDY)

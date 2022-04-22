@@ -17,29 +17,27 @@
                     },
                     {
                         "name":"ASAN_OPTIONS",
-                        "value":"detect_odr_violation=0"
-                    },
-                    {
-                        "name":"MALLOC_CONF",
-                        "value":"prof:true,stats_print:true"
+                        "value":"abort_on_error=1"
                     }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                        "program": "@CMAKE_BINARY_DIR@/bin/worldeditor@CMAKE_EXECUTABLE_SUFFIX@",
-                        "miDebuggerPath": "@GDB_EXECUTABLE@",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            },
-                            {
-                                "description": "Enable break on all exceptions",
-                                "text": "catch throw",
-                                "ignoreFailures": true
-                            }
-                         ]
+                "program": "@CMAKE_BINARY_DIR@/bin/worldeditor@CMAKE_EXECUTABLE_SUFFIX@",
+                "miDebuggerPath": "@GDB_EXECUTABLE@",
+                "miDebuggerArgs": "@GDB_ARGS@",
+                "MIMode": "gdb",
+                "additionalSOLibSearchPath": "C:/msys64/mingw64/bin",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    },
+                    {
+                        "description": "Enable break on all exceptions",
+                        "text": "catch throw",
+                        "ignoreFailures": true
+                    }
+                ]
             },
             {
                 "name": "Game Window OpenGL",

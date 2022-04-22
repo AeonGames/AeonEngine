@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>RendererSelectionDialog</class>
- <widget class="QDialog" name="RendererSelectionDialog">
+ <class>RendererSelectDialog</class>
+ <widget class="QDialog" name="RendererSelectDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -51,7 +51,7 @@
   <connection>
    <sender>mButtonBox</sender>
    <signal>accepted()</signal>
-   <receiver>RendererSelectionDialog</receiver>
+   <receiver>RendererSelectDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -67,7 +67,7 @@
   <connection>
    <sender>mButtonBox</sender>
    <signal>rejected()</signal>
-   <receiver>RendererSelectionDialog</receiver>
+   <receiver>RendererSelectDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

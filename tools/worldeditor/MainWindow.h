@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ namespace AeonGames
     class CameraSettings;
     class Renderer;
     class EngineWindow;
-    class MainWindow : public QMainWindow, public Ui::MainWindow
+    class MainWindow : public QMainWindow
     {
         Q_OBJECT
     public:
-        MainWindow();
+        MainWindow ( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{} );
         ~MainWindow();
     private slots:
         void on_actionNewScene_triggered();
@@ -42,6 +42,7 @@ namespace AeonGames
         void nearChanged ( double aNear );
         void farChanged ( double aFar );
     private:
+        Ui::MainWindow mUi{};
         CameraSettings* mCameraSettings{};
     };
 }

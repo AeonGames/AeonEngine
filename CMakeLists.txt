@@ -29,6 +29,10 @@ enable_testing()
 enable_language(CXX)
 enable_language(C)
 
+if(NOT ENV{MSYSTEM_PREFIX} STREQUAL "")
+  list(APPEND CMAKE_PREFIX_PATH "$ENV{MSYSTEM_PREFIX}")
+endif()
+
 define_property(GLOBAL PROPERTY PLUGINS INHERITED
   BRIEF_DOCS "Built Plugin List"
   FULL_DOCS "Plugin Targets should add an entry to this list in order to be included into the configuration file.")
@@ -56,19 +60,18 @@ set(Portaudio_FIND_QUIETLY ON)
 
 find_program(XXD_EXECUTABLE xxd
              HINTS ENV
-                   MINGW_PREFIX
-                   MSYS2_PATH
+                   MSYSTEM_PREFIX
                    ChocolateyInstall)
-find_program(BASH_EXECUTABLE bash HINTS ENV MINGW_PREFIX MSYS2_PATH)
+find_program(BASH_EXECUTABLE bash HINTS ENV MSYSTEM_PREFIX)
 find_program(GLOBAL_EXECUTABLE
              NAMES global global.exe
-             HINTS ENV MINGW_PREFIX MSYS2_PATH)
+             HINTS ENV MSYSTEM_PREFIX)
 find_program(CLANG_EXECUTABLE
              NAMES clang clang.exe
-             HINTS ENV MINGW_PREFIX MSYS2_PATH)
+             HINTS ENV MSYSTEM_PREFIX)
 find_program(CLANG_TIDY_EXECUTABLE
              NAMES clang-tidy clang-tidy.exe
-             HINTS ENV MINGW_PREFIX MSYS2_PATH)
+             HINTS ENV MSYSTEM_PREFIX)
 
 find_package(Git)
 find_package(ZLIB)
@@ -86,11 +89,10 @@ find_package(Protobuf REQUIRED)
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8
              HINTS ENV
-                   MINGW_PREFIX
-                   MSYS2_PATH
+                   MSYSTEM_PREFIX
                    "${PYTHON_PATH}/Scripts")
 find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
-             HINTS ENV MINGW_PREFIX MSYS2_PATH)
+             HINTS ENV MSYSTEM_PREFIX)
 
 option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" OFF)
@@ -111,12 +113,7 @@ elseif(CMAKE_HOST_WIN32)
 endif()
 
 find_program(SED_EXECUTABLE sed
-            HINTS
-                  "C:\\msys64"
-            ENV
-                  MINGW_PREFIX
-                  MSYS2_PATH
-                  ProgramFiles
+            PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles
             PATH_SUFFIXES
                   bin
                   usr/bin
@@ -127,11 +124,8 @@ if(NOT SED_EXECUTABLE)
   message(FATAL_ERROR "Unable to find sed executable.")
 endif()
 find_program(GREP_EXECUTABLE grep
-            HINTS
-                  "C:\\msys64"
-            ENV
-                  MINGW_PREFIX
-                  MSYS2_PATH
+            PATHS ENV
+                  MSYSTEM_PREFIX
                   ProgramFiles
             PATH_SUFFIXES
                   usr/bin
@@ -143,8 +137,7 @@ endif()
 
 find_program(DOXYGEN_EXECUTABLE doxygen
              HINTS ENV
-                   MINGW_PREFIX
-                   MSYS2_PATH
+                   MSYSTEM_PREFIX
                    ProgramFiles
                    ChocolateyInstall
                    ProgramData
@@ -152,8 +145,7 @@ find_program(DOXYGEN_EXECUTABLE doxygen
 if(DOXYGEN_EXECUTABLE)
   find_program(DOT_EXECUTABLE dot
                HINTS ENV
-                     MINGW_PREFIX
-                     MSYS2_PATH
+                     MSYSTEM_PREFIX
                      ProgramFiles
                      ChocolateyInstall
                      ProgramData
@@ -469,10 +461,16 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
                  INCLIST
                  "${INCLIST}")
 
-  find_program(GDB_EXECUTABLE gdb HINTS ENV MINGW_PREFIX MSYS2_PATH)
+  find_program(GDB_EXECUTABLE gdb
+              PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles
+            PATH_SUFFIXES
+                  bin
+                  usr/bin
+  )
+
   set(DEBUG_PATH "${CMAKE_BINARY_DIR}/bin")
   if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
-    set(DEBUG_PATH "${DEBUG_PATH};$ENV{MINGW_PREFIX}/bin")
+    set(DEBUG_PATH "${DEBUG_PATH};$ENV{MSYSTEM_PREFIX}/bin")
     set(USE_EXTERNAL_CONSOLE "true")
   else()
     set(DEBUG_PATH "$ENV{PATH}:${DEBUG_PATH}")
