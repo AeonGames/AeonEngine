@@ -15,7 +15,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="QGraphicsView" name="mView">
+    <widget class="AeonGames::NodeEditorView" name="mView">
      <property name="autoFillBackground">
       <bool>false</bool>
      </property>
@@ -41,6 +41,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AeonGames::NodeEditorView</class>
+   <extends>QGraphicsView</extends>
+   <header>NodeEditorView.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

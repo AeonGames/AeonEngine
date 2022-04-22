@@ -16,7 +16,9 @@ limitations under the License.
 #include <QFileDialog>
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
+#include <iostream>
 #include "aeongames/Renderer.h"
+#include "aeongames/LogLevel.h"
 #include "WorldEditor.h"
 #include "MainWindow.h"
 #include "SceneWindow.h"
@@ -26,9 +28,10 @@ limitations under the License.
 
 namespace AeonGames
 {
-    MainWindow::MainWindow() : QMainWindow(), Ui::MainWindow()
+    MainWindow::MainWindow ( QWidget* parent, Qt::WindowFlags flags ) : QMainWindow{parent, flags}
     {
-        setupUi ( this );
+        mUi.setupUi ( this );
+
         QSurfaceFormat surface_format = QSurfaceFormat::defaultFormat();
 
         surface_format.setColorSpace ( QSurfaceFormat::sRGBColorSpace );
@@ -42,22 +45,12 @@ namespace AeonGames
         surface_format.setDepthBufferSize ( 24 );
         //surface_format.setSamples ( ? ); ///@< Find out what is a sensible value for multisampling
         QSurfaceFormat::setDefaultFormat ( surface_format );
-        mCameraSettings = new CameraSettings ( this );
-        connect ( mCameraSettings, SIGNAL ( fieldOfViewChanged ( double ) ), this, SLOT ( fieldOfViewChanged ( double ) ) );
-        connect ( mCameraSettings, SIGNAL ( nearChanged ( double ) ), this, SLOT ( nearChanged ( double ) ) );
-        connect ( mCameraSettings, SIGNAL ( farChanged ( double ) ), this, SLOT ( farChanged ( double ) ) );
     }
 
-    MainWindow::~MainWindow()
-    {
-        disconnect();
-        mCameraSettings->disconnect();
-        mCameraSettings->deleteLater();
-    }
+    MainWindow::~MainWindow() = default;
 
     void MainWindow::on_actionExit_triggered()
     {
-        mdiArea->closeAllSubWindows();
         close();
     }
 
@@ -65,12 +58,12 @@ namespace AeonGames
     {
         SceneWindow* sceneWindow;
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mdiArea ) );
+        mdiSubWindow = mUi.mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mUi.mdiArea ) );
         mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
         mdiSubWindow->setWindowTitle ( tr ( "Untitled Scene" ) );
         mdiSubWindow->showMaximized();
         mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
-        actionSave->setEnabled ( true );
+        mUi.actionSave->setEnabled ( true );
     }
 
     void MainWindow::on_actionOpen_triggered()
@@ -85,21 +78,21 @@ namespace AeonGames
             QFileInfo fileinfo ( filename );
             SceneWindow* sceneWindow;
             QMdiSubWindow*
-            mdiSubWindow = mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mdiArea ) );
+            mdiSubWindow = mUi.mdiArea->addSubWindow ( sceneWindow = new SceneWindow ( mUi.mdiArea ) );
             mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
             mdiSubWindow->setWindowTitle ( fileinfo.absoluteFilePath() );
             mdiSubWindow->showMaximized();
             mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
             sceneWindow->Open ( fileinfo.absoluteFilePath().toStdString() );
             /** @todo handle open failure. */
-            actionSave->setEnabled ( true );
+            mUi.actionSave->setEnabled ( true );
         }
     }
 
     void MainWindow::on_actionSave_triggered()
     {
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->currentSubWindow ();
+        mdiSubWindow = mUi.mdiArea->currentSubWindow ();
         if ( !mdiSubWindow )
         {
             return;
@@ -120,25 +113,32 @@ namespace AeonGames
 
     void MainWindow::on_actionCamera_triggered()
     {
-        mCameraSettings->show();
+        if ( mCameraSettings == nullptr )
+        {
+            mCameraSettings = new CameraSettings{this};
+            connect ( mCameraSettings, SIGNAL ( fieldOfViewChanged ( double ) ), this, SLOT ( fieldOfViewChanged ( double ) ) );
+            connect ( mCameraSettings, SIGNAL ( nearChanged ( double ) ), this, SLOT ( nearChanged ( double ) ) );
+            connect ( mCameraSettings, SIGNAL ( farChanged ( double ) ), this, SLOT ( farChanged ( double ) ) );
+        }
+        mCameraSettings->exec();
     }
 
     void MainWindow::on_actionNewShader_triggered()
     {
         NodeEditor* nodeEditor;
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->addSubWindow ( nodeEditor = new NodeEditor ( mdiArea ) );
+        mdiSubWindow = mUi.mdiArea->addSubWindow ( nodeEditor = new NodeEditor ( mUi.mdiArea ) );
         mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
         mdiSubWindow->setWindowTitle ( tr ( "Untitled Shader" ) );
         mdiSubWindow->showMaximized();
         mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
-        actionSave->setEnabled ( true );
+        mUi.actionSave->setEnabled ( true );
     }
 
     void MainWindow::fieldOfViewChanged ( double aFieldOfView )
     {
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->currentSubWindow ();
+        mdiSubWindow = mUi.mdiArea->currentSubWindow ();
         if ( !mdiSubWindow )
         {
             return;
@@ -149,7 +149,7 @@ namespace AeonGames
     void MainWindow::nearChanged ( double aNear )
     {
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->currentSubWindow ();
+        mdiSubWindow = mUi.mdiArea->currentSubWindow ();
         if ( !mdiSubWindow )
         {
             return;
@@ -160,7 +160,7 @@ namespace AeonGames
     void MainWindow::farChanged ( double aFar )
     {
         QMdiSubWindow*
-        mdiSubWindow = mdiArea->currentSubWindow ();
+        mdiSubWindow = mUi.mdiArea->currentSubWindow ();
         if ( !mdiSubWindow )
         {
             return;
