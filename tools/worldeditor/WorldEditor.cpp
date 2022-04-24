@@ -26,10 +26,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    const GridSettings& WorldEditor::GetGridSettings() const
-    {
-        return mGridSettings;
-    }
     const Pipeline& WorldEditor::GetGridPipeline() const
     {
         return *mGridPipeline;
@@ -72,10 +68,6 @@ namespace AeonGames
     int WorldEditor::GetPathMetaType() const
     {
         return mPathMetaType;
-    }
-    QSettings& WorldEditor::GetSettings()
-    {
-        return mSettings;
     }
 
     Renderer* WorldEditor::GetRenderer()
@@ -120,6 +112,26 @@ namespace AeonGames
         mStringMetaType{qRegisterMetaType<std::string>() },
         mPathMetaType{qRegisterMetaType<std::filesystem::path>() }
     {
+        setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
+        setOrganizationName ( "AeonGames" );
+        setOrganizationDomain ( "aeongames.com" );
+        setApplicationName ( "AeonGames World Editor" );
+
+        /* Workspace default settings */
+        QSettings settings{};
+        settings.beginGroup ( "Workspace" );
+
+        QSizeF Scale = settings.value ( "Scale", QSizeF ( 780.0f, 780.0f ) ).toSizeF();
+        QColor OddLineColor = settings.value ( "OddLineColor", QColor ( 74, 74, 74 ) ).value<QColor>();
+        QColor EvenLineColor = settings.value ( "EvenLineColor", QColor ( 74, 74, 74 ) ).value<QColor>();
+        QColor XLineColor = settings.value ( "XLineColor", QColor ( 255, 0, 0 ) ).value<QColor>();
+        QColor YLineColor = settings.value ( "YLineColor", QColor ( 0, 255, 0 ) ).value<QColor>();
+        QColor BorderLineColor = settings.value ( "BorderLineColor", QColor ( 74, 74, 74 ) ).value<QColor>();
+        uint32_t HorizontalSpacing = settings.value ( "HorizontalSpacing", uint32_t ( 16 ) ).toUInt();
+        uint32_t VerticalSpacing = settings.value ( "VerticalSpacing", uint32_t ( 16 ) ).toUInt();
+        settings.endGroup();
+
+
         /* Add a nice renderer selection window.*/
         QStringList renderer_list;
         EnumerateRendererConstructors ( [&renderer_list] ( const std::string & aIdentifier )->bool
@@ -163,79 +175,79 @@ namespace AeonGames
             LoadPipeline ( *mWirePipeline, ":/pipelines/solid_wire.pln" );
             LoadMaterial ( *mXGridMaterial, ":/materials/grid.mtl" );
 
-            mXGridMaterial->Set ( { "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} } );
-            mXGridMaterial->Set ( { "StartingPosition", Vector3{0.0f, - ( mGridSettings.height() / 2 ), 0.0f} } );
-            mXGridMaterial->Set ( { "Offset", Vector3{0.0f, ( mGridSettings.height() / static_cast<float> ( mGridSettings.horizontalSpacing() ) ), 0.0f} } );
-            mXGridMaterial->Set ( { "LineCount", static_cast<uint32_t> ( mGridSettings.horizontalSpacing() + 1 ) } );
+            mXGridMaterial->Set ( { "Scale", Vector3{static_cast<float> ( Scale.width() ), static_cast<float> ( Scale.height() ), 1.0f} } );
+            mXGridMaterial->Set ( { "StartingPosition", Vector3{0.0f, - static_cast<float> ( Scale.height() / 2 ), 0.0f} } );
+            mXGridMaterial->Set ( { "Offset", Vector3{0.0f, static_cast<float> ( Scale.height() / static_cast<float> ( HorizontalSpacing ) ), 0.0f} } );
+            mXGridMaterial->Set ( { "LineCount", static_cast<uint32_t> ( HorizontalSpacing + 1 ) } );
             mXGridMaterial->Set ( {"OddLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.oddLineColor().redF() ),
-                static_cast<float> ( mGridSettings.oddLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.oddLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.oddLineColor().alphaF() )
+                static_cast<float> ( OddLineColor.redF() ),
+                static_cast<float> ( OddLineColor.greenF() ),
+                static_cast<float> ( OddLineColor.blueF() ),
+                static_cast<float> ( OddLineColor.alphaF() )
             }} );
             mXGridMaterial->Set ( {"EvenLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.evenLineColor().redF() ),
-                static_cast<float> ( mGridSettings.evenLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.evenLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.evenLineColor().alphaF() )
+                static_cast<float> ( EvenLineColor.redF() ),
+                static_cast<float> ( EvenLineColor.greenF() ),
+                static_cast<float> ( EvenLineColor.blueF() ),
+                static_cast<float> ( EvenLineColor.alphaF() )
             }} );
             mXGridMaterial->Set ( {"CentralLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.xLineColor().redF() ),
-                static_cast<float> ( mGridSettings.xLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.xLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.xLineColor().alphaF() )
+                static_cast<float> ( XLineColor.redF() ),
+                static_cast<float> ( XLineColor.greenF() ),
+                static_cast<float> ( XLineColor.blueF() ),
+                static_cast<float> ( XLineColor.alphaF() )
             }} );
             mXGridMaterial->Set ( {"BorderLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.borderLineColor().redF() ),
-                static_cast<float> ( mGridSettings.borderLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.borderLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
+                static_cast<float> ( BorderLineColor.redF() ),
+                static_cast<float> ( BorderLineColor.greenF() ),
+                static_cast<float> ( BorderLineColor.blueF() ),
+                static_cast<float> ( BorderLineColor.alphaF() )
             }} );
 
             LoadMaterial ( *mYGridMaterial, ":/materials/grid.mtl" );
-            mYGridMaterial->Set ( { "Scale", Vector3{mGridSettings.width(), mGridSettings.height(), 1.0f} } );
-            mYGridMaterial->Set ( { "StartingPosition", Vector3{ - ( mGridSettings.width() / 2 ), 0.0f, 0.0f} } );
-            mYGridMaterial->Set ( { "Offset", Vector3{ ( mGridSettings.width() / static_cast<float> ( mGridSettings.verticalSpacing() ) ), 0.0f, 0.0f} } );
-            mYGridMaterial->Set ( { "LineCount", static_cast<uint32_t> ( mGridSettings.verticalSpacing() + 1 ) } );
+            mYGridMaterial->Set ( { "Scale", Vector3{static_cast<float> ( Scale.width() ), static_cast<float> ( Scale.height() ), 1.0f} } );
+            mYGridMaterial->Set ( { "StartingPosition", Vector3{ - static_cast<float> ( Scale.width() / 2 ), 0.0f, 0.0f} } );
+            mYGridMaterial->Set ( { "Offset", Vector3{ ( static_cast<float> ( Scale.width() ) / ( VerticalSpacing ) ), 0.0f, 0.0f} } );
+            mYGridMaterial->Set ( { "LineCount", static_cast<uint32_t> ( VerticalSpacing + 1 ) } );
             mYGridMaterial->Set ( {"OddLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.oddLineColor().redF() ),
-                static_cast<float> ( mGridSettings.oddLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.oddLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.oddLineColor().alphaF() )
+                static_cast<float> ( OddLineColor.redF() ),
+                static_cast<float> ( OddLineColor.greenF() ),
+                static_cast<float> ( OddLineColor.blueF() ),
+                static_cast<float> ( OddLineColor.alphaF() )
             }} );
             mYGridMaterial->Set ( {"EvenLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.evenLineColor().redF() ),
-                static_cast<float> ( mGridSettings.evenLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.evenLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.evenLineColor().alphaF() )
+                static_cast<float> ( EvenLineColor.redF() ),
+                static_cast<float> ( EvenLineColor.greenF() ),
+                static_cast<float> ( EvenLineColor.blueF() ),
+                static_cast<float> ( EvenLineColor.alphaF() )
             }} );
             mYGridMaterial->Set ( {"CentralLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.yLineColor().redF() ),
-                static_cast<float> ( mGridSettings.yLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.yLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.yLineColor().alphaF() )
+                static_cast<float> ( YLineColor.redF() ),
+                static_cast<float> ( YLineColor.greenF() ),
+                static_cast<float> ( YLineColor.blueF() ),
+                static_cast<float> ( YLineColor.alphaF() )
             }} );
             mYGridMaterial->Set ( {"BorderLineColor",
                                    Vector4
             {
-                static_cast<float> ( mGridSettings.borderLineColor().redF() ),
-                static_cast<float> ( mGridSettings.borderLineColor().greenF() ),
-                static_cast<float> ( mGridSettings.borderLineColor().blueF() ),
-                static_cast<float> ( mGridSettings.borderLineColor().alphaF() )
+                static_cast<float> ( BorderLineColor.redF() ),
+                static_cast<float> ( BorderLineColor.greenF() ),
+                static_cast<float> ( BorderLineColor.blueF() ),
+                static_cast<float> ( BorderLineColor.alphaF() )
             }} );
         }
 
