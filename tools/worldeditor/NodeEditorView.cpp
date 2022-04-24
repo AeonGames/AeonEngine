@@ -18,7 +18,7 @@ limitations under the License.
 #include <QKeyEvent>
 #include "NodeEditorView.h"
 #include "WorldEditor.h"
-#include "GridSettings.h"
+
 namespace AeonGames
 {
     NodeEditorView::NodeEditorView ( QWidget *parent ) : QGraphicsView ( parent )
@@ -59,7 +59,7 @@ namespace AeonGames
 
     void NodeEditorView::drawBackground ( QPainter *painter, const QRectF &rect )
     {
-        auto& settings = qWorldEditorApp->GetSettings();
+        QSettings settings{};
         settings.beginGroup ( "Workspace" );
         QColor backgroundColor = settings.value ( "BackgroundColor", QColor ( 127, 127, 127 ) ).value<QColor>();
         settings.endGroup();

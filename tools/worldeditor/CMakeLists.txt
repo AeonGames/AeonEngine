@@ -49,7 +49,6 @@ set(WORLDEDITOR_QT_HEADERS
 
 set(WORLDEDITOR_HEADERS
     WorldEditor.h
-    GridSettings.h
     ${WORLDEDITOR_QT_HEADERS})
 
 set(WORLDEDITOR_SOURCES
@@ -68,8 +67,7 @@ set(WORLDEDITOR_SOURCES
     NodeEditor.cpp
     NodeEditorView.cpp
     SettingsDialog.cpp
-    EngineWindow.cpp
-    GridSettings.cpp)
+    EngineWindow.cpp)
 
 set(WORLDEDITOR_UI
     ui/MainWindow.ui

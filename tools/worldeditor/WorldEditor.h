@@ -21,7 +21,6 @@ limitations under the License.
 #include <QSettings>
 #include <string>
 #include <filesystem>
-#include "GridSettings.h"
 #include "aeongames/Pipeline.h"
 #include "aeongames/Mesh.h"
 #include "aeongames/Material.h"
@@ -40,7 +39,6 @@ namespace AeonGames
     public:
         WorldEditor ( int &argc, char *argv[] );
         ~WorldEditor() final;
-        const GridSettings& GetGridSettings() const;
         const Pipeline& GetGridPipeline() const;
         const Mesh& GetGridMesh() const;
         const Material& GetXGridMaterial() const;
@@ -51,17 +49,14 @@ namespace AeonGames
         int GetStringIdMetaType() const;
         int GetStringMetaType() const;
         int GetPathMetaType() const;
-        QSettings& GetSettings();
         void AttachWindowToRenderer ( void* aWindow );
         void DetachWindowFromRenderer ( void* aWindow );
         Renderer* GetRenderer();
     private:
-        QSettings mSettings{"AeonGames", "AeonGames World Editor"};
         int mStringIdMetaType{};
         int mStringMetaType{};
         int mPathMetaType{};
         QMutex mMutex{};
-        GridSettings mGridSettings{};
         std::string mRendererName{}; ///< @todo Multi-renderer support
         std::unique_ptr<Renderer> mRenderer{};
         std::unique_ptr<Pipeline> mGridPipeline{};

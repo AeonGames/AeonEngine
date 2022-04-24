@@ -108,10 +108,6 @@ int ENTRYPOINT main ( int argc, char *argv[] )
         AS IT IS ALL WASTED TIME. */
     {
         AeonGames::WorldEditor worldeditor ( argc, argv );
-        worldeditor.setWindowIcon ( QIcon ( ":/icons/magnifying_glass" ) );
-        worldeditor.setOrganizationName ( "AeonGames" );
-        worldeditor.setOrganizationDomain ( "aeongames.com" );
-        worldeditor.setApplicationName ( "AeonGames World Editor" );
         {
             AeonGames::MainWindow mainWindow{};
             mainWindow.showNormal();

@@ -26,7 +26,7 @@ namespace AeonGames
         QWidget *parent, Qt::WindowFlags f ) : QDialog ( parent, f )
     {
         mUi.setupUi ( this );
-        auto& settings = qWorldEditorApp->GetSettings();
+        QSettings settings{};
         settings.beginGroup ( "Camera" );
         setFieldOfView ( settings.value ( "FieldOfView", 60.0f ).toDouble() );
         setNear ( settings.value ( "Near", 1.0f ).toDouble() );
@@ -53,7 +53,7 @@ namespace AeonGames
     }
     void CameraSettings::setFieldOfView ( double aFieldOfView )
     {
-        auto& settings = qWorldEditorApp->GetSettings();
+        QSettings settings{};
         settings.beginGroup ( "Camera" );
         settings.setValue ( "FieldOfView", static_cast<float> ( aFieldOfView ) );
         settings.endGroup();
@@ -64,7 +64,7 @@ namespace AeonGames
     }
     void CameraSettings::setNear ( double aNear )
     {
-        auto& settings = qWorldEditorApp->GetSettings();
+        QSettings settings{};
         settings.beginGroup ( "Camera" );
         settings.setValue ( "Near", static_cast<float> ( aNear ) );
         settings.endGroup();
@@ -75,7 +75,7 @@ namespace AeonGames
     }
     void CameraSettings::setFar ( double aFar )
     {
-        auto& settings = qWorldEditorApp->GetSettings();
+        QSettings settings{};
         settings.beginGroup ( "Camera" );
         settings.setValue ( "Far", static_cast<float> ( aFar ) );
         settings.endGroup();
