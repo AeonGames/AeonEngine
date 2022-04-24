@@ -72,12 +72,19 @@ namespace AeonGames
         qWorldEditorApp->AttachWindowToRenderer ( mWinId );
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
 
-        auto& settings = qWorldEditorApp->GetSettings();
+        QSettings settings{};
         settings.beginGroup ( "Camera" );
         mFieldOfView = settings.value ( "FieldOfView", 60.0f ).toFloat();
         mNear = settings.value ( "Near", 1.0f ).toFloat();
         mFar = settings.value ( "Far", 1600.0f ).toFloat();
         settings.endGroup();
+        settings.beginGroup ( "Workspace" );
+        mHorizontalSpacing = settings.value ( "HorizontalSpacing", uint32_t ( 16 ) ).toUInt();
+        mVerticalSpacing = settings.value ( "VerticalSpacing", uint32_t ( 16 ) ).toUInt();
+        QColor background_color = settings.value ( "BackgroundColor", QColor ( 127, 127, 127 ) ).value<QColor>();
+        settings.endGroup();
+
+        qWorldEditorApp->GetRenderer()->SetClearColor ( mWinId, background_color.redF(), background_color.greenF(), background_color.blueF(), 1.0f );
 
         updateViewMatrix();
 #if 0
@@ -277,14 +284,14 @@ namespace AeonGames
                     qWorldEditorApp->GetGridMesh(),
                     qWorldEditorApp->GetGridPipeline(),
                     &qWorldEditorApp->GetXGridMaterial(), nullptr, 0, 2,
-                    qWorldEditorApp->GetGridSettings().horizontalSpacing() + 1 );
+                    mHorizontalSpacing + 1 );
                 qWorldEditorApp->GetRenderer()->Render (
                     mWinId,
                     Matrix4x4{},
                     qWorldEditorApp->GetGridMesh(),
                     qWorldEditorApp->GetGridPipeline(),
                     &qWorldEditorApp->GetYGridMaterial(), nullptr, 2, 2,
-                    qWorldEditorApp->GetGridSettings().verticalSpacing() + 1 );
+                    mVerticalSpacing + 1 );
                 /** @todo This should be the code path for edit mode,
                  * game mode should just render the scene using Window::Render(const Scene&)
                 */
