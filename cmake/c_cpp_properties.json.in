@@ -3,7 +3,7 @@
         {
             "name": "@CMAKE_SYSTEM_NAME@",
             "intelliSenseMode": "gcc-x64",
-            "compilerPath": "@CMAKE_C_COMPILER@",
+            "compilerPath": "@CMAKE_CXX_COMPILER@",
             "includePath": [
                 @INCLIST@,
                 "@CMAKE_SOURCE_DIR@/include",
