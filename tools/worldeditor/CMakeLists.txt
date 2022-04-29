@@ -151,8 +151,6 @@ add_executable(worldeditor
 if(MSVC)
   set_target_properties(worldeditor
                         PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
-else()
-  set_target_properties(worldeditor PROPERTIES LINK_FLAGS "-Wl,--stack,10485760")
 endif()
 
 target_link_libraries(worldeditor
