@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,24 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_NODE_EDITOR_H
-#define AEONGAMES_NODE_EDITOR_H
+#ifndef AEONGAMES_NODE_WINDOW_H
+#define AEONGAMES_NODE_WINDOW_H
 
-#include "ui_NodeEditor.h"
+#include "ui_NodeWindow.h"
 
 namespace AeonGames
 {
-    class NodeEditor : public QWidget
+    class NodeWindow : public QWidget
     {
         Q_OBJECT
     public:
-        NodeEditor ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
-        ~NodeEditor();
+        NodeWindow ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
+        ~NodeWindow();
     private slots:
     signals:
     private:
-        Ui::NodeEditor mUi;
-        QGraphicsScene* mScene;
+        Ui::NodeWindow mUi;
     };
 }
 #endif

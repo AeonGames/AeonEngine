@@ -41,8 +41,8 @@ set(WORLDEDITOR_QT_HEADERS
     RendererSelectDialog.h
     SettingsDialog.h
     CameraSettings.h
-    NodeEditor.h
-    NodeEditorView.h
+    NodeWindow.h
+    NodeView.h
     MainWindow.h
     SceneWindow.h
     EngineWindow.h)
@@ -64,8 +64,8 @@ set(WORLDEDITOR_SOURCES
     SceneWindow.cpp
     RendererSelectDialog.cpp
     CameraSettings.cpp
-    NodeEditor.cpp
-    NodeEditorView.cpp
+    NodeView.cpp
+    NodeWindow.cpp
     SettingsDialog.cpp
     EngineWindow.cpp)
 
@@ -76,7 +76,7 @@ set(WORLDEDITOR_UI
     ui/SettingsDialog.ui
     ui/ResourcesDialog.ui
     ui/CameraSettings.ui
-    ui/NodeEditor.ui
+    ui/NodeWindow.ui
 )
 
 if(WIN32)

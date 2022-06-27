@@ -14,31 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_NODE_EDITOR_VIEW_H
-#define AEONGAMES_NODE_EDITOR_VIEW_H
+#ifndef AEONGAMES_NODE_VIEW_H
+#define AEONGAMES_NODE_VIEW_H
 
-#include <QGraphicsView>
+#include <QWidget>
 
 namespace AeonGames
 {
-    class NodeEditorView : public QGraphicsView
+    class NodeView : public QWidget
     {
         Q_OBJECT
     public:
-        NodeEditorView ( QWidget *parent = nullptr );
-        void itemMoved();
-
+        NodeView ( QWidget *parent = nullptr );
+        ~NodeView();
     public slots:
-        void zoomIn();
-        void zoomOut();
-
     protected:
         void keyPressEvent ( QKeyEvent *event ) override;
+        void mousePressEvent ( QMouseEvent *event ) override;
+        void mouseMoveEvent ( QMouseEvent *event ) override;
+        void mouseReleaseEvent ( QMouseEvent *event ) override;
+        void paintEvent ( QPaintEvent *event ) override;
 #if QT_CONFIG(wheelevent)
         void wheelEvent ( QWheelEvent *event ) override;
 #endif
-        void drawBackground ( QPainter *painter, const QRectF &rect ) override;
-        void scaleView ( qreal scaleFactor );
+    private:
     };
 }
 #endif
