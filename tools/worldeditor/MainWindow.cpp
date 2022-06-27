@@ -16,6 +16,7 @@ limitations under the License.
 #include <QFileDialog>
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
+#include <QScrollArea>
 #include <iostream>
 #include "aeongames/Renderer.h"
 #include "aeongames/LogLevel.h"
@@ -24,7 +25,7 @@ limitations under the License.
 #include "SceneWindow.h"
 #include "EngineWindow.h"
 #include "CameraSettings.h"
-#include "NodeEditor.h"
+#include "NodeView.h"
 
 namespace AeonGames
 {
@@ -125,9 +126,11 @@ namespace AeonGames
 
     void MainWindow::on_actionNewShader_triggered()
     {
-        NodeEditor* nodeEditor;
-        QMdiSubWindow*
-        mdiSubWindow = mUi.mdiArea->addSubWindow ( nodeEditor = new NodeEditor ( mUi.mdiArea ) );
+        QScrollArea* scrollArea{new QScrollArea{mUi.mdiArea}};
+        NodeView* nodeView{new NodeView{scrollArea}};
+        scrollArea->setWidget ( nodeView );
+        scrollArea->setWidgetResizable ( true );
+        QMdiSubWindow* mdiSubWindow{ mUi.mdiArea->addSubWindow ( scrollArea ) };
         mdiSubWindow->setAttribute ( Qt::WA_DeleteOnClose );
         mdiSubWindow->setWindowTitle ( tr ( "Untitled Shader" ) );
         mdiSubWindow->showMaximized();

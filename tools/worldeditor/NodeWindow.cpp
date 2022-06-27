@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2022 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,20 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "WorldEditor.h"
-#include "NodeEditor.h"
-#include <QLabel>
+
+#include "NodeWindow.h"
 
 namespace AeonGames
 {
-    NodeEditor::NodeEditor (
-        QWidget *parent, Qt::WindowFlags f ) :
+    NodeWindow::NodeWindow ( QWidget *parent, Qt::WindowFlags f ) :
         QWidget ( parent, f )
     {
         mUi.setupUi ( this );
-        mScene = new QGraphicsScene ( this );
-        mScene->addWidget ( new QLabel ( "Hello World" ) );
-        mUi.mView->setScene ( mScene );
     }
-    NodeEditor::~NodeEditor() = default;
+    NodeWindow::~NodeWindow() = default;
 }
