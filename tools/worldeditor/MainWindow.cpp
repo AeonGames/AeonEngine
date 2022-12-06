@@ -17,6 +17,7 @@ limitations under the License.
 #include <QMdiSubWindow>
 #include <QSurfaceFormat>
 #include <QScrollArea>
+#include <QColorSpace>
 #include <iostream>
 #include "aeongames/Renderer.h"
 #include "aeongames/LogLevel.h"
@@ -35,7 +36,7 @@ namespace AeonGames
 
         QSurfaceFormat surface_format = QSurfaceFormat::defaultFormat();
 
-        surface_format.setColorSpace ( QSurfaceFormat::sRGBColorSpace );
+        surface_format.setColorSpace ( QColorSpace::SRgb );
         surface_format.setRenderableType ( QSurfaceFormat::OpenGL );
         surface_format.setSwapBehavior ( QSurfaceFormat::DoubleBuffer );
         surface_format.setRedBufferSize ( 8 );

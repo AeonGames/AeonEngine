@@ -178,17 +178,12 @@ if(BUILD_STANDALONE_APPLICATION)
   add_subdirectory(application)
 endif()
 
-find_package(Qt5
+find_package(Qt6
              COMPONENTS LinguistTools
                         Core
                         Gui
                         Widgets)
-if(WIN32)
-  find_package(Qt5 COMPONENTS WinExtras)
-elseif(UNIX)
-  find_package(Qt5 COMPONENTS X11Extras)
-endif()
-if(Qt5_FOUND)
+if(Qt6_FOUND)
   add_subdirectory(tools/worldeditor)
 endif()
 
@@ -450,11 +445,11 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
 
   set(INCLIST "")
 
-  if(Qt5_FOUND)
-    list(APPEND INCLIST ${Qt5Core_INCLUDE_DIRS})
-    list(APPEND INCLIST ${Qt5Gui_INCLUDE_DIRS})
-    list(APPEND INCLIST ${Qt5Widgets_INCLUDE_DIRS})
-  endif(Qt5_FOUND)
+  if(Qt6_FOUND)
+    list(APPEND INCLIST ${Qt6Core_INCLUDE_DIRS})
+    list(APPEND INCLIST ${Qt6Gui_INCLUDE_DIRS})
+    list(APPEND INCLIST ${Qt6Widgets_INCLUDE_DIRS})
+  endif(Qt6_FOUND)
   list(APPEND INCLIST ${GLSlang_INCLUDE_DIR})
   list(APPEND INCLIST ${VULKAN_INCLUDE_DIR})
   list(APPEND INCLIST ${Protobuf_INCLUDE_DIR})
