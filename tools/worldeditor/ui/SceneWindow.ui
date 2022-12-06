@@ -891,6 +891,7 @@
   <slot>on_globalTransformChanged()</slot>
   <slot>on_sceneTreeViewClicked(QModelIndex)</slot>
   <slot>on_nodeListViewClicked(QModelIndex)</slot>
+  <slot>on_componentListViewClicked(QModelIndex)</slot>
   <slot>on_sceneContextMenuRequested(QPoint)</slot>
   <slot>on_componentContextMenuRequested(QPoint)</slot>
  </slots>

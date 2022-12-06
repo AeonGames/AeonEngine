@@ -19,11 +19,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     delegates
                     ${CMAKE_SOURCE_DIR}/include
                     ${PROTOBUF_INCLUDE_DIR}
-                    ${Qt5Core_INCLUDE_DIRS}
-                    ${Qt5Gui_INCLUDE_DIRS}
-                    ${Qt5Widgets_INCLUDE_DIRS})
+                    ${Qt6Core_INCLUDE_DIRS}
+                    ${Qt6Gui_INCLUDE_DIRS}
+                    ${Qt6Widgets_INCLUDE_DIRS})
 
-qt5_create_translation(QM_FILES
+qt6_create_translation(QM_FILES
                        ${CMAKE_CURRENT_SOURCE_DIR}
                        OPTIONS
                        -source-language
@@ -80,10 +80,10 @@ set(WORLDEDITOR_UI
 )
 
 if(WIN32)
-  include_directories(${Qt5WinExtras_INCLUDE_DIRS})
+  include_directories(${Qt6WinExtras_INCLUDE_DIRS})
   list(APPEND WORLDEDITOR_SOURCES ${WORLDEDITOR_SOURCES} icon.rc)
 elseif(UNIX)
-  include_directories(${Qt5X11Extras_INCLUDE_DIRS})
+  include_directories(${Qt6X11Extras_INCLUDE_DIRS})
 endif()
 
 configure_file(worldeditor_dynamic.qrc
@@ -135,9 +135,9 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Creating binary materials.")
 
-qt5_wrap_cpp(WORLDEDITOR_MOCS ${WORLDEDITOR_QT_HEADERS})
-qt5_wrap_ui(WORLDEDITOR_UI_HEADERS ${WORLDEDITOR_UI})
-qt5_add_resources(WORLDEDITOR_RESOURCES worldeditor_static.qrc
+qt6_wrap_cpp(WORLDEDITOR_MOCS ${WORLDEDITOR_QT_HEADERS})
+qt6_wrap_ui(WORLDEDITOR_UI_HEADERS ${WORLDEDITOR_UI})
+qt6_add_resources(WORLDEDITOR_RESOURCES worldeditor_static.qrc
                   ${CMAKE_CURRENT_BINARY_DIR}/worldeditor_dynamic.qrc)
 
 add_executable(worldeditor
@@ -155,11 +155,11 @@ endif()
 
 target_link_libraries(worldeditor
                       AeonEngine
-                      ${Qt5Core_LIBRARIES}
-                      ${Qt5Gui_LIBRARIES}
-                      ${Qt5Widgets_LIBRARIES}
-                      ${Qt5WinExtras_LIBRARIES}
-                      ${Qt5X11Extras_LIBRARIES}
+                      ${Qt6Core_LIBRARIES}
+                      ${Qt6Gui_LIBRARIES}
+                      ${Qt6Widgets_LIBRARIES}
+                      ${Qt6WinExtras_LIBRARIES}
+                      ${Qt6X11Extras_LIBRARIES}
                       ${OPENGL_LIBRARIES}
                       ${CMAKE_DL_LIBS}
                       ${CMAKE_THREAD_LIBS_INIT})
