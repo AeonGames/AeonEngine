@@ -67,7 +67,7 @@ namespace AeonGames
         void updateViewMatrix();
         void* mWinId{ nullptr };
         const Scene* mScene{nullptr};
-        QPoint mLastCursorPosition;
+        QPointF mLastCursorPosition;
         QTimer mTimer;
         QElapsedTimer mStopWatch;
         float mFrustumVerticalHalfAngle;
@@ -81,7 +81,7 @@ namespace AeonGames
         uint32_t mVerticalSpacing{};
         /* We're using QT classes for now... */
         QQuaternion mCameraRotation;
-        QVector4D mCameraLocation;
+        QVector3D mCameraLocation;
         QMatrix4x4 mViewMatrix;
     };
 }

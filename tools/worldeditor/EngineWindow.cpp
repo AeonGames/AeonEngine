@@ -39,13 +39,13 @@ namespace AeonGames
 {
     EngineWindow::EngineWindow ( QWindow *parent ) :
         QWindow{ parent },
-        mTimer(),
-        mStopWatch(),
-        mFrustumVerticalHalfAngle ( 0 ), mStep ( 10 ),
+        mTimer{},
+        mStopWatch{},
+        mFrustumVerticalHalfAngle{}, mStep{ 10 },
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         // Stand back 3 meters.
-        mCameraLocation ( -QVector3D ( mCameraRotation.rotatedVector ( forward ) * 300.0f ), 1 ),
-        mViewMatrix()
+        mCameraLocation { -mCameraRotation.rotatedVector ( forward ) * 300.0f },
+        mViewMatrix{}
     {
         // Hopefully these settings are optimal for Vulkan as well as OpenGL
         setSurfaceType ( QSurface::OpenGLSurface );
@@ -391,10 +391,10 @@ namespace AeonGames
     {
         if ( event->buttons() & Qt::LeftButton )
         {
-            QPoint movement = event->globalPos() - mLastCursorPosition;
-            mLastCursorPosition = event->globalPos();
-            mCameraRotation = QQuaternion::fromAxisAndAngle ( 0, 0, 1, - ( static_cast<float> ( movement.x() ) / 2.0f ) ) * mCameraRotation;
-            mCameraRotation = mCameraRotation * QQuaternion::fromAxisAndAngle ( 1, 0, 0, - ( static_cast<float> ( movement.y() ) / 2.0f ) );
+            QPointF movement = event->globalPosition() - mLastCursorPosition;
+            mLastCursorPosition = event->globalPosition();
+            mCameraRotation = QQuaternion::fromAxisAndAngle ( 0, 0, 1, - ( movement.x() / 2.0f ) ) * mCameraRotation;
+            mCameraRotation = mCameraRotation * QQuaternion::fromAxisAndAngle ( 1, 0, 0, - ( movement.y() / 2.0f ) );
             updateViewMatrix();
         }
         event->accept();
@@ -404,7 +404,7 @@ namespace AeonGames
     {
         if ( event->button() & Qt::LeftButton )
         {
-            mLastCursorPosition = event->globalPos();
+            mLastCursorPosition = event->globalPosition();
         }
         event->accept();
     }
