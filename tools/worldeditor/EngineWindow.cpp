@@ -16,9 +16,6 @@ limitations under the License.
 #include <QResizeEvent>
 #include <QString>
 #include <QStringList>
-#ifdef __unix__
-#include <QX11Info>
-#endif
 #include <cassert>
 #include <cmath>
 #include <iostream>
