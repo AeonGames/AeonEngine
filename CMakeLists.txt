@@ -287,10 +287,6 @@ add_custom_target(
   COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
-                       ${CMAKE_SOURCE_DIR}/proto/geometry.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
-          --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
-          --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/transform.proto
   COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
@@ -308,7 +304,11 @@ add_custom_target(
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
-  SOURCES ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+          --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
+          --proto_path ${CMAKE_SOURCE_DIR}/proto
+                       ${CMAKE_SOURCE_DIR}/proto/collision.proto
+        SOURCES ${CMAKE_SOURCE_DIR}/proto/mesh.proto
           ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
           ${CMAKE_SOURCE_DIR}/proto/animation.proto
           ${CMAKE_SOURCE_DIR}/proto/model.proto
@@ -320,12 +320,12 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/proto/vector3.proto
           ${CMAKE_SOURCE_DIR}/proto/vector4.proto
           ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
-          ${CMAKE_SOURCE_DIR}/proto/geometry.proto
           ${CMAKE_SOURCE_DIR}/proto/transform.proto
           ${CMAKE_SOURCE_DIR}/proto/scene.proto
           ${CMAKE_SOURCE_DIR}/proto/reference.proto
           ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
           ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
+          ${CMAKE_SOURCE_DIR}/proto/collision.proto
   COMMENT "Generating Protocol Buffers Python Code")
 
 #
