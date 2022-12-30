@@ -41,13 +41,13 @@ protobuf_generate_cpp(PROTOBUF_SOURCES
                       ${CMAKE_SOURCE_DIR}/proto/material.proto
                       ${CMAKE_SOURCE_DIR}/proto/model.proto
                       ${CMAKE_SOURCE_DIR}/proto/modelcontroller.proto
-                      ${CMAKE_SOURCE_DIR}/proto/geometry.proto
                       ${CMAKE_SOURCE_DIR}/proto/transform.proto
                       ${CMAKE_SOURCE_DIR}/proto/scene.proto
                       ${CMAKE_SOURCE_DIR}/proto/reference.proto
                       ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
                       ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
                       ${CMAKE_SOURCE_DIR}/proto/animation.proto
+                      ${CMAKE_SOURCE_DIR}/proto/collision.proto
 )
 
 set(ENGINE_SDK_HEADERS
