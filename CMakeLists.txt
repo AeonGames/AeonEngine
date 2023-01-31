@@ -420,7 +420,7 @@ endif()
 #
 # Generate VS Code Environment
 #
-if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
+if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   set(CODE_ZOOMLEVEL "0" CACHE STRING "window.zoomLevel for VS Code.")
   # TODO SOURCE_DIRECTORIES could be set and used to call add_subdirectory
   # directly from this top level
@@ -472,7 +472,7 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix) Makefiles")
   )
 
   set(DEBUG_PATH "${CMAKE_BINARY_DIR}/bin")
-  if(CMAKE_GENERATOR MATCHES "MSYS Makefiles")
+  if(CMAKE_GENERATOR MATCHES "(MSYS|MinGW) Makefiles")
     set(DEBUG_PATH "${DEBUG_PATH};$ENV{MSYSTEM_PREFIX}/bin")
     set(USE_EXTERNAL_CONSOLE "true")
   else()
