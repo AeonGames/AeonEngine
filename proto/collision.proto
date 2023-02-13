@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2022,2023 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,13 +43,13 @@ message KdTreeLeafMsg{
 }
 
 message CollisionMsg {
-	uint32 Version                   = 1;
+	uint32     Version               = 1;
     Vector3Msg Center                = 2;
     Vector3Msg Radii                 = 3;
-    repeated sint32     PlaneIndices = 4;
-    repeated uint32     BrushIndices = 5;
-    repeated Vector4Msg Planes       = 6;
-    repeated BrushMsg   Brushes      = 7;
-    repeated KdTreeNodeMsg KdNodes   = 8;
-    repeated KdTreeLeafMsg KdLeaves  = 9;
+    bytes      PlaneIndices          = 4;
+    bytes      BrushIndices          = 5;
+    repeated Vector4Msg Plane        = 6;
+    repeated BrushMsg   Brush        = 7;
+    repeated KdTreeNodeMsg KdNode    = 8;
+    repeated KdTreeLeafMsg KdLeaf    = 9;
 }

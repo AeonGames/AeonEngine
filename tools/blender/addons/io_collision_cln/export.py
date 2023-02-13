@@ -1,4 +1,4 @@
-# Copyright (C) 2012,2013,2015,2017,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2012,2013,2015,2017,2019,2021-2023 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ import math
 import mathutils
 import time  # used to measure time taken during execution
 import collision_pb2
+import struct
+from multiprocessing.dummy import Pool
 import google.protobuf.text_format
 
 class GTYKdNode():
@@ -352,34 +354,108 @@ class CLN_OT_exporter(bpy.types.Operator):
                 self.process_kd_mesh(object.data)
         self.build_kd_tree(self.kdpoints,[0,1,2],0)
 
+        collision_buffer_min_x = 0.0
+        collision_buffer_max_x = 0.0
+        collision_buffer_min_y = 0.0
+        collision_buffer_max_y = 0.0
+        collision_buffer_min_z = 0.0
+        collision_buffer_max_z = 0.0
+
         for object in scene.objects:
             if (object.type=='MESH'):
                 self.process_collision_mesh(object)
-                #for point in object.bound_box:
-                #    world_space_point = mathutils.Vector(point) * mathutils.Matrix(object.matrix_world)
-                #    if world_space_point[0] < header.aabb[0]:
-                #        header.aabb[0] = world_space_point[0]
-                #    if world_space_point[0] > header.aabb[3]:
-                #        header.aabb[3] = world_space_point[0]
-                #    if world_space_point[1] < header.aabb[1]:
-                #        header.aabb[1] = world_space_point[1]
-                #    if world_space_point[1] > header.aabb[4]:
-                #        header.aabb[4] = world_space_point[1]
-                #    if world_space_point[2] < header.aabb[2]:
-                #        header.aabb[2] = world_space_point[2]
-                #    if world_space_point[2] > header.aabb[5]:
-                #        header.aabb[5] = world_space_point[2]
+                # Store center, radii.
+                # TODO: Find a better/faster way to do this
+                collision_buffer_min_x = min(
+                    object.bound_box[0][0],
+                    object.bound_box[1][0],
+                    object.bound_box[2][0],
+                    object.bound_box[3][0],
+                    object.bound_box[4][0],
+                    object.bound_box[5][0],
+                    object.bound_box[6][0],
+                    object.bound_box[7][0],
+                    collision_buffer_min_x)
+                collision_buffer_max_x = max(
+                    object.bound_box[0][0],
+                    object.bound_box[1][0],
+                    object.bound_box[2][0],
+                    object.bound_box[3][0],
+                    object.bound_box[4][0],
+                    object.bound_box[5][0],
+                    object.bound_box[6][0],
+                    object.bound_box[7][0],
+                    collision_buffer_max_x)
+                collision_buffer_min_y = min(
+                    object.bound_box[0][1],
+                    object.bound_box[1][1],
+                    object.bound_box[2][1],
+                    object.bound_box[3][1],
+                    object.bound_box[4][1],
+                    object.bound_box[5][1],
+                    object.bound_box[6][1],
+                    object.bound_box[7][1],
+                    collision_buffer_min_y)
+                collision_buffer_max_y = max(
+                    object.bound_box[0][1],
+                    object.bound_box[1][1],
+                    object.bound_box[2][1],
+                    object.bound_box[3][1],
+                    object.bound_box[4][1],
+                    object.bound_box[5][1],
+                    object.bound_box[6][1],
+                    object.bound_box[7][1],
+                    collision_buffer_max_y)
+                collision_buffer_min_z = min(
+                    object.bound_box[0][2],
+                    object.bound_box[1][2],
+                    object.bound_box[2][2],
+                    object.bound_box[3][2],
+                    object.bound_box[4][2],
+                    object.bound_box[5][2],
+                    object.bound_box[6][2],
+                    object.bound_box[7][2],
+                    collision_buffer_min_z)
+                collision_buffer_max_z = max(
+                    object.bound_box[0][2],
+                    object.bound_box[1][2],
+                    object.bound_box[2][2],
+                    object.bound_box[3][2],
+                    object.bound_box[4][2],
+                    object.bound_box[5][2],
+                    object.bound_box[6][2],
+                    object.bound_box[7][2],
+                    collision_buffer_max_z)
+
+        collision_buffer.Center.x = (
+            collision_buffer_min_x + collision_buffer_max_x) / 2
+        collision_buffer.Center.y = (
+            collision_buffer_min_y + collision_buffer_max_y) / 2
+        collision_buffer.Center.z = (
+            collision_buffer_min_z + collision_buffer_max_z) / 2
+
+        collision_buffer.Radii.x = collision_buffer_max_x - collision_buffer.Center.x
+        collision_buffer.Radii.y = collision_buffer_max_y - collision_buffer.Center.y
+        collision_buffer.Radii.z = collision_buffer_max_z - collision_buffer.Center.z
 
         for plane in self.planes:
-            collision_buffer.Planes.add(x = plane[0],y = plane[1],z = plane[2],w = plane[3])
-        collision_buffer.PlaneIndices.extend(self.plane_indices)
+            collision_buffer.Plane.add(x = plane[0],y = plane[1],z = plane[2],w = plane[3])
+        pool = Pool()
+        collision_buffer.PlaneIndices = b''.join(
+            list(pool.map(struct.Struct('i').pack, self.plane_indices)))
+        pool.close()
+        pool.join()
         for node in self.kdtreenodes:
-            collision_buffer.KdNodes.add(Axis = node.axis, Distance = node.distance, Near = node.near_index, Far = node.far_index)
+            collision_buffer.KdNode.add(Axis = node.axis, Distance = node.distance, Near = node.near_index, Far = node.far_index)
         for leaf in self.kdtreeleaves:
-            collision_buffer.KdLeaves.add(BrushStart = len(collision_buffer.BrushIndices), BrushCount = len(leaf.brush_indices))
-            collision_buffer.BrushIndices.extend(leaf.brush_indices)
+            collision_buffer.KdLeaf.add(BrushStart = len(collision_buffer.BrushIndices), BrushCount = len(leaf.brush_indices))
+            #collision_buffer.BrushIndices.extend(leaf.brush_indices)
+            pool = Pool()
+            collision_buffer.BrushIndices += b''.join(list(pool.map(struct.Struct('i').pack, leaf.brush_indices)))
+            pool.close()
+            pool.join()
         for brush in self.brushes:
-            brush_reference = collision_buffer.Brushes.add()
+            brush_reference = collision_buffer.Brush.add()
             brush_reference.SixDOP.positive.x = brush.sixdop[0]
             brush_reference.SixDOP.positive.y = brush.sixdop[1]
             brush_reference.SixDOP.positive.z = brush.sixdop[2]
