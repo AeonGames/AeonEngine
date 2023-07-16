@@ -1,16 +1,16 @@
-# Use broken brackets
+# Use broken braces
 style=allman
 # No Tabs
 convert-tabs
-# Add brackets to one line conditionals
-add-brackets
+# Add braces to one line conditionals
+add-braces
 # Indent namespaces
 indent-namespaces
 # Add spaces besides operators
 pad-oper
 # Add spaces between parens and inside statements
 pad-paren
-# We're adding brackets to one line conditional statements,
+# We're adding braces to one line conditional statements,
 # No indent is clearer to read.
 min-conditional-indent=0
 # Continue in exclude errors
