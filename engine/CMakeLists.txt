@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2021,2023 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -184,7 +184,7 @@ add_library(ProtoBufClasses
             ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
 add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
-target_link_libraries(ProtoBufClasses ${PROTOBUF_LIBRARIES})
+target_link_libraries(ProtoBufClasses protobuf::libprotobuf absl::log_internal_message absl::log_internal_check_op)
 
 if(MSVC)
   set_target_properties(
