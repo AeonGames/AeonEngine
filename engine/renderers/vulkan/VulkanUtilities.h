@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2023 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,24 +24,6 @@ namespace AeonGames
 {
     static_assert ( VK_SUCCESS == 0, "VK_SUCCESS is NOT zero!" );
     const char* GetVulkanResultString ( VkResult aResult );
-
-    struct Vertex
-    {
-        float position[3];
-        float normal[3];
-        float tangent[3];
-        float bitangent[3];
-        float uv[2];
-        uint8_t weight_indices[4];
-        uint8_t weight_influences[4];
-        float color[3];
-    };
-
-    static_assert (
-        sizeof ( Vertex ) ==
-        ( sizeof ( float ) * 17 + sizeof ( uint8_t ) * 8 ),
-        "Vertex Structure Contains Padding." );
-
     VKAPI_ATTR VkBool32 VKAPI_CALL
     DebugCallback
     (

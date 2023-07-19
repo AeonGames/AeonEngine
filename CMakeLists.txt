@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2023 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -85,6 +85,7 @@ include(CheckIncludeFiles)
 find_package (Python3 COMPONENTS Interpreter)
 find_package(ImageMagick OPTIONAL_COMPONENTS convert)
 find_package(Protobuf REQUIRED)
+find_package(absl REQUIRED)
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8
