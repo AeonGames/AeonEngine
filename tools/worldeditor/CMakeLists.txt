@@ -150,7 +150,10 @@ add_executable(worldeditor
 
 if(MSVC)
   set_target_properties(worldeditor
-                        PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS")
+                        PROPERTIES
+                        COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS"
+                        VS_DEBUGGER_ENVIRONMENT  "QT_PLUGIN_PATH=${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}$<$<CONFIG:Debug>:debug/>/Qt6/plugins"
+)
 endif()
 
 target_link_libraries(worldeditor
