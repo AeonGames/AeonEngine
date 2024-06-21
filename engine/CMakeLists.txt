@@ -25,29 +25,33 @@ include_directories(
                     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-protobuf_generate_cpp(PROTOBUF_SOURCES
-                      PROTOBUF_HEADERS
+add_library(ProtoBufClasses SHARED
+  ${CMAKE_SOURCE_DIR}/proto/configuration.proto
+  ${CMAKE_SOURCE_DIR}/proto/vector2.proto
+  ${CMAKE_SOURCE_DIR}/proto/vector3.proto
+  ${CMAKE_SOURCE_DIR}/proto/vector4.proto
+  ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
+  ${CMAKE_SOURCE_DIR}/proto/property.proto
+  ${CMAKE_SOURCE_DIR}/proto/sampler.proto
+  ${CMAKE_SOURCE_DIR}/proto/mesh.proto
+  ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
+  ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
+  ${CMAKE_SOURCE_DIR}/proto/material.proto
+  ${CMAKE_SOURCE_DIR}/proto/model.proto
+  ${CMAKE_SOURCE_DIR}/proto/modelcontroller.proto
+  ${CMAKE_SOURCE_DIR}/proto/transform.proto
+  ${CMAKE_SOURCE_DIR}/proto/scene.proto
+  ${CMAKE_SOURCE_DIR}/proto/reference.proto
+  ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
+  ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
+  ${CMAKE_SOURCE_DIR}/proto/animation.proto
+  ${CMAKE_SOURCE_DIR}/proto/collision.proto
+  ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
+)
+
+protobuf_generate(TARGET ProtoBufClasses
                       EXPORT_MACRO DLL_PROTOBUF
-                      ${CMAKE_SOURCE_DIR}/proto/configuration.proto
-                      ${CMAKE_SOURCE_DIR}/proto/vector2.proto
-                      ${CMAKE_SOURCE_DIR}/proto/vector3.proto
-                      ${CMAKE_SOURCE_DIR}/proto/vector4.proto
-                      ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
-                      ${CMAKE_SOURCE_DIR}/proto/property.proto
-                      ${CMAKE_SOURCE_DIR}/proto/sampler.proto
-                      ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-                      ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
-                      ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
-                      ${CMAKE_SOURCE_DIR}/proto/material.proto
-                      ${CMAKE_SOURCE_DIR}/proto/model.proto
-                      ${CMAKE_SOURCE_DIR}/proto/modelcontroller.proto
-                      ${CMAKE_SOURCE_DIR}/proto/transform.proto
-                      ${CMAKE_SOURCE_DIR}/proto/scene.proto
-                      ${CMAKE_SOURCE_DIR}/proto/reference.proto
-                      ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
-                      ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
-                      ${CMAKE_SOURCE_DIR}/proto/animation.proto
-                      ${CMAKE_SOURCE_DIR}/proto/collision.proto
+                      IMPORT_DIRS ${CMAKE_SOURCE_DIR}/proto
 )
 
 set(ENGINE_SDK_HEADERS
@@ -177,14 +181,9 @@ if(MSVC)
     "-D_SCL_SECURE_NO_WARNINGS -wd4251 -wd4244 -wd4267 -wd4996")
 endif()
 
-add_library(ProtoBufClasses
-            SHARED
-            ${PROTOBUF_SOURCES}
-            ${PROTOBUF_HEADERS}
-            ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h)
 add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
-target_link_libraries(ProtoBufClasses protobuf::libprotobuf absl::log_internal_message absl::log_internal_check_op)
+target_link_libraries(ProtoBufClasses protobuf::libprotobuf)
 
 if(MSVC)
   set_target_properties(

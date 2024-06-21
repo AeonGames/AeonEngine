@@ -2,8 +2,6 @@
 style=allman
 # No Tabs
 convert-tabs
-# Add braces to one line conditionals
-add-braces
 # Indent namespaces
 indent-namespaces
 # Add spaces besides operators
