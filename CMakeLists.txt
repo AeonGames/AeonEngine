@@ -84,8 +84,7 @@ include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
 find_package (Python3 COMPONENTS Interpreter)
 find_package(ImageMagick OPTIONAL_COMPONENTS convert)
-find_package(Protobuf REQUIRED)
-find_package(absl REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8

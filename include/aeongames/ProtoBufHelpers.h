@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021,2023 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2023,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -99,13 +99,13 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Not enough data or null pointer passed to LoadProtoBufObject." );
         }
-        if ( strncmp ( reinterpret_cast<const char*> ( aData ), reinterpret_cast<const char*> ( &aMagick ), 7 ) != 0 )
+        if ( strncmp ( reinterpret_cast<const char * > ( aData ), reinterpret_cast<const char * > ( &aMagick ), 7 ) != 0 )
         {
             std::ostringstream stream;
             stream << "Provided buffer does not contain " << reinterpret_cast<const char*> ( &aMagick ) << " information.";
             throw std::runtime_error ( stream.str().c_str() );
         }
-        else if ( reinterpret_cast<const uint8_t*> ( aData ) [7] == '\0' )
+        else if ( reinterpret_cast<const uint8_t * > ( aData ) [7] == '\0' )
         {
             BufferInputStream buffer_input_stream ( reinterpret_cast<const uint8_t*> ( aData ) + 8, aSize - 8 );
             if ( !t.ParseFromZeroCopyStream ( &buffer_input_stream ) )
