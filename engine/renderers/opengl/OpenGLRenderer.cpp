@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ void main()
     const GLchar* const vertex_shader_code_ptr = vertex_shader_code;
 
     const GLchar fragment_shader_code[] =
-R"(#version 450 core
+        R"(#version 450 core
 out vec4 FragColor;
   
 in vec2 Pos;
@@ -69,26 +69,26 @@ void main()
     const GLint fragment_shader_len { sizeof(fragment_shader_code) /*/ sizeof(fragment_shader_code[0])*/};
     const GLchar* const fragment_shader_code_ptr = fragment_shader_code;
 
-    const float vertices[] = {  
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-        1.0f, -1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f, 1.0f
-    };
+    const float vertices[] = {
+                                 // positions   // texCoords
+                                 -1.0f,  1.0f,  0.0f, 1.0f,
+                                 -1.0f, -1.0f,  0.0f, 0.0f,
+                                 1.0f, -1.0f,  1.0f, 0.0f,
+                                 1.0f,  1.0f,  1.0f, 1.0f
+                             };
     constexpr GLuint vertex_size{sizeof(vertices)};
 
 #ifdef _WIN32
     static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsString = nullptr;
     static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribs = nullptr;
     const int ContextAttribs[] =
-    {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-        WGL_CONTEXT_MINOR_VERSION_ARB, 5,
-        WGL_CONTEXT_PROFILE_MASK_ARB,
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-        0
-    };
+        {
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+            WGL_CONTEXT_PROFILE_MASK_ARB,
+            WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+            0
+        };
 
     static ATOM gRendererWindowClass{0};
     static std::atomic<size_t> mRendererCount{0};
@@ -115,29 +115,29 @@ void main()
         }
         ++mRendererCount;
         return CreateWindowEx ( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
-                                   MAKEINTATOM ( gRendererWindowClass ), "AeonEngine OpenGL Internal Window",
-                                   WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-                                   0, 0, // Location
-                                   rect.right - rect.left, rect.bottom - rect.top, // dimensions
-                                   nullptr,
-                                   nullptr,
-                                   GetModuleHandle ( nullptr ),
-                                   nullptr );
-}
-static void DestroyRendererWindow(HWND hWnd)
-{
-    assert(mRendererCount);
-    DestroyWindow ( hWnd );
-    if(--mRendererCount == 0)
-    {
-        UnregisterClass ( reinterpret_cast<LPCSTR> (
-#if defined(_M_X64) || defined(__amd64__)
-            0x0ULL +
-#endif
-            MAKELONG ( gRendererWindowClass, 0 ) ), nullptr );
-            gRendererWindowClass = 0;
+                                MAKEINTATOM ( gRendererWindowClass ), "AeonEngine OpenGL Internal Window",
+                                WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                0, 0, // Location
+                                rect.right - rect.left, rect.bottom - rect.top, // dimensions
+                                nullptr,
+                                nullptr,
+                                GetModuleHandle ( nullptr ),
+                                nullptr );
     }
-}
+    static void DestroyRendererWindow(HWND hWnd)
+    {
+        assert(mRendererCount);
+        DestroyWindow ( hWnd );
+        if(--mRendererCount == 0)
+        {
+            UnregisterClass ( reinterpret_cast<LPCSTR> (
+#if defined(_M_X64) || defined(__amd64__)
+                                  0x0ULL +
+#endif
+                                  MAKELONG ( gRendererWindowClass, 0 ) ), nullptr );
+            gRendererWindowClass = 0;
+        }
+    }
     OpenGLRenderer::OpenGLRenderer(void* aWindow) :
         mWindowId{CreateRendererWindow()},
         mDeviceContext{GetDC(mWindowId)}
@@ -247,12 +247,12 @@ static void DestroyRendererWindow(HWND hWnd)
     }
 #elif defined(__unix__)
     static int context_attribs[] =
-    {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 5,
-        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-        None
-    };
+        {
+            GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+            GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+            GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+            None
+        };
 
     static GLXFBConfig GetGLXConfig ( Display* display, ::Window window)
     {
@@ -263,25 +263,25 @@ static void DestroyRendererWindow(HWND hWnd)
         int frame_buffer_config_count{};
         GLXFBConfig *frame_buffer_configs =
             glXGetFBConfigs ( display,
-                                DefaultScreen ( display ),
-                                &frame_buffer_config_count );
+                              DefaultScreen ( display ),
+                              &frame_buffer_config_count );
         if ( !frame_buffer_configs )
         {
             throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
         }
 
-        std::remove_if(frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
-                    [display,xwvid] ( const GLXFBConfig & x ) -> bool
-        {
-            XVisualInfo *xvi = glXGetVisualFromFBConfig(display, x);
-            if(xvi && xvi->visualid == xwvid)
-            {
-                XFree(xvi);
-                return false;
-            }
-            XFree(xvi);
-            return true;
-        });
+        (void) std::remove_if(frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
+                              [display,xwvid] ( const GLXFBConfig & x ) -> bool
+                              {
+                                  XVisualInfo *xvi = glXGetVisualFromFBConfig(display, x);
+                                  if(xvi && xvi->visualid == xwvid)
+    {
+        XFree(xvi);
+            return false;
+        }
+        XFree(xvi);
+        return true;
+                              });
 
         GLXFBConfig result = frame_buffer_configs[ 0 ];
         XFree ( frame_buffer_configs );
@@ -293,19 +293,19 @@ static void DestroyRendererWindow(HWND hWnd)
         if(mRendererCount == 0)
         {
             XSetErrorHandler ( [] ( Display * mDisplay, XErrorEvent * error_event ) -> int
-            {
-                char error_string[1024];
-                XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
-                std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
-                return 0;
-            } );
+                               {
+                                   char error_string[1024];
+                                   XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
+                                   std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
+                                   return 0;
+                               } );
             if(mDisplay){XCloseDisplay(mDisplay);}
             mDisplay = XOpenDisplay ( nullptr );
         }
@@ -324,7 +324,7 @@ static void DestroyRendererWindow(HWND hWnd)
         GLXFBConfig glxconfig = GetGLXConfig(mDisplay,reinterpret_cast<::Window>(aWindow));
 
         if ( nullptr == ( mOpenGLContext = glXCreateContextAttribsARB ( mDisplay, glxconfig, nullptr,
-                                        True, context_attribs ) ) )
+                                           True, context_attribs ) ) )
         {
             throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
         }
@@ -570,8 +570,8 @@ static void DestroyRendererWindow(HWND hWnd)
         auto it = mMaterialStore.find(aMaterial.GetConsecutiveId());
         if(it!=mMaterialStore.end()){return;}
         mMaterialStore.emplace(
-            aMaterial.GetConsecutiveId(),
-            OpenGLMaterial{*this,aMaterial});
+                          aMaterial.GetConsecutiveId(),
+                          OpenGLMaterial{*this,aMaterial});
     }
 
     void OpenGLRenderer::UnloadMaterial(const Material& aMaterial)
