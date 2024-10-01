@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2022,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ namespace AeonGames
         mUi.setupUi ( this );
         mEngineWindow = new EngineWindow();
         QWidget* widget = QWidget::createWindowContainer ( mEngineWindow, mUi.splitter );
-        QSizePolicy size_policy ( QSizePolicy::Expanding, QSizePolicy::Expanding );
+        QSizePolicy size_policy ( QSizePolicy::Ignored, QSizePolicy::Ignored );
         size_policy.setHorizontalStretch ( 1 );
         size_policy.setVerticalStretch ( 1 );
         widget->setSizePolicy ( size_policy );
@@ -247,7 +247,7 @@ namespace AeonGames
         QModelIndex index = mUi.sceneTreeView->currentIndex();
         if ( index.isValid() )
         {
-            if ( Node* node = reinterpret_cast<Node*> ( index.internalPointer() ) )
+            if ( Node * node = reinterpret_cast<Node * > ( index.internalPointer() ) )
             {
                 Transform local
                 {
@@ -278,7 +278,7 @@ namespace AeonGames
         QModelIndex index = mUi.sceneTreeView->currentIndex();
         if ( index.isValid() )
         {
-            if ( Node* node = reinterpret_cast<Node*> ( index.internalPointer() ) )
+            if ( Node * node = reinterpret_cast<Node * > ( index.internalPointer() ) )
             {
                 Transform global
                 {
@@ -308,7 +308,7 @@ namespace AeonGames
     {
         if ( aModelIndex.isValid() )
         {
-            if ( Node* node = reinterpret_cast<Node*> ( aModelIndex.internalPointer() ) )
+            if ( Node * node = reinterpret_cast<Node * > ( aModelIndex.internalPointer() ) )
             {
                 mComponentListModel.SetNode ( node );
                 mComponentModel.SetComponent ( nullptr );
