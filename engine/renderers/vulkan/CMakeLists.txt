@@ -13,11 +13,7 @@
 # the License.
 
 find_package(Vulkan)
-find_package(GLslang)
-
-if(GLSLANG_HAS_REVISION_H)
-    add_definitions(-DGLSLANG_HAS_REVISION_H)
-endif()
+find_package(glslang)
 
 include_directories(${GLSLANG_INCLUDE_DIR} ${GLSLANG_SPIRV_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR})
 

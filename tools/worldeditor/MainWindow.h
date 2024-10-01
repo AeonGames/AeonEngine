@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ namespace AeonGames
     class NodeEditor;
     class CameraSettings;
     class Renderer;
-    class EngineWindow;
     class MainWindow : public QMainWindow
     {
         Q_OBJECT

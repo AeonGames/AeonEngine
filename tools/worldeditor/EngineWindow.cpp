@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -157,7 +157,7 @@ namespace AeonGames
         assert ( mNode->GetComponent ( ModelInstance::TypeId ) && "ModelInstance is a nullptr" );
         mRenderer->Unload ( *mNode );
         mRenderer->Load ( *mNode );
-        if ( ModelInstance* model_instance = reinterpret_cast<ModelInstance*> ( mNode->GetComponent ( ModelInstance::TypeId ) ) )
+        if ( ModelInstance * model_instance = reinterpret_cast<ModelInstance * > ( mNode->GetComponent ( ModelInstance::TypeId ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.
             float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;
@@ -191,26 +191,21 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        if ( qWorldEditorApp->GetRenderer() != nullptr && aResizeEvent->size() != aResizeEvent->oldSize() && aResizeEvent->size().width() && aResizeEvent->size().height() )
+        QWindow::resizeEvent ( aResizeEvent );
+        auto renderer = qWorldEditorApp->GetRenderer();
+        if ( renderer != nullptr )
         {
-#ifdef Q_OS_WIN
-            // This is a workaround
-            QMargins margins{QWindow::frameMargins() };
-            qWorldEditorApp->GetRenderer()->ResizeViewport ( mWinId,
-                    margins.left(),
-                    margins.top(),
-                    aResizeEvent->size().width(), aResizeEvent->size().height() );
-#else
-            qWorldEditorApp->GetRenderer()->ResizeViewport ( mWinId,
-                    0,
-                    0,
-                    aResizeEvent->size().width(), aResizeEvent->size().height() );
-#endif
+            QSize size{QWindow::size() };
+            renderer->ResizeViewport ( mWinId,
+                                       0,
+                                       0,
+                                       width() * devicePixelRatio(),
+                                       height() * devicePixelRatio() );
             Matrix4x4 projection {};
-            mAspectRatio = ( static_cast<float> ( aResizeEvent->size().width() ) /
-                             static_cast<float> ( aResizeEvent->size().height() ) );
+            mAspectRatio = ( static_cast<float> ( size.width() ) /
+                             static_cast<float> ( size.height() ) );
             projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
-            qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, projection );
+            renderer->SetProjectionMatrix ( mWinId, projection );
 #if 0
             static const QMatrix4x4 flipMatrix (
                 1.0f, 0.0f, 0.0f, 0.0f,
