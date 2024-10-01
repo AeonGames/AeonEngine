@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ limitations under the License.
 #include "WorldEditor.h"
 #include "MainWindow.h"
 #include "SceneWindow.h"
-#include "EngineWindow.h"
 #include "CameraSettings.h"
 #include "NodeView.h"
 
@@ -147,7 +146,7 @@ namespace AeonGames
         {
             return;
         }
-        reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetFieldOfView ( static_cast<float> ( aFieldOfView ) );
+        reinterpret_cast<SceneWindow * > ( mdiSubWindow->widget() )->SetFieldOfView ( static_cast<float> ( aFieldOfView ) );
     }
 
     void MainWindow::nearChanged ( double aNear )
@@ -158,7 +157,7 @@ namespace AeonGames
         {
             return;
         }
-        reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetNear ( static_cast<float> ( aNear ) );
+        reinterpret_cast<SceneWindow * > ( mdiSubWindow->widget() )->SetNear ( static_cast<float> ( aNear ) );
     }
 
     void MainWindow::farChanged ( double aFar )
@@ -169,6 +168,6 @@ namespace AeonGames
         {
             return;
         }
-        reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->SetFar ( static_cast<float> ( aFar ) );
+        reinterpret_cast<SceneWindow * > ( mdiSubWindow->widget() )->SetFar ( static_cast<float> ( aFar ) );
     }
 }

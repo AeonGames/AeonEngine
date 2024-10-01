@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ namespace AeonGames
         */
         virtual void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) = 0;
         /** Resizes the specific window surface's viewport.
-         * @param aWindowId Platform depended window handle.
+         * @param aWindowId Platform dependent window handle.
          * @param aX X coordinate of the viewport.
          * @param aY Y coordinate of the viewport.
          * @param aWidth Width of the viewport.
