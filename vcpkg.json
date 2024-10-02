@@ -10,6 +10,7 @@
     "spirv-tools",
     "vulkan",
     "zlib",
-    "qt"
+    "qtbase",
+    "qttools"
   ]
 }
