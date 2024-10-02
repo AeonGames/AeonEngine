@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2018,2022 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2018,2022,2024 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -152,7 +152,8 @@ if(MSVC)
   set_target_properties(worldeditor
                         PROPERTIES
                         COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS"
-                        VS_DEBUGGER_ENVIRONMENT  "QT_PLUGIN_PATH=${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}$<$<CONFIG:Debug>:debug/>/Qt6/plugins"
+                        VS_DEBUGGER_ENVIRONMENT  "QT_PLUGIN_PATH=${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>/Qt6/plugins"
+                        VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 endif()
 

@@ -41,6 +41,7 @@ codeblocks*
 clang64*
 gcc*
 .vscode
+vcpkg_installed
 
 # CTags
 tags
