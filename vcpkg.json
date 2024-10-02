@@ -1,0 +1,15 @@
+{
+  "dependencies": [
+    "glslang",
+    "gtest",
+    "libogg",
+    "libpng",
+    "libvorbis",
+    "portaudio",
+    "protobuf",
+    "spirv-tools",
+    "vulkan",
+    "zlib",
+    "qt"
+  ]
+}
