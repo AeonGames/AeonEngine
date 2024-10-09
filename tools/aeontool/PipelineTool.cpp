@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : PROTOBUF_WARNINGS )
-#endif
-#include "aeongames/ProtoBufClasses.h"
-#include <google/protobuf/text_format.h>
-#include "pipeline.pb.h"
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
-
 #include <fstream>
 #include <sstream>
 #include <ostream>
 #include <iostream>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
 #if defined(__unix__) || defined(__MINGW32__)
 #include "sys/stat.h"
 #endif
@@ -97,25 +88,12 @@ namespace AeonGames
     int PipelineTool::operator() ( int argc, char** argv )
     {
         ProcessArgs ( argc, argv );
-        std::ifstream file;
-        file.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-        file.open ( mInputFile, std::ifstream::in | std::ifstream::binary );
-        std::vector<uint8_t> buffer ( ( std::istreambuf_iterator<char> ( file ) ), ( std::istreambuf_iterator<char>() ) );
-        file.close();
-        assert ( 0 );
-#if 0
-        Pipeline pipeline ( buffer.data(), buffer.size() );
+        xmlDocPtr document{xmlReadFile ( mInputFile.c_str(), nullptr, 0 ) };
+        if ( document == nullptr )
         {
-            std::ofstream shader_file ( mOutputFile + ".vert", std::ifstream::out );
-            shader_file << pipeline.GetVertexShaderSource() << std::endl;
-            shader_file.close();
+            throw std::runtime_error ( "Error parsing XML file" );
         }
-        {
-            std::ofstream shader_file ( mOutputFile + ".frag", std::ifstream::out );
-            shader_file << pipeline.GetFragmentShaderSource() << std::endl;
-            shader_file.close();
-        }
-#endif
+        xmlFreeDoc ( document );
         return 0;
     }
 }

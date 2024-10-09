@@ -1,4 +1,4 @@
-<xml version="1.0">
+<?xml version="1.0"?>
 <shader>
   <name>grid</name>
   <uniforms>
@@ -26,6 +26,7 @@
       <uint location ="0" interpolation="flat" name="instance_index"/>
     </outputs>
     <code>
+    <![CDATA[
       #ifndef VULKAN
       #define gl_InstanceIndex gl_InstanceID
       #endif
@@ -36,16 +37,18 @@
                      ViewMatrix *
                      vec4(StartingPosition + (VertexPosition*Scale) + ( Offset * gl_InstanceIndex ),1.0);
       }
+    ]]>
     </code>
   </vertex>
   <fragment>
     <inputs>
-    </inputs>
       <uint location="0" interpolation="flat" name="instance_index"/>
+    </inputs>
     <outputs>
       <vec4 location="0" name="FragColor"/>
     </outputs>
     <code>
+    <![CDATA[
       void main ( void )
       {
           if ( ( instance_index != 0u ) && ( instance_index != ( LineCount - 1u ) ) )
@@ -68,6 +71,7 @@
               FragColor = BorderLineColor;
           }
       }
+    ]]>
     </code>
   </fragment>
 </shader>
