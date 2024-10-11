@@ -18,8 +18,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <iostream>
-#include <libxml/tree.h>
-#include <libxml/parser.h>
+#include <string.h>
 #if defined(__unix__) || defined(__MINGW32__)
 #include "sys/stat.h"
 #endif
@@ -85,14 +84,62 @@ namespace AeonGames
         }
     }
 
+    const std::unordered_map<std::string_view, std::function<void ( xmlNodePtr ) >> PipelineTool::XMLNodeProcessors
+    {
+        {
+            "pipeline",
+            [] ( xmlNodePtr node )->void
+            {
+                std::cout << "Processing Pipeline: " << node->name << std::endl;
+            }
+        },
+        {
+            "block",
+            [] ( xmlNodePtr node )->void
+            {
+            }
+        }
+    };
+
+    void PipelineTool::ProcessNode ( xmlNodePtr node )
+    {
+        ///@todo Replace recurrent implementation with iterative implementation.
+        auto processor = XMLNodeProcessors.find ( reinterpret_cast<const char*> ( node->name ) );
+        if ( processor != XMLNodeProcessors.end() )
+        {
+            processor->second ( node );
+        }
+        for ( xmlNodePtr child = node->children; child; child = child->next )
+        {
+            if ( child->type == XML_ELEMENT_NODE )
+            {
+                std::cout << "Element: " << child->name << std::endl;
+                ProcessNode ( child );
+            }
+        }
+    }
+
     int PipelineTool::operator() ( int argc, char** argv )
     {
         ProcessArgs ( argc, argv );
         xmlDocPtr document{xmlReadFile ( mInputFile.c_str(), nullptr, 0 ) };
         if ( document == nullptr )
         {
+            xmlFreeDoc ( document );
             throw std::runtime_error ( "Error parsing XML file" );
         }
+        xmlNodePtr root_element{ xmlDocGetRootElement ( document ) };
+        if ( root_element == nullptr )
+        {
+            xmlFreeDoc ( document );
+            throw std::runtime_error ( "Failed to get root element" );
+        }
+        else if ( xmlStrcmp ( root_element->name, BAD_CAST "pipeline" ) != 0 )
+        {
+            xmlFreeDoc ( document );
+            throw std::runtime_error ( "Root element is not pipeline" );
+        }
+        ProcessNode ( root_element );
         xmlFreeDoc ( document );
         return 0;
     }
