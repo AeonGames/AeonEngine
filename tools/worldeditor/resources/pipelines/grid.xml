@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<shader>
+<pipeline>
   <name>grid</name>
   <uniforms>
     <block binding="0" name="Matrices">
@@ -74,4 +74,4 @@
     ]]>
     </code>
   </fragment>
-</shader>
+</pipeline>

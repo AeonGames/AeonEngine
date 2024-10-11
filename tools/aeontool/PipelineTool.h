@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,12 @@ limitations under the License.
 #ifndef AEONGAMES_PIPELINETOOL_H
 #define AEONGAMES_PIPELINETOOL_H
 #include <string>
+#include <string_view>
 #include <stdexcept>
+#include <unordered_map>
+#include <functional>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
 #include "Tool.h"
 
 namespace AeonGames
@@ -29,8 +34,10 @@ namespace AeonGames
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );
+        void ProcessNode ( xmlNodePtr aNode );
         std::string mInputFile;
         std::string mOutputFile;
+        static const std::unordered_map<std::string_view, std::function<void ( xmlNodePtr ) >> XMLNodeProcessors;
     };
 }
 #endif
