@@ -20,6 +20,7 @@ limitations under the License.
 #include <stdexcept>
 #include <unordered_map>
 #include <functional>
+#include <tuple>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include "Tool.h"
@@ -37,7 +38,7 @@ namespace AeonGames
         void ProcessNode ( xmlNodePtr aNode );
         std::string mInputFile;
         std::string mOutputFile;
-        static const std::unordered_map<std::string_view, std::function<void ( xmlNodePtr ) >> XMLNodeProcessors;
+        static const std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>> XMLNodeProcessors;
     };
 }
 #endif

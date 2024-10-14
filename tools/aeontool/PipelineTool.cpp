@@ -84,19 +84,81 @@ namespace AeonGames
         }
     }
 
-    const std::unordered_map<std::string_view, std::function<void ( xmlNodePtr ) >> PipelineTool::XMLNodeProcessors
+    static void ProcessVariableNode ( xmlNodePtr node )
+    {
+        auto name {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "name" ) ) };
+        std::cout << node->name << " " << name << ";\n";
+    }
+
+    const std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>> PipelineTool::XMLNodeProcessors
     {
         {
             "pipeline",
-            [] ( xmlNodePtr node )->void
             {
-                std::cout << "Processing Pipeline: " << node->name << std::endl;
+                [] ( xmlNodePtr node )->void
+                {
+                    auto version {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "version" ) ) };
+                    if ( version != nullptr )
+                    {
+                        std::cout << "#version " << version << std::endl;
+                    }
+                },
+                {}
             }
         },
         {
             "block",
-            [] ( xmlNodePtr node )->void
             {
+                [] ( xmlNodePtr node )->void
+                {
+                    if ( node->parent == nullptr || xmlStrcmp ( node->parent->name, reinterpret_cast<const xmlChar * > ( "uniforms" ) ) != 0 )
+                    {
+                        throw std::runtime_error ( "Block element must be a child of a uniforms element." );
+                    }
+                    auto name {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "name" ) ) };
+                    auto binding {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "binding" ) ) };
+                    auto storage {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "storage" ) ) };
+                    std::cout <<
+                              ( ( binding || storage ) ? "layout(" : "" ) <<
+                              ( ( binding ) ? "binding = " : "" ) <<
+                              ( ( binding ) ? reinterpret_cast<const char*> ( binding ) : "" ) <<
+                              ( ( binding ) ? ", " : "" ) <<
+                              ( ( storage ) ? reinterpret_cast<const char*> ( storage ) : "" ) <<
+                              ( ( storage || binding ) ? ")" : "" ) <<
+                              " uniform " << name << "{\n";
+                },
+                [] ( xmlNodePtr )->void
+                {
+                    std::cout << "};\n";
+                }
+            }
+        },
+        {
+            "mat4",
+            {
+                ProcessVariableNode,
+                {}
+            }
+        },
+        {
+            "vec2",
+            {
+                ProcessVariableNode,
+                {}
+            }
+        },
+        {
+            "vec3",
+            {
+                ProcessVariableNode,
+                {}
+            }
+        },
+        {
+            "vec4",
+            {
+                ProcessVariableNode,
+                {}
             }
         }
     };
@@ -107,15 +169,18 @@ namespace AeonGames
         auto processor = XMLNodeProcessors.find ( reinterpret_cast<const char*> ( node->name ) );
         if ( processor != XMLNodeProcessors.end() )
         {
-            processor->second ( node );
+            std::get<0> ( processor->second ) ( node );
         }
         for ( xmlNodePtr child = node->children; child; child = child->next )
         {
             if ( child->type == XML_ELEMENT_NODE )
             {
-                std::cout << "Element: " << child->name << std::endl;
                 ProcessNode ( child );
             }
+        }
+        if ( processor != XMLNodeProcessors.end() && std::get<1> ( processor->second ) != nullptr )
+        {
+            std::get<1> ( processor->second ) ( node );
         }
     }
 
