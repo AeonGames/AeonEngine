@@ -87,7 +87,33 @@ namespace AeonGames
     static void ProcessVariableNode ( xmlNodePtr node )
     {
         auto name {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "name" ) ) };
-        std::cout << node->name << " " << name << ";\n";
+        auto location {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "location" ) ) };
+        auto interpolation {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "interpolation" ) ) };
+        auto parent = node->parent;
+        bool is_input{false};
+        bool is_output{false};
+        while ( parent != nullptr )
+        {
+            if ( xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( "inputs" ) ) == 0 )
+            {
+                is_input = true;
+                break;
+            }
+            else if ( xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( "outputs" ) ) == 0 )
+            {
+                is_input = true;
+                break;
+            }
+            parent = parent->parent;
+        }
+        std::cout <<
+                  ( location ? "layout(location = " : "" ) <<
+                  ( location ? reinterpret_cast<const char*> ( location ) : "" ) <<
+                  ( location ? ") " : "" ) <<
+                  ( interpolation ? reinterpret_cast<const char*> ( interpolation ) : "" ) << ( interpolation ? " " : "" ) <<
+                  ( is_input ? "in " : "" ) <<
+                  ( is_output ? "out " : "" ) <<
+                  node->name << " " << name << ";\n";
     }
 
     const std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>> PipelineTool::XMLNodeProcessors
@@ -156,6 +182,13 @@ namespace AeonGames
         },
         {
             "vec4",
+            {
+                ProcessVariableNode,
+                {}
+            }
+        },
+        {
+            "uint",
             {
                 ProcessVariableNode,
                 {}
