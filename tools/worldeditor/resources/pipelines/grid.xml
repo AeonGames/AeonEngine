@@ -19,9 +19,9 @@
     </block>
   </uniforms>
   <vertex>
-    <attributes>
+    <inputs>
       <vec3 name="VertexPosition"/>
-    </attributes>
+    </inputs>
     <outputs>
       <uint location ="0" interpolation="flat" name="instance_index"/>
     </outputs>
