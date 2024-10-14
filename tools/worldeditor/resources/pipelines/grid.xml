@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
-<pipeline>
+<pipeline version="450">
   <name>grid</name>
   <uniforms>
-    <block binding="0" name="Matrices">
-      <mat4 name="ModelMatrix;"/>
-      <mat4 name="ProjectionMatrix;"/>
-      <mat4 name="ViewMatrix;"/>
+    <block binding="0" storage="std140" name="Matrices">
+      <mat4 name="ModelMatrix"/>
+      <mat4 name="ProjectionMatrix"/>
+      <mat4 name="ViewMatrix"/>
     </block>
-    <block binding="1" name="Properties">
+    <block binding="1" storage="std140" name="Properties">
       <vec4 name="OddLineColor"/>
       <vec4 name="EvenLineColor"/>
       <vec4 name="CentralLineColor"/>
