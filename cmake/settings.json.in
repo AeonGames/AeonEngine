@@ -1,6 +1,7 @@
 {
     "git.path": "${GIT_EXECUTABLE}",
     "git.ignoreLimitWarning": true,
+    "terminal.integrated.fontFamily": "MesloLGS NF",
     "terminal.integrated.automationProfile.windows":
     {
         "path": "C:\\Windows\\System32\\cmd.exe"
@@ -47,5 +48,5 @@
         "*.cmake": "cmake",
         "*.cmake.in": "cmake",
     },
-    "editor.fontFamily": "'Fira Code', Consolas, 'Courier New', monospace"
+    "editor.fontFamily": "'Fira Code', 'Consolas', 'Courier New', monospace"
 }
