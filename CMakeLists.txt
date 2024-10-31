@@ -84,7 +84,7 @@ include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
 find_package (Python3 COMPONENTS Interpreter)
 find_package(ImageMagick OPTIONAL_COMPONENTS convert)
-find_package(Protobuf CONFIG REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8
@@ -172,6 +172,7 @@ if(DOXYGEN_EXECUTABLE)
 endif()
 
 add_subdirectory(tools/aeontool)
+add_subdirectory(proto)
 add_subdirectory(engine)
 option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
 if(BUILD_STANDALONE_APPLICATION)
@@ -426,6 +427,7 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   # directly from this top level
   set(SOURCE_DIRECTORIES ${CMAKE_SOURCE_DIR} application
       # application/windows
+      proto
       engine
       engine/images
       engine/images/png
