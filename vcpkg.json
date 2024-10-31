@@ -11,6 +11,8 @@
     "vulkan",
     "zlib",
     "qtbase",
-    "qttools"
+    "qttools",
+    "libxml2",
+    "pkgconf"
   ]
 }
