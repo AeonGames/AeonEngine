@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021,2023 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2021,2023,2024 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -22,36 +22,7 @@ include_directories(
                     ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
                     ${CMAKE_SOURCE_DIR}/include
                     ${VULKAN_INCLUDE_DIR}
-                    ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-add_library(ProtoBufClasses SHARED
-  ${CMAKE_SOURCE_DIR}/proto/configuration.proto
-  ${CMAKE_SOURCE_DIR}/proto/vector2.proto
-  ${CMAKE_SOURCE_DIR}/proto/vector3.proto
-  ${CMAKE_SOURCE_DIR}/proto/vector4.proto
-  ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
-  ${CMAKE_SOURCE_DIR}/proto/property.proto
-  ${CMAKE_SOURCE_DIR}/proto/sampler.proto
-  ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-  ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
-  ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
-  ${CMAKE_SOURCE_DIR}/proto/material.proto
-  ${CMAKE_SOURCE_DIR}/proto/model.proto
-  ${CMAKE_SOURCE_DIR}/proto/modelcontroller.proto
-  ${CMAKE_SOURCE_DIR}/proto/transform.proto
-  ${CMAKE_SOURCE_DIR}/proto/scene.proto
-  ${CMAKE_SOURCE_DIR}/proto/reference.proto
-  ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
-  ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
-  ${CMAKE_SOURCE_DIR}/proto/animation.proto
-  ${CMAKE_SOURCE_DIR}/proto/collision.proto
-  ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
-)
-
-protobuf_generate(TARGET ProtoBufClasses
-                      EXPORT_MACRO DLL_PROTOBUF
-                      IMPORT_DIRS ${CMAKE_SOURCE_DIR}/proto
+                    ${CMAKE_BINARY_DIR}/proto
 )
 
 set(ENGINE_SDK_HEADERS
@@ -162,7 +133,6 @@ set(ENGINE_MATH_SOURCES
 source_group("sdk" FILES ${ENGINE_SDK_HEADERS})
 source_group("core" FILES ${ENGINE_CORE_HEADERS} ${ENGINE_CORE_SOURCES})
 source_group("math" FILES ${ENGINE_MATH_HEADERS} ${ENGINE_MATH_SOURCES})
-source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
 set(ENGINE_SOURCES
     ${ENGINE_CORE_SOURCES}
@@ -183,23 +153,12 @@ endif()
 
 add_library(AeonEngine SHARED ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
-target_link_libraries(ProtoBufClasses protobuf::libprotobuf)
-
 if(MSVC)
-  set_target_properties(
-    ProtoBufClasses
-    PROPERTIES COMPILE_FLAGS
-               "-FIaeongames/ProtoBufClasses.h -WX -D_CRT_SECURE_NO_WARNINGS")
   set_target_properties(AeonEngine
                         PROPERTIES COMPILE_FLAGS
                                    "-WX -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX")
   target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses)
 elseif(MINGW OR MSYS OR UNIX)
-  set_target_properties(
-    ProtoBufClasses
-    PROPERTIES
-      COMPILE_FLAGS
-      "-include aeongames/ProtoBufClasses.h")
   if(NOT ${CMAKE_CXX_COMPILER} MATCHES "clang")
     set(STDXXFS stdc++fs)
   endif()
