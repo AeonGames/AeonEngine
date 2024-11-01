@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2021,2024 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ namespace AeonGames
         None
     };
 
+#if 0
     static const int choose_fb_config_attribs[] =
     {
         GLX_X_RENDERABLE, True,
@@ -88,7 +89,6 @@ namespace AeonGames
         None
     };
 
-#if 0
     static GLXFBConfig GetGLXConfig ( Display* display )
     {
         int frame_buffer_config_count{};
@@ -236,7 +236,7 @@ namespace AeonGames
             last_time = current_time;
             if ( mRenderer )
             {
-                if ( const Node* camera = aScene.GetCamera() )
+                if ( const Node * camera = aScene.GetCamera() )
                 {
                     mRenderer->SetViewMatrix ( reinterpret_cast<void*> ( mWindowId ), camera->GetGlobalTransform().GetInverted().GetMatrix() );
                     Matrix4x4 projection {};
@@ -247,7 +247,7 @@ namespace AeonGames
                 aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                 {
                     AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                    if ( mRenderer->GetFrustum ( reinterpret_cast<void*> ( mWindowId ) ).Intersects ( transformed_aabb ) )
+                    if ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ).Intersects ( transformed_aabb ) )
                     {
                         // Call Node specific rendering function.
                         aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
