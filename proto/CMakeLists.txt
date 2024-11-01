@@ -48,7 +48,7 @@ protobuf_generate(TARGET ProtoBufClasses
 
 source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
-target_link_libraries(ProtoBufClasses protobuf::libprotobuf)
+target_link_libraries(ProtoBufClasses ${Protobuf_LIBRARIES})
 
 if(MSVC)
   set_target_properties(

@@ -73,6 +73,7 @@ find_program(CLANG_TIDY_EXECUTABLE
              NAMES clang-tidy clang-tidy.exe
              HINTS ENV MSYSTEM_PREFIX)
 
+find_package(PkgConfig)
 find_package(Git)
 find_package(ZLIB)
 find_package(Threads)
@@ -84,7 +85,14 @@ include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
 find_package (Python3 COMPONENTS Interpreter)
 find_package(ImageMagick OPTIONAL_COMPONENTS convert)
-find_package(Protobuf REQUIRED CONFIG)
+
+find_package(Protobuf CONFIG)
+if(NOT Protobuf_FOUND)
+  find_package(Protobuf REQUIRED)
+  if(Protobuf_FOUND AND PKG_CONFIG_FOUND AND NOT Protobuf_LIBRARIES MATCHES "absl")
+    pkg_search_module(Protobuf REQUIRED protobuf)
+  endif()
+endif()
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
 find_program(AUTOPEP8_EXECUTABLE autopep8
