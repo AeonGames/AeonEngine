@@ -92,6 +92,8 @@ if(NOT Protobuf_FOUND)
   if(Protobuf_FOUND AND PKG_CONFIG_FOUND AND NOT Protobuf_LIBRARIES MATCHES "absl")
     pkg_search_module(Protobuf REQUIRED protobuf)
   endif()
+else()
+  set(Protobuf_LIBRARIES protobuf::libprotobuf)
 endif()
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)

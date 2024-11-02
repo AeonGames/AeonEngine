@@ -13,7 +13,7 @@
 # the License.
 
 include_directories(
-                    ${PROTOBUF_INCLUDE_DIR}
+                    ${Protobuf_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/include
 )
 
@@ -45,8 +45,6 @@ protobuf_generate(TARGET ProtoBufClasses
                       EXPORT_MACRO DLL_PROTOBUF
                       IMPORT_DIRS ${CMAKE_SOURCE_DIR}/proto
 )
-
-source_group("protobuf" FILES ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
 
 target_link_libraries(ProtoBufClasses ${Protobuf_LIBRARIES})
 
