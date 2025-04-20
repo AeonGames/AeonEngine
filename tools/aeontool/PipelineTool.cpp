@@ -84,6 +84,25 @@ namespace AeonGames
         }
     }
 
+    static xmlChar* GetParentElementProp ( xmlNodePtr node, const char* name, const char* prop )
+    {
+        xmlNodePtr parent = node->parent;
+        while ( parent != nullptr )
+        {
+            if ( parent->type == XML_ELEMENT_NODE && xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( name ) ) == 0 )
+            {
+                auto version {xmlGetProp ( parent, reinterpret_cast<const xmlChar*> ( prop ) ) };
+                if ( version != nullptr )
+                {
+                    return version;
+                }
+                break;
+            }
+            parent = parent->parent;
+        }
+        return nullptr;
+    }
+
     static void ProcessVariableNode ( xmlNodePtr node )
     {
         auto name {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "name" ) ) };
@@ -119,20 +138,6 @@ namespace AeonGames
     const PipelineTool::ProcessorMap PipelineTool::XMLElementProcessors
     {
         {
-            "pipeline",
-            {
-                [] ( xmlNodePtr node )->void
-                {
-                    auto version {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "version" ) ) };
-                    if ( version != nullptr )
-                    {
-                        std::cout << "#version " << version << std::endl;
-                    }
-                },
-                {}
-            }
-        },
-        {
             "block",
             {
                 [] ( xmlNodePtr node )->void
@@ -165,6 +170,11 @@ namespace AeonGames
                 [] ( xmlNodePtr node )->void
                 {
                     std::cout << "//--Vertex shader starts here--//\n";
+                    auto version {GetParentElementProp ( node, "pipeline", "version" ) };
+                    if ( version != nullptr )
+                    {
+                        std::cout << "#version " << reinterpret_cast<const char*> ( version ) << std::endl;
+                    }
                 },
                 [] ( xmlNodePtr )->void
                 {
@@ -178,6 +188,11 @@ namespace AeonGames
                 [] ( xmlNodePtr node )->void
                 {
                     std::cout << "//--Fragment shader starts here--//\n";
+                    auto version {GetParentElementProp ( node, "pipeline", "version" ) };
+                    if ( version != nullptr )
+                    {
+                        std::cout << "#version " << reinterpret_cast<const char*> ( version ) << std::endl;
+                    }
                 },
                 [] ( xmlNodePtr )->void
                 {
