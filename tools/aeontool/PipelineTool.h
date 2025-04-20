@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2024 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2024,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@ namespace AeonGames
         void ProcessNode ( xmlNodePtr aNode );
         std::string mInputFile;
         std::string mOutputFile;
-        static const std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>> XMLNodeProcessors;
+        using ProcessorMap = std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>>;
+        static const ProcessorMap XMLElementProcessors;
     };
 }
 #endif

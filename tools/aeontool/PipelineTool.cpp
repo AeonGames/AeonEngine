@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2024 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2024,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ namespace AeonGames
             }
             else if ( xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( "outputs" ) ) == 0 )
             {
-                is_input = true;
+                is_output = true;
                 break;
             }
             parent = parent->parent;
@@ -116,7 +116,7 @@ namespace AeonGames
                   node->name << " " << name << ";\n";
     }
 
-    const std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>> PipelineTool::XMLNodeProcessors
+    const PipelineTool::ProcessorMap PipelineTool::XMLElementProcessors
     {
         {
             "pipeline",
@@ -151,11 +151,37 @@ namespace AeonGames
                               ( ( binding ) ? ", " : "" ) <<
                               ( ( storage ) ? reinterpret_cast<const char*> ( storage ) : "" ) <<
                               ( ( storage || binding ) ? ")" : "" ) <<
-                              " uniform " << name << "{\n";
+                    " uniform " << name << "{\n";
                 },
                 [] ( xmlNodePtr )->void
                 {
                     std::cout << "};\n";
+                }
+            }
+        },
+        {
+            "vertex",
+            {
+                [] ( xmlNodePtr node )->void
+                {
+                    std::cout << "//--Vertex shader starts here--//\n";
+                },
+                [] ( xmlNodePtr )->void
+                {
+                    std::cout << "//--Vertex shader ends here--//\n";
+                }
+            }
+        },
+        {
+            "fragment",
+            {
+                [] ( xmlNodePtr node )->void
+                {
+                    std::cout << "//--Fragment shader starts here--//\n";
+                },
+                [] ( xmlNodePtr )->void
+                {
+                    std::cout << "//--Fragment shader ends here--//\n";
                 }
             }
         },
@@ -198,20 +224,33 @@ namespace AeonGames
 
     void PipelineTool::ProcessNode ( xmlNodePtr node )
     {
-        ///@todo Replace recurrent implementation with iterative implementation.
-        auto processor = XMLNodeProcessors.find ( reinterpret_cast<const char*> ( node->name ) );
-        if ( processor != XMLNodeProcessors.end() )
+        ProcessorMap::const_iterator processor{};
+        switch ( node->type )
         {
-            std::get<0> ( processor->second ) ( node );
+        case XML_ELEMENT_NODE:
+        {
+            processor = XMLElementProcessors.find ( reinterpret_cast<const char*> ( node->name ) );
+            if ( processor != XMLElementProcessors.end() )
+            {
+                std::get<0> ( processor->second ) ( node );
+            }
+        }
+        break;
+        case XML_TEXT_NODE:
+        case XML_CDATA_SECTION_NODE:
+            if ( node->parent != nullptr && xmlStrcmp ( node->parent->name, reinterpret_cast<const xmlChar * > ( "code" ) ) == 0 && !xmlIsBlankNode ( node ) )
+            {
+                std::cout << reinterpret_cast<const char*> ( node->content ) << std::endl;
+            }
+            break;
+        default:
+            break;
         }
         for ( xmlNodePtr child = node->children; child; child = child->next )
         {
-            if ( child->type == XML_ELEMENT_NODE )
-            {
-                ProcessNode ( child );
-            }
+            ProcessNode ( child );
         }
-        if ( processor != XMLNodeProcessors.end() && std::get<1> ( processor->second ) != nullptr )
+        if ( node->type == XML_ELEMENT_NODE && processor != XMLElementProcessors.end() && std::get<1> ( processor->second ) != nullptr )
         {
             std::get<1> ( processor->second ) ( node );
         }
