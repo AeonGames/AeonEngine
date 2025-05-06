@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -210,7 +210,7 @@ constexpr uint32_t crc32r ( const char* message, const std::size_t size )
     return crc32impl ( message, size, 0xFFFFFFFF );
 }
 
-constexpr uint32_t operator "" _crc32 ( const char* message, const std::size_t size )
+constexpr uint32_t operator ""_crc32 ( const char* message, const std::size_t size )
 {
     return crc32r ( message, size );
 }
@@ -420,7 +420,7 @@ constexpr uint64_t crc64r ( const char* message, const std::size_t size )
     return crc64impl ( message, size, 0xFFFFFFFFFFFFFFFF );
 }
 
-constexpr const uint64_t operator "" _crc64 ( const char* message, const std::size_t size )
+constexpr const uint64_t operator ""_crc64 ( const char* message, const std::size_t size )
 {
     return crc64r ( message, size );
 }
@@ -433,7 +433,7 @@ Polynomial is 0x42F0E1EBA9EA3693 for CRC64-ECMA
 static_assert ( "AeonGames"_crc64 == 0x187936cc3eca327f, "CRC64 Operator Failure." );
 static_assert ( crc64r ( "AeonGames", 9 ) == 0x187936cc3eca327f, "CRC64 Failure." );
 
-constexpr const std::size_t operator "" _id ( const char* message, const std::size_t size )
+constexpr const std::size_t operator ""_id ( const char* message, const std::size_t size )
 {
     return ( sizeof ( std::size_t ) == 4 ) ? crc32impl ( message, size, 0xFFFFFFFF ) :
            ( sizeof ( std::size_t ) == 8 ) ? crc64impl ( message, size, 0xFFFFFFFFFFFFFFFF ) : 0;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ limitations under the License.
 
 namespace AeonGames
 {
-    constexpr const std::size_t operator "" _kb ( unsigned long long int aKyloBytes )
+    constexpr const std::size_t operator ""_kb ( unsigned long long int aKyloBytes )
     {
         return aKyloBytes * 1024;
     }
-    constexpr const std::size_t operator "" _mb ( unsigned long long int aMegaBytes )
+    constexpr const std::size_t operator ""_mb ( unsigned long long int aMegaBytes )
     {
         return aMegaBytes * 1024_kb;
     }
-    constexpr const std::size_t operator "" _gb ( unsigned long long int aGigaBytes )
+    constexpr const std::size_t operator ""_gb ( unsigned long long int aGigaBytes )
     {
         return aGigaBytes * 1024_mb;
     }
