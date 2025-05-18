@@ -38,7 +38,7 @@ set(TEST_SRCS
     FlyWeightTests.cpp
     CRCTests.cpp
     SceneTests.cpp
-    # MaterialTests.cpp
+    MatrixTests.cpp
     TransformTests.cpp
     QuaternionTests.cpp
     PackageTests.cpp
