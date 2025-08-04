@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ limitations under the License.
 #include <cassert>
 #include <cstdint>
 #include "Convert.h"
-#include "PipelineTool.h"
 #include "Pack.h"
 #include "Base64.h"
+#include "PipelineTool.h"
 
 int main ( int argc, char *argv[] )
 {
@@ -40,9 +40,9 @@ int main ( int argc, char *argv[] )
     std::unordered_map<std::string, std::function<std::unique_ptr<AeonGames::Tool>() > > ToolFactories
     {
         { "convert", [] { return std::make_unique<AeonGames::Convert>(); } },
-        { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
         { "pack", [] { return std::make_unique<AeonGames::Pack>(); } },
         { "base64", [] { return std::make_unique<AeonGames::Base64>(); } },
+        { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
     };
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );

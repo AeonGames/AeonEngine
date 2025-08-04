@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (C) 2009-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2009-2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -2080,7 +2080,7 @@ inline float CapsuleDistanceToPlane ( float* plane, const float* point, const fl
 }
 // @}
 
-inline void PrintMatrix ( float* M )
+inline void PrintMatrix ( const float* M )
 {
     printf (
         "%f %f %f %f\n"

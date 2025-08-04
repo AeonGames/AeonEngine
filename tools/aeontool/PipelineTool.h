@@ -21,8 +21,6 @@ limitations under the License.
 #include <unordered_map>
 #include <functional>
 #include <tuple>
-#include <libxml/tree.h>
-#include <libxml/parser.h>
 #include "Tool.h"
 
 namespace AeonGames
@@ -35,11 +33,8 @@ namespace AeonGames
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );
-        void ProcessNode ( xmlNodePtr aNode );
         std::string mInputFile;
         std::string mOutputFile;
-        using ProcessorMap = std::unordered_map<std::string_view, std::tuple<std::function<void ( xmlNodePtr ) >, std::function<void ( xmlNodePtr ) >>>;
-        static const ProcessorMap XMLElementProcessors;
     };
 }
 #endif

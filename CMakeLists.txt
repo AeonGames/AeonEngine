@@ -63,6 +63,7 @@ find_program(XXD_EXECUTABLE xxd
                    MSYSTEM_PREFIX
                    ChocolateyInstall)
 find_program(BASH_EXECUTABLE bash HINTS ENV MSYSTEM_PREFIX)
+find_program(ZSH_EXECUTABLE zsh HINTS ENV MSYSTEM_PREFIX)
 find_program(GLOBAL_EXECUTABLE
              NAMES global global.exe
              HINTS ENV MSYSTEM_PREFIX)
@@ -181,8 +182,8 @@ if(DOXYGEN_EXECUTABLE)
                     COMMENT "Generating Documentation")
 endif()
 
-add_subdirectory(tools/aeontool)
 add_subdirectory(proto)
+add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
 option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
 if(BUILD_STANDALONE_APPLICATION)

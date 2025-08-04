@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2024 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -333,12 +333,12 @@ void main()
         if ( ! glXIsDirect (  mDisplay,  static_cast<GLXContext> ( mOpenGLContext ) ) )
         {
             std::cout << LogLevel ( LogLevel::Info ) <<
-                      "Indirect GLX rendering context obtained" << std::endl;
+            "Indirect GLX rendering context obtained" << std::endl;
         }
         else
         {
             std::cout << LogLevel ( LogLevel::Info ) <<
-                      "Direct GLX rendering context obtained" << std::endl;
+            "Direct GLX rendering context obtained" << std::endl;
         }
 
         if ( !MakeCurrent(reinterpret_cast<::Window>(reinterpret_cast<::Window>(aWindow))) )
@@ -570,8 +570,8 @@ void main()
         auto it = mMaterialStore.find(aMaterial.GetConsecutiveId());
         if(it!=mMaterialStore.end()){return;}
         mMaterialStore.emplace(
-                          aMaterial.GetConsecutiveId(),
-                          OpenGLMaterial{*this,aMaterial});
+            aMaterial.GetConsecutiveId(),
+            OpenGLMaterial{*this,aMaterial});
     }
 
     void OpenGLRenderer::UnloadMaterial(const Material& aMaterial)
@@ -711,6 +711,7 @@ void main()
                                   const Pipeline& aPipeline,
                                   const Material* aMaterial,
                                   const BufferAccessor* aSkeleton,
+                                  Topology aTopology,
                                   uint32_t aVertexStart,
                                   uint32_t aVertexCount,
                                   uint32_t aInstanceCount,
@@ -721,7 +722,7 @@ void main()
         {
             return;
         }
-        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
     }
 
     const Frustum& OpenGLRenderer::GetFrustum ( void* aWindowId ) const

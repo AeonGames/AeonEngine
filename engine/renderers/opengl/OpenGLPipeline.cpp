@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace AeonGames
         std::swap ( mPipeline, aOpenGLPipeline.mPipeline );
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
     }
-
+#if 0
     static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
     {
         std::string vertex_shader{ "#version 450\n" };
@@ -94,7 +94,7 @@ namespace AeonGames
             {
                 "layout(binding = " + std::to_string ( MATERIAL ) + ",std140) uniform Properties{\n" +
                 aPipeline.GetProperties() +
-                "};\n"};
+                         "};\n"};
 
             uint32_t sampler_binding = 0;
             std::string samplers ( "//----SAMPLERS-START----\n" );
@@ -110,95 +110,96 @@ namespace AeonGames
         fragment_shader.append ( aPipeline.GetFragmentShaderCode() );
         return fragment_shader;
     }
+#endif
+
+    static const std::unordered_map<const ShaderType, const GLenum> ShaderTypeToGLShaderType
+    {
+        { VERT, GL_VERTEX_SHADER },
+        { FRAG, GL_FRAGMENT_SHADER },
+        { COMP, GL_COMPUTE_SHADER },
+        { TESC, GL_TESS_CONTROL_SHADER },
+        { TESE, GL_TESS_EVALUATION_SHADER },
+        { GEOM, GL_GEOMETRY_SHADER }
+    };
 
     OpenGLPipeline::OpenGLPipeline ( const OpenGLRenderer& aOpenGLRenderer, const Pipeline& aPipeline ) :
         mOpenGLRenderer{aOpenGLRenderer}, mPipeline{&aPipeline}
     {
-        std::string vertex_shader_code = GetVertexShaderCode ( aPipeline );
-        std::string fragment_shader_code = GetFragmentShaderCode ( aPipeline );
-
-        //--------------------------------------------------
-        // Begin OpenGL Specific code
-        //--------------------------------------------------
         mProgramId = glCreateProgram();
         OPENGL_CHECK_ERROR_THROW;
         GLint compile_status;
         GLint link_status;
-        //-------------------------
-        uint32_t vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
-        OPENGL_CHECK_ERROR_THROW;
 
-        const auto* vertex_shader_source_ptr = reinterpret_cast<const GLchar *> ( vertex_shader_code.c_str() );
-        auto vertex_shader_len = static_cast<GLint> ( vertex_shader_code.length() );
-
-        glShaderSource (
-            vertex_shader,
-            1,
-            &vertex_shader_source_ptr,
-            &vertex_shader_len );
-        OPENGL_CHECK_ERROR_THROW;
-
-        glCompileShader ( vertex_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        glGetShaderiv ( vertex_shader, GL_COMPILE_STATUS, &compile_status );
-        OPENGL_CHECK_ERROR_THROW;
-        if ( compile_status != GL_TRUE )
+        std::array<std::string_view, ShaderType::COUNT> shader_codes =
         {
-            GLint info_log_len;
-            glGetShaderiv ( vertex_shader, GL_INFO_LOG_LENGTH, &info_log_len );
-            OPENGL_CHECK_ERROR_THROW;
-            std::string log_string;
-            log_string.resize ( info_log_len );
-            if ( info_log_len > 1 )
-            {
-                glGetShaderInfoLog ( vertex_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                OPENGL_CHECK_ERROR_THROW;
-                std::cout << vertex_shader_code << std::endl;
-                std::cout << log_string << std::endl;
-                throw std::runtime_error ( log_string.c_str() );
-            }
-            throw std::runtime_error ( "Error Compiling Shaders." );
-        }
-        glAttachShader ( mProgramId, vertex_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        //-------------------------
+            aPipeline.GetShaderCode ( VERT ),
+            aPipeline.GetShaderCode ( FRAG ),
+            aPipeline.GetShaderCode ( COMP ),
+            aPipeline.GetShaderCode ( TESC ),
+            aPipeline.GetShaderCode ( TESE ),
+            aPipeline.GetShaderCode ( GEOM )
+        };
 
-        uint32_t fragment_shader = glCreateShader ( GL_FRAGMENT_SHADER );
-        OPENGL_CHECK_ERROR_THROW;
-
-        const auto* fragment_shader_source_ptr = reinterpret_cast<const GLchar *> ( fragment_shader_code.c_str() );
-        auto fragment_shader_len = static_cast<GLint> ( fragment_shader_code.length() );
-
-        glShaderSource ( fragment_shader, 1, &fragment_shader_source_ptr, &fragment_shader_len );
-        OPENGL_CHECK_ERROR_THROW;
-        glCompileShader ( fragment_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        glGetShaderiv ( fragment_shader, GL_COMPILE_STATUS, &compile_status );
-        OPENGL_CHECK_ERROR_THROW;
-        if ( compile_status != GL_TRUE )
+        std::array<uint32_t, ShaderType::COUNT> shader_ids =
         {
-            GLint info_log_len;
-            glGetShaderiv ( fragment_shader, GL_INFO_LOG_LENGTH, &info_log_len );
-            OPENGL_CHECK_ERROR_THROW;
-            std::string log_string;
-            log_string.resize ( info_log_len );
-            if ( info_log_len > 1 )
-            {
-                glGetShaderInfoLog ( fragment_shader, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << fragment_shader_code << std::endl;
-                std::cout << log_string << std::endl;
-                OPENGL_CHECK_ERROR_THROW;
-            }
-        }
-        glAttachShader ( mProgramId, fragment_shader );
+            shader_codes.at ( VERT ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( VERT ) ),
+            shader_codes.at ( FRAG ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( FRAG ) ),
+            shader_codes.at ( COMP ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( COMP ) ),
+            shader_codes.at ( TESC ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( TESC ) ),
+            shader_codes.at ( TESE ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( TESE ) ),
+            shader_codes.at ( GEOM ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( GEOM ) )
+        };
         OPENGL_CHECK_ERROR_THROW;
+
         //-------------------------
+        for ( size_t i = 0; i < shader_codes.size(); ++i )
+        {
+            if ( shader_ids.at ( i ) == 0 )
+            {
+                continue;
+            }
+            const auto* source_ptr = reinterpret_cast<const GLchar *> ( shader_codes.at ( i ).data() );
+            auto source_len = static_cast<GLint> ( shader_codes.at ( i ).length() );
+
+            glShaderSource (
+                shader_ids.at ( i ),
+                1,
+                &source_ptr,
+                &source_len );
+            OPENGL_CHECK_ERROR_THROW;
+
+            glCompileShader ( shader_ids.at ( i ) );
+            OPENGL_CHECK_ERROR_THROW;
+            glGetShaderiv ( shader_ids.at ( i ), GL_COMPILE_STATUS, &compile_status );
+            OPENGL_CHECK_ERROR_THROW;
+            if ( compile_status != GL_TRUE )
+            {
+                GLint info_log_len;
+                glGetShaderiv ( shader_ids.at ( i ), GL_INFO_LOG_LENGTH, &info_log_len );
+                OPENGL_CHECK_ERROR_THROW;
+                std::string log_string;
+                log_string.resize ( info_log_len );
+                if ( info_log_len > 1 )
+                {
+                    glGetShaderInfoLog ( shader_ids.at ( i ), info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+                    OPENGL_CHECK_ERROR_THROW;
+                    std::cout << shader_codes.at ( i ) << std::endl;
+                    std::cout << log_string << std::endl;
+                    throw std::runtime_error ( log_string.c_str() );
+                }
+                log_string = ShaderTypeToString.at ( static_cast<ShaderType> ( i ) );
+                throw std::runtime_error ( "Error Compiling Shaders." );
+            }
+            glAttachShader ( mProgramId, shader_ids.at ( i ) );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+        //-------------------------
+
         glLinkProgram ( mProgramId );
         OPENGL_CHECK_ERROR_THROW;
         glGetProgramiv ( mProgramId, GL_LINK_STATUS, &link_status );
         OPENGL_CHECK_ERROR_THROW;
         if ( link_status != GL_TRUE )
-
         {
             GLint info_log_len;
             glGetProgramiv ( mProgramId, GL_INFO_LOG_LENGTH, &info_log_len );
@@ -208,28 +209,27 @@ namespace AeonGames
             if ( info_log_len > 1 )
             {
                 glGetProgramInfoLog ( mProgramId, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                std::cout << vertex_shader_code << std::endl;
-                std::cout << fragment_shader_code << std::endl;
+                for ( const auto& shader_code : shader_codes )
+                {
+                    if ( shader_code.empty() )
+                    {
+                        continue;
+                    }
+                    std::cout << shader_code << std::endl;
+                }
                 std::cout << log_string << std::endl;
                 OPENGL_CHECK_ERROR_THROW;
             }
         }
-        glDetachShader ( mProgramId, vertex_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        glDetachShader ( mProgramId, fragment_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        glDeleteShader ( vertex_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        glDeleteShader ( fragment_shader );
-        OPENGL_CHECK_ERROR_THROW;
-        /* We need to bind the program to set any samplers. */
-        glUseProgram ( mProgramId );
-        OPENGL_CHECK_ERROR_THROW;
-
-        // Samplers
-        for ( GLint i = 0; i < static_cast<GLint> ( aPipeline.GetSamplerDescriptors().size() ); ++i )
+        for ( const auto& shader_id : shader_ids )
         {
-            glUniform1i ( i, i );
+            if ( shader_id == 0 )
+            {
+                continue;
+            }
+            glDetachShader ( mProgramId, shader_id );
+            OPENGL_CHECK_ERROR_THROW;
+            glDeleteShader ( shader_id );
             OPENGL_CHECK_ERROR_THROW;
         }
     }
