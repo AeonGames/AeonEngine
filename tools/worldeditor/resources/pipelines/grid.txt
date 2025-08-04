@@ -1,42 +1,25 @@
 AEONPLN
-topology: LINE_LIST
-uniform {
-  name: "OddLineColor"
-  type: VECTOR_FLOAT_4
-}
-uniform {
-  name: "EvenLineColor"
-  type: VECTOR_FLOAT_4
-}
-uniform {
-  name: "CentralLineColor"
-  type: VECTOR_FLOAT_4
-}
-uniform {
-  name: "BorderLineColor"
-  type: VECTOR_FLOAT_4
-}
-uniform {
-  name: "Scale"
-  type: VECTOR_FLOAT_3
-}
-uniform {
-  name: "StartingPosition"
-  type: VECTOR_FLOAT_3
-}
-  uniform {
-  name: "Offset"
-  type: VECTOR_FLOAT_3
-}
-uniform {
-  name: "LineCount"
-  type: SCALAR_UINT
-}
-vertex_shader {
-  code:
+vert:
+    "#version 450\n"
     "#ifndef VULKAN\n"
     "#define gl_InstanceIndex gl_InstanceID\n"
     "#endif\n"
+    "layout(binding = 0, std140) uniform Matrices{\n"
+    "mat4 ModelMatrix;\n"
+    "mat4 ProjectionMatrix;\n"
+    "mat4 ViewMatrix;\n"
+    "};\n"
+    "layout(binding = 1, std140) uniform Properties{\n"
+    "vec4 OddLineColor;\n"
+    "vec4 EvenLineColor;\n"
+    "vec4 CentralLineColor;\n"
+    "vec4 BorderLineColor;\n"
+    "vec3 Scale;\n"
+    "vec3 StartingPosition;\n"
+    "vec3 Offset;\n"
+    "uint LineCount;\n"
+    "};\n"
+    "layout(location = 0) in vec3 VertexPosition;\n"
     "layout(location = 0) flat out uint instance_index;\n"
     "void main()\n"
     "{\n"
@@ -45,12 +28,20 @@ vertex_shader {
     "               ViewMatrix *\n"
     "               vec4(StartingPosition + (VertexPosition*Scale) + ( Offset * gl_InstanceIndex ),1.0);\n"
     "}\n"
-}
-
-fragment_shader {
-  code:
+frag:
+    "#version 450\n"
     "layout ( location = 0 ) out vec4 FragColor;\n"
     "layout ( location = 0 ) flat in uint instance_index;\n"
+    "layout(binding = 1, std140) uniform Properties{\n"
+    "vec4 OddLineColor;\n"
+    "vec4 EvenLineColor;\n"
+    "vec4 CentralLineColor;\n"
+    "vec4 BorderLineColor;\n"
+    "vec3 Scale;\n"
+    "vec3 StartingPosition;\n"
+    "vec3 Offset;\n"
+    "uint LineCount;\n"
+    "};\n"
     "void main ( void )\n"
     "{\n"
     "    if ( ( instance_index != 0u ) && ( instance_index != ( LineCount - 1u ) ) )\n"
@@ -73,4 +64,3 @@ fragment_shader {
     "        FragColor = BorderLineColor;\n"
     "    }\n"
     "}\n"
-}

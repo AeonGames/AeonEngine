@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,48 +15,11 @@
 syntax = "proto3";
 package AeonGames;
 
-message UniformDescriptorMsg {
-    enum Type
-    {
-		SCALAR_FLOAT   = 0;
-		SCALAR_UINT    = 1;
-		SCALAR_INT     = 2;
-		VECTOR_FLOAT_2 = 3;
-		VECTOR_FLOAT_3 = 4;
-		VECTOR_FLOAT_4 = 5;
-	}
-	string name = 1;
-	Type type = 2;
-}
-message SamplerDescriptorMsg {
-	string name = 1;
-}
-
-message ShaderMsg {
-    oneof source {
-	bytes bytecode = 1;
-	string code = 2;
-    }
-}
-
 message PipelineMsg {
-    enum Topology
-    {
-		POINT_LIST						 = 0;
-		LINE_STRIP 						 = 1;
-		LINE_LIST  						 = 2;
-		TRIANGLE_STRIP					 = 3;
-		TRIANGLE_FAN					 = 4;
-		TRIANGLE_LIST					 = 5;
-		LINE_LIST_WITH_ADJACENCY		 = 6;
-		LINE_STRIP_WITH_ADJACENCY		 = 7;
-		TRIANGLE_LIST_WITH_ADJACENCY	 = 8;
-		TRIANGLE_STRIP_WITH_ADJACENCY	 = 9;
-		PATCH_LIST						 = 10;
-    }
-	Topology    topology                  = 1;
-	repeated UniformDescriptorMsg uniform = 2;
-	repeated SamplerDescriptorMsg sampler = 3;
-	ShaderMsg vertex_shader               = 4;
-	ShaderMsg fragment_shader             = 5;
+	optional string vert          = 1;
+	optional string frag          = 2;
+	optional string comp          = 3;
+	optional string tesc          = 4;
+	optional string tese          = 5;
+	optional string geom          = 6;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -211,6 +211,7 @@ namespace AeonGames
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
                                 const BufferAccessor* aSkeleton,
+                                Topology aTopology,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
@@ -240,13 +241,13 @@ namespace AeonGames
         mOpenGLRenderer.BindMesh ( aMesh );
         if ( aMesh.GetIndexCount() )
         {
-            glDrawElementsInstanced ( TopologyMap.at ( aPipeline.GetTopology() ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+            glDrawElementsInstanced ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                                       GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            glDrawArraysInstanced ( TopologyMap.at ( aPipeline.GetTopology() ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+            glDrawArraysInstanced ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }

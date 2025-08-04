@@ -1,21 +1,25 @@
 AEONPLN
-topology: TRIANGLE_LIST
-uniform {
-  name: "SolidColor"
-  type: VECTOR_FLOAT_4
-}
-vertex_shader {
-  code: "void main()\n"
+vert:
+  "#version 450\n"
+  "layout(binding = 0, std140) uniform Matrices{\n"
+  "mat4 ModelMatrix;\n"
+  "mat4 ProjectionMatrix;\n"
+  "mat4 ViewMatrix;\n"
+  "};\n"
+  "layout(location = 0) in vec3 VertexPosition;\n"
+  "void main()\n"
   "{\n"
-  "gl_Position = ProjectionMatrix * ViewMatrix * vec4(VertexPosition, 1.0);\n"
+  "gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(VertexPosition, 1.0);\n"
   "}\n"
-}
 
-fragment_shader {
-  code: "layout ( location = 0 ) out vec4 FragColor;\n"
+frag:
+  "#version 450\n"
+  "layout(binding = 1, std140) uniform Properties{\n"
+  "vec4 SolidColor;\n"
+  "};\n"
+  "layout ( location = 0 ) out vec4 FragColor;\n"
   "\n"
   "void main()\n"
   "{\n"
   "FragColor = SolidColor;\n"
   "}\n"
-}

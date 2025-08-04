@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,13 +42,13 @@ namespace AeonGames
     {
         return *mYGridMaterial;
     }
-    const Pipeline& WorldEditor::GetWirePipeline() const
+    const Pipeline& WorldEditor::GetSolidColorPipeline() const
     {
-        return *mWirePipeline;
+        return *mSolidColorPipeline;
     }
-    const Material& WorldEditor::GetWireMaterial() const
+    const Material& WorldEditor::GetSolidColorMaterial() const
     {
-        return *mWireMaterial;
+        return *mSolidColorMaterial;
     }
     const Mesh& WorldEditor::GetAABBWireMesh() const
     {
@@ -165,14 +165,14 @@ namespace AeonGames
 
         {
             mGridPipeline = std::make_unique<Pipeline>();
-            mWirePipeline = std::make_unique<Pipeline>();
+            mSolidColorPipeline = std::make_unique<Pipeline>();
             mXGridMaterial = std::make_unique<Material>();
             mYGridMaterial = std::make_unique<Material>();
-            mWireMaterial = std::make_unique<Material>();
+            mSolidColorMaterial = std::make_unique<Material>();
 
-            LoadMaterial ( *mWireMaterial, ":/materials/solidcolor.mtl" );
+            LoadMaterial ( *mSolidColorMaterial, ":/materials/solidcolor.mtl" );
             LoadPipeline ( *mGridPipeline, ":/pipelines/grid.pln" );
-            LoadPipeline ( *mWirePipeline, ":/pipelines/solid_wire.pln" );
+            LoadPipeline ( *mSolidColorPipeline, ":/pipelines/solid_color.pln" );
             LoadMaterial ( *mXGridMaterial, ":/materials/grid.mtl" );
 
             mXGridMaterial->Set ( { "Scale", Vector3{static_cast<float> ( Scale.width() ), static_cast<float> ( Scale.height() ), 1.0f} } );
@@ -264,8 +264,8 @@ namespace AeonGames
         mXGridMaterial.reset();
         mYGridMaterial.reset();
         mAABBWireMesh.reset();
-        mWireMaterial.reset();
-        mWirePipeline.reset();
+        mSolidColorMaterial.reset();
+        mSolidColorPipeline.reset();
         mRenderer.reset();
     }
 

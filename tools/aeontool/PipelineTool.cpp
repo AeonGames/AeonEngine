@@ -14,15 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
+#include "aeongames/ProtoBufClasses.h"
+#include <google/protobuf/text_format.h>
+#include "pipeline.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 #include <fstream>
 #include <sstream>
 #include <ostream>
 #include <iostream>
 #include <string.h>
-#if defined(__unix__) || defined(__MINGW32__)
-#include "sys/stat.h"
-#endif
+#include <filesystem>
 #include "PipelineTool.h"
+#include "CodeFieldValuePrinter.hpp"
 #include "aeongames/Pipeline.h"
 
 namespace AeonGames
@@ -84,215 +94,88 @@ namespace AeonGames
         }
     }
 
-    static xmlChar* GetParentElementProp ( xmlNodePtr node, const char* name, const char* prop )
+    const std::unordered_map<const char*, std::function<std::string * ( PipelineMsg* ) >> ShaderTypeToExtension
     {
-        xmlNodePtr parent = node->parent;
-        while ( parent != nullptr )
-        {
-            if ( parent->type == XML_ELEMENT_NODE && xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( name ) ) == 0 )
-            {
-                auto version {xmlGetProp ( parent, reinterpret_cast<const xmlChar*> ( prop ) ) };
-                if ( version != nullptr )
-                {
-                    return version;
-                }
-                break;
-            }
-            parent = parent->parent;
-        }
-        return nullptr;
-    }
-
-    static void ProcessVariableNode ( xmlNodePtr node )
-    {
-        auto name {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "name" ) ) };
-        auto location {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "location" ) ) };
-        auto interpolation {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "interpolation" ) ) };
-        auto parent = node->parent;
-        bool is_input{false};
-        bool is_output{false};
-        while ( parent != nullptr )
-        {
-            if ( xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( "inputs" ) ) == 0 )
-            {
-                is_input = true;
-                break;
-            }
-            else if ( xmlStrcmp ( parent->name, reinterpret_cast<const xmlChar * > ( "outputs" ) ) == 0 )
-            {
-                is_output = true;
-                break;
-            }
-            parent = parent->parent;
-        }
-        std::cout <<
-                  ( location ? "layout(location = " : "" ) <<
-                  ( location ? reinterpret_cast<const char*> ( location ) : "" ) <<
-                  ( location ? ") " : "" ) <<
-                  ( interpolation ? reinterpret_cast<const char*> ( interpolation ) : "" ) << ( interpolation ? " " : "" ) <<
-                  ( is_input ? "in " : "" ) <<
-                  ( is_output ? "out " : "" ) <<
-                  node->name << " " << name << ";\n";
-    }
-
-    const PipelineTool::ProcessorMap PipelineTool::XMLElementProcessors
-    {
-        {
-            "block",
-            {
-                [] ( xmlNodePtr node )->void
-                {
-                    if ( node->parent == nullptr || xmlStrcmp ( node->parent->name, reinterpret_cast<const xmlChar * > ( "uniforms" ) ) != 0 )
-                    {
-                        throw std::runtime_error ( "Block element must be a child of a uniforms element." );
-                    }
-                    auto name {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "name" ) ) };
-                    auto binding {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "binding" ) ) };
-                    auto storage {xmlGetProp ( node, reinterpret_cast<const xmlChar*> ( "storage" ) ) };
-                    std::cout <<
-                              ( ( binding || storage ) ? "layout(" : "" ) <<
-                              ( ( binding ) ? "binding = " : "" ) <<
-                              ( ( binding ) ? reinterpret_cast<const char*> ( binding ) : "" ) <<
-                              ( ( binding ) ? ", " : "" ) <<
-                              ( ( storage ) ? reinterpret_cast<const char*> ( storage ) : "" ) <<
-                              ( ( storage || binding ) ? ")" : "" ) <<
-                    " uniform " << name << "{\n";
-                },
-                [] ( xmlNodePtr )->void
-                {
-                    std::cout << "};\n";
-                }
-            }
-        },
-        {
-            "vertex",
-            {
-                [] ( xmlNodePtr node )->void
-                {
-                    std::cout << "//--Vertex shader starts here--//\n";
-                    auto version {GetParentElementProp ( node, "pipeline", "version" ) };
-                    if ( version != nullptr )
-                    {
-                        std::cout << "#version " << reinterpret_cast<const char*> ( version ) << std::endl;
-                    }
-                },
-                [] ( xmlNodePtr )->void
-                {
-                    std::cout << "//--Vertex shader ends here--//\n";
-                }
-            }
-        },
-        {
-            "fragment",
-            {
-                [] ( xmlNodePtr node )->void
-                {
-                    std::cout << "//--Fragment shader starts here--//\n";
-                    auto version {GetParentElementProp ( node, "pipeline", "version" ) };
-                    if ( version != nullptr )
-                    {
-                        std::cout << "#version " << reinterpret_cast<const char*> ( version ) << std::endl;
-                    }
-                },
-                [] ( xmlNodePtr )->void
-                {
-                    std::cout << "//--Fragment shader ends here--//\n";
-                }
-            }
-        },
-        {
-            "mat4",
-            {
-                ProcessVariableNode,
-                {}
-            }
-        },
-        {
-            "vec2",
-            {
-                ProcessVariableNode,
-                {}
-            }
-        },
-        {
-            "vec3",
-            {
-                ProcessVariableNode,
-                {}
-            }
-        },
-        {
-            "vec4",
-            {
-                ProcessVariableNode,
-                {}
-            }
-        },
-        {
-            "uint",
-            {
-                ProcessVariableNode,
-                {}
-            }
-        }
+        { ".vert", PipelineMsg::mutable_vert },
+        { ".frag", PipelineMsg::mutable_frag },
+        { ".comp", PipelineMsg::mutable_comp },
+        { ".tesc", PipelineMsg::mutable_tesc },
+        { ".tese", PipelineMsg::mutable_tese },
+        { ".geom", PipelineMsg::mutable_geom }
     };
-
-    void PipelineTool::ProcessNode ( xmlNodePtr node )
-    {
-        ProcessorMap::const_iterator processor{};
-        switch ( node->type )
-        {
-        case XML_ELEMENT_NODE:
-        {
-            processor = XMLElementProcessors.find ( reinterpret_cast<const char*> ( node->name ) );
-            if ( processor != XMLElementProcessors.end() )
-            {
-                std::get<0> ( processor->second ) ( node );
-            }
-        }
-        break;
-        case XML_TEXT_NODE:
-        case XML_CDATA_SECTION_NODE:
-            if ( node->parent != nullptr && xmlStrcmp ( node->parent->name, reinterpret_cast<const xmlChar * > ( "code" ) ) == 0 && !xmlIsBlankNode ( node ) )
-            {
-                std::cout << reinterpret_cast<const char*> ( node->content ) << std::endl;
-            }
-            break;
-        default:
-            break;
-        }
-        for ( xmlNodePtr child = node->children; child; child = child->next )
-        {
-            ProcessNode ( child );
-        }
-        if ( node->type == XML_ELEMENT_NODE && processor != XMLElementProcessors.end() && std::get<1> ( processor->second ) != nullptr )
-        {
-            std::get<1> ( processor->second ) ( node );
-        }
-    }
 
     int PipelineTool::operator() ( int argc, char** argv )
     {
         ProcessArgs ( argc, argv );
-        xmlDocPtr document{xmlReadFile ( mInputFile.c_str(), nullptr, 0 ) };
-        if ( document == nullptr )
+        std::filesystem::path input_path{mInputFile};
+        std::filesystem::path output_path{mOutputFile};
+        char magick_number[8] = "AEONPLN";
+        if ( !input_path.has_extension() )
         {
-            xmlFreeDoc ( document );
-            throw std::runtime_error ( "Error parsing XML file" );
+            if ( output_path.extension() != ".pln" && output_path.extension() != ".txt" )
+            {
+                throw std::runtime_error ( "Unsupported output file extension, must be .pln or .txt" );
+            }
+            PipelineMsg pipeline_msg;
+            bool found_shader{false};
+            for ( const auto& [extension, setter] : ShaderTypeToExtension )
+            {
+                std::filesystem::path shader_path{input_path.replace_extension ( extension ) };
+                if ( std::filesystem::exists ( shader_path ) )
+                {
+                    std::ifstream shader_file ( shader_path );
+                    if ( !shader_file )
+                    {
+                        throw std::runtime_error ( "Failed to open shader file: " + shader_path.string() );
+                    }
+                    std::string shader_code ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
+                    shader_file.close();
+                    setter ( &pipeline_msg )->assign ( shader_code );
+                    found_shader = true;
+                }
+            }
+            if ( found_shader )
+            {
+                if ( output_path.extension() == ".pln" )
+                {
+                    std::ofstream binary_file ( mOutputFile, std::ios::out | std::ios::binary );
+                    binary_file << magick_number << '\0';
+                    pipeline_msg.SerializeToOstream ( &binary_file );
+                    binary_file.close();
+                }
+                else
+                {
+                    google::protobuf::TextFormat::Printer printer;
+                    for ( int i = 1; i <= pipeline_msg.GetDescriptor()->field_count() ; ++i )
+                    {
+                        if ( !printer.RegisterFieldValuePrinter (
+                                 pipeline_msg.GetDescriptor()->FindFieldByNumber ( i ),
+                                 new CodeFieldValuePrinter ) )
+                        {
+                            std::cout << "Failed to register field value printer." << std::endl;
+                        }
+                    }
+                    std::string text_string;
+                    std::ofstream text_file ( mOutputFile, std::ios::out );
+                    printer.PrintToString ( pipeline_msg, &text_string );
+                    text_file << magick_number << std::endl;
+                    text_file.write ( text_string.c_str(), text_string.length() );
+                    text_file.close();
+                }
+            }
+            else
+            {
+                throw std::runtime_error ( "No suitable shader file found." );
+            }
         }
-        xmlNodePtr root_element{ xmlDocGetRootElement ( document ) };
-        if ( root_element == nullptr )
+        else if ( input_path.extension() == ".pln" || input_path.extension() == ".txt" )
         {
-            xmlFreeDoc ( document );
-            throw std::runtime_error ( "Failed to get root element" );
         }
-        else if ( xmlStrcmp ( root_element->name, BAD_CAST "pipeline" ) != 0 )
+        else
         {
-            xmlFreeDoc ( document );
-            throw std::runtime_error ( "Root element is not pipeline" );
+            throw std::runtime_error ( "Unsupported file extension" );
         }
-        ProcessNode ( root_element );
-        xmlFreeDoc ( document );
+
         return 0;
     }
 }

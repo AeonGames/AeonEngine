@@ -6,7 +6,6 @@
   </qresource>
   <qresource prefix="pipelines">
     <file alias="solid_color.pln">${CMAKE_CURRENT_BINARY_DIR}/solid_color.pln</file>
-    <file alias="solid_wire.pln">${CMAKE_CURRENT_BINARY_DIR}/solid_wire.pln</file>
     <file alias="grid.pln">${CMAKE_CURRENT_BINARY_DIR}/grid.pln</file>
   </qresource>
   <qresource prefix="materials">

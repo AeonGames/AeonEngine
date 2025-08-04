@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <array>
 #include <regex>
@@ -28,8 +29,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    class MaterialMsg;
     class PipelineMsg;
+    /// @todo: This enum should be moved to a place where it makes more sence, like mesh metadata.
     enum Topology
     {
         UNDEFINED = 0,
@@ -45,6 +46,9 @@ namespace AeonGames
         TRIANGLE_STRIP_WITH_ADJACENCY,
         PATCH_LIST,
     };
+
+#if 0
+    class MaterialMsg;
 
     enum AttributeBits
     {
@@ -83,6 +87,28 @@ namespace AeonGames
         VECTOR_FLOAT_3,
         VECTOR_FLOAT_4,
     };
+#endif
+
+    enum ShaderType
+    {
+        VERT = 0, //  vertex shader
+        FRAG,     //  fragment shader
+        COMP,     //  compute shader
+        TESC,     //  tessellation control shader
+        TESE,     //  tessellation evaluation shader
+        GEOM,     //  geometry shader
+        COUNT
+    };
+
+    const std::unordered_map<const ShaderType, const char*> ShaderTypeToString
+    {
+        { VERT, "vertex" },
+        { FRAG, "fragment" },
+        { COMP, "compute" },
+        { TESC, "tessellation control" },
+        { TESE, "tessellation evaluation" },
+        { GEOM, "geometry" }
+    };
 
     class Pipeline : public Resource
     {
@@ -91,21 +117,28 @@ namespace AeonGames
         DLL virtual ~Pipeline();
         DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload() final;
+#if 0
         DLL Topology GetTopology() const;
         DLL const std::string& GetVertexShaderCode() const;
         DLL const std::string& GetFragmentShaderCode() const;
-        DLL const std::vector<std::tuple<UniformType, std::string>>& GetUniformDescriptors() const;
+        DLL const std::vector<std::tuple<UniformType, std::string >> & GetUniformDescriptors() const;
         DLL const std::vector<std::string>& GetSamplerDescriptors() const;
         DLL std::string GetProperties () const;
         DLL std::string GetAttributes () const;
         DLL uint32_t GetAttributeBitmap() const;
+#endif
+        DLL const std::string_view GetShaderCode ( ShaderType aType ) const;
+
         DLL void LoadFromPBMsg ( const PipelineMsg& aPipelineMsg );
     private:
-        Topology mTopology{};
+#if 0
+        Topology mTopology {};
         std::string mVertexShaderCode{};
         std::string mFragmentShaderCode{};
-        std::vector<std::tuple<UniformType, std::string>> mUniformDescriptors{};
+        std::vector<std::tuple<UniformType, std::string >> mUniformDescriptors{};
         std::vector<std::string> mSamplerDescriptors{};
+#endif
+        std::array<std::string, ShaderType::COUNT> mShaderCode {};
     };
 }
 #endif
