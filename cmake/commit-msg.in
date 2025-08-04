@@ -4,8 +4,8 @@
 # So only add the emojis that are being used.
 
 # Used to depict an EPIC task or commit
-#${SED_EXECUTABLE} -i 's/:epic:/🐋/g' "$1"
+# ${SED_EXECUTABLE} -i 's/:epic:/🐋/g' "$1"
 # Used to depict a bugfix
-#${SED_EXECUTABLE} -i 's/:bug:/🐛/g' "$1"
+# ${SED_EXECUTABLE} -i 's/:bug:/🐛/g' "$1"
 # Used to depict a partial commit
-#${SED_EXECUTABLE} -i 's/:construction:/🚧/g' "$1"
+# ${SED_EXECUTABLE} -i 's/:construction:/🚧/g' "$1"

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ namespace AeonGames
         const Mesh& GetGridMesh() const;
         const Material& GetXGridMaterial() const;
         const Material& GetYGridMaterial() const;
-        const Pipeline& GetWirePipeline() const;
-        const Material& GetWireMaterial() const;
+        const Pipeline& GetSolidColorPipeline() const;
+        const Material& GetSolidColorMaterial() const;
         const Mesh& GetAABBWireMesh() const;
         int GetStringIdMetaType() const;
         int GetStringMetaType() const;
@@ -63,8 +63,8 @@ namespace AeonGames
         std::unique_ptr<Mesh> mGridMesh{};
         std::unique_ptr<Material> mXGridMaterial{};
         std::unique_ptr<Material> mYGridMaterial{};
-        std::unique_ptr<Pipeline> mWirePipeline{};
-        std::unique_ptr<Material> mWireMaterial{};
+        std::unique_ptr<Pipeline> mSolidColorPipeline{};
+        std::unique_ptr<Material> mSolidColorMaterial{};
         std::unique_ptr<Mesh> mAABBWireMesh{};
     };
 }

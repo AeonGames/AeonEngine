@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ namespace AeonGames
         }
         return Property{};
     }
-
+#if 0
     size_t GetUniformBufferSize ( const PipelineMsg& aPipelineMsg )
     {
         size_t size = 0;
@@ -158,7 +158,7 @@ namespace AeonGames
         }
         return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 float
     }
-
+#endif
     Material::UniformKeyValue PropertyToKeyValue ( const PropertyMsg& aProperty )
     {
         switch ( aProperty.value_case() )
@@ -179,21 +179,21 @@ namespace AeonGames
             return Material::UniformKeyValue{aProperty.name(), Matrix4x4
                 {
                     aProperty.matrix4x4().m0(),
-                    aProperty.matrix4x4().m1(),
-                    aProperty.matrix4x4().m2(),
-                    aProperty.matrix4x4().m3(),
-                    aProperty.matrix4x4().m4(),
-                    aProperty.matrix4x4().m5(),
-                    aProperty.matrix4x4().m6(),
-                    aProperty.matrix4x4().m7(),
-                    aProperty.matrix4x4().m8(),
-                    aProperty.matrix4x4().m9(),
-                    aProperty.matrix4x4().m10(),
-                    aProperty.matrix4x4().m11(),
-                    aProperty.matrix4x4().m12(),
-                    aProperty.matrix4x4().m13(),
-                    aProperty.matrix4x4().m14(),
-                    aProperty.matrix4x4().m15()
+                             aProperty.matrix4x4().m1(),
+                             aProperty.matrix4x4().m2(),
+                             aProperty.matrix4x4().m3(),
+                             aProperty.matrix4x4().m4(),
+                             aProperty.matrix4x4().m5(),
+                             aProperty.matrix4x4().m6(),
+                             aProperty.matrix4x4().m7(),
+                             aProperty.matrix4x4().m8(),
+                             aProperty.matrix4x4().m9(),
+                             aProperty.matrix4x4().m10(),
+                             aProperty.matrix4x4().m11(),
+                             aProperty.matrix4x4().m12(),
+                             aProperty.matrix4x4().m13(),
+                             aProperty.matrix4x4().m14(),
+                             aProperty.matrix4x4().m15()
                 }};
         default:
             break;

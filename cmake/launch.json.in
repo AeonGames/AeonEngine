@@ -144,25 +144,6 @@
                     ]
             },
             {
-                "name": "Electron JavaScript",
-                "type": "node",
-                "request": "launch",
-                "cwd": "@CMAKE_SOURCE_DIR@",
-                "console": "integratedTerminal",
-                "runtimeExecutable": "@ELECTRON_EXECUTABLE@",
-                "windows": {
-                    "runtimeExecutable": "@ELECTRON_EXECUTABLE@"
-                },
-                "args" : ["--js-flags=\"--expose-gc\"","@CMAKE_SOURCE_DIR@/electron"],
-                "outputCapture": "std",
-                "localRoot": "@CMAKE_SOURCE_DIR@/electron",
-                "remoteRoot": "@CMAKE_BINARY_DIR@/bin/resources/app",
-                "env":{
-                    "NODE_PATH":"@DEBUG_PATH@",
-                    "PATH":"@DEBUG_PATH@"
-                }
-            },
-            {
                 "name": "Unit Tests",
                 "type": "cppdbg",
                 "request": "launch",

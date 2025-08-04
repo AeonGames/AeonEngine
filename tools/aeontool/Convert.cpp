@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ limitations under the License.
 #include "sys/stat.h"
 #endif
 #include "Convert.h"
+#include "CodeFieldValuePrinter.hpp"
 
 /** @todo This code may benefit from ProtoBufHelpers.h,
     but by doing so, it must become public
@@ -134,31 +135,6 @@ namespace AeonGames
         pattern += "\\s*\\)";
         return pattern;
     }
-
-    class CodeFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
-    {
-    public:
-        CodeFieldValuePrinter() : google::protobuf::TextFormat::FastFieldValuePrinter()
-        {
-        };
-        void PrintString ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
-        {
-            std::string pattern ( "\\\\n" );
-            std::string format ( "$&\"\n\"" );
-            try
-            {
-                std::regex newline ( pattern );
-                std::string printed = std::regex_replace ( val, newline, format );
-                google::protobuf::TextFormat::FastFieldValuePrinter::PrintString ( printed, base_text_generator );
-            }
-            catch ( const std::regex_error& e )
-            {
-                std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
-                throw;
-            }
-        }
-    };
-
 
     template<class T> const uint8_t* Print ( const uint8_t* cursor, std::ostringstream& stream, uint32_t count )
     {
@@ -579,11 +555,17 @@ namespace AeonGames
                 google::protobuf::TextFormat::Printer printer;
 
                 // Try to print shader code in a more human readable format.
-                if ( ( message == &pipeline_buffer ) && ( !printer.RegisterFieldValuePrinter (
-                            pipeline_buffer.vertex_shader().GetDescriptor()->FindFieldByName ( "code" ),
-                            new CodeFieldValuePrinter ) ) )
+                if ( message == &pipeline_buffer )
                 {
-                    std::cout << "Failed to register field value printer." << std::endl;
+                    for ( int i = 1; i <= pipeline_buffer.GetDescriptor()->field_count() ; ++i )
+                    {
+                        if ( !printer.RegisterFieldValuePrinter (
+                                 pipeline_buffer.GetDescriptor()->FindFieldByNumber ( i ),
+                                 new CodeFieldValuePrinter ) )
+                        {
+                            std::cout << "Failed to register field value printer." << std::endl;
+                        }
+                    }
                 }
 
                 // Print Vertex buffers in a more human readable format.

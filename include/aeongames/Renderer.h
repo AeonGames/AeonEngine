@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2024 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ limitations under the License.
 #include <functional>
 #include "Platform.h"
 #include "aeongames/Matrix4x4.h"
+#include "aeongames/Pipeline.h"
 
 namespace AeonGames
 {
@@ -90,6 +91,7 @@ namespace AeonGames
                               const Pipeline& aPipeline,
                               const Material* aMaterial = nullptr,
                               const BufferAccessor* aSkeleton = nullptr,
+                              Topology aTopology = Topology::TRIANGLE_LIST,
                               uint32_t aVertexStart = 0,
                               uint32_t aVertexCount = 0xffffffff,
                               uint32_t aInstanceCount = 1,

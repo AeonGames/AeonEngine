@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2018,2024 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2018,2024,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -12,20 +12,29 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-set(AEONTOOL_HEADERS Tool.h Convert.h PipelineTool.h Pack.h Base64.h)
-set(AEONTOOL_SOURCES Main.cpp Convert.cpp PipelineTool.cpp Pack.cpp Base64.cpp)
+set(AEONTOOL_HEADERS
+  Tool.h 
+  Convert.h 
+  Pack.h 
+  Base64.h
+  PipelineTool.h
+)
+set(AEONTOOL_SOURCES
+  Main.cpp
+  Convert.cpp
+  Pack.cpp
+  Base64.cpp
+  PipelineTool.cpp
+)
 
-find_package(LibXml2 REQUIRED)
-
-include_directories(${LIBXML2_INCLUDE_DIR}
-                    ${ZLIB_INCLUDE_DIR}
+include_directories(${ZLIB_INCLUDE_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/include
                     ${CMAKE_BINARY_DIR}/proto
                     ${CMAKE_BINARY_DIR}/engine)
 
 add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
-target_link_libraries(aeontool ProtoBufClasses AeonEngine ${ZLIB_LIBRARIES} ${LIBXML2_LIBRARIES})
+target_link_libraries(aeontool ProtoBufClasses AeonEngine ${ZLIB_LIBRARIES})
 if(MSVC)
   set_target_properties(
     aeontool
