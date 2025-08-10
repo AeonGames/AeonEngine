@@ -33,11 +33,9 @@
                 "MSYSTEM": "UCRT64",
                 "CHERE_INVOKING":"1"
             }
-        },
-        "PowerShell":null,
-        "Command Prompt":null
+        }
     },
-    "terminal.integrated.defaultProfile.windows": "MinGW GCC Bash",
+    "terminal.integrated.defaultProfile.windows": "${VSCODE_DEFAULT_PROFILE_WINDOWS}",
     "python.defaultInterpreterPath": "${Python3_EXECUTABLE}",
     "clang.executable": "${CLANG_EXECUTABLE}",
     "cmake.cmakePath": "${CMAKE_COMMAND}",
