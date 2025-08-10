@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2023,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -29,7 +29,7 @@ enable_testing()
 enable_language(CXX)
 enable_language(C)
 
-if(NOT ENV{MSYSTEM_PREFIX} STREQUAL "")
+if(NOT $ENV{MSYSTEM_PREFIX} STREQUAL "")
   list(APPEND CMAKE_PREFIX_PATH "$ENV{MSYSTEM_PREFIX}")
 endif()
 
@@ -431,6 +431,16 @@ endif()
 #
 # Generate VS Code Environment
 #
+if($ENV{MSYSTEM} STREQUAL "MINGW64")
+  set(VSCODE_DEFAULT_PROFILE_WINDOWS "MinGW GCC Bash")
+elseif(ENV{MSYSTEM} STREQUAL "UCRT64")
+  set(VSCODE_DEFAULT_PROFILE_WINDOWS "MinGW UCRT64 Bash")
+elseif(ENV{MSYSTEM} STREQUAL "CLANG64")
+  set(VSCODE_DEFAULT_PROFILE_WINDOWS "MinGW Clang Bash")
+else()
+  set(VSCODE_DEFAULT_PROFILE_WINDOWS "PowerShell")
+endif()
+
 if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   set(CODE_ZOOMLEVEL "0" CACHE STRING "window.zoomLevel for VS Code.")
   # TODO SOURCE_DIRECTORIES could be set and used to call add_subdirectory
