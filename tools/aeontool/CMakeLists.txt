@@ -13,9 +13,9 @@
 # the License.
 
 set(AEONTOOL_HEADERS
-  Tool.h 
-  Convert.h 
-  Pack.h 
+  Tool.h
+  Convert.h
+  Pack.h
   Base64.h
   PipelineTool.h
 )
