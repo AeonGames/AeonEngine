@@ -96,12 +96,12 @@ namespace AeonGames
 
     const std::unordered_map<const char*, std::function<std::string * ( PipelineMsg* ) >> ShaderTypeToExtension
     {
-        { ".vert", PipelineMsg::mutable_vert },
-        { ".frag", PipelineMsg::mutable_frag },
-        { ".comp", PipelineMsg::mutable_comp },
-        { ".tesc", PipelineMsg::mutable_tesc },
-        { ".tese", PipelineMsg::mutable_tese },
-        { ".geom", PipelineMsg::mutable_geom }
+        { ".vert", &PipelineMsg::mutable_vert },
+        { ".frag", &PipelineMsg::mutable_frag },
+        { ".comp", &PipelineMsg::mutable_comp },
+        { ".tesc", &PipelineMsg::mutable_tesc },
+        { ".tese", &PipelineMsg::mutable_tese },
+        { ".geom", &PipelineMsg::mutable_geom }
     };
 
     int PipelineTool::operator() ( int argc, char** argv )

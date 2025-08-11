@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/Platform.h"
 #include "aeongames/Material.h"
 #include "aeongames/Resource.h"
+#include <functional>
 
 namespace AeonGames
 {
@@ -100,7 +101,7 @@ namespace AeonGames
         COUNT
     };
 
-    const std::unordered_map<const ShaderType, const char*> ShaderTypeToString
+    const std::unordered_map<ShaderType, const char*> ShaderTypeToString
     {
         { VERT, "vertex" },
         { FRAG, "fragment" },

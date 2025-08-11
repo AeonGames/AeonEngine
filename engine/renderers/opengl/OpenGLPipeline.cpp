@@ -112,7 +112,7 @@ namespace AeonGames
     }
 #endif
 
-    static const std::unordered_map<const ShaderType, const GLenum> ShaderTypeToGLShaderType
+    static const std::unordered_map<ShaderType, const GLenum> ShaderTypeToGLShaderType
     {
         { VERT, GL_VERTEX_SHADER },
         { FRAG, GL_FRAGMENT_SHADER },
