@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/Pipeline.h"
+#include "aeongames/CRC.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLFunctions.h"
 #include <vector>
@@ -246,7 +247,13 @@ namespace AeonGames
             GLenum type;
             glGetActiveAttrib ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
             OPENGL_CHECK_ERROR_THROW;
-            std::cout << "Attribute " << i << ": " << name << " (size: " << size << ", type: " << type << ")" << std::endl;
+            GLint location = glGetAttribLocation ( mProgramId, name );
+            OPENGL_CHECK_ERROR_THROW;
+            if ( location >= 0 )
+            {
+                mAttributes.push_back ( Attribute{ crc32i ( name, length ), static_cast<uint32_t> ( location ), static_cast<uint32_t> ( size ), static_cast<uint32_t> ( type ) } );
+            }
+            std::cout << "Attribute " << i << ": " << name << " (location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
         }
 
 

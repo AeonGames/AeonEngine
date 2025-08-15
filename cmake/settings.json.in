@@ -1,7 +1,6 @@
 {
     "git.path": "${GIT_EXECUTABLE}",
     "git.ignoreLimitWarning": true,
-    "terminal.integrated.fontFamily": "MesloLGS NF",
     "terminal.integrated.automationProfile.windows":
     {
         "path": "C:\\Windows\\System32\\cmd.exe"
