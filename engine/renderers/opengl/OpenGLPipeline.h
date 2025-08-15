@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLPIPELINE_H
 #define AEONGAMES_OPENGLPIPELINE_H
 #include <cstdint>
+#include <vector>
+#include <string_view>
 #include "aeongames/Pipeline.h"
 
 namespace AeonGames
@@ -31,6 +33,13 @@ namespace AeonGames
     class OpenGLPipeline
     {
     public:
+        struct Attribute
+        {
+            uint32_t name;
+            uint32_t location;
+            uint32_t size;
+            uint32_t type;
+        };
         OpenGLPipeline ( const OpenGLRenderer& aOpenGLRenderer, const Pipeline& aPipeline );
         OpenGLPipeline ( OpenGLPipeline&& aOpenGLPipeline );
         OpenGLPipeline ( const OpenGLPipeline& ) = delete;
@@ -38,10 +47,13 @@ namespace AeonGames
         OpenGLPipeline& operator= ( OpenGLPipeline&& ) = delete;
         ~OpenGLPipeline();
         uint32_t GetProgramId() const;
+        const Attribute& GetAttribute ( uint32_t name ) const;
+        const Attribute& GetAttribute ( std::string_view name ) const;
     private:
         const OpenGLRenderer& mOpenGLRenderer;
         const Pipeline* mPipeline{};
         uint32_t mProgramId{};
+        std::vector<Attribute> mAttributes{};
     };
 }
 #endif
