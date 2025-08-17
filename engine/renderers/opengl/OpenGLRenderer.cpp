@@ -512,6 +512,16 @@ void main()
             it = mMeshStore.find(aMesh.GetConsecutiveId());
         }
         it->second.Bind();
+        GLint currentProgram{0};
+        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        auto pipeline = std::find_if(mPipelineStore.begin(), mPipelineStore.end(),
+        [currentProgram](const auto& pair) {
+            return pair.second.GetProgramId() == currentProgram;
+        });
+        if (pipeline != mPipelineStore.end())
+        {
+            it->second.EnableAttributes(pipeline->second.GetVertexAttributes());
+        }
     }
 
     void OpenGLRenderer::LoadPipeline(const Pipeline& aPipeline)

@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <string_view>
+#include "OpenGLVertexAttribute.h"
 #include "aeongames/Pipeline.h"
 
 namespace AeonGames
@@ -33,27 +34,19 @@ namespace AeonGames
     class OpenGLPipeline
     {
     public:
-        struct Attribute
-        {
-            uint32_t name;
-            uint32_t location;
-            uint32_t size;
-            uint32_t type;
-        };
         OpenGLPipeline ( const OpenGLRenderer& aOpenGLRenderer, const Pipeline& aPipeline );
         OpenGLPipeline ( OpenGLPipeline&& aOpenGLPipeline );
         OpenGLPipeline ( const OpenGLPipeline& ) = delete;
         OpenGLPipeline& operator= ( const OpenGLPipeline& ) = delete;
         OpenGLPipeline& operator= ( OpenGLPipeline&& ) = delete;
         ~OpenGLPipeline();
-        uint32_t GetProgramId() const;
-        const Attribute& GetAttribute ( uint32_t name ) const;
-        const Attribute& GetAttribute ( std::string_view name ) const;
+        GLint GetProgramId() const;
+        const std::vector<OpenGLVertexAttribute>& GetVertexAttributes () const;
     private:
         const OpenGLRenderer& mOpenGLRenderer;
         const Pipeline* mPipeline{};
-        uint32_t mProgramId{};
-        std::vector<Attribute> mAttributes{};
+        GLint mProgramId{};
+        std::vector<OpenGLVertexAttribute> mAttributes{};
     };
 }
 #endif
