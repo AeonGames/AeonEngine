@@ -12,7 +12,6 @@
                 "@CMAKE_SOURCE_DIR@/tools/worldeditor",
                 "@CMAKE_BINARY_DIR@/tools/worldeditor",
                 "@CMAKE_BINARY_DIR@/engine/renderers/opengl",
-                "@CMAKE_BINARY_DIR@/engine/renderers/vulkan",
                 "@CMAKE_BINARY_DIR@/engine",
                 "@CMAKE_BINARY_DIR@/proto/"
             ],

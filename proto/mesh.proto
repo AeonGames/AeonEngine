@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016,2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,15 @@ message AttributeMsg
 {
     enum AttributeSemantic
     {
-        POSITION            = 0;
-        NORMAL              = 1;
-        TANGENT             = 2;
-        BITANGENT           = 3;
-        TEXCOORD            = 4;
-        WEIGHT_INDEX        = 5;
-        WEIGHT_VALUE        = 6;
-        COLOR               = 7;
+        UNUSED              = 0x0;
+        POSITION            = 0x3DE95988;
+        NORMAL              = 0x06843867;
+        TANGENT             = 0x508CD822;
+        BITANGENT           = -863954250; //0xCC811AB6;
+        TEXCOORD            = 0x7683CFA6;
+        WEIGHT_INDEX        = 0x48129712;
+        WEIGHT_VALUE        = 0x6E44A092;
+        COLOR               = 0x65476198;
     }
     enum AttributeType
     {

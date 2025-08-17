@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ limitations under the License.
 #include <memory>
 #include <vector>
 #include "aeongames/AABB.h"
+#include "aeongames/CRC.h"
 #include "aeongames/Resource.h"
 
 namespace AeonGames
@@ -28,17 +29,16 @@ namespace AeonGames
     class Mesh final : public Resource
     {
     public:
-        enum AttributeSemantic : uint8_t
+        enum AttributeSemantic : uint32_t
         {
-            POSITION                      = 0,
-            NORMAL                        = 1,
-            TANGENT                       = 2,
-            BITANGENT                     = 3,
-            TEXCOORD                      = 4,
-            WEIGHT_INDEX                  = 5,
-            WEIGHT_VALUE                  = 6,
-            COLOR                         = 7,
-            SEMANTIC_COUNT
+            POSITION                      = "VertexPosition"_crc32,
+            NORMAL                        = "VertexNormal"_crc32,
+            TANGENT                       = "VertexTangent"_crc32,
+            BITANGENT                     = "VertexBitangent"_crc32,
+            TEXCOORD                      = "VertexUV"_crc32,
+            WEIGHT_INDEX                  = "VertexWeightIndices"_crc32,
+            WEIGHT_VALUE                  = "VertexWeights"_crc32,
+            COLOR                         = "VertexColor"_crc32,
         };
 
         enum AttributeType : uint8_t

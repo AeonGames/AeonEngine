@@ -13,11 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/Pipeline.h"
-#include "aeongames/CRC.h"
 #include "OpenGLPipeline.h"
 #include "OpenGLFunctions.h"
+#include "aeongames/CRC.h"
 #include <vector>
+#include <algorithm>
 
 namespace AeonGames
 {
@@ -27,6 +27,7 @@ namespace AeonGames
     {
         std::swap ( mPipeline, aOpenGLPipeline.mPipeline );
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
+        mAttributes.swap ( aOpenGLPipeline.mAttributes );
     }
 #if 0
     static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
@@ -238,7 +239,7 @@ namespace AeonGames
         GLint num_active_attributes;
         glGetProgramiv ( mProgramId, GL_ACTIVE_ATTRIBUTES, &num_active_attributes );
         OPENGL_CHECK_ERROR_THROW;
-
+        mAttributes.reserve ( num_active_attributes );
         for ( GLint i = 0; i < num_active_attributes; ++i )
         {
             GLchar name[256];
@@ -249,13 +250,13 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             GLint location = glGetAttribLocation ( mProgramId, name );
             OPENGL_CHECK_ERROR_THROW;
-            if ( location >= 0 )
-            {
-                mAttributes.push_back ( Attribute{ crc32i ( name, length ), static_cast<uint32_t> ( location ), static_cast<uint32_t> ( size ), static_cast<uint32_t> ( type ) } );
-            }
-            std::cout << "Attribute " << i << ": " << name << " (location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
+            mAttributes.push_back ( { crc32i ( name, length ), location, size, type } );
+            std::cout << "Attribute " << i << ": " << name << " (crc: " << std::hex << mAttributes.back().name << std::dec << " location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
         }
-
+        std::sort ( mAttributes.begin(), mAttributes.end(), [] ( const OpenGLVertexAttribute & a, const OpenGLVertexAttribute & b )
+        {
+            return a.name < b.name;
+        } );
 
         GLint num_active_uniforms;
         glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &num_active_uniforms );
@@ -346,8 +347,13 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    uint32_t OpenGLPipeline::GetProgramId() const
+    GLint OpenGLPipeline::GetProgramId() const
     {
         return mProgramId;
+    }
+
+    const std::vector<OpenGLVertexAttribute>& OpenGLPipeline::GetVertexAttributes() const
+    {
+        return mAttributes;
     }
 }

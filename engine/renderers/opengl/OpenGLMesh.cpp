@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <cassert>
 #include <unordered_map>
+#include <algorithm>
 #include "OpenGLFunctions.h"
 #include "aeongames/Mesh.h"
 #include "OpenGLMesh.h"
@@ -62,20 +63,37 @@ namespace AeonGames
     {
         glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
-        /** @todo Find out what is best disable all or only unused */
-        for ( GLuint i = 0; i < Mesh::SEMANTIC_COUNT; ++i )
+    }
+
+    void OpenGLMesh::EnableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const
+    {
+        for ( GLuint i = 0; i < 8; ++i )
         {
             glDisableVertexAttribArray ( i );
         }
+
         size_t offset{0};
         for ( auto& attribute : mMesh->GetAttributes() )
         {
-            glEnableVertexAttribArray ( std::get<0> ( attribute ) );
+            auto it = std::lower_bound ( aAttributes.begin(), aAttributes.end(), std::get<0> ( attribute ),
+                                         [] ( const OpenGLVertexAttribute & a, uint32_t b )
+            {
+                return a.name < b;
+            } );
+            if ( it == aAttributes.end() || it->name != std::get<0> ( attribute ) )
+            {
+                /* If we get here, it means the attribute is not present in aAttributes,
+                    but it is present in the mesh, so skip it and continue. */
+                offset += GetAttributeTotalSize ( attribute );
+                continue;
+            }
+
+            glEnableVertexAttribArray ( it->location );
             OPENGL_CHECK_ERROR_THROW;
             if ( ! ( std::get<3> ( attribute ) & Mesh::AttributeFlag::INTEGER ) )
             {
                 glVertexAttribPointer (
-                    std::get<0> ( attribute ),
+                    it->location,
                     std::get<1> ( attribute ),
                     MeshTypeToOGL[std::get<2> ( attribute )],
                     std::get<3> ( attribute ) & Mesh::AttributeFlag::NORMALIZED,
@@ -86,7 +104,7 @@ namespace AeonGames
             else
             {
                 glVertexAttribIPointer (
-                    std::get<0> ( attribute ),
+                    it->location,
                     std::get<1> ( attribute ),
                     MeshTypeToOGL[std::get<2> ( attribute )],
                     static_cast<GLsizei> ( mMesh->GetStride() ),
@@ -104,5 +122,13 @@ namespace AeonGames
             glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0 );
         }
         OPENGL_CHECK_ERROR_THROW;
+    }
+
+    void OpenGLMesh::DisableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const
+    {
+        for ( const auto& attribute : aAttributes )
+        {
+            glDisableVertexAttribArray ( attribute.location );
+        }
     }
 }
