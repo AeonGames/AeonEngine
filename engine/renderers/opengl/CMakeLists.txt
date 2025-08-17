@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -17,7 +17,7 @@ if(UNIX)
   find_package(X11)
 endif()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include)
 
 set(CMAKE_REQUIRED_QUIET OFF)
 
@@ -151,11 +151,7 @@ set(OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/glAssignments.h
     ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.h
     OpenGLRenderer.h
-    #OpenGLWinAPIRenderer.h
-    #OpenGLX11Renderer.h
     OpenGLWindow.h
-    #OpenGLWinAPIWindow.h
-    #OpenGLX11Window.h
     OpenGLFunctions.h
     OpenGLBuffer.h
     OpenGLMesh.h
@@ -168,11 +164,7 @@ set(OPENGL_RENDERER_HEADERS
 set(OPENGL_RENDERER_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.cpp
     OpenGLRenderer.cpp
-    #OpenGLWinAPIRenderer.cpp
-    #OpenGLX11Renderer.cpp
     OpenGLWindow.cpp
-    #OpenGLWinAPIWindow.cpp
-    #OpenGLX11Window.cpp
     OpenGLBuffer.cpp
     OpenGLMesh.cpp
     OpenGLPipeline.cpp

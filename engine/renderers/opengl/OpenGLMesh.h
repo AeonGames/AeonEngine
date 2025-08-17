@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLMESH_H
 #define AEONGAMES_OPENGLMESH_H
 
+#include <vector>
 #include "OpenGLBuffer.h"
-
+#include "OpenGLVertexAttribute.h"
 namespace AeonGames
 {
     class Mesh;
@@ -32,6 +33,8 @@ namespace AeonGames
         OpenGLMesh& operator= ( const OpenGLMesh& aOpenGLMesh ) = delete;
         OpenGLMesh& operator= ( OpenGLMesh&& aOpenGLMesh ) = delete;
         void Bind() const;
+        void EnableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const;
+        void DisableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const;
     private:
         const OpenGLRenderer& mOpenGLRenderer;
         const Mesh* mMesh{nullptr};
