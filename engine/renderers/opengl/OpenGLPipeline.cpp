@@ -250,13 +250,16 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             GLint location = glGetAttribLocation ( mProgramId, name );
             OPENGL_CHECK_ERROR_THROW;
-            mAttributes.push_back ( { crc32i ( name, length ), location, size, type } );
-            std::cout << "Attribute " << i << ": " << name << " (crc: " << std::hex << mAttributes.back().name << std::dec << " location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
+
+            const uint32_t name_crc{crc32i ( name, length ) };
+            auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
+                                         [] ( const OpenGLVertexAttribute & a, const uint32_t b )
+            {
+                return a.name < b;
+            } );
+            mAttributes.insert ( it, { name_crc, location, size, type } );
+            std::cout << "Attribute " << i << ": " << name << " (crc: " << std::hex << name_crc << std::dec << " location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
         }
-        std::sort ( mAttributes.begin(), mAttributes.end(), [] ( const OpenGLVertexAttribute & a, const OpenGLVertexAttribute & b )
-        {
-            return a.name < b.name;
-        } );
 
         GLint num_active_uniforms;
         glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &num_active_uniforms );
