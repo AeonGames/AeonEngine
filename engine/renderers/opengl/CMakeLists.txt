@@ -181,7 +181,7 @@ add_library(OpenGLRenderer
             SHARED
             ${OPENGL_RENDERER_HEADERS}
             ${OPENGL_RENDERER_SOURCES}
-            ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
+            ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp)
 
 if(IWYU_PROGRAM)
   set_property(TARGET OpenGLRenderer PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})

@@ -13,16 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/Frustum.h"
-#include "aeongames/AABB.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/Node.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Material.h"
-#include "aeongames/MemoryPool.h" ///<- This is here just for the literals
+#include "aeongames/Frustum.hpp"
+#include "aeongames/AABB.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/MemoryPool.hpp" ///<- This is here just for the literals
 #include "OpenGLWindow.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLFunctions.h"

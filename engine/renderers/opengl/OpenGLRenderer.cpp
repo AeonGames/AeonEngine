@@ -20,12 +20,12 @@ limitations under the License.
 #include "OpenGLBuffer.h"
 #include "OpenGLWindow.h"
 #include "OpenGLFunctions.h"
-#include "aeongames/Platform.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "aeongames/Texture.h"
-#include "aeongames/LogLevel.h"
+#include "aeongames/Platform.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Texture.hpp"
+#include "aeongames/LogLevel.hpp"
 
 namespace AeonGames
 {

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2018,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -20,15 +20,15 @@ include_directories(${GTEST_INCLUDE_DIR}
                     ${CMAKE_BINARY_DIR}/engine)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/engine/include/Decoder.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Archive.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Container.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Package.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Archive.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Container.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.hpp)
 set(TEST_SRCS
     Main.cpp
     ArchiveTests.cpp

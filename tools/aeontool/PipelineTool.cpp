@@ -18,7 +18,7 @@ limitations under the License.
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
-#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufClasses.hpp"
 #include <google/protobuf/text_format.h>
 #include "pipeline.pb.h"
 #ifdef _MSC_VER
@@ -33,7 +33,7 @@ limitations under the License.
 #include <filesystem>
 #include "PipelineTool.h"
 #include "CodeFieldValuePrinter.hpp"
-#include "aeongames/Pipeline.h"
+#include "aeongames/Pipeline.hpp"
 
 namespace AeonGames
 {

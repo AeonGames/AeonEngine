@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ limitations under the License.
 #include <functional>
 #include <filesystem>
 #include <string>
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Package.h"
-#include "aeongames/CRC.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Package.hpp"
+#include "aeongames/CRC.hpp"
 #include "gtest/gtest.h"
 
 using namespace ::testing;

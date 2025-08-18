@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
 #include <cstring>
 #include <cassert>
 #include <algorithm>
 #include <sstream>
 #include <variant>
 
-#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufClasses.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -36,7 +36,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 
-#include "aeongames/Resource.h"
+#include "aeongames/Resource.hpp"
 
 namespace AeonGames
 {
@@ -249,7 +249,7 @@ namespace AeonGames
     {
         for ( const auto& mRootNode : mNodes )
         {
-            if ( Node* node = static_cast<Node*> ( mRootNode.get() )->Find ( aUnaryPredicate ) )
+            if ( Node * node = static_cast<Node * > ( mRootNode.get() )->Find ( aUnaryPredicate ) )
             {
                 return node;
             }
@@ -292,7 +292,7 @@ namespace AeonGames
         },
         aNode->mParent );
         aNode->mParent = this;
-        std::vector<std::unique_ptr<Node>>::iterator inserted_node;
+        std::vector<std::unique_ptr<Node >>::iterator inserted_node;
         if ( aIndex < mNodes.size() )
         {
             inserted_node = mNodes.insert ( mNodes.begin() + aIndex, std::move ( aNode ) );
@@ -424,7 +424,7 @@ namespace AeonGames
         LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCE"_mgk );
         mName = scene_buffer.name();
 
-        std::unordered_map<const NodeMsg*, std::tuple<const NodeMsg*, int, Node*>> node_map;
+        std::unordered_map<const NodeMsg*, std::tuple<const NodeMsg*, int, Node* >> node_map;
         for ( auto &i : scene_buffer.node() )
         {
             const NodeMsg* node = &i;

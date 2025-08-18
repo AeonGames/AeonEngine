@@ -18,7 +18,7 @@ limitations under the License.
 #include <unordered_map>
 #include <algorithm>
 #include "OpenGLFunctions.h"
-#include "aeongames/Mesh.h"
+#include "aeongames/Mesh.hpp"
 #include "OpenGLMesh.h"
 
 namespace AeonGames

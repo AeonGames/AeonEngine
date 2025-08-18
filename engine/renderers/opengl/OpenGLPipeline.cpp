@@ -15,7 +15,7 @@ limitations under the License.
 */
 #include "OpenGLPipeline.h"
 #include "OpenGLFunctions.h"
-#include "aeongames/CRC.h"
+#include "aeongames/CRC.hpp"
 #include <vector>
 #include <algorithm>
 

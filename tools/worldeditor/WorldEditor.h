@@ -21,11 +21,11 @@ limitations under the License.
 #include <QSettings>
 #include <string>
 #include <filesystem>
-#include "aeongames/Pipeline.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Material.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/StringId.h"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/StringId.hpp"
 Q_DECLARE_METATYPE ( AeonGames::StringId );
 Q_DECLARE_METATYPE ( std::string );
 Q_DECLARE_METATYPE ( std::filesystem::path );

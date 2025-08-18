@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 /** \File Implements the interface for the Portaudio plugin.*/
-#include "aeongames/Plugin.h"
-#include "aeongames/Component.h"
-#include "aeongames/StringId.h"
+#include "aeongames/Plugin.hpp"
+#include "aeongames/Component.hpp"
+#include "aeongames/StringId.hpp"
 #include "ModelComponent.h"
 #include "Camera.h"
 #include "PointLight.h"

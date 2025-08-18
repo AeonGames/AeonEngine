@@ -15,10 +15,10 @@ limitations under the License.
 */
 #include <array>
 #include <regex>
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "aeongames/CRC.h"
-#include "aeongames/Mesh.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufUtils.hpp"
+#include "aeongames/CRC.hpp"
+#include "aeongames/Mesh.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )

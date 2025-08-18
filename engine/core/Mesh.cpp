@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -23,9 +23,9 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "aeongames/Mesh.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/AeonEngine.h"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/AeonEngine.hpp"
 
 namespace AeonGames
 {
@@ -116,13 +116,13 @@ namespace AeonGames
         {
             {
                 aMeshMsg.center().x(),
-                aMeshMsg.center().y(),
-                aMeshMsg.center().z()
+                        aMeshMsg.center().y(),
+                        aMeshMsg.center().z()
             },
             {
                 aMeshMsg.radii().x(),
-                aMeshMsg.radii().y(),
-                aMeshMsg.radii().z()
+                        aMeshMsg.radii().y(),
+                        aMeshMsg.radii().z()
             }
         };
 

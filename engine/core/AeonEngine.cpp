@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018-2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufClasses.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -27,24 +27,24 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "aeongames/ProtoBufHelpers.h"
-#include "aeongames/Plugin.h"
-#include "aeongames/Node.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/Buffer.h"
-#include "aeongames/Texture.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Material.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Model.h"
-#include "aeongames/Skeleton.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Package.h"
-#include "aeongames/ResourceFactory.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/Resource.h"
+#include "aeongames/ProtoBufHelpers.hpp"
+#include "aeongames/Plugin.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/Buffer.hpp"
+#include "aeongames/Texture.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Model.hpp"
+#include "aeongames/Skeleton.hpp"
+#include "aeongames/Animation.hpp"
+#include "aeongames/Package.hpp"
+#include "aeongames/ResourceFactory.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/Resource.hpp"
 #include "Factory.h"
 #ifdef __unix__
 #include <X11/Xlib.h>
@@ -62,9 +62,9 @@ namespace AeonGames
     static bool gInitialized = false;
     static ConfigurationMsg gConfigurationMsg;
 #if defined(WIN32)
-    static std::vector<std::tuple<HMODULE, PluginModuleInterface*>> gPlugInCache;
+    static std::vector<std::tuple<HMODULE, PluginModuleInterface* >> gPlugInCache;
 #else
-    static std::vector<std::tuple<void*, PluginModuleInterface*>> gPlugInCache;
+    static std::vector<std::tuple<void*, PluginModuleInterface* >> gPlugInCache;
 #endif
     static std::string gPlugInPath ( std::getenv ( "PATH" ) ? std::getenv ( "PATH" ) : ""  );
     static void LoadPlugin ( const std::string& aDir, const std::string& aFilename )

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <mutex>
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufHelpers.h"
-#include "aeongames/Node.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "aeongames/Skeleton.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/ProtoBufHelpers.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "aeongames/CRC.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/ResourceCache.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/Model.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Skeleton.hpp"
+#include "aeongames/Animation.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
+#include "aeongames/ProtoBufUtils.hpp"
+#include "aeongames/CRC.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/ResourceCache.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/Model.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )

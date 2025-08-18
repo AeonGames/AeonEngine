@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ limitations under the License.
 #include <utility>
 #include <tuple>
 #include <algorithm>
-#include "aeongames/StringId.h"
+#include "aeongames/StringId.hpp"
 
 #define FactoryDefinition(X,...) \
     std::unique_ptr<X> Construct##X ( uint32_t aIdentifier,##__VA_ARGS__);\

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@ limitations under the License.
 
 #include <vector>
 #include <cstring>
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -26,9 +26,9 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include "aeongames/Skeleton.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Matrix4x4.h"
+#include "aeongames/Skeleton.hpp"
+#include "aeongames/Animation.hpp"
+#include "aeongames/Matrix4x4.hpp"
 
 namespace AeonGames
 {
@@ -73,21 +73,21 @@ namespace AeonGames
                 Vector3
                 {
                     joint.scale().x(),
-                    joint.scale().y(),
-                    joint.scale().z()
+                         joint.scale().y(),
+                         joint.scale().z()
                 },
                 Quaternion
                 {
                     joint.rotation().w(),
-                    joint.rotation().x(),
-                    joint.rotation().y(),
-                    joint.rotation().z()
+                         joint.rotation().x(),
+                         joint.rotation().y(),
+                         joint.rotation().z()
                 },
                 Vector3
                 {
                     joint.translation().x(),
-                    joint.translation().y(),
-                    joint.translation().z()
+                         joint.translation().y(),
+                         joint.translation().z()
                 }
             },
             Transform
@@ -95,21 +95,21 @@ namespace AeonGames
                 Vector3
                 {
                     joint.invertedscale().x(),
-                    joint.invertedscale().y(),
-                    joint.invertedscale().z()
+                         joint.invertedscale().y(),
+                         joint.invertedscale().z()
                 },
                 Quaternion
                 {
                     joint.invertedrotation().w(),
-                    joint.invertedrotation().x(),
-                    joint.invertedrotation().y(),
-                    joint.invertedrotation().z()
+                         joint.invertedrotation().x(),
+                         joint.invertedrotation().y(),
+                         joint.invertedrotation().z()
                 },
                 Vector3
                 {
                     joint.invertedtranslation().x(),
-                    joint.invertedtranslation().y(),
-                    joint.invertedtranslation().z()
+                         joint.invertedtranslation().y(),
+                         joint.invertedtranslation().z()
                 }
             },
             joint.name() );

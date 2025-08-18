@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021,2023,2024 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2021,2023,2024,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -26,65 +26,65 @@ include_directories(
 )
 
 set(ENGINE_SDK_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/FrameBuffer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Buffer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/BufferAccessor.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Animation.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Texture.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Sound.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceFactory.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceId.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/MemoryPool.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Package.h)
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/LogLevel.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/FrameBuffer.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Mesh.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Material.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Buffer.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/BufferAccessor.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Skeleton.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Animation.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Texture.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Sound.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceFactory.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceId.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/MemoryPool.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Package.hpp)
 
 set(ENGINE_MATH_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector3.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector2.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Plane.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/AABB.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Frustum.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix3x3.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufHelpers.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector4.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector3.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Vector2.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Plane.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/AABB.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Frustum.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix4x4.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Matrix3x3.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Transform.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufHelpers.hpp
 )
 
 set(ENGINE_CORE_HEADERS
     include/Decoder.h
     include/Factory.h
     include/Configuration.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Component.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/StringId.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Material.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Base64.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.h
-    ${CMAKE_SOURCE_DIR}/include/aeongames/Clock.h
-    # ${CMAKE_SOURCE_DIR}/include/aeongames/Octree.h
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Node.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Component.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/StringId.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Material.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Model.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Base64.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Property.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Clock.hpp
+    # ${CMAKE_SOURCE_DIR}/include/aeongames/Octree.hpp
     )
 
 set(ENGINE_CORE_SOURCES

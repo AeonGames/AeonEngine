@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_PORTAUDIOSOUNDSYSTEM_H
 #include <string>
 #include <vector>
-#include "aeongames/SoundSystem.h"
+#include "aeongames/SoundSystem.hpp"
 
 namespace AeonGames
 {

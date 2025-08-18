@@ -19,7 +19,7 @@ limitations under the License.
 #include <vector>
 #include <string_view>
 #include "OpenGLVertexAttribute.h"
-#include "aeongames/Pipeline.h"
+#include "aeongames/Pipeline.hpp"
 
 namespace AeonGames
 {

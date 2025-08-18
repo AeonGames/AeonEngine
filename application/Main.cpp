@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2020,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2020,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/StringId.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/Platform.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/StringId.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Platform.hpp"
 #include "Window.h"
 #include <cassert>
 #include <iostream>

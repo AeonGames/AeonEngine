@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ limitations under the License.
 
 #ifndef AEONGAMES_COMPONENTMODEL_H
 #define AEONGAMES_COMPONENTMODEL_H
-#include "aeongames/Component.h"
+#include "aeongames/Component.hpp"
 #include "PropertyModel.h"
 namespace AeonGames
 {

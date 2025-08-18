@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@ limitations under the License.
 #include <algorithm>
 #include <iostream>
 #include <cstring>
-#include "aeongames/Platform.h"
-#include "aeongames/Utilities.h"
+#include "aeongames/Platform.hpp"
+#include "aeongames/Utilities.hpp"
 namespace AeonGames
 {
     const std::string GetFileExtension ( const std::string& aFilePath )

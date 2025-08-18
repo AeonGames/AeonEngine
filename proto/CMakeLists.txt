@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2024,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -38,7 +38,7 @@ add_library(ProtoBufClasses SHARED
   matrix4x4.proto
   animation.proto
   collision.proto
-  ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.h
+  ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufClasses.hpp
 )
 
 protobuf_generate(TARGET ProtoBufClasses
@@ -52,11 +52,11 @@ if(MSVC)
   set_target_properties(
     ProtoBufClasses
     PROPERTIES COMPILE_FLAGS
-               "-FIaeongames/ProtoBufClasses.h -WX -D_CRT_SECURE_NO_WARNINGS")
+               "-FIaeongames/ProtoBufClasses.hpp -WX -D_CRT_SECURE_NO_WARNINGS")
 elseif(MINGW OR MSYS OR UNIX)
   set_target_properties(
     ProtoBufClasses
     PROPERTIES
       COMPILE_FLAGS
-      "-include aeongames/ProtoBufClasses.h")
+      "-include aeongames/ProtoBufClasses.hpp")
 endif()
