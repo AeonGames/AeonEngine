@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,17 +18,17 @@ limitations under the License.
 #include <cstring>
 #include <cmath>
 #include <cassert>
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Skeleton.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Buffer.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/Node.h"
-#include "aeongames/Model.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Skeleton.hpp"
+#include "aeongames/Animation.hpp"
+#include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Buffer.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Model.hpp"
 #include "ModelComponent.h"
 
 namespace AeonGames
@@ -152,7 +152,7 @@ namespace AeonGames
             AABB aabb;
             for ( auto& i : model->GetAssemblies() )
             {
-                if ( Mesh* mesh = std::get<0> ( i ).Cast<Mesh>() )
+                if ( Mesh * mesh = std::get<0> ( i ).Cast<Mesh>() )
                 {
                     aabb += mesh->GetAABB();
                 }

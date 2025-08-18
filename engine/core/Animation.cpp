@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ limitations under the License.
 #include <cstring>
 #include <cmath>
 #include <mutex>
-#include "aeongames/AeonEngine.h"
-#include "aeongames/ProtoBufHelpers.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/Animation.h"
-#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
+#include "aeongames/ProtoBufUtils.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/Animation.hpp"
+#include "aeongames/ProtoBufClasses.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -57,28 +57,28 @@ namespace AeonGames
             for ( auto& joint : frame.bone() )
             {
                 mFrames.back().emplace_back (
-                    Transform
+                           Transform
                 {
                     Vector3
                     {
                         joint.scale().x(),
-                        joint.scale().y(),
-                        joint.scale().z()
+                             joint.scale().y(),
+                             joint.scale().z()
                     },
                     Quaternion
                     {
                         joint.rotation().w(),
-                        joint.rotation().x(),
-                        joint.rotation().y(),
-                        joint.rotation().z()
+                             joint.rotation().x(),
+                             joint.rotation().y(),
+                             joint.rotation().z()
                     },
                     Vector3
                     {
                         joint.translation().x(),
-                        joint.translation().y(),
-                        joint.translation().z()
+                             joint.translation().y(),
+                             joint.translation().z()
                     }                   }
-                );
+                       );
             }
         }
     }

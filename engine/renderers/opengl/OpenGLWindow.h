@@ -19,10 +19,10 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <mutex>
-#include "aeongames/Platform.h"
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Frustum.h"
-#include "aeongames/Texture.h"
+#include "aeongames/Platform.hpp"
+#include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Frustum.hpp"
+#include "aeongames/Texture.hpp"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLFrameBuffer.h"

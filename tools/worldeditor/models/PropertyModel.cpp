@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ limitations under the License.
 #include <typeinfo>
 #include <cassert>
 
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ResourceId.h"
-#include "aeongames/Model.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ResourceId.hpp"
+#include "aeongames/Model.hpp"
 #include "PropertyModel.h"
 
 namespace AeonGames

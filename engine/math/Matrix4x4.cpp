@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cmath>
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Transform.h"
-#include "aeongames/Vector3.h"
+#include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Transform.hpp"
+#include "aeongames/Vector3.hpp"
 #include "3DMath.h"
 
 namespace AeonGames

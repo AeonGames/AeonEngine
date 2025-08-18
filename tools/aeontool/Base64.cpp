@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ limitations under the License.
 #include "sys/stat.h"
 #endif
 #include "Base64.h"
-#include "aeongames/Base64.h"
-#include "aeongames/Pipeline.h"
+#include "aeongames/Base64.hpp"
+#include "aeongames/Pipeline.hpp"
 
 namespace AeonGames
 {

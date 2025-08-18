@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ limitations under the License.
 #include <QCloseEvent>
 
 #include "WorldEditor.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/Matrix4x4.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Matrix4x4.hpp"
 
 namespace AeonGames
 {

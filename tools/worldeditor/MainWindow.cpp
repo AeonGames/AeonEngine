@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2024 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ limitations under the License.
 #include <QScrollArea>
 #include <QColorSpace>
 #include <iostream>
-#include "aeongames/Renderer.h"
-#include "aeongames/LogLevel.h"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/LogLevel.hpp"
 #include "WorldEditor.h"
 #include "MainWindow.h"
 #include "SceneWindow.h"

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 #include "OpenGLFunctions.h"
 #include "OpenGLRenderer.h"
 #include "OpenGLTexture.h"
-#include "aeongames/Texture.h"
+#include "aeongames/Texture.hpp"
 
 namespace AeonGames
 {

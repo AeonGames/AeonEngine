@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #ifdef _WIN32
-#include "aeongames/Platform.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/Frustum.h"
+#include "aeongames/Platform.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Frustum.hpp"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -158,13 +158,13 @@ namespace AeonGames
             if ( EnumDisplaySettingsEx ( nullptr, ENUM_CURRENT_SETTINGS, &device_mode, 0 ) )
             {
                 std::cout <<
-                          "Position: " << device_mode.dmPosition.x << " " << device_mode.dmPosition.y << std::endl <<
-                          "Display Orientation: " << device_mode.dmDisplayOrientation << std::endl <<
-                          "Display Flags: " << device_mode.dmDisplayFlags << std::endl <<
-                          "Display Frecuency: " << device_mode.dmDisplayFrequency << std::endl <<
-                          "Bits Per Pixel: " << device_mode.dmBitsPerPel << std::endl <<
-                          "Width: " << device_mode.dmPelsWidth << std::endl <<
-                          "Height: " << device_mode.dmPelsHeight << std::endl;
+                "Position: " << device_mode.dmPosition.x << " " << device_mode.dmPosition.y << std::endl <<
+                "Display Orientation: " << device_mode.dmDisplayOrientation << std::endl <<
+                "Display Flags: " << device_mode.dmDisplayFlags << std::endl <<
+                "Display Frecuency: " << device_mode.dmDisplayFrequency << std::endl <<
+                "Bits Per Pixel: " << device_mode.dmBitsPerPel << std::endl <<
+                "Width: " << device_mode.dmPelsWidth << std::endl <<
+                "Height: " << device_mode.dmPelsHeight << std::endl;
                 aX = device_mode.dmPosition.x;
                 aY = device_mode.dmPosition.y;
                 aWidth = device_mode.dmPelsWidth;
@@ -245,7 +245,7 @@ namespace AeonGames
             else if ( mRenderer )
             {
                 std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
-                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double>> ( current_time - last_time ) };
+                std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
                 aScene.Update ( delta.count() );
                 last_time = current_time;
                 if ( const Node* camera = aScene.GetCamera() )

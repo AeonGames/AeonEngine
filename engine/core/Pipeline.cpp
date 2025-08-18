@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 #include <unordered_map>
-#include "aeongames/Pipeline.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )

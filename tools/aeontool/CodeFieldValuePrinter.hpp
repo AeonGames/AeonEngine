@@ -18,7 +18,7 @@ limitations under the License.
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
-#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufClasses.hpp"
 #include <google/protobuf/text_format.h>
 #ifdef _MSC_VER
 #pragma warning( pop )

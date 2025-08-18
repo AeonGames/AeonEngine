@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ limitations under the License.
 #include <cassert>
 #include <iostream>
 
-#include "aeongames/ResourceId.h"
-#include "aeongames/Component.h"
-#include "aeongames/ToString.h"
-#include "aeongames/StringId.h"
-#include "aeongames/LogLevel.h"
+#include "aeongames/ResourceId.hpp"
+#include "aeongames/Component.hpp"
+#include "aeongames/ToString.hpp"
+#include "aeongames/StringId.hpp"
+#include "aeongames/LogLevel.hpp"
 #include "ComponentModel.h"
 #include "WorldEditor.h"
 

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@ limitations under the License.
 #include <sstream>
 #include <exception>
 #include <unordered_map>
-#include "aeongames/ResourceFactory.h"
-#include "aeongames/ResourceCache.h"
-#include "aeongames/ResourceId.h"
+#include "aeongames/ResourceFactory.hpp"
+#include "aeongames/ResourceCache.hpp"
+#include "aeongames/ResourceId.hpp"
 
 namespace AeonGames
 {
-    static std::unordered_map < uint32_t, std::tuple<std::function < UniqueAnyPtr ( uint32_t ) >, UniqueAnyPtr>> Constructors;
+    static std::unordered_map < uint32_t, std::tuple<std::function < UniqueAnyPtr ( uint32_t ) >, UniqueAnyPtr >> Constructors;
 
     UniqueAnyPtr ConstructResource ( const ResourceId& aResourceId )
     {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 #include <unordered_map>
 #include <cstdint>
 #include "Tool.h"
-#include "aeongames/Package.h"
+#include "aeongames/Package.hpp"
 
 namespace AeonGames
 {

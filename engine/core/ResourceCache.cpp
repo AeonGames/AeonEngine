@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <unordered_map>
-#include "aeongames/ResourceCache.h"
-#include "aeongames/ResourceFactory.h"
-#include "aeongames/ResourceId.h"
+#include "aeongames/ResourceCache.hpp"
+#include "aeongames/ResourceFactory.hpp"
+#include "aeongames/ResourceId.hpp"
 
 namespace AeonGames
 {
