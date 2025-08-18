@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015,2018-2020 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015,2018-2020,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ limitations under the License.
 #include <QXmlStreamWriter>
 #include <QTextStream>
 #include "SceneModel.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
 
 namespace AeonGames
 {
@@ -120,7 +120,7 @@ namespace AeonGames
         }
         else if ( role == Qt::DecorationRole )
         {
-            if ( mScene.GetCamera() != reinterpret_cast<Node*> ( index.internalPointer() ) )
+            if ( mScene.GetCamera() != reinterpret_cast<Node * > ( index.internalPointer() ) )
             {
                 return QIcon ( ":/icons/icon_node" );
             }

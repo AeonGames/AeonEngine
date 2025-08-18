@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2019,2021,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ limitations under the License.
 #include <iostream>
 #include <exception>
 #include "Configuration.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/Resource.h"
-#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/Resource.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
 
 namespace AeonGames
 {

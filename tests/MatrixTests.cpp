@@ -18,7 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <functional>
 #include <string>
-#include "aeongames/Matrix4x4.h"
+#include "aeongames/Matrix4x4.hpp"
 #include "../engine/math/3DMath.h"
 #include "gtest/gtest.h"
 

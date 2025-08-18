@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 #include "ComponentListModel.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/StringId.h"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/StringId.hpp"
 
 namespace AeonGames
 {

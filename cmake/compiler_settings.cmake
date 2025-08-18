@@ -55,7 +55,7 @@ option(USE_IWYU "Instrument compilation to use include-what-you-use" OFF)
 if(USE_IWYU)
   find_program(IWYU_PROGRAM NAMES include-what-you-use iwyu)
   if(IWYU_PROGRAM)
-    set(IWYU_COMMAND_LINE ${IWYU_PROGRAM};-Xiwyu;--keep=aeongames/ProtoBufClasses.h CACHE INTERNAL "IWYU Command Line" FORCE)
+    set(IWYU_COMMAND_LINE ${IWYU_PROGRAM};-Xiwyu;--keep=aeongames/ProtoBufClasses.hpp CACHE INTERNAL "IWYU Command Line" FORCE)
   endif()
 endif()
 

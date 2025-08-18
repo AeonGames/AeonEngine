@@ -17,9 +17,9 @@ limitations under the License.
 #define AEONGAMES_OPENGLRENDERER_H
 
 #include <unordered_map>
-#include "aeongames/Renderer.h"
-#include "aeongames/Transform.h"
-#include "aeongames/Matrix4x4.h"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/Transform.hpp"
+#include "aeongames/Matrix4x4.hpp"
 #include "OpenGLFunctions.h"
 #include "OpenGLBuffer.h"
 #include "OpenGLMesh.h"
@@ -30,7 +30,7 @@ limitations under the License.
 #ifdef Status
 #undef Status
 #endif
-#include "aeongames/ProtoBufClasses.h"
+#include "aeongames/ProtoBufClasses.hpp"
 
 namespace AeonGames
 {

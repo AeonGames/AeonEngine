@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <atomic>
-#include "aeongames/Resource.h"
-#include "aeongames/ResourceCache.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/CRC.h"
+#include "aeongames/Resource.hpp"
+#include "aeongames/ResourceCache.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/CRC.hpp"
 
 namespace AeonGames
 {

@@ -23,14 +23,14 @@ limitations under the License.
 #include <stdexcept>
 #include "WorldEditor.h"
 #include "EngineWindow.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/Model.h"
-#include "aeongames/Animation.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/ResourceCache.h"
-#include "aeongames/Frustum.h"
-#include "aeongames/CRC.h"
-#include "aeongames/Node.h"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/Model.hpp"
+#include "aeongames/Animation.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/ResourceCache.hpp"
+#include "aeongames/Frustum.hpp"
+#include "aeongames/CRC.hpp"
+#include "aeongames/Node.hpp"
 
 namespace AeonGames
 {

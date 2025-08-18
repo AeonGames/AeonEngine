@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/Material.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufHelpers.h"
+#include "aeongames/Material.hpp"
+#include "aeongames/ProtoBufUtils.hpp"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufHelpers.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -239,7 +239,7 @@ namespace AeonGames
         }
     }
 
-    const std::vector<std::tuple<std::string, ResourceId>>& Material::GetSamplers() const
+    const std::vector<std::tuple<std::string, ResourceId >> & Material::GetSamplers() const
     {
         return mSamplers;
     }

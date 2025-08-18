@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,14 +23,14 @@ limitations under the License.
 #include <cassert>
 #include <algorithm>
 #include <type_traits>
-#include "aeongames/Node.h"
-#include "aeongames/Scene.h"
-#include "aeongames/LogLevel.h"
+#include "aeongames/Node.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/LogLevel.hpp"
 #include "Factory.h"
-#include "aeongames/StringId.h"
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/ProtoBufUtils.h"
-#include "aeongames/CRC.h"
+#include "aeongames/StringId.hpp"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/ProtoBufUtils.hpp"
+#include "aeongames/CRC.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -94,7 +94,7 @@ namespace AeonGames
     Scene* Node::GetScene() const
     {
         const Node* node = this;
-        while ( std::holds_alternative<Node*> ( node->mParent ) && std::get<Node*> ( node->mParent ) != nullptr )
+        while ( std::holds_alternative<Node * > ( node->mParent ) && std::get<Node * > ( node->mParent ) != nullptr )
         {
             node = std::get<Node*> ( node->mParent );
         }
@@ -141,7 +141,7 @@ namespace AeonGames
         {
             std::visit ( [&node] ( auto&& parent )
             {
-                if ( typeid ( parent ).hash_code() == typeid ( Node* ).hash_code() && parent != nullptr )
+                if ( typeid ( parent ).hash_code() == typeid ( Node * ).hash_code() && parent != nullptr )
                 {
                     node.mGlobalTransform = reinterpret_cast<Node*> ( parent )->mGlobalTransform * node.mLocalTransform;
                 }
@@ -160,7 +160,7 @@ namespace AeonGames
         // Update the Local transform for this node only
         std::visit ( [this] ( auto&& parent )
         {
-            if ( typeid ( parent ).hash_code() == typeid ( Node* ).hash_code() && parent != nullptr )
+            if ( typeid ( parent ).hash_code() == typeid ( Node * ).hash_code() && parent != nullptr )
             {
                 mLocalTransform = mGlobalTransform * reinterpret_cast<Node*> ( parent )->mGlobalTransform.GetInverted();
             }
@@ -181,7 +181,7 @@ namespace AeonGames
                       for each node and is false only once.*/
             std::visit ( [this, &node] ( auto&& parent )
             {
-                if ( &node != this && typeid ( parent ).hash_code() == typeid ( Node* ).hash_code() && parent != nullptr )
+                if ( &node != this && typeid ( parent ).hash_code() == typeid ( Node * ).hash_code() && parent != nullptr )
                 {
                     node.mGlobalTransform = reinterpret_cast<Node*> ( parent )->mGlobalTransform * node.mLocalTransform;
                 }
@@ -321,7 +321,7 @@ namespace AeonGames
             return nullptr;
         }
         aNode->mParent = this;
-        std::vector<std::unique_ptr<Node>>::iterator it{};
+        std::vector<std::unique_ptr<Node >>::iterator it{};
         if ( aIndex < mNodes.size() )
         {
             it = mNodes.insert ( mNodes.begin() + aIndex, std::move ( aNode ) );

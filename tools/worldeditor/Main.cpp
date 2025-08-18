@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ limitations under the License.
 #include <mutex>
 #include "MainWindow.h"
 #include "WorldEditor.h"
-#include "aeongames/AeonEngine.h"
+#include "aeongames/AeonEngine.hpp"
 
 #ifdef _MSC_VER
 #include <tlhelp32.h>

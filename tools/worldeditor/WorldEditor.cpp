@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "WorldEditor.h"
-#include "aeongames/Vector3.h"
-#include "aeongames/Vector4.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Material.h"
+#include "aeongames/Vector3.hpp"
+#include "aeongames/Vector4.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Material.hpp"
 #include "RendererSelectDialog.h"
 #include <QMessageBox>
 #include <QFile>
