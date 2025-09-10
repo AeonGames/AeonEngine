@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include <vector>
 #include <algorithm>
+#include <cassert>
 
 namespace AeonGames
 {
@@ -261,22 +262,22 @@ namespace AeonGames
             std::cout << "Attribute " << i << ": " << name << " (crc: " << std::hex << name_crc << std::dec << " location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
         }
 
-        GLint num_active_uniforms;
-        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &num_active_uniforms );
-        OPENGL_CHECK_ERROR_THROW;
+        // GLint num_active_uniforms;
+        // glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &num_active_uniforms );
+        // OPENGL_CHECK_ERROR_THROW;
 
-        for ( GLint i = 0; i < num_active_uniforms; ++i )
-        {
-            GLchar name[256];
-            GLsizei length;
-            GLint size;
-            GLenum type;
-            glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
-            OPENGL_CHECK_ERROR_THROW;
-            GLint location { glGetUniformLocation ( mProgramId, name ) };
-            OPENGL_CHECK_ERROR_THROW;
-            std::cout << "Uniform (index: " << i << " name: " << name << " size: " << size << ", type: " << type << ", location: " << location << ")" << std::endl;
-        }
+        // for ( GLint i = 0; i < num_active_uniforms; ++i )
+        // {
+        //     GLchar name[256];
+        //     GLsizei length;
+        //     GLint size;
+        //     GLenum type;
+        //     glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
+        //     OPENGL_CHECK_ERROR_THROW;
+        //     GLint location { glGetUniformLocation ( mProgramId, name ) };
+        //     OPENGL_CHECK_ERROR_THROW;
+        //     std::cout << "Uniform (index: " << i << " name: " << name << " size: " << size << ", type: " << type << ", location: " << location << ")" << std::endl;
+        // }
 
         // Extract Uniform Block information
         GLint num_uniform_blocks = 0;
@@ -284,39 +285,37 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         std::cout << "Active uniform blocks: " << num_uniform_blocks << std::endl;
 
+        mUniformBlocks.reserve ( num_uniform_blocks );
         for ( GLint block = 0; block < num_uniform_blocks; ++block )
         {
-            // Query block name length and name
-            GLint name_len = 0;
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_NAME_LENGTH, &name_len );
+            GLchar block_name[256];
+            GLsizei length{};
+            glGetActiveUniformBlockName ( mProgramId, block, sizeof ( block_name ), &length, block_name );
             OPENGL_CHECK_ERROR_THROW;
-            if ( name_len < 1 )
+            const uint32_t name_crc{crc32i ( block_name, length ) };
+            auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name_crc,
+                                         [] ( const OpenGLUniformBlock & a, const uint32_t b )
             {
-                name_len = 1;
-            }
-            std::vector<GLchar> block_name ( static_cast<size_t> ( name_len ) );
-            GLsizei written = 0;
-            glGetActiveUniformBlockName ( mProgramId, block, name_len, &written, block_name.data() );
+                return a.name < b;
+            } );
+            it = mUniformBlocks.insert ( it, { name_crc, 0, 0, 0 } );
+            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_DATA_SIZE, &it->data_size );
+            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_BINDING, &it->binding );
+            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &it->active_count );
             OPENGL_CHECK_ERROR_THROW;
 
-            // Other block properties
-            GLint data_size = 0, binding = 0, active_count = 0;
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_DATA_SIZE, &data_size );
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_BINDING, &binding );
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &active_count );
-            OPENGL_CHECK_ERROR_THROW;
+            std::cout << "Uniform Block " << block << ": " << block_name
+                      << " (binding: " << it->binding << ", size: " << it->data_size
+                      << ", uniforms: " << it->active_count << ")" << std::endl;
 
-            std::cout << "Uniform Block " << block << ": " << block_name.data()
-                      << " (binding: " << binding << ", size: " << data_size
-                      << ", uniforms: " << active_count << ")" << std::endl;
-
-            if ( active_count > 0 )
+            it->active_uniforms.reserve ( it->active_count );
+            if ( it->active_count > 0 )
             {
-                std::vector<GLint> indices ( static_cast<size_t> ( active_count ) );
-                glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices.data() );
+                assert ( it->active_count <= 64 );
+                GLint indices[64];
+                glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
                 OPENGL_CHECK_ERROR_THROW;
-
-                for ( GLint u = 0; u < active_count; ++u )
+                for ( GLint u = 0; u < it->active_count; ++u )
                 {
                     GLuint uniform_index = static_cast<GLuint> ( indices[ static_cast<size_t> ( u ) ] );
                     GLchar uname[256];
@@ -329,6 +328,9 @@ namespace AeonGames
                     GLint offset = 0;
                     glGetActiveUniformsiv ( mProgramId, 1, &uniform_index, GL_UNIFORM_OFFSET, &offset );
                     OPENGL_CHECK_ERROR_THROW;
+
+                    const uint32_t uname_crc{crc32i ( uname, ulen ) };
+                    it->active_uniforms.push_back ( { uname_crc, -1, usize, utype } );
 
                     std::cout << "  - Uniform idx " << uniform_index << ": " << uname
                               << " (type: " << utype << ", elements: " << usize
