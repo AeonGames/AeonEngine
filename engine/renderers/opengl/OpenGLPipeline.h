@@ -19,6 +19,7 @@ limitations under the License.
 #include <vector>
 #include <string_view>
 #include "OpenGLVertexAttribute.h"
+#include "OpenGLUniformBlock.h"
 #include "aeongames/Pipeline.hpp"
 
 namespace AeonGames
@@ -47,6 +48,7 @@ namespace AeonGames
         const Pipeline* mPipeline{};
         GLint mProgramId{};
         std::vector<OpenGLVertexAttribute> mAttributes{};
+        std::vector<OpenGLUniformBlock> mUniformBlocks{};
     };
 }
 #endif
