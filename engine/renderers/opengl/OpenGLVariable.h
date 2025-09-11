@@ -13,18 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLVERTEXATTRIBUTE_H
-#define AEONGAMES_OPENGLVERTEXATTRIBUTE_H
+#ifndef AEONGAMES_OPENGLVARIABLE_H
+#define AEONGAMES_OPENGLVARIABLE_H
 
 #include <cstdint>
 #include "OpenGLFunctions.h"
 
 namespace AeonGames
 {
-    struct OpenGLVertexAttribute
+    struct OpenGLVariable
     {
         uint32_t name;
-        GLint location;
+        union
+        {
+            GLint location;
+            GLint offset;
+        };
         GLint size;
         GLenum type;
     };

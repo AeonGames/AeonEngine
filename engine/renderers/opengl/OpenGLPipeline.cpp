@@ -236,106 +236,146 @@ namespace AeonGames
             glDeleteShader ( shader_id );
             OPENGL_CHECK_ERROR_THROW;
         }
-        // Extract Attribute and Uniform data from the compiled program
-        GLint num_active_attributes;
-        glGetProgramiv ( mProgramId, GL_ACTIVE_ATTRIBUTES, &num_active_attributes );
+        ReflectAttributes();
+        ReflectUniforms();
+    }
+
+    void OpenGLPipeline::ReflectAttributes()
+    {
+        mAttributes.clear();
+        GLint active_attribute_count{};
+        GLchar name[256] {};
+        GLsizei length{};
+        GLint size{};
+        GLenum type{};
+        GLint location{};
+        glGetProgramiv ( mProgramId, GL_ACTIVE_ATTRIBUTES, &active_attribute_count );
         OPENGL_CHECK_ERROR_THROW;
-        mAttributes.reserve ( num_active_attributes );
-        for ( GLint i = 0; i < num_active_attributes; ++i )
+        mAttributes.reserve ( active_attribute_count );
+        for ( GLint i = 0; i < active_attribute_count; ++i )
         {
-            GLchar name[256];
-            GLsizei length;
-            GLint size;
-            GLenum type;
             glGetActiveAttrib ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
             OPENGL_CHECK_ERROR_THROW;
-            GLint location = glGetAttribLocation ( mProgramId, name );
+            location = glGetAttribLocation ( mProgramId, name );
             OPENGL_CHECK_ERROR_THROW;
-
+            // Skip reserved attributes
+            if ( location < 0 )
+            {
+                continue;
+            }
             const uint32_t name_crc{crc32i ( name, length ) };
             auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
-                                         [] ( const OpenGLVertexAttribute & a, const uint32_t b )
+                                         [] ( const OpenGLVariable & a, const uint32_t b )
             {
                 return a.name < b;
             } );
             mAttributes.insert ( it, { name_crc, location, size, type } );
-            std::cout << "Attribute " << i << ": " << name << " (crc: " << std::hex << name_crc << std::dec << " location: " << location << ", size: " << size << ", type: " << type << ")" << std::endl;
         }
-
-        // GLint num_active_uniforms;
-        // glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &num_active_uniforms );
-        // OPENGL_CHECK_ERROR_THROW;
-
-        // for ( GLint i = 0; i < num_active_uniforms; ++i )
-        // {
-        //     GLchar name[256];
-        //     GLsizei length;
-        //     GLint size;
-        //     GLenum type;
-        //     glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
-        //     OPENGL_CHECK_ERROR_THROW;
-        //     GLint location { glGetUniformLocation ( mProgramId, name ) };
-        //     OPENGL_CHECK_ERROR_THROW;
-        //     std::cout << "Uniform (index: " << i << " name: " << name << " size: " << size << ", type: " << type << ", location: " << location << ")" << std::endl;
-        // }
-
-        // Extract Uniform Block information
-        GLint num_uniform_blocks = 0;
-        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORM_BLOCKS, &num_uniform_blocks );
-        OPENGL_CHECK_ERROR_THROW;
-        std::cout << "Active uniform blocks: " << num_uniform_blocks << std::endl;
-
-        mUniformBlocks.reserve ( num_uniform_blocks );
-        for ( GLint block = 0; block < num_uniform_blocks; ++block )
+        for ( const auto& attribute : mAttributes )
         {
-            GLchar block_name[256];
-            GLsizei length{};
-            glGetActiveUniformBlockName ( mProgramId, block, sizeof ( block_name ), &length, block_name );
+            std::cout << LogLevel::Debug << "Attribute: " << attribute.name << " (crc: " << std::hex << attribute.name << std::dec << ", location: " << attribute.location << ", size: " << attribute.size << ", type: " << attribute.type << ")" << std::endl;
+        }
+    }
+
+    void OpenGLPipeline::ReflectUniforms()
+    {
+        mUniforms.clear();
+        mUniformBlocks.clear();
+        GLint uniform_count;
+        GLint non_block_uniform_count{};
+        GLint block_uniform_count{};
+        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &uniform_count );
+        OPENGL_CHECK_ERROR_THROW;
+        non_block_uniform_count = uniform_count;
+
+        GLint uniform_block_count = 0;
+        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_block_count );
+        OPENGL_CHECK_ERROR_THROW;
+
+        GLchar name[256];
+        GLint indices[64];
+        GLsizei length{};
+        GLint size{};
+        GLenum type{};
+        GLint binding_offset_or_location{};
+
+        mUniformBlocks.reserve ( uniform_block_count );
+        for ( GLint i = 0; i < uniform_block_count; ++i )
+        {
+            glGetActiveUniformBlockName ( mProgramId, i, sizeof ( name ), &length, name );
             OPENGL_CHECK_ERROR_THROW;
-            const uint32_t name_crc{crc32i ( block_name, length ) };
+            glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_DATA_SIZE, &size );
+            OPENGL_CHECK_ERROR_THROW;
+            glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_BINDING, &binding_offset_or_location );
+            OPENGL_CHECK_ERROR_THROW;
+            glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &block_uniform_count );
+            OPENGL_CHECK_ERROR_THROW;
+            assert ( block_uniform_count <= 64 );
+
+            const uint32_t name_crc{crc32i ( name, length ) };
             auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name_crc,
                                          [] ( const OpenGLUniformBlock & a, const uint32_t b )
             {
                 return a.name < b;
             } );
-            it = mUniformBlocks.insert ( it, { name_crc, 0, 0, 0 } );
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_DATA_SIZE, &it->data_size );
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_BINDING, &it->binding );
-            glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &it->active_count );
-            OPENGL_CHECK_ERROR_THROW;
+            mUniformBlocks.insert ( it, { name_crc, size, binding_offset_or_location } );
 
-            std::cout << "Uniform Block " << block << ": " << block_name
-                      << " (binding: " << it->binding << ", size: " << it->data_size
-                      << ", uniforms: " << it->active_count << ")" << std::endl;
-
-            it->active_uniforms.reserve ( it->active_count );
-            if ( it->active_count > 0 )
+            it->uniforms.reserve ( block_uniform_count );
+            non_block_uniform_count -= block_uniform_count;
+            if ( block_uniform_count > 0 )
             {
-                assert ( it->active_count <= 64 );
-                GLint indices[64];
-                glGetActiveUniformBlockiv ( mProgramId, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
+                glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
                 OPENGL_CHECK_ERROR_THROW;
-                for ( GLint u = 0; u < it->active_count; ++u )
+                for ( GLint j = 0; j < block_uniform_count; ++j )
                 {
-                    GLuint uniform_index = static_cast<GLuint> ( indices[ static_cast<size_t> ( u ) ] );
-                    GLchar uname[256];
-                    GLsizei ulen = 0;
-                    GLint usize = 0;
-                    GLenum utype = 0;
-                    glGetActiveUniform ( mProgramId, uniform_index, sizeof ( uname ), &ulen, &usize, &utype, uname );
+                    GLuint uniform_index = static_cast<GLuint> ( indices[ static_cast<size_t> ( j ) ] );
+                    glGetActiveUniform ( mProgramId, uniform_index, sizeof ( name ), &length, &size, &type, name );
                     OPENGL_CHECK_ERROR_THROW;
 
-                    GLint offset = 0;
-                    glGetActiveUniformsiv ( mProgramId, 1, &uniform_index, GL_UNIFORM_OFFSET, &offset );
+                    glGetActiveUniformsiv ( mProgramId, 1, &uniform_index, GL_UNIFORM_OFFSET, &binding_offset_or_location );
                     OPENGL_CHECK_ERROR_THROW;
 
-                    const uint32_t uname_crc{crc32i ( uname, ulen ) };
-                    it->active_uniforms.push_back ( { uname_crc, -1, usize, utype } );
-
-                    std::cout << "  - Uniform idx " << uniform_index << ": " << uname
-                              << " (type: " << utype << ", elements: " << usize
-                              << ", offset: " << offset << ")" << std::endl;
+                    uint32_t name_crc{crc32i ( name, length ) };
+                    auto il = std::lower_bound ( it->uniforms.begin(), it->uniforms.end(), name_crc,
+                                                 [] ( const OpenGLVariable & a, const uint32_t b )
+                    {
+                        return a.name < b;
+                    } );
+                    it->uniforms.insert ( il, { name_crc, binding_offset_or_location, size, type } );
                 }
+            }
+        }
+
+        mUniforms.reserve ( non_block_uniform_count );
+        for ( GLint i = 0; i < uniform_count; ++i )
+        {
+            glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
+            OPENGL_CHECK_ERROR_THROW;
+            binding_offset_or_location =  glGetUniformLocation ( mProgramId, name );
+            OPENGL_CHECK_ERROR_THROW;
+            // If the uniform is part of a uniform block, its location will be -1
+            if ( binding_offset_or_location < 0 )
+            {
+                continue;
+            }
+            uint32_t name_crc{crc32i ( name, length ) };
+            auto il = std::lower_bound ( mUniforms.begin(), mUniforms.end(), name_crc,
+                                         [] ( const OpenGLVariable & a, const uint32_t b )
+            {
+                return a.name < b;
+            } );
+            mUniforms.insert ( il, { name_crc, binding_offset_or_location, size, type } );
+        }
+        for ( const auto& uniform : mUniforms )
+        {
+            std::cout << LogLevel::Debug << "Uniform: " << uniform.name << " (crc: " << std::hex << uniform.name << std::dec << ", location: " << uniform.location << ", size: " << uniform.size << ", type: " << uniform.type << ")" << std::endl;
+        }
+        for ( const auto& block : mUniformBlocks )
+        {
+            std::cout << LogLevel::Debug << "Uniform Block: " << block.name << " (crc: " << std::hex << block.name << std::dec << ", size: " << block.size << ", binding: " << block.binding << ", active uniforms: " << block.uniforms.size() << ")" << std::endl;
+            for ( const auto& uniform : block.uniforms )
+            {
+                std::cout << LogLevel::Debug << "\tUniform: " << uniform.name << " (crc: " << std::hex << uniform.name << std::dec << ", offset: " << uniform.offset << ", size: " << uniform.size << ", type: " << uniform.type << ")" << std::endl;
             }
         }
     }
@@ -357,7 +397,7 @@ namespace AeonGames
         return mProgramId;
     }
 
-    const std::vector<OpenGLVertexAttribute>& OpenGLPipeline::GetVertexAttributes() const
+    const std::vector<OpenGLVariable>& OpenGLPipeline::GetVertexAttributes() const
     {
         return mAttributes;
     }

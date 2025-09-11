@@ -18,7 +18,7 @@ limitations under the License.
 
 #include <vector>
 #include "OpenGLBuffer.h"
-#include "OpenGLVertexAttribute.h"
+#include "OpenGLVariable.h"
 namespace AeonGames
 {
     class Mesh;
@@ -33,8 +33,8 @@ namespace AeonGames
         OpenGLMesh& operator= ( const OpenGLMesh& aOpenGLMesh ) = delete;
         OpenGLMesh& operator= ( OpenGLMesh&& aOpenGLMesh ) = delete;
         void Bind() const;
-        void EnableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const;
-        void DisableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const;
+        void EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
+        void DisableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
     private:
         const OpenGLRenderer& mOpenGLRenderer;
         const Mesh* mMesh{nullptr};

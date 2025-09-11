@@ -65,7 +65,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLMesh::EnableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const
+    void OpenGLMesh::EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const
     {
         for ( GLuint i = 0; i < 8; ++i )
         {
@@ -76,7 +76,7 @@ namespace AeonGames
         for ( auto& attribute : mMesh->GetAttributes() )
         {
             auto it = std::lower_bound ( aAttributes.begin(), aAttributes.end(), std::get<0> ( attribute ),
-                                         [] ( const OpenGLVertexAttribute & a, uint32_t b )
+                                         [] ( const OpenGLVariable & a, uint32_t b )
             {
                 return a.name < b;
             } );
@@ -124,7 +124,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLMesh::DisableAttributes ( const std::vector<OpenGLVertexAttribute>& aAttributes ) const
+    void OpenGLMesh::DisableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const
     {
         for ( const auto& attribute : aAttributes )
         {
