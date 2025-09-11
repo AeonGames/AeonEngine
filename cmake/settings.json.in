@@ -1,5 +1,5 @@
 {
-    "git.path": "${GIT_EXECUTABLE}",
+    "git.enabled": true,
     "git.ignoreLimitWarning": true,
     "terminal.integrated.automationProfile.windows":
     {
