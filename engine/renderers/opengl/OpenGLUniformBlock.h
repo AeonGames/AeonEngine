@@ -19,16 +19,16 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include "OpenGLFunctions.h"
-
+#include "OpenGLFunctions.h"
+#include "OpenGLVariable.h"
 namespace AeonGames
 {
     struct OpenGLUniformBlock
     {
         uint32_t name;
-        GLint data_size;
+        GLint size;
         GLint binding;
-        GLint active_count;
-        std::vector<OpenGLVertexAttribute> active_uniforms;
+        std::vector<OpenGLVariable> uniforms;
     };
 }
 #endif
