@@ -18,7 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <string_view>
-#include "OpenGLVertexAttribute.h"
+#include "OpenGLVariable.h"
 #include "OpenGLUniformBlock.h"
 #include "aeongames/Pipeline.hpp"
 
@@ -42,12 +42,15 @@ namespace AeonGames
         OpenGLPipeline& operator= ( OpenGLPipeline&& ) = delete;
         ~OpenGLPipeline();
         GLint GetProgramId() const;
-        const std::vector<OpenGLVertexAttribute>& GetVertexAttributes () const;
+        const std::vector<OpenGLVariable>& GetVertexAttributes () const;
     private:
+        void ReflectAttributes();
+        void ReflectUniforms();
         const OpenGLRenderer& mOpenGLRenderer;
         const Pipeline* mPipeline{};
         GLint mProgramId{};
-        std::vector<OpenGLVertexAttribute> mAttributes{};
+        std::vector<OpenGLVariable> mAttributes{};
+        std::vector<OpenGLVariable> mUniforms{};
         std::vector<OpenGLUniformBlock> mUniformBlocks{};
     };
 }
