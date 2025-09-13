@@ -220,12 +220,7 @@ namespace AeonGames
         mOpenGLRenderer.BindPipeline ( aPipeline );
 
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
-
-        glBindBuffer ( GL_UNIFORM_BUFFER, mMatrices.GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
-
-        glBindBufferBase ( GL_UNIFORM_BUFFER, MATRICES, mMatrices.GetBufferId() );
-        OPENGL_CHECK_ERROR_THROW;
+        mOpenGLRenderer.SetMatrices ( mMatrices );
 
         if ( aMaterial )
         {

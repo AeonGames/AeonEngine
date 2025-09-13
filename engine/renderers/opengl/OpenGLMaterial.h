@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ namespace AeonGames
 {
     class Material;
     class OpenGLRenderer;
+    class OpenGLPipeline;
     class OpenGLMaterial
     {
     public:
@@ -30,7 +31,10 @@ namespace AeonGames
         OpenGLMaterial& operator= ( const OpenGLMaterial& ) = delete;
         OpenGLMaterial& operator= ( OpenGLMaterial&& ) = delete;
         ~OpenGLMaterial();
-        void Bind() const;
+        /// @brief  Binds the material to the specified binding index.
+        /// @param aBindingIndex The binding index to use.
+        /// @note Not super happy about this API, might change it later.
+        void Bind ( const OpenGLPipeline& aPipeline ) const;
     private:
         OpenGLRenderer& mOpenGLRenderer;
         const Material* mMaterial;

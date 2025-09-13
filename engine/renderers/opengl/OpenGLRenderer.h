@@ -57,6 +57,7 @@ namespace AeonGames
         void SetMaterial ( const Material& aMaterial );
 
         void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const;
+        void SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -116,6 +117,7 @@ namespace AeonGames
         /// Overlay quadrilateral.
         OpenGLBuffer mOverlayQuad{};
         /**@}*/
+        OpenGLPipeline* mCurrentPipeline{nullptr};
         std::unordered_map<size_t, OpenGLPipeline> mPipelineStore{};
         std::unordered_map<size_t, OpenGLMaterial> mMaterialStore{};
         std::unordered_map<size_t, OpenGLMesh> mMeshStore{};

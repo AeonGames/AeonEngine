@@ -61,6 +61,13 @@ namespace AeonGames
             INTEGER          =  0b00000010,
         };
 
+        enum  BindingLocations : uint32_t
+        {
+            MATRICES = "Matrices"_crc32,
+            MATERIAL = "Properties"_crc32, // Todo: Change to Material
+            SKELETON = "Skeleton"_crc32
+        };
+
         using AttributeSize       = uint8_t;
         using AttributeFlags      = uint8_t;
         using AttributeTuple = std::tuple<AttributeSemantic, AttributeSize, AttributeType, AttributeFlags>;

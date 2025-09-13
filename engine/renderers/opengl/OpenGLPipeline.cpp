@@ -29,6 +29,8 @@ namespace AeonGames
         std::swap ( mPipeline, aOpenGLPipeline.mPipeline );
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
         mAttributes.swap ( aOpenGLPipeline.mAttributes );
+        mUniformBlocks.swap ( aOpenGLPipeline.mUniformBlocks );
+        mUniforms.swap ( aOpenGLPipeline.mUniforms );
     }
 #if 0
     static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
@@ -400,5 +402,18 @@ namespace AeonGames
     const std::vector<OpenGLVariable>& OpenGLPipeline::GetVertexAttributes() const
     {
         return mAttributes;
+    }
+    const OpenGLUniformBlock* OpenGLPipeline::GetUniformBlock ( uint32_t name ) const
+    {
+        auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name,
+                                     [] ( const OpenGLUniformBlock & a, const uint32_t b )
+        {
+            return a.name < b;
+        } );
+        if ( it == mUniformBlocks.end() )
+        {
+            return nullptr;
+        }
+        return &*it;
     }
 }
