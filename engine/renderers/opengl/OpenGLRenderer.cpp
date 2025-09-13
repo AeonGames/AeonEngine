@@ -512,15 +512,9 @@ void main()
             it = mMeshStore.find(aMesh.GetConsecutiveId());
         }
         it->second.Bind();
-        GLint currentProgram{0};
-        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-        auto pipeline = std::find_if(mPipelineStore.begin(), mPipelineStore.end(),
-        [currentProgram](const auto& pair) {
-            return pair.second.GetProgramId() == currentProgram;
-        });
-        if (pipeline != mPipelineStore.end())
+        if (mCurrentPipeline != nullptr)
         {
-            it->second.EnableAttributes(pipeline->second.GetVertexAttributes());
+            it->second.EnableAttributes(mCurrentPipeline->GetVertexAttributes());
         }
     }
 
@@ -549,30 +543,49 @@ void main()
             LoadPipeline(aPipeline);
             it = mPipelineStore.find(aPipeline.GetConsecutiveId());
         };
-
-        glUseProgram ( it->second.GetProgramId() );
+        mCurrentPipeline = &it->second;
+        glUseProgram ( mCurrentPipeline->GetProgramId() );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLRenderer::SetMaterial ( const Material& aMaterial)
     {
+        if(mCurrentPipeline == nullptr){return;}
         auto it = mMaterialStore.find(aMaterial.GetConsecutiveId());
         if(it==mMaterialStore.end())
         {
             LoadMaterial(aMaterial);
             it = mMaterialStore.find(aMaterial.GetConsecutiveId());
         };
-        it->second.Bind();
+        it->second.Bind(*mCurrentPipeline);
     }
 
     void OpenGLRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer) const
     {
+        if(mCurrentPipeline == nullptr){return;}
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::SKELETON ) };
+        if ( uniform_block == nullptr ){return;}
         const OpenGLMemoryPoolBuffer* memory_pool_buffer = reinterpret_cast<const OpenGLMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
         if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&>(memory_pool_buffer->GetBuffer()).GetBufferId() : 0 )
         {
-            glBindBufferRange ( GL_UNIFORM_BUFFER, SKELETON, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
+            assert(static_cast<const size_t>(uniform_block->size) == aSkeletonBuffer.GetSize());
+            glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
             OPENGL_CHECK_ERROR_THROW;
         };
+    }
+
+    void OpenGLRenderer::SetMatrices ( const OpenGLBuffer& aMatricesBuffer) const
+    {
+        if(mCurrentPipeline == nullptr){return;}
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::MATRICES ) };
+        if ( uniform_block == nullptr ){return;}
+
+        assert(static_cast<const size_t>(uniform_block->size) == aMatricesBuffer.GetSize());
+        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aMatricesBuffer.GetBufferId(), 0, aMatricesBuffer.GetSize() );
+        OPENGL_CHECK_ERROR_THROW;
+
+        //glBindBufferBase ( GL_UNIFORM_BUFFER, uniform_block->binding, aMatricesBuffer.GetBufferId() );
+        //OPENGL_CHECK_ERROR_THROW;
     }
 
     void OpenGLRenderer::LoadMaterial(const Material& aMaterial)
