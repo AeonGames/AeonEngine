@@ -24,13 +24,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    enum  BindingLocations : uint32_t
-    {
-        MATRICES = 0,
-        MATERIAL,
-        SKELETON
-    };
-
     class OpenGLRenderer;
     class OpenGLPipeline
     {
@@ -43,6 +36,7 @@ namespace AeonGames
         ~OpenGLPipeline();
         GLint GetProgramId() const;
         const std::vector<OpenGLVariable>& GetVertexAttributes () const;
+        const OpenGLUniformBlock* GetUniformBlock ( uint32_t name ) const;
     private:
         void ReflectAttributes();
         void ReflectUniforms();

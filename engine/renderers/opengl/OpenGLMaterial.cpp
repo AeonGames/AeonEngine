@@ -15,9 +15,12 @@ limitations under the License.
 */
 #include "aeongames/Material.hpp"
 #include "aeongames/Texture.hpp"
+#include "aeongames/Mesh.hpp"
+
 #include "OpenGLFunctions.h"
 #include "OpenGLMaterial.h"
 #include "OpenGLRenderer.h"
+#include "OpenGLPipeline.h"
 
 namespace AeonGames
 {
@@ -60,7 +63,7 @@ namespace AeonGames
     {
     }
 
-    void OpenGLMaterial::Bind() const
+    void OpenGLMaterial::Bind ( const OpenGLPipeline& aPipeline ) const
     {
         for ( GLenum i = 0; i < mMaterial->GetSamplers().size(); ++i )
         {
@@ -72,10 +75,14 @@ namespace AeonGames
         }
         if ( mMaterial->GetUniformBuffer().size() )
         {
-            glBindBuffer ( GL_UNIFORM_BUFFER, mUniformBuffer.GetBufferId() );
-            OPENGL_CHECK_ERROR_THROW;
-            glBindBufferBase ( GL_UNIFORM_BUFFER, MATERIAL, mUniformBuffer.GetBufferId() );
-            OPENGL_CHECK_ERROR_THROW;
+            const OpenGLUniformBlock* uniform_block = aPipeline.GetUniformBlock ( Mesh::MATERIAL );
+            //glBindBuffer ( GL_UNIFORM_BUFFER, mUniformBuffer.GetBufferId() );
+            //OPENGL_CHECK_ERROR_THROW;
+            if ( uniform_block != nullptr )
+            {
+                glBindBufferBase ( GL_UNIFORM_BUFFER, uniform_block->binding, mUniformBuffer.GetBufferId() );
+                OPENGL_CHECK_ERROR_THROW;
+            }
         }
     }
 }
