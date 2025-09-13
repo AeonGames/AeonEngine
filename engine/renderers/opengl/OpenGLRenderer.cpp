@@ -568,7 +568,7 @@ void main()
         const OpenGLMemoryPoolBuffer* memory_pool_buffer = reinterpret_cast<const OpenGLMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
         if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&>(memory_pool_buffer->GetBuffer()).GetBufferId() : 0 )
         {
-            assert(static_cast<const size_t>(uniform_block->size) == aSkeletonBuffer.GetSize());
+            assert(static_cast<const size_t>(uniform_block->size) >= aSkeletonBuffer.GetSize());
             glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
             OPENGL_CHECK_ERROR_THROW;
         };
