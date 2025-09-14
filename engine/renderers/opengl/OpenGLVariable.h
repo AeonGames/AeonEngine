@@ -26,6 +26,7 @@ namespace AeonGames
         uint32_t name;
         union
         {
+            GLint binding;
             GLint location;
             GLint offset;
         };
