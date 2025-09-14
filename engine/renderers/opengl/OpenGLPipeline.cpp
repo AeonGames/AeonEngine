@@ -271,7 +271,7 @@ namespace AeonGames
             {
                 return a.name < b;
             } );
-            mAttributes.insert ( it, { name_crc, location, size, type } );
+            mAttributes.insert ( it, { name_crc, {location}, size, type } );
         }
         for ( const auto& attribute : mAttributes )
         {
@@ -343,7 +343,7 @@ namespace AeonGames
                     {
                         return a.name < b;
                     } );
-                    it->uniforms.insert ( il, { name_crc, binding_offset_or_location, size, type } );
+                    it->uniforms.insert ( il, { name_crc, {binding_offset_or_location}, size, type } );
                 }
             }
         }
@@ -366,7 +366,7 @@ namespace AeonGames
             {
                 return a.name < b;
             } );
-            mUniforms.insert ( il, { name_crc, binding_offset_or_location, size, type } );
+            mUniforms.insert ( il, { name_crc, {binding_offset_or_location}, size, type } );
         }
         for ( const auto& uniform : mUniforms )
         {
