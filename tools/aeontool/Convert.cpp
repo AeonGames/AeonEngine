@@ -19,6 +19,7 @@ limitations under the License.
 #pragma warning( disable : PROTOBUF_WARNINGS )
 #endif
 #include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/Platform.hpp"
 #include <google/protobuf/text_format.h>
 #include "pipeline.pb.h"
 #include "material.pb.h"

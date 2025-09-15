@@ -27,7 +27,7 @@ limitations under the License.
 #endif
 #endif
 #endif
-#elif defined(__unix__)
+#elif defined(__unix__) || defined(__APPLE__)
 #ifndef DLL_PROTOBUF
 #define DLL_PROTOBUF __attribute__((visibility("default")))
 #endif

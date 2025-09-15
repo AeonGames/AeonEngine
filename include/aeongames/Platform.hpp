@@ -39,7 +39,7 @@ limitations under the License.
 #define PLUGIN __declspec( dllexport )
 #endif
 #endif
-#elif defined(__unix__)
+#elif defined(__unix__) || defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

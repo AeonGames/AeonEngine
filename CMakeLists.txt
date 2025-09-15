@@ -105,7 +105,11 @@ find_program(AUTOPEP8_EXECUTABLE autopep8
 find_program(CMAKE_FORMAT_EXECUTABLE cmake-format
              HINTS ENV MSYSTEM_PREFIX)
 
-option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
+if(NOT APPLE)
+  option(BUILD_OPENGL_RENDERER "Build the OpenGL renderer" ON)
+else()
+  set(BUILD_OPENGL_RENDERER OFF CACHE BOOL "OpenGL Renderer is disabled on Apple, 4.5 is not supported" FORCE)
+endif()
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" OFF)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
@@ -123,12 +127,28 @@ elseif(CMAKE_HOST_WIN32)
   set(PATH_SEPARATOR $<SEMICOLON>)
 endif()
 
-find_program(SED_EXECUTABLE sed
+function(gnu_sed_check validator_result_var item)
+  execute_process(COMMAND ${item} --version
+                  RESULT_VARIABLE sed_result
+                  OUTPUT_VARIABLE sed_output
+                  ERROR_VARIABLE sed_error
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  ERROR_STRIP_TRAILING_WHITESPACE)
+  if(sed_output MATCHES "GNU sed")
+    message(STATUS "Found GNU sed: ${item}")
+    set(${validator_result_var} TRUE PARENT_SCOPE)
+  else()
+    set(${validator_result_var} FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+
+find_program(SED_EXECUTABLE NAMES gsed sed
             PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles
             PATH_SUFFIXES
                   bin
                   usr/bin
                   Git/usr/bin
+                  VALIDATOR gnu_sed_check
 )
 
 if(NOT SED_EXECUTABLE)
@@ -185,7 +205,11 @@ endif()
 add_subdirectory(proto)
 add_subdirectory(tools/aeontool)
 add_subdirectory(engine)
-option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
+if(NOT APPLE)
+  option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
+else()
+  set(BUILD_STANDALONE_APPLICATION OFF CACHE BOOL "Standalone application is disabled on Apple, OpenGL Renderer is required" FORCE)
+endif()
 if(BUILD_STANDALONE_APPLICATION)
   add_subdirectory(application)
 endif()
@@ -199,25 +223,17 @@ if(Qt6_FOUND)
   add_subdirectory(tools/worldeditor)
 endif()
 
-find_path(GTEST_SOURCE_PATH googletest PATHS /usr/src/googletest)
-if(GTEST_SOURCE_PATH)
-  add_subdirectory(${GTEST_SOURCE_PATH} ${CMAKE_BINARY_DIR}/googletest)
-  set(GTEST_LIBRARY gtest)
-  set(GMOCK_LIBRARY gmock)
+find_package(GTest)
+if(GTest_FOUND)
+  find_library(GMOCK_LIBRARY
+                NAMES gmock libgmock libgmock.a
+                PATHS "${GTEST_DIR}"
+                PATH_SUFFIXES lib)
+  find_library(GMOCK_LIBRARY_DEBUG
+                NAMES gmockd libgmockd libgmockd.a
+                PATHS "${GTEST_DIR}"
+                PATH_SUFFIXES lib)
   add_subdirectory(tests)
-else()
-  find_package(GTest)
-  if(GTest_FOUND)
-    find_library(GMOCK_LIBRARY
-                 NAMES gmock libgmock libgmock.a
-                 PATHS "${GTEST_DIR}"
-                 PATH_SUFFIXES lib)
-    find_library(GMOCK_LIBRARY_DEBUG
-                 NAMES gmockd libgmockd libgmockd.a
-                 PATHS "${GTEST_DIR}"
-                 PATH_SUFFIXES lib)
-    add_subdirectory(tests)
-  endif()
 endif()
 
 #
