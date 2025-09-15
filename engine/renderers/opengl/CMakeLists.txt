@@ -17,7 +17,7 @@ if(UNIX)
   find_package(X11)
 endif()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CMAKE_REQUIRED_QUIET OFF)
 
