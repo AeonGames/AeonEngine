@@ -23,8 +23,10 @@ else(PORTAUDIO_LIBRARIES AND PORTAUDIO_INCLUDE_DIRS)
   if(PORTAUDIO2_FOUND)
     set(PORTAUDIO_INCLUDE_DIRS ${PORTAUDIO2_INCLUDE_DIRS})
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-      set(PORTAUDIO_LIBRARIES
-          "${PORTAUDIO2_LIBRARY_DIRS}/lib${PORTAUDIO2_LIBRARIES}.dylib")
+      # Use the full libraries list from pkg-config which includes frameworks
+      set(PORTAUDIO_LIBRARIES ${PORTAUDIO2_LIBRARIES})
+      # Also add the library directory for linking
+      link_directories(${PORTAUDIO2_LIBRARY_DIRS})
     else(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       set(PORTAUDIO_LIBRARIES ${PORTAUDIO2_LIBRARIES})
     endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

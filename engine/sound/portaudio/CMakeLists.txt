@@ -1,4 +1,4 @@
-include_directories(${PORTAUDIO_INCLUDE_DIR})
+include_directories(${PORTAUDIO_INCLUDE_DIRS})
 set(PORTAUDIO_HEADERS PortAudioSoundSystem.h)
 set(PORTAUDIO_SOURCES PortAudioSoundSystem.cpp Plugin.cpp)
 add_library(PortAudioSoundSystem
@@ -16,7 +16,7 @@ elseif(MINGW OR MSYS)
                           PREFIX ""
   )
 endif()
-target_link_libraries(PortAudioSoundSystem AeonEngine ${PORTAUDIO_LIBRARY})
+target_link_libraries(PortAudioSoundSystem AeonEngine ${PORTAUDIO_LIBRARIES})
 
 set_property(GLOBAL APPEND PROPERTY PLUGINS PortAudioSoundSystem)
 
