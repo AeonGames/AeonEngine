@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-find_package(OpenGL)
+find_package(OpenGL REQUIRED)
 if(UNIX)
   find_package(X11)
 endif()

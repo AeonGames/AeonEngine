@@ -18,8 +18,6 @@ include_directories(
                     ${PNG_PNG_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/engine
                     ${CMAKE_SOURCE_DIR}/engine/include
-                    ${CMAKE_SOURCE_DIR}/engine/renderers/opengl
-                    ${CMAKE_SOURCE_DIR}/engine/renderers/vulkan
                     ${CMAKE_SOURCE_DIR}/include
                     ${VULKAN_INCLUDE_DIR}
                     ${CMAKE_BINARY_DIR}/proto
@@ -159,13 +157,9 @@ if(MSVC)
                                    "-WX -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX")
   target_link_libraries(AeonEngine ${ZLIB_LIBRARIES} ProtoBufClasses)
 elseif(MINGW OR MSYS OR UNIX)
-  if(NOT ${CMAKE_CXX_COMPILER} MATCHES "clang")
-    set(STDXXFS stdc++fs)
-  endif()
   target_link_libraries(AeonEngine
                         ${ZLIB_LIBRARIES}
                         ${CMAKE_DL_LIBS}
-                        ${STDXXFS}
                         ProtoBufClasses)
 endif()
 
