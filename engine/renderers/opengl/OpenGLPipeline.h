@@ -37,6 +37,7 @@ namespace AeonGames
         GLint GetProgramId() const;
         const std::vector<OpenGLVariable>& GetVertexAttributes () const;
         const OpenGLUniformBlock* GetUniformBlock ( uint32_t name ) const;
+        const GLuint GetSamplerLocation ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes();
         void ReflectUniforms();

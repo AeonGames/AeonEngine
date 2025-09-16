@@ -73,6 +73,7 @@
         "*.cmake": "cmake",
         "*.cmake.in": "cmake",
     },
-    "editor.fontFamily": "'Fira Code', 'Consolas', 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', 'FiraCode NF', 'Consolas', 'Courier New', monospace",
     "terminal.integrated.fontFamily": "'MesloLGS Nerd Font Mono', 'Consolas', monospace"
 }

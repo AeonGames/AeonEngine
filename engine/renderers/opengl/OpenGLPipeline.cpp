@@ -32,91 +32,6 @@ namespace AeonGames
         mUniformBlocks.swap ( aOpenGLPipeline.mUniformBlocks );
         mUniforms.swap ( aOpenGLPipeline.mUniforms );
     }
-#if 0
-    static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
-    {
-        std::string vertex_shader{ "#version 450\n" };
-        vertex_shader.append ( aPipeline.GetAttributes() );
-
-        std::string transforms (
-            "layout(binding = " + std::to_string ( MATRICES ) + ", std140) uniform Matrices{\n"
-            "mat4 ModelMatrix;\n"
-            "mat4 ProjectionMatrix;\n"
-            "mat4 ViewMatrix;\n"
-            "};\n"
-        );
-        vertex_shader.append ( transforms );
-
-        if ( aPipeline.GetUniformDescriptors().size() )
-        {
-            std::string properties (
-                "layout(binding = " + std::to_string ( MATERIAL ) +
-                ",std140) uniform Properties{\n" +
-                aPipeline.GetProperties() + "};\n" );
-
-            if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
-            {
-                std::string skeleton (
-                    "layout(std140, binding = " + std::to_string ( SKELETON ) + ") uniform Skeleton{\n"
-                    "mat4 skeleton[256];\n"
-                    "};\n"
-                );
-                vertex_shader.append ( skeleton );
-            }
-
-            uint32_t sampler_binding = 0;
-            std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipeline.GetSamplerDescriptors() )
-            {
-                samplers += "layout(binding = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i + ";\n";
-                ++sampler_binding;
-            }
-            samplers.append ( "//----SAMPLERS-END----\n" );
-
-            vertex_shader.append ( properties );
-            vertex_shader.append ( samplers );
-        }
-
-        vertex_shader.append ( aPipeline.GetVertexShaderCode() );
-        return vertex_shader;
-    }
-
-    static std::string GetFragmentShaderCode ( const Pipeline& aPipeline )
-    {
-        std::string fragment_shader{"#version 450\n"};
-        std::string transforms (
-            "layout(binding = " + std::to_string ( MATRICES ) + ", std140) uniform Matrices{\n"
-            "mat4 ModelMatrix;\n"
-            "mat4 ProjectionMatrix;\n"
-            "mat4 ViewMatrix;\n"
-            "};\n"
-        );
-
-        fragment_shader.append ( transforms );
-
-        if ( aPipeline.GetUniformDescriptors().size() )
-        {
-            std::string properties
-            {
-                "layout(binding = " + std::to_string ( MATERIAL ) + ",std140) uniform Properties{\n" +
-                aPipeline.GetProperties() +
-                         "};\n"};
-
-            uint32_t sampler_binding = 0;
-            std::string samplers ( "//----SAMPLERS-START----\n" );
-            for ( auto& i : aPipeline.GetSamplerDescriptors() )
-            {
-                samplers += "layout(location = " + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i + ";\n";
-                ++sampler_binding;
-            }
-            samplers.append ( "//----SAMPLERS-END----\n" );
-            fragment_shader.append ( properties );
-            fragment_shader.append ( samplers );
-        }
-        fragment_shader.append ( aPipeline.GetFragmentShaderCode() );
-        return fragment_shader;
-    }
-#endif
 
     static const std::unordered_map<ShaderType, const GLenum> ShaderTypeToGLShaderType
     {
@@ -403,6 +318,21 @@ namespace AeonGames
     {
         return mAttributes;
     }
+
+    const GLuint OpenGLPipeline::GetSamplerLocation ( uint32_t name_hash ) const
+    {
+        auto it = std::lower_bound ( mUniforms.begin(), mUniforms.end(), name_hash,
+                                     [] ( const OpenGLVariable & a, const uint32_t b )
+        {
+            return a.name < b;
+        } );
+        if ( it == mUniforms.end() || it->location < 0 || it->type != GL_SAMPLER_2D )
+        {
+            return 0;
+        }
+        return it->location;
+    }
+
     const OpenGLUniformBlock* OpenGLPipeline::GetUniformBlock ( uint32_t name ) const
     {
         auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name,
