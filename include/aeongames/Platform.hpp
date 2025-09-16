@@ -52,7 +52,7 @@ limitations under the License.
 #endif
 #endif
 
-#if defined(__GNUC__)&&((__GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8 || (__GNUC_MINOR__ == 8 && __GNUC_PATCHLEVEL__ > 4))))||defined (__i386__))
+#if defined(__GNUC__) && defined(__i386__)
 #define ENTRYPOINT __attribute__((force_align_arg_pointer))
 #else
 #define ENTRYPOINT
