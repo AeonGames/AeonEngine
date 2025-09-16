@@ -1,0 +1,53 @@
+name: Build on macOS
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: macos-latest
+    name: 🚧🍎 clang
+
+    steps:
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: '🍎 Install dependencies'
+      run: |
+        brew update
+        brew install \
+          gnu-sed \
+          cmake \
+          make \
+          protobuf \
+          zlib \
+          libpng \
+          glslang \
+          portaudio \
+          libogg \
+          libvorbis \
+          cairo \
+          googletest \
+          qt6 \
+          pkg-config \
+          molten-vk
+
+    - name: 'Set up Clang'
+      run: |
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+
+    - name: '🚧 Build'
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        cmake --build build
+
+    - name: '🧪 Run TESTS'
+      run: |
+        cd build
+        ctest --output-on-failure
