@@ -64,7 +64,7 @@ namespace AeonGames
         enum  BindingLocations : uint32_t
         {
             MATRICES = "Matrices"_crc32,
-            MATERIAL = "Properties"_crc32, // Todo: Change to Material
+            MATERIAL = "Material"_crc32,
             SKELETON = "Skeleton"_crc32
         };
 

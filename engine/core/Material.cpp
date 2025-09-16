@@ -102,7 +102,7 @@ namespace AeonGames
         mSamplers.reserve ( aMaterialMsg.sampler().size() );
         for ( auto& i : aMaterialMsg.sampler() )
         {
-            std::get<1> ( mSamplers.emplace_back ( i.name(), ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) } ) ).Store();
+            std::get<1> ( mSamplers.emplace_back ( crc32i ( i.name().c_str(), i.name().size() ), ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) } ) ).Store();
         }
     }
 
@@ -228,10 +228,11 @@ namespace AeonGames
 
     void Material::SetSampler ( const std::string& aName, const ResourceId& aValue )
     {
+        uint32_t name_hash = crc32i ( aName.c_str(), aName.size() );
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+                                [name_hash] ( const SamplerKeyValue & aTuple )
         {
-            return std::get<0> ( aTuple ) == aName;
+            return std::get<0> ( aTuple ) == name_hash;
         } );
         if ( i != mSamplers.end() )
         {
@@ -239,17 +240,18 @@ namespace AeonGames
         }
     }
 
-    const std::vector<std::tuple<std::string, ResourceId >> & Material::GetSamplers() const
+    const std::vector<std::tuple<uint32_t, ResourceId >> & Material::GetSamplers() const
     {
         return mSamplers;
     }
 
     ResourceId Material::GetSampler ( const std::string& aName )
     {
+        uint32_t name_hash = crc32i ( aName.c_str(), aName.size() );
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                [&aName] ( const std::tuple<std::string, ResourceId>& aTuple )
+                                [name_hash] ( const SamplerKeyValue& aTuple )
         {
-            return std::get<0> ( aTuple ) == aName;
+            return std::get<0> ( aTuple ) == name_hash;
         } );
         if ( i != mSamplers.end() )
         {

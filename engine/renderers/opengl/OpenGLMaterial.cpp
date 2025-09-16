@@ -65,19 +65,21 @@ namespace AeonGames
 
     void OpenGLMaterial::Bind ( const OpenGLPipeline& aPipeline ) const
     {
-        for ( GLenum i = 0; i < mMaterial->GetSamplers().size(); ++i )
+        const auto& samplers = mMaterial->GetSamplers();
+        for ( GLenum i = 0; i < samplers.size(); ++i )
         {
-            glActiveTexture ( GL_TEXTURE0 + i );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glBindTexture ( GL_TEXTURE_2D,
-                            mOpenGLRenderer.GetTextureId ( *std::get<1> ( mMaterial->GetSamplers() [i] ).Cast<Texture>() ) );
-            OPENGL_CHECK_ERROR_NO_THROW;
+            aPipeline.GetSamplerLocation ( std::get<0> ( samplers[i] ) );
+
+            glBindTextureUnit ( aPipeline.GetSamplerLocation ( std::get<0> ( samplers[i] ) ),
+                                mOpenGLRenderer.GetTextureId ( *std::get<1> ( samplers[i] ).Cast<Texture>() ) );
+            OPENGL_CHECK_ERROR_THROW;
         }
+
+        ///@TODO: Material format does not currently support non block uniforms.
+
         if ( mMaterial->GetUniformBuffer().size() )
         {
             const OpenGLUniformBlock* uniform_block = aPipeline.GetUniformBlock ( Mesh::MATERIAL );
-            //glBindBuffer ( GL_UNIFORM_BUFFER, mUniformBuffer.GetBufferId() );
-            //OPENGL_CHECK_ERROR_THROW;
             if ( uniform_block != nullptr )
             {
                 glBindBufferBase ( GL_UNIFORM_BUFFER, uniform_block->binding, mUniformBuffer.GetBufferId() );

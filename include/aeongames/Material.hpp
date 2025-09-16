@@ -38,7 +38,7 @@ namespace AeonGames
     public:
         using UniformValue = std::variant<uint32_t, int32_t, float, Vector2, Vector3, Vector4, Matrix4x4>;
         using UniformKeyValue = std::tuple<std::string, UniformValue>;
-        using SamplerKeyValue = std::tuple<std::string, ResourceId>;
+        using SamplerKeyValue = std::tuple<uint32_t, ResourceId>;
         DLL Material();
         /// The Copy Contsructor is used for virtual copying.
         DLL Material ( const Material& aMaterial );
@@ -64,7 +64,7 @@ namespace AeonGames
         ///@name Property and Sampler Getters
         ///@{
         DLL ResourceId GetSampler ( const std::string& aName );
-        DLL const std::vector<std::tuple<std::string, ResourceId >> & GetSamplers() const;
+        DLL const std::vector<std::tuple<uint32_t, ResourceId >> & GetSamplers() const;
         ///@}
         DLL const std::vector<uint8_t>& GetUniformBuffer() const;
     private:
@@ -91,7 +91,7 @@ namespace AeonGames
         DLL size_t LoadVariables ( std::initializer_list<UniformKeyValue> aUniforms );
         DLL void LoadSamplers ( std::initializer_list<SamplerKeyValue> aSamplers );
         std::vector<UniformVariable> mVariables{};
-        std::vector<std::tuple<std::string, ResourceId >> mSamplers{};
+        std::vector<SamplerKeyValue> mSamplers{};
         std::vector<uint8_t> mUniformBuffer{};
     };
     DLL size_t GetUniformValueSize ( const Material::UniformValue& aValue );

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ namespace AeonGames
         // Properties
         vertex_shader.append (
             "layout(set = " + std::to_string ( MATERIAL ) +
-            ", binding = 0,std140) uniform Properties{\n" +
+            ", binding = 0,std140) uniform Material{\n" +
             aPipeline.GetProperties( ) + "};\n" );
 
         vertex_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
@@ -110,7 +110,7 @@ namespace AeonGames
         fragment_shader.append ( transforms );
 
         fragment_shader.append ( "layout(set = " + std::to_string ( MATERIAL ) +
-                                 ", binding = 0,std140) uniform Properties{\n" +
+                                 ", binding = 0,std140) uniform Material{\n" +
                                  aPipeline.GetProperties() + "};\n" );
         fragment_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
 
@@ -194,9 +194,9 @@ namespace AeonGames
             stream << vertex_shader_code << std::endl;
             stream << fragment_shader_code << std::endl;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
-                   " Error:" << std::endl << compiler_linker.GetLog();
+                                                                     " Error:" << std::endl << compiler_linker.GetLog();
             std::cout << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
-                      " Error:" << std::endl << compiler_linker.GetLog();
+                                                                        " Error:" << std::endl << compiler_linker.GetLog();
             std::cout << fragment_shader_code << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }

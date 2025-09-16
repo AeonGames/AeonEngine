@@ -6,7 +6,7 @@ vert:
   "mat4 ProjectionMatrix;\n"
   "mat4 ViewMatrix;\n"
   "};\n"
-  "layout(binding = 1, std140) uniform Properties{\n"
+  "layout(binding = 1, std140) uniform Material{\n"
   "  vec3 LightPosition;\n"
   "  vec3 Kd;\n"
   "};\n"
