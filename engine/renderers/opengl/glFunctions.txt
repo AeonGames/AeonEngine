@@ -112,6 +112,7 @@ glUniform3uiv
 glUniform4uiv
 glGetUniformIndices
 glCompressedTexImage2D
+glBindTextureUnit
 glActiveTexture
 glDetachShader
 glIsBuffer
