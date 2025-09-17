@@ -26,6 +26,7 @@ limitations under the License.
 #include "Base64.h"
 #include "aeongames/Base64.hpp"
 #include "aeongames/Pipeline.hpp"
+#include <filesystem>
 
 namespace AeonGames
 {
@@ -81,9 +82,17 @@ namespace AeonGames
         {
             throw std::runtime_error ( "No Input file provided." );
         }
-        else if ( mOutputFile.empty() )
+        if ( mOutputFile.empty() )
         {
-            mOutputFile = mInputFile;
+            if ( !mDecode )
+            {
+                std::filesystem::path input_path ( mInputFile );
+                mOutputFile = input_path.replace_extension ( ".b64" ).string();
+            }
+            else
+            {
+                throw std::runtime_error ( "No Output file provided. Decoding does not yet infer output extensions." );
+            }
         }
     }
 

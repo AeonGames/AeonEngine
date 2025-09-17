@@ -1,0 +1,69 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/diffuse_map_phong.txt"
+}
+default_material {
+    path: "aerin/materials/body.txt"
+}
+skeleton {
+    path: "aerin/skeleton.txt"
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/Body.txt"
+    }
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/Bottoms.txt"
+    }
+    material {
+        path: "aerin/materials/bottom.txt"
+    }
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/Hair.txt"
+    }
+    material {
+        path: "aerin/materials/hair.txt"
+    }
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/Shoes.txt"
+    }
+    material {
+        path: "aerin/materials/shoes.txt"
+    }
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/Tops.txt"
+    }
+    material {
+        path: "aerin/materials/top.txt"
+    }
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/default.txt"
+    }
+}
+assembly {
+    mesh {
+        path: "aerin/meshes/Eyelashes.txt"
+    }
+}
+animation {
+        path: "aerin/animations/Idle.txt"
+}
+animation {
+        path: "aerin/animations/Bind.txt"
+}
+animation {
+        path: "aerin/animations/Walk.txt"
+}
+animation {
+        path: "aerin/animations/CatWalk.txt"
+}
