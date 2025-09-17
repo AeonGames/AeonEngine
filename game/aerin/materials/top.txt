@@ -1,0 +1,23 @@
+AEONMTL
+property {
+  name: "LightPosition"
+  vector3 {
+    x: 0
+    y: 0
+    z: 0
+  }
+}
+property {
+  name: "Kd"
+  vector3 {
+    x: 1
+    y: 1
+    z: 1
+  }
+}
+sampler {
+  name: "DiffuseMap"
+  image {
+    path: "aerin/textures/Aerin_Top_Diffuse.png"
+  }
+}
