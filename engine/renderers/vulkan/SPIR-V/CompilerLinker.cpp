@@ -1,7 +1,7 @@
 //
-// Copyright (C) 2002-2005  3Dlabs Inc. Ltd.
-// Copyright (C) 2013-2016 LunarG, Inc.
-// Copyright (C) 2017-2019,2021 Aeon Games
+// Copyright (C) 2002-2005,2025  3Dlabs Inc. Ltd.
+// Copyright (C) 2013-2016,2025 LunarG, Inc.
+// Copyright (C) 2017-2019,2021,2025 Aeon Games
 //
 // All rights reserved.
 //
@@ -41,11 +41,8 @@
 #endif
 
 #include "glslang/Include/ResourceLimits.h"
-#include "glslang/Include/ShHandle.h"
 #include "glslang/Public/ShaderLang.h"
 #include "glslang/SPIRV/GlslangToSpv.h"
-//#include "glslang/SPIRV/GLSL.std.450.h"
-#include "glslang/SPIRV/doc.h"
 #include "glslang/SPIRV/disassemble.h"
 #include <cstring>
 #include <cstdlib>
@@ -55,7 +52,7 @@
 #include <thread>
 #include "CompilerLinker.h"
 
-#include "aeongames/Platform.h"
+#include "aeongames/Platform.hpp"
 
 namespace glslang
 {
