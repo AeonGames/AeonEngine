@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ limitations under the License.
 #include <unordered_map>
 #include <memory>
 #include <tuple>
-#include "aeongames/Platform.h"
-#include "aeongames/Renderer.h"
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Transform.h"
+#include "aeongames/Platform.hpp"
+#include "aeongames/Renderer.hpp"
+#include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Transform.hpp"
 #include "VulkanWindow.h"
 #include "VulkanBuffer.h"
 #include "VulkanMesh.h"
@@ -70,6 +70,7 @@ namespace AeonGames
 
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
+        void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) final;
         void SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
         void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
         void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
@@ -81,6 +82,7 @@ namespace AeonGames
                       const Pipeline& aPipeline,
                       const Material* aMaterial = nullptr,
                       const BufferAccessor* aSkeleton = nullptr,
+                      Topology aTopology = Topology::TRIANGLE_LIST,
                       uint32_t aVertexStart = 0,
                       uint32_t aVertexCount = 0xffffffff,
                       uint32_t aInstanceCount = 1,
@@ -130,7 +132,7 @@ namespace AeonGames
         VkFence mVkFence{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
-        mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout>> mVkSamplerDescriptorSetLayouts{};
+        mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout >> mVkSamplerDescriptorSetLayouts{};
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017,2020,2021 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2017,2020,2021,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -61,7 +61,7 @@ add_library(VulkanRenderer
             ${VULKAN_RENDERER_SOURCES}
             ${SPIRV_HEADERS}
             ${SPIRV_SOURCES}
-            ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.h)
+            ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp)
 
 if(IWYU_PROGRAM)
   set_property(TARGET VulkanRenderer PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})

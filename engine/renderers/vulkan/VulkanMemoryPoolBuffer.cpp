@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ limitations under the License.
 #include <array>
 #include <utility>
 #include <cassert>
-#include "aeongames/AeonEngine.h"
-#include "aeongames/CRC.h"
-#include "aeongames/Material.h"
-#include "aeongames/Vector2.h"
-#include "aeongames/Vector3.h"
-#include "aeongames/Vector4.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/CRC.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Vector2.hpp"
+#include "aeongames/Vector3.hpp"
+#include "aeongames/Vector4.hpp"
 #include "VulkanMemoryPoolBuffer.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"

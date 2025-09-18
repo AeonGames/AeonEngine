@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,13 +32,13 @@ limitations under the License.
 #include "VulkanWindow.h"
 #include "VulkanBuffer.h"
 #include "VulkanUtilities.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "aeongames/Texture.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/MemoryPool.h"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Texture.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/MemoryPool.hpp"
 #include "SPIR-V/CompilerLinker.h"
 
 namespace AeonGames
@@ -301,8 +301,8 @@ namespace AeonGames
             nullptr,
             static_cast<uint32_t> ( validation_feature_enable_exts.size() ),
             validation_feature_enable_exts.data(),
-            0,
-            nullptr
+                                          0,
+                                          nullptr
         };
 
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -871,6 +871,7 @@ namespace AeonGames
                                   const Pipeline& aPipeline,
                                   const Material* aMaterial,
                                   const BufferAccessor* aSkeleton,
+                                  Topology aTopology,
                                   uint32_t aVertexStart,
                                   uint32_t aVertexCount,
                                   uint32_t aInstanceCount,
@@ -902,5 +903,16 @@ namespace AeonGames
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.AllocateSingleFrameUniformMemory ( aSize );
+    }
+
+    void VulkanRenderer::SetClearColor ( void* aWindowId, float R, float G, float B, float A )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        ///@todo finish this
+        //it->second.SetClearColor ( R, G, B, A );
     }
 }

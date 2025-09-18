@@ -84,7 +84,6 @@ namespace AeonGames
         virtual void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         virtual void BeginRender ( void* aWindowId ) = 0;
         virtual void EndRender ( void* aWindowId ) = 0;
-        /** @todo Model matrix should be optional, the only required arguments should be pipeline and mesh... and I am not sure about pipeline. */
         virtual void Render ( void* aWindowId,
                               const Matrix4x4& aModelMatrix,
                               const Mesh& aMesh,

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,18 +26,18 @@ limitations under the License.
 #include <utility>
 #include <cstring>
 #include <cassert>
-#include "aeongames/Frustum.h"
-#include "aeongames/Material.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/AABB.h"
-#include "aeongames/Scene.h"
-#include "aeongames/Node.h"
-#include "aeongames/Mesh.h"
-#include "aeongames/Pipeline.h"
-#include "aeongames/Material.h"
-#include "aeongames/LogLevel.h"
-#include "aeongames/MemoryPool.h"
+#include "aeongames/Frustum.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/AABB.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/MemoryPool.hpp"
 
 namespace AeonGames
 {
@@ -617,7 +617,7 @@ namespace AeonGames
                                    mVkSwapchainKHR,
                                    UINT64_MAX, VK_NULL_HANDLE,
                                    mVulkanRenderer.GetFence(),
-                                   const_cast<uint32_t*> ( &mActiveImageIndex ) ) )
+                                   const_cast<uint32_t * > ( &mActiveImageIndex ) ) )
         {
             std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }

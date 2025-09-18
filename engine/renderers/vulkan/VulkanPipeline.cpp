@@ -18,8 +18,8 @@ limitations under the License.
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Utilities.h"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Utilities.hpp"
 #include <vulkan/vulkan.h>
 #include "VulkanPipeline.h"
 #include "VulkanRenderer.h"
@@ -44,6 +44,7 @@ namespace AeonGames
         {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
     };
 
+#if 0
     static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
         std::string samplers ( "//----SAMPLERS-START----\n" );
@@ -167,6 +168,7 @@ namespace AeonGames
         }
         return offset;
     }
+#endif
 
     VulkanPipeline::VulkanPipeline ( VulkanPipeline&& aVulkanPipeline ) :
         mVulkanRenderer{aVulkanPipeline.mVulkanRenderer}
@@ -179,6 +181,7 @@ namespace AeonGames
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
+#if 0
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 >
         shader_modules{ { VK_NULL_HANDLE } };
 
@@ -431,6 +434,7 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
+#endif
     }
 
     VulkanPipeline::~VulkanPipeline()

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2023 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2023,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ limitations under the License.
 #include <vector>
 #include <cassert>
 #include <cstring>
-#include "aeongames/ProtoBufClasses.h"
-#include "aeongames/AeonEngine.h"
-#include "aeongames/Utilities.h"
-#include "aeongames/CRC.h"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "aeongames/AeonEngine.hpp"
+#include "aeongames/Utilities.hpp"
+#include "aeongames/CRC.hpp"
 #include "VulkanRenderer.h"
 #include "VulkanMesh.h"
 #include "VulkanUtilities.h"
