@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "aeongames/Matrix4x4.h"
-#include "aeongames/Frustum.h"
+#include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Frustum.hpp"
 #include "VulkanMemoryPoolBuffer.h"
 
 namespace AeonGames

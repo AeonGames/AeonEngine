@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018,2021,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_VULKANMESH_H
 
 #include <vulkan/vulkan.h>
-#include "aeongames/Mesh.h"
+#include "aeongames/Mesh.hpp"
 #include "VulkanBuffer.h"
 
 namespace AeonGames

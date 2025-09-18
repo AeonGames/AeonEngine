@@ -170,7 +170,7 @@ def iter_files(paths: Iterable[Path]) -> Iterable[Path]:
 
 def git_repo_root(start: Path) -> Path | None:
     try:
-        out = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=start)
+        out = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=str(start))
         return Path(out.decode().strip())
     except Exception:
         return None
@@ -189,7 +189,7 @@ def git_changed_files(repo_root: Path) -> set[Path]:
     ]
     for cmd in cmds:
         try:
-            out = subprocess.check_output(cmd, cwd=repo_root)
+            out = subprocess.check_output(cmd, cwd=str(repo_root))
         except subprocess.CalledProcessError:
             continue
         for line in out.decode("utf-8", "ignore").splitlines():
