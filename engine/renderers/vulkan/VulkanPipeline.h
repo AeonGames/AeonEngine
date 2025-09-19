@@ -18,8 +18,11 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <array>
+#include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/Pipeline.hpp"
+#include "VulkanVariable.h"
+#include "VulkanUniformBlock.h"
 
 namespace AeonGames
 {
@@ -43,11 +46,19 @@ namespace AeonGames
         VulkanPipeline& operator= ( VulkanPipeline&& ) = delete;
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
+        const std::vector<VulkanVariable>& GetVertexAttributes() const;
+        const VulkanUniformBlock* GetUniformBlock ( uint32_t name ) const;
+        const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
+        void ReflectAttributes();
+        void ReflectUniforms();
         const VulkanRenderer& mVulkanRenderer;
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
+        std::vector<VulkanVariable> mAttributes{};
+        std::vector<VulkanVariable> mUniforms{};
+        std::vector<VulkanUniformBlock> mUniformBlocks{};
     };
 }
 #endif

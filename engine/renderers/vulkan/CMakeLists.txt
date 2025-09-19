@@ -12,12 +12,9 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-find_package(Vulkan REQUIRED)
+include(gitclone)
 
-message(STATUS "Vulkan_FOUND: ${Vulkan_FOUND}")
-message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
-message(STATUS "Vulkan_LIBRARIES: ${Vulkan_LIBRARIES}")
-message(STATUS "VULKAN_SDK: $ENV{VULKAN_SDK}")
+find_package(Vulkan REQUIRED)
 
 if(NOT Vulkan_FOUND)
     message(FATAL_ERROR "Vulkan SDK not found! Please install Vulkan SDK and set VULKAN_SDK environment variable.")
@@ -27,6 +24,8 @@ find_package(glslang REQUIRED)
 if(NOT glslang_FOUND)
     message(FATAL_ERROR "glslang not found")
 endif()
+
+gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH spirv-reflect TAG vulkan-sdk-1.4.321.0)
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
