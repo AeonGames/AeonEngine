@@ -18,6 +18,7 @@ limitations under the License.
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Utilities.hpp"
 #include <vulkan/vulkan.h>
@@ -25,6 +26,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
+#include "aeongames/CRC.hpp"
 
 namespace AeonGames
 {
@@ -450,5 +452,44 @@ namespace AeonGames
     const VkPipeline VulkanPipeline::GetPipeline() const
     {
         return mVkPipeline;
+    }
+
+    const std::vector<VulkanVariable>& VulkanPipeline::GetVertexAttributes() const
+    {
+        return mAttributes;
+    }
+
+    const VulkanUniformBlock* VulkanPipeline::GetUniformBlock ( uint32_t name ) const
+    {
+        auto it = std::find_if ( mUniformBlocks.begin(), mUniformBlocks.end(),
+                                 [name] ( const VulkanUniformBlock & block )
+        {
+            return block.name == name;
+        } );
+        return ( it != mUniformBlocks.end() ) ? & ( *it ) : nullptr;
+    }
+
+    const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
+    {
+        auto it = std::find_if ( mUniforms.begin(), mUniforms.end(),
+                                 [name_hash] ( const VulkanVariable & uniform )
+        {
+            return uniform.name == name_hash;
+        } );
+        return ( it != mUniforms.end() ) ? it->binding : 0;
+    }
+
+    void VulkanPipeline::ReflectAttributes()
+    {
+        // TODO: Implement reflection of vertex attributes from SPIR-V
+        // This would involve analyzing the SPIR-V bytecode to extract
+        // vertex input attributes and their properties
+    }
+
+    void VulkanPipeline::ReflectUniforms()
+    {
+        // TODO: Implement reflection of uniforms and uniform blocks from SPIR-V
+        // This would involve analyzing the SPIR-V bytecode to extract
+        // uniform variables, uniform blocks, and samplers
     }
 }
