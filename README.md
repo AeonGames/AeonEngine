@@ -48,6 +48,7 @@ pacboy -S --needed --noconfirm \
     make:p \
     tools-git:p \
     vulkan:p \
+    vulkan-devel:p \
     qt6:p \
     protobuf:p \
     zlib:p \
