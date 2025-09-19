@@ -1,4 +1,4 @@
-# AeonEngine 
+# AeonEngine
 
 [![MS Visual C++ Build status](https://github.com/AeonGames/AeonEngine/actions/workflows/build-windows.yml/badge.svg)](https://github.com/AeonGames/AeonEngine/actions/workflows/build-windows.yml) [![MSYS Build status](https://github.com/AeonGames/AeonEngine/actions/workflows/build-msys2.yml/badge.svg)](https://github.com/AeonGames/AeonEngine/actions/workflows/build-msys2.yml) [![Linux Build status](https://github.com/AeonGames/AeonEngine/actions/workflows/build-ubuntu.yml/badge.svg)](https://github.com/AeonGames/AeonEngine/actions/workflows/build-ubuntu.yml) [![macOS Build status](https://github.com/AeonGames/AeonEngine/actions/workflows/build-macos.yml/badge.svg)](https://github.com/AeonGames/AeonEngine/actions/workflows/build-macos.yml) [![CodeFactor](https://www.codefactor.io/repository/github/aeongames/AeonEngine/badge)](https://www.codefactor.io/repository/github/aeongames/AeonEngine) [![Patreon](https://img.shields.io/badge/patreon-donate-orange.svg)](https://www.patreon.com/user?u=3798744) [![Ko-Fi](https://img.shields.io/badge/ko--fi-donate-orange.svg)](https://ko-fi.com/aeongames)
 
