@@ -12,10 +12,21 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-find_package(Vulkan)
-find_package(glslang)
+find_package(Vulkan REQUIRED)
 
-include_directories(${GLSLANG_INCLUDE_DIR} ${GLSLANG_SPIRV_INCLUDE_DIR} ${VULKAN_INCLUDE_DIR})
+message(STATUS "Vulkan_FOUND: ${Vulkan_FOUND}")
+message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
+message(STATUS "Vulkan_LIBRARIES: ${Vulkan_LIBRARIES}")
+message(STATUS "VULKAN_SDK: $ENV{VULKAN_SDK}")
+
+if(NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Vulkan SDK not found! Please install Vulkan SDK and set VULKAN_SDK environment variable.")
+endif()
+
+find_package(glslang REQUIRED)
+if(NOT glslang_FOUND)
+    message(FATAL_ERROR "glslang not found")
+endif()
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
@@ -67,12 +78,15 @@ if(IWYU_PROGRAM)
   set_property(TARGET VulkanRenderer PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})
 endif()
 
-target_link_libraries(VulkanRenderer
+target_link_libraries(VulkanRenderer PRIVATE
                       AeonEngine
                       ProtoBufClasses
                       Threads::Threads
-                      ${VULKAN_LIBRARY}
-                      ${GLSLANG_LIBRARIES}
+                      Vulkan::Vulkan
+                      glslang::glslang
+                      glslang::SPIRV
+                      glslang::glslang-default-resource-limits
+                      glslang::OSDependent
 )
 
 if(MSVC)
