@@ -146,7 +146,7 @@ namespace AeonGames
         mLog.clear();
         /*  The original code used heap memory for program and shaders
             in order to destroy the program first and the shaders last,
-            that shouldn't be necesary with this new approach,
+            that shouldn't be necessary with this new approach,
             keep the order of declaration of the following two locals
             to ensure program is destroyed before shaders. */
         std::vector<glslang::TShader> shaders;

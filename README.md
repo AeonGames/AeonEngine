@@ -264,3 +264,15 @@ cmake --build build
 cd build
 ctest --output-on-failure
 ```
+
+## Miscelaneus
+
+### Enable/Disable Renderers
+
+The BUILD_&lt;API NAME&gt;_RENDERER cmake variable can be used to disable or enable renderers, by default all renderers available on the platform are build, unless one is temporarily disabled due to it being broken or under construction.
+
+In general the following command can be used:
+
+```bash
+cmake -DBUILD_VULKAN_RENDERER:boolean=&lt;ON/OFF&gt; -DBUILD_OPENGL_RENDERER:boolean=&lt;ON/OFF&gt; ..
+```
