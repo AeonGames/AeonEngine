@@ -40,12 +40,8 @@ jobs:
           -Source "${{ env.FEED_URL }}"
       if: matrix.compiler == 'msvc'
 
-    - name: 📥 Install VCPKG Dependencies
-      run: ${{env.VCPKG_EXE}} install --binarysource="${{env.VCPKG_BINARY_SOURCES}}" --x-manifest-root=${{github.workspace}}
-      if: matrix.compiler == 'msvc'
-
     - name: ⚙️ Configure CMake (Windows Visual Studio)
-      run: cmake -DCMAKE_TOOLCHAIN_FILE="${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg\scripts\buildsystems\vcpkg.cmake" -B ${{github.workspace}}/build
+      run: cmake -DCMAKE_TOOLCHAIN_FILE="${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg\scripts\buildsystems\vcpkg.cmake" -DBUILD_VULKAN_RENDERER:boolean=ON -B ${{github.workspace}}/build
       if: matrix.compiler == 'msvc'
 
     - name: 🔨 Build
