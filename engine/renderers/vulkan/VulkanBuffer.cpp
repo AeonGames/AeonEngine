@@ -78,7 +78,7 @@ namespace AeonGames
         return mBuffer;
     }
 
-    void VulkanBuffer::WriteMemory ( const VkDeviceSize aOffset, const VkDeviceSize aSize, const void * aData ) const
+    void VulkanBuffer::WriteMemory ( const size_t aOffset, const size_t aSize, const void * aData ) const
     {
         if ( aData )
         {
