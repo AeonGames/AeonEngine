@@ -19,7 +19,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Add NuGet sources
+    - name: 🔄 Update vcpkg to latest
+      shell: pwsh
+      run: |
+        cd C:/vcpkg
+        git pull
+        ./bootstrap-vcpkg.bat
+      if: matrix.compiler == 'msvc'
+
+    - name: 📦 Add NuGet sources
       shell: pwsh
       run: |
         .$(${{ env.VCPKG_EXE }} fetch nuget) `
@@ -34,13 +42,13 @@ jobs:
           -Source "${{ env.FEED_URL }}"
       if: matrix.compiler == 'msvc'
 
-    - name: Install VCPKG Dependencies
+    - name: 📥 Install VCPKG Dependencies
       run: ${{env.VCPKG_EXE}} install --binarysource="${{env.VCPKG_BINARY_SOURCES}}" --x-manifest-root=${{github.workspace}}
       if: matrix.compiler == 'msvc'
 
-    - name: Configure CMake (Windows Visual Studio)
+    - name: ⚙️ Configure CMake (Windows Visual Studio)
       run: cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -B ${{github.workspace}}/build
       if: matrix.compiler == 'msvc'
 
-    - name: Build
+    - name: 🔨 Build
       run: cmake --build ${{github.workspace}}/build
