@@ -8,6 +8,7 @@
     "portaudio",
     "protobuf",
     "spirv-tools",
+    "shaderc",
     "vulkan",
     "zlib",
     "qtbase",
