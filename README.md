@@ -275,5 +275,5 @@ The BUILD_&lt;API NAME&gt;_RENDERER cmake variable can be used to disable or ena
 In general the following command can be used:
 
 ```bash
-cmake -DBUILD_VULKAN_RENDERER:boolean=&lt;ON/OFF&gt; -DBUILD_OPENGL_RENDERER:boolean=&lt;ON/OFF&gt; ..
+cmake -DBUILD_VULKAN_RENDERER:boolean=<ON/OFF> -DBUILD_OPENGL_RENDERER:boolean=<ON/OFF> ..
 ```
