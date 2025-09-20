@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 env:
   USERNAME: AeonGames
-  VCPKG_EXE: C:/vcpkg/vcpkg.exe
+  VCPKG_EXE: vcpkg
   FEED_URL: https://nuget.pkg.github.com/AeonGames/index.json
   VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AeonGames/index.json,readwrite"
 
@@ -19,12 +19,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: 🔄 Update vcpkg to latest
+    - name: 🔄 Update Visual Studio
       shell: pwsh
       run: |
-        cd C:/vcpkg
-        git pull
-        ./bootstrap-vcpkg.bat
+        & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe" update --installPath "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise" --quiet --wait
       if: matrix.compiler == 'msvc'
 
     - name: 📦 Add NuGet sources
@@ -47,7 +45,7 @@ jobs:
       if: matrix.compiler == 'msvc'
 
     - name: ⚙️ Configure CMake (Windows Visual Studio)
-      run: cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -B ${{github.workspace}}/build
+      run: cmake -DCMAKE_TOOLCHAIN_FILE="${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg\scripts\buildsystems\vcpkg.cmake" -B ${{github.workspace}}/build
       if: matrix.compiler == 'msvc'
 
     - name: 🔨 Build
