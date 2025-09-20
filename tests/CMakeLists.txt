@@ -31,6 +31,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.hpp)
 set(TEST_SRCS
     Main.cpp
+    AABBTests.cpp
     ArchiveTests.cpp
     ContainerTests.cpp
     DecoderTests.cpp
