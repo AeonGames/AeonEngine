@@ -83,9 +83,7 @@ target_link_libraries(VulkanRenderer PRIVATE
                       Threads::Threads
                       Vulkan::Vulkan
                       glslang::glslang
-                      glslang::SPIRV
                       glslang::glslang-default-resource-limits
-                      glslang::OSDependent
 )
 
 if(MSVC)

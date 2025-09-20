@@ -38,7 +38,8 @@ mingw32
 make*
 build*
 codeblocks*
-clang64*
+clang64
+ucrt64
 gcc*
 .vscode
 vcpkg_installed
