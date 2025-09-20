@@ -25,6 +25,14 @@ if(NOT glslang_FOUND)
     message(FATAL_ERROR "glslang not found")
 endif()
 
+# Find MoltenVK on macOS
+if(APPLE)
+    find_library(MOLTENVK_LIBRARY MoltenVK PATHS /opt/homebrew/lib /usr/local/lib)
+    if(NOT MOLTENVK_LIBRARY)
+        message(FATAL_ERROR "MoltenVK library not found")
+    endif()
+endif()
+
 gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH spirv-reflect TAG vulkan-sdk-1.4.321.0)
 
 set(SPIRV_HEADERS
@@ -87,6 +95,26 @@ target_link_libraries(VulkanRenderer PRIVATE
                       glslang::SPIRV
 )
 
+# Add platform-specific libraries
+if(APPLE)
+  target_link_libraries(VulkanRenderer PRIVATE
+                        "-framework Metal"
+                        "-framework MetalKit"
+                        "-framework Foundation"
+                        "-framework QuartzCore"
+                        "-framework CoreGraphics"
+                        "-framework IOKit"
+                        "-framework IOSurface"
+                        "-framework AppKit"
+                        "-framework Cocoa"
+                        "-framework CoreFoundation"
+                        "-framework CoreVideo"
+                        ${MOLTENVK_LIBRARY})
+elseif(UNIX AND NOT APPLE)
+  target_link_libraries(VulkanRenderer PRIVATE
+                        X11)
+endif()
+
 if(MSVC)
   set_target_properties(
     VulkanRenderer
@@ -101,6 +129,13 @@ elseif(MINGW OR MSYS)
         "-DVK_USE_PLATFORM_WIN32_KHR"
       PREFIX
         "")
+elseif(APPLE)
+  set_target_properties(
+    VulkanRenderer
+    PROPERTIES
+      COMPILE_FLAGS
+        "-DVK_USE_PLATFORM_METAL_EXT"
+  )
 elseif(UNIX)
   set_target_properties(
     VulkanRenderer

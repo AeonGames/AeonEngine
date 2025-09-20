@@ -107,6 +107,16 @@ namespace AeonGames
             stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+#elif defined( VK_USE_PLATFORM_METAL_EXT )
+        VkMetalSurfaceCreateInfoEXT metal_surface_create_info_ext {};
+        metal_surface_create_info_ext.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+        metal_surface_create_info_ext.pLayer = reinterpret_cast<CAMetalLayer*> ( mWindowId );
+        if ( VkResult result = vkCreateMetalSurfaceEXT ( mVulkanRenderer.GetInstance(), &metal_surface_create_info_ext, nullptr, &mVkSurfaceKHR ) )
+        {
+            std::ostringstream stream;
+            stream << "Call to vkCreateMetalSurfaceEXT failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
         VkXlibSurfaceCreateInfoKHR xlib_surface_create_info_khr {};
         xlib_surface_create_info_khr.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
