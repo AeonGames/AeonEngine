@@ -21,12 +21,14 @@ limitations under the License.
 #include <algorithm>
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Utilities.hpp"
+#include "aeongames/LogLevel.hpp"
+#include "aeongames/CRC.hpp"
 #include <vulkan/vulkan.h>
 #include "VulkanPipeline.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
-#include "aeongames/CRC.hpp"
+#include "spirv_reflect.h"
 
 namespace AeonGames
 {
@@ -180,31 +182,76 @@ namespace AeonGames
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
     }
 
+    std::array<EShLanguage, ShaderType::COUNT> ShaderTypeToEShLanguage
+    {
+        EShLanguage::EShLangVertex,
+        EShLanguage::EShLangFragment,
+        EShLanguage::EShLangCompute,
+        EShLanguage::EShLangTessControl,
+        EShLanguage::EShLangTessEvaluation,
+        EShLanguage::EShLangGeometry
+    };
+
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
-#if 0
-        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 >
-        shader_modules{ { VK_NULL_HANDLE } };
+        //std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 > shader_modules{ { VK_NULL_HANDLE } };
+        CompilerLinker compiler_linker{CompilerLinker::TOptions::EOptionDumpReflection};
 
-        std::string vertex_shader_code = GetVertexShaderCode ( aPipeline );
-        std::string fragment_shader_code = GetFragmentShaderCode ( aPipeline );
+        std::array<std::string_view, ShaderType::COUNT> shader_codes =
+        {
+            aPipeline.GetShaderCode ( VERT ),
+            aPipeline.GetShaderCode ( FRAG ),
+            aPipeline.GetShaderCode ( COMP ),
+            aPipeline.GetShaderCode ( TESC ),
+            aPipeline.GetShaderCode ( TESE ),
+            aPipeline.GetShaderCode ( GEOM )
+        };
 
-        CompilerLinker compiler_linker;
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangVertex, vertex_shader_code.c_str() );
-        compiler_linker.AddShaderSource ( EShLanguage::EShLangFragment, fragment_shader_code.c_str() );
+        for ( uint32_t i = 0; i < ShaderType::COUNT; ++i )
+        {
+            if ( shader_codes.at ( i ).empty() )
+            {
+                continue;
+            }
+            compiler_linker.AddShaderSource ( ShaderTypeToEShLanguage.at ( i ), shader_codes.at ( i ).data() );
+        }
+
         if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
         {
             std::ostringstream stream;
-            stream << vertex_shader_code << std::endl;
-            stream << fragment_shader_code << std::endl;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
                                                                      " Error:" << std::endl << compiler_linker.GetLog();
-            std::cout << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
-                                                                        " Error:" << std::endl << compiler_linker.GetLog();
-            std::cout << fragment_shader_code << std::endl;
+            std::cout << LogLevel::Error << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
+                                                                                           " Error:" << std::endl << compiler_linker.GetLog();
             throw std::runtime_error ( stream.str().c_str() );
         }
+
+#if 0
+        {
+            // Generate reflection data for a shader
+            SpvReflectShaderModule module {};
+            SpvReflectResult result = spvReflectCreateShaderModule ( spirv_nbytes, spirv_code, &module );
+            assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+
+            // Enumerate and extract shader's input variables
+            uint32_t var_count{0};
+            result = spvReflectEnumerateInputVariables ( &module, &var_count, NULL );
+            assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+            SpvReflectInterfaceVariable** input_vars =
+                ( SpvReflectInterfaceVariable** ) malloc ( var_count * sizeof ( SpvReflectInterfaceVariable* ) );
+            result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars );
+            assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+
+            // Output variables, descriptor bindings, descriptor sets, and push constants
+            // can be enumerated and extracted using a similar mechanism.
+
+            // Destroy the reflection data when no longer required.
+            spvReflectDestroyShaderModule ( &module );
+        }
+#endif
+
+#if 0
         {
             VkShaderModuleCreateInfo shader_module_create_info{};
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

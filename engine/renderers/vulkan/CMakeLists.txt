@@ -67,19 +67,34 @@ set(VULKAN_RENDERER_SOURCES
     VulkanFrameBuffer.cpp
     Plugin.cpp)
 
+include_directories(${CMAKE_BINARY_DIR}/spirv-reflect)
+set(SPIRV_REFLECT_SOURCES
+    ${CMAKE_BINARY_DIR}/spirv-reflect/spirv_reflect.cpp
+)
+
+set(SPIRV_REFLECT_HEADERS
+    ${CMAKE_BINARY_DIR}/spirv-reflect/spirv_reflect.h
+)
+
 source_group("Renderer"
-             FILES
-             ${VULKAN_RENDERER_HEADERS}
-             ${VULKAN_RENDERER_SOURCES})
+            FILES
+            ${VULKAN_RENDERER_HEADERS}
+            ${VULKAN_RENDERER_SOURCES}
+            ${SPIRV_REFLECT_SOURCES}
+            ${SPIRV_REFLECT_HEADERS}
+)
 source_group("Compiler" FILES ${SPIRV_HEADERS} ${SPIRV_SOURCES})
 
 add_library(VulkanRenderer
             SHARED
             ${VULKAN_RENDERER_HEADERS}
             ${VULKAN_RENDERER_SOURCES}
+            ${SPIRV_REFLECT_SOURCES}
+            ${SPIRV_REFLECT_HEADERS}
             ${SPIRV_HEADERS}
             ${SPIRV_SOURCES}
-            ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp)
+            ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
+)
 
 if(IWYU_PROGRAM)
   set_property(TARGET VulkanRenderer PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_COMMAND_LINE})
