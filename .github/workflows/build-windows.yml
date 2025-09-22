@@ -4,13 +4,18 @@ on: [push, pull_request]
 
 env:
   USERNAME: AeonGames
-  VCPKG_EXE: vcpkg
+  VCPKG_EXE: C:\vcpkg\vcpkg.exe
   FEED_URL: https://nuget.pkg.github.com/AeonGames/index.json
-  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AeonGames/index.json,readwrite"
+  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/AeonGames/index.json,readwrite;nugettimeout,900"
+  VCPKG_FEATURE_FLAGS: "binarycaching,manifests,versions"
+  VCPKG_VERBOSE: "1"
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      packages: write
 
     strategy:
       matrix:
@@ -23,6 +28,14 @@ jobs:
       shell: pwsh
       run: |
         & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe" update --installPath "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise" --quiet --wait
+      if: matrix.compiler == 'msvc'
+
+    - name: 🔄 Update VCPKG
+      shell: pwsh
+      run: |
+        cd C:\vcpkg
+        git pull
+        .\bootstrap-vcpkg.bat
       if: matrix.compiler == 'msvc'
 
     - name: 📦 Add NuGet sources
@@ -41,8 +54,17 @@ jobs:
       if: matrix.compiler == 'msvc'
 
     - name: ⚙️ Configure CMake (Windows Visual Studio)
-      run: cmake -DCMAKE_TOOLCHAIN_FILE="${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg\scripts\buildsystems\vcpkg.cmake" -DBUILD_VULKAN_RENDERER:boolean=ON -B ${{github.workspace}}/build
+      shell: pwsh
+      run: |
+        cmake -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DBUILD_VULKAN_RENDERER:boolean=ON -B ${{github.workspace}}/build
       if: matrix.compiler == 'msvc'
 
     - name: 🔨 Build
       run: cmake --build ${{github.workspace}}/build
+
+    - name: 🧪 Run Tests
+      shell: pwsh
+      run: |
+        cd ${{github.workspace}}/build
+        ctest --output-on-failure --verbose
+      if: matrix.compiler == 'msvc'
