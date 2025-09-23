@@ -66,5 +66,5 @@ jobs:
       shell: pwsh
       run: |
         cd ${{github.workspace}}/build
-        ctest --output-on-failure --verbose
+        ctest --output-on-failure --verbose -C Debug
       if: matrix.compiler == 'msvc'
