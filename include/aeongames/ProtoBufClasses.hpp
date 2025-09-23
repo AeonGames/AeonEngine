@@ -20,7 +20,11 @@ limitations under the License.
 #ifdef ProtoBufClasses_EXPORTS
 #define DLL_PROTOBUF __declspec( dllexport )
 #else
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define DLL_PROTOBUF
+#else
 #define DLL_PROTOBUF __declspec( dllimport )
+#endif
 #endif
 #endif
 #elif defined(__unix__) || defined(__APPLE__)
