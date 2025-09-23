@@ -33,7 +33,7 @@ if(APPLE)
     endif()
 endif()
 
-gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH spirv-reflect TAG vulkan-sdk-1.4.321.0)
+gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH "${CMAKE_BINARY_DIR}/spirv-reflect" TAG vulkan-sdk-1.4.321.0)
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
