@@ -192,10 +192,20 @@ namespace AeonGames
         EShLanguage::EShLangGeometry
     };
 
+    std::array<VkShaderStageFlagBits, ShaderType::COUNT> ShaderTypeToShaderStageFlagBit
+    {
+        VK_SHADER_STAGE_VERTEX_BIT,
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        VK_SHADER_STAGE_COMPUTE_BIT,
+        VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+        VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
+        VK_SHADER_STAGE_GEOMETRY_BIT
+    };
+
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
-        //std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 > shader_modules{ { VK_NULL_HANDLE } };
+        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 > shader_modules{ { VK_NULL_HANDLE } };
         CompilerLinker compiler_linker{CompilerLinker::TOptions::EOptionDumpReflection};
 
         std::array<std::string_view, ShaderType::COUNT> shader_codes =
@@ -227,56 +237,46 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-#if 0
+        for ( uint32_t i = 0; i < ShaderType::COUNT; ++i )
         {
-            // Generate reflection data for a shader
+            if ( shader_codes.at ( i ).empty() )
+            {
+                continue;
+            }
+            VkShaderModuleCreateInfo shader_module_create_info{};
+            shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            shader_module_create_info.codeSize = compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ).size() * sizeof ( uint32_t );
+            shader_module_create_info.pCode = compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ).data();
+
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( ShaderTypeToShaderStageFlagBit.at ( i ) )] ) )
+            {
+                std::ostringstream stream;
+                stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            //--------Reflection----------//
             SpvReflectShaderModule module {};
-            SpvReflectResult result = spvReflectCreateShaderModule ( spirv_nbytes, spirv_code, &module );
+            SpvReflectResult result = spvReflectCreateShaderModule (
+                                          shader_module_create_info.codeSize,
+                                          shader_module_create_info.pCode,
+                                          &module );
             assert ( result == SPV_REFLECT_RESULT_SUCCESS );
 
-            // Enumerate and extract shader's input variables
             uint32_t var_count{0};
             result = spvReflectEnumerateInputVariables ( &module, &var_count, NULL );
             assert ( result == SPV_REFLECT_RESULT_SUCCESS );
-            SpvReflectInterfaceVariable** input_vars =
-                ( SpvReflectInterfaceVariable** ) malloc ( var_count * sizeof ( SpvReflectInterfaceVariable* ) );
-            result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars );
+            std::vector<SpvReflectInterfaceVariable*> input_vars ( var_count );
+            result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars.data() );
             assert ( result == SPV_REFLECT_RESULT_SUCCESS );
-
-            // Output variables, descriptor bindings, descriptor sets, and push constants
-            // can be enumerated and extracted using a similar mechanism.
-
-            // Destroy the reflection data when no longer required.
+            for ( const auto& i : input_vars )
+            {
+                std::cout << "Input: " << i->location << " " << i->name << " " << i->format << " " << std::string ( i->type_description->type_name ? i->type_description->type_name : "" ) << std::endl;
+            }
             spvReflectDestroyShaderModule ( &module );
+            //--------Reflection----------//
         }
-#endif
-
 #if 0
-        {
-            VkShaderModuleCreateInfo shader_module_create_info{};
-            shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).size() * sizeof ( uint32_t );
-            shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangVertex ).data();
-
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )] ) )
-            {
-                std::ostringstream stream;
-                stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
-        {
-            VkShaderModuleCreateInfo shader_module_create_info{};
-            shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            shader_module_create_info.codeSize = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).size() * sizeof ( uint32_t );
-            shader_module_create_info.pCode = compiler_linker.GetSpirV ( EShLanguage::EShLangFragment ).data();
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )] ) )
-            {
-                std::ostringstream stream;
-                stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-        }
 
         std::array<VkPipelineShaderStageCreateInfo, 2> pipeline_shader_stage_create_infos{ {} };
         pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

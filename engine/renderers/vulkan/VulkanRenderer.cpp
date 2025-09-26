@@ -283,18 +283,49 @@ namespace AeonGames
             }
         }
 
-#if VK_HEADER_VERSION >= 179
         std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
         {
             VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
             VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
         };
-#else
-        std::array<VkValidationFeatureEnableEXT, 1> validation_feature_enable_exts
+
+        // Validate that all requested layers are available
         {
-            VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT
-        };
-#endif
+            uint32_t available_layer_count;
+            vkEnumerateInstanceLayerProperties ( &available_layer_count, nullptr );
+            std::vector<VkLayerProperties> available_layers ( available_layer_count );
+            vkEnumerateInstanceLayerProperties ( &available_layer_count, available_layers.data() );
+            std::cout << "Available Layers:" << std::endl;
+            for ( const auto& available_layer : available_layers )
+            {
+                std::cout << "  - " << available_layer.layerName
+                          << ": " << available_layer.description << std::endl;
+            }
+
+            for ( auto it = mInstanceLayerNames.begin(); it != mInstanceLayerNames.end(); )
+            {
+                bool layer_found = false;
+                for ( const auto& available_layer : available_layers )
+                {
+                    if ( strcmp ( *it, available_layer.layerName ) == 0 )
+                    {
+                        layer_found = true;
+                        break;
+                    }
+                }
+                if ( !layer_found )
+                {
+                    std::cout << LogLevel::Warning << "Requested layer '" << *it
+                              << "' is not available." << std::endl;
+                    it = mInstanceLayerNames.erase ( it ); // erase returns an iterator to the next element
+                }
+                else
+                {
+                    ++it; // only increment if no erase occurred
+                }
+            }
+        }
+
         VkValidationFeaturesEXT validation_features_ext
         {
             VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
@@ -319,6 +350,17 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer instance. error code: ( " << GetVulkanResultString ( result ) << " )";
+
+            if ( result == VK_ERROR_LAYER_NOT_PRESENT )
+            {
+                stream << std::endl << "The following layers were requested but are not available:";
+                for ( const char * requested_layer : mInstanceLayerNames )
+                {
+                    stream << std::endl << "  - " << requested_layer;
+                }
+                stream << std::endl << "Consider installing the Vulkan SDK or disabling validation layers.";
+            }
+
             std::string error_string = stream.str();
             std::cout << LogLevel::Error << error_string << std::endl;
             throw std::runtime_error ( error_string.c_str() );
