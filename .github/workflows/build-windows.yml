@@ -22,7 +22,8 @@ jobs:
         compiler: [msvc]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
 
     - name: 🔄 Update Visual Studio
       shell: pwsh
@@ -30,7 +31,7 @@ jobs:
         & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe" update --installPath "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise" --quiet --wait
       if: matrix.compiler == 'msvc'
 
-    - name: 🔄 Update VCPKG
+    - name: 🔃 Update VCPKG
       shell: pwsh
       run: |
         cd C:\vcpkg
