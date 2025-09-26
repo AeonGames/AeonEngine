@@ -33,7 +33,7 @@ if(APPLE)
     endif()
 endif()
 
-gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH "${CMAKE_BINARY_DIR}/spirv-reflect" TAG vulkan-sdk-1.4.321.0)
+gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH "${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect" TAG vulkan-sdk-1.4.321.0)
 
 set(SPIRV_HEADERS
     SPIR-V/CompilerLinker.h
@@ -67,13 +67,13 @@ set(VULKAN_RENDERER_SOURCES
     VulkanFrameBuffer.cpp
     Plugin.cpp)
 
-include_directories(${CMAKE_BINARY_DIR}/spirv-reflect)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect)
 set(SPIRV_REFLECT_SOURCES
-    ${CMAKE_BINARY_DIR}/spirv-reflect/spirv_reflect.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect/spirv_reflect.cpp
 )
 
 set(SPIRV_REFLECT_HEADERS
-    ${CMAKE_BINARY_DIR}/spirv-reflect/spirv_reflect.h
+    ${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect/spirv_reflect.h
 )
 
 source_group("Renderer"
