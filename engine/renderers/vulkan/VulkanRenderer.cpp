@@ -261,15 +261,16 @@ namespace AeonGames
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
         application_info.pApplicationName = "AeonEngine Vulkan Renderer";
 
+        // Validate that all requested layers are available
         {
-            uint32_t device_layer_count;
-            vkEnumerateInstanceLayerProperties ( &device_layer_count, nullptr );
-            std::vector<VkLayerProperties> device_layer_list ( device_layer_count );
-            vkEnumerateInstanceLayerProperties ( &device_layer_count, device_layer_list.data() );
-            std::cout << "VulkanRenderer Instance Layers" << std::endl;
-            for ( auto& i : device_layer_list )
+            uint32_t available_layer_count;
+            vkEnumerateInstanceLayerProperties ( &available_layer_count, nullptr );
+            std::vector<VkLayerProperties> available_layers ( available_layer_count );
+            vkEnumerateInstanceLayerProperties ( &available_layer_count, available_layers.data() );
+            std::cout << LogLevel::Info << "VulkanRenderer Available Layers" << std::endl;
+            for ( auto& i : available_layers )
             {
-                std::cout << " " << i.layerName << ": " << i.description << std::endl;
+                std::cout << LogLevel::Info << "  - " << i.layerName << ": " << i.description << std::endl;
                 {
                     uint32_t instance_extension_layer_count;
                     vkEnumerateInstanceExtensionProperties ( i.layerName, &instance_extension_layer_count, nullptr );
@@ -280,26 +281,6 @@ namespace AeonGames
                         std::cout << "\t" << j.extensionName << std::endl;
                     }
                 }
-            }
-        }
-
-        std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
-        {
-            VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
-            VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
-        };
-
-        // Validate that all requested layers are available
-        {
-            uint32_t available_layer_count;
-            vkEnumerateInstanceLayerProperties ( &available_layer_count, nullptr );
-            std::vector<VkLayerProperties> available_layers ( available_layer_count );
-            vkEnumerateInstanceLayerProperties ( &available_layer_count, available_layers.data() );
-            std::cout << "Available Layers:" << std::endl;
-            for ( const auto& available_layer : available_layers )
-            {
-                std::cout << "  - " << available_layer.layerName
-                          << ": " << available_layer.description << std::endl;
             }
 
             for ( auto it = mInstanceLayerNames.begin(); it != mInstanceLayerNames.end(); )
@@ -326,6 +307,49 @@ namespace AeonGames
             }
         }
 
+        // Validate that all requested extensions are available
+        {
+            uint32_t available_extension_count;
+            vkEnumerateInstanceExtensionProperties ( nullptr, &available_extension_count, nullptr );
+            std::vector<VkExtensionProperties> available_extensions ( available_extension_count );
+            vkEnumerateInstanceExtensionProperties ( nullptr, &available_extension_count, available_extensions.data() );
+
+            std::cout << LogLevel::Info << "VulkanRenderer Available Instance Extensions" << std::endl;
+            for ( const auto& extension : available_extensions )
+            {
+                std::cout << LogLevel::Info << "  - " << extension.extensionName << " (version " << extension.specVersion << ")" << std::endl;
+            }
+
+            for ( auto it = mInstanceExtensionNames.begin(); it != mInstanceExtensionNames.end(); )
+            {
+                bool extension_found = false;
+                for ( const auto& available_extension : available_extensions )
+                {
+                    if ( strcmp ( *it, available_extension.extensionName ) == 0 )
+                    {
+                        extension_found = true;
+                        break;
+                    }
+                }
+                if ( !extension_found )
+                {
+                    std::cout << LogLevel::Warning << "Requested extension '" << *it
+                              << "' is not available." << std::endl;
+                    it = mInstanceExtensionNames.erase ( it ); // erase returns an iterator to the next element
+                }
+                else
+                {
+                    ++it; // only increment if no erase occurred
+                }
+            }
+        }
+
+        std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
+        {
+            VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
+            VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
+        };
+
         VkValidationFeaturesEXT validation_features_ext
         {
             VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
@@ -350,17 +374,6 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer instance. error code: ( " << GetVulkanResultString ( result ) << " )";
-
-            if ( result == VK_ERROR_LAYER_NOT_PRESENT )
-            {
-                stream << std::endl << "The following layers were requested but are not available:";
-                for ( const char * requested_layer : mInstanceLayerNames )
-                {
-                    stream << std::endl << "  - " << requested_layer;
-                }
-                stream << std::endl << "Consider installing the Vulkan SDK or disabling validation layers.";
-            }
-
             std::string error_string = stream.str();
             std::cout << LogLevel::Error << error_string << std::endl;
             throw std::runtime_error ( error_string.c_str() );
@@ -425,13 +438,13 @@ namespace AeonGames
         {
             uint32_t extension_property_count;
             vkEnumerateDeviceExtensionProperties ( mVkPhysicalDevice, nullptr, &extension_property_count, nullptr );
-
             std::vector<VkExtensionProperties> extension_properties ( extension_property_count );
             vkEnumerateDeviceExtensionProperties ( mVkPhysicalDevice, nullptr, &extension_property_count, extension_properties.data() );
-            std::cout << "Vulkan Extensions" << std::endl;
+            std::cout << LogLevel::Info << "Vulkan Renderer Available Device Extensions" << std::endl;
             for ( auto& i : extension_properties )
             {
-                std::cout << " " << i.extensionName << "t|\t" << i.specVersion << std::endl;
+                std::cout << LogLevel::Info << "  - " << i.extensionName << " (version " << i.specVersion << ")" << std::endl;
+
                 if ( !strcmp ( i.extensionName, VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) )
                 {
                     mDeviceExtensionNames.emplace_back ( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
