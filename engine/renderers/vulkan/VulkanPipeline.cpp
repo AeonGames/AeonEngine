@@ -206,7 +206,12 @@ namespace AeonGames
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
         std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 > shader_modules{ { VK_NULL_HANDLE } };
-        CompilerLinker compiler_linker{CompilerLinker::TOptions::EOptionDumpReflection};
+        CompilerLinker compiler_linker{static_cast<CompilerLinker::TOptions> (
+                                           CompilerLinker::TOptions::EOptionSpv |
+                                           CompilerLinker::TOptions::EOptionVulkanRules |
+                                           CompilerLinker::TOptions::EOptionLinkProgram |
+                                           CompilerLinker::TOptions::EOptionDumpReflection
+                                       ) };
 
         std::array<std::string_view, ShaderType::COUNT> shader_codes =
         {
@@ -232,26 +237,27 @@ namespace AeonGames
             std::ostringstream stream;
             stream << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
                                                                      " Error:" << std::endl << compiler_linker.GetLog();
-            std::cout << LogLevel::Error << ( ( result == CompilerLinker::EFailCompile ) ? "Compilation" : "Linking" ) <<
-                                                                                           " Error:" << std::endl << compiler_linker.GetLog();
+            std::cout << LogLevel::Error << stream.str();
             throw std::runtime_error ( stream.str().c_str() );
         }
 
         for ( uint32_t i = 0; i < ShaderType::COUNT; ++i )
         {
-            if ( shader_codes.at ( i ).empty() )
+            const std::vector<uint32_t>& spirv{compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ) };
+            if ( spirv.size() == 0 )
             {
                 continue;
             }
             VkShaderModuleCreateInfo shader_module_create_info{};
             shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            shader_module_create_info.codeSize = compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ).size() * sizeof ( uint32_t );
-            shader_module_create_info.pCode = compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ).data();
+            shader_module_create_info.codeSize = spirv.size() * sizeof ( uint32_t );
+            shader_module_create_info.pCode = spirv.data();
 
             if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( ShaderTypeToShaderStageFlagBit.at ( i ) )] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
@@ -269,9 +275,38 @@ namespace AeonGames
             std::vector<SpvReflectInterfaceVariable*> input_vars ( var_count );
             result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars.data() );
             assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+            std::cout << LogLevel::Info << "SPIR-V Reflect Inputs: " << std::endl;
             for ( const auto& i : input_vars )
             {
-                std::cout << "Input: " << i->location << " " << i->name << " " << i->format << " " << std::string ( i->type_description->type_name ? i->type_description->type_name : "" ) << std::endl;
+                std::cout << LogLevel::Info << "  - ID: " << i->spirv_id << std::endl;
+                std::cout << LogLevel::Info << "    name: " << i->name << std::endl;
+                std::cout << LogLevel::Info << "    location: " << i->location << std::endl;
+                std::cout << LogLevel::Info << "    component: " << i->component << std::endl;
+                std::cout << LogLevel::Info << "    storage_class: " << i->storage_class << std::endl;
+                std::cout << LogLevel::Info << "    semantic: " << ( i->semantic ? i->semantic : "none" ) << std::endl;
+                std::cout << LogLevel::Info << "    decoration_flags: " << i->decoration_flags << std::endl;
+                std::cout << LogLevel::Info << "    built_in: " << i->built_in << std::endl;
+                std::cout << LogLevel::Info << "    scalar_width: " << i->numeric.scalar.width  << std::endl;
+                std::cout << LogLevel::Info << "    scalar_signedness: " << i->numeric.scalar.signedness  << std::endl;
+                std::cout << LogLevel::Info << "    vector_component_count: " << i->numeric.vector.component_count  << std::endl;
+                std::cout << LogLevel::Info << "    matrix_column_count: " << i->numeric.matrix.column_count  << std::endl;
+                std::cout << LogLevel::Info << "    matrix_row_count: " << i->numeric.matrix.row_count  << std::endl;
+                std::cout << LogLevel::Info << "    matrix_stride: " << i->numeric.matrix.stride  << std::endl;
+                std::cout << LogLevel::Info << "    array_dims_count: " << i->array.dims_count << std::endl;
+                for ( uint32_t j = 0; j < SPV_REFLECT_MAX_ARRAY_DIMS; ++j )
+                {
+                    std::cout << LogLevel::Info << "      - array_dim[" << j << "]: " << i->array.dims[j] << std::endl;
+                }
+                for ( uint32_t j = 0; j < SPV_REFLECT_MAX_ARRAY_DIMS; ++j )
+                {
+                    std::cout << LogLevel::Info << "      - array_spec_constant_op_id[" << j << "]: " << i->array.spec_constant_op_ids[j] << std::endl;
+                }
+                std::cout << LogLevel::Info << "    array_stride: " << i->array.stride << std::endl;
+                std::cout << LogLevel::Info << "    member_count: " << i->member_count << std::endl;
+                //(i->members ? i->members : "none") << " " <<
+                std::cout << LogLevel::Info << "    format: " << i->format << std::endl;
+                //(i->type_description ? i->type_description : "none") << " " <<
+                std::cout << LogLevel::Info << "    word_offset location: " << i->word_offset.location << std::endl;
             }
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection----------//
