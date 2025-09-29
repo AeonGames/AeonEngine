@@ -267,14 +267,32 @@ namespace AeonGames
                                           shader_module_create_info.codeSize,
                                           shader_module_create_info.pCode,
                                           &module );
-            assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect module creation failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
 
             uint32_t var_count{0};
             result = spvReflectEnumerateInputVariables ( &module, &var_count, NULL );
-            assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect input variable enumeration failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
             std::vector<SpvReflectInterfaceVariable*> input_vars ( var_count );
             result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars.data() );
-            assert ( result == SPV_REFLECT_RESULT_SUCCESS );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect input variable enumeration failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
             std::cout << LogLevel::Info << "SPIR-V Reflect Inputs: " << std::endl;
             for ( const auto& i : input_vars )
             {
