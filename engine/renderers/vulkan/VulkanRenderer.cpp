@@ -278,7 +278,7 @@ namespace AeonGames
                     vkEnumerateInstanceExtensionProperties ( i.layerName, &instance_extension_layer_count, instance_extension_layer_list.data() );
                     for ( auto& j : instance_extension_layer_list )
                     {
-                        std::cout << "\t" << j.extensionName << std::endl;
+                        std::cout << LogLevel::Info << "    - " << j.extensionName << std::endl;
                     }
                 }
             }

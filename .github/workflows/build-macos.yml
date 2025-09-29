@@ -35,7 +35,17 @@ jobs:
           googletest \
           qt6 \
           pkg-config \
-          molten-vk
+          molten-vk \
+          spirv-headers \
+          spirv-tools \
+          vulkan-extensionlayer \
+          vulkan-headers \
+          vulkan-loader \
+          vulkan-profiles \
+          vulkan-tools \
+          vulkan-utility-libraries \
+          vulkan-validationlayers \
+          vulkan-volk
 
     - name: 'Set up Clang'
       run: |
@@ -44,7 +54,7 @@ jobs:
 
     - name: '🚧 Build'
       run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER=ON
         cmake --build build
 
     - name: '🧪 Run TESTS'
