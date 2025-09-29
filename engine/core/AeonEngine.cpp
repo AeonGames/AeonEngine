@@ -85,10 +85,15 @@ namespace AeonGames
             return;
         }
 #else
+#if defined(__APPLE__)
+#define SO_SUFFIX ".dylib"
+#else
+#define SO_SUFFIX ".so"
+#endif
         void* plugin;
         if ( ! ( plugin = dlopen ( aFilename.c_str(), RTLD_NOW | RTLD_GLOBAL ) ) )
         {
-            if ( ! ( plugin = dlopen ( ( "lib" + aFilename + ".so" ).c_str(), RTLD_NOW | RTLD_GLOBAL ) ) )
+            if ( ! ( plugin = dlopen ( ( "lib" + aFilename + SO_SUFFIX ).c_str(), RTLD_NOW | RTLD_GLOBAL ) ) )
             {
                 std::cout << LogLevel::Error << "Failed to load " << aFilename << std::endl;
                 std::cout << LogLevel::Error << "Error " << dlerror() << std::endl;
