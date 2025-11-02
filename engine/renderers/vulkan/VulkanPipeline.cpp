@@ -321,33 +321,69 @@ namespace AeonGames
                 }
                 std::cout << LogLevel::Info << "    array_stride: " << i->array.stride << std::endl;
                 std::cout << LogLevel::Info << "    member_count: " << i->member_count << std::endl;
-                //(i->members ? i->members : "none") << " " <<
+
+                // Print all members if they exist
+                if ( i->members && i->member_count > 0 )
+                {
+                    std::cout << LogLevel::Info << "    members: " << std::endl;
+                    for ( uint32_t j = 0; j < i->member_count; ++j )
+                    {
+                        const SpvReflectInterfaceVariable* member = &i->members[j];
+                        std::cout << LogLevel::Info << "      [" << j << "] name: " << ( member->name ? member->name : "none" ) << std::endl;
+                        std::cout << LogLevel::Info << "      [" << j << "] location: " << member->location << std::endl;
+                        std::cout << LogLevel::Info << "      [" << j << "] format: " << member->format << std::endl;
+                        std::cout << LogLevel::Info << "      [" << j << "] spirv_id: " << member->spirv_id << std::endl;
+                        std::cout << LogLevel::Info << "      [" << j << "] component: " << member->component << std::endl;
+                        std::cout << LogLevel::Info << "      [" << j << "] storage_class: " << member->storage_class << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << LogLevel::Info << "    members: none" << std::endl;
+                }
+
                 std::cout << LogLevel::Info << "    format: " << i->format << std::endl;
-                //(i->type_description ? i->type_description : "none") << " " <<
+
+                // Print type description if it exists
+                if ( i->type_description )
+                {
+                    std::cout << LogLevel::Info << "    type_description: " << std::endl;
+                    std::cout << LogLevel::Info << "      id: " << i->type_description->id << std::endl;
+                    std::cout << LogLevel::Info << "      op: " << i->type_description->op << std::endl;
+                    std::cout << LogLevel::Info << "      type_name: " << ( i->type_description->type_name ? i->type_description->type_name : "none" ) << std::endl;
+                    std::cout << LogLevel::Info << "      struct_member_name: " << ( i->type_description->struct_member_name ? i->type_description->struct_member_name : "none" ) << std::endl;
+                    std::cout << LogLevel::Info << "      storage_class: " << i->type_description->storage_class << std::endl;
+                    std::cout << LogLevel::Info << "      type_flags: " << i->type_description->type_flags << std::endl;
+                    std::cout << LogLevel::Info << "      decoration_flags: " << i->type_description->decoration_flags << std::endl;
+                    std::cout << LogLevel::Info << "      member_count: " << i->type_description->member_count << std::endl;
+
+                    // Print struct members if it's a struct
+                    if ( i->type_description->member_count > 0 && i->type_description->members )
+                    {
+                        std::cout << LogLevel::Info << "      struct_members: " << std::endl;
+                        for ( uint32_t k = 0; k < i->type_description->member_count; ++k )
+                        {
+                            const SpvReflectTypeDescription* struct_member = &i->type_description->members[k];
+                            std::cout << LogLevel::Info << "        [" << k << "] type_name: " << ( struct_member->type_name ? struct_member->type_name : "none" ) << std::endl;
+                            std::cout << LogLevel::Info << "        [" << k << "] struct_member_name: " << ( struct_member->struct_member_name ? struct_member->struct_member_name : "none" ) << std::endl;
+                            std::cout << LogLevel::Info << "        [" << k << "] id: " << struct_member->id << std::endl;
+                            std::cout << LogLevel::Info << "        [" << k << "] op: " << struct_member->op << std::endl;
+                            std::cout << LogLevel::Info << "        [" << k << "] type_flags: " << struct_member->type_flags << std::endl;
+                            std::cout << LogLevel::Info << "        [" << k << "] decoration_flags: " << struct_member->decoration_flags << std::endl;
+                        }
+                    }
+                }
+                else
+                {
+                    std::cout << LogLevel::Info << "    type_description: none" << std::endl;
+                }
+
                 std::cout << LogLevel::Info << "    word_offset location: " << i->word_offset.location << std::endl;
             }
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection----------//
         }
 #if 0
-
-        std::array<VkPipelineShaderStageCreateInfo, 2> pipeline_shader_stage_create_infos{ {} };
-        pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        pipeline_shader_stage_create_infos[0].pNext = nullptr;
-        pipeline_shader_stage_create_infos[0].flags = 0;
-        pipeline_shader_stage_create_infos[0].module = shader_modules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )];
-        pipeline_shader_stage_create_infos[0].pName = "main";
-        pipeline_shader_stage_create_infos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-        pipeline_shader_stage_create_infos[0].pSpecializationInfo = nullptr;
-
-        pipeline_shader_stage_create_infos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        pipeline_shader_stage_create_infos[1].pNext = nullptr;
-        pipeline_shader_stage_create_infos[1].flags = 0;
-        pipeline_shader_stage_create_infos[1].module = shader_modules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )];
-        pipeline_shader_stage_create_infos[1].pName = "main";
-        pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
-
         std::array<VkVertexInputBindingDescription, 1> vertex_input_binding_descriptions { {} };
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
@@ -500,6 +536,23 @@ namespace AeonGames
             stream << "Pipeline Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
             throw std::runtime_error ( stream.str().c_str() );
         }
+
+        std::array<VkPipelineShaderStageCreateInfo, 2> pipeline_shader_stage_create_infos{ {} };
+        pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        pipeline_shader_stage_create_infos[0].pNext = nullptr;
+        pipeline_shader_stage_create_infos[0].flags = 0;
+        pipeline_shader_stage_create_infos[0].module = shader_modules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )];
+        pipeline_shader_stage_create_infos[0].pName = "main";
+        pipeline_shader_stage_create_infos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+        pipeline_shader_stage_create_infos[0].pSpecializationInfo = nullptr;
+
+        pipeline_shader_stage_create_infos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        pipeline_shader_stage_create_infos[1].pNext = nullptr;
+        pipeline_shader_stage_create_infos[1].flags = 0;
+        pipeline_shader_stage_create_infos[1].module = shader_modules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )];
+        pipeline_shader_stage_create_infos[1].pName = "main";
+        pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
 
         VkGraphicsPipelineCreateInfo graphics_pipeline_create_info {};
         graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
