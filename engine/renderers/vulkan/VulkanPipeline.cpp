@@ -48,6 +48,47 @@ namespace AeonGames
         {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
     };
 
+    static const std::unordered_map<SpvReflectFormat, VkFormat> SpvReflectToVulkanFormat
+    {
+        { SPV_REFLECT_FORMAT_UNDEFINED, VK_FORMAT_UNDEFINED },
+        { SPV_REFLECT_FORMAT_R16_UINT, VK_FORMAT_R16_UINT },
+        { SPV_REFLECT_FORMAT_R16_SINT, VK_FORMAT_R16_SINT },
+        { SPV_REFLECT_FORMAT_R16_SFLOAT, VK_FORMAT_R16_SFLOAT },
+        { SPV_REFLECT_FORMAT_R16G16_UINT, VK_FORMAT_R16G16_UINT },
+        { SPV_REFLECT_FORMAT_R16G16_SINT, VK_FORMAT_R16G16_SINT },
+        { SPV_REFLECT_FORMAT_R16G16_SFLOAT, VK_FORMAT_R16G16_SFLOAT },
+        { SPV_REFLECT_FORMAT_R16G16B16_UINT, VK_FORMAT_R16G16B16_UINT },
+        { SPV_REFLECT_FORMAT_R16G16B16_SINT, VK_FORMAT_R16G16B16_SINT },
+        { SPV_REFLECT_FORMAT_R16G16B16_SFLOAT, VK_FORMAT_R16G16B16_SFLOAT },
+        { SPV_REFLECT_FORMAT_R16G16B16A16_UINT, VK_FORMAT_R16G16B16A16_UINT },
+        { SPV_REFLECT_FORMAT_R16G16B16A16_SINT, VK_FORMAT_R16G16B16A16_SINT },
+        { SPV_REFLECT_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT },
+        { SPV_REFLECT_FORMAT_R32_UINT, VK_FORMAT_R32_UINT },
+        { SPV_REFLECT_FORMAT_R32_SINT, VK_FORMAT_R32_SINT },
+        { SPV_REFLECT_FORMAT_R32_SFLOAT, VK_FORMAT_R32_SFLOAT },
+        { SPV_REFLECT_FORMAT_R32G32_UINT, VK_FORMAT_R32G32_UINT },
+        { SPV_REFLECT_FORMAT_R32G32_SINT, VK_FORMAT_R32G32_SINT },
+        { SPV_REFLECT_FORMAT_R32G32_SFLOAT, VK_FORMAT_R32G32_SFLOAT },
+        { SPV_REFLECT_FORMAT_R32G32B32_UINT, VK_FORMAT_R32G32B32_UINT },
+        { SPV_REFLECT_FORMAT_R32G32B32_SINT, VK_FORMAT_R32G32B32_SINT },
+        { SPV_REFLECT_FORMAT_R32G32B32_SFLOAT, VK_FORMAT_R32G32B32_SFLOAT },
+        { SPV_REFLECT_FORMAT_R32G32B32A32_UINT, VK_FORMAT_R32G32B32A32_UINT },
+        { SPV_REFLECT_FORMAT_R32G32B32A32_SINT, VK_FORMAT_R32G32B32A32_SINT },
+        { SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT, VK_FORMAT_R32G32B32A32_SFLOAT },
+        { SPV_REFLECT_FORMAT_R64_UINT, VK_FORMAT_R64_UINT },
+        { SPV_REFLECT_FORMAT_R64_SINT, VK_FORMAT_R64_SINT },
+        { SPV_REFLECT_FORMAT_R64_SFLOAT, VK_FORMAT_R64_SFLOAT },
+        { SPV_REFLECT_FORMAT_R64G64_UINT, VK_FORMAT_R64G64_UINT },
+        { SPV_REFLECT_FORMAT_R64G64_SINT, VK_FORMAT_R64G64_SINT },
+        { SPV_REFLECT_FORMAT_R64G64_SFLOAT, VK_FORMAT_R64G64_SFLOAT },
+        { SPV_REFLECT_FORMAT_R64G64B64_UINT, VK_FORMAT_R64G64B64_UINT },
+        { SPV_REFLECT_FORMAT_R64G64B64_SINT, VK_FORMAT_R64G64B64_SINT },
+        { SPV_REFLECT_FORMAT_R64G64B64_SFLOAT, VK_FORMAT_R64G64B64_SFLOAT },
+        { SPV_REFLECT_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64A64_UINT },
+        { SPV_REFLECT_FORMAT_R64G64B64A64_SINT, VK_FORMAT_R64G64B64A64_SINT },
+        { SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT, VK_FORMAT_R64G64B64A64_SFLOAT }
+    };
+
 #if 0
     static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
@@ -274,9 +315,45 @@ namespace AeonGames
                 std::cout << LogLevel::Error << stream.str();
                 throw std::runtime_error ( stream.str().c_str() );
             }
-
+            //------------Bindings-----------//
+            uint32_t bind_count{0};
+            result = spvReflectEnumerateDescriptorBindings ( &module, &bind_count, nullptr );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect descriptor binding enumeration failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            std::vector<SpvReflectDescriptorBinding*> bindings ( bind_count );
+            result = spvReflectEnumerateDescriptorBindings ( &module, &bind_count, bindings.data() );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect descriptor binding enumeration failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            std::cout << LogLevel::Info << "SPIR-V Reflect Bindings: " << std::endl;
+            for ( const auto& i : bindings )
+            {
+                std::cout << LogLevel::Info << "  - ID: " << i->spirv_id << std::endl;
+                std::cout << LogLevel::Info << "    name: " << i->name << std::endl;
+                std::cout << LogLevel::Info << "    set: " << static_cast<int> ( i->set ) << std::endl;
+                std::cout << LogLevel::Info << "    binding: " << static_cast<int> ( i->binding ) << std::endl;
+                std::cout << LogLevel::Info << "    descriptor_type: " << i->descriptor_type << std::endl;
+                std::cout << LogLevel::Info << "    resource_type: " << i->resource_type << std::endl;
+                std::cout << LogLevel::Info << "    array.dims_count: " << i->array.dims_count << std::endl;
+                for ( uint32_t j = 0; j < SPV_REFLECT_MAX_ARRAY_DIMS; ++j )
+                {
+                    std::cout << LogLevel::Info << "      - array.dims[" << j << "]: " << i->array.dims[j] << std::endl;
+                }
+                std::cout << LogLevel::Info << "    count: " << i->count << std::endl;
+                std::cout << LogLevel::Info << "    block.size: " << i->block.size << std::endl;
+            }
+            //------------Input Variables-----------//
             uint32_t var_count{0};
-            result = spvReflectEnumerateInputVariables ( &module, &var_count, NULL );
+            result = spvReflectEnumerateInputVariables ( &module, &var_count, nullptr );
             if ( result != SPV_REFLECT_RESULT_SUCCESS )
             {
                 std::ostringstream stream;
@@ -294,12 +371,31 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
             std::cout << LogLevel::Info << "SPIR-V Reflect Inputs: " << std::endl;
+            mAttributes.clear();
+            mAttributes.reserve ( var_count );
             for ( const auto& i : input_vars )
             {
+#if 1
+                if ( i->built_in < 0 )
+                {
+                    const uint32_t name_crc{crc32i ( i->name, strlen ( i->name ) ) };
+                    auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
+                                                 [] ( const VulkanVariable & a, const uint32_t b )
+                    {
+                        return a.name < b;
+                    } );
+                    mAttributes.insert ( it,
+                    {
+                        name_crc,
+                        i->location,
+                        SpvReflectToVulkanFormat.at ( i->format )
+                    } );
+                }
+#endif
                 std::cout << LogLevel::Info << "  - ID: " << i->spirv_id << std::endl;
                 std::cout << LogLevel::Info << "    name: " << i->name << std::endl;
-                std::cout << LogLevel::Info << "    location: " << i->location << std::endl;
-                std::cout << LogLevel::Info << "    component: " << i->component << std::endl;
+                std::cout << LogLevel::Info << "    location: " << static_cast<int> ( i->location ) << std::endl;
+                std::cout << LogLevel::Info << "    component: " << static_cast<int> ( i->component ) << std::endl;
                 std::cout << LogLevel::Info << "    storage_class: " << i->storage_class << std::endl;
                 std::cout << LogLevel::Info << "    semantic: " << ( i->semantic ? i->semantic : "none" ) << std::endl;
                 std::cout << LogLevel::Info << "    decoration_flags: " << i->decoration_flags << std::endl;
@@ -624,12 +720,15 @@ namespace AeonGames
 
     const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
     {
+#if 0
         auto it = std::find_if ( mUniforms.begin(), mUniforms.end(),
                                  [name_hash] ( const VulkanVariable & uniform )
         {
             return uniform.name == name_hash;
         } );
         return ( it != mUniforms.end() ) ? it->binding : 0;
+#endif
+        return 0;
     }
 
     void VulkanPipeline::ReflectAttributes()
