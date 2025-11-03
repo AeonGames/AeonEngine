@@ -24,15 +24,8 @@ namespace AeonGames
     struct VulkanVariable
     {
         uint32_t name;
-        union
-        {
-            uint32_t binding;
-            uint32_t location;
-            uint32_t offset;
-        };
-        uint32_t size;
+        uint32_t location;
         VkFormat format;
-        uint32_t descriptorType;
     };
 }
 #endif
