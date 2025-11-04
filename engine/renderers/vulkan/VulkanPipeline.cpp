@@ -28,7 +28,6 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
-#include "spirv_reflect.h"
 
 namespace AeonGames
 {
@@ -315,167 +314,13 @@ namespace AeonGames
                 std::cout << LogLevel::Error << stream.str();
                 throw std::runtime_error ( stream.str().c_str() );
             }
-            //------------Bindings-----------//
-            uint32_t bind_count{0};
-            result = spvReflectEnumerateDescriptorBindings ( &module, &bind_count, nullptr );
-            if ( result != SPV_REFLECT_RESULT_SUCCESS )
-            {
-                std::ostringstream stream;
-                stream << "SPIR-V Reflect descriptor binding enumeration failed: ( " << static_cast<int> ( result ) << " )";
-                std::cout << LogLevel::Error << stream.str();
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            std::vector<SpvReflectDescriptorBinding*> bindings ( bind_count );
-            result = spvReflectEnumerateDescriptorBindings ( &module, &bind_count, bindings.data() );
-            if ( result != SPV_REFLECT_RESULT_SUCCESS )
-            {
-                std::ostringstream stream;
-                stream << "SPIR-V Reflect descriptor binding enumeration failed: ( " << static_cast<int> ( result ) << " )";
-                std::cout << LogLevel::Error << stream.str();
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            std::cout << LogLevel::Info << "SPIR-V Reflect Bindings: " << std::endl;
-            for ( const auto& i : bindings )
-            {
-                std::cout << LogLevel::Info << "  - ID: " << i->spirv_id << std::endl;
-                std::cout << LogLevel::Info << "    name: " << i->name << std::endl;
-                std::cout << LogLevel::Info << "    set: " << static_cast<int> ( i->set ) << std::endl;
-                std::cout << LogLevel::Info << "    binding: " << static_cast<int> ( i->binding ) << std::endl;
-                std::cout << LogLevel::Info << "    descriptor_type: " << i->descriptor_type << std::endl;
-                std::cout << LogLevel::Info << "    resource_type: " << i->resource_type << std::endl;
-                std::cout << LogLevel::Info << "    array.dims_count: " << i->array.dims_count << std::endl;
-                for ( uint32_t j = 0; j < SPV_REFLECT_MAX_ARRAY_DIMS; ++j )
-                {
-                    std::cout << LogLevel::Info << "      - array.dims[" << j << "]: " << i->array.dims[j] << std::endl;
-                }
-                std::cout << LogLevel::Info << "    count: " << i->count << std::endl;
-                std::cout << LogLevel::Info << "    block.size: " << i->block.size << std::endl;
-            }
-            //------------Input Variables-----------//
-            uint32_t var_count{0};
-            result = spvReflectEnumerateInputVariables ( &module, &var_count, nullptr );
-            if ( result != SPV_REFLECT_RESULT_SUCCESS )
-            {
-                std::ostringstream stream;
-                stream << "SPIR-V Reflect input variable enumeration failed: ( " << static_cast<int> ( result ) << " )";
-                std::cout << LogLevel::Error << stream.str();
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            std::vector<SpvReflectInterfaceVariable*> input_vars ( var_count );
-            result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars.data() );
-            if ( result != SPV_REFLECT_RESULT_SUCCESS )
-            {
-                std::ostringstream stream;
-                stream << "SPIR-V Reflect input variable enumeration failed: ( " << static_cast<int> ( result ) << " )";
-                std::cout << LogLevel::Error << stream.str();
-                throw std::runtime_error ( stream.str().c_str() );
-            }
-            std::cout << LogLevel::Info << "SPIR-V Reflect Inputs: " << std::endl;
-            mAttributes.clear();
-            mAttributes.reserve ( var_count );
-            for ( const auto& i : input_vars )
-            {
-#if 1
-                if ( i->built_in < 0 )
-                {
-                    const uint32_t name_crc{crc32i ( i->name, strlen ( i->name ) ) };
-                    auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
-                                                 [] ( const VulkanVariable & a, const uint32_t b )
-                    {
-                        return a.name < b;
-                    } );
-                    mAttributes.insert ( it,
-                    {
-                        name_crc,
-                        i->location,
-                        SpvReflectToVulkanFormat.at ( i->format )
-                    } );
-                }
-#endif
-                std::cout << LogLevel::Info << "  - ID: " << i->spirv_id << std::endl;
-                std::cout << LogLevel::Info << "    name: " << i->name << std::endl;
-                std::cout << LogLevel::Info << "    location: " << static_cast<int> ( i->location ) << std::endl;
-                std::cout << LogLevel::Info << "    component: " << static_cast<int> ( i->component ) << std::endl;
-                std::cout << LogLevel::Info << "    storage_class: " << i->storage_class << std::endl;
-                std::cout << LogLevel::Info << "    semantic: " << ( i->semantic ? i->semantic : "none" ) << std::endl;
-                std::cout << LogLevel::Info << "    decoration_flags: " << i->decoration_flags << std::endl;
-                std::cout << LogLevel::Info << "    built_in: " << i->built_in << std::endl;
-                std::cout << LogLevel::Info << "    scalar_width: " << i->numeric.scalar.width  << std::endl;
-                std::cout << LogLevel::Info << "    scalar_signedness: " << i->numeric.scalar.signedness  << std::endl;
-                std::cout << LogLevel::Info << "    vector_component_count: " << i->numeric.vector.component_count  << std::endl;
-                std::cout << LogLevel::Info << "    matrix_column_count: " << i->numeric.matrix.column_count  << std::endl;
-                std::cout << LogLevel::Info << "    matrix_row_count: " << i->numeric.matrix.row_count  << std::endl;
-                std::cout << LogLevel::Info << "    matrix_stride: " << i->numeric.matrix.stride  << std::endl;
-                std::cout << LogLevel::Info << "    array_dims_count: " << i->array.dims_count << std::endl;
-                for ( uint32_t j = 0; j < SPV_REFLECT_MAX_ARRAY_DIMS; ++j )
-                {
-                    std::cout << LogLevel::Info << "      - array_dim[" << j << "]: " << i->array.dims[j] << std::endl;
-                }
-                for ( uint32_t j = 0; j < SPV_REFLECT_MAX_ARRAY_DIMS; ++j )
-                {
-                    std::cout << LogLevel::Info << "      - array_spec_constant_op_id[" << j << "]: " << i->array.spec_constant_op_ids[j] << std::endl;
-                }
-                std::cout << LogLevel::Info << "    array_stride: " << i->array.stride << std::endl;
-                std::cout << LogLevel::Info << "    member_count: " << i->member_count << std::endl;
 
-                // Print all members if they exist
-                if ( i->members && i->member_count > 0 )
-                {
-                    std::cout << LogLevel::Info << "    members: " << std::endl;
-                    for ( uint32_t j = 0; j < i->member_count; ++j )
-                    {
-                        const SpvReflectInterfaceVariable* member = &i->members[j];
-                        std::cout << LogLevel::Info << "      [" << j << "] name: " << ( member->name ? member->name : "none" ) << std::endl;
-                        std::cout << LogLevel::Info << "      [" << j << "] location: " << member->location << std::endl;
-                        std::cout << LogLevel::Info << "      [" << j << "] format: " << member->format << std::endl;
-                        std::cout << LogLevel::Info << "      [" << j << "] spirv_id: " << member->spirv_id << std::endl;
-                        std::cout << LogLevel::Info << "      [" << j << "] component: " << member->component << std::endl;
-                        std::cout << LogLevel::Info << "      [" << j << "] storage_class: " << member->storage_class << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cout << LogLevel::Info << "    members: none" << std::endl;
-                }
-
-                std::cout << LogLevel::Info << "    format: " << i->format << std::endl;
-
-                // Print type description if it exists
-                if ( i->type_description )
-                {
-                    std::cout << LogLevel::Info << "    type_description: " << std::endl;
-                    std::cout << LogLevel::Info << "      id: " << i->type_description->id << std::endl;
-                    std::cout << LogLevel::Info << "      op: " << i->type_description->op << std::endl;
-                    std::cout << LogLevel::Info << "      type_name: " << ( i->type_description->type_name ? i->type_description->type_name : "none" ) << std::endl;
-                    std::cout << LogLevel::Info << "      struct_member_name: " << ( i->type_description->struct_member_name ? i->type_description->struct_member_name : "none" ) << std::endl;
-                    std::cout << LogLevel::Info << "      storage_class: " << i->type_description->storage_class << std::endl;
-                    std::cout << LogLevel::Info << "      type_flags: " << i->type_description->type_flags << std::endl;
-                    std::cout << LogLevel::Info << "      decoration_flags: " << i->type_description->decoration_flags << std::endl;
-                    std::cout << LogLevel::Info << "      member_count: " << i->type_description->member_count << std::endl;
-
-                    // Print struct members if it's a struct
-                    if ( i->type_description->member_count > 0 && i->type_description->members )
-                    {
-                        std::cout << LogLevel::Info << "      struct_members: " << std::endl;
-                        for ( uint32_t k = 0; k < i->type_description->member_count; ++k )
-                        {
-                            const SpvReflectTypeDescription* struct_member = &i->type_description->members[k];
-                            std::cout << LogLevel::Info << "        [" << k << "] type_name: " << ( struct_member->type_name ? struct_member->type_name : "none" ) << std::endl;
-                            std::cout << LogLevel::Info << "        [" << k << "] struct_member_name: " << ( struct_member->struct_member_name ? struct_member->struct_member_name : "none" ) << std::endl;
-                            std::cout << LogLevel::Info << "        [" << k << "] id: " << struct_member->id << std::endl;
-                            std::cout << LogLevel::Info << "        [" << k << "] op: " << struct_member->op << std::endl;
-                            std::cout << LogLevel::Info << "        [" << k << "] type_flags: " << struct_member->type_flags << std::endl;
-                            std::cout << LogLevel::Info << "        [" << k << "] decoration_flags: " << struct_member->decoration_flags << std::endl;
-                        }
-                    }
-                }
-                else
-                {
-                    std::cout << LogLevel::Info << "    type_description: none" << std::endl;
-                }
-
-                std::cout << LogLevel::Info << "    word_offset location: " << i->word_offset.location << std::endl;
+            if ( i == VERT )
+            {
+                // Only vertex shader needs attribute reflection
+                ReflectAttributes ( module );
             }
+            ReflectUniforms ( module );
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection----------//
         }
@@ -731,14 +576,48 @@ namespace AeonGames
         return 0;
     }
 
-    void VulkanPipeline::ReflectAttributes()
+    void VulkanPipeline::ReflectAttributes ( SpvReflectShaderModule& module )
     {
-        // TODO: Implement reflection of vertex attributes from SPIR-V
-        // This would involve analyzing the SPIR-V bytecode to extract
-        // vertex input attributes and their properties
+        uint32_t var_count{0};
+        SpvReflectResult result{spvReflectEnumerateInputVariables ( &module, &var_count, nullptr ) };
+        if ( result != SPV_REFLECT_RESULT_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "SPIR-V Reflect input variable enumeration failed: ( " << static_cast<int> ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        std::vector<SpvReflectInterfaceVariable*> input_vars ( var_count );
+        result = spvReflectEnumerateInputVariables ( &module, &var_count, input_vars.data() );
+        if ( result != SPV_REFLECT_RESULT_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "SPIR-V Reflect input variable enumeration failed: ( " << static_cast<int> ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        mAttributes.reserve ( mAttributes.capacity() + input_vars.size() );
+        for ( const auto& i : input_vars )
+        {
+            if ( i->built_in < 0 )
+            {
+                const uint32_t name_crc{crc32i ( i->name, strlen ( i->name ) ) };
+                auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
+                                             [] ( const VulkanVariable & a, const uint32_t b )
+                {
+                    return a.name < b;
+                } );
+                mAttributes.insert ( it,
+                {
+                    name_crc,
+                    i->location,
+                    SpvReflectToVulkanFormat.at ( i->format )
+                } );
+            }
+        }
     }
 
-    void VulkanPipeline::ReflectUniforms()
+    void VulkanPipeline::ReflectUniforms ( SpvReflectShaderModule& module )
     {
         // TODO: Implement reflection of uniforms and uniform blocks from SPIR-V
         // This would involve analyzing the SPIR-V bytecode to extract
