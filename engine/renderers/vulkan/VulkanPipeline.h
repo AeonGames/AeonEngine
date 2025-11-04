@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "VulkanVariable.h"
 #include "VulkanUniformBlock.h"
+#include "spirv_reflect.h"
 
 namespace AeonGames
 {
@@ -50,8 +51,8 @@ namespace AeonGames
         const VulkanUniformBlock* GetUniformBlock ( uint32_t name ) const;
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
-        void ReflectAttributes();
-        void ReflectUniforms();
+        void ReflectAttributes ( SpvReflectShaderModule& module );
+        void ReflectUniforms ( SpvReflectShaderModule& module );
         const VulkanRenderer& mVulkanRenderer;
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
