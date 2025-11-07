@@ -23,7 +23,9 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "VulkanVariable.h"
 #include "VulkanUniformBlock.h"
-#include "spirv_reflect.h"
+
+// Forward declarations
+struct SpvReflectShaderModule;
 
 namespace AeonGames
 {
@@ -48,6 +50,7 @@ namespace AeonGames
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
         const std::vector<VulkanVariable>& GetVertexAttributes() const;
+        const std::vector<VulkanVariable>& GetSamplers() const;
         const VulkanUniformBlock* GetUniformBlock ( uint32_t name ) const;
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
@@ -61,6 +64,7 @@ namespace AeonGames
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanUniformBlock> mUniformBlocks{};
+        std::vector<VulkanVariable> mSamplers{};
     };
 }
 #endif

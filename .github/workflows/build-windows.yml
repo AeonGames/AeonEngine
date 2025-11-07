@@ -48,9 +48,9 @@ jobs:
           -StorePasswordInClearText `
           -Name GitHubPackages `
           -UserName "${{ env.USERNAME }}" `
-          -Password "${{ secrets.GITHUB_TOKEN }}"
+          -Password "${{ secrets.PAT }}"
         .$(${{ env.VCPKG_EXE }} fetch nuget) `
-          setapikey "${{ secrets.GITHUB_TOKEN }}" `
+          setapikey "${{ secrets.PAT }}" `
           -Source "${{ env.FEED_URL }}"
       if: matrix.compiler == 'msvc'
 
