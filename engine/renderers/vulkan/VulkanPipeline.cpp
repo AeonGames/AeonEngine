@@ -28,6 +28,7 @@ limitations under the License.
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
 #include "SPIR-V/CompilerLinker.h"
+#include <spirv_reflect.h>
 
 namespace AeonGames
 {
@@ -91,42 +92,42 @@ namespace AeonGames
     static const std::unordered_map<VkFormat, uint32_t> VkFormatToVulkanSize
     {
         { VK_FORMAT_UNDEFINED, 0 },
-        { VK_FORMAT_R16_UINT, sizeof ( uint16_t ) },
-        { VK_FORMAT_R16_SINT, sizeof ( int16_t ) },
-        { VK_FORMAT_R16_SFLOAT, sizeof ( float ) },
-        { VK_FORMAT_R16G16_UINT, sizeof ( uint16_t ) * 2 },
-        { VK_FORMAT_R16G16_SINT, sizeof ( int16_t ) * 2 },
-        { VK_FORMAT_R16G16_SFLOAT, sizeof ( float ) * 2 },
-        { VK_FORMAT_R16G16B16_UINT, sizeof ( uint16_t ) * 3 },
-        { VK_FORMAT_R16G16B16_SINT, sizeof ( int16_t ) * 3 },
-        { VK_FORMAT_R16G16B16_SFLOAT, sizeof ( float ) * 3 },
-        { VK_FORMAT_R16G16B16A16_UINT, sizeof ( uint16_t ) * 4 },
-        { VK_FORMAT_R16G16B16A16_SINT, sizeof ( int16_t ) * 4 },
-        { VK_FORMAT_R16G16B16A16_SFLOAT, sizeof ( float ) * 4 },
-        { VK_FORMAT_R32_UINT, sizeof ( uint32_t ) },
-        { VK_FORMAT_R32_SINT, sizeof ( int32_t ) },
-        { VK_FORMAT_R32_SFLOAT, sizeof ( float ) },
-        { VK_FORMAT_R32G32_UINT, sizeof ( uint32_t ) * 2 },
-        { VK_FORMAT_R32G32_SINT, sizeof ( int32_t ) * 2 },
-        { VK_FORMAT_R32G32_SFLOAT, sizeof ( float ) * 2 },
-        { VK_FORMAT_R32G32B32_UINT, sizeof ( uint32_t ) * 3 },
-        { VK_FORMAT_R32G32B32_SINT, sizeof ( int32_t ) * 3 },
-        { VK_FORMAT_R32G32B32_SFLOAT, sizeof ( float ) * 3 },
-        { VK_FORMAT_R32G32B32A32_UINT, sizeof ( uint32_t ) * 4 },
-        { VK_FORMAT_R32G32B32A32_SINT, sizeof ( int32_t ) * 4 },
-        { VK_FORMAT_R32G32B32A32_SFLOAT, sizeof ( float ) * 4 },
-        { VK_FORMAT_R64_UINT, sizeof ( uint64_t ) },
-        { VK_FORMAT_R64_SINT, sizeof ( int64_t ) },
-        { VK_FORMAT_R64_SFLOAT, sizeof ( float ) },
-        { VK_FORMAT_R64G64_UINT, sizeof ( uint64_t ) * 2 },
-        { VK_FORMAT_R64G64_SINT, sizeof ( int64_t ) * 2 },
-        { VK_FORMAT_R64G64_SFLOAT, sizeof ( float ) * 2 },
-        { VK_FORMAT_R64G64B64_UINT, sizeof ( uint64_t ) * 3 },
-        { VK_FORMAT_R64G64B64_SINT, sizeof ( int64_t ) * 3 },
-        { VK_FORMAT_R64G64B64_SFLOAT, sizeof ( float ) * 3 },
-        { VK_FORMAT_R64G64B64A64_UINT, sizeof ( uint64_t ) * 4 },
-        { VK_FORMAT_R64G64B64A64_SINT, sizeof ( int64_t ) * 4 },
-        { VK_FORMAT_R64G64B64A64_SFLOAT, sizeof ( float ) * 4 }
+        { VK_FORMAT_R16_UINT, static_cast<uint32_t> ( sizeof ( uint16_t ) ) },
+        { VK_FORMAT_R16_SINT, static_cast<uint32_t> ( sizeof ( int16_t ) ) },
+        { VK_FORMAT_R16_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) ) },
+        { VK_FORMAT_R16G16_UINT, static_cast<uint32_t> ( sizeof ( uint16_t ) * 2 ) },
+        { VK_FORMAT_R16G16_SINT, static_cast<uint32_t> ( sizeof ( int16_t ) * 2 ) },
+        { VK_FORMAT_R16G16_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 2 ) },
+        { VK_FORMAT_R16G16B16_UINT, static_cast<uint32_t> ( sizeof ( uint16_t ) * 3 ) },
+        { VK_FORMAT_R16G16B16_SINT, static_cast<uint32_t> ( sizeof ( int16_t ) * 3 ) },
+        { VK_FORMAT_R16G16B16_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 3 ) },
+        { VK_FORMAT_R16G16B16A16_UINT, static_cast<uint32_t> ( sizeof ( uint16_t ) * 4 ) },
+        { VK_FORMAT_R16G16B16A16_SINT, static_cast<uint32_t> ( sizeof ( int16_t ) * 4 ) },
+        { VK_FORMAT_R16G16B16A16_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 4 ) },
+        { VK_FORMAT_R32_UINT, static_cast<uint32_t> ( sizeof ( uint32_t ) ) },
+        { VK_FORMAT_R32_SINT, static_cast<uint32_t> ( sizeof ( int32_t ) ) },
+        { VK_FORMAT_R32_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) ) },
+        { VK_FORMAT_R32G32_UINT, static_cast<uint32_t> ( sizeof ( uint32_t ) * 2 ) },
+        { VK_FORMAT_R32G32_SINT, static_cast<uint32_t> ( sizeof ( int32_t ) * 2 ) },
+        { VK_FORMAT_R32G32_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 2 ) },
+        { VK_FORMAT_R32G32B32_UINT, static_cast<uint32_t> ( sizeof ( uint32_t ) * 3 ) },
+        { VK_FORMAT_R32G32B32_SINT, static_cast<uint32_t> ( sizeof ( int32_t ) * 3 ) },
+        { VK_FORMAT_R32G32B32_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 3 ) },
+        { VK_FORMAT_R32G32B32A32_UINT, static_cast<uint32_t> ( sizeof ( uint32_t ) * 4 ) },
+        { VK_FORMAT_R32G32B32A32_SINT, static_cast<uint32_t> ( sizeof ( int32_t ) * 4 ) },
+        { VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 4 ) },
+        { VK_FORMAT_R64_UINT, static_cast<uint32_t> ( sizeof ( uint64_t ) ) },
+        { VK_FORMAT_R64_SINT, static_cast<uint32_t> ( sizeof ( int64_t ) ) },
+        { VK_FORMAT_R64_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) ) },
+        { VK_FORMAT_R64G64_UINT, static_cast<uint32_t> ( sizeof ( uint64_t ) * 2 ) },
+        { VK_FORMAT_R64G64_SINT, static_cast<uint32_t> ( sizeof ( int64_t ) * 2 ) },
+        { VK_FORMAT_R64G64_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 2 ) },
+        { VK_FORMAT_R64G64B64_UINT, static_cast<uint32_t> ( sizeof ( uint64_t ) * 3 ) },
+        { VK_FORMAT_R64G64B64_SINT, static_cast<uint32_t> ( sizeof ( int64_t ) * 3 ) },
+        { VK_FORMAT_R64G64B64_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 3 ) },
+        { VK_FORMAT_R64G64B64A64_UINT, static_cast<uint32_t> ( sizeof ( uint64_t ) * 4 ) },
+        { VK_FORMAT_R64G64B64A64_SINT, static_cast<uint32_t> ( sizeof ( int64_t ) * 4 ) },
+        { VK_FORMAT_R64G64B64A64_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 4 ) }
     };
 
 #if 0
@@ -614,6 +615,11 @@ namespace AeonGames
         return mAttributes;
     }
 
+    const std::vector<VulkanVariable>& VulkanPipeline::GetSamplers() const
+    {
+        return mSamplers;
+    }
+
     const VulkanUniformBlock* VulkanPipeline::GetUniformBlock ( uint32_t name ) const
     {
         auto it = std::find_if ( mUniformBlocks.begin(), mUniformBlocks.end(),
@@ -626,15 +632,12 @@ namespace AeonGames
 
     const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
     {
-#if 0
-        auto it = std::find_if ( mUniforms.begin(), mUniforms.end(),
-                                 [name_hash] ( const VulkanVariable & uniform )
+        auto it = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                 [name_hash] ( const VulkanVariable & sampler )
         {
-            return uniform.name == name_hash;
+            return sampler.name == name_hash;
         } );
-        return ( it != mUniforms.end() ) ? it->binding : 0;
-#endif
-        return 0;
+        return ( it != mSamplers.end() ) ? it->location : 0;
     }
 
     void VulkanPipeline::ReflectAttributes ( SpvReflectShaderModule& module )
@@ -681,8 +684,126 @@ namespace AeonGames
 
     void VulkanPipeline::ReflectUniforms ( SpvReflectShaderModule& module )
     {
-        // TODO: Implement reflection of uniforms and uniform blocks from SPIR-V
-        // This would involve analyzing the SPIR-V bytecode to extract
-        // uniform variables, uniform blocks, and samplers
+        // Reflect uniform blocks
+        uint32_t block_count = 0;
+        SpvReflectResult result = spvReflectEnumerateDescriptorSets ( &module, &block_count, nullptr );
+        if ( result != SPV_REFLECT_RESULT_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "SPIR-V Reflect descriptor set enumeration failed: ( " << static_cast<int> ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        if ( block_count > 0 )
+        {
+            std::vector<SpvReflectDescriptorSet*> descriptor_sets ( block_count );
+            result = spvReflectEnumerateDescriptorSets ( &module, &block_count, descriptor_sets.data() );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect descriptor set enumeration failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            for ( const auto& descriptor_set : descriptor_sets )
+            {
+                for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
+                {
+                    const SpvReflectDescriptorBinding& binding = *descriptor_set->bindings[i];
+
+                    if ( binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER )
+                    {
+                        // Process uniform blocks
+                        if ( binding.block.name != nullptr )
+                        {
+                            const uint32_t name_crc = crc32i ( binding.block.name, strlen ( binding.block.name ) );
+                            auto it = std::find_if ( mUniformBlocks.begin(), mUniformBlocks.end(),
+                                                     [name_crc] ( const VulkanUniformBlock & block )
+                            {
+                                return block.name == name_crc;
+                            } );
+
+                            if ( it == mUniformBlocks.end() )
+                            {
+                                VulkanUniformBlock uniform_block;
+                                uniform_block.name = name_crc;
+                                uniform_block.set = binding.set;
+                                uniform_block.binding = binding.binding;
+                                uniform_block.size = binding.block.size;
+
+                                std::cout << "Uniform Block: " << binding.block.name
+                                          << " (crc: " << std::hex << name_crc << std::dec
+                                          << ", set: " << binding.set << ", binding: " << binding.binding
+                                          << ", size: " << binding.block.size << ")" << std::endl;
+
+                                // Process uniform block members
+                                for ( uint32_t j = 0; j < binding.block.member_count; ++j )
+                                {
+                                    const SpvReflectBlockVariable& member = binding.block.members[j];
+                                    if ( member.name != nullptr )
+                                    {
+                                        VulkanVariable uniform_var;
+                                        uniform_var.name = crc32i ( member.name, strlen ( member.name ) );
+                                        uniform_var.location = member.offset;
+                                        uniform_var.format = VK_FORMAT_UNDEFINED; // Not applicable for uniforms
+                                        uniform_block.uniforms.push_back ( uniform_var );
+
+                                        std::cout << "  - Uniform: " << member.name
+                                                  << " (crc: " << std::hex << uniform_var.name << std::dec
+                                                  << ", offset: " << member.offset << ")" << std::endl;
+                                    }
+                                }
+
+                                mUniformBlocks.push_back ( uniform_block );
+                            }
+                        }
+                    }
+                    else if ( binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+                              binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE ||
+                              binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER )
+                    {
+                        // Process samplers
+                        if ( binding.name != nullptr )
+                        {
+                            VulkanVariable sampler_var;
+                            sampler_var.name = crc32i ( binding.name, strlen ( binding.name ) );
+                            sampler_var.location = binding.binding;
+                            sampler_var.format = VK_FORMAT_UNDEFINED; // Not applicable for samplers
+
+                            // Check if sampler already exists
+                            auto it = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                                     [&sampler_var] ( const VulkanVariable & var )
+                            {
+                                return var.name == sampler_var.name;
+                            } );
+
+                            if ( it == mSamplers.end() )
+                            {
+                                mSamplers.push_back ( sampler_var );
+                                std::cout << "Sampler: " << binding.name
+                                          << " (crc: " << std::hex << sampler_var.name << std::dec
+                                          << ", binding: " << binding.binding << ")" << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort uniform blocks by name for faster lookup
+        std::sort ( mUniformBlocks.begin(), mUniformBlocks.end(),
+                    [] ( const VulkanUniformBlock & a, const VulkanUniformBlock & b )
+        {
+            return a.name < b.name;
+        } );
+
+        // Sort samplers by name for faster lookup
+        std::sort ( mSamplers.begin(), mSamplers.end(),
+                    [] ( const VulkanVariable & a, const VulkanVariable & b )
+        {
+            return a.name < b.name;
+        } );
     }
 }
