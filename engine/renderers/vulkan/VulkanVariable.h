@@ -23,9 +23,9 @@ namespace AeonGames
 {
     struct VulkanVariable
     {
-        uint32_t name;
-        uint32_t location;
-        VkFormat format;
+        uint32_t name{};
+        uint32_t location{};
+        VkFormat format{};
     };
 }
 #endif
