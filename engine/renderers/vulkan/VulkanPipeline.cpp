@@ -88,6 +88,47 @@ namespace AeonGames
         { SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT, VK_FORMAT_R64G64B64A64_SFLOAT }
     };
 
+    static const std::unordered_map<VkFormat, uint32_t> VkFormatToVulkanSize
+    {
+        { VK_FORMAT_UNDEFINED, 0 },
+        { VK_FORMAT_R16_UINT, sizeof ( uint16_t ) },
+        { VK_FORMAT_R16_SINT, sizeof ( int16_t ) },
+        { VK_FORMAT_R16_SFLOAT, sizeof ( float ) },
+        { VK_FORMAT_R16G16_UINT, sizeof ( uint16_t ) * 2 },
+        { VK_FORMAT_R16G16_SINT, sizeof ( int16_t ) * 2 },
+        { VK_FORMAT_R16G16_SFLOAT, sizeof ( float ) * 2 },
+        { VK_FORMAT_R16G16B16_UINT, sizeof ( uint16_t ) * 3 },
+        { VK_FORMAT_R16G16B16_SINT, sizeof ( int16_t ) * 3 },
+        { VK_FORMAT_R16G16B16_SFLOAT, sizeof ( float ) * 3 },
+        { VK_FORMAT_R16G16B16A16_UINT, sizeof ( uint16_t ) * 4 },
+        { VK_FORMAT_R16G16B16A16_SINT, sizeof ( int16_t ) * 4 },
+        { VK_FORMAT_R16G16B16A16_SFLOAT, sizeof ( float ) * 4 },
+        { VK_FORMAT_R32_UINT, sizeof ( uint32_t ) },
+        { VK_FORMAT_R32_SINT, sizeof ( int32_t ) },
+        { VK_FORMAT_R32_SFLOAT, sizeof ( float ) },
+        { VK_FORMAT_R32G32_UINT, sizeof ( uint32_t ) * 2 },
+        { VK_FORMAT_R32G32_SINT, sizeof ( int32_t ) * 2 },
+        { VK_FORMAT_R32G32_SFLOAT, sizeof ( float ) * 2 },
+        { VK_FORMAT_R32G32B32_UINT, sizeof ( uint32_t ) * 3 },
+        { VK_FORMAT_R32G32B32_SINT, sizeof ( int32_t ) * 3 },
+        { VK_FORMAT_R32G32B32_SFLOAT, sizeof ( float ) * 3 },
+        { VK_FORMAT_R32G32B32A32_UINT, sizeof ( uint32_t ) * 4 },
+        { VK_FORMAT_R32G32B32A32_SINT, sizeof ( int32_t ) * 4 },
+        { VK_FORMAT_R32G32B32A32_SFLOAT, sizeof ( float ) * 4 },
+        { VK_FORMAT_R64_UINT, sizeof ( uint64_t ) },
+        { VK_FORMAT_R64_SINT, sizeof ( int64_t ) },
+        { VK_FORMAT_R64_SFLOAT, sizeof ( float ) },
+        { VK_FORMAT_R64G64_UINT, sizeof ( uint64_t ) * 2 },
+        { VK_FORMAT_R64G64_SINT, sizeof ( int64_t ) * 2 },
+        { VK_FORMAT_R64G64_SFLOAT, sizeof ( float ) * 2 },
+        { VK_FORMAT_R64G64B64_UINT, sizeof ( uint64_t ) * 3 },
+        { VK_FORMAT_R64G64B64_SINT, sizeof ( int64_t ) * 3 },
+        { VK_FORMAT_R64G64B64_SFLOAT, sizeof ( float ) * 3 },
+        { VK_FORMAT_R64G64B64A64_UINT, sizeof ( uint64_t ) * 4 },
+        { VK_FORMAT_R64G64B64A64_SINT, sizeof ( int64_t ) * 4 },
+        { VK_FORMAT_R64G64B64A64_SFLOAT, sizeof ( float ) * 4 }
+    };
+
 #if 0
     static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
@@ -324,21 +365,31 @@ namespace AeonGames
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection----------//
         }
-#if 0
+
+        //----------------Vertex Input------------------//
         std::array<VkVertexInputBindingDescription, 1> vertex_input_binding_descriptions { {} };
         vertex_input_binding_descriptions[0].binding = 0;
-        vertex_input_binding_descriptions[0].stride = sizeof ( Vertex );
+        vertex_input_binding_descriptions[0].stride = sizeof ( mDefaultStride );
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        uint32_t attributes = aPipeline.GetAttributeBitmap();
-        std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( popcount ( attributes ) );
-        for ( auto& i : vertex_input_attribute_descriptions )
+        std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( mAttributes.size() );
+        for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
         {
-            uint32_t attribute_bit = ( 1 << ffs ( attributes ) );
-            i.location = GetLocation ( static_cast<AttributeBits> ( attribute_bit ) );
-            i.binding = 0;
-            i.format = GetFormat ( static_cast<AttributeBits> ( attribute_bit ) );
-            i.offset = GetOffset ( static_cast<AttributeBits> ( attribute_bit ) );
-            attributes ^= attribute_bit;
+            vertex_input_attribute_descriptions[i].location = mAttributes[i].location;
+            vertex_input_attribute_descriptions[i].binding = 0;
+            vertex_input_attribute_descriptions[i].format = mAttributes[i].format;
+        }
+        // Sort by location
+        std::sort ( vertex_input_attribute_descriptions.begin(), vertex_input_attribute_descriptions.end(),
+                    [] ( const VkVertexInputAttributeDescription & a, const VkVertexInputAttributeDescription & b )
+        {
+            return a.location < b.location;
+        } );
+        // Calculate offsets
+        uint32_t offset = 0;
+        for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
+        {
+            vertex_input_attribute_descriptions[i].offset = offset;
+            offset += VkFormatToVulkanSize.at ( mAttributes[i].format );
         }
 
         VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info {};
@@ -350,13 +401,15 @@ namespace AeonGames
         pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t> ( vertex_input_attribute_descriptions.size() );
         pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vertex_input_attribute_descriptions.data();
 
+        //----------------Input Assembly------------------//
         VkPipelineInputAssemblyStateCreateInfo pipeline_input_assembly_state_create_info{};
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = TopologyMap.at ( aPipeline.GetTopology() );
+        pipeline_input_assembly_state_create_info.topology = TopologyMap.at ( TRIANGLE_LIST );
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
+        //----------------Viewport State------------------//
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
         pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         pipeline_viewport_state_create_info.pNext = nullptr;
@@ -366,6 +419,7 @@ namespace AeonGames
         pipeline_viewport_state_create_info.scissorCount = 1;
         pipeline_viewport_state_create_info.pScissors = nullptr;
 
+        //----------------Rasterization State------------------//
         VkPipelineRasterizationStateCreateInfo pipeline_rasterization_state_create_info{};
         pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         pipeline_rasterization_state_create_info.pNext = nullptr;
@@ -381,6 +435,7 @@ namespace AeonGames
         pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
         pipeline_rasterization_state_create_info.lineWidth = 1.0f;
 
+        //----------------Multisample State------------------//
         VkPipelineMultisampleStateCreateInfo pipeline_multisample_state_create_info{};
         pipeline_multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         pipeline_multisample_state_create_info.pNext = nullptr;
@@ -392,6 +447,7 @@ namespace AeonGames
         pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_TRUE;
         pipeline_multisample_state_create_info.alphaToOneEnable = VK_FALSE;
 
+        //----------------Depth Stencil State------------------//
         VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info{};
         pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         pipeline_depth_stencil_state_create_info.pNext = nullptr;
@@ -406,6 +462,7 @@ namespace AeonGames
         pipeline_depth_stencil_state_create_info.minDepthBounds = 0.0f;
         pipeline_depth_stencil_state_create_info.maxDepthBounds = 1.0f;
 
+        //----------------Color Blend State------------------//
         std::array<VkPipelineColorBlendAttachmentState, 1> pipeline_color_blend_attachment_states{ {} };
         pipeline_color_blend_attachment_states[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         pipeline_color_blend_attachment_states[0].blendEnable = VK_TRUE;
@@ -426,6 +483,7 @@ namespace AeonGames
         pipeline_color_blend_state_create_info.pAttachments = pipeline_color_blend_attachment_states.data();
         memset ( pipeline_color_blend_state_create_info.blendConstants, 0, sizeof ( VkPipelineColorBlendStateCreateInfo::blendConstants ) );
 
+        //----------------Dynamic State------------------//
         std::array<VkDynamicState, 2> dynamic_states
         {
             {
@@ -439,6 +497,8 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.flags = 0;
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
+
+        //----------------Push Constant Range------------------//
         std::array<VkPushConstantRange, 1> push_constant_ranges {};
         push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
         push_constant_ranges[0].offset = 0;
@@ -451,6 +511,7 @@ namespace AeonGames
         // Matrix Descriptor Set Layout
         descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
 
+#if 0
         if ( aPipeline.GetUniformDescriptors().size() )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
@@ -463,6 +524,7 @@ namespace AeonGames
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
         }
+#endif
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -530,7 +592,6 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-#endif
     }
 
     VulkanPipeline::~VulkanPipeline()
@@ -613,6 +674,7 @@ namespace AeonGames
                     i->location,
                     SpvReflectToVulkanFormat.at ( i->format )
                 } );
+                mDefaultStride += VkFormatToVulkanSize.at ( SpvReflectToVulkanFormat.at ( i->format ) );
             }
         }
     }
