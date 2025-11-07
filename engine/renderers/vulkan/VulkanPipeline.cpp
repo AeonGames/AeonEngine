@@ -727,7 +727,7 @@ namespace AeonGames
 
                             if ( it == mUniformBlocks.end() )
                             {
-                                VulkanUniformBlock uniform_block;
+                                VulkanUniformBlock uniform_block{};
                                 uniform_block.name = name_crc;
                                 uniform_block.set = binding.set;
                                 uniform_block.binding = binding.binding;

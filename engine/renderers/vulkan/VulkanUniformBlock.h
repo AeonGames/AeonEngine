@@ -25,12 +25,12 @@ namespace AeonGames
 {
     struct VulkanUniformBlock
     {
-        uint32_t name;
-        uint32_t size;
-        uint32_t binding;
-        uint32_t set;
-        VkDescriptorType descriptorType;
-        std::vector<VulkanVariable> uniforms;
+        uint32_t name{};
+        uint32_t size{};
+        uint32_t binding{};
+        uint32_t set{};
+        VkDescriptorType descriptorType{};
+        std::vector<VulkanVariable> uniforms{};
     };
 }
 #endif
