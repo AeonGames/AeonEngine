@@ -30,7 +30,7 @@ namespace AeonGames
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
         mAttributes.swap ( aOpenGLPipeline.mAttributes );
         mUniformBlocks.swap ( aOpenGLPipeline.mUniformBlocks );
-        mUniforms.swap ( aOpenGLPipeline.mUniforms );
+        mSamplerLocations.swap ( aOpenGLPipeline.mSamplerLocations );
     }
 
     static const std::unordered_map<ShaderType, const GLenum> ShaderTypeToGLShaderType
@@ -196,15 +196,9 @@ namespace AeonGames
 
     void OpenGLPipeline::ReflectUniforms()
     {
-        mUniforms.clear();
+        mSamplerLocations.clear();
         mUniformBlocks.clear();
-        GLint uniform_count;
-        GLint non_block_uniform_count{};
         GLint block_uniform_count{};
-        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &uniform_count );
-        OPENGL_CHECK_ERROR_THROW;
-        non_block_uniform_count = uniform_count;
-
         GLint uniform_block_count = 0;
         glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_block_count );
         OPENGL_CHECK_ERROR_THROW;
@@ -238,7 +232,6 @@ namespace AeonGames
             mUniformBlocks.insert ( it, { name_crc, size, binding_offset_or_location } );
 
             it->uniforms.reserve ( block_uniform_count );
-            non_block_uniform_count -= block_uniform_count;
             if ( block_uniform_count > 0 )
             {
                 glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
@@ -263,29 +256,40 @@ namespace AeonGames
             }
         }
 
-        mUniforms.reserve ( non_block_uniform_count );
+        GLint uniform_count;
+        GLint sampler_count{0};
+        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &uniform_count );
+        OPENGL_CHECK_ERROR_THROW;
         for ( GLint i = 0; i < uniform_count; ++i )
         {
             glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
             OPENGL_CHECK_ERROR_THROW;
-            binding_offset_or_location =  glGetUniformLocation ( mProgramId, name );
-            OPENGL_CHECK_ERROR_THROW;
-            // If the uniform is part of a uniform block, its location will be -1
-            if ( binding_offset_or_location < 0 )
-            {
-                continue;
-            }
-            uint32_t name_crc{crc32i ( name, length ) };
-            auto il = std::lower_bound ( mUniforms.begin(), mUniforms.end(), name_crc,
-                                         [] ( const OpenGLVariable & a, const uint32_t b )
-            {
-                return a.name < b;
-            } );
-            mUniforms.insert ( il, { name_crc, {binding_offset_or_location}, size, type } );
+            sampler_count += ( type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_3D ||
+                               type == GL_SAMPLER_2D_ARRAY || type == GL_SAMPLER_2D_SHADOW || type == GL_SAMPLER_CUBE_SHADOW ) ? 1 : 0;
         }
-        for ( const auto& uniform : mUniforms )
+        mSamplerLocations.reserve ( sampler_count );
+        for ( GLint i = 0; i < uniform_count; ++i )
         {
-            std::cout << LogLevel::Debug << "Uniform: " << uniform.name << " (crc: " << std::hex << uniform.name << std::dec << ", location: " << uniform.location << ", size: " << uniform.size << ", type: " << uniform.type << ")" << std::endl;
+            glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
+            OPENGL_CHECK_ERROR_THROW;
+            if ( type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_3D ||
+                 type == GL_SAMPLER_2D_ARRAY || type == GL_SAMPLER_2D_SHADOW || type == GL_SAMPLER_CUBE_SHADOW )
+            {
+                binding_offset_or_location =  glGetUniformLocation ( mProgramId, name );
+                OPENGL_CHECK_ERROR_THROW;
+                uint32_t name_crc{crc32i ( name, length ) };
+                auto il = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_crc,
+                                             [] ( const OpenGLSamplerLocation & a, const uint32_t b )
+                {
+                    return a.name < b;
+                } );
+                mSamplerLocations.insert ( il, { name_crc, binding_offset_or_location } );
+            }
+        }
+
+        for ( const auto& sampler : mSamplerLocations )
+        {
+            std::cout << LogLevel::Debug << "Sampler: " << sampler.name << " (crc: " << std::hex << sampler.name << std::dec << ", location: " << sampler.location << ")" << std::endl;
         }
         for ( const auto& block : mUniformBlocks )
         {
@@ -321,12 +325,12 @@ namespace AeonGames
 
     const GLuint OpenGLPipeline::GetSamplerLocation ( uint32_t name_hash ) const
     {
-        auto it = std::lower_bound ( mUniforms.begin(), mUniforms.end(), name_hash,
-                                     [] ( const OpenGLVariable & a, const uint32_t b )
+        auto it = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_hash,
+                                     [] ( const OpenGLSamplerLocation & a, const uint32_t b )
         {
             return a.name < b;
         } );
-        if ( it == mUniforms.end() || it->location < 0 || it->type != GL_SAMPLER_2D )
+        if ( it == mSamplerLocations.end() || it->location < 0 )
         {
             return 0;
         }

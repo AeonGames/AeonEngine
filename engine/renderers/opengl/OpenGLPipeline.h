@@ -45,7 +45,7 @@ namespace AeonGames
         const Pipeline* mPipeline{};
         GLint mProgramId{};
         std::vector<OpenGLVariable> mAttributes{};
-        std::vector<OpenGLVariable> mUniforms{};
+        std::vector<OpenGLSamplerLocation> mSamplerLocations{};
         std::vector<OpenGLUniformBlock> mUniformBlocks{};
     };
 }
