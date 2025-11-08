@@ -33,5 +33,11 @@ namespace AeonGames
         GLint size;
         GLenum type;
     };
+
+    struct OpenGLSamplerLocation
+    {
+        uint32_t name{};
+        GLint location{};
+    };
 }
 #endif
