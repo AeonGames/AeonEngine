@@ -29,6 +29,7 @@ namespace AeonGames
         uint32_t size{};
         uint32_t binding{};
         uint32_t set{};
+        VkShaderStageFlags stageFlags{};
         VkDescriptorType descriptorType{};
         std::vector<VulkanVariable> uniforms{};
     };
