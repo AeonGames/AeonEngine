@@ -740,7 +740,7 @@ namespace AeonGames
                                 descriptor_set_binding.set,
                                 descriptor_set_binding.binding,
                                 descriptor_set_binding.block.size,
-                                ShaderTypeToShaderStageFlagBit.at ( aType ),
+                                static_cast<VkShaderStageFlags> ( ShaderTypeToShaderStageFlagBit.at ( aType ) ),
                                 {}
                             } );
 
