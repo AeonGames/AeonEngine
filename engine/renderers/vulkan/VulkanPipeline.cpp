@@ -287,12 +287,12 @@ namespace AeonGames
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
-        std::array < VkShaderModule, ffs ( ~VK_SHADER_STAGE_ALL_GRAPHICS ) + 1 > shader_modules{ { VK_NULL_HANDLE } };
+        std::array < VkShaderModule, ShaderType::COUNT > shader_modules{ { VK_NULL_HANDLE } };
         CompilerLinker compiler_linker{static_cast<CompilerLinker::TOptions> (
                                            CompilerLinker::TOptions::EOptionSpv |
                                            CompilerLinker::TOptions::EOptionVulkanRules |
-                                           CompilerLinker::TOptions::EOptionLinkProgram |
-                                           CompilerLinker::TOptions::EOptionDumpReflection
+                                           CompilerLinker::TOptions::EOptionLinkProgram
+                                           //| CompilerLinker::TOptions::EOptionDumpReflection
                                        ) };
 
         std::array<std::string_view, ShaderType::COUNT> shader_codes =
@@ -335,7 +335,7 @@ namespace AeonGames
             shader_module_create_info.codeSize = spirv.size() * sizeof ( uint32_t );
             shader_module_create_info.pCode = spirv.data();
 
-            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ffs ( ShaderTypeToShaderStageFlagBit.at ( i ) )] ) )
+            if ( VkResult result = vkCreateShaderModule ( mVulkanRenderer.GetDevice(), &shader_module_create_info, nullptr, &shader_modules[ i ] ) )
             {
                 std::ostringstream stream;
                 stream << "Shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -362,7 +362,7 @@ namespace AeonGames
                 // Only vertex shader needs attribute reflection
                 ReflectAttributes ( module );
             }
-            ReflectUniforms ( module );
+            ReflectUniforms ( module, static_cast<ShaderType> ( i ) );
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection----------//
         }
@@ -407,7 +407,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = TopologyMap.at ( TRIANGLE_LIST );
+        pipeline_input_assembly_state_create_info.topology = TopologyMap.at ( LINE_LIST );
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         //----------------Viewport State------------------//
@@ -505,22 +505,25 @@ namespace AeonGames
         push_constant_ranges[0].offset = 0;
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 
+        uint32_t descriptor_set_layout_count = 0;
         std::array<VkDescriptorSetLayout, 4> descriptor_set_layouts;
 
-        uint32_t descriptor_set_layout_count = 0;
-
         // Matrix Descriptor Set Layout
-        descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
-
-#if 0
-        if ( aPipeline.GetUniformDescriptors().size() )
+        if ( GetUniformBlock ( "Matrices"_crc32 ) )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         }
-        if ( aPipeline.GetSamplerDescriptors().size() )
+        // Material Descriptor Set Layout
+        if ( GetUniformBlock ( "Material"_crc32 ) )
         {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( aPipeline.GetSamplerDescriptors().size() );
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         }
+        // Sampler Descriptor Set Layout
+        if ( mSamplerLocations.size() )
+        {
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplerLocations.size() );
+        }
+#if 0
         if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
@@ -541,11 +544,12 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
+        ///@Kwizatz Haderach Note: This needs to take into account multiple shader stages.
         std::array<VkPipelineShaderStageCreateInfo, 2> pipeline_shader_stage_create_infos{ {} };
         pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[0].pNext = nullptr;
         pipeline_shader_stage_create_infos[0].flags = 0;
-        pipeline_shader_stage_create_infos[0].module = shader_modules[ffs ( VK_SHADER_STAGE_VERTEX_BIT )];
+        pipeline_shader_stage_create_infos[0].module = shader_modules[VERT];
         pipeline_shader_stage_create_infos[0].pName = "main";
         pipeline_shader_stage_create_infos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
         pipeline_shader_stage_create_infos[0].pSpecializationInfo = nullptr;
@@ -553,7 +557,7 @@ namespace AeonGames
         pipeline_shader_stage_create_infos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pipeline_shader_stage_create_infos[1].pNext = nullptr;
         pipeline_shader_stage_create_infos[1].flags = 0;
-        pipeline_shader_stage_create_infos[1].module = shader_modules[ffs ( VK_SHADER_STAGE_FRAGMENT_BIT )];
+        pipeline_shader_stage_create_infos[1].module = shader_modules[FRAG];
         pipeline_shader_stage_create_infos[1].pName = "main";
         pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
@@ -615,9 +619,9 @@ namespace AeonGames
         return mAttributes;
     }
 
-    const std::vector<VulkanVariable>& VulkanPipeline::GetSamplers() const
+    const std::vector<VulkanSamplerLocation>& VulkanPipeline::GetSamplers() const
     {
-        return mSamplers;
+        return mSamplerLocations;
     }
 
     const VulkanUniformBlock* VulkanPipeline::GetUniformBlock ( uint32_t name ) const
@@ -632,12 +636,12 @@ namespace AeonGames
 
     const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
     {
-        auto it = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                 [name_hash] ( const VulkanVariable & sampler )
+        auto it = std::find_if ( mSamplerLocations.begin(), mSamplerLocations.end(),
+                                 [name_hash] ( const VulkanSamplerLocation & sampler )
         {
             return sampler.name == name_hash;
         } );
-        return ( it != mSamplers.end() ) ? it->location : 0;
+        return ( it != mSamplerLocations.end() ) ? it->location : 0;
     }
 
     void VulkanPipeline::ReflectAttributes ( SpvReflectShaderModule& module )
@@ -682,11 +686,11 @@ namespace AeonGames
         }
     }
 
-    void VulkanPipeline::ReflectUniforms ( SpvReflectShaderModule& module )
+    void VulkanPipeline::ReflectUniforms ( SpvReflectShaderModule& aModule, ShaderType aType )
     {
-        // Reflect uniform blocks
-        uint32_t block_count = 0;
-        SpvReflectResult result = spvReflectEnumerateDescriptorSets ( &module, &block_count, nullptr );
+        // Get descriptor set count
+        uint32_t descriptor_set_count = 0;
+        SpvReflectResult result = spvReflectEnumerateDescriptorSets ( &aModule, &descriptor_set_count, nullptr );
         if ( result != SPV_REFLECT_RESULT_SUCCESS )
         {
             std::ostringstream stream;
@@ -695,10 +699,10 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        if ( block_count > 0 )
+        if ( descriptor_set_count > 0 )
         {
-            std::vector<SpvReflectDescriptorSet*> descriptor_sets ( block_count );
-            result = spvReflectEnumerateDescriptorSets ( &module, &block_count, descriptor_sets.data() );
+            std::vector<SpvReflectDescriptorSet*> descriptor_sets ( descriptor_set_count );
+            result = spvReflectEnumerateDescriptorSets ( &aModule, &descriptor_set_count, descriptor_sets.data() );
             if ( result != SPV_REFLECT_RESULT_SUCCESS )
             {
                 std::ostringstream stream;
@@ -711,97 +715,96 @@ namespace AeonGames
             {
                 for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
                 {
-                    const SpvReflectDescriptorBinding& binding = *descriptor_set->bindings[i];
-
-                    if ( binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER )
+                    const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
+                    if ( descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER )
                     {
                         // Process uniform blocks
-                        if ( binding.block.name != nullptr )
+                        if ( descriptor_set_binding.type_description->type_name != nullptr )
                         {
-                            const uint32_t name_crc = crc32i ( binding.block.name, strlen ( binding.block.name ) );
-                            auto it = std::find_if ( mUniformBlocks.begin(), mUniformBlocks.end(),
-                                                     [name_crc] ( const VulkanUniformBlock & block )
+                            const uint32_t name_crc{crc32i ( descriptor_set_binding.type_description->type_name, strlen ( descriptor_set_binding.type_description->type_name ) ) };
+                            auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name_crc,
+                                                         [] ( const VulkanUniformBlock & a, const uint32_t b )
                             {
-                                return block.name == name_crc;
+                                return a.name < b;
+                            } );
+                            if ( it != mUniformBlocks.end() && it->name == name_crc )
+                            {
+                                // Already exists, update stage flags
+                                it->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                                continue;
+                            }
+
+                            mUniformBlocks.insert ( it,
+                            {
+                                name_crc,
+                                descriptor_set_binding.set,
+                                descriptor_set_binding.binding,
+                                descriptor_set_binding.block.size,
+                                ShaderTypeToShaderStageFlagBit.at ( aType ),
+                                {}
                             } );
 
-                            if ( it == mUniformBlocks.end() )
+                            std::cout << LogLevel::Debug << "Uniform Block: " << descriptor_set_binding.type_description->type_name
+                                      << " (crc: " << std::hex << name_crc << std::dec
+                                      << ", set: " << descriptor_set_binding.set << ", binding: " << descriptor_set_binding.binding
+                                      << ", size: " << descriptor_set_binding.block.size << ")" << std::endl;
+
+
+#if 0                                       // Process uniform block members
+                            for ( uint32_t j = 0; j < binding.block.member_count; ++j )
                             {
-                                VulkanUniformBlock uniform_block{};
-                                uniform_block.name = name_crc;
-                                uniform_block.set = binding.set;
-                                uniform_block.binding = binding.binding;
-                                uniform_block.size = binding.block.size;
-
-                                std::cout << "Uniform Block: " << binding.block.name
-                                          << " (crc: " << std::hex << name_crc << std::dec
-                                          << ", set: " << binding.set << ", binding: " << binding.binding
-                                          << ", size: " << binding.block.size << ")" << std::endl;
-
-                                // Process uniform block members
-                                for ( uint32_t j = 0; j < binding.block.member_count; ++j )
+                                const SpvReflectBlockVariable& member = binding.block.members[j];
+                                if ( member.name != nullptr )
                                 {
-                                    const SpvReflectBlockVariable& member = binding.block.members[j];
-                                    if ( member.name != nullptr )
-                                    {
-                                        VulkanVariable uniform_var;
-                                        uniform_var.name = crc32i ( member.name, strlen ( member.name ) );
-                                        uniform_var.location = member.offset;
-                                        uniform_var.format = VK_FORMAT_UNDEFINED; // Not applicable for uniforms
-                                        uniform_block.uniforms.push_back ( uniform_var );
+                                    VulkanVariable uniform_var;
+                                    uniform_var.name = crc32i ( member.name, strlen ( member.name ) );
+                                    uniform_var.location = member.offset;
+                                    uniform_var.format = VK_FORMAT_UNDEFINED; // Not applicable for uniforms
+                                    uniform_block.uniforms.push_back ( uniform_var );
 
-                                        std::cout << "  - Uniform: " << member.name
-                                                  << " (crc: " << std::hex << uniform_var.name << std::dec
-                                                  << ", offset: " << member.offset << ")" << std::endl;
-                                    }
+                                    std::cout << "  - Uniform: " << member.name
+                                              << " (crc: " << std::hex << uniform_var.name << std::dec
+                                              << ", offset: " << member.offset << ")" << std::endl;
                                 }
-
-                                mUniformBlocks.push_back ( uniform_block );
                             }
+#endif
                         }
                     }
-                    else if ( binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
-                              binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE ||
-                              binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER )
+                    else if ( descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+                              descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE ||
+                              descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER )
                     {
                         // Process samplers
-                        if ( binding.name != nullptr )
+                        if ( descriptor_set_binding.name != nullptr )
                         {
-                            VulkanVariable sampler_var;
-                            sampler_var.name = crc32i ( binding.name, strlen ( binding.name ) );
-                            sampler_var.location = binding.binding;
-                            sampler_var.format = VK_FORMAT_UNDEFINED; // Not applicable for samplers
-
-                            // Check if sampler already exists
-                            auto it = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                                     [&sampler_var] ( const VulkanVariable & var )
+                            const uint32_t name_crc{crc32i ( descriptor_set_binding.name, strlen ( descriptor_set_binding.name ) ) };
+                            auto it = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_crc,
+                                                         [] ( const VulkanSamplerLocation & a, const uint32_t b )
                             {
-                                return var.name == sampler_var.name;
+                                return a.name < b;
                             } );
-
-                            if ( it == mSamplers.end() )
+                            if ( it != mSamplerLocations.end() && it->name == name_crc )
                             {
-                                mSamplers.push_back ( sampler_var );
-                                std::cout << "Sampler: " << binding.name
-                                          << " (crc: " << std::hex << sampler_var.name << std::dec
-                                          << ", binding: " << binding.binding << ")" << std::endl;
+                                // Already exists, skip
+                                continue;
                             }
+                            mSamplerLocations.insert ( it,
+                            {
+                                name_crc,
+                                descriptor_set_binding.binding
+                            } );
+                            std::cout << LogLevel::Debug << "Sampler: " << descriptor_set_binding.name
+                                      << " (crc: " << std::hex << name_crc << std::dec
+                                      << ", binding: " << descriptor_set_binding.binding << ")" << std::endl;
                         }
                     }
                 }
             }
         }
 
-        // Sort uniform blocks by name for faster lookup
-        std::sort ( mUniformBlocks.begin(), mUniformBlocks.end(),
-                    [] ( const VulkanUniformBlock & a, const VulkanUniformBlock & b )
-        {
-            return a.name < b.name;
-        } );
-
         // Sort samplers by name for faster lookup
-        std::sort ( mSamplers.begin(), mSamplers.end(),
-                    [] ( const VulkanVariable & a, const VulkanVariable & b )
+        std::sort ( mSamplerLocations.begin(), mSamplerLocations.end(),
+                    [] ( const VulkanSamplerLocation & a, const VulkanSamplerLocation & b )
         {
             return a.name < b.name;
         } );
