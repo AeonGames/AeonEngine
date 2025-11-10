@@ -27,5 +27,11 @@ namespace AeonGames
         uint32_t location{};
         VkFormat format{};
     };
+
+    struct VulkanSamplerLocation
+    {
+        uint32_t name{};
+        uint32_t location{};
+    };
 }
 #endif

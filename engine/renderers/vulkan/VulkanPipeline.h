@@ -50,12 +50,12 @@ namespace AeonGames
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetPipeline() const;
         const std::vector<VulkanVariable>& GetVertexAttributes() const;
-        const std::vector<VulkanVariable>& GetSamplers() const;
+        const std::vector<VulkanSamplerLocation>& GetSamplers() const;
         const VulkanUniformBlock* GetUniformBlock ( uint32_t name ) const;
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
-        void ReflectUniforms ( SpvReflectShaderModule& module );
+        void ReflectUniforms ( SpvReflectShaderModule& module, ShaderType aType );
         const VulkanRenderer& mVulkanRenderer;
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
@@ -64,7 +64,7 @@ namespace AeonGames
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanUniformBlock> mUniformBlocks{};
-        std::vector<VulkanVariable> mSamplers{};
+        std::vector<VulkanSamplerLocation> mSamplerLocations{};
     };
 }
 #endif
