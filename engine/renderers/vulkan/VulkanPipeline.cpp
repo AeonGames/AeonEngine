@@ -505,7 +505,7 @@ namespace AeonGames
         push_constant_ranges[0].offset = 0;
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 
-        uint32_t descriptor_set_layout_count = 0;
+        uint32_t descriptor_set_layout_count{0};
         std::array<VkDescriptorSetLayout, 4> descriptor_set_layouts;
 
         // Matrix Descriptor Set Layout
