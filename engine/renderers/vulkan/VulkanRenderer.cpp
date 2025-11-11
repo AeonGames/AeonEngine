@@ -207,7 +207,6 @@ namespace AeonGames
 
     void VulkanRenderer::SetupDebug()
     {
-        mInstanceExtensionNames.emplace_back ( VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME );
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_UTILS_EXTENSION_NAME );
         mInstanceLayerNames.emplace_back ( "VK_LAYER_KHRONOS_validation" );
     }
@@ -257,7 +256,7 @@ namespace AeonGames
         VkApplicationInfo application_info {};
 
         application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application_info.apiVersion = 0;
+        application_info.apiVersion = VK_API_VERSION_1_1;
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
         application_info.pApplicationName = "AeonEngine Vulkan Renderer";
 
@@ -309,10 +308,22 @@ namespace AeonGames
 
         // Validate that all requested extensions are available
         {
+            // Get global instance extensions
             uint32_t available_extension_count;
             vkEnumerateInstanceExtensionProperties ( nullptr, &available_extension_count, nullptr );
             std::vector<VkExtensionProperties> available_extensions ( available_extension_count );
             vkEnumerateInstanceExtensionProperties ( nullptr, &available_extension_count, available_extensions.data() );
+
+            // Also get extensions provided by layers
+            std::vector<VkExtensionProperties> layer_extensions;
+            for ( const char * layer_name : mInstanceLayerNames )
+            {
+                uint32_t layer_extension_count;
+                vkEnumerateInstanceExtensionProperties ( layer_name, &layer_extension_count, nullptr );
+                std::vector<VkExtensionProperties> layer_ext_props ( layer_extension_count );
+                vkEnumerateInstanceExtensionProperties ( layer_name, &layer_extension_count, layer_ext_props.data() );
+                layer_extensions.insert ( layer_extensions.end(), layer_ext_props.begin(), layer_ext_props.end() );
+            }
 
             std::cout << LogLevel::Info << "VulkanRenderer Available Instance Extensions" << std::endl;
             for ( const auto& extension : available_extensions )
@@ -323,6 +334,8 @@ namespace AeonGames
             for ( auto it = mInstanceExtensionNames.begin(); it != mInstanceExtensionNames.end(); )
             {
                 bool extension_found = false;
+
+                // Check global extensions
                 for ( const auto& available_extension : available_extensions )
                 {
                     if ( strcmp ( *it, available_extension.extensionName ) == 0 )
@@ -331,6 +344,20 @@ namespace AeonGames
                         break;
                     }
                 }
+
+                // If not found in global extensions, check layer extensions
+                if ( !extension_found )
+                {
+                    for ( const auto& layer_extension : layer_extensions )
+                    {
+                        if ( strcmp ( *it, layer_extension.extensionName ) == 0 )
+                        {
+                            extension_found = true;
+                            break;
+                        }
+                    }
+                }
+
                 if ( !extension_found )
                 {
                     std::cout << LogLevel::Warning << "Requested extension '" << *it
@@ -344,32 +371,12 @@ namespace AeonGames
             }
         }
 
-        std::array<VkValidationFeatureEnableEXT, 2> validation_feature_enable_exts
-        {
-            VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
-            VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
-        };
-
-        VkValidationFeaturesEXT validation_features_ext
-        {
-            VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
-            nullptr,
-            static_cast<uint32_t> ( validation_feature_enable_exts.size() ),
-            validation_feature_enable_exts.data(),
-                                          0,
-                                          nullptr
-        };
-
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &application_info;
         instance_create_info.enabledLayerCount = static_cast<uint32_t> ( mInstanceLayerNames.size() );
         instance_create_info.ppEnabledLayerNames = mInstanceLayerNames.data();
         instance_create_info.enabledExtensionCount = static_cast<uint32_t> ( mInstanceExtensionNames.size() );
         instance_create_info.ppEnabledExtensionNames = mInstanceExtensionNames.data();
-        if ( mValidate )
-        {
-            instance_create_info.pNext = &validation_features_ext;
-        }
         if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
         {
             std::ostringstream stream;

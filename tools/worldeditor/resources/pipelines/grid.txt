@@ -26,7 +26,7 @@ vert:
     "instance_index = uint ( gl_InstanceIndex );\n"
     "gl_Position =  ProjectionMatrix *\n"
     "               ViewMatrix *\n"
-    "               vec4(StartingPosition + (VertexPosition*Scale) + ( Offset * gl_InstanceIndex ),1.0);\n"
+    "               vec4(StartingPosition + (VertexPosition * Scale) + ( Offset * gl_InstanceIndex ),1.0);\n"
     "}\n"
 frag:
     "#version 450\n"
