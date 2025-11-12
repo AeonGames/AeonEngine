@@ -32,8 +32,8 @@ namespace AeonGames
     extern "C"
     {
 #endif
-    /** Iterative non-constexpr crc32 calculation.*/
-    DLL uint32_t crc32i ( const char* message, size_t size );
+    /** Iterative non-constexpr crc32 calculation with previous CRC value.*/
+    DLL uint32_t crc32i ( const char* message, size_t size, uint32_t previous_crc = 0 );
 #ifdef __cplusplus
 }
 #endif
@@ -230,8 +230,8 @@ static_assert ( crc32r ( "AeonGames" ) == 0x2B0C3B, "CRC32 Failure." );
 extern "C"
 {
 #endif
-    /** Iterative non-constexpr crc64 calculation.*/
-    DLL uint64_t crc64i ( const char* message, size_t size );
+    /** Iterative non-constexpr crc64 calculation with previous CRC value.*/
+    DLL uint64_t crc64i ( const char* message, size_t size, uint64_t previous_crc = 0 );
 #ifdef __cplusplus
 }
 #endif

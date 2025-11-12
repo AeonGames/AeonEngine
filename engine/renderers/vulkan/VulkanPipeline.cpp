@@ -508,6 +508,7 @@ namespace AeonGames
         uint32_t descriptor_set_layout_count{0};
         std::array<VkDescriptorSetLayout, 4> descriptor_set_layouts;
 
+#if 0
         // Matrix Descriptor Set Layout
         if ( GetUniformBlock ( "Matrices"_crc32 ) )
         {
@@ -523,7 +524,7 @@ namespace AeonGames
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplerLocations.size() );
         }
-#if 0
+        //---------------Dynamic Uniform Buffer for Skeletons------------------//
         if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
         {
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
@@ -623,17 +624,17 @@ namespace AeonGames
     {
         return mSamplerLocations;
     }
-
-    const VulkanUniformBlock* VulkanPipeline::GetUniformBlock ( uint32_t name ) const
+#if 0
+    const VulkanDescriptorSetBinding* VulkanPipeline::GetUniformBlock ( uint32_t name ) const
     {
-        auto it = std::find_if ( mUniformBlocks.begin(), mUniformBlocks.end(),
-                                 [name] ( const VulkanUniformBlock & block )
+        auto it = std::find_if ( mDescriptorSets.begin(), mDescriptorSets.end(),
+                                 [name] ( const VulkanDescriptorSetBinding & block )
         {
             return block.name == name;
         } );
-        return ( it != mUniformBlocks.end() ) ? & ( *it ) : nullptr;
+        return ( it != mDescriptorSets.end() ) ? & ( *it ) : nullptr;
     }
-
+#endif
     const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
     {
         auto it = std::find_if ( mSamplerLocations.begin(), mSamplerLocations.end(),
@@ -711,37 +712,40 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
+            mDescriptorSets.reserve ( descriptor_set_count );
             for ( const auto& descriptor_set : descriptor_sets )
             {
+                auto& bindings = mDescriptorSets.emplace_back ( VulkanDescriptorSet{descriptor_set->set, {}} ).bindings;
+                bindings.reserve ( descriptor_set->binding_count );
                 for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
                 {
                     const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
+                    /// @todo @Kwizatz Haderach store the descriptor type in the binding as well.
                     if ( descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER )
                     {
                         // Process uniform blocks
                         if ( descriptor_set_binding.type_description->type_name != nullptr )
                         {
                             const uint32_t name_crc{crc32i ( descriptor_set_binding.type_description->type_name, strlen ( descriptor_set_binding.type_description->type_name ) ) };
-                            auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name_crc,
-                                                         [] ( const VulkanUniformBlock & a, const uint32_t b )
+                            auto it = std::lower_bound ( bindings.begin(), bindings.end(), name_crc,
+                                                         [] ( const VulkanDescriptorSetBinding & a, const uint32_t b )
                             {
                                 return a.name < b;
                             } );
-                            if ( it != mUniformBlocks.end() && it->name == name_crc )
+                            if ( it != bindings.end() && it->name == name_crc )
                             {
                                 // Already exists, update stage flags
                                 it->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
                                 continue;
                             }
 
-                            mUniformBlocks.insert ( it,
+                            bindings.insert ( it,
                             {
                                 name_crc,
                                 descriptor_set_binding.set,
                                 descriptor_set_binding.binding,
                                 descriptor_set_binding.block.size,
                                 static_cast<VkShaderStageFlags> ( ShaderTypeToShaderStageFlagBit.at ( aType ) ),
-                                {}
                             } );
 
                             std::cout << LogLevel::Debug << "Uniform Block: " << descriptor_set_binding.type_description->type_name
