@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANUNIFORMBLOCK_H
-#define AEONGAMES_VULKANUNIFORMBLOCK_H
+#ifndef AEONGAMES_VULKANDESCRIPTORSET_H
+#define AEONGAMES_VULKANDESCRIPTORSET_H
 
 #include <cstdint>
 #include <vector>
@@ -23,7 +23,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    struct VulkanUniformBlock
+    struct VulkanDescriptorSetBinding
     {
         uint32_t name{};
         uint32_t size{};
@@ -31,7 +31,12 @@ namespace AeonGames
         uint32_t set{};
         VkShaderStageFlags stageFlags{};
         VkDescriptorType descriptorType{};
-        std::vector<VulkanVariable> uniforms{};
+    };
+
+    struct VulkanDescriptorSet
+    {
+        uint32_t set{};
+        std::vector<VulkanDescriptorSetBinding> bindings{};
     };
 }
 #endif

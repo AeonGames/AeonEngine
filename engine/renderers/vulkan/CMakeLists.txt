@@ -52,6 +52,7 @@ set(VULKAN_RENDERER_HEADERS
     VulkanTexture.h
     VulkanMemoryPoolBuffer.h
     VulkanFrameBuffer.h
+    VulkanDescriptorSet.h
     )
 
 set(VULKAN_RENDERER_SOURCES
