@@ -17,13 +17,17 @@ limitations under the License.
 #include <cassert>
 namespace AeonGames
 {
-    /*! \brief Compute the CRC32 of a given message.
-        \return     The CRC32 of the message.
+    /*! \brief Compute the CRC32 of a given message, continuing from a previous CRC value.
+        \param message      The message to compute the CRC for.
+        \param size         The size of the message in bytes.
+        \param previous_crc The previous CRC32 value to continue from.
+        \return             The CRC32 of the message combined with the previous CRC.
      */
-    uint32_t crc32i ( const char* message, size_t size )
+    uint32_t crc32i ( const char* message, size_t size, uint32_t previous_crc )
     {
         assert ( message != nullptr );
-        uint32_t       remainder = 0xFFFFFFFF;
+        // Un-finalize the previous CRC to continue computing
+        uint32_t       remainder = reflect32<16> ( previous_crc ) ^ 0xFFFFFFFF;
         uint32_t       data;
         uint8_t        byte;
         /*
@@ -40,13 +44,17 @@ namespace AeonGames
         return reflect32<16> ( remainder ) ^ 0xFFFFFFFF;
     }
 
-    /*! \brief Compute the CRC64 of a given message.
-        \return     The CRC64 of the message.
+    /*! \brief Compute the CRC64 of a given message, continuing from a previous CRC value.
+        \param message      The message to compute the CRC for.
+        \param size         The size of the message in bytes.
+        \param previous_crc The previous CRC64 value to continue from.
+        \return             The CRC64 of the message combined with the previous CRC.
      */
-    uint64_t crc64i ( const char* message, size_t size )
+    uint64_t crc64i ( const char* message, size_t size, uint64_t previous_crc )
     {
         assert ( message != nullptr );
-        uint64_t       remainder = 0xFFFFFFFFFFFFFFFF;
+        // Un-finalize the previous CRC to continue computing
+        uint64_t       remainder = reflect64<32> ( previous_crc ) ^ 0xFFFFFFFFFFFFFFFF;
         uint64_t       data;
         uint8_t        byte;
         /*
