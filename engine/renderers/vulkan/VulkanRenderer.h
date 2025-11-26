@@ -50,8 +50,7 @@ namespace AeonGames
         const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
         const VkSemaphore& GetSignalSemaphore() const;
-        const VkDescriptorSetLayout& GetUniformBufferDescriptorSetLayout() const;
-        const VkDescriptorSetLayout& GetUniformBufferDynamicDescriptorSetLayout() const;
+        const VkDescriptorSetLayout& GetUniformBufferDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const;
         const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;
         uint32_t GetQueueFamilyIndex() const;
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
@@ -130,9 +129,7 @@ namespace AeonGames
         VkQueue mVkQueue{ VK_NULL_HANDLE };
         VkSemaphore mVkSignalSemaphore{ VK_NULL_HANDLE };
         VkFence mVkFence{ VK_NULL_HANDLE };
-        VkDescriptorSetLayout mVkUniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
-        VkDescriptorSetLayout mVkUniformBufferDynamicDescriptorSetLayout{ VK_NULL_HANDLE };
-        mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout >> mVkSamplerDescriptorSetLayouts{};
+        mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout >> mVkDescriptorSetLayouts{};
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};

@@ -43,6 +43,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    ///@todo Decide if renderer should still be passed as const reference.
     VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
         mUniformBuffer { mVulkanRenderer }
@@ -80,6 +81,8 @@ namespace AeonGames
             }
         }
 
+#if 0
+        ///@kwizatz Haderach Commented out while new pipeline code is set up.
         // Initialize Descriptor Sets
         {
             if ( aMaterial.GetUniformBuffer().size() )
@@ -159,6 +162,7 @@ namespace AeonGames
             }
             vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
         }
+#endif
     }
 
     VulkanMaterial::~VulkanMaterial()
@@ -180,7 +184,7 @@ namespace AeonGames
         std::swap ( mSamplerDescriptorSet, aVulkanMaterial.mSamplerDescriptorSet );
     }
 
-    void VulkanMaterial::Bind ( VkCommandBuffer aVkCommandBuffer, const VkPipelineLayout aVkPipelineLayout ) const
+    void VulkanMaterial::Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aPipeline  ) const
     {
         std::array<VkDescriptorSet, 2> descriptor_sets
         {
@@ -191,7 +195,7 @@ namespace AeonGames
         uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
         vkCmdBindDescriptorSets ( aVkCommandBuffer,
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  aVkPipelineLayout,
+                                  aPipeline.GetPipelineLayout(),
                                   MATERIAL,
                                   descriptor_set_count,
                                   descriptor_sets.data(), 0, nullptr );
