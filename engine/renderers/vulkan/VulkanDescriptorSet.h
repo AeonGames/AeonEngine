@@ -35,8 +35,8 @@ namespace AeonGames
 
     struct VulkanDescriptorSet
     {
-        uint32_t set{};
-        std::vector<VulkanDescriptorSetBinding> bindings{};
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings{};
     };
 }
 #endif

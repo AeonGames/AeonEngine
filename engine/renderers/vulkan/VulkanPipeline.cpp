@@ -130,6 +130,22 @@ namespace AeonGames
         { VK_FORMAT_R64G64B64A64_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 4 ) }
     };
 
+    static const std::unordered_map<SpvReflectDescriptorType, VkDescriptorType> SpvReflectToVulkanDescriptorType
+    {
+        { SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER, VK_DESCRIPTOR_TYPE_SAMPLER },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT },
+        { SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR }
+    };
+
 #if 0
     static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
@@ -715,103 +731,24 @@ namespace AeonGames
             mDescriptorSets.reserve ( descriptor_set_count );
             for ( const auto& descriptor_set : descriptor_sets )
             {
-                auto& bindings = mDescriptorSets.emplace_back ( VulkanDescriptorSet{descriptor_set->set, {}} ).bindings;
-                bindings.reserve ( descriptor_set->binding_count );
+                auto& set = mDescriptorSets.emplace_back ( VulkanDescriptorSet{} );
+                set.descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
+                set.descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                set.descriptor_set_layout_create_info.pNext = nullptr;
+                set.descriptor_set_layout_create_info.flags = 0;
                 for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
                 {
                     const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
-                    /// @todo @Kwizatz Haderach store the descriptor type in the binding as well.
-                    if ( descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER )
-                    {
-                        // Process uniform blocks
-                        if ( descriptor_set_binding.type_description->type_name != nullptr )
-                        {
-                            const uint32_t name_crc{crc32i ( descriptor_set_binding.type_description->type_name, strlen ( descriptor_set_binding.type_description->type_name ) ) };
-                            auto it = std::lower_bound ( bindings.begin(), bindings.end(), name_crc,
-                                                         [] ( const VulkanDescriptorSetBinding & a, const uint32_t b )
-                            {
-                                return a.name < b;
-                            } );
-                            if ( it != bindings.end() && it->name == name_crc )
-                            {
-                                // Already exists, update stage flags
-                                it->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
-                                continue;
-                            }
-
-                            bindings.insert ( it,
-                            {
-                                name_crc,
-                                descriptor_set_binding.set,
-                                descriptor_set_binding.binding,
-                                descriptor_set_binding.block.size,
-                                static_cast<VkShaderStageFlags> ( ShaderTypeToShaderStageFlagBit.at ( aType ) ),
-                            } );
-
-                            std::cout << LogLevel::Debug << "Uniform Block: " << descriptor_set_binding.type_description->type_name
-                                      << " (crc: " << std::hex << name_crc << std::dec
-                                      << ", set: " << descriptor_set_binding.set << ", binding: " << descriptor_set_binding.binding
-                                      << ", size: " << descriptor_set_binding.block.size << ")" << std::endl;
-
-
-#if 0
-                            // Process uniform block members
-                            for ( uint32_t j = 0; j < binding.block.member_count; ++j )
-                            {
-                                const SpvReflectBlockVariable& member = binding.block.members[j];
-                                if ( member.name != nullptr )
-                                {
-                                    VulkanVariable uniform_var;
-                                    uniform_var.name = crc32i ( member.name, strlen ( member.name ) );
-                                    uniform_var.location = member.offset;
-                                    uniform_var.format = VK_FORMAT_UNDEFINED; // Not applicable for uniforms
-                                    uniform_block.uniforms.push_back ( uniform_var );
-
-                                    std::cout << "  - Uniform: " << member.name
-                                              << " (crc: " << std::hex << uniform_var.name << std::dec
-                                              << ", offset: " << member.offset << ")" << std::endl;
-                                }
-                            }
-#endif
-                        }
-                    }
-                    else if ( descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
-                              descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE ||
-                              descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER )
-                    {
-                        // Process samplers
-                        if ( descriptor_set_binding.name != nullptr )
-                        {
-                            const uint32_t name_crc{crc32i ( descriptor_set_binding.name, strlen ( descriptor_set_binding.name ) ) };
-                            auto it = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_crc,
-                                                         [] ( const VulkanSamplerLocation & a, const uint32_t b )
-                            {
-                                return a.name < b;
-                            } );
-                            if ( it != mSamplerLocations.end() && it->name == name_crc )
-                            {
-                                // Already exists, skip
-                                continue;
-                            }
-                            mSamplerLocations.insert ( it,
-                            {
-                                name_crc,
-                                descriptor_set_binding.binding
-                            } );
-                            std::cout << LogLevel::Debug << "Sampler: " << descriptor_set_binding.name
-                                      << " (crc: " << std::hex << name_crc << std::dec
-                                      << ", binding: " << descriptor_set_binding.binding << ")" << std::endl;
-                        }
-                    }
+                    auto& layout_binding = set.descriptor_set_layout_bindings.emplace_back ( VkDescriptorSetLayoutBinding{} );
+                    layout_binding.binding = descriptor_set_binding.binding;
+                    layout_binding.descriptorType = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
+                    layout_binding.descriptorCount = descriptor_set_binding.count;
+                    layout_binding.stageFlags = VK_SHADER_STAGE_ALL; /// @todo @Kwizatz Haderach determine actual stage flags based on usage.
+                    layout_binding.pImmutableSamplers = nullptr;
                 }
+                set.descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( set.descriptor_set_layout_bindings.size() );
+                set.descriptor_set_layout_create_info.pBindings = set.descriptor_set_layout_bindings.data();
             }
         }
-
-        // Sort samplers by name for faster lookup
-        std::sort ( mSamplerLocations.begin(), mSamplerLocations.end(),
-                    [] ( const VulkanSamplerLocation & a, const VulkanSamplerLocation & b )
-        {
-            return a.name < b.name;
-        } );
     }
 }
