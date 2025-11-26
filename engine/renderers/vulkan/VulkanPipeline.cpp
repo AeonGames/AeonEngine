@@ -754,7 +754,8 @@ namespace AeonGames
                                       << ", size: " << descriptor_set_binding.block.size << ")" << std::endl;
 
 
-#if 0                                       // Process uniform block members
+#if 0
+                            // Process uniform block members
                             for ( uint32_t j = 0; j < binding.block.member_count; ++j )
                             {
                                 const SpvReflectBlockVariable& member = binding.block.members[j];

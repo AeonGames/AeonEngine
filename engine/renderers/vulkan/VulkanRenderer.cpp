@@ -64,8 +64,6 @@ namespace AeonGames
             InitializeSemaphores();
             InitializeFence();
             InitializeCommandPools();
-            InitializeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER );
-            InitializeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC );
             AttachWindow ( aWindow );
         }
         catch ( ... )
@@ -83,13 +81,11 @@ namespace AeonGames
         mMaterialStore.clear();
         mPipelineStore.clear();
         mMeshStore.clear();
-        for ( auto& i : mVkSamplerDescriptorSetLayouts )
+        for ( auto& i : mVkDescriptorSetLayouts )
         {
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
         }
-        mVkSamplerDescriptorSetLayouts.clear();
-        FinalizeDescriptorSetLayout ( mVkUniformBufferDynamicDescriptorSetLayout );
-        FinalizeDescriptorSetLayout ( mVkUniformBufferDescriptorSetLayout );
+        mVkDescriptorSetLayouts.clear();
         FinalizeCommandPools();
         FinalizeFence();
         FinalizeSemaphores();
@@ -772,24 +768,53 @@ namespace AeonGames
         return &it->second.GetDescriptorImageInfo();
     }
 
-    const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDescriptorSetLayout() const
+    const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const
     {
-        return mVkUniformBufferDescriptorSetLayout;
-    }
+        uint32_t key
+        {
+            crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.bindingCount ), sizeof ( uint32_t ),
+                     crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.flags ), sizeof ( VkDescriptorSetLayoutCreateFlags ),
+                              crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.sType ), sizeof ( VkStructureType ) ) ) )
+        };
 
-    const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDynamicDescriptorSetLayout() const
-    {
-        return mVkUniformBufferDynamicDescriptorSetLayout;
+        for ( uint32_t i = 0; i < aDescriptorSetLayoutCreateInfo.bindingCount; ++i )
+        {
+            key =
+                crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].stageFlags ), sizeof ( VkShaderStageFlags ),
+                         crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].descriptorCount ), sizeof ( uint32_t ),
+                                  crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].descriptorType ), sizeof ( VkDescriptorType ),
+                                           crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].binding ), sizeof ( uint32_t ), key ) ) ) );
+        }
+
+        auto lb = std::lower_bound ( mVkDescriptorSetLayouts.begin(), mVkDescriptorSetLayouts.end(), key,
+                                     [] ( const std::tuple<size_t, VkDescriptorSetLayout>& a, size_t b )
+        {
+            return std::get<0> ( a ) < b;
+        } );
+
+        if ( lb != mVkDescriptorSetLayouts.end() && std::get<0> ( *lb ) == key )
+        {
+            return std::get<1> ( *lb );
+        }
+        VkDescriptorSetLayout descriptor_set_layout;
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &aDescriptorSetLayoutCreateInfo, nullptr, &descriptor_set_layout ) )
+        {
+            std::ostringstream stream;
+            stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        lb = mVkDescriptorSetLayouts.insert ( lb, { {key}, {descriptor_set_layout} } );
+        return std::get<1> ( *lb );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const
     {
-        auto lb = std::lower_bound ( mVkSamplerDescriptorSetLayouts.begin(), mVkSamplerDescriptorSetLayouts.end(), aSamplerCount,
+        auto lb = std::lower_bound ( mVkDescriptorSetLayouts.begin(), mVkDescriptorSetLayouts.end(), aSamplerCount,
                                      [] ( const std::tuple<size_t, VkDescriptorSetLayout>&a, size_t b )
         {
             return std::get<0> ( a ) < b;
         } );
-        if ( lb != mVkSamplerDescriptorSetLayouts.end() && std::get<0> ( *lb ) == aSamplerCount )
+        if ( lb != mVkDescriptorSetLayouts.end() && std::get<0> ( *lb ) == aSamplerCount )
         {
             return std::get<1> ( *lb );
         }
@@ -813,7 +838,7 @@ namespace AeonGames
             descriptor_set_layout_create_info.flags = 0;
             descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( descriptor_set_layout_bindings.size() );
             descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
-            lb = mVkSamplerDescriptorSetLayouts.insert ( lb, {{aSamplerCount}, {VK_NULL_HANDLE}} );
+            lb = mVkDescriptorSetLayouts.insert ( lb, {{aSamplerCount}, {VK_NULL_HANDLE}} );
             if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr,
                                    &std::get<1> ( *lb ) ) )
             {
