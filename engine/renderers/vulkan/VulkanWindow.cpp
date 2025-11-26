@@ -463,13 +463,14 @@ namespace AeonGames
     void VulkanWindow::InitializeMatrices()
     {
 
-        mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout() );
         mMatrices.Initialize (
             sizeof ( float ) * 16 * 2,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
+#if 0
+        ///@Kwizatz Haderach TODO: Re-enable Matrix descriptor set.
+        mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout() );
         VkDescriptorBufferInfo descriptor_buffer_info = { mMatrices.GetBuffer(), 0, mMatrices.GetSize() };
         VkWriteDescriptorSet write_descriptor_set{};
         write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -483,6 +484,7 @@ namespace AeonGames
         write_descriptor_set.pImageInfo = nullptr;
         write_descriptor_set.pTexelBufferView = nullptr;
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+#endif
     }
 
     void VulkanWindow::FinalizeMatrices()
@@ -743,7 +745,7 @@ namespace AeonGames
 
         if ( aMaterial != nullptr )
         {
-            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, pipeline->GetPipelineLayout() );
+            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
         }
         if ( aSkeleton != nullptr )
         {

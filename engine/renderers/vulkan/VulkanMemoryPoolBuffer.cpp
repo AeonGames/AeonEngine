@@ -97,7 +97,9 @@ namespace AeonGames
     void VulkanMemoryPoolBuffer::InitializeDescriptorSet()
     {
         VkDescriptorSetLayout descriptorset_layout{VK_NULL_HANDLE};
-        descriptorset_layout = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
+        //descriptorset_layout = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
+        //descriptorset_layout = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
+        descriptorset_layout = VK_NULL_HANDLE; /// @Kwizatz This will cause a failure while finishing new pipeline code.
         VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
         descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
