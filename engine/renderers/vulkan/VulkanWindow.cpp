@@ -43,7 +43,7 @@ namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
-        mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
+        //mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
         mMatrices { aVulkanRenderer }
     {
         try
@@ -59,7 +59,7 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( VulkanWindow&& aVulkanWindow ) :
         mVulkanRenderer { aVulkanWindow.mVulkanRenderer },
-        mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
+        //mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
         mMatrices{std::move ( aVulkanWindow.mMatrices ) }
     {
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
@@ -715,7 +715,7 @@ namespace AeonGames
         {
             std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
-        mMemoryPoolBuffer.Reset();
+        //mMemoryPoolBuffer.Reset();
     }
 
     void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
@@ -845,7 +845,8 @@ namespace AeonGames
 
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
-        return mMemoryPoolBuffer.Allocate ( aSize );
+        //return mMemoryPoolBuffer.Allocate ( aSize );
+        return {};
     }
 
     VkRenderPass VulkanWindow::GetRenderPass() const

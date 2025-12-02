@@ -83,7 +83,7 @@ namespace AeonGames
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
         Frustum mFrustum{};
-        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
+        //VulkanMemoryPoolBuffer mMemoryPoolBuffer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         VulkanBuffer mMatrices;
