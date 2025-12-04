@@ -55,7 +55,7 @@ namespace AeonGames
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
-        void ReflectUniforms ( SpvReflectShaderModule& module, ShaderType aType );
+        void ReflectDescriptorSets ( SpvReflectShaderModule& module, ShaderType aType );
         const VulkanRenderer& mVulkanRenderer;
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };

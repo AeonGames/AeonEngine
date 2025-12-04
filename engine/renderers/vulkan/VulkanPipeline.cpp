@@ -378,7 +378,7 @@ namespace AeonGames
                 // Only vertex shader needs attribute reflection
                 ReflectAttributes ( module );
             }
-            ReflectUniforms ( module, static_cast<ShaderType> ( i ) );
+            ReflectDescriptorSets ( module, static_cast<ShaderType> ( i ) );
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection----------//
         }
@@ -703,7 +703,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanPipeline::ReflectUniforms ( SpvReflectShaderModule& aModule, ShaderType aType )
+    void VulkanPipeline::ReflectDescriptorSets ( SpvReflectShaderModule& aModule, ShaderType aType )
     {
         // Get descriptor set count
         uint32_t descriptor_set_count = 0;
@@ -729,25 +729,49 @@ namespace AeonGames
             }
 
             mDescriptorSets.reserve ( descriptor_set_count );
+
             for ( const auto& descriptor_set : descriptor_sets )
             {
-                auto& set = mDescriptorSets.emplace_back ( VulkanDescriptorSet{} );
-                set.descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
-                set.descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-                set.descriptor_set_layout_create_info.pNext = nullptr;
-                set.descriptor_set_layout_create_info.flags = 0;
-                for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
+                auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), descriptor_set->set,
+                                             [] ( const VulkanDescriptorSet & a, const uint32_t b )
                 {
-                    const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
-                    auto& layout_binding = set.descriptor_set_layout_bindings.emplace_back ( VkDescriptorSetLayoutBinding{} );
-                    layout_binding.binding = descriptor_set_binding.binding;
-                    layout_binding.descriptorType = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
-                    layout_binding.descriptorCount = descriptor_set_binding.count;
-                    layout_binding.stageFlags = VK_SHADER_STAGE_ALL; /// @todo @Kwizatz Haderach determine actual stage flags based on usage.
-                    layout_binding.pImmutableSamplers = nullptr;
+                    return a.index < b;
+                } );
+
+                if ( it == mDescriptorSets.end() || it->index != descriptor_set->set )
+                {
+                    it = mDescriptorSets.insert ( it, VulkanDescriptorSet{descriptor_set->set} );
+                    it->descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
+                    it->descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                    it->descriptor_set_layout_create_info.pNext = nullptr;
+                    it->descriptor_set_layout_create_info.flags = 0;
+                    std::cout << LogLevel::Debug << "Descriptor set " << descriptor_set->set << std::endl;
+                    for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
+                    {
+                        assert ( descriptor_set->set == descriptor_set->bindings[i]->set && "Binding Set does not match Descriptor Set" );
+                        const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
+                        auto layout_binding = std::lower_bound ( it->descriptor_set_layout_bindings.begin(), it->descriptor_set_layout_bindings.end(), descriptor_set_binding.binding,
+                                              [] ( const VkDescriptorSetLayoutBinding & a, const uint32_t b )
+                        {
+                            return a.binding < b;
+                        } );
+
+                        layout_binding = it->descriptor_set_layout_bindings.insert ( layout_binding, VkDescriptorSetLayoutBinding{} );
+                        layout_binding->binding = descriptor_set_binding.binding;
+                        layout_binding->descriptorType = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
+                        layout_binding->descriptorCount = descriptor_set_binding.count;
+                        layout_binding->stageFlags = VK_SHADER_STAGE_ALL; /// @todo @Kwizatz Haderach determine actual stage flags based on usage.
+                        layout_binding->pImmutableSamplers = nullptr;
+                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " stored." << std::endl;
+                    }
+                    it->descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( it->descriptor_set_layout_bindings.size() );
+                    it->descriptor_set_layout_create_info.pBindings = it->descriptor_set_layout_bindings.data();
                 }
-                set.descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( set.descriptor_set_layout_bindings.size() );
-                set.descriptor_set_layout_create_info.pBindings = set.descriptor_set_layout_bindings.data();
+                else
+                {
+                    // @todo @Kwizatz Compare set and binding info and merge them if required.
+                    std::cout << LogLevel::Debug << "Duplicate Set " << descriptor_set->set << std::endl;
+                }
             }
         }
     }
