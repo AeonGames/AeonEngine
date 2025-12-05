@@ -146,6 +146,14 @@ namespace AeonGames
         { SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR }
     };
 
+    bool operator!= ( const VkDescriptorSetLayoutBinding& a, const SpvReflectDescriptorBinding& b )
+    {
+        return ! ( a.binding == b.binding &&
+                   a.descriptorType  == SpvReflectToVulkanDescriptorType.at ( b.descriptor_type ) &&
+                   a.descriptorCount == b.count &&
+                   a.pImmutableSamplers == nullptr );
+    }
+
 #if 0
     static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
     {
@@ -515,15 +523,15 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
+#if 0
         //----------------Push Constant Range------------------//
         std::array<VkPushConstantRange, 1> push_constant_ranges {};
         push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
         push_constant_ranges[0].offset = 0;
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
-
-        uint32_t descriptor_set_layout_count{0};
+#endif
+        uint32_t descriptor_set_layout_count {0};
         std::array<VkDescriptorSetLayout, 4> descriptor_set_layouts;
-
 #if 0
         // Matrix Descriptor Set Layout
         if ( GetUniformBlock ( "Matrices"_crc32 ) )
@@ -552,8 +560,8 @@ namespace AeonGames
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = descriptor_set_layout_count;
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layout_count ? descriptor_set_layouts.data() : nullptr;
-        pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( push_constant_ranges.size() );
-        pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
+        pipeline_layout_create_info.pushConstantRangeCount = 0; //static_cast<uint32_t> ( push_constant_ranges.size() );
+        pipeline_layout_create_info.pPushConstantRanges = nullptr; //push_constant_ranges.data();
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;
@@ -737,7 +745,6 @@ namespace AeonGames
                 {
                     return a.index < b;
                 } );
-
                 if ( it == mDescriptorSets.end() || it->index != descriptor_set->set )
                 {
                     it = mDescriptorSets.insert ( it, VulkanDescriptorSet{descriptor_set->set} );
@@ -746,32 +753,40 @@ namespace AeonGames
                     it->descriptor_set_layout_create_info.pNext = nullptr;
                     it->descriptor_set_layout_create_info.flags = 0;
                     std::cout << LogLevel::Debug << "Descriptor set " << descriptor_set->set << std::endl;
-                    for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
+                }
+                for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
+                {
+                    const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
+                    auto layout_binding = std::lower_bound ( it->descriptor_set_layout_bindings.begin(), it->descriptor_set_layout_bindings.end(), descriptor_set_binding.binding,
+                                          [] ( const VkDescriptorSetLayoutBinding & a, const uint32_t b )
                     {
-                        assert ( descriptor_set->set == descriptor_set->bindings[i]->set && "Binding Set does not match Descriptor Set" );
-                        const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
-                        auto layout_binding = std::lower_bound ( it->descriptor_set_layout_bindings.begin(), it->descriptor_set_layout_bindings.end(), descriptor_set_binding.binding,
-                                              [] ( const VkDescriptorSetLayoutBinding & a, const uint32_t b )
-                        {
-                            return a.binding < b;
-                        } );
-
+                        return a.binding < b;
+                    } );
+                    if ( layout_binding == it->descriptor_set_layout_bindings.end() || layout_binding->binding != descriptor_set_binding.binding )
+                    {
                         layout_binding = it->descriptor_set_layout_bindings.insert ( layout_binding, VkDescriptorSetLayoutBinding{} );
                         layout_binding->binding = descriptor_set_binding.binding;
                         layout_binding->descriptorType = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
                         layout_binding->descriptorCount = descriptor_set_binding.count;
-                        layout_binding->stageFlags = VK_SHADER_STAGE_ALL; /// @todo @Kwizatz Haderach determine actual stage flags based on usage.
+                        layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->pImmutableSamplers = nullptr;
-                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " stored." << std::endl;
+                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
                     }
-                    it->descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( it->descriptor_set_layout_bindings.size() );
-                    it->descriptor_set_layout_create_info.pBindings = it->descriptor_set_layout_bindings.data();
+                    else
+                    {
+                        if ( *layout_binding != descriptor_set_binding )
+                        {
+                            std::ostringstream stream;
+                            stream << "Descriptor Set Binding Conflict at Set " << descriptor_set_binding.set << " Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name;
+                            std::cout << LogLevel::Error << stream.str();
+                            throw std::runtime_error ( stream.str().c_str() );
+                        }
+                        layout_binding->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " Reused Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
+                    }
                 }
-                else
-                {
-                    // @todo @Kwizatz Compare set and binding info and merge them if required.
-                    std::cout << LogLevel::Debug << "Duplicate Set " << descriptor_set->set << std::endl;
-                }
+                it->descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( it->descriptor_set_layout_bindings.size() );
+                it->descriptor_set_layout_create_info.pBindings = it->descriptor_set_layout_bindings.data();
             }
         }
     }
