@@ -347,6 +347,8 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
+        uint32_t pipeline_shader_stage_create_info_count{0};
+        std::array<VkPipelineShaderStageCreateInfo, ShaderType::COUNT> pipeline_shader_stage_create_infos{ {} };
         for ( uint32_t i = 0; i < ShaderType::COUNT; ++i )
         {
             const std::vector<uint32_t>& spirv{compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ) };
@@ -388,7 +390,15 @@ namespace AeonGames
             }
             ReflectDescriptorSets ( module, static_cast<ShaderType> ( i ) );
             spvReflectDestroyShaderModule ( &module );
-            //--------Reflection----------//
+            //--------Reflection-END----------//
+            //----------------Shader Stages------------------//
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].pNext = nullptr;
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].flags = 0;
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].module = shader_modules[i];
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].pName = "main";
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].stage = ShaderTypeToShaderStageFlagBit.at ( static_cast<ShaderType> ( i ) );
+            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count++].pSpecializationInfo = nullptr;
         }
 
         //----------------Vertex Input------------------//
@@ -531,7 +541,11 @@ namespace AeonGames
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
         uint32_t descriptor_set_layout_count {0};
-        std::array<VkDescriptorSetLayout, 4> descriptor_set_layouts;
+        std::array<VkDescriptorSetLayout, 8> descriptor_set_layouts;
+        for ( const auto& i : mDescriptorSets )
+        {
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( i.descriptor_set_layout_create_info );
+        }
 #if 0
         // Matrix Descriptor Set Layout
         if ( GetUniformBlock ( "Matrices"_crc32 ) )
@@ -569,29 +583,12 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        ///@Kwizatz Haderach Note: This needs to take into account multiple shader stages.
-        std::array<VkPipelineShaderStageCreateInfo, 2> pipeline_shader_stage_create_infos{ {} };
-        pipeline_shader_stage_create_infos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        pipeline_shader_stage_create_infos[0].pNext = nullptr;
-        pipeline_shader_stage_create_infos[0].flags = 0;
-        pipeline_shader_stage_create_infos[0].module = shader_modules[VERT];
-        pipeline_shader_stage_create_infos[0].pName = "main";
-        pipeline_shader_stage_create_infos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-        pipeline_shader_stage_create_infos[0].pSpecializationInfo = nullptr;
-
-        pipeline_shader_stage_create_infos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        pipeline_shader_stage_create_infos[1].pNext = nullptr;
-        pipeline_shader_stage_create_infos[1].flags = 0;
-        pipeline_shader_stage_create_infos[1].module = shader_modules[FRAG];
-        pipeline_shader_stage_create_infos[1].pName = "main";
-        pipeline_shader_stage_create_infos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        pipeline_shader_stage_create_infos[1].pSpecializationInfo = nullptr;
-
+        //----------------Shader Stages------------------//
         VkGraphicsPipelineCreateInfo graphics_pipeline_create_info {};
         graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         graphics_pipeline_create_info.pNext = nullptr;
         graphics_pipeline_create_info.flags = 0;
-        graphics_pipeline_create_info.stageCount = static_cast<uint32_t> ( pipeline_shader_stage_create_infos.size() );
+        graphics_pipeline_create_info.stageCount = pipeline_shader_stage_create_info_count;
         graphics_pipeline_create_info.pStages = pipeline_shader_stage_create_infos.data();
         graphics_pipeline_create_info.pVertexInputState = &pipeline_vertex_input_state_create_info;
         graphics_pipeline_create_info.pInputAssemblyState = &pipeline_input_assembly_state_create_info;
