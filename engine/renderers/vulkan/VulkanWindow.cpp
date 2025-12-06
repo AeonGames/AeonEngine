@@ -464,7 +464,7 @@ namespace AeonGames
     {
 
         mMatrices.Initialize (
-            sizeof ( float ) * 16 * 2,
+            sizeof ( float ) * 16 * 3,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 #if 0
@@ -567,14 +567,14 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
@@ -730,19 +730,20 @@ namespace AeonGames
     {
         const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
         assert ( pipeline );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipeline() );
-        ///@todo Move Matrices binding to BeginRender
         vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   pipeline->GetPipelineLayout(),
                                   MATRICES,
                                   1,
                                   &mMatricesDescriptorSet, 0, nullptr );
+#if 0
         vkCmdPushConstants ( mVkCommandBuffer,
                              pipeline->GetPipelineLayout(),
                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                              0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
-
+#endif
         if ( aMaterial != nullptr )
         {
             mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
