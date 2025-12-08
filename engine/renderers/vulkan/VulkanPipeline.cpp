@@ -738,14 +738,15 @@ namespace AeonGames
             for ( const auto& descriptor_set : descriptor_sets )
             {
                 auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), descriptor_set->set,
-                                             [] ( const VulkanDescriptorSet & a, const uint32_t b )
+                                             [] ( const VulkanDescriptorSetInfo & a, const uint32_t b )
                 {
                     return a.index < b;
                 } );
                 if ( it == mDescriptorSets.end() || it->index != descriptor_set->set )
                 {
-                    it = mDescriptorSets.insert ( it, VulkanDescriptorSet{descriptor_set->set} );
+                    it = mDescriptorSets.insert ( it, VulkanDescriptorSetInfo{descriptor_set->set} );
                     it->descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
+                    it->descriptor_set_binding_table.reserve ( descriptor_set->binding_count );
                     it->descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
                     it->descriptor_set_layout_create_info.pNext = nullptr;
                     it->descriptor_set_layout_create_info.flags = 0;
@@ -768,6 +769,18 @@ namespace AeonGames
                         layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->pImmutableSamplers = nullptr;
                         std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
+                        uint32_t hash = crc32i ( descriptor_set_binding.type_description->type_name,
+                                                 strlen ( descriptor_set_binding.type_description->type_name ) );
+                        it->descriptor_set_binding_table.insert (
+                            std::lower_bound ( it->descriptor_set_binding_table.begin(), it->descriptor_set_binding_table.end(), hash,
+                                               [] ( const VulkanDescriptorSetBindingRecord & a, const uint32_t b )
+                        {
+                            return a.hash < b;
+                        } ),
+                        {
+                            hash,
+                            descriptor_set_binding.binding,
+                        } );
                     }
                     else
                     {
