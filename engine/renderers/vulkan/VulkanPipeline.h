@@ -63,7 +63,7 @@ namespace AeonGames
         uint32_t mDefaultStride{0};
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
-        std::vector<VulkanDescriptorSet> mDescriptorSets{};
+        std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
         std::vector<VulkanSamplerLocation> mSamplerLocations{};
     };
 }

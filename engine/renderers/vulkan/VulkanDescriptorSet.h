@@ -23,21 +23,18 @@ limitations under the License.
 
 namespace AeonGames
 {
-    struct VulkanDescriptorSetBinding
+    struct VulkanDescriptorSetBindingRecord
     {
-        uint32_t name{};
-        uint32_t size{};
-        uint32_t binding{};
-        uint32_t set{};
-        VkShaderStageFlags stageFlags{};
-        VkDescriptorType descriptorType{};
+        uint32_t hash{};
+        uint32_t binding_index{};
     };
 
-    struct VulkanDescriptorSet
+    struct VulkanDescriptorSetInfo
     {
         uint32_t index{};
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings{};
+        std::vector<VulkanDescriptorSetBindingRecord> descriptor_set_binding_table{};
     };
 }
 #endif
