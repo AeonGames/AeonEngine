@@ -467,10 +467,20 @@ namespace AeonGames
             sizeof ( float ) * 16 * 3,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-#if 0
-        ///@Kwizatz Haderach TODO: Re-enable Matrix descriptor set.
+
+        VkDescriptorSetLayoutCreateInfo matrices_descriptor_set_layout_create_info{};
+        matrices_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        matrices_descriptor_set_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding matrices_descriptor_set_layout_binding{};
+        matrices_descriptor_set_layout_binding.binding = 0;
+        matrices_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        matrices_descriptor_set_layout_binding.descriptorCount = 1;
+        matrices_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        matrices_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+        matrices_descriptor_set_layout_create_info.pBindings = &matrices_descriptor_set_layout_binding;
+
         mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout() );
+        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( matrices_descriptor_set_layout_create_info ) );
         VkDescriptorBufferInfo descriptor_buffer_info = { mMatrices.GetBuffer(), 0, mMatrices.GetSize() };
         VkWriteDescriptorSet write_descriptor_set{};
         write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -484,7 +494,6 @@ namespace AeonGames
         write_descriptor_set.pImageInfo = nullptr;
         write_descriptor_set.pTexelBufferView = nullptr;
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
-#endif
     }
 
     void VulkanWindow::FinalizeMatrices()
