@@ -13,8 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "aeongames/CRC.hpp"
 #include <cassert>
+#include "aeongames/CRC.hpp"
+
 namespace AeonGames
 {
     /*! \brief Compute the CRC32 of a given message, continuing from a previous CRC value.
@@ -29,13 +30,12 @@ namespace AeonGames
         // Un-finalize the previous CRC to continue computing
         uint32_t       remainder = reflect32<16> ( previous_crc ) ^ 0xFFFFFFFF;
         uint32_t       data;
-        uint8_t        byte;
         /*
          * Divide the message by the polynomial, a byte at a time.
          */
-        for ( byte = 0; byte < size; ++byte )
+        for ( size_t byte = 0; byte < size; ++byte )
         {
-            data = reflect32<4> ( message[byte] ) ^ ( remainder >> ( 32 - 8 ) );
+            data = reflect32<4> ( static_cast<uint8_t> ( message[byte] ) ) ^ ( remainder >> ( 32 - 8 ) );
             remainder = crc_table32[data] ^ ( remainder << 8 );
         }
         /*
@@ -56,13 +56,12 @@ namespace AeonGames
         // Un-finalize the previous CRC to continue computing
         uint64_t       remainder = reflect64<32> ( previous_crc ) ^ 0xFFFFFFFFFFFFFFFF;
         uint64_t       data;
-        uint8_t        byte;
         /*
          * Divide the message by the polynomial, a byte at a time.
          */
-        for ( byte = 0; byte < size; ++byte )
+        for ( size_t byte = 0; byte < size; ++byte )
         {
-            data = reflect64<4> ( message[byte] ) ^ ( remainder >> ( 64 - 8 ) );
+            data = reflect64<4> ( static_cast<uint8_t> ( message[byte] ) ) ^ ( remainder >> ( 64 - 8 ) );
             remainder = crc_table64[data] ^ ( remainder << 8 );
         }
         /*

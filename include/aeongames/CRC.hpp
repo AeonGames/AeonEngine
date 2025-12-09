@@ -201,7 +201,7 @@ constexpr uint32_t reflect32<1> ( uint32_t x )
 constexpr uint32_t crc32impl ( const char* message, const std::size_t size, uint32_t crc )
 {
     return size == 0 ? reflect32<16> ( crc ) ^ 0xFFFFFFFF :
-           crc32impl ( message + 1, size - 1, crc_table32[reflect32<4> ( message[0] ) ^ ( crc >> ( 32 - 8 ) )] ^ ( crc << 8 ) );
+           crc32impl ( message + 1, size - 1, crc_table32[reflect32<4> ( static_cast<uint8_t> ( message[0] ) ) ^ ( crc >> ( 32 - 8 ) )] ^ ( crc << 8 ) );
 }
 
 /** Recursive constexpr crc32 calculation. */
@@ -411,7 +411,7 @@ constexpr uint64_t reflect64<1> ( uint64_t x )
 constexpr uint64_t crc64impl ( const char* message, const std::size_t size, uint64_t crc )
 {
     return size == 0 ? reflect64<32> ( crc ) ^ 0xFFFFFFFFFFFFFFFF :
-           crc64impl ( message + 1, size - 1, crc_table64[reflect64<4> ( message[0] ) ^ ( crc >> ( 64 - 8 ) )] ^ ( crc << 8 ) );
+           crc64impl ( message + 1, size - 1, crc_table64[reflect64<4> ( static_cast<uint8_t> ( message[0] ) ) ^ ( crc >> ( 64 - 8 ) )] ^ ( crc << 8 ) );
 }
 
 /** Recursive constexpr crc64 calculation. */
