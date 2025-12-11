@@ -462,7 +462,6 @@ namespace AeonGames
 
     void VulkanWindow::InitializeMatrices()
     {
-
         mMatrices.Initialize (
             sizeof ( float ) * 16 * 3,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -475,7 +474,8 @@ namespace AeonGames
         matrices_descriptor_set_layout_binding.binding = 0;
         matrices_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         matrices_descriptor_set_layout_binding.descriptorCount = 1;
-        matrices_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        // we're assuming only vertex shaders will access matrices for now
+        matrices_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         matrices_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         matrices_descriptor_set_layout_create_info.pBindings = &matrices_descriptor_set_layout_binding;
 
