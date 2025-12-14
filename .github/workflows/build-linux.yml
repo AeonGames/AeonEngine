@@ -1,0 +1,49 @@
+name: Build on Linux
+
+on: [push, pull_request]
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu, archlinux]
+        compiler: [gcc, clang]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies (Ubuntu)
+      run: >-
+        sudo apt-get update ;
+        sudo apt-get install -y build-essential software-properties-common gcc g++ llvm clang sed python3 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng-dev vim-common git portaudio19-dev libogg-dev libvorbis-dev googletest libglu1-mesa-dev freeglut3-dev mesa-common-dev libcairo2-dev libprotobuf-dev protobuf-compiler mesa-vulkan-drivers libvulkan1 libvulkan-dev qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libxkbcommon-dev glslang-dev glslang-tools libglx-mesa0 vulkan-validationlayers ;
+      if: matrix.os == 'ubuntu'
+
+    - name: Setup and run Arch Linux build
+      run: |
+        docker run --rm -v ${{github.workspace}}:/workspace -w /workspace archlinux:latest bash -c "
+          pacman -Syu --noconfirm &&
+          pacman -S --noconfirm base-devel gcc clang cmake python tar wget git portaudio libvorbis libogg gtest mesa vulkan-devel qt6-base qt6-tools libxkbcommon glslang vulkan-validation-layers cairo protobuf pkg-config &&
+          if [ '${{ matrix.compiler }}' = 'gcc' ]; then
+            cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON
+          else
+            cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON -DCMAKE_TOOLCHAIN_FILE=/workspace/cmake/clang-toolchain.cmake
+          fi &&
+          cmake --build /workspace/build
+        "
+      if: matrix.os == 'archlinux'
+
+    - name: Configure CMake (Ubuntu GCC)
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON
+      if: matrix.os == 'ubuntu' && matrix.compiler == 'gcc'
+
+    - name: Configure CMake (Ubuntu Clang)
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/cmake/clang-toolchain.cmake
+      if: matrix.os == 'ubuntu' && matrix.compiler == 'clang'
+
+    - name: Build (Ubuntu)
+      run: cmake --build ${{github.workspace}}/build
+      if: matrix.os == 'ubuntu'
