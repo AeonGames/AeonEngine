@@ -20,6 +20,7 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <memory>
+#include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
 #include "VulkanBuffer.h"
 #include "VulkanPipeline.h"
@@ -31,15 +32,18 @@ namespace AeonGames
     class VulkanMaterial
     {
     public:
-        VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, const Material& aMaterial );
+        VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Material& aMaterial );
+        VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, const Material& aMaterial );
         VulkanMaterial ( const VulkanMaterial& aMaterial ) = delete;
         VulkanMaterial& operator= ( const VulkanMaterial& aMaterial ) = delete;
         VulkanMaterial& operator= ( VulkanMaterial&& ) = delete;
         VulkanMaterial ( VulkanMaterial&& aVulkanMaterial );
         ~VulkanMaterial();
-        void Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aPipeline ) const;
+        void Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aVulkanPipeline ) const;
     private:
-        const VulkanRenderer& mVulkanRenderer;
+        VulkanRenderer& mVulkanRenderer;
+        void Initialize ( const VulkanPipeline& aVulkanPipeline );
+        void Finalize ();
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorSet mSamplerDescriptorSet{VK_NULL_HANDLE};
