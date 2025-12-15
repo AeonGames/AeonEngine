@@ -36,6 +36,7 @@ limitations under the License.
 #include "aeongames/Vector2.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Vector4.hpp"
+#include "aeongames/LogLevel.hpp"
 #include "VulkanMaterial.h"
 #include "VulkanTexture.h"
 #include "VulkanRenderer.h"
@@ -46,7 +47,50 @@ namespace AeonGames
 
     void VulkanMaterial::Initialize ( const VulkanPipeline& aVulkanPipeline )
     {
+        if ( mVkDescriptorPool != VK_NULL_HANDLE || mUniformDescriptorSet != VK_NULL_HANDLE )
+        {
+            std::cout << LogLevel::Error << "VulkanMaterial: Already initialized." << std::endl;
+            throw std::runtime_error ( "VulkanMaterial: Already initialized." );
+        }
 
+        std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
+        uint32_t descriptor_pool_size_count = 0;
+        VkDescriptorSetLayout material_descriptor_set_layout {aVulkanPipeline.GetDescriptorSetLayout ( BindingLocations::MATERIAL ) };
+        if ( material_descriptor_set_layout != VK_NULL_HANDLE )
+        {
+            descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptor_pool_sizes[descriptor_pool_size_count++].descriptorCount = 1;
+        }
+        if ( descriptor_pool_size_count )
+        {
+            VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
+            descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            descriptor_pool_create_info.pNext = nullptr;
+            descriptor_pool_create_info.flags = 0;
+            descriptor_pool_create_info.maxSets = descriptor_pool_size_count;
+            descriptor_pool_create_info.poolSizeCount = descriptor_pool_size_count;
+            descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
+            if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
+            {
+                std::ostringstream stream;
+                stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+        if ( material_descriptor_set_layout != VK_NULL_HANDLE )
+        {
+            VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+            descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
+            descriptor_set_allocate_info.descriptorSetCount = 1;
+            descriptor_set_allocate_info.pSetLayouts = &material_descriptor_set_layout;
+            if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mUniformDescriptorSet ) )
+            {
+                std::ostringstream stream;
+                stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
     }
 
     VulkanMaterial::VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, const Material& aMaterial ) :
@@ -207,6 +251,15 @@ namespace AeonGames
 
     void VulkanMaterial::Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aPipeline  ) const
     {
+        if ( mVkDescriptorPool == VK_NULL_HANDLE && mUniformDescriptorSet == VK_NULL_HANDLE )
+        {
+            /* I dont like that this is the only place where late initialization happens.
+                Initialization should rather be only at construction time, so this is
+                here only temporarily while I get a render back on screen. */
+            std::cout << LogLevel::Debug << "VulkanMaterial: Late Descriptor Pool and Set Initialization." << std::endl;
+            const_cast<VulkanMaterial*> ( this )->Initialize ( aPipeline );
+        }
+
         std::array<VkDescriptorSet, 2> descriptor_sets
         {
             mUniformDescriptorSet,
