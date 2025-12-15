@@ -43,11 +43,39 @@ limitations under the License.
 
 namespace AeonGames
 {
-    ///@todo Decide if renderer should still be passed as const reference.
-    VulkanMaterial::VulkanMaterial ( const VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
+
+    void VulkanMaterial::Initialize ( const VulkanPipeline& aVulkanPipeline )
+    {
+
+    }
+
+    VulkanMaterial::VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
         mUniformBuffer { mVulkanRenderer }
     {
+        const VulkanPipeline* vulkan_pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+        if ( vulkan_pipeline == nullptr )
+        {
+            throw std::runtime_error ( "VulkanMaterial: Pipeline not loaded in VulkanRenderer." );
+        }
+        Initialize ( *vulkan_pipeline );
+    }
+
+    void VulkanMaterial::Finalize ()
+    {
+        // Finalize Descriptor Pool
+        if ( mVkDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, nullptr );
+        }
+        mUniformBuffer.Finalize();
+    }
+
+    VulkanMaterial::VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
+        mVulkanRenderer { aVulkanRenderer },
+        mUniformBuffer { mVulkanRenderer }
+    {
+#if 0
         // Initialize DescriptorPool
         {
             std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
@@ -80,8 +108,6 @@ namespace AeonGames
                 }
             }
         }
-
-#if 0
         ///@kwizatz Haderach Commented out while new pipeline code is set up.
         // Initialize Descriptor Sets
         {
@@ -167,12 +193,7 @@ namespace AeonGames
 
     VulkanMaterial::~VulkanMaterial()
     {
-        // Finalize Descriptor Pool
-        if ( mVkDescriptorPool != VK_NULL_HANDLE )
-        {
-            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, nullptr );
-        }
-        mUniformBuffer.Finalize();
+        Finalize ();
     }
 
     VulkanMaterial::VulkanMaterial ( VulkanMaterial&& aVulkanMaterial ) :
