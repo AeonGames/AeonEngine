@@ -48,9 +48,11 @@ namespace AeonGames
         VulkanPipeline& operator= ( const VulkanPipeline& ) = delete;
         VulkanPipeline& operator= ( VulkanPipeline&& ) = delete;
         const VkPipelineLayout GetPipelineLayout() const;
-        const VkPipeline GetPipeline() const;
+        const VkPipeline GetVkPipeline() const;
+        const Pipeline* GetPipeline() const;
         const std::vector<VulkanVariable>& GetVertexAttributes() const;
         const std::vector<VulkanSamplerLocation>& GetSamplers() const;
+        const VkDescriptorSetLayout GetDescriptorSetLayout ( uint32_t name ) const;
         //const VulkanDescriptorSetBinding* GetUniformBlock ( uint32_t name ) const;
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:

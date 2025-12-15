@@ -631,9 +631,15 @@ namespace AeonGames
     {
         return mVkPipelineLayout;
     }
-    const VkPipeline VulkanPipeline::GetPipeline() const
+
+    const VkPipeline VulkanPipeline::GetVkPipeline() const
     {
         return mVkPipeline;
+    }
+
+    const Pipeline* VulkanPipeline::GetPipeline() const
+    {
+        return mPipeline;
     }
 
     const std::vector<VulkanVariable>& VulkanPipeline::GetVertexAttributes() const
@@ -645,17 +651,24 @@ namespace AeonGames
     {
         return mSamplerLocations;
     }
-#if 0
-    const VulkanDescriptorSetBinding* VulkanPipeline::GetUniformBlock ( uint32_t name ) const
+
+    const VkDescriptorSetLayout VulkanPipeline::GetDescriptorSetLayout ( uint32_t name ) const
     {
-        auto it = std::find_if ( mDescriptorSets.begin(), mDescriptorSets.end(),
-                                 [name] ( const VulkanDescriptorSetBinding & block )
+        for ( const auto& set : mDescriptorSets )
         {
-            return block.name == name;
-        } );
-        return ( it != mDescriptorSets.end() ) ? & ( *it ) : nullptr;
+            auto it = std::lower_bound ( set.descriptor_set_binding_table.begin(), set.descriptor_set_binding_table.end(), name,
+                                         [] ( const VulkanDescriptorSetBindingRecord & a, const uint32_t b )
+            {
+                return a.hash < b;
+            } );
+            if ( it != set.descriptor_set_binding_table.end() && it->hash == name )
+            {
+                return mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( set.descriptor_set_layout_create_info );
+            }
+        }
+        return VK_NULL_HANDLE;
     }
-#endif
+
     const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
     {
         auto it = std::find_if ( mSamplerLocations.begin(), mSamplerLocations.end(),

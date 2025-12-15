@@ -44,7 +44,7 @@ namespace AeonGames
         VulkanRenderer& mVulkanRenderer;
         void Initialize ( const VulkanPipeline& aVulkanPipeline );
         void Finalize ();
-        VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorPool mVkDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorSet mSamplerDescriptorSet{VK_NULL_HANDLE};
         VulkanBuffer mUniformBuffer;
