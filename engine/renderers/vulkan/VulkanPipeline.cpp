@@ -286,6 +286,11 @@ namespace AeonGames
         std::swap ( mPipeline, aVulkanPipeline.mPipeline );
         std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
+        std::swap ( mDefaultStride, aVulkanPipeline.mDefaultStride );
+        mAttributes.swap ( aVulkanPipeline.mAttributes );
+        mUniforms.swap ( aVulkanPipeline.mUniforms );
+        mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
+        mSamplerLocations.swap ( aVulkanPipeline.mSamplerLocations );
     }
 
     std::array<EShLanguage, ShaderType::COUNT> ShaderTypeToEShLanguage
