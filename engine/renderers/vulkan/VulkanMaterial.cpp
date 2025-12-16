@@ -36,6 +36,7 @@ limitations under the License.
 #include "aeongames/Vector2.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Vector4.hpp"
+#include "aeongames/Mesh.hpp"
 #include "aeongames/LogLevel.hpp"
 #include "VulkanMaterial.h"
 #include "VulkanTexture.h"
@@ -55,7 +56,7 @@ namespace AeonGames
 
         std::array<VkDescriptorPoolSize, 2> descriptor_pool_sizes{};
         uint32_t descriptor_pool_size_count = 0;
-        VkDescriptorSetLayout material_descriptor_set_layout {aVulkanPipeline.GetDescriptorSetLayout ( BindingLocations::MATERIAL ) };
+        VkDescriptorSetLayout material_descriptor_set_layout {aVulkanPipeline.GetDescriptorSetLayout ( Mesh::BindingLocations::MATERIAL ) };
         if ( material_descriptor_set_layout != VK_NULL_HANDLE )
         {
             descriptor_pool_sizes[descriptor_pool_size_count].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -270,7 +271,7 @@ namespace AeonGames
         vkCmdBindDescriptorSets ( aVkCommandBuffer,
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   aPipeline.GetPipelineLayout(),
-                                  MATERIAL,
+                                  1, // This should match the set number in the shader for Material
                                   descriptor_set_count,
                                   descriptor_sets.data(), 0, nullptr );
     }

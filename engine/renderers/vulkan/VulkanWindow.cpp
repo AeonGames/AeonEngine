@@ -744,7 +744,7 @@ namespace AeonGames
         vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   pipeline->GetPipelineLayout(),
-                                  MATRICES,
+                                  0, // This should match the set number in the shader for Matrices
                                   1,
                                   &mMatricesDescriptorSet, 0, nullptr );
 #if 0
@@ -765,7 +765,7 @@ namespace AeonGames
             vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                                       pipeline->GetPipelineLayout(),
-                                      SKELETON,
+                                      3, // This should match the set number in the shader for Skeleton
                                       1,
                                       &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
         }

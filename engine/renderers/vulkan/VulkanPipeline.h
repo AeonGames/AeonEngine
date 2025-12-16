@@ -29,14 +29,6 @@ struct SpvReflectShaderModule;
 
 namespace AeonGames
 {
-    enum  BindingLocations : uint32_t
-    {
-        MATRICES = 0,
-        MATERIAL,
-        SAMPLERS,
-        SKELETON,
-    };
-
     class VulkanRenderer;
     class VulkanPipeline
     {
