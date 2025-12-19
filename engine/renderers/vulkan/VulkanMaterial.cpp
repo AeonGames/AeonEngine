@@ -91,11 +91,36 @@ namespace AeonGames
                 stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
                 throw std::runtime_error ( stream.str().c_str() );
             }
+
+            VkWriteDescriptorSet write_descriptor_set{};
+            mUniformBuffer.Initialize (
+                mMaterial->GetUniformBuffer().size(),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                mMaterial->GetUniformBuffer().data() );
+            VkDescriptorBufferInfo descriptor_buffer_info
+            {
+                mUniformBuffer.GetBuffer(),
+                              0,
+                              mMaterial->GetUniformBuffer().size()
+            };
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mUniformDescriptorSet;
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
         }
     }
 
     VulkanMaterial::VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
+        mMaterial { &aMaterial },
         mUniformBuffer { mVulkanRenderer }
     {
         const VulkanPipeline* vulkan_pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
@@ -118,6 +143,7 @@ namespace AeonGames
 
     VulkanMaterial::VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
+        mMaterial { &aMaterial },
         mUniformBuffer { mVulkanRenderer }
     {
 #if 0
@@ -243,6 +269,7 @@ namespace AeonGames
 
     VulkanMaterial::VulkanMaterial ( VulkanMaterial&& aVulkanMaterial ) :
         mVulkanRenderer{aVulkanMaterial.mVulkanRenderer},
+        mMaterial{aVulkanMaterial.mMaterial},
         mUniformBuffer{std::move ( aVulkanMaterial.mUniformBuffer ) }
     {
         std::swap ( mVkDescriptorPool, aVulkanMaterial.mVkDescriptorPool );
