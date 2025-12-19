@@ -34,7 +34,7 @@ namespace AeonGames
     VulkanMesh::VulkanMesh ( const VulkanRenderer& aVulkanRenderer, const Mesh& aMesh ) :
         mVulkanRenderer {aVulkanRenderer}, mMesh{&aMesh}, mMeshBuffer { mVulkanRenderer }
     {
-        const VkDeviceSize buffer_size{ aMesh.GetVertexCount() + ( aMesh.GetIndexBuffer().size() * ( aMesh.GetIndexSize() == 1 ? 2 : 1 ) ) };
+        const VkDeviceSize buffer_size{ aMesh.GetVertexBuffer().size() + ( aMesh.GetIndexBuffer().size() * ( aMesh.GetIndexSize() == 1 ? 2 : 1 ) ) };
         const VkBufferUsageFlags buffer_usage {static_cast<VkBufferUsageFlags> ( ( aMesh.GetVertexCount() ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( aMesh.GetIndexCount() ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 ) ) };
 
         mMeshBuffer.Initialize ( buffer_size, buffer_usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
