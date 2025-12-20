@@ -409,7 +409,7 @@ namespace AeonGames
         //----------------Vertex Input------------------//
         std::array<VkVertexInputBindingDescription, 1> vertex_input_binding_descriptions { {} };
         vertex_input_binding_descriptions[0].binding = 0;
-        vertex_input_binding_descriptions[0].stride = sizeof ( mDefaultStride );
+        vertex_input_binding_descriptions[0].stride = mDefaultStride;
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( mAttributes.size() );
         for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
