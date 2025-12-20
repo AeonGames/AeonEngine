@@ -481,7 +481,10 @@ namespace AeonGames
 
         mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
         mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( matrices_descriptor_set_layout_create_info ) );
-        VkDescriptorBufferInfo descriptor_buffer_info = { mMatrices.GetBuffer(), 0, mMatrices.GetSize() };
+        VkDescriptorBufferInfo descriptor_buffer_info{};
+        descriptor_buffer_info.buffer = mMatrices.GetBuffer();
+        descriptor_buffer_info.offset = 0;
+        descriptor_buffer_info.range = mMatrices.GetSize();
         VkWriteDescriptorSet write_descriptor_set{};
         write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write_descriptor_set.pNext = nullptr;
