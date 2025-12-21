@@ -54,7 +54,7 @@ namespace AeonGames
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
-        uint32_t mDefaultStride{0};
+        uint32_t mVertexStride{0};
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
