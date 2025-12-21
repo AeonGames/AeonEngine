@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "VulkanMemoryPoolBuffer.h"
+#include "VulkanPipeline.h"
 
 namespace AeonGames
 {
@@ -47,6 +48,7 @@ namespace AeonGames
                         const Pipeline& aPipeline,
                         const Material* aMaterial = nullptr,
                         const BufferAccessor* aSkeleton = nullptr,
+                        Topology aTopology = Topology::TRIANGLE_LIST,
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,

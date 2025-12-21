@@ -32,22 +32,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-
-    static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap
-    {
-        {POINT_LIST, VK_PRIMITIVE_TOPOLOGY_POINT_LIST},
-        {LINE_STRIP, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP},
-        {LINE_LIST, VK_PRIMITIVE_TOPOLOGY_LINE_LIST},
-        {TRIANGLE_STRIP, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP},
-        {TRIANGLE_FAN, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN},
-        {TRIANGLE_LIST, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST},
-        {LINE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY},
-        {LINE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY},
-        {TRIANGLE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY},
-        {TRIANGLE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY},
-        {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
-    };
-
     static const std::unordered_map<SpvReflectFormat, VkFormat> SpvReflectToVulkanFormat
     {
         { SPV_REFLECT_FORMAT_UNDEFINED, VK_FORMAT_UNDEFINED },
@@ -286,7 +270,7 @@ namespace AeonGames
         std::swap ( mPipeline, aVulkanPipeline.mPipeline );
         std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
-        std::swap ( mDefaultStride, aVulkanPipeline.mDefaultStride );
+        std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
         mAttributes.swap ( aVulkanPipeline.mAttributes );
         mUniforms.swap ( aVulkanPipeline.mUniforms );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
@@ -409,7 +393,7 @@ namespace AeonGames
         //----------------Vertex Input------------------//
         std::array<VkVertexInputBindingDescription, 1> vertex_input_binding_descriptions { {} };
         vertex_input_binding_descriptions[0].binding = 0;
-        vertex_input_binding_descriptions[0].stride = mDefaultStride;
+        vertex_input_binding_descriptions[0].stride = mVertexStride;
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( mAttributes.size() );
         for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
@@ -446,7 +430,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = TopologyMap.at ( LINE_LIST );
+        pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         //----------------Viewport State------------------//
@@ -524,11 +508,12 @@ namespace AeonGames
         memset ( pipeline_color_blend_state_create_info.blendConstants, 0, sizeof ( VkPipelineColorBlendStateCreateInfo::blendConstants ) );
 
         //----------------Dynamic State------------------//
-        std::array<VkDynamicState, 2> dynamic_states
+        std::array<VkDynamicState, 3> dynamic_states
         {
             {
                 VK_DYNAMIC_STATE_VIEWPORT,
-                VK_DYNAMIC_STATE_SCISSOR
+                VK_DYNAMIC_STATE_SCISSOR,
+                VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
             }
         };
         VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
@@ -721,7 +706,7 @@ namespace AeonGames
                     i->location,
                     SpvReflectToVulkanFormat.at ( i->format )
                 } );
-                mDefaultStride += VkFormatToVulkanSize.at ( SpvReflectToVulkanFormat.at ( i->format ) );
+                mVertexStride += VkFormatToVulkanSize.at ( SpvReflectToVulkanFormat.at ( i->format ) );
             }
         }
     }
