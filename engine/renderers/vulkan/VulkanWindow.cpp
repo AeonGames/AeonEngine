@@ -730,11 +730,27 @@ namespace AeonGames
         //mMemoryPoolBuffer.Reset();
     }
 
+    static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap
+    {
+        {POINT_LIST, VK_PRIMITIVE_TOPOLOGY_POINT_LIST},
+        {LINE_STRIP, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP},
+        {LINE_LIST, VK_PRIMITIVE_TOPOLOGY_LINE_LIST},
+        {TRIANGLE_STRIP, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP},
+        {TRIANGLE_FAN, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN},
+        {TRIANGLE_LIST, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST},
+        {LINE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY},
+        {LINE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY},
+        {TRIANGLE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY},
+        {TRIANGLE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY},
+        {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
+    };
+
     void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
                                 const BufferAccessor* aSkeleton,
+                                Topology aTopology,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
@@ -744,6 +760,7 @@ namespace AeonGames
         assert ( pipeline );
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
         vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   pipeline->GetPipelineLayout(),
