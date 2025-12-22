@@ -130,6 +130,14 @@ namespace AeonGames
         { SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR }
     };
 
+    static const std::unordered_map<TopologyClass, VkPrimitiveTopology> TopologyClassToVulkanTopology
+    {
+        { TRIANGLE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST },
+        { LINE, VK_PRIMITIVE_TOPOLOGY_LINE_LIST },
+        { POINT, VK_PRIMITIVE_TOPOLOGY_POINT_LIST },
+        { PATCH, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST }
+    };
+
     bool operator!= ( const VkDescriptorSetLayoutBinding& a, const SpvReflectDescriptorBinding& b )
     {
         return ! ( a.binding == b.binding &&
@@ -430,7 +438,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
-        pipeline_input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        pipeline_input_assembly_state_create_info.topology = TopologyClassToVulkanTopology.at ( mPipeline->GetTopologyClass() );
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
         //----------------Viewport State------------------//

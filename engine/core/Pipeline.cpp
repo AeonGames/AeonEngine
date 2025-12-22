@@ -60,11 +60,12 @@ namespace AeonGames
 
     Pipeline::~Pipeline()
         = default;
-#if 0
-    Topology Pipeline::GetTopology() const
+    TopologyClass Pipeline::GetTopologyClass() const
     {
-        return mTopology;
+        return mTopologyClass;
     }
+
+#if 0
     const std::string& Pipeline::GetVertexShaderCode() const
     {
         return mVertexShaderCode;
@@ -217,6 +218,10 @@ namespace AeonGames
         mShaderCode[TESC] = aPipelineMsg.tesc();
         mShaderCode[TESE] = aPipelineMsg.tese();
         mShaderCode[GEOM] = aPipelineMsg.geom();
+        if ( aPipelineMsg.has_topology_class() )
+        {
+            mTopologyClass = static_cast<TopologyClass> ( aPipelineMsg.topology_class() );
+        }
     }
 
     void Pipeline::Unload()
