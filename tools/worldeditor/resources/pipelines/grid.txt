@@ -79,3 +79,4 @@ frag:
     "        FragColor = BorderLineColor;\n"
     "    }\n"
     "}\n"
+topology_class: LINE
