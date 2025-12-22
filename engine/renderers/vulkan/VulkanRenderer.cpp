@@ -252,7 +252,7 @@ namespace AeonGames
         VkApplicationInfo application_info {};
 
         application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        application_info.apiVersion = VK_API_VERSION_1_4;
+        application_info.apiVersion = VK_API_VERSION_1_3;
         application_info.applicationVersion = VK_MAKE_VERSION ( 0, 1, 0 );
         application_info.pApplicationName = "AeonEngine Vulkan Renderer";
 
