@@ -16,10 +16,18 @@ syntax = "proto3";
 package AeonGames;
 
 message PipelineMsg {
-	optional string vert          = 1;
-	optional string frag          = 2;
-	optional string comp          = 3;
-	optional string tesc          = 4;
-	optional string tese          = 5;
-	optional string geom          = 6;
+    enum TopologyClass
+    {
+		TRIANGE = 0;
+		LINE    = 1;
+		POINT   = 2;
+		PATCH   = 3;
+	};
+	optional string vert                  = 1;
+	optional string frag                  = 2;
+	optional string comp                  = 3;
+	optional string tesc                  = 4;
+	optional string tese                  = 5;
+	optional string geom                  = 6;
+	optional TopologyClass topology_class = 7;
 }

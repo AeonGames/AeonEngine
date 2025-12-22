@@ -48,6 +48,14 @@ namespace AeonGames
         PATCH_LIST,
     };
 
+    enum TopologyClass
+    {
+        TRIANGLE = 0,
+        LINE     = 1,
+        POINT    = 2,
+        PATCH    = 3,
+    };
+
 #if 0
     class MaterialMsg;
 
@@ -118,8 +126,8 @@ namespace AeonGames
         DLL virtual ~Pipeline();
         DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
         DLL void Unload() final;
+        DLL TopologyClass GetTopologyClass() const;
 #if 0
-        DLL Topology GetTopology() const;
         DLL const std::string& GetVertexShaderCode() const;
         DLL const std::string& GetFragmentShaderCode() const;
         DLL const std::vector<std::tuple<UniformType, std::string >> & GetUniformDescriptors() const;
@@ -140,6 +148,7 @@ namespace AeonGames
         std::vector<std::string> mSamplerDescriptors{};
 #endif
         std::array<std::string, ShaderType::COUNT> mShaderCode {};
+        TopologyClass mTopologyClass{ TopologyClass::TRIANGLE };
     };
 }
 #endif
