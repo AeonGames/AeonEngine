@@ -50,7 +50,7 @@ limitations under the License.
 namespace AeonGames
 {
     static const char float_pattern[] = "([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?)";
-    static const char uint_pattern[] = "(+?[0-9]+)";
+    static const char uint_pattern[] = "([+]?[0-9]+)";
     static const char int_pattern[] = "([-+]?[0-9]+)";
     static const char separator_pattern[] = "\\s+";
     uint32_t GetStride ( const MeshMsg& aMeshMsg )
@@ -97,11 +97,11 @@ namespace AeonGames
             case AttributeMsg::INT:
                 for ( size_t j = 0; j < i.size(); ++j )
                 {
-                    pattern += int_pattern;
-                    if ( j < ( i.size() - 1 ) )
+                    if ( pattern.back() == ')' )
                     {
                         pattern += separator_pattern;
                     }
+                    pattern += int_pattern;
                 }
                 break;
             case AttributeMsg::UNSIGNED_BYTE:
@@ -109,11 +109,11 @@ namespace AeonGames
             case AttributeMsg::UNSIGNED_INT:
                 for ( size_t j = 0; j < i.size(); ++j )
                 {
-                    pattern += uint_pattern;
-                    if ( j < ( i.size() - 1 ) )
+                    if ( pattern.back() == ')' )
                     {
                         pattern += separator_pattern;
                     }
+                    pattern += uint_pattern;
                 }
                 break;
             case AttributeMsg::HALF_FLOAT:
@@ -122,11 +122,11 @@ namespace AeonGames
             case AttributeMsg::DOUBLE:
                 for ( size_t j = 0; j < i.size(); ++j )
                 {
-                    pattern += float_pattern;
-                    if ( j < ( i.size() - 1 ) )
+                    if ( pattern.back() == ')' )
                     {
                         pattern += separator_pattern;
                     }
+                    pattern += float_pattern;
                 }
                 break;
             default:
