@@ -1,5 +1,9 @@
 #version 450
-
+#ifdef VULKAN
+layout(set = 0, binding = 0, std140)
+#else
+layout(binding = 0, std140)
+#endif
 layout(binding = 0, std140) uniform Matrices
 {
       mat4 ModelMatrix;
@@ -7,13 +11,23 @@ layout(binding = 0, std140) uniform Matrices
       mat4 ViewMatrix;
 };
 
-layout(binding = 1, std140) uniform Material
+#ifdef VULKAN
+layout(set = 1, binding = 0, std140)
+#else
+layout(binding = 1, std140)
+#endif
+uniform Material
 {
       vec3 LightPosition;
       vec3 Kd;
 };
 
-layout(binding = 2, std140) uniform Skeleton
+#ifdef VULKAN
+layout(set = 2, binding = 0, std140)
+#else
+layout(binding = 2, std140)
+#endif
+uniform Skeleton
 {
       mat4 skeleton[256];
 };

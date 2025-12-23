@@ -36,12 +36,13 @@ Attribute {
     Semantic: WEIGHT_INDEX
     Size:  4
     Type:  UNSIGNED_BYTE
+    Flags: 2
 }
 Attribute {
     Semantic: WEIGHT_VALUE
     Size:  4
     Type:  UNSIGNED_BYTE
-    Normalized: true
+    Flags: 1
 }
 VertexCount: 24
 IndexSize: 1
