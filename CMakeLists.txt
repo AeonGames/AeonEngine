@@ -362,25 +362,37 @@ add_custom_target(
 add_custom_target(
   binary-assets
   COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt"
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o
           ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
+  COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt"
   COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
   COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt"
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
+  COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt"
   COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/fixed_phong.prg
   COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt"
+  COMMAND
           $<TARGET_FILE:aeontool> convert -i
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
+  COMMAND
+          ${CMAKE_COMMAND} -E echo "Generating development textures"
   COMMAND ${CMAKE_COMMAND} -DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -P
           ${CMAKE_SOURCE_DIR}/cmake/GenerateDevelopmentTextures.cmake
   DEPENDS aeontool ProtoBufClasses
