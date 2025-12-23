@@ -195,15 +195,15 @@ namespace AeonGames
         auto renderer = qWorldEditorApp->GetRenderer();
         if ( renderer != nullptr )
         {
-            QRect frame_geometry{ QWindow::frameGeometry() };
+            QSize window_size{ aResizeEvent->size() };
             renderer->ResizeViewport ( mWinId,
-                                       frame_geometry.x() * devicePixelRatio(),
-                                       frame_geometry.y() * devicePixelRatio(),
-                                       frame_geometry.width() * devicePixelRatio(),
-                                       frame_geometry.height() * devicePixelRatio() );
+                                       0,
+                                       0,
+                                       window_size.width() * devicePixelRatio(),
+                                       window_size.height() * devicePixelRatio() );
             Matrix4x4 projection {};
-            mAspectRatio = ( static_cast<float> ( frame_geometry.width() ) /
-                             static_cast<float> ( frame_geometry.height() ) );
+            mAspectRatio = ( static_cast<float> ( window_size.width() ) /
+                             static_cast<float> ( window_size.height() ) );
             projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
             renderer->SetProjectionMatrix ( mWinId, projection );
 #if 0
