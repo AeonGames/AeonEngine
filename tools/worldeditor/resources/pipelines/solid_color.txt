@@ -1,7 +1,12 @@
 AEONPLN
 vert:
   "#version 450\n"
-  "layout(binding = 0, std140) uniform Matrices{\n"
+  "#ifdef VULKAN\n"
+  "layout(set = 0, binding = 0, std140)\n"
+  "#else\n"
+  "layout(binding = 0, std140)\n"
+  "#endif\n"
+  "uniform Matrices{\n"
   "mat4 ModelMatrix;\n"
   "mat4 ProjectionMatrix;\n"
   "mat4 ViewMatrix;\n"
@@ -14,7 +19,12 @@ vert:
 
 frag:
   "#version 450\n"
-  "layout(binding = 1, std140) uniform Material{\n"
+  "#ifdef VULKAN\n"
+  "layout(set = 1, binding = 0, std140)\n"
+  "#else\n"
+  "layout(binding = 1, std140)\n"
+  "#endif\n"
+  "uniform Material{\n"
   "vec4 SolidColor;\n"
   "};\n"
   "layout ( location = 0 ) out vec4 FragColor;\n"
@@ -23,3 +33,4 @@ frag:
   "{\n"
   "FragColor = SolidColor;\n"
   "}\n"
+topology_class: LINE

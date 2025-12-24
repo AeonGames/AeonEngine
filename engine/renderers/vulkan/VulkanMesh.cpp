@@ -57,7 +57,7 @@ namespace AeonGames
                 {
                     buffer[i] = aMesh.GetIndexBuffer() [i];
                 }
-                mMeshBuffer.WriteMemory ( aMesh.GetVertexBuffer().size(), buffer.size() * sizeof ( uint16_t ), aMesh.GetIndexBuffer().data() );
+                mMeshBuffer.WriteMemory ( aMesh.GetVertexBuffer().size(), buffer.size() * sizeof ( uint16_t ), buffer.data() );
             }
         }
     }

@@ -94,7 +94,7 @@ namespace AeonGames
                 VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
                 VkBufferCopy copy_region = {};
                 copy_region.size = aSize;
-                copy_region.srcOffset  = copy_region.dstOffset = aOffset;
+                copy_region.dstOffset = aOffset;
                 vkCmdCopyBuffer ( command_buffer, source.GetBuffer(), mBuffer, 1, &copy_region );
                 mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
             }
