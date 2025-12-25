@@ -49,11 +49,12 @@ message AttributeMsg
         NONE                   = 0x00;
         NORMALIZED             = 0x01;
         INTEGER                = 0x02;
+        NORMALIZED_AND_INTEGER = 0x03;
     }
     AttributeSemantic    Semantic    = 1;
     uint32               Size        = 2;
     AttributeType        Type        = 3;
-    uint32               Flags       = 4;
+    AttributeFlags       Flags       = 4;
 }
 
 message MeshMsg {

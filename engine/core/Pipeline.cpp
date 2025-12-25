@@ -60,7 +60,7 @@ namespace AeonGames
 
     Pipeline::~Pipeline()
         = default;
-    TopologyClass Pipeline::GetTopologyClass() const
+    uint32_t Pipeline::GetTopologyClass() const
     {
         return mTopologyClass;
     }
@@ -220,7 +220,12 @@ namespace AeonGames
         mShaderCode[GEOM] = aPipelineMsg.geom();
         if ( aPipelineMsg.has_topology_class() )
         {
-            mTopologyClass = static_cast<TopologyClass> ( aPipelineMsg.topology_class() );
+            mTopologyClass = static_cast<uint32_t> ( aPipelineMsg.topology_class() );
+            mTopologyClass = mTopologyClass == 0 ? TOPOLOGY_CLASS_TRIANGLE : mTopologyClass;
+        }
+        else
+        {
+            mTopologyClass = TOPOLOGY_CLASS_TRIANGLE;
         }
     }
 

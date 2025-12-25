@@ -130,12 +130,12 @@ namespace AeonGames
         { SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR }
     };
 
-    static const std::unordered_map<TopologyClass, VkPrimitiveTopology> TopologyClassToVulkanTopology
+    static const std::unordered_map<uint32_t, VkPrimitiveTopology> TopologyClassToVulkanTopology
     {
-        { TRIANGLE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST },
-        { LINE, VK_PRIMITIVE_TOPOLOGY_LINE_LIST },
-        { POINT, VK_PRIMITIVE_TOPOLOGY_POINT_LIST },
-        { PATCH, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST }
+        { Pipeline::TOPOLOGY_CLASS_TRIANGLE, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST },
+        { Pipeline::TOPOLOGY_CLASS_LINE, VK_PRIMITIVE_TOPOLOGY_LINE_LIST },
+        { Pipeline::TOPOLOGY_CLASS_POINT, VK_PRIMITIVE_TOPOLOGY_POINT_LIST },
+        { Pipeline::TOPOLOGY_CLASS_PATCH, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST }
     };
 
     bool operator!= ( const VkDescriptorSetLayoutBinding& a, const SpvReflectDescriptorBinding& b )
