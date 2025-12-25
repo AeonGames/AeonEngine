@@ -96,7 +96,9 @@ namespace AeonGames
 
     void VulkanMemoryPoolBuffer::InitializeDescriptorSet()
     {
-        VkDescriptorSetLayout descriptorset_layout{VK_NULL_HANDLE};
+        // This needs to be fixed when dynamic uniform buffers are supported in the new pipeline system.
+#if 0
+        VkDescriptorSetLayout descriptorset_layout {VK_NULL_HANDLE};
         //descriptorset_layout = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
         //descriptorset_layout = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
         descriptorset_layout = VK_NULL_HANDLE; /// @Kwizatz This will cause a failure while finishing new pipeline code.
@@ -124,6 +126,7 @@ namespace AeonGames
         write_descriptor_set.pImageInfo = nullptr;
         write_descriptor_set.pTexelBufferView = nullptr;
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+#endif
     }
 
     void VulkanMemoryPoolBuffer::FinalizeDescriptorPool()
