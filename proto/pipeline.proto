@@ -18,10 +18,22 @@ package AeonGames;
 message PipelineMsg {
     enum TopologyClass
     {
-		TRIANGE = 0;
-		LINE    = 1;
-		POINT   = 2;
-		PATCH   = 3;
+		DEFAULT                 = 0;
+		POINT                   = 1;
+		LINE                    = 2;
+		POINT_AND_LINE          = 3;
+		TRIANGLE                = 4;
+		POINT_AND_TRIANGLE      = 5;
+		LINE_AND_TRIANGLE       = 6;
+		POINT_LINE_AND_TRIANGLE = 7;
+		PATCH                   = 8;
+		POINT_AND_PATCH         = 9;
+		LINE_AND_PATCH          = 10;
+		POINT_LINE_AND_PATCH    = 11;
+		TRIANGLE_AND_PATCH      = 12;
+		POINT_TRIANGLE_AND_PATCH= 13;
+		LINE_TRIANGLE_AND_PATCH = 14;
+		ALL                     = 15;
 	};
 	optional string vert                  = 1;
 	optional string frag                  = 2;
