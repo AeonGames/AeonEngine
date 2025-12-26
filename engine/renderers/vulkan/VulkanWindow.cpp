@@ -142,6 +142,14 @@ namespace AeonGames
     void VulkanWindow::InitializeSwapchain()
     {
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
+
+        if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
+             mVkSurfaceCapabilitiesKHR.currentExtent.height == 0 )
+        {
+            std::cout << LogLevel::Debug << "Cannot create swapchain with zero area. (" << mVkSurfaceCapabilitiesKHR.currentExtent.width << "x" << mVkSurfaceCapabilitiesKHR.currentExtent.height << ")" << std::endl;
+            return;
+        }
+
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;
@@ -238,6 +246,13 @@ namespace AeonGames
 
     void VulkanWindow::InitializeDepthStencil()
     {
+        if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
+             mVkSurfaceCapabilitiesKHR.currentExtent.height == 0 )
+        {
+            std::cout << LogLevel::Debug << "Cannot create depth stencil with zero area. (" << mVkSurfaceCapabilitiesKHR.currentExtent.width << "x" << mVkSurfaceCapabilitiesKHR.currentExtent.height << ")" << std::endl;
+            return;
+        }
+
         mHasStencil =
             ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
               mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
@@ -315,6 +330,12 @@ namespace AeonGames
 
     void VulkanWindow::InitializeFrameBuffers()
     {
+        if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
+             mVkSurfaceCapabilitiesKHR.currentExtent.height == 0 )
+        {
+            std::cout << LogLevel::Debug << "Cannot create framebuffers with zero area. (" << mVkSurfaceCapabilitiesKHR.currentExtent.width << "x" << mVkSurfaceCapabilitiesKHR.currentExtent.height << ")" << std::endl;
+            return;
+        }
         mVkFramebuffers.resize ( mSwapchainImageCount );
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
         {

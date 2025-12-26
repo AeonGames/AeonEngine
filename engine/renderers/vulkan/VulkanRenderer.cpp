@@ -204,6 +204,7 @@ namespace AeonGames
     void VulkanRenderer::SetupDebug()
     {
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_UTILS_EXTENSION_NAME );
+        mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
         mInstanceLayerNames.emplace_back ( "VK_LAYER_KHRONOS_validation" );
     }
 
@@ -240,6 +241,11 @@ namespace AeonGames
         mInstanceExtensionNames.push_back ( VK_KHR_SURFACE_EXTENSION_NAME );
 #ifdef VK_USE_PLATFORM_WIN32_KHR
         mInstanceExtensionNames.push_back ( VK_KHR_WIN32_SURFACE_EXTENSION_NAME );
+#elif defined (VK_USE_PLATFORM_METAL_EXT)
+        mInstanceExtensionNames.push_back ( VK_EXT_METAL_SURFACE_EXTENSION_NAME );
+        mInstanceExtensionNames.push_back ( VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME );
+        mInstanceExtensionNames.push_back ( VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME );
+        mDeviceExtensionNames.push_back ( "VK_KHR_portability_subset" );
 #elif defined (VK_USE_PLATFORM_XLIB_KHR)
         mInstanceExtensionNames.push_back ( VK_KHR_XLIB_SURFACE_EXTENSION_NAME );
 #endif
@@ -373,6 +379,9 @@ namespace AeonGames
         instance_create_info.ppEnabledLayerNames = mInstanceLayerNames.data();
         instance_create_info.enabledExtensionCount = static_cast<uint32_t> ( mInstanceExtensionNames.size() );
         instance_create_info.ppEnabledExtensionNames = mInstanceExtensionNames.data();
+#ifdef VK_USE_PLATFORM_METAL_EXT
+        instance_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
         if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
         {
             std::ostringstream stream;
