@@ -32,6 +32,11 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include "aeongames/Node.hpp"
 
+#if defined(__APPLE__)
+// Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
+extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr );
+#endif
+
 namespace AeonGames
 {
     EngineWindow::EngineWindow ( QWindow *parent ) :
@@ -44,8 +49,14 @@ namespace AeonGames
         mCameraLocation { -mCameraRotation.rotatedVector ( forward ) * 300.0f },
         mViewMatrix{}
     {
-        // Hopefully these settings are optimal for Vulkan as well as OpenGL
+#if defined(__APPLE__)
+        // On macOS, we dont support OpenGL since it is deprecated
+        // and we need a version higher than the one available,
+        // so lets go with Metal.
+        setSurfaceType ( QSurface::MetalSurface );
+#else
         setSurfaceType ( QSurface::OpenGLSurface );
+#endif
 
         /* On Windows we want the window to own its device context.
         This code works on Qt 5.6.0, but if it does not
@@ -65,7 +76,15 @@ namespace AeonGames
         {
             setFlags ( current_flags | Qt::MSWindowsOwnDC );
         }
+
+        // Get the native window handle
+#if defined(__APPLE__)
+        // On macOS with Vulkan/MoltenVK, we need to pass the CAMetalLayer, not the NSView
+        mWinId = GetMetalLayerFromNSView ( reinterpret_cast<void*> ( winId() ) );
+#else
         mWinId = reinterpret_cast<void*> ( winId() );
+#endif
+
         qWorldEditorApp->AttachWindowToRenderer ( mWinId );
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );
 

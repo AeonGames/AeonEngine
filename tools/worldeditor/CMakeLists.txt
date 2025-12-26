@@ -69,6 +69,10 @@ set(WORLDEDITOR_SOURCES
     SettingsDialog.cpp
     EngineWindow.cpp)
 
+if(APPLE)
+    list(APPEND WORLDEDITOR_SOURCES MacOSMetalHelper.mm)
+endif()
+
 set(WORLDEDITOR_UI
     ui/MainWindow.ui
     ui/SceneWindow.ui
@@ -163,3 +167,9 @@ target_link_libraries(worldeditor
                       ${OPENGL_LIBRARIES}
                       ${CMAKE_DL_LIBS}
                       ${CMAKE_THREAD_LIBS_INIT})
+
+if(APPLE)
+    target_link_libraries(worldeditor
+                          "-framework QuartzCore"
+                          "-framework AppKit")
+endif()
