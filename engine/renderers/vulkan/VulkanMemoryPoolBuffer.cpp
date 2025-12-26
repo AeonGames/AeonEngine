@@ -76,43 +76,24 @@ namespace AeonGames
 
     void VulkanMemoryPoolBuffer::InitializeDescriptorPool()
     {
-        VkDescriptorPoolSize descriptor_pool_size{};
-        descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        descriptor_pool_size.descriptorCount = 1;
-        VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
-        descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptor_pool_create_info.pNext = nullptr;
-        descriptor_pool_create_info.flags = 0;
-        descriptor_pool_create_info.maxSets = 1;
-        descriptor_pool_create_info.poolSizeCount = 1;
-        descriptor_pool_create_info.pPoolSizes = &descriptor_pool_size;
-        if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
-        {
-            std::ostringstream stream;
-            stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
+        mVkDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1}} );
     }
 
     void VulkanMemoryPoolBuffer::InitializeDescriptorSet()
     {
-        // This needs to be fixed when dynamic uniform buffers are supported in the new pipeline system.
-#if 0
-        VkDescriptorSetLayout descriptorset_layout {VK_NULL_HANDLE};
-        //descriptorset_layout = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
-        //descriptorset_layout = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
-        descriptorset_layout = VK_NULL_HANDLE; /// @Kwizatz This will cause a failure while finishing new pipeline code.
-        VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
-        descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptor_set_allocate_info.descriptorPool = mVkDescriptorPool;
-        descriptor_set_allocate_info.descriptorSetCount = 1;
-        descriptor_set_allocate_info.pSetLayouts = &descriptorset_layout;
-        if ( VkResult result = vkAllocateDescriptorSets ( mVulkanRenderer.GetDevice(), &descriptor_set_allocate_info, &mVkDescriptorSet ) )
-        {
-            std::ostringstream stream;
-            stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
-        }
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding descriptor_set_layout_binding{};
+        descriptor_set_layout_binding.binding = 0;
+        descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        descriptor_set_layout_binding.descriptorCount = 1;
+        // Only vertex shaders will access these for now, add a flag for other stages if needed
+        descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+        descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
+        mVkDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( descriptor_set_layout_create_info ) );
+
         VkDescriptorBufferInfo descriptor_buffer_info = { mUniformBuffer.GetBuffer(), 0, mUniformBuffer.GetSize() };
         VkWriteDescriptorSet write_descriptor_set{};
         write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -126,7 +107,6 @@ namespace AeonGames
         write_descriptor_set.pImageInfo = nullptr;
         write_descriptor_set.pTexelBufferView = nullptr;
         vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
-#endif
     }
 
     void VulkanMemoryPoolBuffer::FinalizeDescriptorPool()
