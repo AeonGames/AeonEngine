@@ -57,7 +57,7 @@ jobs:
     - name: ⚙️ Configure CMake (Windows Visual Studio)
       shell: pwsh
       run: |
-        cmake -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DBUILD_VULKAN_RENDERER:boolean=ON -B ${{github.workspace}}/build
+        cmake -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -B ${{github.workspace}}/build
       if: matrix.compiler == 'msvc'
 
     - name: 🔨 Build

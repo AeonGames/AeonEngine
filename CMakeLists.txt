@@ -111,7 +111,7 @@ if(NOT APPLE)
 else()
   set(BUILD_OPENGL_RENDERER OFF CACHE BOOL "OpenGL Renderer is disabled on Apple, 4.5 is not supported" FORCE)
 endif()
-option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" OFF)
+option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
 if(CLANG_TIDY_EXECUTABLE)

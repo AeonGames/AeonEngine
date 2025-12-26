@@ -54,7 +54,7 @@ jobs:
 
     - name: '🚧 Build'
       run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER=ON
+        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         cmake --build build
 
     - name: '🧪 Run TESTS'
