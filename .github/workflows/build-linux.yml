@@ -28,20 +28,20 @@ jobs:
           pacman -Syu --noconfirm &&
           pacman -S --noconfirm base-devel gcc clang cmake python tar wget git portaudio libvorbis libogg gtest mesa vulkan-devel qt6-base qt6-tools libxkbcommon glslang vulkan-validation-layers cairo protobuf pkg-config &&
           if [ '${{ matrix.compiler }}' = 'gcc' ]; then
-            cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON
+            cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           else
-            cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON -DCMAKE_TOOLCHAIN_FILE=/workspace/cmake/clang-toolchain.cmake
+            cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=/workspace/cmake/clang-toolchain.cmake
           fi &&
           cmake --build /workspace/build
         "
       if: matrix.os == 'archlinux'
 
     - name: Configure CMake (Ubuntu GCC)
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       if: matrix.os == 'ubuntu' && matrix.compiler == 'gcc'
 
     - name: Configure CMake (Ubuntu Clang)
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_VULKAN_RENDERER:boolean=ON -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/cmake/clang-toolchain.cmake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/cmake/clang-toolchain.cmake
       if: matrix.os == 'ubuntu' && matrix.compiler == 'clang'
 
     - name: Build (Ubuntu)
