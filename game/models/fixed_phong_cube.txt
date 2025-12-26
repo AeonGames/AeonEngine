@@ -1,9 +1,9 @@
 AEONMDL
 default_pipeline {
-    file: "game/shaders/fixed_phong.txt"
+    path: "shaders/fixed_phong.txt"
 }
 assembly {
     mesh {
-        file: "game/meshes/cube.txt"
+        path: "meshes/cube.txt"
     }
 }
