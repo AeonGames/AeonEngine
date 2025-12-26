@@ -95,6 +95,7 @@ if(NOT Protobuf_FOUND)
   endif()
 else()
   set(Protobuf_LIBRARIES protobuf::libprotobuf)
+  set(Protobuf_PROTOC_EXECUTABLE protobuf::protoc)
 endif()
 
 get_filename_component(PYTHON_PATH "${Python3_EXECUTABLE}" DIRECTORY)
@@ -264,75 +265,75 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/commit-msg.in"
 
 add_custom_target(
   generate-python-protobuf-source
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/mesh.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/skeleton.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/animation.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/model.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/pipeline.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/material.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/property.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/sampler.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/vector2.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/vector3.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/vector4.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/quaternion.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/transform.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/scene.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/reference.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/framebuffer.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/matrix4x4.proto
-  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+  COMMAND ${Protobuf_PROTOC_EXECUTABLE}
           --python_out ${CMAKE_SOURCE_DIR}/tools/blender/modules
           --proto_path ${CMAKE_SOURCE_DIR}/proto
                        ${CMAKE_SOURCE_DIR}/proto/collision.proto
