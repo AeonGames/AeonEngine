@@ -26,13 +26,17 @@ from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 class MSH_OT_exporterCommon():
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, export_tangents=True, export_uvs=True, export_weights=True, export_colors=True):
         self.mesh = None
         self.object = None
         self.armature = None
         self.vertices = []
         self.indices = []
         self.filepath = filepath
+        self.export_tangents = export_tangents
+        self.export_uvs = export_uvs
+        self.export_weights = export_weights
+        self.export_colors = export_colors
 
     def get_vertex(self, loop_and_attributes):
         loop = loop_and_attributes[0]
@@ -228,29 +232,31 @@ class MSH_OT_exporterCommon():
 
             mesh.calc_tangents(uvmap=mesh.uv_layers[0].name)
 
-            attribute = mesh_buffer.Attribute.add()
-            attribute.Semantic   = mesh_pb2.AttributeMsg.TANGENT
-            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-            attribute.Size       = 3
-            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
-            vertex_struct_string += '3f'
+            if self.export_tangents:
+                attribute = mesh_buffer.Attribute.add()
+                attribute.Semantic   = mesh_pb2.AttributeMsg.TANGENT
+                attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+                attribute.Size       = 3
+                attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+                vertex_struct_string += '3f'
 
-            attribute = mesh_buffer.Attribute.add()
-            attribute.Semantic   = mesh_pb2.AttributeMsg.BITANGENT
-            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-            attribute.Size       = 3
-            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
-            vertex_struct_string += '3f'
+                attribute = mesh_buffer.Attribute.add()
+                attribute.Semantic   = mesh_pb2.AttributeMsg.BITANGENT
+                attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+                attribute.Size       = 3
+                attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+                vertex_struct_string += '3f'
 
-            attribute = mesh_buffer.Attribute.add()
-            attribute.Semantic   = mesh_pb2.AttributeMsg.TEXCOORD
-            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-            attribute.Size       = 2
-            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
-            vertex_struct_string += '2f'
+            if self.export_uvs:
+                attribute = mesh_buffer.Attribute.add()
+                attribute.Semantic   = mesh_pb2.AttributeMsg.TEXCOORD
+                attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
+                attribute.Size       = 2
+                attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+                vertex_struct_string += '2f'
 
-        # Weights are only included if there is an armature modifier.
-        if self.armature is not None:
+        # Weights are only included if there is an armature modifier and export_weights is True.
+        if self.armature is not None and self.export_weights:
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_INDEX
             attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
@@ -263,7 +269,7 @@ class MSH_OT_exporterCommon():
             attribute.Flags      = mesh_pb2.AttributeMsg.NORMALIZED
             vertex_struct_string += '8B'
 
-        if(len(mesh.color_attributes) > 0):
+        if(len(mesh.color_attributes) > 0 and self.export_colors):
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.COLOR
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
@@ -381,6 +387,28 @@ class MSH_OT_exporter(bpy.types.Operator):
     bl_label = "Export AeonGames Mesh"
 
     filepath: bpy.props.StringProperty(subtype='FILE_PATH')
+    
+    # Export options (Position and Normal are always exported)
+    export_tangents: bpy.props.BoolProperty(
+        name="Export Tangents",
+        description="Export tangent and bitangent vectors (requires UVs)",
+        default=True
+    )
+    export_uvs: bpy.props.BoolProperty(
+        name="Export UVs",
+        description="Export texture coordinates",
+        default=True
+    )
+    export_weights: bpy.props.BoolProperty(
+        name="Export Weights",
+        description="Export vertex weights for skeletal animation",
+        default=True
+    )
+    export_colors: bpy.props.BoolProperty(
+        name="Export Vertex Colors",
+        description="Export vertex color attributes",
+        default=True
+    )
 
     @classmethod
     def poll(cls, context):
@@ -393,7 +421,13 @@ class MSH_OT_exporter(bpy.types.Operator):
             return {'CANCELLED'}
         bpy.ops.object.mode_set()
         self.filepath = bpy.path.ensure_ext(self.filepath, ".msh")
-        exporter = MSH_OT_exporterCommon(self.filepath)
+        exporter = MSH_OT_exporterCommon(
+            self.filepath,
+            export_tangents=self.export_tangents,
+            export_uvs=self.export_uvs,
+            export_weights=self.export_weights,
+            export_colors=self.export_colors
+        )
         exporter.run(context.active_object)
         return {'FINISHED'}
 
@@ -418,6 +452,28 @@ class MSHExportAll(bpy.types.Operator):
     bl_label = "Export AeonGames Meshes"
 
     directory: bpy.props.StringProperty(subtype='DIR_PATH')
+    
+    # Export options (Position and Normal are always exported)
+    export_tangents: bpy.props.BoolProperty(
+        name="Export Tangents",
+        description="Export tangent and bitangent vectors (requires UVs)",
+        default=True
+    )
+    export_uvs: bpy.props.BoolProperty(
+        name="Export UVs",
+        description="Export texture coordinates",
+        default=True
+    )
+    export_weights: bpy.props.BoolProperty(
+        name="Export Weights",
+        description="Export vertex weights for skeletal animation",
+        default=True
+    )
+    export_colors: bpy.props.BoolProperty(
+        name="Export Vertex Colors",
+        description="Export vertex color attributes",
+        default=True
+    )
 
     @classmethod
     def poll(cls, context):
@@ -427,7 +483,12 @@ class MSHExportAll(bpy.types.Operator):
         for object in context.scene.objects:
             if (object.type == 'MESH'):
                 exporter = MSH_OT_exporterCommon(
-                    self.directory + os.sep + object.name + ".msh")
+                    self.directory + os.sep + object.name + ".msh",
+                    export_tangents=self.export_tangents,
+                    export_uvs=self.export_uvs,
+                    export_weights=self.export_weights,
+                    export_colors=self.export_colors
+                )
                 exporter.run(object)
         return {'FINISHED'}
 
