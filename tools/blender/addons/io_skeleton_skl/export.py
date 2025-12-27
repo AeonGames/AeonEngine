@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2019,2021 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,8 +84,8 @@ class SKL_OT_exporter(bpy.types.Operator):
         out.write(skeleton_buffer.SerializeToString())
         out.close()
         print("Done.")
-        print("Writting", self.filepath + ".txt", ".")
-        out = open(self.filepath + ".txt", "wt")
+        print("Writting", self.filepath.replace('.skl', '.txt'), ".")
+        out = open(self.filepath.replace('.skl', '.txt'), "wt")
         out.write("AEONSKL\n")
         out.write(google.protobuf.text_format.MessageToString(skeleton_buffer))
         out.close()
@@ -98,7 +98,7 @@ class SKL_OT_exporter(bpy.types.Operator):
                 os.path.dirname(
                     bpy.data.filepath) +
                 os.sep +
-                context.scene.name,
+                context.active_object.name,
                 ".skl")
         else:
             self.filepath = bpy.path.ensure_ext(self.filepath, ".skl")
