@@ -23,7 +23,7 @@ limitations under the License.
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-#include <regex>
+#include <sstream>
 namespace AeonGames
 {
 
@@ -35,19 +35,71 @@ namespace AeonGames
         };
         void PrintString ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
         {
-            std::string pattern ( "\\\\n" );
-            std::string format ( "$&\"\n\"" );
-            try
+            // Format multi-line strings by breaking them after each \n
+            // First, escape the string normally (quotes, backslashes, etc.)
+            std::string escaped;
+            escaped.reserve ( val.size() * 2 );
+            for ( char c : val )
             {
-                std::regex newline ( pattern );
-                std::string printed = std::regex_replace ( val, newline, format );
-                google::protobuf::TextFormat::FastFieldValuePrinter::PrintString ( printed, base_text_generator );
+                switch ( c )
+                {
+                case '\\':
+                    escaped += "\\\\";
+                    break;
+                case '\"':
+                    escaped += "\\\"";
+                    break;
+                case '\n':
+                    escaped += "\\n";
+                    break;
+                case '\r':
+                    escaped += "\\r";
+                    break;
+                case '\t':
+                    escaped += "\\t";
+                    break;
+                default:
+                    if ( c >= 32 && c < 127 )
+                    {
+                        escaped += c;
+                    }
+                    else
+                    {
+                        // Print as octal escape
+                        char buf[5];
+                        snprintf ( buf, sizeof ( buf ), "\\%03o", static_cast<unsigned char> ( c ) );
+                        escaped += buf;
+                    }
+                    break;
+                }
             }
-            catch ( const std::regex_error& e )
+
+            // Now split the escaped string at each \n occurrence
+            std::ostringstream output;
+            output << '"';
+
+            size_t pos = 0;
+            size_t found;
+            while ( ( found = escaped.find ( "\\n", pos ) ) != std::string::npos )
             {
-                std::cout << "Error: " << e.what() << " at " << __func__ << " line " << __LINE__ << std::endl;
-                throw;
+                // Print up to and including the \n
+                output << escaped.substr ( pos, found - pos + 2 );
+                // Check if there's more content after this \n
+                if ( found + 2 < escaped.size() )
+                {
+                    output << "\"\n\"";
+                }
+                pos = found + 2;
             }
+
+            // Print remaining content
+            if ( pos < escaped.size() )
+            {
+                output << escaped.substr ( pos );
+            }
+
+            output << '"';
+            base_text_generator->PrintString ( output.str() );
         }
     };
 }

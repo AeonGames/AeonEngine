@@ -29,7 +29,7 @@ limitations under the License.
 #include <sstream>
 #include <ostream>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <filesystem>
 #include "PipelineTool.h"
 #include "CodeFieldValuePrinter.hpp"
