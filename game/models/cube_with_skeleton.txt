@@ -1,0 +1,12 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/fixed_phong.txt"
+}
+skeleton {
+  path: "skeletons/root.txt"
+}
+assembly {
+  mesh {
+    path: "meshes/cube_with_skeleton.txt"
+  }
+}
