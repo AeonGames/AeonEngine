@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019,2021 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -105,9 +105,14 @@ class MSH_OT_exporterCommon():
                 vertex.extend(weight_values)
             # Does nothing on mesh_pb2.MeshMsg.WEIGHT_VALUE:
             elif attribute.Semantic == mesh_pb2.AttributeMsg.COLOR:
-                vertex.extend([self.mesh.vertex_colors[0].data[loop.index].color[0],
-                            self.mesh.vertex_colors[0].data[loop.index].color[1],
-                            self.mesh.vertex_colors[0].data[loop.index].color[2]])
+                # Use color_attributes instead of deprecated vertex_colors
+                color_layer = self.mesh.color_attributes[0] if len(self.mesh.color_attributes) > 0 else None
+                if color_layer:
+                    vertex.extend([color_layer.data[loop.index].color[0],
+                                color_layer.data[loop.index].color[1],
+                                color_layer.data[loop.index].color[2]])
+                else:
+                    vertex.extend([1.0, 1.0, 1.0])
 
         #print("Generating Vertex", loop.index)
         return [loop.index, vertex]
@@ -192,7 +197,6 @@ class MSH_OT_exporterCommon():
         mesh_buffer.Radii.z = mesh_buffer_max_z - mesh_buffer.Center.z
 
         mesh = mesh_object.data
-        mesh.calc_normals()
 
         # if this mesh is modified by an armature, find out which one.
         self.armature = None
@@ -209,7 +213,7 @@ class MSH_OT_exporterCommon():
         attribute.Semantic   = mesh_pb2.AttributeMsg.POSITION
         attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
         attribute.Size       = 3
-        attribute.flags      = 0
+        attribute.Flags      = mesh_pb2.AttributeMsg.NONE
         
         vertex_struct_string += '3f'
 
@@ -217,7 +221,7 @@ class MSH_OT_exporterCommon():
         attribute.Semantic   = mesh_pb2.AttributeMsg.NORMAL
         attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
         attribute.Size       = 3
-        attribute.flags      = 0
+        attribute.Flags      = mesh_pb2.AttributeMsg.NONE
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
@@ -228,21 +232,21 @@ class MSH_OT_exporterCommon():
             attribute.Semantic   = mesh_pb2.AttributeMsg.TANGENT
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 3
-            attribute.flags      = 0
+            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
             vertex_struct_string += '3f'
 
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.BITANGENT
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 3
-            attribute.flags      = 0
+            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
             vertex_struct_string += '3f'
 
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.TEXCOORD
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 2
-            attribute.flags      = 0
+            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
             vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier.
@@ -251,20 +255,20 @@ class MSH_OT_exporterCommon():
             attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_INDEX
             attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
             attribute.Size       = 4
-            attribute.flags      = 2
+            attribute.Flags      = mesh_pb2.AttributeMsg.INTEGER
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_VALUE
             attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
             attribute.Size       = 4
-            attribute.flags      = 1
+            attribute.Flags      = mesh_pb2.AttributeMsg.NORMALIZED
             vertex_struct_string += '8B'
 
-        if(len(mesh.vertex_colors) > 0):
+        if(len(mesh.color_attributes) > 0):
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic   = mesh_pb2.AttributeMsg.COLOR
             attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size       = 4
-            attribute.flags      = 0
+            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
             vertex_struct_string += '3f'
 
         # Generate Vertex Buffer--------------------------------------
