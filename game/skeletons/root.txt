@@ -1,0 +1,30 @@
+AEONSKL
+Version: 1
+Joint {
+  ParentIndex: -1
+  Scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  Rotation {
+    w: 0.7071068
+    x: 0.7071068
+  }
+  Translation {
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  InvertedRotation {
+    w: 0.7071068
+    x: -0.7071068
+  }
+  InvertedTranslation {
+    x: -0.0
+    z: -0.0
+  }
+  Name: "root"
+}
