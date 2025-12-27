@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017,2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017,2019,2025 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ bl_info = {
     "name": "AeonGames Mesh Format (.msh)",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
-    "blender": (2, 80, 0),
+    "blender": (5, 0, 0),
     "location": "File > Export > Export AeonGames Mesh",
     "description": "Exports a mesh to an AeonGames Mesh (MSH) file",
     "warning": "",
@@ -46,6 +46,12 @@ def register():
     bpy.utils.register_class(export.MSHExportAll)
     bpy.types.TOPBAR_MT_file_export.append(msh_all_menu_func)
 
+
+def unregister():
+    bpy.utils.unregister_class(export.MSH_OT_exporter)
+    bpy.types.TOPBAR_MT_file_export.remove(msh_menu_func)
+    bpy.utils.unregister_class(export.MSHExportAll)
+    bpy.types.TOPBAR_MT_file_export.remove(msh_all_menu_func)
 
 if __name__ == "__main__":
     register()

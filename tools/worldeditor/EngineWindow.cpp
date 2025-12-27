@@ -333,6 +333,7 @@ namespace AeonGames
                         {
                             // Call Node specific rendering function.
                             aNode.Render ( *qWorldEditorApp->GetRenderer(), mWinId );
+#if 0
                             // Render Node AABBss
                             qWorldEditorApp->GetRenderer()->Render (
                                 mWinId,
@@ -365,6 +366,7 @@ namespace AeonGames
                                 nullptr,
                                 AeonGames::Topology::LINE_LIST
                             );
+#endif
                         }
                     } );
                 }
