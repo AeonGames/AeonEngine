@@ -158,17 +158,32 @@ namespace AeonGames
                 }
             }
             aNode.SetAABB ( aabb );
-            if ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) )
+            const Skeleton* skeleton{ model->GetSkeleton() };
+            if ( skeleton )
             {
                 float* skeleton_buffer = reinterpret_cast<float*> ( mSkeleton.data() );
-                auto animation = model->GetAnimations() [mActiveAnimation].Cast<Animation>();
-                mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
-                assert ( ( model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16 ) < mSkeleton.size() );
-                for ( size_t i = 0; i < model->GetSkeleton()->GetJoints().size(); ++i )
+                assert ( ( skeleton->GetJoints().size() * sizeof ( float ) * 16 ) < mSkeleton.size() );
+                const std::vector<ResourceId>& animations = model->GetAnimations();
+                if ( animations.size() && animations.size() > mActiveAnimation )
                 {
-                    Matrix4x4 matrix{ ( animation->GetTransform ( i, mCurrentSample ) *
-                                        model->GetSkeleton()->GetJoints() [i].GetInvertedTransform() ) };
-                    memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                    // Use animation transforms
+                    auto animation = animations[mActiveAnimation].Cast<Animation>();
+                    mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
+                    for ( size_t i = 0; i < skeleton->GetJoints().size(); ++i )
+                    {
+                        Matrix4x4 matrix{ animation->GetTransform ( i, mCurrentSample ) *
+                                          skeleton->GetJoints() [i].GetInvertedTransform() };
+                        memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                    }
+                }
+                else
+                {
+                    // No animation - use identity matrices (bind pose * inverse bind pose = identity)
+                    Matrix4x4 identity{}; // Identity matrix
+                    for ( size_t i = 0; i < skeleton->GetJoints().size(); ++i )
+                    {
+                        memcpy ( skeleton_buffer + ( i * 16 ), identity.GetMatrix4x4(), sizeof ( float ) * 16 );
+                    }
                 }
             }
         }
@@ -180,9 +195,10 @@ namespace AeonGames
         {
             BufferAccessor* skeleton_accessor_ptr{nullptr};
             BufferAccessor skeleton_accessor{};
-            if ( ( model->GetSkeleton() && ( model->GetAnimations().size() > mActiveAnimation ) ) )
+            const Skeleton* skeleton{model->GetSkeleton() };
+            if ( skeleton )
             {
-                size_t used_bones_size = model->GetSkeleton()->GetJoints().size() * sizeof ( float ) * 16;
+                size_t used_bones_size = skeleton->GetJoints().size() * sizeof ( float ) * 16;
                 assert ( used_bones_size <= mSkeleton.size() );
                 skeleton_accessor = aRenderer.AllocateSingleFrameUniformMemory ( aWindowId, used_bones_size );
                 skeleton_accessor.WriteMemory ( 0, used_bones_size, mSkeleton.data() );
