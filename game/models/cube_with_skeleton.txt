@@ -1,6 +1,6 @@
 AEONMDL
 default_pipeline {
-    path: "shaders/fixed_phong.txt"
+    path: "shaders/fixed_phong_with_skeleton.txt"
 }
 skeleton {
   path: "skeletons/root.txt"
