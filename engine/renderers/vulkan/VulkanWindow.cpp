@@ -782,12 +782,16 @@ namespace AeonGames
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-        vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  pipeline->GetPipelineLayout(),
-                                  0, // This should match the set number in the shader for Matrices
-                                  1,
-                                  &mMatricesDescriptorSet, 0, nullptr );
+
+        if ( uint32_t matrix_set_index = pipeline->GetMatrixDescriptorSet(); matrix_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      matrix_set_index,
+                                      1,
+                                      &mMatricesDescriptorSet, 0, nullptr );
+        }
 #if 0
         vkCmdPushConstants ( mVkCommandBuffer,
                              pipeline->GetPipelineLayout(),
@@ -803,14 +807,17 @@ namespace AeonGames
             const VulkanMemoryPoolBuffer* memory_pool_buffer =
                 reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeleton->GetMemoryPoolBuffer() );
             uint32_t offset = static_cast<uint32_t> ( aSkeleton->GetOffset() );
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      3, // This should match the set number in the shader for Skeleton
-                                      1,
-                                      &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
+            std::cout << LogLevel::Debug << "Binding skeleton descriptor set at offset " << offset << " Buffer Size " << memory_pool_buffer->GetBuffer().GetSize() << " Buffer " << memory_pool_buffer->GetDescriptorSet() << std::endl;
+            if ( uint32_t skeleton_set_index = pipeline->GetSkeletonDescriptorSet(); skeleton_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          pipeline->GetPipelineLayout(),
+                                          skeleton_set_index,
+                                          1,
+                                          &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
+            }
         }
-
         mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer );
         if ( aMesh.GetIndexCount() )
         {

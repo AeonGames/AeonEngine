@@ -19,6 +19,7 @@ limitations under the License.
 #include <string>
 #include <array>
 #include <vector>
+#include <limits>
 #include <vulkan/vulkan.h>
 #include "aeongames/Pipeline.hpp"
 #include "VulkanVariable.h"
@@ -45,7 +46,9 @@ namespace AeonGames
         const std::vector<VulkanVariable>& GetVertexAttributes() const;
         const std::vector<VulkanSamplerLocation>& GetSamplers() const;
         const VkDescriptorSetLayout GetDescriptorSetLayout ( uint32_t name ) const;
-        //const VulkanDescriptorSetBinding* GetUniformBlock ( uint32_t name ) const;
+        uint32_t GetMatrixDescriptorSet() const;
+        uint32_t GetMaterialDescriptorSet() const;
+        uint32_t GetSkeletonDescriptorSet() const;
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
@@ -55,6 +58,9 @@ namespace AeonGames
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
         uint32_t mVertexStride{0};
+        uint32_t mMatrixDescriptorSet{std::numeric_limits<uint32_t>::max() };
+        uint32_t mMaterialDescriptorSet{std::numeric_limits<uint32_t>::max() };
+        uint32_t mSkeletonDescriptorSet{std::numeric_limits<uint32_t>::max() };
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
