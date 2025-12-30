@@ -279,6 +279,9 @@ namespace AeonGames
         std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
         std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
+        std::swap ( mMatrixDescriptorSet, aVulkanPipeline.mMatrixDescriptorSet );
+        std::swap ( mMaterialDescriptorSet, aVulkanPipeline.mMaterialDescriptorSet );
+        std::swap ( mSkeletonDescriptorSet, aVulkanPipeline.mSkeletonDescriptorSet );
         mAttributes.swap ( aVulkanPipeline.mAttributes );
         mUniforms.swap ( aVulkanPipeline.mUniforms );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
@@ -539,9 +542,14 @@ namespace AeonGames
         push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
 #endif
         uint32_t descriptor_set_layout_count {0};
-        std::array<VkDescriptorSetLayout, 8> descriptor_set_layouts;
+        std::array<VkDescriptorSetLayout, 8> descriptor_set_layouts{};
+        assert ( "More descriptor sets than available slots" && mDescriptorSets.size() <= descriptor_set_layouts.size() );
         for ( const auto& i : mDescriptorSets )
         {
+            if ( i.index != descriptor_set_layout_count )
+            {
+                throw std::runtime_error ( "Descriptor set index must match its position in array, check shader source" );
+            }
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( i.descriptor_set_layout_create_info );
         }
 #if 0
@@ -773,15 +781,29 @@ namespace AeonGames
                     } );
                     if ( layout_binding == it->descriptor_set_layout_bindings.end() || layout_binding->binding != descriptor_set_binding.binding )
                     {
+                        uint32_t hash = crc32i ( descriptor_set_binding.type_description->type_name,
+                                                 strlen ( descriptor_set_binding.type_description->type_name ) );
+                        switch ( hash )
+                        {
+                        case Mesh::BindingLocations::MATRICES:
+                            mMatrixDescriptorSet = descriptor_set->set;
+                            break;
+                        case Mesh::BindingLocations::MATERIAL:
+                            mMaterialDescriptorSet = descriptor_set->set;
+                            break;
+                        case Mesh::BindingLocations::SKELETON:
+                            mSkeletonDescriptorSet = descriptor_set->set;
+                            break;
+                        default:
+                            break;
+                        }
                         layout_binding = it->descriptor_set_layout_bindings.insert ( layout_binding, VkDescriptorSetLayoutBinding{} );
                         layout_binding->binding = descriptor_set_binding.binding;
-                        layout_binding->descriptorType = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
+                        layout_binding->descriptorType = ( hash == Mesh::BindingLocations::SKELETON ) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
                         layout_binding->descriptorCount = descriptor_set_binding.count;
                         layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->pImmutableSamplers = nullptr;
                         std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
-                        uint32_t hash = crc32i ( descriptor_set_binding.type_description->type_name,
-                                                 strlen ( descriptor_set_binding.type_description->type_name ) );
                         it->descriptor_set_binding_table.insert (
                             std::lower_bound ( it->descriptor_set_binding_table.begin(), it->descriptor_set_binding_table.end(), hash,
                                                [] ( const VulkanDescriptorSetBindingRecord & a, const uint32_t b )
@@ -810,5 +832,18 @@ namespace AeonGames
                 it->descriptor_set_layout_create_info.pBindings = it->descriptor_set_layout_bindings.data();
             }
         }
+    }
+
+    uint32_t VulkanPipeline::GetMatrixDescriptorSet() const
+    {
+        return mMatrixDescriptorSet;
+    }
+    uint32_t VulkanPipeline::GetMaterialDescriptorSet() const
+    {
+        return mMaterialDescriptorSet;
+    }
+    uint32_t VulkanPipeline::GetSkeletonDescriptorSet() const
+    {
+        return mSkeletonDescriptorSet;
     }
 }

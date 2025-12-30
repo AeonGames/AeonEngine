@@ -281,25 +281,21 @@ namespace AeonGames
     {
         if ( mVkDescriptorPool == VK_NULL_HANDLE && mUniformDescriptorSet == VK_NULL_HANDLE )
         {
-            /* I dont like that this is the only place where late initialization happens.
+            /* I dont like that currently this is the only place where initialization happens.
                 Initialization should rather be only at construction time, so this is
                 here only temporarily while I get a render back on screen. */
             std::cout << LogLevel::Debug << "VulkanMaterial: Late Descriptor Pool and Set Initialization." << std::endl;
             const_cast<VulkanMaterial*> ( this )->Initialize ( aPipeline );
         }
 
-        std::array<VkDescriptorSet, 2> descriptor_sets
+        if ( uint32_t material_set_index = aPipeline.GetMaterialDescriptorSet(); material_set_index != std::numeric_limits<uint32_t>::max() )
         {
-            mUniformDescriptorSet,
-            mSamplerDescriptorSet,
-        };
-
-        uint32_t descriptor_set_count = static_cast<uint32_t> ( std::remove ( descriptor_sets.begin(), descriptor_sets.end(), ( VkDescriptorSet ) VK_NULL_HANDLE ) - descriptor_sets.begin() );
-        vkCmdBindDescriptorSets ( aVkCommandBuffer,
-                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  aPipeline.GetPipelineLayout(),
-                                  1, // This should match the set number in the shader for Material
-                                  descriptor_set_count,
-                                  descriptor_sets.data(), 0, nullptr );
+            vkCmdBindDescriptorSets ( aVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      aPipeline.GetPipelineLayout(),
+                                      1,
+                                      material_set_index,
+                                      &mUniformDescriptorSet, 0, nullptr );
+        }
     }
 }

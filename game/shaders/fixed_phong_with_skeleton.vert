@@ -3,8 +3,8 @@
 layout(set = 0, binding = 0, std140)
 #else
 layout(binding = 0, std140)
-uniform Matrices
 #endif
+uniform Matrices
 {
       mat4 ModelMatrix;
       mat4 ProjectionMatrix;
@@ -12,9 +12,9 @@ uniform Matrices
 };
 
 #ifdef VULKAN
-layout(set = 2, binding = 0, std140)
+layout(set = 1, binding = 0, std140)
 #else
-layout(binding = 2, std140)
+layout(binding = 1, std140)
 #endif
 uniform Skeleton
 {
