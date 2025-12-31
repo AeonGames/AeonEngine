@@ -65,6 +65,7 @@ namespace AeonGames
     {
         if ( mDeviceMemory != VK_NULL_HANDLE || mBuffer != VK_NULL_HANDLE )
         {
+            std::cout << LogLevel::Error << "Buffer already initialized." << std::endl;
             throw ( std::runtime_error ( "Buffer already initialized." ) );
         }
         mSize = aSize;
@@ -110,11 +111,13 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "vkMapMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
         else
         {
+            std::cout << LogLevel::Error << "The VkBuffer VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT property must be set to be able to map buffer memory." << std::endl;
             throw std::runtime_error ( "The VkBuffer VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT property must be set to be able to map buffer memory." );
         }
         return data;
@@ -166,6 +169,7 @@ namespace AeonGames
 
         if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
+            std::cout << LogLevel::Error << "No suitable memory type found for buffer." << std::endl;
             throw std::runtime_error ( "No suitable memory type found for buffer." );
         }
 
@@ -173,6 +177,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "vkAllocateMemory failed for buffer. error code: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         vkBindBufferMemory ( mVulkanRenderer.GetDevice(), mBuffer, mDeviceMemory, 0 );

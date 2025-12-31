@@ -105,6 +105,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Call to vkCreateWin32SurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 #elif defined( VK_USE_PLATFORM_METAL_EXT )
@@ -115,6 +116,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Call to vkCreateMetalSurfaceEXT failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 #elif defined( VK_USE_PLATFORM_XLIB_KHR )
@@ -126,6 +128,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Call to vkCreateXlibSurfaceKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 #endif
@@ -135,6 +138,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "WSI not supported.";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
@@ -195,6 +199,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Call to vkCreateSwapchainKHR failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         if ( swapchain_create_info.oldSwapchain != VK_NULL_HANDLE )
@@ -209,6 +214,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Get swapchain image count failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         mVkSwapchainImages.resize ( mSwapchainImageCount );
@@ -220,6 +226,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Get swapchain images failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
@@ -278,6 +285,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Call to vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -302,6 +310,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Could not find a suitable memory index.";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         VkMemoryAllocateInfo memory_allocate_info{};
@@ -366,6 +375,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Physical device reports no surface formats.";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -410,6 +420,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Unable to find a suitable depth stencil format";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -568,6 +579,7 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
@@ -575,6 +587,7 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
             FinalizeFrameBuffers();
@@ -807,7 +820,6 @@ namespace AeonGames
             const VulkanMemoryPoolBuffer* memory_pool_buffer =
                 reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeleton->GetMemoryPoolBuffer() );
             uint32_t offset = static_cast<uint32_t> ( aSkeleton->GetOffset() );
-            std::cout << LogLevel::Debug << "Binding skeleton descriptor set at offset " << offset << " Buffer Size " << memory_pool_buffer->GetBuffer().GetSize() << " Buffer " << memory_pool_buffer->GetDescriptorSet() << std::endl;
             if ( uint32_t skeleton_set_index = pipeline->GetSkeletonDescriptorSet(); skeleton_set_index != std::numeric_limits<uint32_t>::max() )
             {
                 vkCmdBindDescriptorSets ( GetCommandBuffer(),

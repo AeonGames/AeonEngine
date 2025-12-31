@@ -25,6 +25,7 @@ limitations under the License.
 #include "aeongames/Vector2.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Vector4.hpp"
+#include "aeongames/LogLevel.hpp"
 #include "VulkanMemoryPoolBuffer.h"
 #include "VulkanRenderer.h"
 #include "VulkanUtilities.h"
@@ -125,6 +126,7 @@ namespace AeonGames
         if ( mOffset > mUniformBuffer.GetSize() )
         {
             mOffset = offset;
+            std::cout << LogLevel::Error << "Memory Pool Buffer cannot fulfill allocation request." << std::endl;
             throw std::runtime_error ( "Memory Pool Buffer cannot fulfill allocation request." );
         }
         return BufferAccessor{this, offset, aSize};

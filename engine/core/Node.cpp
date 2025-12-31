@@ -80,6 +80,7 @@ namespace AeonGames
         {
             if ( parent == nullptr )
             {
+                std::cout << LogLevel::Error << "Node has no parent and thus no assigned index." << std::endl;
                 throw std::runtime_error ( "Node has no parent and thus no assigned index." );
             }
             auto index = std::find_if ( parent->mNodes.begin(), parent->mNodes.end(),

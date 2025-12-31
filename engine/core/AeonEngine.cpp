@@ -311,6 +311,7 @@ namespace AeonGames
         }
         if ( stream.rdbuf()->in_avail() > 0 )
         {
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
@@ -356,6 +357,7 @@ namespace AeonGames
                 return;
             }
         }
+        std::cout << LogLevel::Error << "Resource not found." << std::endl;
         throw std::runtime_error ( "Resource not found." );
     }
     void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size )

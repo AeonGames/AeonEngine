@@ -25,6 +25,7 @@ limitations under the License.
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Utilities.hpp"
 #include "aeongames/CRC.hpp"
+#include "aeongames/LogLevel.hpp"
 #include "VulkanRenderer.h"
 #include "VulkanMesh.h"
 #include "VulkanUtilities.h"
@@ -83,6 +84,7 @@ namespace AeonGames
         default:
             break;
         };
+        std::cout << LogLevel::Error << "Invalid Index Size." << std::endl;
         throw std::runtime_error ( "Invalid Index Size." );
     }
 

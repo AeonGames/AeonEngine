@@ -17,6 +17,7 @@ limitations under the License.
 #include "aeongames/ProtoBufUtils.hpp"
 #include "aeongames/ProtoBufClasses.hpp"
 #include "aeongames/ProtoBufHelpers.hpp"
+#include "aeongames/LogLevel.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -220,6 +221,7 @@ namespace AeonGames
             auto j = i + 1;
             if ( ( ( j != mVariables.end() ) ? ( j->GetOffset() - i->GetOffset() ) : ( mUniformBuffer.size() - i->GetOffset() ) ) < value_size )
             {
+                std::cout << LogLevel::Error << "Value type size exceeds original type size." << std::endl;
                 throw std::runtime_error ( "Value type size exceeds original type size." );
             }
             memcpy ( mUniformBuffer.data() + i->GetOffset(), GetUniformValuePointer ( std::get<UniformValue> ( aValue ) ), value_size );
@@ -249,7 +251,7 @@ namespace AeonGames
     {
         uint32_t name_hash = crc32i ( aName.c_str(), aName.size() );
         auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
-                                [name_hash] ( const SamplerKeyValue& aTuple )
+                                [name_hash] ( const SamplerKeyValue & aTuple )
         {
             return std::get<0> ( aTuple ) == name_hash;
         } );

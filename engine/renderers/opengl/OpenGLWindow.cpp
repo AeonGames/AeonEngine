@@ -78,6 +78,7 @@ namespace AeonGames
         case 4:
             return GL_UNSIGNED_INT;
         };
+        std::cout << LogLevel::Error << "Invalid Index Size." << std::endl;
         throw std::runtime_error ( "Invalid Index Size." );
     }
 

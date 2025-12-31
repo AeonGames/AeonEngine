@@ -53,6 +53,7 @@
 #include "CompilerLinker.h"
 
 #include "aeongames/Platform.hpp"
+#include "aeongames/LogLevel.hpp"
 
 namespace glslang
 {
@@ -66,12 +67,14 @@ namespace AeonGames
         // Make sure that -E is not specified alongside linking (which includes SPV generation)
         if ( ( mOptions & EOptionOutputPreprocessed ) && ( mOptions & EOptionLinkProgram ) )
         {
+            std::cout << LogLevel::Error << "can't use -E when linking is selected" << std::endl;
             throw std::runtime_error ( "can't use -E when linking is selected" );
         }
 
         if ( ( mOptions & EOptionFlattenUniformArrays ) != 0 &&
              ( mOptions & EOptionReadHlsl ) == 0 )
         {
+            std::cout << LogLevel::Error << "uniform array flattening only valid when compiling HLSL source." << std::endl;
             throw std::runtime_error ( "uniform array flattening only valid when compiling HLSL source." );
         }
     }

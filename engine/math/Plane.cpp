@@ -17,6 +17,7 @@ limitations under the License.
 #include "3DMath.h"
 #include "aeongames/Plane.hpp"
 #include "aeongames/AABB.hpp"
+#include "aeongames/LogLevel.hpp"
 
 namespace AeonGames
 {
@@ -26,6 +27,7 @@ namespace AeonGames
         float length = sqrtf ( Dot ( mNormal, mNormal ) );
         if ( !length )
         {
+            std::cout << LogLevel::Error << "Zero lenght normal passed to plane constructor." << std::endl;
             throw std::runtime_error ( "Zero lenght normal passed to plane constructor." );
         }
         mNormal /= length;

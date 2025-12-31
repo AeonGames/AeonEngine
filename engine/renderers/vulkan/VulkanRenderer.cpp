@@ -190,10 +190,12 @@ namespace AeonGames
 
             if ( ( vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkCreateDebugUtilsMessengerEXT" ) ) ) == nullptr )
             {
+                std::cout << LogLevel::Error << "vkGetInstanceProcAddr failed to load vkCreateDebugUtilsMessengerEXT" << std::endl;
                 throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkCreateDebugUtilsMessengerEXT" );
             }
             if ( ( vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkDestroyDebugUtilsMessengerEXT" ) ) ) == nullptr )
             {
+                std::cout << LogLevel::Error << "vkGetInstanceProcAddr failed to load vkDestroyDebugUtilsMessengerEXT" << std::endl;
                 throw std::runtime_error ( "vkGetInstanceProcAddr failed to load vkDestroyDebugUtilsMessengerEXT" );
             }
             mFunctionsLoaded = true;
@@ -396,6 +398,7 @@ namespace AeonGames
     {
         if ( !mVkInstance )
         {
+            std::cout << LogLevel::Error << "mVkInstance is a nullptr." << std::endl;
             throw std::runtime_error ( "mVkInstance is a nullptr." );
         }
         {
@@ -404,6 +407,7 @@ namespace AeonGames
 
             if ( physical_device_count == 0 )
             {
+                std::cout << LogLevel::Error << "No VulkanRenderer physical device found" << std::endl;
                 throw std::runtime_error ( "No VulkanRenderer physical device found" );
             }
 
@@ -424,6 +428,7 @@ namespace AeonGames
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, nullptr );
             if ( family_properties_count == 0 )
             {
+                std::cout << LogLevel::Error << "VulkanRenderer physical device has no queue family properties." << std::endl;
                 throw std::runtime_error ( "VulkanRenderer physical device has no queue family properties." );
             }
             std::vector<VkQueueFamilyProperties> family_properties_list ( family_properties_count );
@@ -443,6 +448,7 @@ namespace AeonGames
             }
             if ( !graphics_queue_family_found )
             {
+                std::cout << LogLevel::Error << "No graphics queue family found." << std::endl;
                 throw std::runtime_error ( "No graphics queue family found." );
             }
         }
@@ -484,6 +490,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer device. error code: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
@@ -498,6 +505,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
@@ -810,6 +818,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         lb = mVkDescriptorSetLayouts.insert ( lb, { {key}, {descriptor_set_layout} } );
@@ -857,6 +866,7 @@ namespace AeonGames
             }
             return std::get<1> ( *lb );
         }
+        std::cout << LogLevel::Error << "Sampler Count must be > 0" << std::endl;
         throw std::runtime_error ( "Sampler Count must be > 0" );
     }
 
@@ -880,6 +890,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
     }
@@ -986,6 +997,7 @@ namespace AeonGames
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.GetFrustum();
@@ -996,6 +1008,7 @@ namespace AeonGames
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.AllocateSingleFrameUniformMemory ( aSize );

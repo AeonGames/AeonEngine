@@ -75,6 +75,7 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
@@ -89,6 +90,7 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
@@ -126,6 +128,7 @@ namespace AeonGames
         const VulkanPipeline* vulkan_pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
         if ( vulkan_pipeline == nullptr )
         {
+            std::cout << LogLevel::Error << "VulkanMaterial: Pipeline not loaded in VulkanRenderer." << std::endl;
             throw std::runtime_error ( "VulkanMaterial: Pipeline not loaded in VulkanRenderer." );
         }
         Initialize ( *vulkan_pipeline );
@@ -175,6 +178,7 @@ namespace AeonGames
                 {
                     std::ostringstream stream;
                     stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+                    std::cout << LogLevel::Error << stream.str() << std::endl;
                     throw std::runtime_error ( stream.str().c_str() );
                 }
             }
@@ -193,6 +197,7 @@ namespace AeonGames
                 {
                     std::ostringstream stream;
                     stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                    std::cout << LogLevel::Error << stream.str() << std::endl;
                     throw std::runtime_error ( stream.str().c_str() );
                 }
             }
@@ -207,6 +212,7 @@ namespace AeonGames
                 {
                     std::ostringstream stream;
                     stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+                    std::cout << LogLevel::Error << stream.str() << std::endl;
                     throw std::runtime_error ( stream.str().c_str() );
                 }
             }
