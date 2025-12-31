@@ -166,6 +166,7 @@ void main()
                 mOpenGLContext = nullptr;
                 ReleaseDC ( mWindowId, mDeviceContext );
                 DestroyRendererWindow ( mWindowId );
+                std::cout << LogLevel::Error << "Failed retrieving a pointer to wglGetExtensionsString" << std::endl;
                 throw std::runtime_error ( "Failed retrieving a pointer to wglGetExtensionsString" );
             }
         }
@@ -177,6 +178,7 @@ void main()
                 mOpenGLContext = nullptr;
                 ReleaseDC ( mWindowId, mDeviceContext );
                 DestroyRendererWindow ( mWindowId );
+                std::cout << LogLevel::Error << "Failed retrieving a pointer to wglCreateContextAttribsARB" << std::endl;
                 throw std::runtime_error ( "Failed retrieving a pointer to wglCreateContextAttribsARB" );
             }
         }
@@ -187,6 +189,7 @@ void main()
             {
                 ReleaseDC ( mWindowId, mDeviceContext );
                 DestroyRendererWindow ( mWindowId );
+                std::cout << LogLevel::Error << "wglCreateContextAttribs Failed" << std::endl;
                 throw std::runtime_error ( "wglCreateContextAttribs Failed" );
             }
         }
@@ -196,12 +199,14 @@ void main()
             mOpenGLContext = nullptr;
             ReleaseDC ( mWindowId, mDeviceContext );
             DestroyRendererWindow ( mWindowId );
+            std::cout << LogLevel::Error << "WGL_ARB_create_context is not available" << std::endl;
             throw std::runtime_error ( "WGL_ARB_create_context is not available" );
         }
         // Make OpenGL Context current.
         MakeCurrent();
         if ( !LoadOpenGLAPI() )
         {
+            std::cout << LogLevel::Error << "Unable to Load OpenGL functions." << std::endl;
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
         glGenVertexArrays ( 1, &mVertexArrayObject );
@@ -267,6 +272,7 @@ void main()
                               &frame_buffer_config_count );
         if ( !frame_buffer_configs )
         {
+            std::cout << LogLevel::Error << "Failed to retrieve a framebuffer config" << std::endl;
             throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
         }
 
@@ -317,6 +323,7 @@ void main()
                          ( PFNGLXCREATECONTEXTATTRIBSARBPROC )
                          glXGetProcAddressARB ( ( const GLubyte * ) "glXCreateContextAttribsARB" ) ) )
             {
+                std::cout << LogLevel::Error << "Failed retrieving glXCreateContextAttribsARB." << std::endl;
                 throw std::runtime_error ( "Failed retrieving glXCreateContextAttribsARB." );
             }
         }
@@ -326,6 +333,7 @@ void main()
         if ( nullptr == ( mOpenGLContext = glXCreateContextAttribsARB ( mDisplay, glxconfig, nullptr,
                                            True, context_attribs ) ) )
         {
+            std::cout << LogLevel::Error << "glXCreateContextAttribsARB Failed." << std::endl;
             throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
         }
 
@@ -343,11 +351,13 @@ void main()
 
         if ( !MakeCurrent(reinterpret_cast<::Window>(reinterpret_cast<::Window>(aWindow))) )
         {
+            std::cout << LogLevel::Error << "glXMakeCurrent failed." << std::endl;
             throw std::runtime_error ( "glXMakeCurrent failed." );
         }
 
         if ( !LoadOpenGLAPI() )
         {
+            std::cout << LogLevel::Error << "Unable to Load OpenGL functions." << std::endl;
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
 
@@ -523,6 +533,7 @@ void main()
         auto it = mPipelineStore.find(aPipeline.GetConsecutiveId());
         if(it!=mPipelineStore.end())
         {
+            std::cout << LogLevel::Error << "OpenGL object already loaded." << std::endl;
             throw std::runtime_error ( "OpenGL object already loaded." );
         }
         mPipelineStore.emplace(aPipeline.GetConsecutiveId(),OpenGLPipeline{*this,aPipeline});
@@ -753,6 +764,7 @@ void main()
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.GetFrustum();
@@ -762,6 +774,7 @@ void main()
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.AllocateSingleFrameUniformMemory ( aSize );

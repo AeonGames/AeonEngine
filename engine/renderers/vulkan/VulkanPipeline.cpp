@@ -548,6 +548,7 @@ namespace AeonGames
         {
             if ( i.index != descriptor_set_layout_count )
             {
+                std::cout << LogLevel::Error << "Descriptor set index must match its position in array, check shader source" << std::endl;
                 throw std::runtime_error ( "Descriptor set index must match its position in array, check shader source" );
             }
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( i.descriptor_set_layout_create_info );
@@ -586,6 +587,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Pipeline Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -615,6 +617,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         for ( auto& i : shader_modules )

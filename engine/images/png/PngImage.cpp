@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020,2022,2025 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ limitations under the License.
 #include <stdexcept>
 #include <cstring>
 #include "PngImage.h"
+#include "aeongames/LogLevel.hpp"
 
 namespace AeonGames
 {
@@ -58,7 +59,7 @@ namespace AeonGames
     }
     bool DecodePNG ( Texture& aTexture, size_t aBufferSize, const void* aBuffer )
     {
-        if ( png_sig_cmp ( static_cast<uint8_t*> ( const_cast<void*> ( aBuffer ) ), 0, 8 ) != 0 )
+        if ( png_sig_cmp ( static_cast<uint8_t * > ( const_cast<void * > ( aBuffer ) ), 0, 8 ) != 0 )
         {
             return false;
         }
@@ -69,15 +70,18 @@ namespace AeonGames
                                          nullptr, nullptr, nullptr );
             if ( png_ptr == nullptr )
             {
+                std::cout << LogLevel::Error << "png_create_read_struct failed." << std::endl;
                 throw std::runtime_error ( "png_create_read_struct failed." );
             }
             png_infop info_ptr = png_create_info_struct ( png_ptr );
             if ( info_ptr == nullptr )
             {
+                std::cout << LogLevel::Error << "png_create_info_struct failed." << std::endl;
                 throw std::runtime_error ( "png_create_info_struct failed." );
             }
             if ( setjmp ( png_jmpbuf ( png_ptr ) ) )
             {
+                std::cout << LogLevel::Error << "Error during init_io." << std::endl;
                 throw std::runtime_error ( "Error during init_io." );
             }
             png_read_memory_struct read_memory_struct = {static_cast<const uint8_t*> ( aBuffer ), static_cast<const uint8_t*> ( aBuffer ) + 8,
@@ -102,6 +106,7 @@ namespace AeonGames
             }
             else
             {
+                std::cout << LogLevel::Error << "PNG image color type not supported...yet" << std::endl;
                 throw std::runtime_error ( "PNG image color type not supported...yet" );
             }
 
@@ -111,6 +116,7 @@ namespace AeonGames
             /* read file */
             if ( setjmp ( png_jmpbuf ( png_ptr ) ) )
             {
+                std::cout << LogLevel::Error << "Error during read_image." << std::endl;
                 throw std::runtime_error ( "Error during read_image." );
             }
             // --------------------------------------

@@ -128,6 +128,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         return descriptor_pool;
@@ -150,6 +151,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Allocate Descriptor Set failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         return descriptor_set;

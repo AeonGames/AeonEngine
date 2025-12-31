@@ -25,6 +25,7 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include "aeongames/Texture.hpp"
 #include "aeongames/Utilities.hpp"
+#include "aeongames/LogLevel.hpp"
 
 namespace AeonGames
 {
@@ -55,6 +56,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Image creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -68,18 +70,21 @@ namespace AeonGames
                                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
         if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
+            std::cout << LogLevel::Error << "Unable to find a suitable memory type index" << std::endl;
             throw std::runtime_error ( "Unable to find a suitable memory type index" );
         }
         if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mVkDeviceMemory ) )
         {
             std::ostringstream stream;
             stream << "Image Memory Allocation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         if ( VkResult result = vkBindImageMemory ( mVulkanRenderer.GetDevice(), mVkImage, mVkDeviceMemory, 0 ) )
         {
             std::ostringstream stream;
             stream << "Bind Image Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -100,6 +105,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Create Image View failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         /*-----------------------------------------------------------------*/
@@ -126,6 +132,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -144,6 +151,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Create Buffer failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -158,6 +166,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Allocate Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -165,6 +174,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Bind Buffer Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
 
@@ -173,6 +183,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Map Memory failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         if ( aTexture.GetFormat() == Texture::Format::RGBA )

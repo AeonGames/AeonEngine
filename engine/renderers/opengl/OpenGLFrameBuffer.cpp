@@ -62,6 +62,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         if ( glCheckFramebufferStatus ( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
         {
+            std::cout << LogLevel::Error << "Incomplete Framebuffer." << std::endl;
             throw std::runtime_error ( "Incomplete Framebuffer." );
         }
         OPENGL_CHECK_ERROR_THROW;

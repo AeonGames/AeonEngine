@@ -111,6 +111,7 @@ namespace AeonGames
                 properties += "vec4 " + std::get<1> ( i ) + ";\n";
                 break;
             default:
+                std::cout << LogLevel::Error << "Unknown Type." << std::endl;
                 throw std::runtime_error ( "Unknown Type." );
             }
         }

@@ -106,9 +106,11 @@ namespace AeonGames
                     OPENGL_CHECK_ERROR_THROW;
                     std::cout << shader_codes.at ( i ) << std::endl;
                     std::cout << log_string << std::endl;
+                    std::cout << LogLevel::Error << log_string << std::endl;
                     throw std::runtime_error ( log_string.c_str() );
                 }
                 log_string = ShaderTypeToString.at ( static_cast<ShaderType> ( i ) );
+                std::cout << LogLevel::Error << "Error Compiling Shaders." << std::endl;
                 throw std::runtime_error ( "Error Compiling Shaders." );
             }
             glAttachShader ( mProgramId, shader_ids.at ( i ) );
