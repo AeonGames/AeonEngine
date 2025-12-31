@@ -30,6 +30,7 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include "aeongames/Utilities.hpp"
+#include "aeongames/LogLevel.hpp"
 
 namespace AeonGames
 {
@@ -103,6 +104,7 @@ namespace AeonGames
         {
             std::ostringstream stream;
             stream << "Provided buffer does not contain " << reinterpret_cast<const char*> ( &aMagick ) << " information.";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         else if ( reinterpret_cast<const uint8_t * > ( aData ) [7] == '\0' )
@@ -112,6 +114,7 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "Binary parse failed on " << reinterpret_cast<const char*> ( &aMagick ) << "buffer.";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }
@@ -122,6 +125,7 @@ namespace AeonGames
             {
                 std::ostringstream stream;
                 stream << "Text parse failed on " << reinterpret_cast<const char*> ( &aMagick ) << " buffer.";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
                 throw std::runtime_error ( stream.str().c_str() );
             }
         }

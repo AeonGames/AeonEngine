@@ -1,0 +1,7 @@
+AEONMTL
+sampler {
+  name: "DiffuseMap"
+  image {
+  path: "images/olivedrab.png"
+  }
+}

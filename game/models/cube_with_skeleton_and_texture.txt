@@ -1,0 +1,15 @@
+AEONMDL
+default_pipeline {
+    path: "shaders/fixed_phong_with_skeleton_and_texture.txt"
+}
+skeleton {
+  path: "skeletons/root.txt"
+}
+assembly {
+  mesh {
+    path: "meshes/cube_with_skeleton_and_texture.txt"
+  }
+  material {
+      path: "materials/olivedrab.txt"
+  }
+}
