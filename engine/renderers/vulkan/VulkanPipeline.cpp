@@ -76,6 +76,8 @@ namespace AeonGames
     static const std::unordered_map<VkFormat, uint32_t> VkFormatToVulkanSize
     {
         { VK_FORMAT_UNDEFINED, 0 },
+        { VK_FORMAT_R8G8B8A8_UINT, static_cast<uint32_t> ( sizeof ( uint8_t ) * 4 ) },
+        { VK_FORMAT_R8G8B8A8_UNORM, static_cast<uint32_t> ( sizeof ( uint8_t ) * 4 ) },
         { VK_FORMAT_R16_UINT, static_cast<uint32_t> ( sizeof ( uint16_t ) ) },
         { VK_FORMAT_R16_SINT, static_cast<uint32_t> ( sizeof ( int16_t ) ) },
         { VK_FORMAT_R16_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) ) },
@@ -714,6 +716,21 @@ namespace AeonGames
             if ( i->built_in < 0 )
             {
                 const uint32_t name_crc{crc32i ( i->name, strlen ( i->name ) ) };
+                // Override format for weight attributes - they use 8-bit data even though shader declares 32-bit
+                VkFormat format;
+                if ( name_crc == Mesh::WEIGHT_INDEX )
+                {
+                    format = VK_FORMAT_R8G8B8A8_UINT; // uint8_t indices
+                }
+                else if ( name_crc == Mesh::WEIGHT_VALUE )
+                {
+                    format = VK_FORMAT_R8G8B8A8_UNORM; // normalized uint8_t weights (0-255 -> 0.0-1.0)
+                }
+                else
+                {
+                    format = SpvReflectToVulkanFormat.at ( i->format );
+                }
+
                 auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
                                              [] ( const VulkanVariable & a, const uint32_t b )
                 {
@@ -723,9 +740,9 @@ namespace AeonGames
                 {
                     name_crc,
                     i->location,
-                    SpvReflectToVulkanFormat.at ( i->format )
+                    format
                 } );
-                mVertexStride += VkFormatToVulkanSize.at ( SpvReflectToVulkanFormat.at ( i->format ) );
+                mVertexStride += VkFormatToVulkanSize.at ( format );
             }
         }
     }
