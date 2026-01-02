@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2024,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2024,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -104,6 +104,16 @@ namespace AeonGames
         { ".geom", &PipelineMsg::mutable_geom }
     };
 
+    const std::unordered_map<const char*, std::function<const std::string& ( const PipelineMsg* ) >> ShaderTypeToGetter
+    {
+        { ".vert", &PipelineMsg::vert },
+        { ".frag", &PipelineMsg::frag },
+        { ".comp", &PipelineMsg::comp },
+        { ".tesc", &PipelineMsg::tesc },
+        { ".tese", &PipelineMsg::tese },
+        { ".geom", &PipelineMsg::geom }
+    };
+
     int PipelineTool::operator() ( int argc, char** argv )
     {
         ProcessArgs ( argc, argv );
@@ -170,6 +180,70 @@ namespace AeonGames
         }
         else if ( input_path.extension() == ".pln" || input_path.extension() == ".txt" )
         {
+            // Extract shaders from pipeline file
+            PipelineMsg pipeline_msg;
+            std::ifstream input_file ( mInputFile, input_path.extension() == ".pln" ? ( std::ios::in | std::ios::binary ) : std::ios::in );
+            if ( !input_file )
+            {
+                throw std::runtime_error ( "Failed to open pipeline file: " + mInputFile );
+            }
+
+            // Read and verify magic number
+            char file_magick[8];
+            if ( input_path.extension() == ".pln" )
+            {
+                input_file.read ( file_magick, 8 );
+                if ( strncmp ( file_magick, magick_number, 7 ) != 0 )
+                {
+                    throw std::runtime_error ( "Invalid pipeline file format (magic number mismatch)" );
+                }
+                if ( !pipeline_msg.ParseFromIstream ( &input_file ) )
+                {
+                    throw std::runtime_error ( "Failed to parse binary pipeline file" );
+                }
+            }
+            else // .txt
+            {
+                input_file.getline ( file_magick, 8 );
+                if ( strncmp ( file_magick, magick_number, 7 ) != 0 )
+                {
+                    throw std::runtime_error ( "Invalid pipeline file format (magic number mismatch)" );
+                }
+                std::string text_content ( ( std::istreambuf_iterator<char> ( input_file ) ), std::istreambuf_iterator<char>() );
+                if ( !google::protobuf::TextFormat::ParseFromString ( text_content, &pipeline_msg ) )
+                {
+                    throw std::runtime_error ( "Failed to parse text pipeline file" );
+                }
+            }
+            input_file.close();
+
+            // Extract each shader to its own file
+            std::filesystem::path base_path = output_path.has_extension() ? output_path.replace_extension() : output_path;
+            bool extracted_any = false;
+
+            for ( const auto& [extension, getter] : ShaderTypeToGetter )
+            {
+                const std::string& shader_code = getter ( &pipeline_msg );
+                if ( !shader_code.empty() )
+                {
+                    std::filesystem::path shader_path = base_path;
+                    shader_path.replace_extension ( extension );
+                    std::ofstream shader_file ( shader_path, std::ios::out );
+                    if ( !shader_file )
+                    {
+                        throw std::runtime_error ( "Failed to create shader file: " + shader_path.string() );
+                    }
+                    shader_file << shader_code;
+                    shader_file.close();
+                    std::cout << "Extracted: " << shader_path.filename().string() << std::endl;
+                    extracted_any = true;
+                }
+            }
+
+            if ( !extracted_any )
+            {
+                std::cout << "Warning: No shader code found in pipeline file" << std::endl;
+            }
         }
         else
         {
