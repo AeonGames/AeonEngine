@@ -1,10 +1,11 @@
 #version 450
+
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
 #else
 layout(binding = 0, std140)
 #endif
-layout(binding = 0, std140) uniform Matrices
+uniform Matrices
 {
       mat4 ModelMatrix;
       mat4 ProjectionMatrix;
@@ -16,8 +17,7 @@ layout(set = 1, binding = 0, std140)
 #else
 layout(binding = 1, std140)
 #endif
-uniform Material
-{
+uniform Material{
       vec3 LightPosition;
       vec3 Kd;
 };
@@ -27,16 +27,15 @@ layout(set = 2, binding = 0, std140)
 #else
 layout(binding = 2, std140)
 #endif
-uniform Skeleton
-{
+uniform Skeleton{
       mat4 skeleton[256];
 };
 
 layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec3 VertexNormal;
-layout(location = 4) in vec2 VertexUV;
-layout(location = 5) in uvec4 VertexWeightIndices;
-layout(location = 6) in vec4 VertexWeights;
+layout(location = 2) in vec2 VertexUV;
+layout(location = 3) in uvec4 VertexWeightIndices;
+layout(location = 4) in vec4 VertexWeights;
 layout(location = 0) out vec3 LightIntensity;
 layout(location = 1) out vec2 CoordUV;
 
