@@ -421,6 +421,7 @@ namespace AeonGames
             vkGetPhysicalDeviceMemoryProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceMemoryProperties );
         }
 
+        VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT physical_device_primitive_topology_list_restart_features{};
         VkDeviceCreateInfo device_create_info{};
         VkDeviceQueueCreateInfo device_queue_create_info{};
         {
@@ -477,7 +478,13 @@ namespace AeonGames
         device_queue_create_info.queueFamilyIndex = mQueueFamilyIndex;
         device_queue_create_info.pQueuePriorities = queue_priorities;
 
+        physical_device_primitive_topology_list_restart_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT;
+        physical_device_primitive_topology_list_restart_features.pNext = nullptr;
+        physical_device_primitive_topology_list_restart_features.primitiveTopologyListRestart = VK_TRUE;
+        physical_device_primitive_topology_list_restart_features.primitiveTopologyPatchListRestart = VK_TRUE;
+
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        device_create_info.pNext = &physical_device_primitive_topology_list_restart_features;
         device_create_info.queueCreateInfoCount = 1;
         device_create_info.pQueueCreateInfos = &device_queue_create_info;
         device_create_info.enabledLayerCount = static_cast<uint32_t> ( mDeviceLayerNames.size() );
