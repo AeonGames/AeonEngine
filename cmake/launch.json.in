@@ -3,7 +3,7 @@
         "configurations": [
             {
                 "name": "World Editor",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": [],
                 "stopAtEntry": false,
@@ -21,27 +21,11 @@
                     }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                "program": "@CMAKE_BINARY_DIR@/bin/worldeditor@CMAKE_EXECUTABLE_SUFFIX@",
-                "miDebuggerPath": "@GDB_EXECUTABLE@",
-                "miDebuggerArgs": "@GDB_ARGS@",
-                "MIMode": "gdb",
-                "additionalSOLibSearchPath": "C:/msys64/mingw64/bin",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    },
-                    {
-                        "description": "Enable break on all exceptions",
-                        "text": "catch throw",
-                        "ignoreFailures": true
-                    }
-                ]
+                "program": "@CMAKE_BINARY_DIR@/bin/worldeditor@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             },
             {
                 "name": "Game Window OpenGL",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": ["-r","OpenGL","-s","scenes/main.txt"],
                 "stopAtEntry": false,
@@ -57,20 +41,11 @@
                     }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                        "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
-                        "miDebuggerPath": "@GDB_EXECUTABLE@",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                        "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             },
             {
                 "name": "Game FullScreen OpenGL",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": ["-f","-r","OpenGL","-s","scenes/main.txt"],
                 "stopAtEntry": false,
@@ -82,20 +57,11 @@
                     }                    
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                        "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
-                        "miDebuggerPath": "@GDB_EXECUTABLE@",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                        "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             },
             {
                 "name": "Game Window Vulkan",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": ["-r","Vulkan","-s","scenes/main.txt"],
                 "stopAtEntry": false,
@@ -107,13 +73,8 @@
                     }                    
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
-                "miDebuggerPath": "@GDB_EXECUTABLE@",
-                "MIMode": "gdb",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
+                "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
+            },
                         "ignoreFailures": true
                     }
                 ]
@@ -144,8 +105,24 @@
                     ]
             },
             {
+                "name": "Game FullScreen Vulkan",
+                "type": "@DEBUGGER_TYPE@",
+                "request": "launch",
+                "args": ["-f","-r","Vulkan","-s","scenes/main.txt"],
+                "stopAtEntry": false,
+                "cwd": "@CMAKE_SOURCE_DIR@",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"@DEBUG_PATH@"
+                    }                    
+                ],
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
+            },
+            {
                 "name": "Unit Tests",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": [],
                 "stopAtEntry": false,
@@ -157,20 +134,11 @@
                     }                    
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                "program": "@CMAKE_BINARY_DIR@/bin/unit-tests@CMAKE_EXECUTABLE_SUFFIX@",
-                "miDebuggerPath": "@GDB_EXECUTABLE@",
-                "MIMode": "gdb",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    }
-                    ]
+                "program": "@CMAKE_BINARY_DIR@/bin/unit-tests@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             },
             {
                 "name": "Aeon Tool Convert",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": [
                     "convert","-i","game/meshes/cube.txt","-o","game/meshes/cube.msh"
@@ -184,20 +152,11 @@
                     }                    
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@",
-                        "miDebuggerPath": "@GDB_EXECUTABLE@",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             },
             {
                 "name": "Aeon Tool Base64 Decode",
-                "type": "cppdbg",
+                "type": "@DEBUGGER_TYPE@",
                 "request": "launch",
                 "args": [
                     "base64","decode","-i","game/aerin/textures/Aerin_Body_Diffuse.png.base64","-o","game/aerin/textures/Aerin_Body_Diffuse_TEST.png"
@@ -211,16 +170,7 @@
                     }                    
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@",
-                        "miDebuggerPath": "@GDB_EXECUTABLE@",
-                        "MIMode": "gdb",
-                        "setupCommands": [
-                            {
-                                "description": "Enable pretty-printing for gdb",
-                                "text": "-enable-pretty-printing",
-                                "ignoreFailures": true
-                            }
-                         ]
+                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             }
         ]
     }

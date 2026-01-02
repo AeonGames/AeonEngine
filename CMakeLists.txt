@@ -514,12 +514,45 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
                  INCLIST
                  "${INCLIST}")
 
-  find_program(GDB_EXECUTABLE gdb
-              PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles
-            PATH_SUFFIXES
-                  bin
-                  usr/bin
-  )
+  # Detect appropriate debugger based on compiler
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+    find_program(LLDB_DAP_EXECUTABLE lldb-dap lldb-vscode
+                PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles /usr/bin /usr/local/bin
+              PATH_SUFFIXES
+                    bin
+                    usr/bin
+    )
+    if(LLDB_DAP_EXECUTABLE)
+      set(DEBUGGER_TYPE "lldb-dap")
+      set(DEBUGGER_PATH "${LLDB_DAP_EXECUTABLE}")
+      set(DEBUGGER_CONFIG "")
+    endif()
+  endif()
+  
+  # Fall back to gdb if lldb-dap not found
+  if(NOT DEBUGGER_TYPE)
+    find_program(GDB_EXECUTABLE gdb
+                PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles
+              PATH_SUFFIXES
+                    bin
+                    usr/bin
+    )
+    if(GDB_EXECUTABLE)
+      set(DEBUGGER_TYPE "cppdbg")
+      set(DEBUGGER_PATH "${GDB_EXECUTABLE}")
+      set(DEBUGGER_CONFIG ",
+                \"miDebuggerPath\": \"${GDB_EXECUTABLE}\",
+                \"MIMode\": \"gdb\",
+                \"additionalSOLibSearchPath\": \"C:/msys64/mingw64/bin\",
+                \"setupCommands\": [
+                    {
+                        \"description\": \"Enable pretty-printing for gdb\",
+                        \"text\": \"-enable-pretty-printing\",
+                        \"ignoreFailures\": true
+                    }
+                ]")
+    endif()
+  endif()
 
   set(DEBUG_PATH "${CMAKE_BINARY_DIR}/bin")
   if(CMAKE_GENERATOR MATCHES "(MSYS|MinGW) Makefiles")
