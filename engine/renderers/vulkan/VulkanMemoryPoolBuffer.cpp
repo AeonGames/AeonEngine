@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ namespace AeonGames
         descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
-        mVkDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( descriptor_set_layout_create_info ) );
+        mVkDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( descriptor_set_layout_create_info ) );
 
         VkDescriptorBufferInfo descriptor_buffer_info = { mUniformBuffer.GetBuffer(), 0, mUniformBuffer.GetSize() };
         VkWriteDescriptorSet write_descriptor_set{};

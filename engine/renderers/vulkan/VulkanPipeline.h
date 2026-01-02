@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ namespace AeonGames
         uint32_t GetMatrixDescriptorSet() const;
         uint32_t GetMaterialDescriptorSet() const;
         uint32_t GetSkeletonDescriptorSet() const;
+        uint32_t GetSamplerDescriptorSet() const;
         const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
@@ -61,6 +62,7 @@ namespace AeonGames
         uint32_t mMatrixDescriptorSet{std::numeric_limits<uint32_t>::max() };
         uint32_t mMaterialDescriptorSet{std::numeric_limits<uint32_t>::max() };
         uint32_t mSkeletonDescriptorSet{std::numeric_limits<uint32_t>::max() };
+        uint32_t mSamplerDescriptorSet{std::numeric_limits<uint32_t>::max() };
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};

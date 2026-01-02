@@ -1,7 +1,7 @@
 #version 450
 
 #ifdef VULKAN
-layout(set = 3, binding = 0)
+layout(set = 2, binding = 0)
 #else
 layout(binding = 0)
 #endif

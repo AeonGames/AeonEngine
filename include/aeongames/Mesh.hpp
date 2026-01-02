@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -65,7 +65,8 @@ namespace AeonGames
         {
             MATRICES = "Matrices"_crc32,
             MATERIAL = "Material"_crc32,
-            SKELETON = "Skeleton"_crc32
+            SKELETON = "Skeleton"_crc32,
+            SAMPLERS = "Samplers"_crc32,
         };
 
         using AttributeSize       = uint8_t;

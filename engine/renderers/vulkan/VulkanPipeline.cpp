@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -284,6 +284,7 @@ namespace AeonGames
         std::swap ( mMatrixDescriptorSet, aVulkanPipeline.mMatrixDescriptorSet );
         std::swap ( mMaterialDescriptorSet, aVulkanPipeline.mMaterialDescriptorSet );
         std::swap ( mSkeletonDescriptorSet, aVulkanPipeline.mSkeletonDescriptorSet );
+        std::swap ( mSamplerDescriptorSet, aVulkanPipeline.mSamplerDescriptorSet );
         mAttributes.swap ( aVulkanPipeline.mAttributes );
         mUniforms.swap ( aVulkanPipeline.mUniforms );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
@@ -426,7 +427,7 @@ namespace AeonGames
         for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
         {
             vertex_input_attribute_descriptions[i].offset = offset;
-            offset += VkFormatToVulkanSize.at ( mAttributes[i].format );
+            offset += VkFormatToVulkanSize.at ( vertex_input_attribute_descriptions[i].format );
         }
 
         VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info {};
@@ -553,7 +554,7 @@ namespace AeonGames
                 std::cout << LogLevel::Error << "Descriptor set index must match its position in array, check shader source" << std::endl;
                 throw std::runtime_error ( "Descriptor set index must match its position in array, check shader source" );
             }
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( i.descriptor_set_layout_create_info );
+            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
         }
 #if 0
         // Matrix Descriptor Set Layout
@@ -674,7 +675,7 @@ namespace AeonGames
             } );
             if ( it != set.descriptor_set_binding_table.end() && it->hash == name )
             {
-                return mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( set.descriptor_set_layout_create_info );
+                return mVulkanRenderer.GetDescriptorSetLayout ( set.descriptor_set_layout_create_info );
             }
         }
         return VK_NULL_HANDLE;
@@ -801,8 +802,10 @@ namespace AeonGames
                     } );
                     if ( layout_binding == it->descriptor_set_layout_bindings.end() || layout_binding->binding != descriptor_set_binding.binding )
                     {
-                        uint32_t hash = crc32i ( descriptor_set_binding.type_description->type_name,
-                                                 strlen ( descriptor_set_binding.type_description->type_name ) );
+                        const char* type_name{descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ?
+                                              descriptor_set_binding.type_description->type_name : "Samplers"};
+                        uint32_t hash = crc32i ( type_name,
+                                                 strlen ( type_name ) );
                         switch ( hash )
                         {
                         case Mesh::BindingLocations::MATRICES:
@@ -814,6 +817,25 @@ namespace AeonGames
                         case Mesh::BindingLocations::SKELETON:
                             mSkeletonDescriptorSet = descriptor_set->set;
                             break;
+                        case Mesh::BindingLocations::SAMPLERS:
+                        {
+                            if ( descriptor_set_binding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
+                                 descriptor_set_binding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE &&
+                                 descriptor_set_binding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER )
+                            {
+                                std::cout << LogLevel::Debug << "Sampler Set " << descriptor_set->set << " Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << " expected to be a Sampler but it is not" << std::endl;
+                                break;
+                            }
+                            else if ( mSamplerDescriptorSet != UINT32_MAX && mSamplerDescriptorSet != descriptor_set->set )
+                            {
+                                std::ostringstream stream;
+                                stream << "Multiple sampler descriptor sets detected. Previous Set " << mSamplerDescriptorSet << " New Set " << descriptor_set->set << " Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType );
+                                std::cout << LogLevel::Error << stream.str();
+                                throw std::runtime_error ( stream.str().c_str() );
+                            }
+                            mSamplerDescriptorSet = descriptor_set->set;
+                        }
+                        break;
                         default:
                             break;
                         }
@@ -823,7 +845,7 @@ namespace AeonGames
                         layout_binding->descriptorCount = descriptor_set_binding.count;
                         layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->pImmutableSamplers = nullptr;
-                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
+                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
                         it->descriptor_set_binding_table.insert (
                             std::lower_bound ( it->descriptor_set_binding_table.begin(), it->descriptor_set_binding_table.end(), hash,
                                                [] ( const VulkanDescriptorSetBindingRecord & a, const uint32_t b )
@@ -865,5 +887,9 @@ namespace AeonGames
     uint32_t VulkanPipeline::GetSkeletonDescriptorSet() const
     {
         return mSkeletonDescriptorSet;
+    }
+    uint32_t VulkanPipeline::GetSamplerDescriptorSet() const
+    {
+        return mSamplerDescriptorSet;
     }
 }
