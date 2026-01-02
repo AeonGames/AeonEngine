@@ -58,3 +58,6 @@ tags
 # Generated files
 game/images/*.svg
 game/config
+
+# MacOS preview store
+.DS_Store

@@ -445,7 +445,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
         pipeline_input_assembly_state_create_info.topology = TopologyClassToVulkanTopology.at ( mPipeline->GetTopologyClass() );
-        pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
+        pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_TRUE;
 
         //----------------Viewport State------------------//
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
