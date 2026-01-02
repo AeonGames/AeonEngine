@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -512,7 +512,7 @@ namespace AeonGames
         matrices_descriptor_set_layout_create_info.pBindings = &matrices_descriptor_set_layout_binding;
 
         mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetUniformBufferDescriptorSetLayout ( matrices_descriptor_set_layout_create_info ) );
+        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( matrices_descriptor_set_layout_create_info ) );
         VkDescriptorBufferInfo descriptor_buffer_info{};
         descriptor_buffer_info.buffer = mMatrices.GetBuffer();
         descriptor_buffer_info.offset = 0;

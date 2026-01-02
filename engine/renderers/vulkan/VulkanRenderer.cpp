@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -785,7 +785,7 @@ namespace AeonGames
         return &it->second.GetDescriptorImageInfo();
     }
 
-    const VkDescriptorSetLayout& VulkanRenderer::GetUniformBufferDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const
+    const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const
     {
         uint32_t key
         {
@@ -824,7 +824,7 @@ namespace AeonGames
         lb = mVkDescriptorSetLayouts.insert ( lb, { {key}, {descriptor_set_layout} } );
         return std::get<1> ( *lb );
     }
-
+#if 0
     const VkDescriptorSetLayout& VulkanRenderer::GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const
     {
         auto lb = std::lower_bound ( mVkDescriptorSetLayouts.begin(), mVkDescriptorSetLayouts.end(), aSamplerCount,
@@ -869,7 +869,7 @@ namespace AeonGames
         std::cout << LogLevel::Error << "Sampler Count must be > 0" << std::endl;
         throw std::runtime_error ( "Sampler Count must be > 0" );
     }
-
+#endif
     void VulkanRenderer::InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType )
     {
         VkDescriptorSetLayoutBinding descriptor_set_layout_binding;

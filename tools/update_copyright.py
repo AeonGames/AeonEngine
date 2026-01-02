@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ Behavior:
 - Use --all to scan all files under the provided paths (or repo root when omitted).
 
 Rules to update years:
-- Find lines like: "Copyright (C) 2017-2019,2021,2024 Name".
+- Find lines like: "Copyright (C) 2017-2019,2021,2024,2026 Name".
 - If the current year is already present, do nothing.
 - Else, examine the last entry (after the last comma):
     * If it's a range that ends in last year (current_year - 1), replace the end
@@ -52,9 +52,9 @@ CURRENT_YEAR = _dt.date.today().year
 
 # Regex to match a copyright line with years list.
 # Examples matched:
-#   Copyright (C) 2017-2019,2021,2024 John Doe
-#   Copyright (c) 2017, 2019-2021 Jane Doe
-#   Copyright 2012-2014, 2016-2017,2019 Foo
+#   Copyright (C) 2017-2019,2021,2024,2026 John Doe
+#   Copyright (c) 2017,2019-2021,2026 Jane Doe
+#   Copyright 2012-2014,2016-2017,2019,2026 Foo
 COPYRIGHT_YEARS_RE = re.compile(
     r"(Copyright\s*(?:\(\s*[cC]\s*\)\s*)?)"
     r"(?P<years>"  # group of one or more year entries separated by commas
@@ -170,8 +170,14 @@ def iter_files(paths: Iterable[Path]) -> Iterable[Path]:
 
 def git_repo_root(start: Path) -> Path | None:
     try:
-        out = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=str(start))
-        return Path(out.decode().strip())
+        # Ensure we use a directory for cwd
+        cwd = start if start.is_dir() else start.parent
+        out = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=str(cwd), text=True)
+        git_root = out.strip()
+        # On Windows with Git Bash, convert /c/path to C:/path
+        if git_root.startswith('/') and len(git_root) > 2 and git_root[2] == '/':
+            git_root = git_root[1].upper() + ':' + git_root[2:]
+        return Path(git_root)
     except Exception:
         return None
 
@@ -182,6 +188,10 @@ def git_changed_files(repo_root: Path) -> set[Path]:
     Includes staged and unstaged changes (diff and diff --cached). Untracked files are
     not included.
     """
+    # Ensure repo_root is a directory
+    if not repo_root.is_dir():
+        repo_root = repo_root.parent
+    
     changed: set[Path] = set()
     cmds = [
         ["git", "diff", "--name-only"],
