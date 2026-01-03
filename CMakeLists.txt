@@ -489,9 +489,10 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
       tools/worldeditor)
 
   if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    execute_process(COMMAND ${BASH_EXECUTABLE} --login -c "echo | ${CMAKE_CXX_COMPILER} -Wp,-v -x c++ - -fsyntax-only 2>&1 |  sed -n '/#include <...> search starts here:$/,/End of search list.$/p' | sed '/\\(#include <...> search starts here:$\\|End of search list.$\\)/d'"
+    execute_process(COMMAND ${BASH_EXECUTABLE} --login -c "echo | ${CMAKE_CXX_COMPILER} -Wp,-v -x c++ - -fsyntax-only 2>&1 |  ${SED_EXECUTABLE} -n '/#include <...> search starts here:$/,/End of search list.$/p' | ${SED_EXECUTABLE} '/\\(#include <...> search starts here:$\\|End of search list.$\\)/d'"
                     OUTPUT_VARIABLE CXX_INCLUDE_PATH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE)
                     string(REGEX REPLACE "[ \\t]*\n[ \\t]*" ";" CXX_INCLUDE_PATH "${CXX_INCLUDE_PATH}")
+                    string(REGEX REPLACE "[ \\t]*\\(.*\\)" "" CXX_INCLUDE_PATH "${CXX_INCLUDE_PATH}")
                     string(STRIP "${CXX_INCLUDE_PATH}" CXX_INCLUDE_PATH)
   endif()
 
@@ -502,8 +503,14 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
     list(APPEND INCLIST ${Qt6Gui_INCLUDE_DIRS})
     list(APPEND INCLIST ${Qt6Widgets_INCLUDE_DIRS})
   endif(Qt6_FOUND)
+  if(BUILD_OPENGL_RENDERER)
+    list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine/renderers/opengl)
+  endif(BUILD_OPENGL_RENDERER)
+  if(BUILD_VULKAN_RENDERER)
+    list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine/renderers/vulkan)
+  endif(BUILD_VULKAN_RENDERER)
   list(APPEND INCLIST ${GLSlang_INCLUDE_DIR})
-  list(APPEND INCLIST ${VULKAN_INCLUDE_DIR})
+  list(APPEND INCLIST ${Vulkan_INCLUDE_DIR})
   list(APPEND INCLIST ${Protobuf_INCLUDE_DIR})
   list(APPEND INCLIST ${CXX_INCLUDE_PATH})
 
