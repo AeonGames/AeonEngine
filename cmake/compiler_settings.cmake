@@ -10,8 +10,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(PREPROCESS_VA_OPT ", ##")
   set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /DPROTOBUF_WARNINGS=\"4251 4996\"")
-else()
-  list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64" "C:/msys64/usr")
+elseif(NOT ENV{MSYSTEM_PREFIX} STREQUAL "")
+  list(APPEND CMAKE_PREFIX_PATH "C:/msys64$ENV{MSYSTEM_PREFIX}" "C:/msys64/usr")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -77,10 +77,4 @@ if(PKG_CONFIG_FOUND AND BASH_EXECUTABLE AND MSYS)
   execute_process(COMMAND ${BASH_EXECUTABLE} --login -c "echo $PKG_CONFIG_PATH"
                   OUTPUT_VARIABLE PKG_CONFIG_PATH)
   set(ENV{PKG_CONFIG_PATH} ${PKG_CONFIG_PATH})
-endif()
-
-option(USE_JEMALLOC "Use jemalloc" OFF)
-if(USE_JEMALLOC)
-  find_library(JEMALLOC_LIB libjemalloc.a jemalloc)
-  link_libraries(${JEMALLOC_LIB})
 endif()
