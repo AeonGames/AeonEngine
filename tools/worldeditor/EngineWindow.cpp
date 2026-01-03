@@ -369,7 +369,6 @@ namespace AeonGames
                     } );
                 }
                 qWorldEditorApp->GetRenderer()->EndRender ( mWinId );
-                QCoreApplication::processEvents();
                 return true;
             }
         default:

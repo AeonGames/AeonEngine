@@ -23,7 +23,7 @@ uniform Material{
 };
 
 #ifdef VULKAN
-layout(set = 2, binding = 0, std140)
+layout(set = 3, binding = 0, std140)
 #else
 layout(binding = 2, std140)
 #endif
@@ -33,9 +33,12 @@ uniform Skeleton{
 
 layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec3 VertexNormal;
-layout(location = 2) in vec2 VertexUV;
-layout(location = 3) in uvec4 VertexWeightIndices;
-layout(location = 4) in vec4 VertexWeights;
+layout(location = 2) in vec3 VertexTangent;
+layout(location = 3) in vec3 VertexBitangent;
+layout(location = 4) in vec2 VertexUV;
+layout(location = 5) in uvec4 VertexWeightIndices;
+layout(location = 6) in vec4 VertexWeights;
+
 layout(location = 0) out vec3 LightIntensity;
 layout(location = 1) out vec2 CoordUV;
 
@@ -49,7 +52,7 @@ void main()
                         ( mat3(skeleton[VertexWeightIndices[2]]) * (VertexWeights[2] * VertexNormal) ) +
                         ( mat3(skeleton[VertexWeightIndices[3]]) * (VertexWeights[3] * VertexNormal) ));
             vec3 tnorm = normalize ( mat3(ViewMatrix) * vertex_normal );
-            vec4 eyeCoords = ViewMatrix /* ModelMatrix */* vec4 ( VertexPosition, 1.0 );
+            vec4 eyeCoords = ViewMatrix /* * ModelMatrix */ * vec4 ( VertexPosition, 1.0 );
             vec3 s = normalize ( LightPosition - eyeCoords.xyz );
             LightIntensity = Kd * max ( dot ( s, tnorm ), 0.0 );
       }
