@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <cmath>
+#include <ostream>
+#include <iomanip>
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/Vector3.hpp"
@@ -243,4 +245,25 @@ namespace AeonGames
             std::abs ( aMatrix4x4[15] )
         };
     }
+
+    std::ostream& operator<< ( std::ostream& os, const Matrix4x4& aMatrix )
+    {
+        const float* m = aMatrix.GetMatrix4x4();
+        os << std::fixed << std::setprecision ( 4 );
+        os << "[\n";
+        for ( int row = 0; row < 4; ++row )
+        {
+            os << "  [ ";
+            for ( int col = 0; col < 4; ++col )
+            {
+                os << std::setw ( 10 ) << m[col * 4 + row];
+                if ( col < 3 ) os << ", ";
+            }
+            os << " ]\n";
+        }
+        os << "]";
+        return os;
+    }
+
+    const Matrix4x4 Matrix4x4::Identity{};
 }

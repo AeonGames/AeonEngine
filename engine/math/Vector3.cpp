@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -200,6 +200,11 @@ namespace AeonGames
         mVector[1] /= aLhs;
         mVector[2] /= aLhs;
         return *this;
+    }
+
+    bool Vector3::IsZero() const
+    {
+        return mVector[0] == 0.0f && mVector[1] == 0.0f && mVector[2] == 0.0f;
     }
 
     const Vector3 operator* ( const Vector3& aLhs, const float aRhs )

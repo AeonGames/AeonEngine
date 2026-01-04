@@ -791,10 +791,10 @@ namespace AeonGames
                                 uint32_t aFirstInstance ) const
     {
         const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
-        assert ( pipeline );
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+
 
         if ( uint32_t matrix_set_index = pipeline->GetMatrixDescriptorSet(); matrix_set_index != std::numeric_limits<uint32_t>::max() )
         {
