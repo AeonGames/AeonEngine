@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ namespace AeonGames
 
     Transform AABB::GetTransform() const
     {
-        return {mRadii, Quaternion{}, mCenter};
+        return {mRadii.IsZero() ? Vector3{1, 1, 1} : mRadii, Quaternion{}, mCenter};
     }
 
     float AABB::GetDistanceToPlane ( const Plane & aPlane ) const

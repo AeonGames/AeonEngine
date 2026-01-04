@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ namespace AeonGames
         DLL float GetMaxAxisLenght() const;
         DLL float GetMinAxisLenght() const;
         DLL float GetDistanceToPlane ( const Plane& aPlane ) const;
+        DLL bool IsZero() const;
         /*! \name Operators */
         //@{
         DLL Vector3& operator= ( const float* aLhs );
