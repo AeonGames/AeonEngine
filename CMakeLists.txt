@@ -508,6 +508,7 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   endif(BUILD_OPENGL_RENDERER)
   if(BUILD_VULKAN_RENDERER)
     list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine/renderers/vulkan)
+    list(APPEND INCLIST ${CMAKE_BINARY_DIR}/engine/renderers/vulkan/spirv-reflect)
   endif(BUILD_VULKAN_RENDERER)
   list(APPEND INCLIST ${GLSlang_INCLUDE_DIR})
   list(APPEND INCLIST ${Vulkan_INCLUDE_DIR})
@@ -535,7 +536,7 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
       set(DEBUGGER_CONFIG "")
     endif()
   endif()
-  
+
   # Fall back to gdb if lldb-dap not found
   if(NOT DEBUGGER_TYPE)
     find_program(GDB_EXECUTABLE gdb

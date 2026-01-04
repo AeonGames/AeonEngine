@@ -285,10 +285,10 @@ namespace AeonGames
         std::swap ( mMaterialDescriptorSet, aVulkanPipeline.mMaterialDescriptorSet );
         std::swap ( mSkeletonDescriptorSet, aVulkanPipeline.mSkeletonDescriptorSet );
         std::swap ( mSamplerDescriptorSet, aVulkanPipeline.mSamplerDescriptorSet );
+        std::swap ( mPushConstantModelMatrix, aVulkanPipeline.mPushConstantModelMatrix );
         mAttributes.swap ( aVulkanPipeline.mAttributes );
         mUniforms.swap ( aVulkanPipeline.mUniforms );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
-        //mSamplerLocations.swap ( aVulkanPipeline.mSamplerLocations );
     }
 
     std::array<EShLanguage, ShaderType::COUNT> ShaderTypeToEShLanguage
@@ -560,36 +560,14 @@ namespace AeonGames
             }
             descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
         }
-#if 0
-        // Matrix Descriptor Set Layout
-        if ( GetUniformBlock ( "Matrices"_crc32 ) )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
-        }
-        // Material Descriptor Set Layout
-        if ( GetUniformBlock ( "Material"_crc32 ) )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDescriptorSetLayout();
-        }
-        // Sampler Descriptor Set Layout
-        if ( mSamplerLocations.size() )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetSamplerDescriptorSetLayout ( mSamplerLocations.size() );
-        }
-        //---------------Dynamic Uniform Buffer for Skeletons------------------//
-        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
-        {
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetUniformBufferDynamicDescriptorSetLayout();
-        }
-#endif
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = descriptor_set_layout_count;
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layout_count ? descriptor_set_layouts.data() : nullptr;
-        pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( mPushConstantRanges.size() );
-        pipeline_layout_create_info.pPushConstantRanges = mPushConstantRanges.empty() ? nullptr : mPushConstantRanges.data();
+        pipeline_layout_create_info.pushConstantRangeCount = mPushConstantModelMatrix.offset == 0 && mPushConstantModelMatrix.size == 0 ? 0 : 1;
+        pipeline_layout_create_info.pPushConstantRanges = pipeline_layout_create_info.pushConstantRangeCount ? &mPushConstantModelMatrix : nullptr;
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;
@@ -881,6 +859,10 @@ namespace AeonGames
     {
         return mSamplerDescriptorSet;
     }
+    const VkPushConstantRange& VulkanPipeline::GetPushConstantModelMatrix() const
+    {
+        return mPushConstantModelMatrix;
+    }
 
     void VulkanPipeline::ReflectPushConstants ( SpvReflectShaderModule& aModule, ShaderType aType )
     {
@@ -906,44 +888,17 @@ namespace AeonGames
                 std::cout << LogLevel::Error << stream.str();
                 throw std::runtime_error ( stream.str().c_str() );
             }
-
             for ( const auto& push_constant_block : push_constant_blocks )
             {
-                // Check if we already have a push constant range at this offset
-                auto it = std::find_if ( mPushConstantRanges.begin(), mPushConstantRanges.end(),
-                                         [push_constant_block] ( const VkPushConstantRange & range )
+                /* We'll keep it simple and just look for the model matrix push constant */
+                if ( push_constant_block->member_count == 1 && push_constant_block->members[0].name != nullptr &&
+                     strcmp ( push_constant_block->members[0].name, "ModelMatrix" ) == 0 )
                 {
-                    return range.offset == push_constant_block->offset;
-                } );
-
-                if ( it == mPushConstantRanges.end() )
-                {
-                    // New push constant range
-                    VkPushConstantRange range{};
-                    range.stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
-                    range.offset = push_constant_block->offset;
-                    range.size = push_constant_block->size;
-                    mPushConstantRanges.push_back ( range );
-                    std::cout << LogLevel::Debug << "Push Constant: " << push_constant_block->name
-                              << " Offset: " << range.offset
-                              << " Size: " << range.size
-                              << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
-                }
-                else
-                {
-                    // Existing push constant range - merge stage flags
-                    if ( it->size != push_constant_block->size )
-                    {
-                        std::ostringstream stream;
-                        stream << "Push constant size mismatch at offset " << push_constant_block->offset
-                               << ". Expected " << it->size << ", got " << push_constant_block->size;
-                        std::cout << LogLevel::Error << stream.str();
-                        throw std::runtime_error ( stream.str().c_str() );
-                    }
-                    it->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
-                    std::cout << LogLevel::Debug << "Push Constant (merged): " << push_constant_block->name
-                              << " Offset: " << it->offset
-                              << " Size: " << it->size
+                    mPushConstantModelMatrix.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                    mPushConstantModelMatrix.offset = push_constant_block->offset;
+                    mPushConstantModelMatrix.size = push_constant_block->size;
+                    std::cout << LogLevel::Debug << "Model Matrix Push Constant Offset: " << mPushConstantModelMatrix.offset
+                              << " Size: " << mPushConstantModelMatrix.size
                               << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
                 }
             }
