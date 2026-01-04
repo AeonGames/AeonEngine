@@ -50,6 +50,7 @@ namespace AeonGames
         uint32_t GetMaterialDescriptorSet() const;
         uint32_t GetSkeletonDescriptorSet() const;
         uint32_t GetSamplerDescriptorSet() const;
+        const VkPushConstantRange& GetPushConstantModelMatrix() const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
         void ReflectDescriptorSets ( SpvReflectShaderModule& module, ShaderType aType );
@@ -66,7 +67,7 @@ namespace AeonGames
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
-        std::vector<VkPushConstantRange> mPushConstantRanges{};
+        VkPushConstantRange mPushConstantModelMatrix{};
     };
 }
 #endif

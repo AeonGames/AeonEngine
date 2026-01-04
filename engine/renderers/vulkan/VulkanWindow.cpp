@@ -495,7 +495,7 @@ namespace AeonGames
     void VulkanWindow::InitializeMatrices()
     {
         mMatrices.Initialize (
-            sizeof ( float ) * 16 * 3,
+            sizeof ( float ) * 16 * 2,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 
@@ -613,14 +613,14 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
@@ -791,7 +791,6 @@ namespace AeonGames
                                 uint32_t aFirstInstance ) const
     {
         const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
@@ -805,12 +804,15 @@ namespace AeonGames
                                       1,
                                       &mMatricesDescriptorSet, 0, nullptr );
         }
-#if 0
-        vkCmdPushConstants ( mVkCommandBuffer,
-                             pipeline->GetPipelineLayout(),
-                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                             0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
-#endif
+
+        if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
+        {
+            vkCmdPushConstants ( mVkCommandBuffer,
+                                 pipeline->GetPipelineLayout(),
+                                 push_constant_model_matrix.stageFlags,
+                                 push_constant_model_matrix.offset, push_constant_model_matrix.size,
+                                 aModelMatrix.GetMatrix4x4() );
+        }
         if ( aMaterial != nullptr )
         {
             mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
