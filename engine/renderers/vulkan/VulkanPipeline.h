@@ -50,10 +50,10 @@ namespace AeonGames
         uint32_t GetMaterialDescriptorSet() const;
         uint32_t GetSkeletonDescriptorSet() const;
         uint32_t GetSamplerDescriptorSet() const;
-        const uint32_t GetSamplerBinding ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
         void ReflectDescriptorSets ( SpvReflectShaderModule& module, ShaderType aType );
+        void ReflectPushConstants ( SpvReflectShaderModule& module, ShaderType aType );
         const VulkanRenderer& mVulkanRenderer;
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
@@ -66,7 +66,7 @@ namespace AeonGames
         std::vector<VulkanVariable> mAttributes{};
         std::vector<VulkanVariable> mUniforms{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
-        std::vector<VulkanSamplerLocation> mSamplerLocations{};
+        std::vector<VkPushConstantRange> mPushConstantRanges{};
     };
 }
 #endif

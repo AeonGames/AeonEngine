@@ -1,13 +1,18 @@
 #version 450
 
 #ifdef VULKAN
+layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };
+#endif
+#ifdef VULKAN
 layout(set = 0, binding = 0, std140)
 #else
 layout(binding = 0, std140)
 #endif
 uniform Matrices
 {
+#ifndef VULKAN
       mat4 ModelMatrix;
+#endif
       mat4 ProjectionMatrix;
       mat4 ViewMatrix;
 };

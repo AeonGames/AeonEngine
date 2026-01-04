@@ -288,7 +288,7 @@ namespace AeonGames
         mAttributes.swap ( aVulkanPipeline.mAttributes );
         mUniforms.swap ( aVulkanPipeline.mUniforms );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
-        mSamplerLocations.swap ( aVulkanPipeline.mSamplerLocations );
+        //mSamplerLocations.swap ( aVulkanPipeline.mSamplerLocations );
     }
 
     std::array<EShLanguage, ShaderType::COUNT> ShaderTypeToEShLanguage
@@ -392,6 +392,7 @@ namespace AeonGames
                 ReflectAttributes ( module );
             }
             ReflectDescriptorSets ( module, static_cast<ShaderType> ( i ) );
+            ReflectPushConstants ( module, static_cast<ShaderType> ( i ) );
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection-END----------//
             //----------------Shader Stages------------------//
@@ -445,8 +446,11 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
         pipeline_input_assembly_state_create_info.topology = TopologyClassToVulkanTopology.at ( mPipeline->GetTopologyClass() );
+#ifdef VK_USE_PLATFORM_METAL_EXT
         pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_TRUE;
-
+#else
+        pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
+#endif
         //----------------Viewport State------------------//
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
         pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -584,8 +588,8 @@ namespace AeonGames
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = descriptor_set_layout_count;
         pipeline_layout_create_info.pSetLayouts = descriptor_set_layout_count ? descriptor_set_layouts.data() : nullptr;
-        pipeline_layout_create_info.pushConstantRangeCount = 0; //static_cast<uint32_t> ( push_constant_ranges.size() );
-        pipeline_layout_create_info.pPushConstantRanges = nullptr; //push_constant_ranges.data();
+        pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t> ( mPushConstantRanges.size() );
+        pipeline_layout_create_info.pPushConstantRanges = mPushConstantRanges.empty() ? nullptr : mPushConstantRanges.data();
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;
@@ -659,11 +663,6 @@ namespace AeonGames
         return mAttributes;
     }
 
-    const std::vector<VulkanSamplerLocation>& VulkanPipeline::GetSamplers() const
-    {
-        return mSamplerLocations;
-    }
-
     const VkDescriptorSetLayout VulkanPipeline::GetDescriptorSetLayout ( uint32_t name ) const
     {
         for ( const auto& set : mDescriptorSets )
@@ -679,16 +678,6 @@ namespace AeonGames
             }
         }
         return VK_NULL_HANDLE;
-    }
-
-    const uint32_t VulkanPipeline::GetSamplerBinding ( uint32_t name_hash ) const
-    {
-        auto it = std::find_if ( mSamplerLocations.begin(), mSamplerLocations.end(),
-                                 [name_hash] ( const VulkanSamplerLocation & sampler )
-        {
-            return sampler.name == name_hash;
-        } );
-        return ( it != mSamplerLocations.end() ) ? it->location : 0;
     }
 
     void VulkanPipeline::ReflectAttributes ( SpvReflectShaderModule& module )
@@ -891,5 +880,73 @@ namespace AeonGames
     uint32_t VulkanPipeline::GetSamplerDescriptorSet() const
     {
         return mSamplerDescriptorSet;
+    }
+
+    void VulkanPipeline::ReflectPushConstants ( SpvReflectShaderModule& aModule, ShaderType aType )
+    {
+        // Get push constant block count
+        uint32_t push_constant_count{0};
+        SpvReflectResult result{spvReflectEnumeratePushConstantBlocks ( &aModule, &push_constant_count, nullptr ) };
+        if ( result != SPV_REFLECT_RESULT_SUCCESS )
+        {
+            std::ostringstream stream;
+            stream << "SPIR-V Reflect push constant enumeration failed: ( " << static_cast<int> ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        if ( push_constant_count > 0 )
+        {
+            std::vector<SpvReflectBlockVariable*> push_constant_blocks ( push_constant_count );
+            result = spvReflectEnumeratePushConstantBlocks ( &aModule, &push_constant_count, push_constant_blocks.data() );
+            if ( result != SPV_REFLECT_RESULT_SUCCESS )
+            {
+                std::ostringstream stream;
+                stream << "SPIR-V Reflect push constant enumeration failed: ( " << static_cast<int> ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str();
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            for ( const auto& push_constant_block : push_constant_blocks )
+            {
+                // Check if we already have a push constant range at this offset
+                auto it = std::find_if ( mPushConstantRanges.begin(), mPushConstantRanges.end(),
+                                         [push_constant_block] ( const VkPushConstantRange & range )
+                {
+                    return range.offset == push_constant_block->offset;
+                } );
+
+                if ( it == mPushConstantRanges.end() )
+                {
+                    // New push constant range
+                    VkPushConstantRange range{};
+                    range.stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
+                    range.offset = push_constant_block->offset;
+                    range.size = push_constant_block->size;
+                    mPushConstantRanges.push_back ( range );
+                    std::cout << LogLevel::Debug << "Push Constant: " << push_constant_block->name
+                              << " Offset: " << range.offset
+                              << " Size: " << range.size
+                              << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
+                }
+                else
+                {
+                    // Existing push constant range - merge stage flags
+                    if ( it->size != push_constant_block->size )
+                    {
+                        std::ostringstream stream;
+                        stream << "Push constant size mismatch at offset " << push_constant_block->offset
+                               << ". Expected " << it->size << ", got " << push_constant_block->size;
+                        std::cout << LogLevel::Error << stream.str();
+                        throw std::runtime_error ( stream.str().c_str() );
+                    }
+                    it->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                    std::cout << LogLevel::Debug << "Push Constant (merged): " << push_constant_block->name
+                              << " Offset: " << it->offset
+                              << " Size: " << it->size
+                              << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
+                }
+            }
+        }
     }
 }

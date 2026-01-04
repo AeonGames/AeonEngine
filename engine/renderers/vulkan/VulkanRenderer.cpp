@@ -248,6 +248,7 @@ namespace AeonGames
         mInstanceExtensionNames.push_back ( VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME );
         mInstanceExtensionNames.push_back ( VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME );
         mDeviceExtensionNames.push_back ( "VK_KHR_portability_subset" );
+        mDeviceExtensionNames.push_back ( VK_EXT_PRIMITIVE_TOPOLOGY_LIST_RESTART_EXTENSION_NAME );
 #elif defined (VK_USE_PLATFORM_XLIB_KHR)
         mInstanceExtensionNames.push_back ( VK_KHR_XLIB_SURFACE_EXTENSION_NAME );
 #endif
@@ -420,10 +421,6 @@ namespace AeonGames
             std::cout << LogLevel::Debug << "maxUniformBufferRange: " << mVkPhysicalDeviceProperties.limits.maxUniformBufferRange << std::endl;
             vkGetPhysicalDeviceMemoryProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceMemoryProperties );
         }
-
-        VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT physical_device_primitive_topology_list_restart_features{};
-        VkDeviceCreateInfo device_create_info{};
-        VkDeviceQueueCreateInfo device_queue_create_info{};
         {
             uint32_t family_properties_count;
             vkGetPhysicalDeviceQueueFamilyProperties ( mVkPhysicalDevice, &family_properties_count, nullptr );
@@ -473,24 +470,36 @@ namespace AeonGames
 
         /// @todo Remove hardcoded Queue Info
         float queue_priorities[] {1.0f};
+        VkDeviceQueueCreateInfo device_queue_create_info{};
         device_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        device_queue_create_info.pNext = nullptr;
         device_queue_create_info.queueCount = 1;
         device_queue_create_info.queueFamilyIndex = mQueueFamilyIndex;
         device_queue_create_info.pQueuePriorities = queue_priorities;
 
+#ifdef VK_USE_PLATFORM_METAL_EXT
+        // For some reason this causes a crash on AMD drivers on the RogAlly, so keep it MacOS only while I figure it out.
+        VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT physical_device_primitive_topology_list_restart_features {};
         physical_device_primitive_topology_list_restart_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT;
         physical_device_primitive_topology_list_restart_features.pNext = nullptr;
         physical_device_primitive_topology_list_restart_features.primitiveTopologyListRestart = VK_TRUE;
         physical_device_primitive_topology_list_restart_features.primitiveTopologyPatchListRestart = VK_TRUE;
-
+#endif
+        VkDeviceCreateInfo device_create_info {};
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+#ifdef VK_USE_PLATFORM_METAL_EXT
+        // For some reason this causes a crash on AMD drivers on the RogAlly, so keep it MacOS only while I figure it out.
         device_create_info.pNext = &physical_device_primitive_topology_list_restart_features;
+#else
+        device_create_info.pNext = nullptr;
+#endif
         device_create_info.queueCreateInfoCount = 1;
         device_create_info.pQueueCreateInfos = &device_queue_create_info;
         device_create_info.enabledLayerCount = static_cast<uint32_t> ( mDeviceLayerNames.size() );
         device_create_info.ppEnabledLayerNames = mDeviceLayerNames.data();
         device_create_info.enabledExtensionCount = static_cast<uint32_t> ( mDeviceExtensionNames.size() );
         device_create_info.ppEnabledExtensionNames = mDeviceExtensionNames.data();
+        device_create_info.pEnabledFeatures = nullptr;
 
         /// @todo Grab best device rather than first one
         if ( VkResult result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) )
