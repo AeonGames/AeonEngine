@@ -22,7 +22,6 @@ limitations under the License.
 #include <limits>
 #include <vulkan/vulkan.h>
 #include "aeongames/Pipeline.hpp"
-#include "VulkanVariable.h"
 #include "VulkanDescriptorSet.h"
 
 // Forward declarations
@@ -43,13 +42,8 @@ namespace AeonGames
         const VkPipelineLayout GetPipelineLayout() const;
         const VkPipeline GetVkPipeline() const;
         const Pipeline* GetPipeline() const;
-        const std::vector<VulkanVariable>& GetVertexAttributes() const;
-        const std::vector<VulkanSamplerLocation>& GetSamplers() const;
         const VkDescriptorSetLayout GetDescriptorSetLayout ( uint32_t name ) const;
-        uint32_t GetMatrixDescriptorSet() const;
-        uint32_t GetMaterialDescriptorSet() const;
-        uint32_t GetSkeletonDescriptorSet() const;
-        uint32_t GetSamplerDescriptorSet() const;
+        uint32_t GetDescriptorSetIndex ( uint32_t hash ) const;
         const VkPushConstantRange& GetPushConstantModelMatrix() const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
@@ -60,12 +54,7 @@ namespace AeonGames
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
         uint32_t mVertexStride{0};
-        uint32_t mMatrixDescriptorSet{std::numeric_limits<uint32_t>::max() };
-        uint32_t mMaterialDescriptorSet{std::numeric_limits<uint32_t>::max() };
-        uint32_t mSkeletonDescriptorSet{std::numeric_limits<uint32_t>::max() };
-        uint32_t mSamplerDescriptorSet{std::numeric_limits<uint32_t>::max() };
-        std::vector<VulkanVariable> mAttributes{};
-        std::vector<VulkanVariable> mUniforms{};
+        std::vector<VkVertexInputAttributeDescription> mVertexAttributes{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
         VkPushConstantRange mPushConstantModelMatrix{};
     };

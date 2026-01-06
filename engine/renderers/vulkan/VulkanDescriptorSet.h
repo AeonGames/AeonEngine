@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,22 +19,15 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "VulkanVariable.h"
 
 namespace AeonGames
 {
-    struct VulkanDescriptorSetBindingRecord
-    {
-        uint32_t hash{};
-        uint32_t binding_index{};
-    };
-
     struct VulkanDescriptorSetInfo
     {
-        uint32_t index{};
+        uint32_t hash{};
+        uint32_t set{};
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings{};
-        std::vector<VulkanDescriptorSetBindingRecord> descriptor_set_binding_table{};
     };
 }
 #endif

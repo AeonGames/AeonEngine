@@ -148,132 +148,6 @@ namespace AeonGames
                    a.pImmutableSamplers == nullptr );
     }
 
-#if 0
-    static std::string GetSamplersCode ( const Pipeline& aPipeline, uint32_t aSetNumber )
-    {
-        std::string samplers ( "//----SAMPLERS-START----\n" );
-        {
-            uint32_t sampler_binding = 0;
-            for ( auto& i : aPipeline.GetSamplerDescriptors() )
-            {
-                samplers += "layout(set = " + std::to_string ( aSetNumber ) + ", binding = " + std::to_string ( sampler_binding ) + ", location =" + std::to_string ( sampler_binding ) + ") uniform sampler2D " + i + ";\n";
-                ++sampler_binding;
-            }
-        }
-        samplers.append ( "//----SAMPLERS-END----\n" );
-        return samplers;
-    }
-
-    static std::string GetVertexShaderCode ( const Pipeline& aPipeline )
-    {
-        std::string vertex_shader{ "#version 450\n" };
-        vertex_shader.append ( aPipeline.GetAttributes () );
-
-        std::string transforms (
-            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = " + std::to_string ( MATRICES ) + ", binding = 0, std140) uniform Matrices{\n"
-            "mat4 ProjectionMatrix;\n"
-            "mat4 ViewMatrix;\n"
-            "};\n"
-        );
-
-        vertex_shader.append ( transforms );
-
-        // Properties
-        vertex_shader.append (
-            "layout(set = " + std::to_string ( MATERIAL ) +
-            ", binding = 0,std140) uniform Material{\n" +
-            aPipeline.GetProperties( ) + "};\n" );
-
-        vertex_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
-
-        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
-        {
-            // Skeleton
-            std::string skeleton (
-                "layout(set = " + std::to_string ( SKELETON ) + ", binding = 0, std140) uniform Skeleton{\n"
-                "mat4 skeleton[256];\n"
-                "};\n"
-            );
-            vertex_shader.append ( skeleton );
-        }
-
-        vertex_shader.append ( aPipeline.GetVertexShaderCode() );
-        return vertex_shader;
-    }
-
-    static std::string GetFragmentShaderCode ( const Pipeline& aPipeline )
-    {
-        std::string fragment_shader{"#version 450\n"};
-        std::string transforms (
-            "layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };\n"
-            "layout(set = " + std::to_string ( MATRICES ) + ", binding = 0, std140) uniform Matrices{\n"
-            "mat4 ProjectionMatrix;\n"
-            "mat4 ViewMatrix;\n"
-            "};\n"
-        );
-        fragment_shader.append ( transforms );
-
-        fragment_shader.append ( "layout(set = " + std::to_string ( MATERIAL ) +
-                                 ", binding = 0,std140) uniform Material{\n" +
-                                 aPipeline.GetProperties() + "};\n" );
-        fragment_shader.append ( GetSamplersCode ( aPipeline, SAMPLERS ) );
-
-        if ( aPipeline.GetAttributeBitmap() & ( VertexWeightIdxBit | VertexWeightBit ) )
-        {
-            // Skeleton
-            std::string skeleton (
-                "layout(set = " + std::to_string ( SKELETON ) + ", binding = 0, std140) uniform Skeleton{\n"
-                "mat4 skeleton[256];\n"
-                "};\n"
-            );
-            fragment_shader.append ( skeleton );
-        }
-
-        fragment_shader.append ( aPipeline.GetFragmentShaderCode() );
-        return fragment_shader;
-    }
-
-    static uint32_t GetLocation ( AttributeBits aAttributeBit )
-    {
-        return ffs ( aAttributeBit );
-    }
-
-    static VkFormat GetFormat ( AttributeBits aAttributeBit )
-    {
-        return ( aAttributeBit & VertexUVBit ) ? VK_FORMAT_R32G32_SFLOAT :
-               ( aAttributeBit & VertexWeightIdxBit ) ? VK_FORMAT_R8G8B8A8_UINT :
-               ( aAttributeBit & VertexWeightBit ) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R32G32B32_SFLOAT;
-    }
-
-    static uint32_t GetSize ( AttributeBits aAttributeBit )
-    {
-        switch ( GetFormat ( aAttributeBit ) )
-        {
-        case VK_FORMAT_R32G32_SFLOAT:
-            return sizeof ( float ) * 2;
-        case VK_FORMAT_R32G32B32_SFLOAT:
-            return sizeof ( float ) * 3;
-        case VK_FORMAT_R8G8B8A8_UINT:
-        case VK_FORMAT_R8G8B8A8_UNORM:
-            return sizeof ( uint8_t ) * 4;
-        default:
-            return 0;
-        }
-        return 0;
-    }
-
-    static uint32_t GetOffset ( AttributeBits aAttributeBit )
-    {
-        uint32_t offset = 0;
-        for ( uint32_t i = 1; i != aAttributeBit; i = i << 1 )
-        {
-            offset += GetSize ( static_cast<AttributeBits> ( i ) );
-        }
-        return offset;
-    }
-#endif
-
     VulkanPipeline::VulkanPipeline ( VulkanPipeline&& aVulkanPipeline ) :
         mVulkanRenderer{aVulkanPipeline.mVulkanRenderer}
     {
@@ -281,13 +155,8 @@ namespace AeonGames
         std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
         std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
-        std::swap ( mMatrixDescriptorSet, aVulkanPipeline.mMatrixDescriptorSet );
-        std::swap ( mMaterialDescriptorSet, aVulkanPipeline.mMaterialDescriptorSet );
-        std::swap ( mSkeletonDescriptorSet, aVulkanPipeline.mSkeletonDescriptorSet );
-        std::swap ( mSamplerDescriptorSet, aVulkanPipeline.mSamplerDescriptorSet );
         std::swap ( mPushConstantModelMatrix, aVulkanPipeline.mPushConstantModelMatrix );
-        mAttributes.swap ( aVulkanPipeline.mAttributes );
-        mUniforms.swap ( aVulkanPipeline.mUniforms );
+        mVertexAttributes.swap ( aVulkanPipeline.mVertexAttributes );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
     }
 
@@ -410,26 +279,6 @@ namespace AeonGames
         vertex_input_binding_descriptions[0].binding = 0;
         vertex_input_binding_descriptions[0].stride = mVertexStride;
         vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        std::vector<VkVertexInputAttributeDescription> vertex_input_attribute_descriptions ( mAttributes.size() );
-        for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
-        {
-            vertex_input_attribute_descriptions[i].location = mAttributes[i].location;
-            vertex_input_attribute_descriptions[i].binding = 0;
-            vertex_input_attribute_descriptions[i].format = mAttributes[i].format;
-        }
-        // Sort by location
-        std::sort ( vertex_input_attribute_descriptions.begin(), vertex_input_attribute_descriptions.end(),
-                    [] ( const VkVertexInputAttributeDescription & a, const VkVertexInputAttributeDescription & b )
-        {
-            return a.location < b.location;
-        } );
-        // Calculate offsets
-        uint32_t offset = 0;
-        for ( size_t i = 0; i < vertex_input_attribute_descriptions.size(); ++i )
-        {
-            vertex_input_attribute_descriptions[i].offset = offset;
-            offset += VkFormatToVulkanSize.at ( vertex_input_attribute_descriptions[i].format );
-        }
 
         VkPipelineVertexInputStateCreateInfo pipeline_vertex_input_state_create_info {};
         pipeline_vertex_input_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -437,8 +286,8 @@ namespace AeonGames
         pipeline_vertex_input_state_create_info.flags = 0;
         pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = static_cast<uint32_t> ( vertex_input_binding_descriptions.size() );
         pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = vertex_input_binding_descriptions.data();
-        pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t> ( vertex_input_attribute_descriptions.size() );
-        pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vertex_input_attribute_descriptions.data();
+        pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t> ( mVertexAttributes.size() );
+        pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = mVertexAttributes.data();
 
         //----------------Input Assembly------------------//
         VkPipelineInputAssemblyStateCreateInfo pipeline_input_assembly_state_create_info{};
@@ -541,31 +390,27 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
-#if 0
-        //----------------Push Constant Range------------------//
-        std::array<VkPushConstantRange, 1> push_constant_ranges {};
-        push_constant_ranges[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; ///@todo determine ALL stage flags based on usage.
-        push_constant_ranges[0].offset = 0;
-        push_constant_ranges[0].size = sizeof ( float ) * 16; // the push constant will contain just the Model Matrix
-#endif
-        uint32_t descriptor_set_layout_count {0};
         std::array<VkDescriptorSetLayout, 8> descriptor_set_layouts{};
-        assert ( "More descriptor sets than available slots" && mDescriptorSets.size() <= descriptor_set_layouts.size() );
+        if ( mDescriptorSets.size() > descriptor_set_layouts.size() )
+        {
+            std::cout << LogLevel::Error << "More descriptor sets than available slots" << std::endl;
+            throw std::runtime_error ( "More descriptor sets than available slots" );
+        }
         for ( const auto& i : mDescriptorSets )
         {
-            if ( i.index != descriptor_set_layout_count )
+            if ( i.set >= mDescriptorSets.size() )
             {
-                std::cout << LogLevel::Error << "Descriptor set index must match its position in array, check shader source" << std::endl;
-                throw std::runtime_error ( "Descriptor set index must match its position in array, check shader source" );
+                std::cout << LogLevel::Error << "Set index out of bounds" << std::endl;
+                throw std::runtime_error ( "Set index out of bounds" );
             }
-            descriptor_set_layouts[descriptor_set_layout_count++] = mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
+            descriptor_set_layouts[i.set] = mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
         }
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = descriptor_set_layout_count;
-        pipeline_layout_create_info.pSetLayouts = descriptor_set_layout_count ? descriptor_set_layouts.data() : nullptr;
+        pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t> ( mDescriptorSets.size() );
+        pipeline_layout_create_info.pSetLayouts = mDescriptorSets.size() ? descriptor_set_layouts.data() : nullptr;
         pipeline_layout_create_info.pushConstantRangeCount = mPushConstantModelMatrix.offset == 0 && mPushConstantModelMatrix.size == 0 ? 0 : 1;
         pipeline_layout_create_info.pPushConstantRanges = pipeline_layout_create_info.pushConstantRangeCount ? &mPushConstantModelMatrix : nullptr;
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
@@ -636,24 +481,16 @@ namespace AeonGames
         return mPipeline;
     }
 
-    const std::vector<VulkanVariable>& VulkanPipeline::GetVertexAttributes() const
-    {
-        return mAttributes;
-    }
-
     const VkDescriptorSetLayout VulkanPipeline::GetDescriptorSetLayout ( uint32_t name ) const
     {
-        for ( const auto& set : mDescriptorSets )
+        auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), name,
+                                     [] ( const VulkanDescriptorSetInfo & a, const uint32_t b )
         {
-            auto it = std::lower_bound ( set.descriptor_set_binding_table.begin(), set.descriptor_set_binding_table.end(), name,
-                                         [] ( const VulkanDescriptorSetBindingRecord & a, const uint32_t b )
-            {
-                return a.hash < b;
-            } );
-            if ( it != set.descriptor_set_binding_table.end() && it->hash == name )
-            {
-                return mVulkanRenderer.GetDescriptorSetLayout ( set.descriptor_set_layout_create_info );
-            }
+            return a.hash < b;
+        } );
+        if ( it != mDescriptorSets.end() && it->hash == name )
+        {
+            return mVulkanRenderer.GetDescriptorSetLayout ( it->descriptor_set_layout_create_info );
         }
         return VK_NULL_HANDLE;
     }
@@ -678,7 +515,7 @@ namespace AeonGames
             std::cout << LogLevel::Error << stream.str();
             throw std::runtime_error ( stream.str().c_str() );
         }
-        mAttributes.reserve ( mAttributes.capacity() + input_vars.size() );
+        mVertexAttributes.reserve ( mVertexAttributes.capacity() + input_vars.size() );
         for ( const auto& i : input_vars )
         {
             if ( i->built_in < 0 )
@@ -699,19 +536,25 @@ namespace AeonGames
                     format = SpvReflectToVulkanFormat.at ( i->format );
                 }
 
-                auto it = std::lower_bound ( mAttributes.begin(), mAttributes.end(), name_crc,
-                                             [] ( const VulkanVariable & a, const uint32_t b )
+                auto it = std::lower_bound ( mVertexAttributes.begin(), mVertexAttributes.end(), i->location,
+                                             [] ( const VkVertexInputAttributeDescription & a, const uint32_t b )
                 {
-                    return a.name < b;
+                    return a.location < b;
                 } );
-                mAttributes.insert ( it,
+                mVertexAttributes.insert ( it,
                 {
-                    name_crc,
                     i->location,
-                    format
+                    0,
+                    format,
+                    0
                 } );
-                mVertexStride += VkFormatToVulkanSize.at ( format );
             }
+        }
+        for ( auto& attr : mVertexAttributes )
+        {
+            // Calculate offsets and stride
+            attr.offset = mVertexStride;
+            mVertexStride += VkFormatToVulkanSize.at ( attr.format );
         }
     }
 
@@ -739,26 +582,46 @@ namespace AeonGames
                 std::cout << LogLevel::Error << stream.str();
                 throw std::runtime_error ( stream.str().c_str() );
             }
-
-            mDescriptorSets.reserve ( descriptor_set_count );
-
             for ( const auto& descriptor_set : descriptor_sets )
             {
-                auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), descriptor_set->set,
+
+                const char* type_name{ ( descriptor_set->binding_count == 1 ) && descriptor_set->bindings[0]->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ?
+                                       descriptor_set->bindings[0]->type_description->type_name : "Samplers"};
+                uint32_t hash = crc32i ( type_name,
+                                         strlen ( type_name ) );
+
+                auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), hash,
                                              [] ( const VulkanDescriptorSetInfo & a, const uint32_t b )
                 {
-                    return a.index < b;
+                    return a.hash < b;
                 } );
-                if ( it == mDescriptorSets.end() || it->index != descriptor_set->set )
+
+                ///@Kwizatz Add more checks to avoid binding conflicts across different shaders
+                if ( it != mDescriptorSets.end() && it->hash == hash && it->set == descriptor_set->set )
                 {
-                    it = mDescriptorSets.insert ( it, VulkanDescriptorSetInfo{descriptor_set->set} );
-                    it->descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
-                    it->descriptor_set_binding_table.reserve ( descriptor_set->binding_count );
-                    it->descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-                    it->descriptor_set_layout_create_info.pNext = nullptr;
-                    it->descriptor_set_layout_create_info.flags = 0;
-                    std::cout << LogLevel::Debug << "Descriptor set " << descriptor_set->set << std::endl;
+                    for ( auto& binding : it->descriptor_set_layout_bindings )
+                    {
+                        binding.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                    }
+                    continue;
                 }
+
+                it = mDescriptorSets.insert ( it,
+                                              VulkanDescriptorSetInfo
+                {
+                    hash,
+                    descriptor_set->set,
+                    VkDescriptorSetLayoutCreateInfo
+                    {
+                        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                        .pNext = nullptr,
+                        .flags = 0
+                    },
+                    {}
+                } );
+                it->descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
+                std::cout << LogLevel::Debug << "Descriptor set " << descriptor_set->set << std::endl;
+
                 for ( uint32_t i = 0; i < descriptor_set->binding_count; ++i )
                 {
                     const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
@@ -767,45 +630,9 @@ namespace AeonGames
                     {
                         return a.binding < b;
                     } );
+
                     if ( layout_binding == it->descriptor_set_layout_bindings.end() || layout_binding->binding != descriptor_set_binding.binding )
                     {
-                        const char* type_name{descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ?
-                                              descriptor_set_binding.type_description->type_name : "Samplers"};
-                        uint32_t hash = crc32i ( type_name,
-                                                 strlen ( type_name ) );
-                        switch ( hash )
-                        {
-                        case Mesh::BindingLocations::MATRICES:
-                            mMatrixDescriptorSet = descriptor_set->set;
-                            break;
-                        case Mesh::BindingLocations::MATERIAL:
-                            mMaterialDescriptorSet = descriptor_set->set;
-                            break;
-                        case Mesh::BindingLocations::SKELETON:
-                            mSkeletonDescriptorSet = descriptor_set->set;
-                            break;
-                        case Mesh::BindingLocations::SAMPLERS:
-                        {
-                            if ( descriptor_set_binding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
-                                 descriptor_set_binding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE &&
-                                 descriptor_set_binding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER )
-                            {
-                                std::cout << LogLevel::Debug << "Sampler Set " << descriptor_set->set << " Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << " expected to be a Sampler but it is not" << std::endl;
-                                break;
-                            }
-                            else if ( mSamplerDescriptorSet != UINT32_MAX && mSamplerDescriptorSet != descriptor_set->set )
-                            {
-                                std::ostringstream stream;
-                                stream << "Multiple sampler descriptor sets detected. Previous Set " << mSamplerDescriptorSet << " New Set " << descriptor_set->set << " Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType );
-                                std::cout << LogLevel::Error << stream.str();
-                                throw std::runtime_error ( stream.str().c_str() );
-                            }
-                            mSamplerDescriptorSet = descriptor_set->set;
-                        }
-                        break;
-                        default:
-                            break;
-                        }
                         layout_binding = it->descriptor_set_layout_bindings.insert ( layout_binding, VkDescriptorSetLayoutBinding{} );
                         layout_binding->binding = descriptor_set_binding.binding;
                         layout_binding->descriptorType = ( hash == Mesh::BindingLocations::SKELETON ) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
@@ -813,28 +640,6 @@ namespace AeonGames
                         layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->pImmutableSamplers = nullptr;
                         std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
-                        it->descriptor_set_binding_table.insert (
-                            std::lower_bound ( it->descriptor_set_binding_table.begin(), it->descriptor_set_binding_table.end(), hash,
-                                               [] ( const VulkanDescriptorSetBindingRecord & a, const uint32_t b )
-                        {
-                            return a.hash < b;
-                        } ),
-                        {
-                            hash,
-                            descriptor_set_binding.binding,
-                        } );
-                    }
-                    else
-                    {
-                        if ( *layout_binding != descriptor_set_binding )
-                        {
-                            std::ostringstream stream;
-                            stream << "Descriptor Set Binding Conflict at Set " << descriptor_set_binding.set << " Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name;
-                            std::cout << LogLevel::Error << stream.str();
-                            throw std::runtime_error ( stream.str().c_str() );
-                        }
-                        layout_binding->stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
-                        std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " Reused Binding " << descriptor_set_binding.binding  << " Type Name " << descriptor_set_binding.type_description->type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
                     }
                 }
                 it->descriptor_set_layout_create_info.bindingCount = static_cast<uint32_t> ( it->descriptor_set_layout_bindings.size() );
@@ -843,22 +648,20 @@ namespace AeonGames
         }
     }
 
-    uint32_t VulkanPipeline::GetMatrixDescriptorSet() const
+    uint32_t VulkanPipeline::GetDescriptorSetIndex ( uint32_t hash ) const
     {
-        return mMatrixDescriptorSet;
+        auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), hash,
+                                     [] ( const VulkanDescriptorSetInfo & a, const uint32_t b )
+        {
+            return a.hash < b;
+        } );
+        if ( it != mDescriptorSets.end() && it->hash == hash )
+        {
+            return it->set;
+        }
+        return std::numeric_limits<uint32_t>::max();
     }
-    uint32_t VulkanPipeline::GetMaterialDescriptorSet() const
-    {
-        return mMaterialDescriptorSet;
-    }
-    uint32_t VulkanPipeline::GetSkeletonDescriptorSet() const
-    {
-        return mSkeletonDescriptorSet;
-    }
-    uint32_t VulkanPipeline::GetSamplerDescriptorSet() const
-    {
-        return mSamplerDescriptorSet;
-    }
+
     const VkPushConstantRange& VulkanPipeline::GetPushConstantModelMatrix() const
     {
         return mPushConstantModelMatrix;
