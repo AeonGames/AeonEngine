@@ -342,7 +342,7 @@ namespace AeonGames
             const_cast<VulkanMaterial*> ( this )->Initialize ( aPipeline );
         }
 
-        if ( uint32_t material_set_index = aPipeline.GetMaterialDescriptorSet(); material_set_index != std::numeric_limits<uint32_t>::max() )
+        if ( uint32_t material_set_index = aPipeline.GetDescriptorSetIndex ( Mesh::BindingLocations::MATERIAL ); material_set_index != std::numeric_limits<uint32_t>::max() )
         {
             vkCmdBindDescriptorSets ( aVkCommandBuffer,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -351,7 +351,7 @@ namespace AeonGames
                                       1,
                                       &mUniformDescriptorSet, 0, nullptr );
         }
-        if ( uint32_t sampler_set_index = aPipeline.GetSamplerDescriptorSet(); sampler_set_index != std::numeric_limits<uint32_t>::max() )
+        if ( uint32_t sampler_set_index = aPipeline.GetDescriptorSetIndex ( Mesh::BindingLocations::SAMPLERS ); sampler_set_index != std::numeric_limits<uint32_t>::max() )
         {
             vkCmdBindDescriptorSets ( aVkCommandBuffer,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS,
