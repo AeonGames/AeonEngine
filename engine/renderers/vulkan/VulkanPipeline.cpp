@@ -599,10 +599,12 @@ namespace AeonGames
                 ///@Kwizatz Add more checks to avoid binding conflicts across different shaders
                 if ( it != mDescriptorSets.end() && it->hash == hash && it->set == descriptor_set->set )
                 {
+#if 0
                     for ( auto& binding : it->descriptor_set_layout_bindings )
                     {
                         binding.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
                     }
+#endif
                     continue;
                 }
 
@@ -637,7 +639,8 @@ namespace AeonGames
                         layout_binding->binding = descriptor_set_binding.binding;
                         layout_binding->descriptorType = ( hash == Mesh::BindingLocations::SKELETON ) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
                         layout_binding->descriptorCount = descriptor_set_binding.count;
-                        layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
+                        //layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
+                        layout_binding->stageFlags = VK_SHADER_STAGE_ALL;
                         layout_binding->pImmutableSamplers = nullptr;
                         std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
                     }

@@ -90,7 +90,8 @@ namespace AeonGames
         descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         descriptor_set_layout_binding.descriptorCount = 1;
         // Only vertex shaders will access these for now, add a flag for other stages if needed
-        descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        //descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
         descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
         mVkDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( descriptor_set_layout_create_info ) );

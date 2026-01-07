@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,17 +23,16 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
 #include "VulkanBuffer.h"
-#include "VulkanPipeline.h"
 
 namespace AeonGames
 {
     class VulkanRenderer;
     class VulkanTexture;
+    class VulkanPipeline;
     class VulkanMaterial
     {
     public:
         VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Material& aMaterial );
-        VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, const Material& aMaterial );
         VulkanMaterial ( const VulkanMaterial& aMaterial ) = delete;
         VulkanMaterial& operator= ( const VulkanMaterial& aMaterial ) = delete;
         VulkanMaterial& operator= ( VulkanMaterial&& ) = delete;
@@ -43,7 +42,6 @@ namespace AeonGames
     private:
         VulkanRenderer& mVulkanRenderer;
         const Material* mMaterial{nullptr};
-        void Initialize ( const VulkanPipeline& aVulkanPipeline );
         void Finalize ();
         VkDescriptorPool mVkDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
