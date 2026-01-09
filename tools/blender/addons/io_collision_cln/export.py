@@ -1,4 +1,4 @@
-# Copyright (C) 2012,2013,2015,2017,2019,2021-2023 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2012,2013,2015,2017,2019,2021-2023,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,17 +74,6 @@ class CLN_OT_exporter(bpy.types.Operator):
     bl_idname = "export_collision_mesh.cln"
     bl_label = "Export AeonGames Collision Mesh"
     filepath: bpy.props.StringProperty(subtype='FILE_PATH')
-
-    def __init__(self):
-        # Collision Data
-        self.planes         = [] # Collision
-        self.plane_indices  = [] # Collision
-        self.brushes        = [] # Polygon Brushes
-        self.kdpoints       = []
-        self.kdtreenodes    = []
-        self.kdtreeleaves   = []
-        # Visual Data
-        self.materials      = {}
 
     @classmethod
     def poll(cls, context):
@@ -343,6 +332,15 @@ class CLN_OT_exporter(bpy.types.Operator):
             self.plane_indices.extend(indices)
 
     def execute(self, context):
+        # Initialize instance variables
+        self.planes         = [] # Collision
+        self.plane_indices  = [] # Collision
+        self.brushes        = [] # Polygon Brushes
+        self.kdpoints       = []
+        self.kdtreenodes    = []
+        self.kdtreeleaves   = []
+        self.materials      = {}
+        
         seconds = time.time()
         bpy.ops.object.mode_set()
         scene = context.scene

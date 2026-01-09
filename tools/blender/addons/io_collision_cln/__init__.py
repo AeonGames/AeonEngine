@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017,2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017,2019,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ bl_info = {
     "name": "AeonGames Collision Format (.cln)",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
-    "blender": (2, 80, 0),
+    "blender": (5, 0, 0),
     "location": "File > Export > Export AeonGames Collision Data",
     "description": "Exports a mesh as AeonGames Collision Data file (CLN)",
     "warning": "",
