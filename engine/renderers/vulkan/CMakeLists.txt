@@ -68,6 +68,10 @@ set(VULKAN_RENDERER_SOURCES
     VulkanFrameBuffer.cpp
     Plugin.cpp)
 
+if(APPLE)
+    list(APPEND VULKAN_RENDERER_SOURCES MacOSMetalHelper.mm)
+endif()
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect)
 set(SPIRV_REFLECT_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect/spirv_reflect.cpp

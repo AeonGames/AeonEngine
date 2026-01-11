@@ -39,6 +39,11 @@ limitations under the License.
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/MemoryPool.hpp"
 
+#if defined(__APPLE__)
+// Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
+extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr );
+#endif
+
 namespace AeonGames
 {
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
@@ -111,7 +116,7 @@ namespace AeonGames
 #elif defined( VK_USE_PLATFORM_METAL_EXT )
         VkMetalSurfaceCreateInfoEXT metal_surface_create_info_ext {};
         metal_surface_create_info_ext.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-        metal_surface_create_info_ext.pLayer = reinterpret_cast<CAMetalLayer*> ( mWindowId );
+        metal_surface_create_info_ext.pLayer = reinterpret_cast<CAMetalLayer*> ( GetMetalLayerFromNSView ( mWindowId ) );
         if ( VkResult result = vkCreateMetalSurfaceEXT ( mVulkanRenderer.GetInstance(), &metal_surface_create_info_ext, nullptr, &mVkSurfaceKHR ) )
         {
             std::ostringstream stream;
@@ -747,7 +752,7 @@ namespace AeonGames
         submit_info.pSignalSemaphores = &mVulkanRenderer.GetSignalSemaphore();
         if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) )
         {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         std::array<VkResult, 1> result_array{ { VkResult::VK_SUCCESS } };
         VkPresentInfoKHR present_info{};
@@ -760,7 +765,7 @@ namespace AeonGames
         present_info.pResults = result_array.data();
         if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer.GetQueue(), &present_info ) )
         {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         mMemoryPoolBuffer.Reset();
     }
