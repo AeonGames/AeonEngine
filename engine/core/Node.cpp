@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -248,7 +248,7 @@ namespace AeonGames
                     }
                     else if constexpr ( std::is_same_v<T, long> )
                     {
-                        component_property_buffer->set_long_ ( arg );
+                        component_property_buffer->set_long_ ( static_cast<int32_t> ( arg ) );
                     }
                     else if constexpr ( std::is_same_v<T, long long> )
                     {
@@ -260,7 +260,7 @@ namespace AeonGames
                     }
                     else if constexpr ( std::is_same_v<T, unsigned long> )
                     {
-                        component_property_buffer->set_unsigned_long ( arg );
+                        component_property_buffer->set_unsigned_long ( static_cast<uint32_t> ( arg ) );
                     }
                     else if constexpr ( std::is_same_v<T, unsigned long long> )
                     {
