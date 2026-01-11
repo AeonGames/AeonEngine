@@ -18,6 +18,10 @@
                     {
                         "name":"ASAN_OPTIONS",
                         "value":"abort_on_error=1"
+                    },
+                    {
+                        "name":"OBJC_DISABLE_INITIALIZE_FORK_SAFETY",
+                        "value":"YES"
                     }
                 ],
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,

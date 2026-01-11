@@ -21,33 +21,53 @@ limitations under the License.
 
 extern "C" void* GetMetalLayerFromNSView(void* nsview_ptr)
 {
-    if (!nsview_ptr)
-    {
-        return nullptr;
+    @autoreleasepool {
+        if (!nsview_ptr)
+        {
+            return nullptr;
+        }
+        
+        NSView* view = (__bridge NSView*)nsview_ptr;
+        
+        // Ensure we're on the main thread for AppKit operations
+        if (![NSThread isMainThread])
+        {
+            NSLog(@"Warning: GetMetalLayerFromNSView called from non-main thread");
+            return nullptr;
+        }
+        
+        // Check if the view already has a metal layer
+        if (view.layer && [view.layer isKindOfClass:[CAMetalLayer class]])
+        {
+            return (__bridge void*)view.layer;
+        }
+        
+        // Create a CAMetalLayer
+        CAMetalLayer* metalLayer = [CAMetalLayer layer];
+        
+        // Important: Set wantsLayer BEFORE setting the layer to avoid issues
+        view.wantsLayer = YES;
+        view.layer = metalLayer;
+        
+        // Remove all gesture recognizers to prevent Swift runtime conflicts
+        // This prevents issues with Qt's QMacStyle gesture recognizer management
+        NSArray* recognizers = [view.gestureRecognizers copy];
+        for (NSGestureRecognizer* recognizer in recognizers)
+        {
+            [view removeGestureRecognizer:recognizer];
+        }
+        
+        // Set the content scale to match the display
+        if (view.window)
+        {
+            metalLayer.contentsScale = view.window.backingScaleFactor;
+        }
+        else
+        {
+            metalLayer.contentsScale = [[NSScreen mainScreen] backingScaleFactor];
+        }
+        
+        // Return bridged pointer without transferring ownership
+        return (__bridge void*)metalLayer;
     }
-    
-    NSView* view = (__bridge NSView*)nsview_ptr;
-    
-    // Check if the view already has a metal layer
-    if (view.layer && [view.layer isKindOfClass:[CAMetalLayer class]])
-    {
-        return (__bridge void*)view.layer;
-    }
-    
-    // Create and set a CAMetalLayer
-    CAMetalLayer* metalLayer = [CAMetalLayer layer];
-    view.layer = metalLayer;
-    view.wantsLayer = YES;
-    
-    // Set the content scale to match the display
-    if (view.window)
-    {
-        metalLayer.contentsScale = view.window.backingScaleFactor;
-    }
-    else
-    {
-        metalLayer.contentsScale = [[NSScreen mainScreen] backingScaleFactor];
-    }
-    
-    return (__bridge void*)metalLayer;
 }
