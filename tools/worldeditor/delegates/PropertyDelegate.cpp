@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace AeonGames
     template<class T> void SetSpinboxEditorValue ( QWidget *editor, const QVariant& value )
     {
         QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );
-        spinBox->setValue ( value.value<T>() );
+        spinBox->setValue ( static_cast<int> ( value.value<T>() ) );
     }
 
     template<class T> void SetSpinboxModelData ( QWidget *editor, QAbstractItemModel *model, const QModelIndex &index )
