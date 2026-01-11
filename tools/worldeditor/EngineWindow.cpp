@@ -118,7 +118,11 @@ namespace AeonGames
     {
         stop();
         mTimer.disconnect();
+        // Detach from renderer BEFORE Qt destroys the NSView
+        // This ensures Vulkan releases the Metal layer first
         qWorldEditorApp->DetachWindowFromRenderer ( mWinId );
+        // Reset to prevent use-after-free
+        mWinId = nullptr;
     }
 
     void EngineWindow::stop()

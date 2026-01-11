@@ -172,4 +172,13 @@ if(APPLE)
     target_link_libraries(worldeditor
                           "-framework QuartzCore"
                           "-framework AppKit")
+
+    # Code signing with entitlements for development
+    add_custom_command(TARGET worldeditor POST_BUILD
+        COMMAND codesign --force --deep --sign -
+                --entitlements ${CMAKE_CURRENT_SOURCE_DIR}/worldeditor.entitlements
+                --timestamp=none
+                $<TARGET_FILE:worldeditor>
+        COMMENT "Code signing worldeditor with development entitlements"
+    )
 endif()
