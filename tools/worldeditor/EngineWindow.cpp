@@ -32,11 +32,6 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include "aeongames/Node.hpp"
 
-#if defined(__APPLE__)
-// Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
-extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr );
-#endif
-
 namespace AeonGames
 {
     EngineWindow::EngineWindow ( QWindow *parent ) :
@@ -78,12 +73,7 @@ namespace AeonGames
         }
 
         // Get the native window handle
-#if defined(__APPLE__)
-        // On macOS with Vulkan/MoltenVK, we need to pass the CAMetalLayer, not the NSView
-        mWinId = GetMetalLayerFromNSView ( reinterpret_cast<void*> ( winId() ) );
-#else
         mWinId = reinterpret_cast<void*> ( winId() );
-#endif
 
         qWorldEditorApp->AttachWindowToRenderer ( mWinId );
         connect ( &mTimer, SIGNAL ( timeout() ), this, SLOT ( requestUpdate() ) );

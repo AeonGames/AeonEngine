@@ -69,10 +69,6 @@ set(WORLDEDITOR_SOURCES
     SettingsDialog.cpp
     EngineWindow.cpp)
 
-if(APPLE)
-    list(APPEND WORLDEDITOR_SOURCES MacOSMetalHelper.mm)
-endif()
-
 set(WORLDEDITOR_UI
     ui/MainWindow.ui
     ui/SceneWindow.ui
