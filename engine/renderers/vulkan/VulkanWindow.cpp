@@ -51,6 +51,7 @@ namespace AeonGames
         mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
         mMatrices { aVulkanRenderer }
     {
+        std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
         try
         {
             Initialize();
@@ -67,6 +68,7 @@ namespace AeonGames
         mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
         mMatrices{std::move ( aVulkanWindow.mMatrices ) }
     {
+        std::cout << LogLevel::Debug << "Moving VulkanWindow." << std::endl;
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
         std::swap ( mFrustum, aVulkanWindow.mFrustum );
         std::swap ( mProjectionMatrix, aVulkanWindow.mProjectionMatrix );
@@ -89,13 +91,17 @@ namespace AeonGames
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
         std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
         std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
+        std::swap ( mVkAcquireSemaphore, aVulkanWindow.mVkAcquireSemaphore );
+        std::swap ( mVkFence, aVulkanWindow.mVkFence );
         mVkSwapchainImages.swap ( aVulkanWindow.mVkSwapchainImages );
         mVkSwapchainImageViews.swap ( aVulkanWindow.mVkSwapchainImageViews );
         mVkFramebuffers.swap ( aVulkanWindow.mVkFramebuffers );
+        mVkSubmitSemaphores.swap ( aVulkanWindow.mVkSubmitSemaphores );
     }
 
     VulkanWindow::~VulkanWindow()
     {
+        std::cout << LogLevel::Info << "Destroying VulkanWindow." << std::endl;
         Finalize();
     }
 
@@ -150,6 +156,7 @@ namespace AeonGames
 
     void VulkanWindow::InitializeSwapchain()
     {
+        std::cout << LogLevel::Debug << "Initializing VulkanWindow Swapchain." << std::endl;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( mVulkanRenderer.GetPhysicalDevice(), mVkSurfaceKHR, &mVkSurfaceCapabilitiesKHR );
 
         if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
@@ -211,6 +218,33 @@ namespace AeonGames
         {
             vkDestroySwapchainKHR ( mVulkanRenderer.GetDevice(), swapchain_create_info.oldSwapchain, nullptr );
         }
+
+        std::cout << LogLevel::Debug << "VulkanWindow Swapchain created with " << mSwapchainImageCount << " images." << std::endl;
+        // Create semaphores for rendering.
+        VkSemaphoreCreateInfo semaphore_create_info{};
+        semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        if ( VkResult result = vkCreateSemaphore ( mVulkanRenderer.GetDevice(), &semaphore_create_info, nullptr, &mVkAcquireSemaphore ) )
+        {
+            std::ostringstream stream;
+            stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        std::cout << LogLevel::Debug << "Created Acquire Semaphore " << std::hex << mVkAcquireSemaphore << std::endl;
+        mVkSubmitSemaphores.resize ( mSwapchainImageCount );
+        for ( size_t i = 0; i < mSwapchainImageCount; ++i )
+        {
+            if ( VkResult result = vkCreateSemaphore ( mVulkanRenderer.GetDevice(), &semaphore_create_info, nullptr, &mVkSubmitSemaphores[i] ) )
+            {
+                std::ostringstream stream;
+                stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            std::cout << LogLevel::Debug << "Created Submit Semaphore " << std::hex << mVkSubmitSemaphores[i] << std::endl;
+        }
+        VkFenceCreateInfo fence_create_info{};
+        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        vkCreateFence ( mVulkanRenderer.GetDevice(), &fence_create_info, nullptr, &mVkFence );
     }
 
     void VulkanWindow::InitializeImageViews()
@@ -559,11 +593,11 @@ namespace AeonGames
     {
         if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) )
         {
-            std::cerr << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
+            std::cerr << LogLevel::Error << "vkQueueWaitIdle failed: " << GetVulkanResultString ( result );
         }
         if ( VkResult result = vkDeviceWaitIdle ( mVulkanRenderer.GetDevice() ) )
         {
-            std::cerr << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
+            std::cerr << LogLevel::Error << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
         FinalizeCommandBuffer();
         FinalizeFrameBuffers();
@@ -599,6 +633,7 @@ namespace AeonGames
             FinalizeFrameBuffers();
             FinalizeDepthStencil();
             FinalizeImageViews();
+            FinalizeSwapchain();
             InitializeSwapchain();
             InitializeImageViews();
             InitializeDepthStencil();
@@ -676,39 +711,34 @@ namespace AeonGames
 
     void VulkanWindow::BeginRender()
     {
+        if ( VkResult result = vkWaitForFences ( mVulkanRenderer.GetDevice(), 1,
+                               &mVkFence,
+                               VK_TRUE, UINT64_MAX ) )
+        {
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+        }
+        if ( VkResult result = vkResetFences ( mVulkanRenderer.GetDevice(), 1,
+                                               &mVkFence ) )
+        {
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+        }
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
                                    mVkSwapchainKHR,
-                                   UINT64_MAX, VK_NULL_HANDLE,
-                                   mVulkanRenderer.GetFence(),
+                                   UINT64_MAX,
+                                   mVkAcquireSemaphore,
+                                   VK_NULL_HANDLE,
                                    const_cast<uint32_t * > ( &mActiveImageIndex ) ) )
         {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
-
-        if ( VkResult result = vkWaitForFences ( mVulkanRenderer.GetDevice(), 1,
-                               &mVulkanRenderer.GetFence(),
-                               VK_TRUE, UINT64_MAX ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
-        }
-        if ( VkResult result = vkResetFences ( mVulkanRenderer.GetDevice(), 1,
-                                               &mVulkanRenderer.GetFence() ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
-        }
-        if ( VkResult result = vkQueueWaitIdle ( mVulkanRenderer.GetQueue() ) )
-        {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
-        }
-
         VkCommandBufferBeginInfo command_buffer_begin_info{};
         command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         vkResetCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPool, 0 );
         if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
         {
-            std::cout << GetVulkanResultString ( result ) << "  Error Code: " << result << " at " << __func__ << " line " << __LINE__ << " " << std::endl;
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  Error Code: " << result << " at " << __func__ << " line " << __LINE__ << " " << std::endl;
         }
 
         vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &mVkViewport );
@@ -739,18 +769,19 @@ namespace AeonGames
         vkCmdEndRenderPass ( mVkCommandBuffer );
         if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
         {
-            std::cout << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         VkSubmitInfo submit_info{};
+        VkPipelineStageFlags wait_stages{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.waitSemaphoreCount = 0;
-        submit_info.pWaitSemaphores = nullptr;
-        submit_info.pWaitDstStageMask = nullptr;
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pWaitSemaphores = &mVkAcquireSemaphore;
+        submit_info.pWaitDstStageMask = &wait_stages;
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &mVkCommandBuffer;
         submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = &mVulkanRenderer.GetSignalSemaphore();
-        if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) )
+        submit_info.pSignalSemaphores = &mVkSubmitSemaphores[mActiveImageIndex];
+        if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, mVkFence ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
@@ -758,7 +789,7 @@ namespace AeonGames
         VkPresentInfoKHR present_info{};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = &mVulkanRenderer.GetSignalSemaphore();
+        present_info.pWaitSemaphores = &mVkSubmitSemaphores[mActiveImageIndex];
         present_info.swapchainCount = 1;
         present_info.pSwapchains = &mVkSwapchainKHR;
         present_info.pImageIndices = &mActiveImageIndex;
@@ -875,6 +906,26 @@ namespace AeonGames
         {
             vkDestroySwapchainKHR ( mVulkanRenderer.GetDevice(), mVkSwapchainKHR, nullptr );
             mVkSwapchainKHR = VK_NULL_HANDLE;
+        }
+        if ( mVkAcquireSemaphore != VK_NULL_HANDLE )
+        {
+            vkDestroySemaphore ( mVulkanRenderer.GetDevice(), mVkAcquireSemaphore, nullptr );
+            std::cout << LogLevel::Debug << "Destroyed Acquire Semaphore " << std::hex << mVkAcquireSemaphore << std::endl;
+            mVkAcquireSemaphore = VK_NULL_HANDLE;
+        }
+        for ( auto& i : mVkSubmitSemaphores )
+        {
+            if ( i != VK_NULL_HANDLE )
+            {
+                vkDestroySemaphore ( mVulkanRenderer.GetDevice(), i, nullptr );
+                std::cout << LogLevel::Debug << "Destroyed Submit Semaphore " << std::hex << i << std::endl;
+            }
+        }
+        mVkSubmitSemaphores.clear();
+        if ( mVkFence != VK_NULL_HANDLE )
+        {
+            vkDestroyFence ( mVulkanRenderer.GetDevice(), mVkFence, nullptr );
+            mVkFence = VK_NULL_HANDLE;
         }
     }
 

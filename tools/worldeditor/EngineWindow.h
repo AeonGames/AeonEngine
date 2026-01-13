@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -76,6 +76,7 @@ namespace AeonGames
         float mFieldOfView{};
         float mNear{};
         float mFar{};
+        bool mIsClosing{ false };
         /* Settings Cache */
         uint32_t mHorizontalSpacing{};
         uint32_t mVerticalSpacing{};

@@ -46,10 +46,8 @@ namespace AeonGames
         const VkPhysicalDevice& GetPhysicalDevice() const;
         const VkDevice& GetDevice() const;
         const VkQueue& GetQueue() const;
-        const VkFence& GetFence() const;
         const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const;
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
-        const VkSemaphore& GetSignalSemaphore() const;
         const VkDescriptorSetLayout& GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const;
         //const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;
         uint32_t GetQueueFamilyIndex() const;
@@ -98,8 +96,6 @@ namespace AeonGames
     private:
         void InitializeInstance();
         void InitializeDevice();
-        void InitializeSemaphores();
-        void InitializeFence();
         void InitializeCommandPools();
         void InitializeDebug();
         void SetupLayersAndExtensions();
@@ -107,8 +103,6 @@ namespace AeonGames
         void LoadFunctions();
         void FinalizeInstance();
         void FinalizeDevice();
-        void FinalizeSemaphores();
-        void FinalizeFence();
         void FinalizeCommandPools();
         void FinalizeDebug();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
@@ -127,8 +121,6 @@ namespace AeonGames
         VkDebugUtilsMessengerEXT mVkDebugUtilsMessengerEXT{VK_NULL_HANDLE};
         VkCommandPool mVkSingleTimeCommandPool{ VK_NULL_HANDLE };
         VkQueue mVkQueue{ VK_NULL_HANDLE };
-        VkSemaphore mVkSignalSemaphore{ VK_NULL_HANDLE };
-        VkFence mVkFence{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout >> mVkDescriptorSetLayouts{};
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
         uint32_t mQueueFamilyIndex{};

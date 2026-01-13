@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2022,2024,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2022,2024,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/ProtoBufClasses.hpp"
 #include "aeongames/StringId.hpp"
+#include "aeongames/LogLevel.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -362,5 +363,15 @@ namespace AeonGames
     void SceneWindow::SetFar ( float aFar )
     {
         mEngineWindow->SetFar ( aFar );
+    }
+    void SceneWindow::closeEvent ( QCloseEvent *event )
+    {
+        std::cout << LogLevel::Info << "Closing SceneWindow" << std::endl;
+        if ( mEngineWindow )
+        {
+            QCloseEvent closeEvent;
+            QCoreApplication::sendEvent ( mEngineWindow, &closeEvent );
+        }
+        QWidget::closeEvent ( event );
     }
 }
