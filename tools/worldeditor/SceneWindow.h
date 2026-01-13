@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ namespace AeonGames
         void on_componentListViewClicked ( const QModelIndex& aModelIndex );
         void on_localTransformChanged();
         void on_globalTransformChanged();
+    protected:
+        void closeEvent ( QCloseEvent *event ) override;
     private:
         void UpdateLocalTransformData ( const Node* aNode );
         void UpdateGlobalTransformData ( const Node* aNode );

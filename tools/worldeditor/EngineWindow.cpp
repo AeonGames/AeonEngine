@@ -23,6 +23,7 @@ limitations under the License.
 #include <stdexcept>
 #include "WorldEditor.h"
 #include "EngineWindow.h"
+#include "aeongames/LogLevel.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Model.hpp"
 #include "aeongames/Animation.hpp"
@@ -113,6 +114,7 @@ namespace AeonGames
         qWorldEditorApp->DetachWindowFromRenderer ( mWinId );
         // Reset to prevent use-after-free
         mWinId = nullptr;
+        std::cout << LogLevel::Info << "EngineWindow destroyed" << std::endl;
     }
 
     void EngineWindow::stop()
@@ -204,6 +206,10 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
+        if ( mIsClosing )
+        {
+            return;
+        }
         QWindow::resizeEvent ( aResizeEvent );
         auto renderer = qWorldEditorApp->GetRenderer();
         if ( renderer != nullptr )
@@ -365,6 +371,12 @@ namespace AeonGames
                 qWorldEditorApp->GetRenderer()->EndRender ( mWinId );
                 return true;
             }
+        case QEvent::Close:
+        {
+            std::cout << LogLevel::Info << "EngineWindow received Close event" << std::endl;
+            mIsClosing = true;
+            return true;
+        }
         default:
             return QWindow::event ( aEvent );
         }

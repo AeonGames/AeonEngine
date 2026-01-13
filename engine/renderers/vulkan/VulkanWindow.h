@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -108,10 +108,13 @@ namespace AeonGames
 
         VkDescriptorPool mMatricesDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
+        VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
+        VkFence mVkFence{ VK_NULL_HANDLE };
 
         ::std::vector<VkImage> mVkSwapchainImages{};
         ::std::vector<VkImageView> mVkSwapchainImageViews{};
         ::std::vector<VkFramebuffer> mVkFramebuffers{};
+        ::std::vector<VkSemaphore> mVkSubmitSemaphores{};
     };
 }
 #endif
