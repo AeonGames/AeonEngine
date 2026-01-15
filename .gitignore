@@ -43,6 +43,8 @@ ucrt64
 gcc*
 .vscode
 vcpkg_installed
+Xcode
+xcode
 
 # CTags
 tags

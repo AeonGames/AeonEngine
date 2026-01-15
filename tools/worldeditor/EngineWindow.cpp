@@ -206,7 +206,7 @@ namespace AeonGames
 
     void EngineWindow::resizeEvent ( QResizeEvent * aResizeEvent )
     {
-        if ( mIsClosing )
+        if ( mIsClosing || aResizeEvent->size().isEmpty() )
         {
             return;
         }

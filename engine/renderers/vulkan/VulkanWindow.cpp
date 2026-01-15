@@ -162,8 +162,10 @@ namespace AeonGames
         if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
              mVkSurfaceCapabilitiesKHR.currentExtent.height == 0 )
         {
-            std::cout << LogLevel::Debug << "Cannot create swapchain with zero area. (" << mVkSurfaceCapabilitiesKHR.currentExtent.width << "x" << mVkSurfaceCapabilitiesKHR.currentExtent.height << ")" << std::endl;
-            return;
+            std::ostringstream stream;
+            stream << "Cannot create swapchain with zero area. (" << mVkSurfaceCapabilitiesKHR.currentExtent.width << "x" << mVkSurfaceCapabilitiesKHR.currentExtent.height << ")" << std::endl;
+            std::cout << LogLevel::Error << stream.str() << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
         }
 
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
@@ -249,6 +251,13 @@ namespace AeonGames
 
     void VulkanWindow::InitializeImageViews()
     {
+        if ( mVkSwapchainKHR == VK_NULL_HANDLE )
+        {
+            std::ostringstream stream;
+            stream << "Cannot initialize swapchain image views with no swapchain.";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
         if ( VkResult result = vkGetSwapchainImagesKHR ( mVulkanRenderer.GetDevice(), mVkSwapchainKHR, &mSwapchainImageCount, nullptr ) )
         {
             std::ostringstream stream;
