@@ -426,7 +426,7 @@ namespace AeonGames
                 {
                     graphics_queue_family_found = true;
                     mQueueFamilyIndex =
-                        static_cast<uint32_t> ( family_properties_list.begin() - family_property );
+                        static_cast<uint32_t> ( family_property - family_properties_list.begin() );
                     break;
                 }
             }
