@@ -41,13 +41,19 @@ extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr )
         }
 
         // Check if the view already has a metal layer
-        if ( !view.layer || ![view.layer isKindOfClass:[CAMetalLayer class]] )
+        if ( view.layer && [view.layer isKindOfClass:[CAMetalLayer class]] )
         {
-            std::cout << AeonGames::LogLevel::Error << "NSView does not have a CAMetalLayer" << std::endl;
-            throw std::runtime_error ( "NSView does not have a CAMetalLayer" );
-            return nullptr;
+            return ( __bridge void* ) view.layer;
         }
 
-        return ( __bridge void* ) view.layer;
+        // Create a CAMetalLayer if the view doesn't have one
+        std::cout << AeonGames::LogLevel::Info << "Creating new CAMetalLayer for NSView" << std::endl;
+        [view setWantsLayer:YES];
+        CAMetalLayer* metalLayer = [CAMetalLayer layer];
+        metalLayer.contentsScale = view.window.backingScaleFactor;
+        metalLayer.frame = view.bounds;
+        [view setLayer:metalLayer];
+
+        return ( __bridge void* ) metalLayer;
     }
 }
