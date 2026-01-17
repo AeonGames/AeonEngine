@@ -75,5 +75,9 @@
     },
     "editor.fontLigatures": true,
     "editor.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', 'FiraCode NF', 'Consolas', 'Courier New', monospace",
-    "terminal.integrated.fontFamily": "'MesloLGS Nerd Font Mono', 'Consolas', monospace"
+    "terminal.integrated.fontFamily": "'MesloLGS Nerd Font Mono', 'Consolas', monospace",
+    "cmake.buildDirectory": "@CMAKE_BINARY_DIR@",
+    "cmake.configureOnOpen": false,
+    "cmake.buildBeforeRun": false,
+    "cmake.configureOnEdit": false
 }
