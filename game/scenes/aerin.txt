@@ -1,0 +1,32 @@
+AEONSCE
+name: "Scene"
+node {
+  name: "Node"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      w: 1
+    }
+    Translation {
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      string: "aerin/aerin.txt"
+    }
+    property {
+      name: "Active Animation"
+      unsigned_long_long: 0
+    }
+    property {
+      name: "Starting Frame"
+      double: 0
+    }
+  }
+}
