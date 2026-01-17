@@ -26,9 +26,9 @@ limitations under the License.
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Vector4.hpp"
 #include "aeongames/LogLevel.hpp"
-#include "VulkanMemoryPoolBuffer.h"
-#include "VulkanRenderer.h"
-#include "VulkanUtilities.h"
+#include "VulkanMemoryPoolBuffer.hpp"
+#include "VulkanRenderer.hpp"
+#include "VulkanUtilities.hpp"
 
 namespace AeonGames
 {

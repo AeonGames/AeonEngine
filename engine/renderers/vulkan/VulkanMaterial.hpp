@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANMATERIAL_H
-#define AEONGAMES_VULKANMATERIAL_H
+#ifndef AEONGAMES_VULKANMATERIAL_HPP
+#define AEONGAMES_VULKANMATERIAL_HPP
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -22,7 +22,7 @@ limitations under the License.
 #include <memory>
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
-#include "VulkanBuffer.h"
+#include "VulkanBuffer.hpp"
 
 namespace AeonGames
 {

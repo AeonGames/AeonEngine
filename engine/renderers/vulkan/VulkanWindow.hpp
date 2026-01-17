@@ -13,16 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANWINDOW_H
-#define AEONGAMES_VULKANWINDOW_H
+#ifndef AEONGAMES_VULKANWINDOW_HPP
+#define AEONGAMES_VULKANWINDOW_HPP
 
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
-#include "VulkanMemoryPoolBuffer.h"
-#include "VulkanPipeline.h"
+#include "VulkanMemoryPoolBuffer.hpp"
+#include "VulkanPipeline.hpp"
 
 namespace AeonGames
 {

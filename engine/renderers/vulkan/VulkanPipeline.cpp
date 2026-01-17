@@ -24,10 +24,10 @@ limitations under the License.
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/CRC.hpp"
 #include <vulkan/vulkan.h>
-#include "VulkanPipeline.h"
-#include "VulkanRenderer.h"
-#include "VulkanUtilities.h"
-#include "SPIR-V/CompilerLinker.h"
+#include "VulkanPipeline.hpp"
+#include "VulkanRenderer.hpp"
+#include "VulkanUtilities.hpp"
+#include "SPIR-V/CompilerLinker.hpp"
 #include <spirv_reflect.h>
 
 namespace AeonGames

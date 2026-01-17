@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ limitations under the License.
 #include <limits>
 #include <cstring>
 #include <utility>
-#include "VulkanTexture.h"
-#include "VulkanRenderer.h"
-#include "VulkanUtilities.h"
+#include "VulkanTexture.hpp"
+#include "VulkanRenderer.hpp"
+#include "VulkanUtilities.hpp"
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/CRC.hpp"
 #include "aeongames/Texture.hpp"

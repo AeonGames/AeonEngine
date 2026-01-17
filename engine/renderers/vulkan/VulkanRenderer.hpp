@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef AEONGAMES_VULKANRENDERER_H
-#define AEONGAMES_VULKANRENDERER_H
+#ifndef AEONGAMES_VULKANRENDERER_HPP
+#define AEONGAMES_VULKANRENDERER_HPP
 
 #include <vulkan/vulkan.h>
 #include <unordered_map>
@@ -25,13 +25,13 @@ limitations under the License.
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Transform.hpp"
-#include "VulkanWindow.h"
-#include "VulkanBuffer.h"
-#include "VulkanMesh.h"
-#include "VulkanPipeline.h"
-#include "VulkanMaterial.h"
-#include "VulkanTexture.h"
-#include "VulkanMemoryPoolBuffer.h"
+#include "VulkanWindow.hpp"
+#include "VulkanBuffer.hpp"
+#include "VulkanMesh.hpp"
+#include "VulkanPipeline.hpp"
+#include "VulkanMaterial.hpp"
+#include "VulkanTexture.hpp"
+#include "VulkanMemoryPoolBuffer.hpp"
 
 namespace AeonGames
 {

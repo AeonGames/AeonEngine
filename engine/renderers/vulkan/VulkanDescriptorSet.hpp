@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANDESCRIPTORSET_H
-#define AEONGAMES_VULKANDESCRIPTORSET_H
+#ifndef AEONGAMES_VULKANDESCRIPTORSET_HPP
+#define AEONGAMES_VULKANDESCRIPTORSET_HPP
 
 #include <cstdint>
 #include <vector>
