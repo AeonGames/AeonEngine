@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLMEMORYPOOLBUFFER_H
-#define AEONGAMES_OPENGLMEMORYPOOLBUFFER_H
+#ifndef AEONGAMES_OPENGLMEMORYPOOLBUFFER_HPP
+#define AEONGAMES_OPENGLMEMORYPOOLBUFFER_HPP
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <tuple>
 #include <initializer_list>
-#include "OpenGLFunctions.h"
-#include "OpenGLBuffer.h"
+#include "OpenGLFunctions.hpp"
+#include "OpenGLBuffer.hpp"
 #include "aeongames/MemoryPoolBuffer.hpp"
 
 namespace AeonGames

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -110,7 +110,7 @@ file(STRINGS "${GLCOREARB_H_PATH}" glPrototypes REGEX "${glFunctions}")
 string(REGEX REPLACE "GLAPI |APIENTRY |\\\\;" "" glPrototypes "${glPrototypes}")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.h  "#ifndef AEONGAMES_GLPROXYFUNCTIONS_H\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.h "#define AEONGAMES_GLPROXYFUNCTIONS_H\n")
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.cpp  "#include \"OpenGLFunctions.h\"\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.cpp  "#include \"OpenGLFunctions.hpp\"\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.cpp "namespace AeonGames {\n")
 foreach(glPrototype IN LISTS glPrototypes)
   string(REGEX MATCH "[(].*[)]"
@@ -150,16 +150,16 @@ set(OPENGL_RENDERER_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/glDefinitions.h
     ${CMAKE_CURRENT_BINARY_DIR}/glAssignments.h
     ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.h
-    OpenGLRenderer.h
-    OpenGLWindow.h
-    OpenGLFunctions.h
-    OpenGLBuffer.h
-    OpenGLMesh.h
-    OpenGLPipeline.h
-    OpenGLMaterial.h
-    OpenGLTexture.h
-    OpenGLFrameBuffer.h
-    OpenGLMemoryPoolBuffer.h)
+    OpenGLRenderer.hpp
+    OpenGLWindow.hpp
+    OpenGLFunctions.hpp
+    OpenGLBuffer.hpp
+    OpenGLMesh.hpp
+    OpenGLPipeline.hpp
+    OpenGLMaterial.hpp
+    OpenGLTexture.hpp
+    OpenGLFrameBuffer.hpp
+    OpenGLMemoryPoolBuffer.hpp)
 
 set(OPENGL_RENDERER_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.cpp

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLMESH_H
-#define AEONGAMES_OPENGLMESH_H
+#ifndef AEONGAMES_OPENGLMESH_HPP
+#define AEONGAMES_OPENGLMESH_HPP
 
 #include <vector>
-#include "OpenGLBuffer.h"
-#include "OpenGLVariable.h"
+#include "OpenGLBuffer.hpp"
+#include "OpenGLVariable.hpp"
 namespace AeonGames
 {
     class Mesh;

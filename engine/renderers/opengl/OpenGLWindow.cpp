@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ limitations under the License.
 #include "aeongames/Scene.hpp"
 #include "aeongames/Material.hpp"
 #include "aeongames/MemoryPool.hpp" ///<- This is here just for the literals
-#include "OpenGLWindow.h"
-#include "OpenGLRenderer.h"
-#include "OpenGLFunctions.h"
+#include "OpenGLWindow.hpp"
+#include "OpenGLRenderer.hpp"
+#include "OpenGLFunctions.hpp"
 #include <sstream>
 #include <iostream>
 #include <algorithm>

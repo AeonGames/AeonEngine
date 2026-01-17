@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@ limitations under the License.
 #include <cstring>
 #include <sstream>
 #include <limits>
-#include "OpenGLRenderer.h"
-#include "OpenGLBuffer.h"
-#include "OpenGLFunctions.h"
+#include "OpenGLRenderer.hpp"
+#include "OpenGLBuffer.hpp"
+#include "OpenGLFunctions.hpp"
 
 namespace AeonGames
 {

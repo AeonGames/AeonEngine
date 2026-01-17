@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ limitations under the License.
 #include "aeongames/Vector2.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Vector4.hpp"
-#include "OpenGLMemoryPoolBuffer.h"
-#include "OpenGLRenderer.h"
+#include "OpenGLMemoryPoolBuffer.hpp"
+#include "OpenGLRenderer.hpp"
 
 namespace AeonGames
 {

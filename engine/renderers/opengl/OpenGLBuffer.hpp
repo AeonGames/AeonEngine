@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLBUFFER_H
-#define AEONGAMES_OPENGLBUFFER_H
+#ifndef AEONGAMES_OPENGLBUFFER_HPP
+#define AEONGAMES_OPENGLBUFFER_HPP
 #include <cstddef>
 #include "aeongames/Buffer.hpp"
-#include "OpenGLFunctions.h"
+#include "OpenGLFunctions.hpp"
 
 namespace AeonGames
 {

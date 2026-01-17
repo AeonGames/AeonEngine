@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,20 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLRENDERER_H
-#define AEONGAMES_OPENGLRENDERER_H
+#ifndef AEONGAMES_OPENGLRENDERER_HPP
+#define AEONGAMES_OPENGLRENDERER_HPP
 
 #include <unordered_map>
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/Matrix4x4.hpp"
-#include "OpenGLFunctions.h"
-#include "OpenGLBuffer.h"
-#include "OpenGLMesh.h"
-#include "OpenGLPipeline.h"
-#include "OpenGLMaterial.h"
-#include "OpenGLTexture.h"
-#include "OpenGLWindow.h"
+#include "OpenGLFunctions.hpp"
+#include "OpenGLBuffer.hpp"
+#include "OpenGLMesh.hpp"
+#include "OpenGLPipeline.hpp"
+#include "OpenGLMaterial.hpp"
+#include "OpenGLTexture.hpp"
+#include "OpenGLWindow.hpp"
 #ifdef Status
 #undef Status
 #endif
