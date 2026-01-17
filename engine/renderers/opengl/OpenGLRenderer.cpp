@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2024,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2024,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@ limitations under the License.
 
 #include <atomic>
 #include <cassert>
-#include "OpenGLRenderer.h"
-#include "OpenGLBuffer.h"
-#include "OpenGLWindow.h"
-#include "OpenGLFunctions.h"
+#include "OpenGLRenderer.hpp"
+#include "OpenGLBuffer.hpp"
+#include "OpenGLWindow.hpp"
+#include "OpenGLFunctions.hpp"
 #include "aeongames/Platform.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/Pipeline.hpp"

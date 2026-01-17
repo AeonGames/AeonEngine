@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLWINDOW_H
-#define AEONGAMES_OPENGLWINDOW_H
+#ifndef AEONGAMES_OPENGLWINDOW_HPP
+#define AEONGAMES_OPENGLWINDOW_HPP
 
 #include <cstdint>
 #include <vector>
@@ -23,10 +23,10 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Texture.hpp"
-#include "OpenGLFunctions.h"
-#include "OpenGLBuffer.h"
-#include "OpenGLFrameBuffer.h"
-#include "OpenGLMemoryPoolBuffer.h"
+#include "OpenGLFunctions.hpp"
+#include "OpenGLBuffer.hpp"
+#include "OpenGLFrameBuffer.hpp"
+#include "OpenGLMemoryPoolBuffer.hpp"
 
 namespace AeonGames
 {

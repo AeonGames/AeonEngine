@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,22 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_OPENGLUNIFORMBLOCK_H
-#define AEONGAMES_OPENGLUNIFORMBLOCK_H
+#ifndef AEONGAMES_OPENGLVARIABLE_HPP
+#define AEONGAMES_OPENGLVARIABLE_HPP
 
 #include <cstdint>
-#include <vector>
-#include "OpenGLFunctions.h"
-#include "OpenGLFunctions.h"
-#include "OpenGLVariable.h"
+#include "OpenGLFunctions.hpp"
+
 namespace AeonGames
 {
-    struct OpenGLUniformBlock
+    struct OpenGLVariable
     {
         uint32_t name;
+        union
+        {
+            GLint binding;
+            GLint location;
+            GLint offset;
+        };
         GLint size;
-        GLint binding;
-        std::vector<OpenGLVariable> uniforms;
+        GLenum type;
+    };
+
+    struct OpenGLSamplerLocation
+    {
+        uint32_t name{};
+        GLint location{};
     };
 }
 #endif
