@@ -28,10 +28,10 @@ limitations under the License.
 #include <array>
 #include <algorithm>
 #include <limits>
-#include "VulkanRenderer.h"
-#include "VulkanWindow.h"
-#include "VulkanBuffer.h"
-#include "VulkanUtilities.h"
+#include "VulkanRenderer.hpp"
+#include "VulkanWindow.hpp"
+#include "VulkanBuffer.hpp"
+#include "VulkanUtilities.hpp"
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/Pipeline.hpp"
@@ -39,7 +39,7 @@ limitations under the License.
 #include "aeongames/Texture.hpp"
 #include "aeongames/Utilities.hpp"
 #include "aeongames/MemoryPool.hpp"
-#include "SPIR-V/CompilerLinker.h"
+#include "SPIR-V/CompilerLinker.hpp"
 
 namespace AeonGames
 {

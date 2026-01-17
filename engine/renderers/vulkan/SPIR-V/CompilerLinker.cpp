@@ -1,7 +1,7 @@
 //
-// Copyright (C) 2002-2005,2025  3Dlabs Inc. Ltd.
-// Copyright (C) 2013-2016,2025 LunarG, Inc.
-// Copyright (C) 2017-2019,2021,2025 Aeon Games
+// Copyright (C) 2002-2005,2025,2026  3Dlabs Inc. Ltd.
+// Copyright (C) 2013-2016,2025,2026 LunarG, Inc.
+// Copyright (C) 2017-2019,2021,2025,2026 Aeon Games
 //
 // All rights reserved.
 //
@@ -50,7 +50,7 @@
 #include <cmath>
 #include <array>
 #include <thread>
-#include "CompilerLinker.h"
+#include "CompilerLinker.hpp"
 
 #include "aeongames/Platform.hpp"
 #include "aeongames/LogLevel.hpp"

@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_VULKANPIPELINE_H
-#define AEONGAMES_VULKANPIPELINE_H
+#ifndef AEONGAMES_VULKANPIPELINE_HPP
+#define AEONGAMES_VULKANPIPELINE_HPP
 #include <cstdint>
 #include <string>
 #include <array>
@@ -22,7 +22,7 @@ limitations under the License.
 #include <limits>
 #include <vulkan/vulkan.h>
 #include "aeongames/Pipeline.hpp"
-#include "VulkanDescriptorSet.h"
+#include "VulkanDescriptorSet.hpp"
 
 // Forward declarations
 struct SpvReflectShaderModule;

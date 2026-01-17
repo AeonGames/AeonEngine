@@ -38,10 +38,10 @@ limitations under the License.
 #include "aeongames/Vector4.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/LogLevel.hpp"
-#include "VulkanMaterial.h"
-#include "VulkanTexture.h"
-#include "VulkanRenderer.h"
-#include "VulkanUtilities.h"
+#include "VulkanMaterial.hpp"
+#include "VulkanTexture.hpp"
+#include "VulkanRenderer.hpp"
+#include "VulkanUtilities.hpp"
 
 namespace AeonGames
 {

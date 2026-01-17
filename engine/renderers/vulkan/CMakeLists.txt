@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017,2020,2021,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2017,2020,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -36,23 +36,23 @@ endif()
 gitclone(https://github.com/KhronosGroup/SPIRV-Reflect.git PATH "${CMAKE_CURRENT_BINARY_DIR}/spirv-reflect" TAG vulkan-sdk-1.4.321.0)
 
 set(SPIRV_HEADERS
-    SPIR-V/CompilerLinker.h
-    SPIR-V/Worklist.h
+    SPIR-V/CompilerLinker.hpp
+    SPIR-V/Worklist.hpp
 )
 set(SPIRV_SOURCES SPIR-V/CompilerLinker.cpp)
 
 set(VULKAN_RENDERER_HEADERS
-    VulkanUtilities.h
-    VulkanRenderer.h
-    VulkanWindow.h
-    VulkanBuffer.h
-    VulkanMesh.h
-    VulkanPipeline.h
-    VulkanMaterial.h
-    VulkanTexture.h
-    VulkanMemoryPoolBuffer.h
-    VulkanFrameBuffer.h
-    VulkanDescriptorSet.h
+    VulkanUtilities.hpp
+    VulkanRenderer.hpp
+    VulkanWindow.hpp
+    VulkanBuffer.hpp
+    VulkanMesh.hpp
+    VulkanPipeline.hpp
+    VulkanMaterial.hpp
+    VulkanTexture.hpp
+    VulkanMemoryPoolBuffer.hpp
+    VulkanFrameBuffer.hpp
+    VulkanDescriptorSet.hpp
     )
 
 set(VULKAN_RENDERER_SOURCES
