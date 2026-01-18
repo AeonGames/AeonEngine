@@ -79,35 +79,6 @@
                 "externalConsole": @USE_EXTERNAL_CONSOLE@,
                 "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
             },
-                        "ignoreFailures": true
-                    }
-                ]
-            },
-            {
-                "name": "Game FullScreen Vulkan",
-                "type": "cppdbg",
-                "request": "launch",
-                "args": ["-f","-r","Vulkan","-s","scenes/main.txt"],
-                "stopAtEntry": false,
-                "cwd": "@CMAKE_SOURCE_DIR@",
-                "environment": [
-                    {
-                        "name":"PATH",
-                        "value":"@DEBUG_PATH@"
-                    }                    
-                ],
-                "externalConsole": @USE_EXTERNAL_CONSOLE@,
-                "program": "@CMAKE_BINARY_DIR@/bin/game@CMAKE_EXECUTABLE_SUFFIX@",
-                "miDebuggerPath": "@GDB_EXECUTABLE@",
-                "MIMode": "gdb",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    }
-                    ]
-            },
             {
                 "name": "Game FullScreen Vulkan",
                 "type": "@DEBUGGER_TYPE@",
@@ -164,6 +135,24 @@
                 "request": "launch",
                 "args": [
                     "base64","decode","-i","game/aerin/textures/Aerin_Body_Diffuse.png.base64","-o","game/aerin/textures/Aerin_Body_Diffuse_TEST.png"
+                ],
+                "stopAtEntry": false,
+                "cwd": "@CMAKE_SOURCE_DIR@",
+                "environment": [
+                    {
+                        "name":"PATH",
+                        "value":"@DEBUG_PATH@"
+                    }                    
+                ],
+                "externalConsole": @USE_EXTERNAL_CONSOLE@,
+                        "program": "@CMAKE_BINARY_DIR@/bin/aeontool@CMAKE_EXECUTABLE_SUFFIX@"@DEBUGGER_CONFIG@
+            },
+            {
+                "name": "Aeon Tool Base64 Encode",
+                "type": "@DEBUGGER_TYPE@",
+                "request": "launch",
+                "args": [
+                    "base64","encode","-i","assets/sponza/sponza.blend","-o","assets/sponza/sponza.blend.base64"
                 ],
                 "stopAtEntry": false,
                 "cwd": "@CMAKE_SOURCE_DIR@",
