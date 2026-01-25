@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017,2019 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017,2019,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,16 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-bl_info = {
-    "name": "Lossless Bone Connect",
-    "author": "Rodrigo Hernandez",
-    "version": (1, 0),
-    "blender": (2, 80, 0),
-    "location": "Object > Connect Bones",
-    "description": "Connects all single child bones to their parent tail without moving their heads",
-    "category": "Object",
-}
 
 import bpy
 import mathutils
@@ -106,17 +96,3 @@ class LosslessConnectMenu(bpy.types.Menu):
         layout.operator(
             LosslessConnectOperator.bl_idname,
             text="Lossless Connect")
-
-
-def register():
-    bpy.utils.register_class(LosslessConnectOperator)
-    bpy.utils.register_class(LosslessConnectMenu)
-
-
-def unregister():
-    bpy.utils.unregister_class(LosslessConnectMenu)
-    bpy.utils.unregister_class(LosslessConnectOperator)
-
-
-if __name__ == "__main__":
-    register()

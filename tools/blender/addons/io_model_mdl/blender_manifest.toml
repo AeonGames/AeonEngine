@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "io_model_mdl"
+version = "1.0.0"
+name = "AeonGames Model Format (.mdl)"
+tagline = "Exports an armature to an AeonGames Model (MDL) file"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Import-Export", "Armature"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"

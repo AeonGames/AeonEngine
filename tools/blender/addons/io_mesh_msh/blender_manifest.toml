@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "io_mesh_msh"
+version = "1.0.0"
+name = "AeonGames Mesh Format (.msh)"
+tagline = "Exports a mesh to an AeonGames Mesh (MSH) file"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Import-Export", "Mesh"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"
