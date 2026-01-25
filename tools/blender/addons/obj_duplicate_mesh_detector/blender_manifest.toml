@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "obj_duplicate_mesh_detector"
+version = "1.0.0"
+name = "Duplicate Mesh Detector"
+tagline = "Detects duplicate meshes based on point cloud comparison"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Mesh", "Object"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"

@@ -15,6 +15,7 @@
 import bpy
 import mathutils
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def get_uv_data(obj):
@@ -134,7 +135,7 @@ def compute_point_cloud_hash(point_cloud, tolerance):
     return (len(point_cloud), tuple(quantized))
 
 
-def compare_point_clouds(cloud1, cloud2, tolerance):
+def compare_point_clouds(cloud1, cloud2, tolerance, match_threshold=100.0):
     """
     Compare two point clouds to determine if they are duplicates.
     
@@ -142,28 +143,77 @@ def compare_point_clouds(cloud1, cloud2, tolerance):
         cloud1: First point cloud (sorted list of vertex tuples)
         cloud2: Second point cloud (sorted list of vertex tuples)
         tolerance: Distance tolerance for matching
+        match_threshold: Minimum percentage of vertices that must match (default 100%)
         
     Returns:
-        True if the point clouds are considered duplicates
+        Tuple of (is_duplicate, match_percentage)
     """
     # Quick check: must have same number of vertices
     if len(cloud1) != len(cloud2):
-        return False
+        return False, 0.0
     
-    # Compare each vertex pair
+    # Compare each vertex pair and track matches
     tolerance_sq = tolerance * tolerance
+    matching_vertices = 0
+    total_vertices = len(cloud1)
+    
     for (x1, y1, z1), (x2, y2, z2) in zip(cloud1, cloud2):
         dx = x1 - x2
         dy = y1 - y2
         dz = z1 - z2
         dist_sq = dx * dx + dy * dy + dz * dz
-        if dist_sq > tolerance_sq:
-            return False
+        if dist_sq <= tolerance_sq:
+            matching_vertices += 1
     
-    return True
+    match_percentage = (matching_vertices / total_vertices) * 100.0 if total_vertices > 0 else 0.0
+    is_duplicate = match_percentage >= match_threshold
+    
+    return is_duplicate, match_percentage
 
 
-def find_duplicate_meshes(objects, tolerance, use_world_space, compare_uvs=False):
+def compare_pair(data1, data2, tolerance, compare_uvs, match_threshold=100.0):
+    """
+    Compare a pair of mesh data objects.
+    
+    Args:
+        data1: First mesh data dict
+        data2: Second mesh data dict
+        tolerance: Distance tolerance for matching
+        compare_uvs: Whether to compare UV maps
+        match_threshold: Minimum percentage of vertices that must match
+        
+    Returns:
+        Tuple of (name1, name2, is_duplicate, match_percentage)
+    """
+    # Skip comparison if objects already share the same mesh data (already linked)
+    if data1['mesh_data'] == data2['mesh_data']:
+        print(f"Comparing '{data1['name']}' vs '{data2['name']}': SKIPPED (already linked)")
+        return (data1['name'], data2['name'], False, 0.0)
+    
+    is_duplicate, match_percentage = compare_point_clouds(data1['point_cloud'], data2['point_cloud'], tolerance, match_threshold)
+    
+    # Log the match percentage
+    print(f"Comparing '{data1['name']}' vs '{data2['name']}': {match_percentage:.2f}% match")
+    
+    # If UV comparison is enabled, also check UV data
+    if is_duplicate and compare_uvs:
+        is_duplicate = compare_uv_data(data1['uv_data'], data2['uv_data'], tolerance)
+        if not is_duplicate:
+            print(f"  -> REJECTED: UV maps do not match")
+        else:
+            print(f"  -> ACCEPTED: UV maps match")
+    
+    if is_duplicate:
+        if not compare_uvs:
+            print(f"  -> ACCEPTED: Point clouds match")
+    else:
+        if not compare_uvs:
+            print(f"  -> REJECTED: Point clouds do not match")
+    
+    return (data1['name'], data2['name'], is_duplicate, match_percentage)
+
+
+def find_duplicate_meshes(objects, tolerance, use_world_space, compare_uvs=False, match_threshold=100.0):
     """
     Find groups of duplicate meshes among the given objects.
     
@@ -172,63 +222,109 @@ def find_duplicate_meshes(objects, tolerance, use_world_space, compare_uvs=False
         tolerance: Distance tolerance for matching
         use_world_space: Whether to compare in world space
         compare_uvs: Whether to also compare UV maps
+        match_threshold: Minimum percentage of vertices that must match
         
     Returns:
         List of lists, where each inner list contains names of duplicate meshes
     """
     # Extract point clouds for all meshes
+    print(f"\n=== Starting duplicate detection for {len(objects)} objects ===")
     mesh_data = []
     for obj in objects:
         if obj.type == 'MESH' and obj.data:
             point_cloud = get_point_cloud(obj, use_world_space)
             cloud_hash = compute_point_cloud_hash(point_cloud, tolerance)
+            # Compute a simple hash ID for display purposes
+            hash_id = hash(cloud_hash)
+            print(f"Object '{obj.name}': {len(point_cloud)} vertices, hash_id={hash_id}")
             data = {
                 'object': obj,
                 'name': obj.name,
+                'mesh_data': obj.data,  # Store mesh data reference
                 'point_cloud': point_cloud,
-                'hash': cloud_hash
+                'hash': cloud_hash,
+                'hash_id': hash_id,  # For logging
+                'vertex_count': len(point_cloud)  # Store vertex count for grouping
             }
             if compare_uvs:
                 data['uv_data'] = get_uv_data(obj)
             mesh_data.append(data)
     
-    # Group by hash for quick filtering
-    hash_groups = defaultdict(list)
+    # Group by vertex count first (meshes must have same vertex count to be duplicates)
+    vertex_count_groups = defaultdict(list)
     for data in mesh_data:
-        hash_groups[data['hash']].append(data)
+        vertex_count_groups[data['vertex_count']].append(data)
     
-    # Find actual duplicates within each hash group
+    print(f"\n=== Vertex count grouping results: {len(vertex_count_groups)} unique vertex counts ===")
+    for vertex_count, group in vertex_count_groups.items():
+        obj_names = [d['name'] for d in group]
+        print(f"Vertex count {vertex_count} ({len(group)} objects): {', '.join(obj_names)}")
+    
+    # Find actual duplicates by comparing all objects with the same vertex count
     duplicate_groups = []
     processed = set()
     
-    for hash_key, group in hash_groups.items():
+    print(f"\n=== Starting detailed comparison with multithreading ===")
+    
+    for vertex_count, group in vertex_count_groups.items():
         if len(group) < 2:
+            print(f"Vertex count {vertex_count}: Only 1 object, skipping")
             continue
         
-        # Within each hash group, verify with detailed comparison
+        print(f"\nVertex count {vertex_count}: Comparing {len(group)} objects using {min(len(group), 8)} threads")
+        
+        # Build list of comparison pairs
+        comparison_pairs = []
         for i, data1 in enumerate(group):
-            if data1['name'] in processed:
-                continue
+            if data1['name'] not in processed:
+                for j in range(i + 1, len(group)):
+                    data2 = group[j]
+                    if data2['name'] not in processed:
+                        comparison_pairs.append((data1, data2))
+        
+        print(f"  Total comparisons: {len(comparison_pairs)}")
+        
+        # Perform comparisons in parallel
+        matches = []
+        with ThreadPoolExecutor(max_workers=min(len(comparison_pairs), 8)) as executor:
+            futures = {
+                executor.submit(compare_pair, data1, data2, tolerance, compare_uvs, match_threshold): (data1['name'], data2['name'])
+                for data1, data2 in comparison_pairs
+            }
             
-            current_group = [data1['name']]
-            
-            for j, data2 in enumerate(group[i + 1:], start=i + 1):
-                if data2['name'] in processed:
-                    continue
-                
-                is_duplicate = compare_point_clouds(data1['point_cloud'], data2['point_cloud'], tolerance)
-                
-                # If UV comparison is enabled, also check UV data
-                if is_duplicate and compare_uvs:
-                    is_duplicate = compare_uv_data(data1['uv_data'], data2['uv_data'], tolerance)
-                
+            for future in as_completed(futures):
+                name1, name2, is_duplicate, match_percentage = future.result()
                 if is_duplicate:
-                    current_group.append(data2['name'])
-                    processed.add(data2['name'])
-            
-            if len(current_group) > 1:
-                duplicate_groups.append(current_group)
-                processed.add(data1['name'])
+                    matches.append((name1, name2))
+        
+        # Build duplicate groups from matches
+        # Create a graph and find connected components
+        graph = defaultdict(set)
+        for name1, name2 in matches:
+            graph[name1].add(name2)
+            graph[name2].add(name1)
+        
+        # Find connected components (groups of duplicates)
+        visited = set()
+        for node in graph:
+            if node not in visited and node not in processed:
+                # BFS to find all connected nodes
+                component = []
+                queue = [node]
+                visited.add(node)
+                
+                while queue:
+                    current = queue.pop(0)
+                    component.append(current)
+                    
+                    for neighbor in graph[current]:
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            queue.append(neighbor)
+                
+                if len(component) > 1:
+                    duplicate_groups.append(component)
+                    processed.update(component)
     
     return duplicate_groups
 
@@ -419,6 +515,7 @@ class DUPLICATEMESH_OT_detect(bpy.types.Operator):
         use_world_space = scene.duplicate_mesh_use_world_space
         selected_only = scene.duplicate_mesh_selected_only
         compare_uvs = scene.duplicate_mesh_compare_uvs
+        match_threshold = scene.duplicate_mesh_match_threshold
         
         # Get objects to compare
         if selected_only:
@@ -432,7 +529,7 @@ class DUPLICATEMESH_OT_detect(bpy.types.Operator):
             return {'CANCELLED'}
         
         # Find duplicates
-        duplicate_groups = find_duplicate_meshes(objects, tolerance, use_world_space, compare_uvs)
+        duplicate_groups = find_duplicate_meshes(objects, tolerance, use_world_space, compare_uvs, match_threshold)
         
         if duplicate_groups:
             # Format results for display

@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "io_animation_anm"
+version = "1.0.0"
+name = "AeonGames Animation Format (.anm)"
+tagline = "Exports armature actions as AeonEngine Animation (ANM) files"
+maintainer = "Rodrigo Hernandez (Kwizatz) <contact@email.com>"
+type = "add-on"
+
+tags = ["Import-Export", "Animation"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"

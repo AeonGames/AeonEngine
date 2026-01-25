@@ -24,7 +24,9 @@ bl_info = {
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
-    "category": "Import-Export"}
+    "category": "Import-Export",
+    "support": "COMMUNITY"
+}
 
 
 def cln_menu_func(self, context):

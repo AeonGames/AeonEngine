@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "armature_lossless_connect"
+version = "1.0.0"
+name = "Lossless Bone Connect"
+tagline = "Connects all single child bones to their parent tail without moving their heads"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Armature", "Object"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"

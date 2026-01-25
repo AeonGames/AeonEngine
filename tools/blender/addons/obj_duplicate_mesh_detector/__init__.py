@@ -13,7 +13,7 @@
 # limitations under the License.
 
 bl_info = {
-    "name": "Duplicate Mesh Detector",
+    "name": "AeonGames Duplicate Mesh Detector",
     "author": "Rodrigo Hernandez",
     "version": (1, 0, 0),
     "blender": (5, 0, 0),
@@ -22,7 +22,9 @@ bl_info = {
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
-    "category": "Object"}
+    "category": "Object",
+    "support": "COMMUNITY"
+}
 
 import bpy
 from . import detector
@@ -41,6 +43,7 @@ class DUPLICATEMESH_PT_panel(bpy.types.Panel):
         scene = context.scene
 
         layout.prop(scene, "duplicate_mesh_tolerance")
+        layout.prop(scene, "duplicate_mesh_match_threshold")
         layout.prop(scene, "duplicate_mesh_use_world_space")
         layout.prop(scene, "duplicate_mesh_compare_uvs")
         layout.prop(scene, "duplicate_mesh_selected_only")
@@ -71,6 +74,15 @@ def register():
         max=1.0,
         precision=6
     )
+    bpy.types.Scene.duplicate_mesh_match_threshold = bpy.props.FloatProperty(
+        name="Match Threshold %",
+        description="Minimum percentage of vertices that must match (100% = exact match)",
+        default=100.0,
+        min=50.0,
+        max=100.0,
+        precision=2,
+        subtype='PERCENTAGE'
+    )
     bpy.types.Scene.duplicate_mesh_use_world_space = bpy.props.BoolProperty(
         name="Use World Space",
         description="Compare vertices in world space (includes object transforms)",
@@ -99,6 +111,7 @@ def unregister():
     bpy.utils.unregister_class(detector.DUPLICATEMESH_OT_detect)
 
     del bpy.types.Scene.duplicate_mesh_tolerance
+    del bpy.types.Scene.duplicate_mesh_match_threshold
     del bpy.types.Scene.duplicate_mesh_use_world_space
     del bpy.types.Scene.duplicate_mesh_compare_uvs
     del bpy.types.Scene.duplicate_mesh_selected_only

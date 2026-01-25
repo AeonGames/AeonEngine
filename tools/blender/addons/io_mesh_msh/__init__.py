@@ -1,4 +1,4 @@
-# Copyright (C) 2016,2017,2019,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016,2017,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,9 @@ bl_info = {
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
-    "category": "Import-Export"}
+    "category": "Import-Export",
+    "support": "COMMUNITY"
+}
 
 import bpy
 from . import export

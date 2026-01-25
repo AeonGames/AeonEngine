@@ -205,6 +205,7 @@ endif()
 
 add_subdirectory(proto)
 add_subdirectory(tools/aeontool)
+add_subdirectory(tools/blender)
 add_subdirectory(engine)
 add_subdirectory(assets)
 if(NOT APPLE)

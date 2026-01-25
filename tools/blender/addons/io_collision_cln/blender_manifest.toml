@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "io_collision_cln"
+version = "1.0.0"
+name = "AeonGames Collision Format (.cln)"
+tagline = "Exports a mesh as AeonGames Collision Data file (CLN)"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Import-Export", "Mesh"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"
