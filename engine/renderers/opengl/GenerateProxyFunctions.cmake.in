@@ -1,0 +1,73 @@
+# Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+# This script generates glProxyFunctions.h and glProxyFunctions.cpp
+# Variables are configured by CMakeLists.txt
+
+set(CMAKE_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
+set(PREPROCESS_ONLY_FLAGS "@PREPROCESS_ONLY_FLAGS@")
+set(PREPROCESS_OUTPUT_FLAG "@PREPROCESS_OUTPUT_FLAG@")
+set(GLCOREARB_H_PATH "@GLCOREARB_H_PATH@")
+set(PREPROCESS_VA_OPT "@PREPROCESS_VA_OPT@")
+set(SOURCE_DIR "@CMAKE_CURRENT_SOURCE_DIR@")
+set(BINARY_DIR "@CMAKE_CURRENT_BINARY_DIR@")
+
+execute_process(
+  COMMAND
+  ${CMAKE_CXX_COMPILER} ${PREPROCESS_ONLY_FLAGS} ${SOURCE_DIR}/glFunctions.txt "${PREPROCESS_OUTPUT_FLAG}${BINARY_DIR}/glFunctions.i"
+)
+
+file(STRINGS "${BINARY_DIR}/glFunctions.i" glFunctions REGEX "^gl")
+
+string(REGEX REPLACE ";" " |" glFunctions "${glFunctions} ")
+file(STRINGS "${GLCOREARB_H_PATH}" glPrototypes REGEX "${glFunctions}")
+string(REGEX REPLACE "GLAPI |APIENTRY |\\\\;" "" glPrototypes "${glPrototypes}")
+
+file(WRITE ${BINARY_DIR}/glProxyFunctions.h  "#ifndef AEONGAMES_GLPROXYFUNCTIONS_H\n")
+file(APPEND ${BINARY_DIR}/glProxyFunctions.h "#define AEONGAMES_GLPROXYFUNCTIONS_H\n")
+file(WRITE ${BINARY_DIR}/glProxyFunctions.cpp  "#include \"OpenGLFunctions.hpp\"\n")
+file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "namespace AeonGames {\n")
+
+foreach(glPrototype IN LISTS glPrototypes)
+  string(REGEX MATCH "[(].*[)]"
+    arguments "${glPrototype}")
+  string(REGEX REPLACE "[A-Za-z0-9_* ]+[ *]([A-Za-z0-9_]+)" "\\1"
+    arguments "${arguments}")
+  string(REGEX REPLACE "\\([ \t]*void[ \t]*\\)" "()"
+    arguments "${arguments}")
+  string(REGEX MATCH "[^(]+"
+    type_and_function "${glPrototype}")
+  string(REGEX MATCH "[A-Za-z0-9_]+[ ]*$" glFunction "${type_and_function}")
+  string(REGEX REPLACE "[ ]+" "" glFunction "${glFunction}")
+  string(REGEX REPLACE "[ ]*${glFunction}[ ]+" "" glType "${type_and_function}")
+  string(REGEX REPLACE "${glFunction}[\t ]*\\(" "${glFunction}Proxy (size_t aLine, const char* aFile, const char* aFunction, " glPrototype "${glPrototype}")
+  string(REGEX REPLACE ",[ \t]*void[ \t]*\\)" ")" glPrototype "${glPrototype}")
+
+  file(APPEND ${BINARY_DIR}/glProxyFunctions.h "${glPrototype};\n")
+  file(APPEND ${BINARY_DIR}/glProxyFunctions.h "#define ${glFunction}(...) ${glFunction}Proxy(__LINE__, __FILE__, __FUNCTION__ ${PREPROCESS_VA_OPT} __VA_ARGS__ )\n")
+  file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "#undef ${glFunction}\n")
+  file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "${glPrototype} {\n")
+  if(glType STREQUAL "void")
+    file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "    ${glFunction}${arguments};\n")
+    file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "    OPENGL_CHECK_ERROR_NO_THROW_LINE_FILE_FUNCTION(aLine,aFile,aFunction);\n")
+  else()
+    file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "    ${glType} result = ${glFunction}${arguments};\n")
+    file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "    OPENGL_CHECK_ERROR_NO_THROW_LINE_FILE_FUNCTION(aLine,aFile,aFunction);\n")
+    file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "    return result;\n")
+  endif()
+  file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "}\n")
+endforeach()
+
+file(APPEND ${BINARY_DIR}/glProxyFunctions.h "#endif\n")
+file(APPEND ${BINARY_DIR}/glProxyFunctions.cpp "}\n")
