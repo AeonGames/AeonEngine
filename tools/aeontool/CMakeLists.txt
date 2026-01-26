@@ -41,16 +41,6 @@ if(MSVC)
     PROPERTIES COMPILE_FLAGS "-WX -D_CRT_SECURE_NO_WARNINGS")
 endif()
 
-add_b64_decode_target(decode_game_textures "png"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Body_Diffuse.b64"     "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Hair_Normal.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Body_Gloss.b64"       "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Hair_Specular.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Body_Normal.b64"      "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Shoes_Diffuse.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Body_Specular.b64"    "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Shoes_Gloss.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Bottom_Diffuse.b64"   "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Shoes_Normal.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Bottom_Gloss.b64"     "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Shoes_Specular.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Bottom_Normal.b64"    "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Top_Diffuse.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Bottom_Specular.b64"  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Top_Gloss.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Hair_Diffuse.b64"     "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Top_Normal.b64"
-  "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Hair_Gloss.b64"       "${CMAKE_SOURCE_DIR}/game/aerin/textures/Aerin_Top_Specular.b64"
-  "${CMAKE_SOURCE_DIR}/game/images/olivedrab.b64"
+add_b64_decode_target(decode_game_textures
+    "${CMAKE_SOURCE_DIR}/game/images/olivedrab.png.b64"
 )

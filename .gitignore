@@ -57,6 +57,7 @@ tags
 *.png
 *.tga
 *.blend
+*.blend1
 
 # Generated files
 game/images/*.svg
