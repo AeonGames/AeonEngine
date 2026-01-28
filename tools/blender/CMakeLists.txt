@@ -30,6 +30,7 @@ set(BLENDER_ADDONS
     io_mesh_msh
     io_model_mdl
     io_skeleton_skl
+    io_scene_unreal
     obj_duplicate_mesh_detector
 )
 
