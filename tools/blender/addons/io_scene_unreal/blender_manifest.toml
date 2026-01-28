@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "io_scene_unreal"
+version = "2.0.0"
+name = "Import Unreal Skeleton Mesh (.psk/.pskx)/Animation Set (.psa)"
+tagline = "Import Unreal Skeleton Mesh (UE1-5) and Animation Data"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Import-Export", "Animation", "Rigging"]
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"
