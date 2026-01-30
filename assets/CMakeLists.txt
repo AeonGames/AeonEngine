@@ -2,6 +2,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/base64.cmake)
 
 
 add_b64_decode_target(decode_aerin
+  "${CMAKE_SOURCE_DIR}/assets/aerin/aerin.fuse.b64"
   "${CMAKE_SOURCE_DIR}/assets/aerin/aerin.blend.b64"
   "${CMAKE_SOURCE_DIR}/assets/aerin/textures/Aerin_Body_Diffuse.png.b64"
   "${CMAKE_SOURCE_DIR}/assets/aerin/textures/Aerin_Body_Gloss.png.b64"

@@ -1,6 +1,7 @@
 {
     "git.enabled": true,
     "git.ignoreLimitWarning": true,
+    "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.automationProfile.windows":
     {
         "path": "C:\\Windows\\System32\\cmd.exe"
