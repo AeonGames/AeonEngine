@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,12 +29,10 @@ class SKL_OT_exporter(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if (context.active_object.type == 'ARMATURE'):
-            return True
-        return False
+        return context.active_object is not None and context.active_object.type == 'ARMATURE'
 
     def execute(self, context):
-        if (context.active_object.type != 'ARMATURE'):
+        if context.active_object is None or context.active_object.type != 'ARMATURE':
             return {'CANCELLED'}
         bpy.ops.object.mode_set()
         self.filepath = bpy.path.ensure_ext(self.filepath, ".skl")
