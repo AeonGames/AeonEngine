@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     strategy:
       matrix:
@@ -62,6 +63,63 @@ jobs:
 
     - name: 🔨 Build
       run: cmake --build ${{github.workspace}}/build
+
+    - name: 🔑 Compute vcpkg manifest hash
+      id: vcpkg-hash
+      shell: pwsh
+      run: |
+        $hash = (Get-FileHash -Algorithm SHA256 -InputStream (
+          [IO.MemoryStream]::new(
+            [Text.Encoding]::UTF8.GetBytes(
+              (Get-Content vcpkg.json -Raw) + (Get-Content vcpkg-configuration.json -Raw)
+            )
+          )
+        )).Hash.Substring(0, 16).ToLower()
+        echo "VCPKG_HASH=$hash" >> $env:GITHUB_OUTPUT
+        echo "Manifest hash: $hash"
+      if: matrix.compiler == 'msvc'
+
+    - name: 🔍 Check if NuGet package version exists
+      id: nuget-check
+      shell: pwsh
+      run: |
+        $version = "83.68.75-${{ steps.vcpkg-hash.outputs.VCPKG_HASH }}"
+        $url = "https://api.nuget.org/v3-flatcontainer/aeonengine/$version/aeonengine.nuspec"
+        try {
+          $response = Invoke-WebRequest -Uri $url -Method Head -ErrorAction Stop
+          echo "Package aeonengine@$version already exists on nuget.org, skipping upload."
+          echo "EXISTS=true" >> $env:GITHUB_OUTPUT
+        } catch {
+          echo "Package aeonengine@$version not found on nuget.org, will upload."
+          echo "EXISTS=false" >> $env:GITHUB_OUTPUT
+        }
+      if: matrix.compiler == 'msvc'
+
+    - name: 📤 Export vcpkg packages as NuGet
+      if: matrix.compiler == 'msvc' && steps.nuget-check.outputs.EXISTS == 'false'
+      shell: pwsh
+      run: |
+        ${{ env.VCPKG_EXE }} export --x-all-installed --nuget `
+          --nuget-id=AeonEngine `
+          --nuget-version="83.68.75-${{ steps.vcpkg-hash.outputs.VCPKG_HASH }}" `
+          --nuget-description="AeonEngine vcpkg dependencies" `
+          --output-dir=${{github.workspace}}/nupkg
+
+    - name: 🔐 NuGet login (OIDC trusted publishing)
+      if: matrix.compiler == 'msvc' && steps.nuget-check.outputs.EXISTS == 'false'
+      uses: NuGet/login@v1
+      id: nuget-login
+      with:
+        user: kwizatz
+
+    - name: 📦 Push to nuget.org
+      if: matrix.compiler == 'msvc' && steps.nuget-check.outputs.EXISTS == 'false'
+      shell: pwsh
+      run: |
+        dotnet nuget push "${{github.workspace}}/nupkg/*.nupkg" `
+          --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} `
+          --source https://api.nuget.org/v3/index.json `
+          --skip-duplicate
 
     - name: 🧪 Run Tests
       shell: pwsh
