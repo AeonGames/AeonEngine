@@ -57,19 +57,24 @@ function(add_b64_decode_target target_name)
 endfunction()
 
 # Function to add a custom target for encoding files to base64 using aeontool
-# Usage: add_b64_encode_target(target_name extension input_file1 [input_file2 ...])
-# The output files will have the same path as input files but with the new extension
-function(add_b64_encode_target target_name extension)
+# Usage: add_b64_encode_target(target_name input_file1 [input_file2 ...])
+# The output files will have .b64 appended to the input file names
+function(add_b64_encode_target target_name)
   set(input_files ${ARGN})
   set(output_files "")
   set(encode_commands "")
   set(output_dirs "")
   
   foreach(input_file ${input_files})
-    # Get the file path without extension and replace with new extension
+    # Convert to absolute path if relative
+    if(NOT IS_ABSOLUTE "${input_file}")
+      set(input_file "${CMAKE_SOURCE_DIR}/${input_file}")
+    endif()
+    
+    # Append .b64 extension to the input file to get the output file
     get_filename_component(file_dir "${input_file}" DIRECTORY)
-    get_filename_component(file_name "${input_file}" NAME_WE)
-    set(output_file "${file_dir}/${file_name}.${extension}")
+    get_filename_component(file_name "${input_file}" NAME)
+    set(output_file "${file_dir}/${file_name}.b64")
     
     list(APPEND output_files "${output_file}")
     list(APPEND output_dirs "${file_dir}")
@@ -95,6 +100,6 @@ function(add_b64_encode_target target_name extension)
     DEPENDS aeontool ${input_files}
     BYPRODUCTS ${output_files}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Encoding files to base64 .${extension} format"
+    COMMENT "Encoding files to base64 .b64 format"
   )
 endfunction()
