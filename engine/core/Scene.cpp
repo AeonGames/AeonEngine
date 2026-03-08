@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -403,14 +403,22 @@ namespace AeonGames
         if ( aAsBinary )
         {
             serialization << "AEONSCE" << '\0';
-            scene_buffer.SerializeToOstream ( &serialization );
+            if ( !scene_buffer.SerializeToOstream ( &serialization ) )
+            {
+                std::cerr << LogLevel::Error << "Failed to serialize scene to binary format.";
+                throw std::runtime_error ( "Failed to serialize scene to binary format." );
+            }
         }
         else
         {
             std::string text;
             serialization << "AEONSCE\n";
             google::protobuf::TextFormat::Printer printer;
-            printer.PrintToString ( scene_buffer, &text );
+            if ( !printer.PrintToString ( scene_buffer, &text ) )
+            {
+                std::cerr << LogLevel::Error << "Failed to serialize scene to text format.";
+                throw std::runtime_error ( "Failed to serialize scene to text format." );
+            }
             serialization << text;
         }
         scene_buffer.Clear();

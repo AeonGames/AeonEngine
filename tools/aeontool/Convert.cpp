@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -587,7 +587,11 @@ namespace AeonGames
 
                 std::string text_string;
                 std::ofstream text_file ( mOutputFile, std::ifstream::out );
-                printer.PrintToString ( *message, &text_string );
+                if ( !printer.PrintToString ( *message, &text_string ) )
+                {
+                    std::cerr << "Failed to serialize message to text format.";
+                    throw std::runtime_error ( "Failed to serialize message to text format." );
+                }
                 text_file << magick_number << std::endl;
                 text_file.write ( text_string.c_str(), text_string.length() );
                 text_file.close();
@@ -597,7 +601,11 @@ namespace AeonGames
                 std::ofstream binary_file ( mOutputFile, std::ifstream::out | std::ifstream::binary );
                 magick_number[7] = '\0';
                 binary_file << magick_number << '\0';
-                message->SerializeToOstream ( &binary_file );
+                if ( !message->SerializeToOstream ( &binary_file ) )
+                {
+                    std::cerr << "Failed to serialize message to binary format.";
+                    throw std::runtime_error ( "Failed to serialize message to binary format." );
+                }
                 binary_file.close();
             }
         }
