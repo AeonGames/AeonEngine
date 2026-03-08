@@ -14,3 +14,8 @@ blender_version_min = "5.0.0"
 license = ["SPDX:Apache-2.0"]
 
 website = "https://github.com/AeonGames/AeonEngine"
+
+wheels = [
+    "./wheels/numpy-2.4.2-cp311-cp311-win_amd64.whl",
+    "./wheels/open3d-0.19.0-cp311-cp311-win_amd64.whl",
+]

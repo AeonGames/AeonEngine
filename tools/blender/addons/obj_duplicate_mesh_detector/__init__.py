@@ -30,6 +30,16 @@ import bpy
 from . import detector
 
 
+def _update_allow_scale(scene, context):
+    if scene.duplicate_mesh_allow_scale and scene.duplicate_mesh_allow_non_uniform_scale:
+        scene.duplicate_mesh_allow_non_uniform_scale = False
+
+
+def _update_allow_non_uniform_scale(scene, context):
+    if scene.duplicate_mesh_allow_non_uniform_scale and scene.duplicate_mesh_allow_scale:
+        scene.duplicate_mesh_allow_scale = False
+
+
 class DUPLICATEMESH_PT_panel(bpy.types.Panel):
     """Panel for Duplicate Mesh Detector"""
     bl_label = "Duplicate Mesh Detector"
@@ -45,6 +55,15 @@ class DUPLICATEMESH_PT_panel(bpy.types.Panel):
         layout.prop(scene, "duplicate_mesh_tolerance")
         layout.prop(scene, "duplicate_mesh_match_threshold")
         layout.prop(scene, "duplicate_mesh_use_world_space")
+        layout.prop(scene, "duplicate_mesh_allow_scale")
+        layout.prop(scene, "duplicate_mesh_allow_non_uniform_scale")
+        if scene.duplicate_mesh_allow_non_uniform_scale:
+            mode = "Non-Uniform"
+        elif scene.duplicate_mesh_allow_scale:
+            mode = "Uniform"
+        else:
+            mode = "Rigid"
+        layout.label(text=f"Active mode: {mode}")
         layout.prop(scene, "duplicate_mesh_compare_uvs")
         layout.prop(scene, "duplicate_mesh_selected_only")
         layout.operator(detector.DUPLICATEMESH_OT_detect.bl_idname)
@@ -56,6 +75,13 @@ class DUPLICATEMESH_PT_panel(bpy.types.Panel):
             for group in context.scene.duplicate_mesh_results.split("|"):
                 if group:
                     box.label(text=group)
+
+            if hasattr(context.scene, "duplicate_mesh_scale_results") and context.scene.duplicate_mesh_scale_results:
+                scale_box = layout.box()
+                scale_box.label(text="Matched Pair Scales:")
+                for pair_scale in context.scene.duplicate_mesh_scale_results.split("|"):
+                    if pair_scale:
+                        scale_box.label(text=pair_scale)
             
             # Add convert to linked button
             layout.operator(detector.DUPLICATEMESH_OT_convert_linked.bl_idname)
@@ -71,7 +97,7 @@ def register():
         description="Distance tolerance for considering vertices as matching",
         default=0.0001,
         min=0.0,
-        max=1.0,
+        max=100.0,
         precision=6
     )
     bpy.types.Scene.duplicate_mesh_match_threshold = bpy.props.FloatProperty(
@@ -88,6 +114,18 @@ def register():
         description="Compare vertices in world space (includes object transforms)",
         default=False
     )
+    bpy.types.Scene.duplicate_mesh_allow_scale = bpy.props.BoolProperty(
+        name="Allow Uniform Scale",
+        description="Use Umeyama similarity transform (scale + rotation + translation) instead of rigid-only",
+        default=True,
+        update=_update_allow_scale,
+    )
+    bpy.types.Scene.duplicate_mesh_allow_non_uniform_scale = bpy.props.BoolProperty(
+        name="Allow Non-Uniform Scale",
+        description="Estimate per-axis scale (sx, sy, sz) with Umeyama rotation + translation",
+        default=False,
+        update=_update_allow_non_uniform_scale,
+    )
     bpy.types.Scene.duplicate_mesh_compare_uvs = bpy.props.BoolProperty(
         name="Compare UV Maps",
         description="Also compare UV maps when detecting duplicates",
@@ -103,6 +141,11 @@ def register():
         description="Detection results",
         default=""
     )
+    bpy.types.Scene.duplicate_mesh_scale_results = bpy.props.StringProperty(
+        name="Scale Results",
+        description="Per-matched-pair scale values",
+        default=""
+    )
 
 
 def unregister():
@@ -113,9 +156,12 @@ def unregister():
     del bpy.types.Scene.duplicate_mesh_tolerance
     del bpy.types.Scene.duplicate_mesh_match_threshold
     del bpy.types.Scene.duplicate_mesh_use_world_space
+    del bpy.types.Scene.duplicate_mesh_allow_scale
+    del bpy.types.Scene.duplicate_mesh_allow_non_uniform_scale
     del bpy.types.Scene.duplicate_mesh_compare_uvs
     del bpy.types.Scene.duplicate_mesh_selected_only
     del bpy.types.Scene.duplicate_mesh_results
+    del bpy.types.Scene.duplicate_mesh_scale_results
 
 
 if __name__ == "__main__":
