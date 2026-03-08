@@ -14,3 +14,7 @@ blender_version_min = "5.0.0"
 license = ["SPDX:Apache-2.0"]
 
 website = "https://github.com/AeonGames/AeonEngine"
+
+wheels = [
+	"./wheels/protobuf-5.29.5-py3-none-any.whl",
+]
