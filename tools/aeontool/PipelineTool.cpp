@@ -150,7 +150,11 @@ namespace AeonGames
                 {
                     std::ofstream binary_file ( mOutputFile, std::ios::out | std::ios::binary );
                     binary_file << magick_number << '\0';
-                    pipeline_msg.SerializeToOstream ( &binary_file );
+                    if ( !pipeline_msg.SerializeToOstream ( &binary_file ) )
+                    {
+                        std::cerr << "Failed to serialize pipeline message to binary format.";
+                        throw std::runtime_error ( "Failed to serialize pipeline message to binary format." );
+                    }
                     binary_file.close();
                 }
                 else
@@ -167,7 +171,11 @@ namespace AeonGames
                     }
                     std::string text_string;
                     std::ofstream text_file ( mOutputFile, std::ios::out );
-                    printer.PrintToString ( pipeline_msg, &text_string );
+                    if ( !printer.PrintToString ( pipeline_msg, &text_string ) )
+                    {
+                        std::cerr << "Failed to serialize pipeline message to text format.";
+                        throw std::runtime_error ( "Failed to serialize pipeline message to text format." );
+                    }
                     text_file << magick_number << std::endl;
                     text_file.write ( text_string.c_str(), text_string.length() );
                     text_file.close();
