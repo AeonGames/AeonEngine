@@ -1,0 +1,343 @@
+/* AeonEngine Doxygen Dark Theme — Modern, sans-serif */
+
+/* ── Root variables ── */
+:root {
+    --bg-primary: #1e1e2e;
+    --bg-secondary: #181825;
+    --bg-tertiary: #252536;
+    --bg-code: #1a1a2a;
+    --bg-hover: #2a2a3e;
+    --text-primary: #cdd6f4;
+    --text-secondary: #a6adc8;
+    --text-muted: #7f849c;
+    --accent: #89b4fa;
+    --accent-hover: #b4d0fb;
+    --accent-dim: #45475a;
+    --border: #313244;
+    --border-light: #45475a;
+    --green: #a6e3a1;
+    --yellow: #f9e2af;
+    --red: #f38ba8;
+    --purple: #cba6f7;
+    --font-sans: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    --radius: 6px;
+}
+
+/* ── Global reset ── */
+html, body {
+    font-family: var(--font-sans) !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* ── Links ── */
+a, a:visited {
+    color: var(--accent) !important;
+    text-decoration: none;
+}
+a:hover, a:focus {
+    color: var(--accent-hover) !important;
+    text-decoration: underline;
+}
+
+/* ── Headings ── */
+h1, h2, h3, h4, h5, h6,
+.title, .groupheader {
+    font-family: var(--font-sans) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+/* ── Top navigation bar ── */
+#top, .tabs, .tabs2, .tabs3,
+#navrow1, #navrow2, #navrow3 {
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+.tablist li, .tablist a {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    font-family: var(--font-sans) !important;
+    border: none !important;
+}
+.tablist a:hover,
+.tablist li.current a {
+    color: var(--accent) !important;
+    background: var(--bg-tertiary) !important;
+    border-radius: var(--radius);
+}
+
+/* ── Title area ── */
+#titlearea, #projectname, #projectbrief, #projectnumber {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-sans) !important;
+    border: none !important;
+}
+#projectname {
+    font-weight: 700 !important;
+    font-size: 1.6em !important;
+}
+#projectbrief {
+    color: var(--text-secondary) !important;
+}
+
+/* ── Side navigation (treeview) ── */
+#side-nav, #nav-tree, .ui-resizable-handle {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border) !important;
+}
+#nav-tree .label {
+    font-family: var(--font-sans) !important;
+    color: var(--text-secondary) !important;
+}
+#nav-tree .label a {
+    color: var(--text-secondary) !important;
+}
+#nav-tree .label a:hover {
+    color: var(--accent) !important;
+}
+#nav-tree .selected {
+    background: var(--bg-tertiary) !important;
+}
+#nav-tree .item {
+    color: var(--text-secondary) !important;
+}
+
+/* ── Content area ── */
+.contents, #doc-content {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+.header {
+    background: var(--bg-primary) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+.summary {
+    color: var(--text-muted) !important;
+}
+
+/* ── Member declarations / detail tables ── */
+.memtitle, .memname, .memItemLeft, .memItemRight,
+.memTemplItemLeft, .memTemplItemRight {
+    font-family: var(--font-mono) !important;
+    color: var(--text-primary) !important;
+    background: var(--bg-tertiary) !important;
+    border: none !important;
+}
+.memSeparator {
+    border-color: var(--border) !important;
+}
+.memdoc {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-top: none !important;
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 12px 16px !important;
+}
+.memproto {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) var(--radius) 0 0;
+    color: var(--text-primary) !important;
+    text-shadow: none !important;
+}
+.memproto td {
+    font-family: var(--font-mono) !important;
+    color: var(--text-primary) !important;
+}
+td.memSeparator {
+    display: none;
+}
+
+/* ── Tables ── */
+table.memberdecls, table.fieldtable, table.mlabels {
+    border: none !important;
+}
+table.memberdecls td, table.fieldtable td,
+table.memberdecls th, table.fieldtable th {
+    border-color: var(--border) !important;
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+.fieldtable th {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Code blocks ── */
+div.fragment, pre.fragment {
+    background: var(--bg-code) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    font-family: var(--font-mono) !important;
+    color: var(--text-primary) !important;
+    padding: 12px 16px !important;
+    overflow-x: auto;
+}
+code, .code, tt {
+    font-family: var(--font-mono) !important;
+    color: var(--purple) !important;
+    background: var(--bg-code) !important;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+/* ── Syntax highlighting ── */
+.keyword      { color: var(--purple) !important; }
+.keywordtype  { color: var(--yellow) !important; }
+.keywordflow  { color: var(--purple) !important; }
+.comment      { color: var(--text-muted) !important; font-style: italic; }
+.preprocessor { color: var(--red) !important; }
+.stringliteral { color: var(--green) !important; }
+.charliteral  { color: var(--green) !important; }
+.vhdldigit    { color: var(--yellow) !important; }
+.vhdlchar     { color: var(--green) !important; }
+.vhdlkeyword  { color: var(--purple) !important; }
+.vhdllogic    { color: var(--red) !important; }
+
+/* ── Search box ── */
+#MSearchBox {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+}
+#MSearchField {
+    font-family: var(--font-sans) !important;
+    color: var(--text-primary) !important;
+    background: transparent !important;
+}
+#MSearchSelect {
+    background: var(--bg-tertiary) !important;
+}
+#MSearchResultsWindow {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+}
+.SRPage, .SRResult {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+.SRResult:hover {
+    background: var(--bg-hover) !important;
+}
+
+/* ── Footer ── */
+.footer, hr {
+    border-color: var(--border) !important;
+    color: var(--text-muted) !important;
+}
+
+/* ── Enum / directory tables ── */
+.directory td, .directory td.entry {
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+.directory tr.even {
+    background: var(--bg-primary) !important;
+}
+.directory tr.odd {
+    background: var(--bg-secondary) !important;
+}
+
+/* ── Class index ── */
+.classindex dl.even {
+    background: var(--bg-primary) !important;
+}
+.classindex dl.odd {
+    background: var(--bg-secondary) !important;
+}
+
+/* ── Inheritance / collaboration diagrams ── */
+.center img, .dyncontent img {
+    filter: invert(0.88) hue-rotate(180deg);
+}
+
+/* ── Breadcrumb / nav path ── */
+.navpath ul, .navpath li {
+    background: var(--bg-secondary) !important;
+    color: var(--text-muted) !important;
+}
+.navpath li a {
+    color: var(--text-secondary) !important;
+    text-shadow: none !important;
+}
+.navpath li a:hover {
+    color: var(--accent) !important;
+}
+div.navpath {
+    border: none !important;
+    background: var(--bg-secondary) !important;
+}
+
+/* ── Tooltip ── */
+.ttc {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius);
+}
+
+/* ── Grouping sections ── */
+.groupheader {
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--accent) !important;
+    margin-top: 1.2em;
+}
+
+/* ── Note / warning / deprecated boxes ── */
+dl.note, dl.warning, dl.attention, dl.deprecated, dl.todo, dl.bug,
+dl.invariant, dl.pre, dl.post {
+    border-left: 4px solid var(--accent) !important;
+    background: var(--bg-tertiary) !important;
+    padding: 10px 14px !important;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text-primary) !important;
+}
+dl.warning {
+    border-left-color: var(--yellow) !important;
+}
+dl.deprecated {
+    border-left-color: var(--red) !important;
+}
+dl.todo {
+    border-left-color: var(--green) !important;
+}
+dl.bug {
+    border-left-color: var(--red) !important;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ── Misc cleanup ── */
+img.footer {
+    display: none;
+}
+.textblock {
+    color: var(--text-primary) !important;
+}
+.paramname {
+    color: var(--yellow) !important;
+    font-style: normal !important;
+}
+.paramtype {
+    color: var(--green) !important;
+}
