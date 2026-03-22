@@ -28,16 +28,43 @@ namespace AeonGames
 {
     class Renderer;
     class EngineWindow;
+    /** @brief Widget for editing and managing a scene and its node hierarchy. */
     class SceneWindow : public QWidget
     {
         Q_OBJECT
     public:
+        /**
+         * @brief Construct the scene window widget.
+         * @param parent Parent widget.
+         * @param f Window flags.
+         */
         SceneWindow ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
+        /** @brief Destructor. */
         virtual ~SceneWindow();
+        /**
+         * @brief Open a scene file.
+         * @param mFilename Path to the scene file.
+         */
         void Open ( const std::string& mFilename );
+        /**
+         * @brief Save the scene to a file.
+         * @param mFilename Path to the output file.
+         */
         void Save ( const std::string& mFilename ) const;
+        /**
+         * @brief Set the camera field of view.
+         * @param aFieldOfView Field of view in degrees.
+         */
         void SetFieldOfView ( float aFieldOfView );
+        /**
+         * @brief Set the near clipping plane distance.
+         * @param aNear Near plane distance.
+         */
         void SetNear ( float aNear );
+        /**
+         * @brief Set the far clipping plane distance.
+         * @param aFar Far plane distance.
+         */
         void SetFar ( float aFar );
     private slots:
         void on_actionAddNode_triggered();
@@ -51,6 +78,7 @@ namespace AeonGames
         void on_localTransformChanged();
         void on_globalTransformChanged();
     protected:
+        /// @brief Handle window close events.
         void closeEvent ( QCloseEvent *event ) override;
     private:
         void UpdateLocalTransformData ( const Node* aNode );

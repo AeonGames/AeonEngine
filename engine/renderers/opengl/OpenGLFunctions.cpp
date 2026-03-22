@@ -62,6 +62,7 @@ limitations under the License.
 namespace AeonGames
 {
 #include "glDefinitions.h"
+    /// @brief Load all OpenGL function pointers and log driver information.
     bool LoadOpenGLAPI()
     {
 #include "glAssignments.h"

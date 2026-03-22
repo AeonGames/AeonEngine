@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,9 +25,11 @@ namespace AeonGames
     class Node;
     class Window;
     class Buffer;
+    /** @brief Component that attaches a 3D model with skeletal animation support to a scene node. */
     class ModelComponent final : public Component
     {
     public:
+        /** @brief Default constructor. */
         ModelComponent();
         /** @name Overrides */
         ///@{
@@ -44,13 +46,23 @@ namespace AeonGames
 
         /** @name Properties */
         ///@{
+        /** @brief Sets the model resource.
+            @param aModel Resource identifier of the model. */
         void SetModel ( const ResourceId& aModel );
+        /** @brief Returns the current model resource identifier. */
         const ResourceId& GetModel() const noexcept;
+        /** @brief Sets the active animation index.
+            @param aActiveAnimation Zero-based index of the animation to activate. */
         void SetActiveAnimation ( size_t aActiveAnimation ) noexcept;
+        /** @brief Returns the active animation index. */
         const size_t& GetActiveAnimation() const noexcept;
+        /** @brief Sets the starting frame for the active animation.
+            @param aAnimationDelta Starting frame value. */
         void SetStartingFrame ( double aAnimationDelta ) noexcept;
+        /** @brief Returns the starting frame for the active animation. */
         const double& GetStartingFrame() const noexcept;
         ///@}
+        /** @brief Returns the class identifier for the ModelComponent. */
         static const StringId& GetClassId();
     private:
         // Properties

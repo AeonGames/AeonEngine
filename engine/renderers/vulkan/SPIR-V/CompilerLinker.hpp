@@ -22,9 +22,11 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Compiles and links GLSL shaders into SPIR-V bytecode. */
     class CompilerLinker
     {
     public:
+        /// @brief Compiler/linker option flags.
         // Command-line options
         enum TOptions
         {
@@ -53,6 +55,7 @@ namespace AeonGames
             EOptionNoStorageFormat = ( 1 << 21 ),
             EOptionKeepUncalled = ( 1 << 22 ),
         };
+        /// @brief Process exit/result codes.
         //
         // Return codes from main/exit().
         //
@@ -63,12 +66,18 @@ namespace AeonGames
             EFailLink,
         };
 
+        /// @brief Constructor.
         CompilerLinker ( TOptions aOptions = static_cast<TOptions> ( EOptionSpv | EOptionVulkanRules | EOptionLinkProgram ) );
         ~CompilerLinker();
+        /// @brief Add GLSL source code for a shader stage.
         void AddShaderSource ( EShLanguage aStage, const char* aSource );
+        /// @brief Remove the shader source for a given stage.
         void RemoveShaderSource ( EShLanguage aStage );
+        /// @brief Compile all added shader sources and link into a program.
         FailCode CompileAndLink();
+        /// @brief Get the compiled SPIR-V bytecode for a shader stage.
         const std::vector<uint32_t>& GetSpirV ( EShLanguage aStage ) const;
+        /// @brief Get the compilation/link log output.
         const std::string& GetLog() const;
     private:
         void SetMessageOptions ( EShMessages& messages ) const;

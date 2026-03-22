@@ -75,7 +75,7 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
         }
 
-        ///@TODO: Material format does not currently support non block uniforms.
+        ///@todo Material format does not currently support non block uniforms.
 
         if ( mMaterial->GetUniformBuffer().size() )
         {

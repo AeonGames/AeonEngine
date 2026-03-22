@@ -21,15 +21,18 @@ namespace AeonGames
 {
     class Texture;
     class OpenGLRenderer;
+    /** @brief OpenGL texture resource wrapper. */
     class OpenGLTexture
     {
     public:
         OpenGLTexture ( OpenGLRenderer& aOpenGLRenderer, const Texture& aTexture );
+        /// @brief Move constructor.
         OpenGLTexture ( OpenGLTexture&& aOpenGLTexture );
         OpenGLTexture ( const OpenGLTexture& ) = delete;
         OpenGLTexture& operator= ( const OpenGLTexture& ) = delete;
         OpenGLTexture& operator= ( OpenGLTexture&& ) = delete;
         ~OpenGLTexture();
+        /// @brief Get the OpenGL texture object identifier.
         GLuint GetTextureId() const;
     private:
         OpenGLRenderer& mOpenGLRenderer;

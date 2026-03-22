@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2017,2020,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2017,2020,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+/** @file Platform.hpp
+ *  @brief Platform-specific macros, includes, and DLL export/import definitions.
+ *
+ *  Defines DLL (engine export/import), PLUGIN (plugin export), and ENTRYPOINT
+ *  macros, and pulls in the required system headers for each supported platform.
+ */
 #ifndef AEONGAMES_PLATFORM_H
 #define AEONGAMES_PLATFORM_H
 

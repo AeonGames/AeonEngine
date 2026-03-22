@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,6 +32,11 @@ namespace AeonGames
         return Decoder<Sound>::UnregisterDecoder ( aMagick );
     }
 
+    /** @brief Decode sound data from a memory buffer.
+        @param aSound Sound object to populate.
+        @param aBuffer Pointer to the encoded sound data.
+        @param aBufferSize Size of the buffer in bytes.
+        @return true on success. */
     bool DecodeSound ( Sound& aSound, const void* aBuffer, size_t aBufferSize )
     {
         return Decoder<Sound>::Decode ( aSound, aBuffer, aBufferSize );

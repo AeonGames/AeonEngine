@@ -140,6 +140,7 @@ namespace AeonGames
         { Pipeline::TOPOLOGY_CLASS_PATCH, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST }
     };
 
+    /// @brief Compare a VkDescriptorSetLayoutBinding with a SpvReflectDescriptorBinding for inequality.
     bool operator!= ( const VkDescriptorSetLayoutBinding& a, const SpvReflectDescriptorBinding& b )
     {
         return ! ( a.binding == b.binding &&
@@ -160,6 +161,7 @@ namespace AeonGames
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
     }
 
+    /// @brief Mapping from ShaderType to glslang EShLanguage.
     std::array<EShLanguage, ShaderType::COUNT> ShaderTypeToEShLanguage
     {
         EShLanguage::EShLangVertex,
@@ -170,6 +172,7 @@ namespace AeonGames
         EShLanguage::EShLangGeometry
     };
 
+    /// @brief Mapping from ShaderType to VkShaderStageFlagBits.
     std::array<VkShaderStageFlagBits, ShaderType::COUNT> ShaderTypeToShaderStageFlagBit
     {
         VK_SHADER_STAGE_VERTEX_BIT,
@@ -596,7 +599,7 @@ namespace AeonGames
                     return a.hash < b;
                 } );
 
-                ///@Kwizatz Add more checks to avoid binding conflicts across different shaders
+                /// @note Kwizatz: Add more checks to avoid binding conflicts across different shaders
                 if ( it != mDescriptorSets.end() && it->hash == hash && it->set == descriptor_set->set )
                 {
 #if 0

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ namespace AeonGames
 }
 #endif
 
+/** @brief CRC-32 lookup table (256 entries) for polynomial 0x04C11DB7. */
 #ifdef __cplusplus
 constexpr
 #else
@@ -113,12 +114,16 @@ uint32_t crc_table32[256] =
 
 #ifdef __cplusplus
 
+/** @brief Compile-time bitmask selecting the high group of bits in a 32-bit word.
+    @tparam bits Number of bits per group. Specializations exist for 1, 2, 4, 8, and 16. */
 template <uint32_t bits>
 struct mask_high32
 {
     enum { value = 0x0 };
 };
 
+/** @brief Compile-time bitmask selecting the low group of bits in a 32-bit word.
+    @tparam bits Number of bits per group. Specializations exist for 1, 2, 4, 8, and 16. */
 template <uint32_t bits>
 struct mask_low32
 {
@@ -185,6 +190,10 @@ struct mask_low32<16>
     enum { value = 0xFFFF0000 };
 };
 
+/** @brief Recursively reflects (bit-reverses) a 32-bit value.
+    @tparam bits Current group size for the divide-and-conquer reflection.
+    @param x Value to reflect.
+    @return The bit-reflected value. */
 template <uint32_t bits>
 constexpr uint32_t reflect32 ( uint32_t x )
 {
@@ -198,6 +207,11 @@ constexpr uint32_t reflect32<1> ( uint32_t x )
     return ( ( x & 0x55555555 ) << 1 | ( x & 0xAAAAAAAA ) >> 1 );
 };
 
+/** @brief Internal recursive CRC-32 computation.
+    @param message Pointer to the data bytes.
+    @param size    Remaining number of bytes to process.
+    @param crc     Running CRC accumulator.
+    @return Final CRC-32 value when size reaches 0. */
 constexpr uint32_t crc32impl ( const char* message, const std::size_t size, uint32_t crc )
 {
     return size == 0 ? reflect32<16> ( crc ) ^ 0xFFFFFFFF :
@@ -210,6 +224,10 @@ constexpr uint32_t crc32r ( const char* message, const std::size_t size )
     return crc32impl ( message, size, 0xFFFFFFFF );
 }
 
+/** @brief User-defined literal for compile-time CRC-32 computation.
+    @param message String literal to hash.
+    @param size    Length of the string.
+    @return CRC-32 checksum of the string. */
 constexpr uint32_t operator ""_crc32 ( const char* message, const std::size_t size )
 {
     return crc32r ( message, size );
@@ -236,6 +254,7 @@ extern "C"
 }
 #endif
 
+/** @brief CRC-64 lookup table (256 entries) for polynomial 0x42F0E1EBA9EA3693 (ECMA-182). */
 #ifdef __cplusplus
 constexpr
 #else
@@ -311,12 +330,16 @@ uint64_t crc_table64[256] =
 
 #ifdef __cplusplus
 
+/** @brief Compile-time bitmask selecting the high group of bits in a 64-bit word.
+    @tparam bits Number of bits per group. Specializations exist for 1, 2, 4, 8, 16, and 32. */
 template <uint64_t bits>
 struct mask_high64
 {
     enum : uint64_t { value = 0x0 };
 };
 
+/** @brief Compile-time bitmask selecting the low group of bits in a 64-bit word.
+    @tparam bits Number of bits per group. Specializations exist for 1, 2, 4, 8, 16, and 32. */
 template <uint64_t bits>
 struct mask_low64
 {
@@ -395,6 +418,10 @@ struct mask_low64<32>
     enum : uint64_t { value = 0xFFFFFFFF00000000 };
 };
 
+/** @brief Recursively reflects (bit-reverses) a 64-bit value.
+    @tparam bits Current group size for the divide-and-conquer reflection.
+    @param x Value to reflect.
+    @return The bit-reflected value. */
 template <uint64_t bits>
 constexpr uint64_t reflect64 ( uint64_t x )
 {
@@ -408,6 +435,11 @@ constexpr uint64_t reflect64<1> ( uint64_t x )
     return ( ( x & 0x5555555555555555 ) << 1 | ( x & 0xAAAAAAAAAAAAAAAA ) >> 1 );
 };
 
+/** @brief Internal recursive CRC-64 computation.
+    @param message Pointer to the data bytes.
+    @param size    Remaining number of bytes to process.
+    @param crc     Running CRC accumulator.
+    @return Final CRC-64 value when size reaches 0. */
 constexpr uint64_t crc64impl ( const char* message, const std::size_t size, uint64_t crc )
 {
     return size == 0 ? reflect64<32> ( crc ) ^ 0xFFFFFFFFFFFFFFFF :
@@ -420,6 +452,10 @@ constexpr uint64_t crc64r ( const char* message, const std::size_t size )
     return crc64impl ( message, size, 0xFFFFFFFFFFFFFFFF );
 }
 
+/** @brief User-defined literal for compile-time CRC-64 computation.
+    @param message String literal to hash.
+    @param size    Length of the string.
+    @return CRC-64 checksum of the string. */
 constexpr const uint64_t operator ""_crc64 ( const char* message, const std::size_t size )
 {
     return crc64r ( message, size );
@@ -433,6 +469,10 @@ Polynomial is 0x42F0E1EBA9EA3693 for CRC64-ECMA
 static_assert ( "AeonGames"_crc64 == 0x187936cc3eca327f, "CRC64 Operator Failure." );
 static_assert ( crc64r ( "AeonGames", 9 ) == 0x187936cc3eca327f, "CRC64 Failure." );
 
+/** @brief User-defined literal that maps to CRC-32 or CRC-64 depending on sizeof(std::size_t).
+    @param message String literal to hash.
+    @param size    Length of the string.
+    @return Platform-sized CRC identifier. */
 constexpr const std::size_t operator ""_id ( const char* message, const std::size_t size )
 {
     return ( sizeof ( std::size_t ) == 4 ) ? crc32impl ( message, size, 0xFFFFFFFF ) :

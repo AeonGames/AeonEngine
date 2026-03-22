@@ -30,20 +30,29 @@ struct SpvReflectShaderModule;
 namespace AeonGames
 {
     class VulkanRenderer;
+    /** @brief Vulkan graphics pipeline with descriptor set and push constant reflection. */
     class VulkanPipeline
     {
     public:
+        /// @brief Construct from a renderer and pipeline resource.
         VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline );
         ~VulkanPipeline();
+        /// @brief Move constructor.
         VulkanPipeline ( VulkanPipeline&& aVulkanPipeline );
         VulkanPipeline ( const VulkanPipeline& ) = delete;
         VulkanPipeline& operator= ( const VulkanPipeline& ) = delete;
         VulkanPipeline& operator= ( VulkanPipeline&& ) = delete;
+        /// @brief Get the Vulkan pipeline layout handle.
         const VkPipelineLayout GetPipelineLayout() const;
+        /// @brief Get the Vulkan pipeline handle.
         const VkPipeline GetVkPipeline() const;
+        /// @brief Get the source Pipeline resource.
         const Pipeline* GetPipeline() const;
+        /// @brief Get a descriptor set layout by its name hash.
         const VkDescriptorSetLayout GetDescriptorSetLayout ( uint32_t name ) const;
+        /// @brief Get the descriptor set index for a given hash.
         uint32_t GetDescriptorSetIndex ( uint32_t hash ) const;
+        /// @brief Get the push constant range used for the model matrix.
         const VkPushConstantRange& GetPushConstantModelMatrix() const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );

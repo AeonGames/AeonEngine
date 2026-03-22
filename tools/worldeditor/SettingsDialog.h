@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014,2015,2018,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014,2015,2018,2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,15 +20,21 @@ limitations under the License.
 #include "ui_SettingsDialog.h"
 namespace AeonGames
 {
+    /** @brief Dialog for configuring application settings. */
     class SettingsDialog : public QDialog
     {
         Q_OBJECT
     public:
+        /** @brief Default constructor. */
         SettingsDialog();
+        /** @brief Destructor. */
         ~SettingsDialog();
     public slots:
+        /** @brief Slot to open a color picker for the background color. */
         void onChangeBackgroundColor();
     signals:
+        /** @brief Emitted when the background color changes.
+         *  @param color New background color. */
         void backgroundColor ( QColor color );
     private:
         Ui::SettingsDialog mUi;

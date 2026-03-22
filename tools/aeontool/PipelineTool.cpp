@@ -94,6 +94,7 @@ namespace AeonGames
         }
     }
 
+    /// @brief Map from shader file extension to its mutable PipelineMsg accessor.
     const std::unordered_map<const char*, std::function<std::string * ( PipelineMsg* ) >> ShaderTypeToExtension
     {
         { ".vert", &PipelineMsg::mutable_vert },
@@ -104,6 +105,7 @@ namespace AeonGames
         { ".geom", &PipelineMsg::mutable_geom }
     };
 
+    /// @brief Map from shader file extension to its const PipelineMsg getter.
     const std::unordered_map<const char*, std::function<const std::string& ( const PipelineMsg* ) >> ShaderTypeToGetter
     {
         { ".vert", &PipelineMsg::vert },

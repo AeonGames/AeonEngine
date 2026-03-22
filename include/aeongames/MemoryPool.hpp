@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,14 +21,26 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief User-defined literal for kilobytes.
+     *  @param aKyloBytes Value in kilobytes.
+     *  @return Value in bytes.
+     */
     constexpr const std::size_t operator ""_kb ( unsigned long long int aKyloBytes )
     {
         return aKyloBytes * 1024;
     }
+    /** @brief User-defined literal for megabytes.
+     *  @param aMegaBytes Value in megabytes.
+     *  @return Value in bytes.
+     */
     constexpr const std::size_t operator ""_mb ( unsigned long long int aMegaBytes )
     {
         return aMegaBytes * 1024_kb;
     }
+    /** @brief User-defined literal for gigabytes.
+     *  @param aGigaBytes Value in gigabytes.
+     *  @return Value in bytes.
+     */
     constexpr const std::size_t operator ""_gb ( unsigned long long int aGigaBytes )
     {
         return aGigaBytes * 1024_mb;
@@ -41,8 +53,14 @@ namespace AeonGames
     class MemoryPool
     {
     public:
+        /** @brief Construct a memory pool.
+         *  @param sizeOfEachBlock Size of each memory block in bytes.
+         *  @param numOfBlocks Number of blocks to pre-allocate.
+         */
         DLL MemoryPool ( size_t sizeOfEachBlock, size_t numOfBlocks );
+        /** @brief Allocate a block from the pool. @return Pointer to the allocated block. */
         DLL void* Allocate();
+        /** @brief Return a block to the pool. @param p Pointer to the block to deallocate. */
         DLL void DeAllocate ( void* p );
     private:
         uint8_t * AddrFromIndex ( size_t i ) const;

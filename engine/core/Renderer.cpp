@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,5 +20,6 @@ limitations under the License.
 namespace AeonGames
 {
     Renderer::~Renderer() = default;
+    /// @brief Factory implementation for Renderer with a window argument.
     FactoryImplementation1Arg ( Renderer, void* );
 }

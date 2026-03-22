@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018-2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -132,6 +132,7 @@ namespace AeonGames
     }
 
     static std::string gConfigFile{"game/config"};
+    /// @brief Array of command-line option handlers.
     const std::array<OptionHandler, 1> gOptionHandlers
     {
         OptionHandler{

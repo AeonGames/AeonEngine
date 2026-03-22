@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2021,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,11 +21,20 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Tool for Base64 encoding and decoding of files. */
     class Base64 : public Tool
     {
     public:
+        /** @brief Default constructor. */
         Base64();
+        /** @brief Destructor. */
         ~Base64();
+        /**
+         * @brief Execute the Base64 tool.
+         * @param argc Argument count.
+         * @param argv Argument vector.
+         * @return Exit status code.
+         */
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );

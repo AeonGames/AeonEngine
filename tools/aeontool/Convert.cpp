@@ -53,6 +53,9 @@ namespace AeonGames
     static const char uint_pattern[] = "([+]?[0-9]+)";
     static const char int_pattern[] = "([-+]?[0-9]+)";
     static const char separator_pattern[] = "\\s+";
+    /** @brief Compute the stride in bytes for a single vertex.
+        @param aMeshMsg Mesh message describing vertex attributes.
+        @return Stride in bytes. */
     uint32_t GetStride ( const MeshMsg& aMeshMsg )
     {
         uint32_t stride = 0;
@@ -84,6 +87,9 @@ namespace AeonGames
         return stride;
     }
 
+    /** @brief Build a regex pattern string matching a single vertex.
+        @param aMeshMsg Mesh message describing vertex attributes.
+        @return Regex pattern string. */
     std::string GetVertexBufferRegexPattern ( const MeshMsg& aMeshMsg )
     {
         std::string pattern{ "\\(\\s*" };
@@ -137,6 +143,12 @@ namespace AeonGames
         return pattern;
     }
 
+    /** @brief Print vertex attribute values from a raw byte cursor.
+        @tparam T Data type of the attribute values.
+        @param cursor Pointer to the current position in the buffer.
+        @param stream Output string stream.
+        @param count Number of elements to print.
+        @return Updated cursor position past the printed elements. */
     template<class T> const uint8_t* Print ( const uint8_t* cursor, std::ostringstream& stream, uint32_t count )
     {
         const T* value = reinterpret_cast<const T*> ( cursor );
@@ -147,9 +159,11 @@ namespace AeonGames
         return cursor += sizeof ( T ) * count;
     }
 
+    /** @brief Custom field value printer for vertex buffer data. */
     class VertexBufferFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
+        /// @brief Construct from a mesh message.
         VertexBufferFieldValuePrinter ( const MeshMsg& aMeshMsg ) :
             google::protobuf::TextFormat::FastFieldValuePrinter(),
             mMeshMsg{ aMeshMsg }
@@ -209,14 +223,17 @@ namespace AeonGames
         const MeshMsg& mMeshMsg;
     };
 
+    /** @brief Custom field value printer for index buffer data. */
     class IndexBufferFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
+        /// @brief Construct from a mesh message.
         IndexBufferFieldValuePrinter ( const MeshMsg& aMeshMsg ) :
             google::protobuf::TextFormat::FastFieldValuePrinter(),
             mMeshMsg{ aMeshMsg }
         {
         };
+        /// @brief Print index buffer bytes in human-readable format.
         void PrintBytes ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
         {
             const uint8_t* cursor8;
@@ -261,6 +278,13 @@ namespace AeonGames
     };
 
 
+    /** @brief Parse attribute values from regex match results into a vertex buffer string.
+        @tparam T Data type of the attribute values.
+        @param index Starting index into match_results.
+        @param match_results Regex match results containing the values.
+        @param vertex_buffer Output buffer to append to.
+        @param count Number of values to parse.
+        @return Updated index past the parsed values. */
     template<class T> size_t Parse ( size_t index, const std::smatch& match_results, std::string& vertex_buffer, size_t count )
     {
         T value{};
@@ -348,6 +372,9 @@ namespace AeonGames
         }
     }
 
+    /** @brief Parse an index buffer from a mesh message.
+        @param aMeshMsg Mesh message containing index data.
+        @return Binary index buffer string. */
     std::string ParseIndexBuffer ( const MeshMsg& aMeshMsg )
     {
         std::string index_buffer;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2018,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 /*! \file
     \brief Header for the 4D vector class.
     \author Rodrigo Hernandez.
-    \copy 2015-2017
+    \copyright 2015-2017
 */
 
 #include "aeongames/Platform.hpp"
@@ -37,17 +37,43 @@ namespace AeonGames
         @note This is the same format the values are internally stored and what Vector3::GetVector3 returns.
         */
         DLL Vector4 ( const float* const aVector );
+        /** @brief Constructor.
+            @param aX X component.
+            @param aY Y component.
+            @param aZ Z component.
+            @param aW W component.
+        */
         DLL Vector4 ( float aX, float aY, float aZ, float aW );
         /// destructor.
         DLL ~Vector4();
+        /** @brief Get a pointer to the internal vector data.
+            @return Pointer to the float array containing X,Y,Z,W components.
+        */
         DLL const float* const GetVector4() const;
+        /** @brief Get the X component.
+            @return Reference to the X component.
+        */
         DLL const float& GetX() const;
+        /** @brief Get the Y component.
+            @return Reference to the Y component.
+        */
         DLL const float& GetY() const;
+        /** @brief Get the Z component.
+            @return Reference to the Z component.
+        */
         DLL const float& GetZ() const;
+        /** @brief Get the W component.
+            @return Reference to the W component.
+        */
         DLL const float& GetW() const;
     protected:
-        float mVector[4];
+        float mVector[4]; ///< X, Y, Z and W components.
     };
+    /** @brief Equality comparison operator.
+        @param aLhs Left-hand side vector.
+        @param aRhs Right-hand side vector.
+        @return true if both vectors are equal.
+    */
     DLL bool operator== ( const Vector4& aLhs, const Vector4& aRhs );
 }
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,12 +27,14 @@ limitations under the License.
 namespace AeonGames
 {
 
+    /** @brief Custom protobuf field value printer for code-formatted text output. */
     class CodeFieldValuePrinter : public google::protobuf::TextFormat::FastFieldValuePrinter
     {
     public:
         CodeFieldValuePrinter() : google::protobuf::TextFormat::FastFieldValuePrinter()
         {
         };
+        /// @brief Print a string value with code-style formatting and escaping.
         void PrintString ( const std::string & val, google::protobuf::TextFormat::BaseTextGenerator* base_text_generator ) const override
         {
             // Format multi-line strings by breaking them after each \n

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,11 +20,18 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Widget for displaying and editing node properties. */
     class NodeWindow : public QWidget
     {
         Q_OBJECT
     public:
+        /**
+         * @brief Construct the node window widget.
+         * @param parent Parent widget.
+         * @param f Window flags.
+         */
         NodeWindow ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
+        /** @brief Destructor. */
         ~NodeWindow();
     private slots:
     signals:

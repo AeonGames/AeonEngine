@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,21 +31,23 @@ limitations under the License.
 namespace AeonGames
 {
     class PipelineMsg;
-    /// @todo: This enum should be moved to a place where it makes more sence, like mesh metadata.
+    /** Primitive topology types for rendering.
+     * @todo This enum should be moved to a place where it makes more sence, like mesh metadata.
+     */
     enum Topology
     {
-        UNDEFINED = 0,
-        POINT_LIST,
-        LINE_STRIP,
-        LINE_LIST,
-        TRIANGLE_STRIP,
-        TRIANGLE_FAN,
-        TRIANGLE_LIST,
-        LINE_LIST_WITH_ADJACENCY,
-        LINE_STRIP_WITH_ADJACENCY,
-        TRIANGLE_LIST_WITH_ADJACENCY,
-        TRIANGLE_STRIP_WITH_ADJACENCY,
-        PATCH_LIST,
+        UNDEFINED = 0,                  /**< Undefined topology. */
+        POINT_LIST,                     /**< List of individual points. */
+        LINE_STRIP,                     /**< Connected line segments. */
+        LINE_LIST,                      /**< Pairs of vertices forming individual lines. */
+        TRIANGLE_STRIP,                 /**< Connected triangle strip. */
+        TRIANGLE_FAN,                   /**< Triangles sharing a common vertex. */
+        TRIANGLE_LIST,                  /**< Independent triangles. */
+        LINE_LIST_WITH_ADJACENCY,       /**< Line list with adjacency information. */
+        LINE_STRIP_WITH_ADJACENCY,      /**< Line strip with adjacency information. */
+        TRIANGLE_LIST_WITH_ADJACENCY,   /**< Triangle list with adjacency information. */
+        TRIANGLE_STRIP_WITH_ADJACENCY,  /**< Triangle strip with adjacency information. */
+        PATCH_LIST,                     /**< Patch list for tessellation. */
     };
 #if 0
     class MaterialMsg;
@@ -89,17 +91,19 @@ namespace AeonGames
     };
 #endif
 
+    /** Shader stage types. */
     enum ShaderType
     {
-        VERT = 0, //  vertex shader
-        FRAG,     //  fragment shader
-        COMP,     //  compute shader
-        TESC,     //  tessellation control shader
-        TESE,     //  tessellation evaluation shader
-        GEOM,     //  geometry shader
-        COUNT
+        VERT = 0, /**< Vertex shader. */
+        FRAG,     /**< Fragment shader. */
+        COMP,     /**< Compute shader. */
+        TESC,     /**< Tessellation control shader. */
+        TESE,     /**< Tessellation evaluation shader. */
+        GEOM,     /**< Geometry shader. */
+        COUNT     /**< Number of shader types. */
     };
 
+    /** Map from ShaderType enum values to human-readable string names. */
     const std::unordered_map<ShaderType, const char*> ShaderTypeToString
     {
         { VERT, "vertex" },
@@ -110,18 +114,32 @@ namespace AeonGames
         { GEOM, "geometry" }
     };
 
+    /** Rendering pipeline resource.
+     *
+     * Manages shader code and topology classification for a rendering pipeline.
+     */
     class Pipeline : public Resource
     {
     public:
-        static const uint32_t TOPOLOGY_CLASS_POINT{1};
-        static const uint32_t TOPOLOGY_CLASS_LINE{2};
-        static const uint32_t TOPOLOGY_CLASS_TRIANGLE{4};
-        static const uint32_t TOPOLOGY_CLASS_PATCH{8};
+        static const uint32_t TOPOLOGY_CLASS_POINT{1};    /**< Point topology class bitmask. */
+        static const uint32_t TOPOLOGY_CLASS_LINE{2};     /**< Line topology class bitmask. */
+        static const uint32_t TOPOLOGY_CLASS_TRIANGLE{4}; /**< Triangle topology class bitmask. */
+        static const uint32_t TOPOLOGY_CLASS_PATCH{8};    /**< Patch topology class bitmask. */
 
+        /** Default constructor. */
         DLL Pipeline();
+        /** Virtual destructor. */
         DLL virtual ~Pipeline();
+        /** Load pipeline data from a memory buffer.
+         * @param aBuffer Pointer to the buffer containing pipeline data.
+         * @param aBufferSize Size of the buffer in bytes.
+         */
         DLL void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) final;
+        /** Release all pipeline resources. */
         DLL void Unload() final;
+        /** Get the topology class bitmask for this pipeline.
+         * @return Bitmask indicating the topology class.
+         */
         DLL uint32_t GetTopologyClass() const;
 #if 0
         DLL const std::string& GetVertexShaderCode() const;
@@ -132,8 +150,15 @@ namespace AeonGames
         DLL std::string GetAttributes () const;
         DLL uint32_t GetAttributeBitmap() const;
 #endif
+        /** Get the shader source code for the given shader stage.
+         * @param aType The shader stage to retrieve code for.
+         * @return String view of the shader source code.
+         */
         DLL const std::string_view GetShaderCode ( ShaderType aType ) const;
 
+        /** Load pipeline configuration from a protobuf message.
+         * @param aPipelineMsg The protobuf message to load from.
+         */
         DLL void LoadFromPBMsg ( const PipelineMsg& aPipelineMsg );
     private:
 #if 0

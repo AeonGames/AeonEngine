@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017,2018,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017,2018,2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,13 +20,26 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Dialog for selecting a rendering backend. */
     class RendererSelectDialog : public QDialog
     {
         Q_OBJECT
     public:
+        /**
+         * @brief Construct the renderer selection dialog.
+         * @param parent Parent widget.
+         * @param f Window flags.
+         */
         RendererSelectDialog ( QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags() );
+        /** @brief Destructor. */
         ~RendererSelectDialog();
+        /**
+         * @brief Populate the dialog with available renderers.
+         * @param renderers List of renderer names.
+         */
         void SetRenderers ( const QStringList& renderers );
+        /** @brief Get the name of the selected renderer.
+         *  @return Selected renderer name. */
         const QString GetSelected() const;
     private slots:
     private:

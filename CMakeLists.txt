@@ -167,25 +167,12 @@ if(NOT GREP_EXECUTABLE)
   message(FATAL_ERROR "Unable to find grep executable.")
 endif()
 
-find_program(DOXYGEN_EXECUTABLE doxygen
-             HINTS ENV
-                   MSYSTEM_PREFIX
-                   ProgramFiles
-                   ChocolateyInstall
-                   ProgramData
-             PATH_SUFFIXES /usr/bin chocolatey/bin)
-if(DOXYGEN_EXECUTABLE)
-  find_program(DOT_EXECUTABLE dot
-               HINTS ENV
-                     MSYSTEM_PREFIX
-                     ProgramFiles
-                     ChocolateyInstall
-                     ProgramData
-               PATH_SUFFIXES /usr/bin chocolatey/bin)
-  if(DOT_EXECUTABLE)
-    set(HAS_DOT "YES")
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+  if(DOXYGEN_DOT_FOUND)
+    set(HAVE_DOT "YES")
   else()
-    set(HAS_DOT "NO")
+    set(HAVE_DOT "NO")
   endif()
   if(GIT_FOUND)
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
@@ -194,13 +181,14 @@ if(DOXYGEN_EXECUTABLE)
   else()
     set(GIT_HASH "Unknown Build")
   endif()
-  file(RELATIVE_PATH BIN_TO_SRC ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in" "Doxyfile" @ONLY)
-  add_custom_target(generate-documentation
-                    COMMAND ${CMAKE_COMMAND} -E remove_directory
-                            ${CMAKE_SOURCE_DIR}/docs/static/documentation
-                    COMMAND ${DOXYGEN_EXECUTABLE}
-                    COMMENT "Generating Documentation")
+  set(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/docs")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in" "${CMAKE_BINARY_DIR}/Doxyfile" @ONLY)
+  add_custom_target(doc
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
+  )
 endif()
 
 add_subdirectory(proto)

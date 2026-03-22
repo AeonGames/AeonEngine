@@ -27,11 +27,15 @@ limitations under the License.
 namespace AeonGames
 {
     class OpenGLRenderer;
+    /** @brief OpenGL memory pool buffer for transient per-frame uniform allocations. */
     class OpenGLMemoryPoolBuffer : public MemoryPoolBuffer
     {
     public:
+        /// @brief Construct with a renderer and initial pool size.
         OpenGLMemoryPoolBuffer ( const OpenGLRenderer&  aOpenGLRenderer, GLsizei aStackSize );
+        /// @brief Construct with a renderer using the default pool size.
         OpenGLMemoryPoolBuffer ( const OpenGLRenderer& aOpenGLRenderer );
+        /// @brief Move constructor.
         OpenGLMemoryPoolBuffer ( OpenGLMemoryPoolBuffer&& );
         OpenGLMemoryPoolBuffer ( const OpenGLMemoryPoolBuffer& ) = delete;
         OpenGLMemoryPoolBuffer& operator= ( const OpenGLMemoryPoolBuffer& ) = delete;
@@ -40,7 +44,9 @@ namespace AeonGames
         BufferAccessor Allocate ( size_t aSize ) final;
         void Reset() final;
         const Buffer & GetBuffer() const final;
+        /// @brief Initialize the pool buffer with the given size.
         void Initialize ( GLsizei aStackSize );
+        /// @brief Release pool buffer resources.
         void Finalize();
     private:
         const OpenGLRenderer&  mOpenGLRenderer;

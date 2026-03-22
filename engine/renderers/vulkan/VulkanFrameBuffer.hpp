@@ -21,6 +21,7 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
+    /** @brief Vulkan framebuffer object for off-screen rendering. */
     class VulkanFrameBuffer : public FrameBuffer
     {
     public:

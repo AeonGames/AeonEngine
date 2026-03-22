@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -113,11 +113,32 @@ namespace AeonGames
     template<class K, class B>
     std::mutex ResourceCache<K, B>::mMutex;
 #endif
+    /** @brief Remove all resources from the cache. */
     DLL void ClearAllResources();
+    /** @brief Enumerate all cached resources.
+     *  @param aEnumerator Callback invoked with each key and resource; return false to stop.
+     */
     DLL void EnumerateResources ( const std::function<bool ( uint32_t, const UniqueAnyPtr& ) >& aEnumerator );
+    /** @brief Store a resource in the cache.
+     *  @param aKey The key to associate with the resource.
+     *  @param pointer The resource to store (moved in).
+     *  @return Reference to the stored resource.
+     */
     DLL const UniqueAnyPtr& StoreResource ( uint32_t aKey, UniqueAnyPtr&& pointer );
+    /** @brief Remove and return a resource from the cache.
+     *  @param aKey The key of the resource to dispose.
+     *  @return The disposed resource.
+     */
     DLL UniqueAnyPtr DisposeResource ( uint32_t aKey );
+    /** @brief Retrieve a cached resource by key.
+     *  @param aKey The resource key.
+     *  @return Reference to the cached resource.
+     */
     DLL const UniqueAnyPtr& GetResource ( uint32_t aKey );
+    /** @brief Retrieve a cached resource by ResourceId, constructing it if absent.
+     *  @param aResourceId The resource identifier.
+     *  @return Reference to the cached resource.
+     */
     DLL const UniqueAnyPtr& GetResource ( const ResourceId& aResourceId );
 }
 #endif

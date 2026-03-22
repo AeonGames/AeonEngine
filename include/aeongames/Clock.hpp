@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012,2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2012,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief High-resolution clock for timing and frame rate management. */
     class Clock
     {
     public:
@@ -55,10 +56,7 @@ namespace AeonGames
             \note Multiple calls passing the same value for the pause parameter will have no effect past the first one.
         */
         DLL void Pause ( bool pause = true );
-        /*!  Query for the pause status of the clock.
-            \param pause [in] Boolean specifing if the clock is to be paused or resumed.
-            \note Multiple calls passing the same value for the pause parameter will have no effect past the first one.
-        */
+        /*!  Query for the pause status of the clock. */
         DLL bool IsPaused();
         /*! Set the time scale.
             By default the time scale is set to no scale (1.0), this scale can be changed for a number higher than 1.0
@@ -71,8 +69,9 @@ namespace AeonGames
             \return clock time scale.
         */
         DLL double GetTimeScale();
-        /*  Single step the clock when paused.
-            This function only takes effect when the clock is paused, its uses are better suited for debbuging rather than gameplay.
+        /** @brief Single step the clock when paused.
+            This function only takes effect when the clock is paused,
+            its uses are better suited for debugging rather than gameplay.
         */
         DLL void SingleStep();
     private:

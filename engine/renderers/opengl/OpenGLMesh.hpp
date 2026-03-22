@@ -23,17 +23,23 @@ namespace AeonGames
 {
     class Mesh;
     class OpenGLRenderer;
+    /** @brief OpenGL mesh wrapper managing vertex and index buffers. */
     class OpenGLMesh
     {
     public:
+        /// @brief Construct from a renderer and mesh resource.
         OpenGLMesh ( const OpenGLRenderer&  aOpenGLRenderer, const Mesh& aMesh );
         ~OpenGLMesh();
+        /// @brief Move constructor.
         OpenGLMesh ( OpenGLMesh&& aOpenGLMesh );
         OpenGLMesh ( const OpenGLMesh& aOpenGLMesh ) = delete;
         OpenGLMesh& operator= ( const OpenGLMesh& aOpenGLMesh ) = delete;
         OpenGLMesh& operator= ( OpenGLMesh&& aOpenGLMesh ) = delete;
+        /// @brief Bind the vertex and index buffers.
         void Bind() const;
+        /// @brief Enable the specified vertex attributes for rendering.
         void EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
+        /// @brief Disable the specified vertex attributes.
         void DisableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
     private:
         const OpenGLRenderer& mOpenGLRenderer;

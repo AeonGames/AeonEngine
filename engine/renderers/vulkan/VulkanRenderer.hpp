@@ -37,23 +37,37 @@ namespace AeonGames
 {
     class VulkanTexture;
     class VulkanWindow;
+    /** @brief Vulkan rendering backend implementing the Renderer interface. */
     class VulkanRenderer final : public Renderer
     {
     public:
+        /// @brief Construct from a native window handle.
         VulkanRenderer ( void* aWindow );
         ~VulkanRenderer() final;
+        /// @brief Get the Vulkan instance handle.
         const VkInstance& GetInstance() const;
+        /// @brief Get the physical device handle.
         const VkPhysicalDevice& GetPhysicalDevice() const;
+        /// @brief Get the logical device handle.
         const VkDevice& GetDevice() const;
+        /// @brief Get the graphics queue handle.
         const VkQueue& GetQueue() const;
+        /// @brief Get the physical device properties.
         const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const;
+        /// @brief Get the physical device memory properties.
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
+        /// @brief Get or create a descriptor set layout matching the given create info.
         const VkDescriptorSetLayout& GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const;
         //const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;
+        /// @brief Get the queue family index used for graphics operations.
         uint32_t GetQueueFamilyIndex() const;
+        /// @brief Get a memory type index matching the requested property flags.
         uint32_t GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const;
+        /// @brief Find a memory type index matching both a type filter and property flags.
         uint32_t FindMemoryTypeIndex ( uint32_t typeFilter, VkMemoryPropertyFlags properties ) const;
+        /// @brief Begin recording a single-use command buffer.
         VkCommandBuffer BeginSingleTimeCommands() const;
+        /// @brief Submit and free a single-use command buffer.
         void EndSingleTimeCommands ( VkCommandBuffer commandBuffer ) const;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
@@ -63,6 +77,7 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        /// @brief Get the descriptor image info for a loaded texture.
         const VkDescriptorImageInfo* GetTextureDescriptorImageInfo ( const Texture& aTexture ) const;
 
         void AttachWindow ( void* aWindowId ) final;
@@ -86,9 +101,13 @@ namespace AeonGames
                       uint32_t aFirstInstance = 0 ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
+        /// @brief Get the common Vulkan render pass.
         VkRenderPass GetRenderPass() const;
+        /// @brief Get the cached VulkanPipeline for a Pipeline resource.
         const VulkanPipeline* GetVulkanPipeline ( const Pipeline& aPipeline );
+        /// @brief Get the cached VulkanMaterial for a Material resource.
         const VulkanMaterial* GetVulkanMaterial ( const Material& aMaterial );
+        /// @brief Get the cached VulkanMesh for a Mesh resource.
         const VulkanMesh* GetVulkanMesh ( const Mesh& aMesh );
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* GetDisplay() const;

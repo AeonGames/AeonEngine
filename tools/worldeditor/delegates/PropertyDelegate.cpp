@@ -27,6 +27,10 @@ namespace AeonGames
 {
     PropertyDelegate::PropertyDelegate ( QObject *parent ) : QStyledItemDelegate ( parent ) {}
 
+    /** @brief Build a QSpinBox editor widget configured for type T.
+        @tparam T Numeric type determining min/max range.
+        @param parent Parent widget.
+        @return The created editor widget. */
     template<class T> QWidget *BuildSpinboxEditor ( QWidget* parent )
     {
         QSpinBox *editor = new QSpinBox ( parent );
@@ -44,12 +48,21 @@ namespace AeonGames
         return editor;
     }
 
+    /** @brief Set the value of a QSpinBox editor from a QVariant.
+        @tparam T Numeric type to extract from the variant.
+        @param editor The spinbox widget.
+        @param value The value to set. */
     template<class T> void SetSpinboxEditorValue ( QWidget *editor, const QVariant& value )
     {
         QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );
         spinBox->setValue ( static_cast<int> ( value.value<T>() ) );
     }
 
+    /** @brief Commit a QSpinBox editor value to the item model.
+        @tparam T Numeric type to store in the model.
+        @param editor The spinbox widget.
+        @param model The item model.
+        @param index The model index to update. */
     template<class T> void SetSpinboxModelData ( QWidget *editor, QAbstractItemModel *model, const QModelIndex &index )
     {
         QSpinBox *spinBox = static_cast<QSpinBox*> ( editor );

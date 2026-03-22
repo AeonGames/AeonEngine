@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,9 +24,21 @@ limitations under the License.
 namespace AeonGames
 {
     class Renderer;
+    /** @brief Initialize the global engine environment.
+     *  @param argc Number of command-line arguments.
+     *  @param argv Array of command-line argument strings.
+     *  @return true if initialization succeeded, false otherwise.
+     */
     DLL bool InitializeGlobalEnvironment ( int argc = 0, char *argv[] = nullptr );
+    /** @brief Shut down the global engine environment and release resources. */
     DLL void FinalizeGlobalEnvironment();
+    /** @brief Get the list of resource search paths.
+     *  @return A vector of directory paths used to locate resources.
+     */
     DLL std::vector<std::string> GetResourcePath();
+    /** @brief Set the list of resource search paths.
+     *  @param aPath A vector of directory paths to use for resource lookup.
+     */
     DLL void SetResourcePath ( const std::vector<std::string>& aPath );
     /*! Returns the resource size referenced by its CRC value. */
     DLL size_t GetResourceSize ( uint32_t crc );

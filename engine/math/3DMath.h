@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (C) 2009-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2009-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -376,7 +376,7 @@ inline void MultVector3x3Matrix ( float* v, float* m, float* out )
     out[2] = vc[0] * m[2] + vc[1] * m[6] + vc[2] * m[10];
 }
 
-/* \brief Returns the multiplicative inverse of a scale (transform) vector. */
+/*! \brief Returns the multiplicative inverse of a scale (transform) vector. */
 inline float* GetScaleVectorInverse ( const float* v, float *out )
 {
     out[0] = 1.0f / v[0];
@@ -384,7 +384,7 @@ inline float* GetScaleVectorInverse ( const float* v, float *out )
     out[2] = 1.0f / v[2];
     return out;
 }
-/* \brief Returns the additive inverse of a position (transform) vector. */
+/*! \brief Returns the additive inverse of a position (transform) vector. */
 inline float* GetPositionVectorInverse ( const float* v, float *out )
 {
     out[0] = -v[0];
@@ -394,6 +394,13 @@ inline float* GetPositionVectorInverse ( const float* v, float *out )
 }
 
 // @}
+
+/// @cond INTERNAL
+// Forward declarations for functions defined in the Quaternion Functions group.
+inline void QuatTo3x3Matrix ( const float* q, float* m );
+inline float* GetQuaternionInverse ( const float* q, float* out );
+/// @endcond
+
 /*! \name Matrix Functions */
 // @{
 /*! \brief Set a matrix to the Identity.
@@ -489,7 +496,7 @@ inline float* Convert3x3To4x4 ( const float* m, float* out )
 
 /*! \brief Transposes a 3x3 Matrix.
 \param src [in] 3x3 matrix to transpose.
-\param out [out] 3x3 transposed matrix.
+\param dst [out] 3x3 transposed matrix.
 */
 inline float* Transpose3x3Matrix ( const float *src, float *dst )
 {
@@ -505,6 +512,9 @@ inline float* Transpose3x3Matrix ( const float *src, float *dst )
 }
 
 
+/** @brief Computes the determinant of a 3x3 matrix.
+    @param src 9-element float array representing the 3x3 matrix.
+    @return The determinant value. */
 inline float DeterminantMatrix3 ( const float *src )
 {
     float A = src[4] * src[8] - src[5] * src[7];
@@ -515,7 +525,7 @@ inline float DeterminantMatrix3 ( const float *src )
 
 /*! \brief Inverts a 3x3 Matrix.
 \param src [in] 3x3 matrix to invert.
-\param out [out] 3x3 inverted matrix.
+\param dst [out] 3x3 inverted matrix.
 */
 inline float* Invert3x3Matrix ( const float *src, float *dst )
 {
@@ -1235,6 +1245,10 @@ inline float* RotateMatrixInertialSpace ( float* src, float* dst, float angle, f
 }
 #endif
 
+/** @brief Copies the 3x3 rotational part of a 4x4 matrix into a new 4x4 matrix.
+    @param src Source 4x4 matrix.
+    @param dst Destination 4x4 matrix (translation row set to identity).
+    @return Pointer to dst. */
 inline float* Matrix3x3To4x4 ( const float* src, float* dst )
 {
     dst[ 0] = src[ 0];
@@ -1373,9 +1387,6 @@ inline float* TranslateMatrixInertialSpace ( float* v, float* src, float* dst )
     memcpy ( dst, result, sizeof ( float ) * 16 );
     return dst;
 }
-
-inline void QuatTo3x3Matrix ( const float* q, float* m );
-inline float* GetQuaternionInverse ( const float* q, float* out );
 
 /*!
 \brief Constructs a transformation matrix from SRT vector.
@@ -1522,9 +1533,8 @@ inline void AngleAxisToQuat ( float angle, float x, float y, float z, float* qua
     into a 4 element float array representing a quaternion.
     The 3 elements of the euler parameter represent, roll, pitch and yaw in that order,
     the quaternion is given as W,X,Y,Z.
-    \param angle [in] Angle of rotation in degrees.
     \param euler [in] Three element array repserenting euler angles as roll, pitch, yaw.
-    \param quat [out] The resulting quaternion.
+    \param q [out] The resulting quaternion.
     \note Untested function.
 */
 inline void EulerToQuat ( float* euler, float* q )
@@ -1541,7 +1551,7 @@ inline void EulerToQuat ( float* euler, float* q )
 /*! \brief Multiply two quaternions.
     \param q1 [in] Left side quaternion.
     \param q2 [in] Right side quaternion.
-    \param qo [out] Resulting quaternion.
+    \param out [out] Resulting quaternion.
 */
 inline float* MultQuats ( const float* q1, const float* q2, float* out )
 {
@@ -1789,6 +1799,12 @@ inline void MultQuats4 ( float* q1, float* q2, float* out )
     out[3] = localout[3];
 }
 
+/** @brief Caps quaternion interpolation factor to [0,1] and copies the corresponding endpoint.
+    @param q1 Origin quaternion.
+    @param q2 Destination quaternion.
+    @param interpolation Interpolation factor.
+    @param out Resulting quaternion if capped.
+    @return true if the factor was outside [0,1] and the result was capped, false otherwise. */
 inline bool CapInterpolation ( const float* q1, const float* q2, double interpolation, float* out )
 {
     if ( interpolation <= 0.0f )
@@ -1815,7 +1831,7 @@ inline bool CapInterpolation ( const float* q1, const float* q2, double interpol
     The out parameter may be the same as either q1 or q2 in which case the values are overwritten.
     \param q1 [in] Origin quaternion.
     \param q2 [in] Destination quaternion.
-    \param interp [in] Interpolation factor.
+    \param interpolation [in] Interpolation factor.
     \param out [out] Resulting quaternion.
 */
 inline float* LerpQuats ( const float* q1, const float* q2, double interpolation, float* out )
@@ -1850,10 +1866,10 @@ inline float* LerpQuats ( const float* q1, const float* q2, double interpolation
 
     Each element is interpolated as v' = v1+((v2-v1)*interpolation).
     The out parameter may be the same as either q1 or q2 in which case the values are overwritten.
-    \param q1 [in] Origin quaternion.
-    \param q2 [in] Destination quaternion.
-    \param interp [in] Interpolation factor.
-    \param out [out] Resulting quaternion.
+    \param[in] q1 Origin quaternion.
+    \param[in] q2 Destination quaternion.
+    \param[in] interp Interpolation factor.
+    \param[out] out Result quaternion.
 */
 inline float* NlerpQuats ( const float* q1, const float* q2, double interp, float* out )
 {
@@ -1863,7 +1879,7 @@ inline float* NlerpQuats ( const float* q1, const float* q2, double interp, floa
 /*! \brief Spherical Linear interpolation between two quaternions.
     \param q1 [in] Origin quaternion.
     \param q2 [in] Destination quaternion.
-    \param interp [in] Interpolation factor.
+    \param interpolation [in] Interpolation factor.
     \param out [out] Resulting quaternion.
 */
 inline float* SlerpQuats ( float* q1, float* q2, float interpolation, float* out )
@@ -1998,6 +2014,10 @@ inline float* MultSRTs ( const float* srt1, const float* srt2, float* out )
     return out;
 }
 
+/** @brief Inverts an SRT (scale-rotation-translation) transform.
+    @param srt 10-element SRT vector [s1,s2,s3,r1,r2,r3,r4,t1,t2,t3].
+    @param out 10-element output SRT vector.
+    @return Pointer to out. */
 inline float* InvertSRT ( const float* srt, float* out )
 {
     out[0] = 1.0f / srt[0];
@@ -2017,6 +2037,11 @@ inline float* InvertSRT ( const float* srt, float* out )
 
 /*! \name Distance functions */
 // @{
+/** @brief Computes the signed distance from a point to a plane.
+    @param plane 4-element plane equation [A,B,C,D].
+    @param point 3-element point position.
+    @param dimensions Unused, kept for signature compatibility.
+    @return Signed distance from the point to the plane. */
 inline float PointDistanceToPlane ( float* plane, const float* point, const float* dimensions = nullptr )
 {
     return
@@ -2026,6 +2051,11 @@ inline float PointDistanceToPlane ( float* plane, const float* point, const floa
         plane[3];
 }
 
+/** @brief Computes the distance from a bounding sphere to a plane.
+    @param plane 4-element plane equation.
+    @param point Center of the sphere.
+    @param dimensions Pointer where the first element is the sphere radius.
+    @return Signed distance from the sphere surface to the plane. */
 inline float SphereDistanceToPlane ( float* plane, const float* point, const float* dimensions )
 {
     return
@@ -2035,6 +2065,11 @@ inline float SphereDistanceToPlane ( float* plane, const float* point, const flo
         ( plane[3] + dimensions[0] );
 }
 
+/** @brief Computes the distance from an axis-aligned bounding box to a plane.
+    @param plane 4-element plane equation.
+    @param point Center of the box.
+    @param dimensions Half-extents of the box [x,y,z].
+    @return Signed distance from the closest box corner to the plane. */
 inline float BoxDistanceToPlane ( float* plane, const float* point, const float* dimensions )
 {
     float offsets[3] =
@@ -2052,6 +2087,11 @@ inline float BoxDistanceToPlane ( float* plane, const float* point, const float*
         plane[2] * point[2] - dist;
 }
 
+/** @brief Computes the distance from a capsule to a plane.
+    @param plane 4-element plane equation.
+    @param point Center of the capsule.
+    @param dimensions [radius, half-height] of the capsule.
+    @return Signed distance from the capsule surface to the plane. */
 inline float CapsuleDistanceToPlane ( float* plane, const float* point, const float* dimensions )
 {
     // radius is dimensions[0] and halfheight is dimensions [1]
@@ -2080,6 +2120,8 @@ inline float CapsuleDistanceToPlane ( float* plane, const float* point, const fl
 }
 // @}
 
+/** @brief Prints a 4x4 matrix to stdout in row-major visual layout.
+    @param M 16-element float array representing the matrix. */
 inline void PrintMatrix ( const float* M )
 {
     printf (

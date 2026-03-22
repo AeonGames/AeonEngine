@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,18 +23,28 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Tool for packing and unpacking game asset packages. */
     class Pack : public Tool
     {
     public:
+        /** @brief Specifies the pack operation to perform. */
         enum Action
         {
-            None = 0,
-            Extract,
-            Compress,
-            Directory
+            None = 0,   /**< No action. */
+            Extract,    /**< Extract assets from a package. */
+            Compress,   /**< Compress assets into a package. */
+            Directory   /**< List the directory of a package. */
         };
+        /** @brief Default constructor. */
         Pack();
+        /** @brief Destructor. */
         ~Pack();
+        /**
+         * @brief Execute the pack tool.
+         * @param argc Argument count.
+         * @param argv Argument vector.
+         * @return Exit status code.
+         */
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );

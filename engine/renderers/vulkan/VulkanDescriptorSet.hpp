@@ -22,12 +22,13 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Holds Vulkan descriptor set layout metadata for pipeline reflection. */
     struct VulkanDescriptorSetInfo
     {
-        uint32_t hash{};
-        uint32_t set{};
-        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings{};
+        uint32_t hash{}; ///< Hash identifier for the descriptor set.
+        uint32_t set{}; ///< Descriptor set index.
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{}; ///< Layout creation parameters.
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings{}; ///< Per-binding descriptions.
     };
 }
 #endif

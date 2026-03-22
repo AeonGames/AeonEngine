@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,10 +28,11 @@ limitations under the License.
 #include "aeongames/Platform.hpp"
 namespace AeonGames
 {
+    /** Compression types supported by PKG packages. */
     enum PKGCompressionTypes
     {
-        NONE = 0,
-        ZLIB
+        NONE = 0, /**< No compression. */
+        ZLIB      /**< ZLIB compression. */
     };
     /// Header for PKG Files.
     struct PKGHeader
@@ -47,14 +48,15 @@ namespace AeonGames
         /// String table offset.
         uint32_t string_table_offset;
     };
+    /** Directory entry describing a single file within a PKG package. */
     struct PKGDirectoryEntry
     {
-        uint32_t path;
-        uint32_t offset;
-        uint64_t extension_offset;
-        uint64_t compressed_size;
-        uint64_t uncompressed_size;
-        uint64_t compression_type;
+        uint32_t path;               /**< Offset into the string table for the file path. */
+        uint32_t offset;             /**< Byte offset of the file data within the package. */
+        uint64_t extension_offset;   /**< Offset to the file extension in the string table. */
+        uint64_t compressed_size;    /**< Size of the file data after compression. */
+        uint64_t uncompressed_size;  /**< Original size of the file data before compression. */
+        uint64_t compression_type;   /**< Compression algorithm used (see PKGCompressionTypes). */
     };
     /*! \brief Package Class.
         Implements PKG file handling routines and management.
@@ -62,12 +64,20 @@ namespace AeonGames
     class Package
     {
     public:
+        /** Construct a Package from a file path.
+         * @param aPath Path to the PKG file or directory to load.
+         */
         DLL Package ( const std::string& aPath );
+        /** Destructor. */
         DLL ~Package();
         Package ( const Package& ) = delete;
         Package& operator= ( const Package& ) = delete;
+        /// @brief Move constructor.
         Package ( Package&& aPackage ) noexcept;
         Package& operator= ( Package&& ) = delete;
+        /** Get the path associated with this package.
+         * @return Const reference to the package's filesystem path.
+         */
         DLL const std::filesystem::path& GetPath() const;
         /*! Returns the file size referenced by its CRC value. */
         DLL size_t GetFileSize ( uint32_t crc ) const;

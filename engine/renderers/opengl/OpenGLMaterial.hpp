@@ -22,17 +22,20 @@ namespace AeonGames
     class Material;
     class OpenGLRenderer;
     class OpenGLPipeline;
+    /** @brief OpenGL material binding handler for shader uniforms and textures. */
     class OpenGLMaterial
     {
     public:
+        /// @brief Construct from a renderer and material resource.
         OpenGLMaterial ( OpenGLRenderer& aOpenGLRenderer, const Material& aMaterial );
+        /// @brief Move constructor.
         OpenGLMaterial ( OpenGLMaterial&& aOpenGLMaterial );
         OpenGLMaterial ( const OpenGLMaterial& ) = delete;
         OpenGLMaterial& operator= ( const OpenGLMaterial& ) = delete;
         OpenGLMaterial& operator= ( OpenGLMaterial&& ) = delete;
         ~OpenGLMaterial();
-        /// @brief  Binds the material to the specified binding index.
-        /// @param aBindingIndex The binding index to use.
+        /// @brief  Binds the material to the specified pipeline.
+        /// @param aPipeline The pipeline to use for binding.
         /// @note Not super happy about this API, might change it later.
         void Bind ( const OpenGLPipeline& aPipeline ) const;
     private:

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,12 +23,20 @@ limitations under the License.
 namespace AeonGames
 {
     class Buffer;
+    /** @brief Abstract interface for a pool-based buffer allocator. */
     class MemoryPoolBuffer
     {
     public:
+        /**
+         * @brief Allocate a sub-region from the memory pool.
+         * @param aSize Number of bytes to allocate.
+         * @return A BufferAccessor describing the allocated region.
+         */
         virtual BufferAccessor Allocate ( size_t aSize ) = 0;
+        /** @brief Reset the pool, freeing all previous allocations. */
         virtual void Reset() = 0;
         virtual ~MemoryPoolBuffer() = default;
+        /** @brief Get a reference to the underlying Buffer. @return Const reference to the buffer. */
         virtual const Buffer& GetBuffer() const = 0;
     };
 }

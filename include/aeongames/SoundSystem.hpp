@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ limitations under the License.
 namespace AeonGames
 {
     class StringId;
+    /** @brief Abstract interface for a platform sound system back-end. */
     class SoundSystem
     {
     public:
@@ -31,6 +32,9 @@ namespace AeonGames
 
     /**@name Factory Functions */
     /*@{*/
+    /** @brief Construct a SoundSystem back-end for the given identifier.
+     *  @param aIdentifier Identifier selecting the back-end implementation.
+     *  @return A unique_ptr owning the newly created SoundSystem, or nullptr on failure. */
     DLL std::unique_ptr<SoundSystem> ConstructSoundSystem ( const StringId& aIdentifier );
     /** Registers a SoundSystem loader for a specific identifier.*/
     DLL bool RegisterSoundSystemConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<SoundSystem>() >& aConstructor );

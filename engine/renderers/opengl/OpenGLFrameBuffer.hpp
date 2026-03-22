@@ -21,20 +21,28 @@ limitations under the License.
 namespace AeonGames
 {
     class OpenGLRenderer;
+    /** @brief OpenGL framebuffer object for off-screen rendering. */
     class OpenGLFrameBuffer
     {
     public:
         OpenGLFrameBuffer();
+        /// @brief Move constructor.
         OpenGLFrameBuffer ( OpenGLFrameBuffer&& aOpenGLFrameBuffer );
         OpenGLFrameBuffer ( const OpenGLFrameBuffer& aOpenGLFrameBuffer ) = delete;
         OpenGLFrameBuffer& operator= ( const OpenGLFrameBuffer& aOpenGLFrameBuffer ) = delete;
         OpenGLFrameBuffer& operator= ( OpenGLFrameBuffer&& aOpenGLFrameBuffer ) = delete;
         ~OpenGLFrameBuffer();
+        /// @brief Resize the framebuffer attachments.
         void Resize ( uint32_t aWidth, uint32_t aHeight );
+        /// @brief Bind the framebuffer as the active render target.
         void Bind();
+        /// @brief Unbind the framebuffer, restoring the default render target.
         void Unbind();
+        /// @brief Create and initialize framebuffer resources.
         void Initialize();
+        /// @brief Release framebuffer resources.
         void Finalize();
+        /// @brief Get the OpenGL framebuffer object identifier.
         GLuint GetFBO() const; /// This is temporary
     private:
         GLuint mFBO {};

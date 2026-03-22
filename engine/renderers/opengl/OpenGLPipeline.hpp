@@ -25,18 +25,25 @@ limitations under the License.
 namespace AeonGames
 {
     class OpenGLRenderer;
+    /** @brief OpenGL shader program pipeline with attribute and uniform reflection. */
     class OpenGLPipeline
     {
     public:
+        /// @brief Construct from a renderer and pipeline resource.
         OpenGLPipeline ( const OpenGLRenderer& aOpenGLRenderer, const Pipeline& aPipeline );
+        /// @brief Move constructor.
         OpenGLPipeline ( OpenGLPipeline&& aOpenGLPipeline );
         OpenGLPipeline ( const OpenGLPipeline& ) = delete;
         OpenGLPipeline& operator= ( const OpenGLPipeline& ) = delete;
         OpenGLPipeline& operator= ( OpenGLPipeline&& ) = delete;
         ~OpenGLPipeline();
+        /// @brief Get the linked shader program identifier.
         GLint GetProgramId() const;
+        /// @brief Get the reflected vertex attribute descriptions.
         const std::vector<OpenGLVariable>& GetVertexAttributes () const;
+        /// @brief Get a uniform block by its name hash, or nullptr if not found.
         const OpenGLUniformBlock* GetUniformBlock ( uint32_t name ) const;
+        /// @brief Get the uniform location of a sampler by its name hash.
         const GLuint GetSamplerLocation ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes();

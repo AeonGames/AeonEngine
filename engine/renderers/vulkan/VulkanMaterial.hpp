@@ -29,15 +29,19 @@ namespace AeonGames
     class VulkanRenderer;
     class VulkanTexture;
     class VulkanPipeline;
+    /** @brief Vulkan material binding handler for descriptor sets and uniforms. */
     class VulkanMaterial
     {
     public:
+        /// @brief Construct from a renderer and material resource.
         VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Material& aMaterial );
         VulkanMaterial ( const VulkanMaterial& aMaterial ) = delete;
         VulkanMaterial& operator= ( const VulkanMaterial& aMaterial ) = delete;
         VulkanMaterial& operator= ( VulkanMaterial&& ) = delete;
+        /// @brief Move constructor.
         VulkanMaterial ( VulkanMaterial&& aVulkanMaterial );
         ~VulkanMaterial();
+        /// @brief Bind material descriptor sets to a command buffer for the given pipeline.
         void Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aVulkanPipeline ) const;
     private:
         VulkanRenderer& mVulkanRenderer;
