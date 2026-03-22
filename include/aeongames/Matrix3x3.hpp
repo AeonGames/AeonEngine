@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 /*! \file
     \brief Header for 3x3 matrix class.
     \author Rodrigo Hernandez.
-    \copy 2015-2019
+    \copyright 2015-2019
 */
 
 #include "aeongames/Platform.hpp"
@@ -38,15 +38,39 @@ namespace AeonGames
             @param aTransform Transform from which to initialize the matrix. Only Scale and Rotation are used.
         */
         DLL Matrix3x3 ( const Transform& aTransform );
+        /** @brief Construct from a float array.
+            @param aMatrix Pointer to a float array of at least 9 elements in column-major order.
+        */
         DLL Matrix3x3 ( const float* const aMatrix );
+        /** @brief Construct from an initializer list.
+            @param aList Initializer list of float values for the matrix elements.
+        */
         DLL Matrix3x3 ( const std::initializer_list<const float> aList );
+        /** @brief Get a pointer to the internal matrix data.
+            @return Pointer to the 9 float elements of the matrix.
+        */
         DLL const float* const GetMatrix3x3() const;
+        /** @brief Get the inverted matrix.
+            @return A new Matrix3x3 that is the inverse of this matrix.
+        */
         DLL const Matrix3x3 GetInvertedMatrix3x3();
+        /** @brief Invert this matrix in place.
+            @return Reference to this matrix after inversion.
+        */
         DLL Matrix3x3& Invert();
+        /** @brief Apply a rotation to this matrix.
+            @param angle Angle in degrees of rotation.
+            @param x X component of the axis of rotation.
+            @param y Y component of the axis of rotation.
+            @param z Z component of the axis of rotation.
+            @return Reference to this matrix after rotation.
+        */
         DLL Matrix3x3& Rotate ( float angle, float x, float y, float z );
         /*! \name Operators */
         //@{
+        /// @brief Multiply this matrix by another matrix.
         DLL Matrix3x3& operator*= ( const Matrix3x3& lhs );
+        /// @brief Access a matrix element by index.
         DLL const float operator[] ( size_t aIndex ) const;
         //@}
         /*! \brief Constructs the rotation matrix defined by the axis-angle provided.
@@ -72,8 +96,22 @@ namespace AeonGames
     \note Since the matrices are stored in column mayor order, this is post multiplication.
     */
     DLL const Matrix3x3 operator* ( const Matrix3x3& lhs, const Matrix3x3& rhs );
+    /** @brief Multiply a 3x3 matrix by a 3D vector.
+        @param lhs The matrix.
+        @param rhs The vector.
+        @return The transformed vector.
+    */
     DLL const Vector3 operator* ( const Matrix3x3& lhs, const Vector3& rhs );
+    /** @brief Compare two 3x3 matrices for equality.
+        @param lhs Left-hand side matrix.
+        @param rhs Right-hand side matrix.
+        @return True if the matrices are equal.
+    */
     DLL const bool operator== ( const Matrix3x3& lhs, const Matrix3x3& rhs );
+    /** @brief Compute the element-wise absolute value of a matrix.
+        @param aMatrix3x3 The input matrix.
+        @return A new matrix with absolute values of each element.
+    */
     DLL const Matrix3x3 Abs ( const Matrix3x3& aMatrix3x3 );
     static_assert ( sizeof ( Matrix3x3 ) == ( sizeof ( float ) * 9 ), "Matrix3x3 is not 9 floats wide." );
 }

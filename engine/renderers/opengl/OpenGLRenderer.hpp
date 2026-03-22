@@ -40,23 +40,34 @@ namespace AeonGames
     class UniformBuffer;
     class OpenGLMesh;
     class OpenGLModel;
+    /** @brief OpenGL rendering backend implementing the Renderer interface. */
     class OpenGLRenderer : public Renderer
     {
     public:
+        /// @brief Construct from a native window handle.
         OpenGLRenderer ( void* aWindow );
         ~OpenGLRenderer();
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
+        /// @brief Get the platform-specific OpenGL rendering context.
         void* GetContext() const;
+        /// @brief Get the shared vertex array object.
         GLuint GetVertexArrayObject() const;
+        /// @brief Get the overlay shader program identifier.
         GLuint GetOverlayProgram() const;
+        /// @brief Get the overlay screen-quad buffer.
         GLuint GetOverlayQuad() const;
 
+        /// @brief Bind a mesh for subsequent draw calls.
         void BindMesh ( const Mesh& aMesh );
+        /// @brief Bind a pipeline (shader program) for rendering.
         void BindPipeline ( const Pipeline& aPipeline );
+        /// @brief Set the active material for rendering.
         void SetMaterial ( const Material& aMaterial );
 
+        /// @brief Upload skeleton joint matrices for skinned rendering.
         void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const;
+        /// @brief Bind the matrices uniform buffer for the current draw.
         void SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
@@ -64,6 +75,7 @@ namespace AeonGames
         void UnloadMaterial ( const Material& aMaterial ) final;
         void LoadTexture ( const Texture& aTexture ) final;
         void UnloadTexture ( const Texture& aTexture ) final;
+        /// @brief Get the OpenGL texture identifier for a loaded texture.
         GLuint GetTextureId ( const Texture& aTexture );
 
         void AttachWindow ( void* aWindowId ) final;
@@ -94,7 +106,9 @@ namespace AeonGames
         bool MakeCurrent ( ::Window aWindow = None );
 #endif
     protected:
+        /// @brief Initialize overlay shader program and quad buffer.
         void InitializeOverlay();
+        /// @brief Release overlay shader program and quad buffer.
         void FinalizeOverlay();
 #if defined(_WIN32)
         HWND mWindowId {};
@@ -117,12 +131,12 @@ namespace AeonGames
         /// Overlay quadrilateral.
         OpenGLBuffer mOverlayQuad{};
         /**@}*/
-        OpenGLPipeline* mCurrentPipeline{nullptr};
-        std::unordered_map<size_t, OpenGLPipeline> mPipelineStore{};
-        std::unordered_map<size_t, OpenGLMaterial> mMaterialStore{};
-        std::unordered_map<size_t, OpenGLMesh> mMeshStore{};
-        std::unordered_map<size_t, OpenGLTexture> mTextureStore{};
-        std::unordered_map<void*, OpenGLWindow> mWindowStore{};
+        OpenGLPipeline* mCurrentPipeline{nullptr}; ///< Currently bound pipeline.
+        std::unordered_map<size_t, OpenGLPipeline> mPipelineStore{}; ///< Loaded pipeline cache.
+        std::unordered_map<size_t, OpenGLMaterial> mMaterialStore{}; ///< Loaded material cache.
+        std::unordered_map<size_t, OpenGLMesh> mMeshStore{}; ///< Loaded mesh cache.
+        std::unordered_map<size_t, OpenGLTexture> mTextureStore{}; ///< Loaded texture cache.
+        std::unordered_map<void*, OpenGLWindow> mWindowStore{}; ///< Attached window map.
     private:
         static std::atomic<size_t> mRendererCount;
 #if defined(__unix__)

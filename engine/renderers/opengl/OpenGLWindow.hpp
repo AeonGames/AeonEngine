@@ -32,6 +32,7 @@ namespace AeonGames
 {
     class Buffer;
     class OpenGLRenderer;
+    /** @brief OpenGL per-window rendering context and state. */
     class OpenGLWindow
     {
     public:
@@ -40,13 +41,17 @@ namespace AeonGames
 #elif defined(__unix__)
         OpenGLWindow ( OpenGLRenderer& aOpenGLRenderer, Display* aDisplay, ::Window aWindowId );
 #endif
+        /// @brief Move constructor.
         OpenGLWindow ( OpenGLWindow&& aOpenGLWindow );
         OpenGLWindow ( const OpenGLWindow& aOpenGLWindow ) = delete;
         OpenGLWindow& operator= ( const OpenGLWindow& aOpenGLWindow ) = delete;
         OpenGLWindow& operator= ( OpenGLWindow&& aOpenGLWindow ) = delete;
         ~OpenGLWindow();
+        /// @brief Get the native window identifier.
         void* GetWindowId() const;
+        /// @brief Begin rendering a new frame.
         void BeginRender();
+        /// @brief End the current frame and present.
         void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
@@ -58,14 +63,23 @@ namespace AeonGames
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0 ) const;
+        /// @brief Allocate transient uniform memory for the current frame.
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        /// @brief Write pixel data to the overlay texture.
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels );
+        /// @brief Set the projection matrix for this window.
         void SetProjectionMatrix ( const Matrix4x4& aMatrix );
+        /// @brief Set the view matrix for this window.
         void SetViewMatrix ( const Matrix4x4& aMatrix );
+        /// @brief Set the clear color for this window.
         void SetClearColor ( float R, float G, float B, float A );
+        /// @brief Get the current projection matrix.
         const Matrix4x4 & GetProjectionMatrix() const;
+        /// @brief Get the current view matrix.
         const Matrix4x4 & GetViewMatrix() const;
+        /// @brief Get the view frustum derived from the current matrices.
         const Frustum & GetFrustum() const;
+        /// @brief Resize the rendering viewport.
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
     private:
         void Initialize();

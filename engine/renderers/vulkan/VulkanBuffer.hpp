@@ -21,10 +21,13 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
+    /** @brief Vulkan GPU buffer wrapper implementing the Buffer interface. */
     class VulkanBuffer : public Buffer
     {
     public:
+        /// @brief Construct an uninitialized buffer.
         VulkanBuffer ( const VulkanRenderer& aVulkanRenderer );
+        /// @brief Construct and initialize a buffer with the given parameters.
         VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
         /// Move Constructor
         VulkanBuffer ( VulkanBuffer&& );
@@ -35,8 +38,11 @@ namespace AeonGames
         /// Move Assignment
         VulkanBuffer& operator= ( VulkanBuffer&& ) = delete;
         ~VulkanBuffer();
+        /// @brief Initialize the buffer with the given size, usage, memory properties, and optional data.
         void Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData = nullptr );
+        /// @brief Release the Vulkan buffer and its device memory.
         void Finalize();
+        /// @brief Get the underlying Vulkan buffer handle.
         const VkBuffer& GetBuffer() const;
         /// @name Virtual functions
         ///@{

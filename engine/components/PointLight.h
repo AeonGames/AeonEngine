@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ namespace AeonGames
 {
     class Node;
     class Window;
+    /** @brief Point light component representing an omnidirectional light source. */
     class PointLight final : public Component
     {
     public:
+        /** @brief Default constructor. */
         PointLight();
         /** @name Overrides */
         ///@{
@@ -37,6 +39,7 @@ namespace AeonGames
         void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
+        /** @brief Returns the class identifier for the PointLight component. */
         static const StringId& GetClassId();
     private:
     };

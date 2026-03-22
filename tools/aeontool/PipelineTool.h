@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2024,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2024,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,11 +25,20 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Tool for processing pipeline asset files. */
     class PipelineTool : public Tool
     {
     public:
+        /** @brief Default constructor. */
         PipelineTool();
+        /** @brief Destructor. */
         ~PipelineTool();
+        /**
+         * @brief Execute the pipeline tool.
+         * @param argc Argument count.
+         * @param argv Argument vector.
+         * @return Exit status code.
+         */
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );

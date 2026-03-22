@@ -66,3 +66,5 @@ game/config
 
 # MacOS preview store
 .DS_Store
+
+doxygen.log

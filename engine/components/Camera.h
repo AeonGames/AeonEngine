@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ namespace AeonGames
 {
     class Node;
     class Window;
+    /** @brief Camera component providing perspective projection parameters for a scene node. */
     class Camera final : public Component
     {
     public:
+        /** @brief Default constructor. */
         Camera();
         /** @name Overrides */
         ///@{
@@ -37,12 +39,22 @@ namespace AeonGames
         void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
+        /** @brief Returns the field of view in degrees. */
         float GetFieldOfView() const;
+        /** @brief Returns the near clipping plane distance. */
         float GetNearPlane() const;
+        /** @brief Returns the far clipping plane distance. */
         float GetFarPlane() const;
+        /** @brief Sets the field of view.
+            @param aFieldOfView Field of view in degrees. */
         void SetFieldOfView ( float aFieldOfView );
+        /** @brief Sets the near clipping plane distance.
+            @param aNearPlane Near plane distance. */
         void SetNearPlane ( float aNearPlane );
+        /** @brief Sets the far clipping plane distance.
+            @param aFarPlane Far plane distance. */
         void SetFarPlane ( float aFarPlane );
+        /** @brief Returns the class identifier for the Camera component. */
         static const StringId& GetClassId();
     private:
         float mFieldOfView{60.0f};

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018,2020,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018,2020,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,11 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Decodes PNG image data from a memory buffer into a Texture.
+        @param aTexture Texture object to receive the decoded image.
+        @param aBufferSize Size of the input buffer in bytes.
+        @param aBuffer Pointer to the PNG data buffer.
+        @return true on successful decode, false on failure. */
     bool DecodePNG ( Texture& aTexture, size_t aBufferSize, const void* aBuffer );
 }
 #endif

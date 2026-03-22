@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,11 +21,20 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Tool for converting between binary and text asset formats. */
     class Convert : public Tool
     {
     public:
+        /** @brief Default constructor. */
         Convert();
+        /** @brief Destructor. */
         ~Convert();
+        /**
+         * @brief Execute the convert tool.
+         * @param argc Argument count.
+         * @param argv Argument vector.
+         * @return Exit status code.
+         */
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );

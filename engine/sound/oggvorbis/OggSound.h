@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2018,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,11 +22,20 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Decodes OGG Vorbis audio data from a memory buffer into a Sound.
+        @param aSound Sound object to receive the decoded audio.
+        @param aBufferSize Size of the input buffer in bytes.
+        @param aBuffer Pointer to the OGG data buffer.
+        @return true on successful decode, false on failure. */
     bool DecodeOGG ( Sound& aSound, size_t aBufferSize, const void* aBuffer );
+    /** @brief Sound implementation for OGG Vorbis audio files. */
     class OggSound final : public Sound
     {
     public:
+        /** @brief Constructs an OggSound by loading from the specified file.
+            @param aFileName Path to the OGG Vorbis audio file. */
         OggSound ( const std::string & aFileName );
+        /** @brief Destructor. */
         ~OggSound() final;
     private:
         ///@name Callback Functions

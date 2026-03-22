@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,18 +21,29 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Custom widget for visual node graph editing. */
     class NodeView : public QWidget
     {
         Q_OBJECT
     public:
+        /**
+         * @brief Construct the node view widget.
+         * @param parent Parent widget.
+         */
         NodeView ( QWidget *parent = nullptr );
+        /** @brief Destructor. */
         ~NodeView();
     public slots:
     protected:
+        /// @brief Handle key press events.
         void keyPressEvent ( QKeyEvent *event ) override;
+        /// @brief Handle mouse press events.
         void mousePressEvent ( QMouseEvent *event ) override;
+        /// @brief Handle mouse move events.
         void mouseMoveEvent ( QMouseEvent *event ) override;
+        /// @brief Handle mouse release events.
         void mouseReleaseEvent ( QMouseEvent *event ) override;
+        /// @brief Handle paint events.
         void paintEvent ( QPaintEvent *event ) override;
 #if QT_CONFIG(wheelevent)
         void wheelEvent ( QWheelEvent *event ) override;

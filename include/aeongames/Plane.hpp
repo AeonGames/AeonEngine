@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 /*! \file
     \brief Header for the plane class.
     \author Rodrigo Hernandez.
-    \copy 2017,2018
+    \copyright 2017,2018
 */
 
 #include "aeongames/Platform.hpp"
@@ -34,10 +34,22 @@ namespace AeonGames
     public:
         ///@brief Default constructor.
         DLL Plane ();
+        /** Construct a plane from a normal vector and distance.
+         * @param aNormalX X component of the plane normal.
+         * @param aNormalY Y component of the plane normal.
+         * @param aNormalZ Z component of the plane normal.
+         * @param aDistance Distance from the origin along the normal.
+         */
         DLL Plane ( float aNormalX, float aNormalY, float aNormalZ, float aDistance );
         /// destructor.
         DLL ~Plane();
+        /** Get the plane normal vector.
+         * @return Const reference to the normal vector.
+         */
         DLL const Vector3& GetNormal() const;
+        /** Get the distance from the origin to the plane.
+         * @return Const reference to the distance value.
+         */
         DLL const float& GetDistance() const;
     private:
         Vector3 mNormal;

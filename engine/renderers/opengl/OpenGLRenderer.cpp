@@ -33,6 +33,7 @@ namespace AeonGames
 #if defined(__unix__)
     Display* OpenGLRenderer::mDisplay {};
 #endif
+    /// @brief Overlay vertex shader GLSL source code.
     const GLchar vertex_shader_code[] =
         R"(#version 450 core
 layout (location = 0) in vec2 aPos;
@@ -48,9 +49,12 @@ void main()
     TexCoords = aTexCoords;
 }
 )";
+    /// @brief Length of the overlay vertex shader source.
     const GLint vertex_shader_len { sizeof(vertex_shader_code) /*/ sizeof(vertex_shader_code[0])*/};
+    /// @brief Pointer to the overlay vertex shader source.
     const GLchar* const vertex_shader_code_ptr = vertex_shader_code;
 
+    /// @brief Overlay fragment shader GLSL source code.
     const GLchar fragment_shader_code[] =
         R"(#version 450 core
 out vec4 FragColor;
@@ -66,9 +70,12 @@ void main()
 }
 )";
 
+    /// @brief Length of the overlay fragment shader source.
     const GLint fragment_shader_len { sizeof(fragment_shader_code) /*/ sizeof(fragment_shader_code[0])*/};
+    /// @brief Pointer to the overlay fragment shader source.
     const GLchar* const fragment_shader_code_ptr = fragment_shader_code;
 
+    /// @brief Overlay screen-quad vertex data (positions and texture coordinates).
     const float vertices[] = {
                                  // positions   // texCoords
                                  -1.0f,  1.0f,  0.0f, 1.0f,
@@ -76,6 +83,7 @@ void main()
                                  1.0f, -1.0f,  1.0f, 0.0f,
                                  1.0f,  1.0f,  1.0f, 1.0f
                              };
+    /// @brief Total byte size of the overlay vertex data.
     constexpr GLuint vertex_size{sizeof(vertices)};
 
 #ifdef _WIN32

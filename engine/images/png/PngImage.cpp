@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2020,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2020,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,11 +25,12 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Helper struct for reading PNG data from memory. */
     struct png_read_memory_struct
     {
-        const uint8_t* buffer;
-        const uint8_t* pointer;
-        png_size_t size;
+        const uint8_t* buffer; ///< Pointer to the start of the memory buffer.
+        const uint8_t* pointer; ///< Current read position within the buffer.
+        png_size_t size; ///< Total size of the memory buffer in bytes.
     };
 
     static void png_read_memory_data ( png_structp png_ptr, png_bytep data, png_size_t length )

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2022,2024 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2022,2024,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,11 +24,18 @@ namespace AeonGames
     class NodeEditor;
     class CameraSettings;
     class Renderer;
+    /** @brief Main window of the world editor application. */
     class MainWindow : public QMainWindow
     {
         Q_OBJECT
     public:
+        /**
+         * @brief Construct the main window.
+         * @param parent Parent widget.
+         * @param flags Window flags.
+         */
         MainWindow ( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{} );
+        /** @brief Destructor. */
         ~MainWindow();
     private slots:
         void on_actionNewScene_triggered();

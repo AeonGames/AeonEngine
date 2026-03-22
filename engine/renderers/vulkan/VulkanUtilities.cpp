@@ -19,6 +19,7 @@ limitations under the License.
 #include <sstream>
 namespace AeonGames
 {
+    /// @brief Convert a VkResult code to a human-readable string.
     const char* GetVulkanResultString ( VkResult aResult )
     {
         switch ( aResult )
@@ -78,6 +79,13 @@ namespace AeonGames
         }
     }
 
+    /** @brief Vulkan debug messenger callback.
+     *  @param aMessageSeverity Severity of the message.
+     *  @param aMessageTypes Type flags of the message.
+     *  @param aCallbackData Callback data containing the message.
+     *  @param aUserData User-provided data pointer.
+     *  @return VK_FALSE to indicate the call should not be aborted.
+     */
     VKAPI_ATTR VkBool32 VKAPI_CALL
     DebugCallback
     (
@@ -114,6 +122,7 @@ namespace AeonGames
         return false;
     }
 
+    /// @brief Create a Vulkan descriptor pool from the given pool sizes.
     VkDescriptorPool CreateDescriptorPool ( const VkDevice& aVkDevice, const std::vector<VkDescriptorPoolSize>& aVkDescriptorPoolSizes )
     {
         VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
@@ -134,11 +143,13 @@ namespace AeonGames
         return descriptor_pool;
     }
 
+    /// @brief Destroy a Vulkan descriptor pool.
     void DestroyDescriptorPool ( const VkDevice& aVkDevice, VkDescriptorPool aVkDescriptorPool )
     {
         vkDestroyDescriptorPool ( aVkDevice, aVkDescriptorPool, nullptr );
     }
 
+    /// @brief Allocate a Vulkan descriptor set from the given pool and layout.
     VkDescriptorSet CreateDescriptorSet ( const VkDevice& aVkDevice, const VkDescriptorPool& aVkDescriptorPool, const VkDescriptorSetLayout& aVkDescriptorSetLayout, uint32_t aDescriptorSetCount )
     {
         VkDescriptorSet descriptor_set{VK_NULL_HANDLE};

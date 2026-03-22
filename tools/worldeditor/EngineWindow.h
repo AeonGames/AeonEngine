@@ -37,17 +37,41 @@ namespace AeonGames
     class Scene;
     class Node;
     class Window;
+    /** @brief Rendering window that hosts the engine viewport. */
     class EngineWindow : public QWindow
     {
         Q_OBJECT
     public:
+        /**
+         * @brief Construct the engine window.
+         * @param parent Parent window.
+         */
         EngineWindow ( QWindow *parent = nullptr );
+        /** @brief Destructor. */
         ~EngineWindow();
+        /** @brief Stop the rendering loop. */
         void stop();
+        /** @brief Start the rendering loop. */
         void start();
+        /**
+         * @brief Set the scene to render.
+         * @param aScene Pointer to the scene, or nullptr to clear.
+         */
         void setScene ( const Scene* aScene );
+        /**
+         * @brief Set the camera field of view.
+         * @param aFieldOfView Field of view in degrees.
+         */
         void SetFieldOfView ( float aFieldOfView );
+        /**
+         * @brief Set the near clipping plane distance.
+         * @param aNear Near plane distance.
+         */
         void SetNear ( float aNear );
+        /**
+         * @brief Set the far clipping plane distance.
+         * @param aFar Far plane distance.
+         */
         void SetFar ( float aFar );
     private:
         const QVector3D right

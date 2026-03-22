@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018,2019,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2013,2018,2019,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,6 +44,12 @@ namespace AeonGames
        version of the library linked do not match, or Z_ERRNO if there is
        an error reading or writing the files.
        compressed_size contains the size in bytes of the compressed written file */
+    /** @brief Compress data from source file to dest file using deflate.
+        @param source Input file.
+        @param dest Output file.
+        @param level Compression level.
+        @param compressed_size Receives the compressed data size in bytes.
+        @return Z_OK on success or a zlib error code. */
     int write_deflated_data ( FILE *source, FILE *dest, int level, uint32_t& compressed_size )
     {
         int ret, flush;

@@ -27,17 +27,24 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
+    /** @brief Vulkan memory pool buffer for transient per-frame uniform allocations. */
     class VulkanMemoryPoolBuffer : public MemoryPoolBuffer
     {
     public:
+        /// @brief Construct with a renderer and initial pool size.
         VulkanMemoryPoolBuffer ( const VulkanRenderer&  aVulkanRenderer, size_t aStackSize );
+        /// @brief Construct with a renderer using the default pool size.
         VulkanMemoryPoolBuffer ( const VulkanRenderer& );
+        /// @brief Move constructor.
         VulkanMemoryPoolBuffer ( VulkanMemoryPoolBuffer&& );
         VulkanMemoryPoolBuffer& operator= ( const VulkanMemoryPoolBuffer& ) = delete;
         VulkanMemoryPoolBuffer& operator = ( VulkanMemoryPoolBuffer&& ) = delete;
         ~VulkanMemoryPoolBuffer();
+        /// @brief Initialize the pool buffer with the given size.
         void Initialize ( size_t aStackSize );
+        /// @brief Release pool buffer and descriptor resources.
         void Finalize();
+        /// @brief Get the Vulkan descriptor set for this pool buffer.
         const VkDescriptorSet& GetDescriptorSet() const;
         BufferAccessor Allocate ( size_t aSize ) final;
         void Reset() final;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,10 +18,18 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Abstract base class for command-line tools. */
     class Tool
     {
     public:
+        /**
+         * @brief Execute the tool with command-line arguments.
+         * @param argc Argument count.
+         * @param argv Argument vector.
+         * @return Exit status code.
+         */
         virtual int operator() ( int argc, char** argv ) = 0;
+        /** @brief Virtual destructor. */
         virtual ~Tool() = default;
     };
 }

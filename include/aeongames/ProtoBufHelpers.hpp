@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021,2023-2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2023-2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,6 +34,10 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** User-defined literal operator that converts an 8-character string to a uint64_t magic number.
+     * @param literal The string literal to convert (must be exactly 8 characters).
+     * @return A uint64_t value representing the magic number in little-endian byte order.
+     */
     constexpr uint64_t operator ""_mgk ( const char* literal, const std::size_t ) noexcept
     {
         /// @todo add support for Big Endian
@@ -48,15 +52,29 @@ namespace AeonGames
             static_cast<uint64_t> ( literal[0] );
     }
 
-    // Helper class to read from a raw memory buffer.
+    /** Zero-copy input stream that reads from a raw memory buffer.
+     *
+     * Implements the google::protobuf::io::ZeroCopyInputStream interface to allow
+     * Protocol Buffer parsing directly from memory without additional copies.
+     */
     class BufferInputStream : public google::protobuf::io::ZeroCopyInputStream
     {
     public:
+        /** Constructs a BufferInputStream over a memory region.
+         * @param aData Pointer to the start of the buffer.
+         * @param aSize Size of the buffer in bytes.
+         */
         BufferInputStream ( const void * aData, size_t aSize ) :
             mStart{ reinterpret_cast<const uint8_t*> ( aData ) },
             mCursor{ mStart },
             mEnd{mStart + aSize} {}
+        /** Destructor. */
         virtual ~BufferInputStream() {}
+        /** Returns the next contiguous block of data from the buffer.
+         * @param[out] data Set to point to the next block of available data.
+         * @param[out] size Set to the number of bytes available at @p data.
+         * @return true if data was returned, false if the end of the buffer was reached with no data.
+         */
         bool Next ( const void** data, int* size ) override
         {
             *data = mCursor;
@@ -64,15 +82,25 @@ namespace AeonGames
             mCursor += *size;
             return ( ( mCursor != mEnd ) || *size );
         }
+        /** Backs up the read cursor by @p count bytes.
+         * @param count Number of bytes to back up. Clamped to the start of the buffer.
+         */
         void BackUp ( int count ) override
         {
             mCursor = ( ( mCursor - count ) > mStart ) ? mCursor - count : mStart;
         }
+        /** Skips forward @p count bytes in the buffer.
+         * @param count Number of bytes to skip. Clamped to the end of the buffer.
+         * @return true if more data remains after skipping, false if the end was reached.
+         */
         bool Skip ( int count ) override
         {
             mCursor = ( ( mCursor + count ) < mEnd ) ? mCursor + count : mEnd;
             return mCursor != mEnd;
         }
+        /** Returns the total number of bytes read from the buffer so far.
+         * @return The number of bytes between the start and the current cursor position.
+         */
         google::protobuf::int64 ByteCount() const override
         {
             return mCursor - mStart;
@@ -185,6 +213,18 @@ namespace AeonGames
         return t;
     }
 
+    /** Loads a Protocol Buffer message from a buffer and populates a target object.
+     *
+     * Deserializes a Protocol Buffer message of type @p U from the given buffer,
+     * then calls LoadFromPBMsg on @p aTarget to populate it. Uses a static buffer
+     * protected by a mutex to reduce repeated allocations.
+     * @tparam T Target type that implements LoadFromPBMsg(const U&).
+     * @tparam U Protocol Buffer message type.
+     * @tparam Magick Magic number identifying the buffer format.
+     * @param aTarget Reference to the target object to populate.
+     * @param aBuffer Pointer to the start of the buffer.
+     * @param aBufferSize Size of the buffer in bytes.
+     */
     template<class T, class U, uint64_t Magick>
     void LoadFromProtoBufObject ( T& aTarget, const void* aBuffer, size_t aBufferSize )
     {

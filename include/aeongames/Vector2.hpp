@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,15 +31,33 @@ namespace AeonGames
         @param aVector a float pointer or array containing vector data.
         */
         DLL Vector2 ( const float* const aVector );
+        /** @brief Constructor.
+            @param aX X component.
+            @param aY Y component.
+        */
         DLL Vector2 ( float aX, float aY );
         /// destructor.
         DLL ~Vector2();
+        /** @brief Get a pointer to the internal vector data.
+            @return Pointer to the float array containing X,Y components.
+        */
         DLL const float* const GetVector() const;
+        /** @brief Get the X component.
+            @return Reference to the X component.
+        */
         DLL const float& GetX() const;
+        /** @brief Get the Y component.
+            @return Reference to the Y component.
+        */
         DLL const float& GetY() const;
     protected:
-        float mVector[2];
+        float mVector[2]; ///< X and Y components.
     };
+    /** @brief Equality comparison operator.
+        @param aLhs Left-hand side vector.
+        @param aRhs Right-hand side vector.
+        @return true if both vectors are equal.
+    */
     DLL bool operator== ( const Vector2& aLhs, const Vector2& aRhs );
 }
 #endif

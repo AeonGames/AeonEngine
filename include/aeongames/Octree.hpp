@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,12 +22,17 @@ limitations under the License.
 namespace AeonGames
 {
     class Node;
+    /** @brief Spatial partitioning data structure that organizes nodes in 3D space. */
     class Octree
     {
     public:
         DLL Octree();
         DLL ~Octree();
+        /** @brief Insert a node into the octree.
+         *  @param aNode Pointer to the node to add. */
         DLL void AddNode ( Node* aNode );
+        /** @brief Remove a node from the octree.
+         *  @param aNode Pointer to the node to remove. */
         DLL void RemoveNode ( Node* aNode );
     private:
         size_t mSize{0};

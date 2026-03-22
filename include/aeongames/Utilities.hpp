@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,14 +21,26 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Extract the file extension from a file path.
+     *  @param aFilePath The file path to extract the extension from.
+     *  @return The file extension including the leading dot.
+     */
     DLL const std::string GetFileExtension ( const std::string& aFilePath );
+    /** @brief Check whether a file exists at the given path.
+     *  @param aFilePath The file path to check.
+     *  @return True if the file exists.
+     */
     DLL bool FileExists ( const std::string& aFilePath );
+    /** @brief De Bruijn lookup table used by ffs(). */
     constexpr uint32_t DeBruijnSequence[32] =
     {
         0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
         31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
     };
-    /* find index of first set bit */
+    /** @brief Find the index of the first set bit using a De Bruijn sequence.
+     *  @param value The 32-bit value to scan.
+     *  @return Zero-based index of the lowest set bit.
+     */
     constexpr uint32_t ffs ( uint32_t value )
     {
         return DeBruijnSequence[ ( ( ( value & ( -static_cast<int64_t> ( value ) ) ) * 0x077CB531ULL ) & 0xFFFFFFFF ) >> 27];
@@ -97,7 +109,10 @@ namespace AeonGames
     static_assert ( ffs ( ~0x3fffffff ) == 30, "Find First Bit Set Failure." );
     static_assert ( ffs ( ~0x7fffffff ) == 31, "Find First Bit Set Failure." );
 
-    /* Get count of bits set in 32bit unsigned int */
+    /** @brief Count the number of set bits in a 32-bit unsigned integer.
+     *  @param v The value whose bits to count.
+     *  @return The number of bits set to 1.
+     */
     constexpr uint32_t popcount ( uint32_t v )
     {
         return ( ( ( ( ( ( v - ( ( v >> 1 ) & 0x55555555 ) ) & 0x33333333 ) +
@@ -122,6 +137,13 @@ namespace AeonGames
     static_assert ( popcount ( 0xd ) == 3, "Popcount Failure." );
     static_assert ( popcount ( 0xe ) == 3, "Popcount Failure." );
     static_assert ( popcount ( 0xf ) == 4, "Popcount Failure." );
+    /** @brief Concatenate two containers.
+     *  @tparam T Type of the first container (also the return type).
+     *  @tparam U Type of the second container.
+     *  @param aFirst The first container.
+     *  @param aSecond The second container to append.
+     *  @return A new container with elements from both inputs.
+     */
     template<class T, class U>
     const T Concatenate ( const T& aFirst, U& aSecond )
     {
@@ -130,21 +152,41 @@ namespace AeonGames
         return result;
     }
 
+    /** @brief Command-line option handler. */
     class OptionHandler
     {
     public:
+        /** @brief Construct an OptionHandler.
+         *  @param aShortOption Single-character short option.
+         *  @param aLongOption Long option string.
+         *  @param aHandler Callback invoked when the option is matched.
+         *  @param aUserData Optional user data passed to the handler.
+         */
         DLL OptionHandler ( const char aShortOption, const char* aLongOption, void ( *aHandler ) ( const char*, void* ), void* aUserData = nullptr );
         DLL ~OptionHandler();
+        /** @brief Get the short option character. @return The short option. */
         DLL const char GetShortOption() const;
+        /** @brief Get the long option string. @return Pointer to the long option. */
         DLL const char* GetLongOption() const;
+        /** @brief Get the user data pointer. @return The user data. */
         DLL void* GetUserData() const;
-        DLL void operator() ( const char*, void* ) const;
+        /** @brief Invoke the handler callback.
+         *  @param aArgument The option argument string.
+         *  @param aUserData User data passed to the handler.
+         */
+        DLL void operator() ( const char* aArgument, void* aUserData ) const;
     private:
         void ( *mHandler ) ( const char*, void* );
         const char mShortOption{};
         const char* mLongOption{nullptr};
         void* mUserData{nullptr};
     };
+    /** @brief Process command-line options.
+     *  @param argc Argument count.
+     *  @param argv Argument values.
+     *  @param aOptionHandler Array of OptionHandler objects.
+     *  @param aOptionHandlerCount Number of handlers in the array.
+     */
     DLL void ProcessOpts ( int argc, char *argv[], const OptionHandler* aOptionHandler, size_t aOptionHandlerCount );
 }
 #endif

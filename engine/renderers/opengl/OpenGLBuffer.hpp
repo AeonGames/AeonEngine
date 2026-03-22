@@ -22,18 +22,23 @@ limitations under the License.
 namespace AeonGames
 {
     class OpenGLRenderer;
+    /** @brief OpenGL GPU buffer wrapper implementing the Buffer interface. */
     class OpenGLBuffer : public Buffer
     {
     public:
         OpenGLBuffer ();
+        /// @brief Construct from size, usage hint, and optional initial data.
         OpenGLBuffer ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
+        /// @brief Move constructor.
         OpenGLBuffer ( OpenGLBuffer&& aOpenGLBuffer );
         OpenGLBuffer ( const OpenGLBuffer& aOpenGLBuffer ) = delete;
         OpenGLBuffer& operator= ( const OpenGLBuffer& aOpenGLBuffer ) = delete;
         OpenGLBuffer& operator= ( OpenGLBuffer&& aOpenGLBuffer ) = delete;
         ~OpenGLBuffer();
 
+        /// @brief Initialize the buffer with the given size, usage, and optional data.
         void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
+        /// @brief Release the buffer resources.
         void Finalize();
         /// @name Virtual functions
         ///@{
@@ -42,8 +47,11 @@ namespace AeonGames
         void Unmap() const final;
         size_t GetSize() const final;
         ///@}
+        /// @brief Map the entire buffer with the specified access flags.
         void* Map ( const GLbitfield aAccess ) const;
+        /// @brief Map a sub-range of the buffer.
         void* MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const;
+        /// @brief Get the OpenGL buffer object identifier.
         GLuint GetBufferId() const;
     private:
         void Initialize ( const void *aData );

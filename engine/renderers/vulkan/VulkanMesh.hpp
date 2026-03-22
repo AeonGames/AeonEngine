@@ -23,15 +23,19 @@ limitations under the License.
 namespace AeonGames
 {
     class VulkanRenderer;
+    /** @brief Vulkan mesh wrapper managing vertex and index buffer resources. */
     class VulkanMesh
     {
     public:
+        /// @brief Construct from a renderer and mesh resource.
         VulkanMesh ( const VulkanRenderer&  aVulkanRenderer, const Mesh& aMesh );
         ~VulkanMesh();
+        /// @brief Move constructor.
         VulkanMesh ( VulkanMesh&& aVulkanMesh );
         VulkanMesh ( const VulkanMesh& aVulkanMesh ) = delete;
         VulkanMesh& operator= ( const VulkanMesh& aVulkanMesh ) = delete;
         VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh ) = delete;
+        /// @brief Bind the mesh vertex and index buffers to a command buffer.
         void Bind ( VkCommandBuffer aVkCommandBuffer ) const;
     private:
         const VulkanRenderer& mVulkanRenderer;

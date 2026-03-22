@@ -22,12 +22,13 @@ limitations under the License.
 #include "OpenGLVariable.hpp"
 namespace AeonGames
 {
+    /** @brief Describes an OpenGL uniform block with its binding and member variables. */
     struct OpenGLUniformBlock
     {
-        uint32_t name;
-        GLint size;
-        GLint binding;
-        std::vector<OpenGLVariable> uniforms;
+        uint32_t name; ///< Name hash identifier of the uniform block.
+        GLint size; ///< Total byte size of the uniform block.
+        GLint binding; ///< Binding point index.
+        std::vector<OpenGLVariable> uniforms; ///< Member variables within the block.
     };
 }
 #endif

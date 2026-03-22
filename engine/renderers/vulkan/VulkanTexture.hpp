@@ -26,15 +26,18 @@ namespace AeonGames
 {
     class Texture;
     class VulkanRenderer;
+    /** @brief Vulkan texture resource wrapper with image and descriptor management. */
     class VulkanTexture
     {
     public:
         VulkanTexture ( const VulkanRenderer&  aVulkanRenderer, const Texture& aTexture );
         ~VulkanTexture();
+        /// @brief Move constructor.
         VulkanTexture ( VulkanTexture&& aVulkanTexture );
         VulkanTexture ( const VulkanTexture& ) = delete;
         VulkanTexture& operator= ( const VulkanTexture& ) = delete;
         VulkanTexture& operator= ( VulkanTexture&& ) = delete;
+        /// @brief Get the Vulkan descriptor image info for binding.
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
     private:
         const VulkanRenderer& mVulkanRenderer;

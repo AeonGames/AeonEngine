@@ -21,23 +21,25 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Describes an OpenGL shader variable with its location and type. */
     struct OpenGLVariable
     {
-        uint32_t name;
+        uint32_t name; ///< Name hash identifier of the variable.
         union
         {
             GLint binding;
             GLint location;
             GLint offset;
         };
-        GLint size;
-        GLenum type;
+        GLint size; ///< Element count of the variable.
+        GLenum type; ///< OpenGL type enumeration value.
     };
 
+    /** @brief Maps a sampler name hash to its OpenGL uniform location. */
     struct OpenGLSamplerLocation
     {
-        uint32_t name{};
-        GLint location{};
+        uint32_t name{}; ///< Name hash identifier of the sampler.
+        GLint location{}; ///< Uniform location of the sampler.
     };
 }
 #endif

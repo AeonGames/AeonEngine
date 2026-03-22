@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,14 +30,27 @@ limitations under the License.
 namespace AeonGames
 {
     class FrameBufferMsg;
+    /** @brief Abstract interface for off-screen render target (frame buffer) resources. */
     class FrameBuffer : public Resource
     {
     public:
         DLL virtual ~FrameBuffer() = 0;
+        /**
+         * @brief Initialize the frame buffer from a protobuf message.
+         * @param aFrameBufferMsg Protobuf message describing the frame buffer configuration.
+         */
         virtual void LoadFromPBMsg ( const FrameBufferMsg& aFrameBufferMsg ) = 0;
+        /** @brief Release all resources held by this frame buffer. */
         virtual void Unload() = 0;
+        /**
+         * @brief Resize the frame buffer to new dimensions.
+         * @param aWidth  New width in pixels.
+         * @param aHeight New height in pixels.
+         */
         virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
+        /** @brief Bind this frame buffer as the current render target. */
         virtual void Bind() = 0;
+        /** @brief Unbind this frame buffer, restoring the previous render target. */
         virtual void Unbind() = 0;
     };
 }

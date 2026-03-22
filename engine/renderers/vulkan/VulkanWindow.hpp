@@ -31,18 +31,34 @@ namespace AeonGames
     class Pipeline;
     class BufferAccessor;
     class VulkanRenderer;
+    /** @brief Vulkan per-window swapchain, render pass, and rendering state. */
     class VulkanWindow
     {
     public:
+        /// @brief Construct from a renderer and native window handle.
         VulkanWindow ( VulkanRenderer& aVulkanRenderer, void* aWindowId );
         ~VulkanWindow();
+        /// @brief Move constructor.
         VulkanWindow ( VulkanWindow&& aVulkanWindow );
         VulkanWindow ( const VulkanWindow& aVulkanWindow ) = delete;
         VulkanWindow& operator= ( const VulkanWindow& aVulkanWindow ) = delete;
         VulkanWindow& operator= ( VulkanWindow&& aVulkanWindow ) = delete;
 
         void BeginRender();
+        /// @brief End the current frame, submit commands, and present.
         void EndRender();
+        /** @brief Render a mesh with the given pipeline, material, and transform.
+         *  @param aModelMatrix Model-to-world transform matrix.
+         *  @param aMesh Mesh geometry to render.
+         *  @param aPipeline Shader pipeline to use.
+         *  @param aMaterial Optional material, may be nullptr.
+         *  @param aSkeleton Optional skeleton buffer accessor for skinning.
+         *  @param aTopology Primitive topology.
+         *  @param aVertexStart First vertex index.
+         *  @param aVertexCount Number of vertices to draw.
+         *  @param aInstanceCount Number of instances.
+         *  @param aFirstInstance First instance index.
+         */
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -53,14 +69,23 @@ namespace AeonGames
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0 ) const;
+        /// @brief Set the projection matrix for this window.
         void SetProjectionMatrix ( const Matrix4x4& aMatrix );
+        /// @brief Set the view matrix for this window.
         void SetViewMatrix ( const Matrix4x4& aMatrix );
+        /// @brief Get the current projection matrix.
         const Matrix4x4& GetProjectionMatrix() const;
+        /// @brief Get the current view matrix.
         const Matrix4x4& GetViewMatrix() const;
+        /// @brief Get the view frustum derived from the current matrices.
         const Frustum& GetFrustum() const;
+        /// @brief Resize the rendering viewport.
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
+        /// @brief Allocate transient uniform memory for the current frame.
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        /// @brief Get the Vulkan render pass for this window.
         VkRenderPass GetRenderPass() const;
+        /// @brief Get the current command buffer being recorded.
         VkCommandBuffer GetCommandBuffer() const;
     private:
         void Initialize();

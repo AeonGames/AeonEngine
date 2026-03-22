@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,14 +21,30 @@ limitations under the License.
 
 namespace AeonGames
 {
+    /** @brief Returns the next available consecutive resource identifier.
+     *  @return A unique, monotonically increasing identifier. */
     DLL size_t GetNextConsecutiveId();
+    /** @brief Base class for loadable engine resources.
+     *
+     *  Provides a common interface for loading resource data from files,
+     *  memory buffers, or numeric identifiers, and assigns each instance
+     *  a unique consecutive id for runtime tracking. */
     class Resource
     {
     public:
+        /** @brief Virtual destructor. */
         virtual ~Resource() {}
+        /** @brief Load the resource from a raw memory buffer.
+         *  @param aBuffer     Pointer to the data buffer.
+         *  @param aBufferSize Size of the data buffer in bytes. */
         virtual void LoadFromMemory ( const void* aBuffer, size_t aBufferSize ) = 0;
+        /** @brief Release all data held by this resource. */
         virtual void Unload () = 0;
+        /** @brief Load the resource identified by a numeric id.
+         *  @param aId Resource identifier. */
         DLL void LoadFromId ( uint32_t aId );
+        /** @brief Load the resource from a file on disk.
+         *  @param aFilename Path to the resource file. */
         DLL void LoadFromFile ( const std::string& aFilename );
         /**
          * @brief Get the Consecutive Id for the resource object.
