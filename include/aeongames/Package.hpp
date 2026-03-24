@@ -39,7 +39,7 @@ namespace AeonGames
     {
         /// File ID, always "AEONPKG\0".
         char id[8];
-        /// File Version version[0] = mayor, version[1] = minor.
+        /// File Version version[0] = major, version[1] = minor.
         uint16_t version[2];
         /// Package size.
         uint32_t file_size;

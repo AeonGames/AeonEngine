@@ -46,14 +46,14 @@ namespace AeonGames
         mVector[2] = * ( reinterpret_cast<const float*> ( reinterpret_cast<const uint8_t*> ( aVector ) + ( aStride * 2 ) ) );
     }
 
-    float Vector3::GetLenghtSquared() const
+    float Vector3::GetLengthSquared() const
     {
         return Dot ( *this, *this );
     }
 
-    float Vector3::GetLenght() const
+    float Vector3::GetLength() const
     {
-        return sqrtf ( GetLenghtSquared() );
+        return sqrtf ( GetLengthSquared() );
     }
 
     size_t Vector3::GetMaxAxisIndex() const
@@ -72,12 +72,12 @@ namespace AeonGames
             ( ( mVector[2] < mVector[1] ) ? 2 : 1 );
     }
 
-    float Vector3::GetMaxAxisLenght() const
+    float Vector3::GetMaxAxisLength() const
     {
         return mVector[GetMaxAxisIndex()];
     }
 
-    float Vector3::GetMinAxisLenght() const
+    float Vector3::GetMinAxisLength() const
     {
         return mVector[GetMinAxisIndex()];
     }

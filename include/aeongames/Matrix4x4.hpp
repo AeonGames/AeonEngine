@@ -29,7 +29,7 @@ namespace AeonGames
 {
     class Vector3;
     class Transform;
-    /*! \brief 4 by 4 matrix in colum mayor order.
+    /*! \brief 4 by 4 matrix in column major order.
     */
     class Matrix4x4
     {
@@ -118,7 +118,7 @@ namespace AeonGames
         /** @brief The 4x4 identity matrix constant. */
         DLL static const Matrix4x4 Identity;
     protected:
-        /// Lineal row mayor matrix.
+        /// Linear row major matrix.
         float mMatrix[16];
     };
     /*! \brief Multiplies two 4x4 matrices.
@@ -126,7 +126,7 @@ namespace AeonGames
     \param lhs [in] left side matrix.
     \param rhs [in] right side matrix.
     \return The resulting matrix.
-    \note Since the matrices are stored in column mayor order, this is post multiplication.
+    \note Since the matrices are stored in column major order, this is post multiplication.
     */
     DLL const Matrix4x4 operator* ( const Matrix4x4& lhs, const Matrix4x4& rhs );
     /** @brief Multiply a 4x4 matrix by a 3D vector.

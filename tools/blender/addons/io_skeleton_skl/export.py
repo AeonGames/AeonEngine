@@ -51,7 +51,7 @@ class SKL_OT_exporter(bpy.types.Operator):
             # changed.
             assert armature.bones.find(bone.name) > joint.ParentIndex
             # print(bone.name,"index:",armature.bones.find(bone.name),"parent index:", parent_index)
-            # What is refered as the matrix_local is really the bone matrix in the armature model space.
+            # What is referred to as the matrix_local is really the bone matrix in the armature model space.
             # Note: skeleton bones are relative to the armature origin, not
             # their parents, unlike animation bones.
             translation, rotation, scale = bone.matrix_local.decompose()
