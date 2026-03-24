@@ -42,7 +42,7 @@ namespace AeonGames
             return;
         }
         auto* read_struct = static_cast<png_read_memory_struct*> ( png_get_io_ptr ( png_ptr ) );
-        // Clip lenght not to get passed the end of the buffer.
+        // Clip length not to get past the end of the buffer.
         png_size_t real_length = std::min<png_size_t> ( ( ( read_struct->buffer + read_struct->size ) - read_struct->pointer ), length );
         if ( length < 1 )
         {

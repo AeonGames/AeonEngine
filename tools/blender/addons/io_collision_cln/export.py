@@ -158,7 +158,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         if behind != 0:
             return -1;
         # All vertices lie on the plane so the polygon is coplanar with the plane,
-        # decide which way to send it based on the polygon normal's mayor axis.
+        # decide which way to send it based on the polygon normal's major axis.
         if polygon.normal[node.axis] < 0.0:
             return -1
         return 1

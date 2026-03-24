@@ -175,7 +175,7 @@ namespace AeonGames
         if ( ModelInstance * model_instance = reinterpret_cast<ModelInstance * > ( mNode->GetComponent ( ModelInstance::TypeId ) ) )
         {
             // Adjust camera position so model fits the frustum tightly.
-            float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLenght() * 2;
+            float diameter = model_instance->GetModel()->GetCenterRadii().GetRadii().GetMaxAxisLength() * 2;
             std::cout << "Diameter: " << diameter << std::endl;
             // Add the near value to the radius just in case the actual object contains the eye position.
             float half_radius = ( static_cast<float> ( geometry().size().width() ) / static_cast<float> ( geometry().size().height() ) ) / 2;

@@ -81,11 +81,11 @@ namespace AeonGames
         /** @brief Get the squared length of the vector.
             @return Squared magnitude of the vector.
         */
-        DLL float GetLenghtSquared() const;
+        DLL float GetLengthSquared() const;
         /** @brief Get the length of the vector.
             @return Magnitude of the vector.
         */
-        DLL float GetLenght() const;
+        DLL float GetLength() const;
         /** @brief Get the index of the axis with the largest absolute value.
             @return Index (0=X, 1=Y, 2=Z) of the largest axis.
         */
@@ -97,11 +97,11 @@ namespace AeonGames
         /** @brief Get the absolute value of the largest axis component.
             @return Absolute value of the largest component.
         */
-        DLL float GetMaxAxisLenght() const;
+        DLL float GetMaxAxisLength() const;
         /** @brief Get the absolute value of the smallest axis component.
             @return Absolute value of the smallest component.
         */
-        DLL float GetMinAxisLenght() const;
+        DLL float GetMinAxisLength() const;
         /** @brief Get the signed distance from this point to a plane.
             @param aPlane The plane to measure distance to.
             @return Signed distance to the plane.

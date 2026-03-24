@@ -28,7 +28,7 @@ namespace AeonGames
 {
     class Vector3;
     class Transform;
-    /*! \brief 3 by 3 matrix in colum mayor order. */
+    /*! \brief 3 by 3 matrix in column major order. */
     class Matrix3x3
     {
     public:
@@ -85,7 +85,7 @@ namespace AeonGames
         */
         DLL static const Matrix3x3 GetRotationMatrix ( float angle, float x, float y, float z );
     protected:
-        /// Lineal row mayor matrix.
+        /// Linear row major matrix.
         float mMatrix[9];
     };
     /*! \brief Multiplies two 3x3 matrices.
@@ -93,7 +93,7 @@ namespace AeonGames
     \param lhs [in] left side matrix.
     \param rhs [in] right side matrix.
     \return The resulting matrix.
-    \note Since the matrices are stored in column mayor order, this is post multiplication.
+    \note Since the matrices are stored in column major order, this is post multiplication.
     */
     DLL const Matrix3x3 operator* ( const Matrix3x3& lhs, const Matrix3x3& rhs );
     /** @brief Multiply a 3x3 matrix by a 3D vector.

@@ -119,11 +119,11 @@ namespace AeonGames
 #endif
         /// General VAO
         GLuint mVertexArrayObject{};
-        /** \addtogroup Overlay functionality.
-         * Both the shader program and the buffer descriving the window/screen quad are
+        /** \addtogroup OverlayFunctionality Overlay functionality.
+         * Both the shader program and the buffer describing the window/screen quad are
          * pretty much constant and usable without modifications by any Opengl window,
-         * so it makes sence that they reside inside the renderer object from which the windows
-         * are creatted.
+         * so it makes sense that they reside inside the renderer object from which the windows
+         * are created.
          *
          @{*/
         /// Raw overlay shader program.

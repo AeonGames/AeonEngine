@@ -559,14 +559,14 @@ namespace AeonGames
                 }
                 if ( message == &mesh_buffer )
                 {
-                    /* Presume raw buffer data if the lenght of the vertex buffer
-                     string exactly maches the string length. */
+                    /* Presume raw buffer data if the length of the vertex buffer
+                     string exactly matches the string length. */
                     if ( GetStride ( mesh_buffer ) *mesh_buffer.vertexcount() != mesh_buffer.vertexbuffer().size() )
                     {
                         mesh_buffer.set_vertexbuffer ( ParseVertexBuffer ( mesh_buffer ) );
                     }
-                    /* Presume raw buffer data if the lenght of the index buffer
-                    string exactly maches the string length. */
+                    /* Presume raw buffer data if the length of the index buffer
+                    string exactly matches the string length. */
                     if ( ( mesh_buffer.indexcount() * mesh_buffer.indexsize() ) != mesh_buffer.indexbuffer().size() )
                     {
                         mesh_buffer.set_indexbuffer ( ParseIndexBuffer ( mesh_buffer ) );
