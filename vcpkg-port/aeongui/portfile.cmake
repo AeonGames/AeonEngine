@@ -4,6 +4,15 @@ vcpkg_from_git(
     REF 0bfe11605dcd235d3b0c5538d5a8282f87c4eedf
 )
 
+# AeonGUI's build pulls some deps via git clone into the source tree.
+# In vcpkg builds this can fail if the destination dir already exists
+# (e.g., due to retries/reconfigure). Ensure a clean state.
+file(REMOVE_RECURSE
+    "${SOURCE_PATH}/css/libparserutils"
+    "${SOURCE_PATH}/css/libwapcaplet"
+    "${SOURCE_PATH}/css/libhubbub"
+)
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
