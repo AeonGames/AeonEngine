@@ -120,7 +120,7 @@ endif()
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
-if(MSVC AND USE_AEONGUI)
+if(USE_AEONGUI)
   find_package(aeongui CONFIG REQUIRED)
 endif()
 
