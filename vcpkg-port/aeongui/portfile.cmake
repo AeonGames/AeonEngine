@@ -1,16 +1,7 @@
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL https://github.com/AeonGames/AeonGUI.git
-    REF 0bfe11605dcd235d3b0c5538d5a8282f87c4eedf
-)
-
-# AeonGUI's build pulls some deps via git clone into the source tree.
-# In vcpkg builds this can fail if the destination dir already exists
-# (e.g., due to retries/reconfigure). Ensure a clean state.
-file(REMOVE_RECURSE
-    "${SOURCE_PATH}/css/libparserutils"
-    "${SOURCE_PATH}/css/libwapcaplet"
-    "${SOURCE_PATH}/css/libhubbub"
+    REF 76ab3134af28e6e1fd841dc49c71614190969944
 )
 
 vcpkg_cmake_configure(
@@ -18,6 +9,7 @@ vcpkg_cmake_configure(
     OPTIONS
         -DAEONGUI_BACKEND=Cairo
         -DBUILD_UNIT_TESTS=OFF
+        -DFETCHCONTENT_FULLY_DISCONNECTED=OFF
 )
 
 vcpkg_cmake_build()
