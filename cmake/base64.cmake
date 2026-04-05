@@ -93,12 +93,15 @@ function(add_b64_encode_target target_name)
     list(APPEND mkdir_commands COMMAND ${CMAKE_COMMAND} -E make_directory "${dir}")
   endforeach()
   
+  # NOTE: Do NOT use BYPRODUCTS here.  The .b64 output files live in the
+  # source tree and are checked into version control.  CMake generates a
+  # clean rule for every BYPRODUCTS entry, which would delete these source
+  # assets when "make clean" is run.
   add_custom_target(
     ${target_name}
     ${mkdir_commands}
     ${encode_commands}
     DEPENDS aeontool ${input_files}
-    BYPRODUCTS ${output_files}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Encoding files to base64 .b64 format"
   )
