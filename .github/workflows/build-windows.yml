@@ -1,4 +1,4 @@
-name: Build on Windows
+name: 🚧🪟 Build on Windows
 
 on: [push, pull_request]
 
@@ -64,7 +64,8 @@ jobs:
       if: matrix.compiler == 'msvc'
 
     - name: 🔨 Build
-      run: cmake --build ${{github.workspace}}/build
+      shell: pwsh
+      run: cmake --build ${{github.workspace}}/build --parallel $env:NUMBER_OF_PROCESSORS
 
     - name: 🧪 Run Tests
       shell: pwsh
