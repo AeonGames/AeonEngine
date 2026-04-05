@@ -11,9 +11,8 @@ add_library(AeonGUIPlugin
             ${AEONGUI_PLUGIN_SOURCES}
             ${CMAKE_SOURCE_DIR}/include/aeongames/GuiOverlay.hpp)
 
-target_link_libraries(AeonGUIPlugin
-                      AeonGUI
-                      AeonEngine)
+target_link_libraries(AeonGUIPlugin AeonGUI AeonEngine)
+target_compile_definitions(AeonGUIPlugin PRIVATE PLUGIN=__declspec\(dllexport\))
 
 if(MSVC)
   set_target_properties(

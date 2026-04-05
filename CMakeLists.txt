@@ -22,6 +22,9 @@ if(COMMAND cmake_policy)
   if(POLICY CMP0053)
     cmake_policy(SET CMP0053 NEW)
   endif(POLICY CMP0053)
+  if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+  endif(POLICY CMP0074)
 endif(COMMAND cmake_policy)
 
 # VCPKG_MANIFEST_FEATURES must be set before project() so vcpkg installs the
@@ -121,7 +124,19 @@ option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
 if(USE_AEONGUI)
-  find_package(aeongui CONFIG REQUIRED)
+  if(MSVC)
+    find_package(aeongui CONFIG REQUIRED)
+  else()
+    include(FetchContent)
+    set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+    set(AEONGUI_BACKEND "Cairo" CACHE STRING "" FORCE)
+    FetchContent_Declare(AeonGUI
+      GIT_REPOSITORY https://github.com/AeonGames/AeonGUI.git
+      GIT_TAG        30a8ec49d76d938ad8ac66b2c4eb8b53ff18eeb9
+      GIT_SHALLOW    ON
+    )
+    FetchContent_MakeAvailable(AeonGUI)
+  endif()
 endif()
 
 if(CLANG_TIDY_EXECUTABLE)
