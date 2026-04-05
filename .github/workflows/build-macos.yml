@@ -21,6 +21,8 @@ jobs:
       run: |
         brew update
         brew install \
+          flex \
+          bison \
           gnu-sed \
           cmake \
           make \
@@ -32,6 +34,9 @@ jobs:
           libogg \
           libvorbis \
           cairo \
+          pango \
+          libxml2 \
+          libjpeg-turbo \
           googletest \
           qt6 \
           pkg-config \
@@ -54,6 +59,8 @@ jobs:
 
     - name: '🚧 Build'
       run: |
+        export PATH="/opt/homebrew/opt/bison/bin:$PATH"
+        export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"      
         cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON
         cmake --build build
 

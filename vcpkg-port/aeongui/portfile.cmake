@@ -1,7 +1,7 @@
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL https://github.com/AeonGames/AeonGUI.git
-    REF c8729a430c4de102b982fe499af37dd99f2bddd0
+    REF 30a8ec49d76d938ad8ac66b2c4eb8b53ff18eeb9
 )
 
 vcpkg_cmake_configure(
