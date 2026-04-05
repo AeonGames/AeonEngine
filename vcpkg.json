@@ -20,6 +20,12 @@
     "aeongui": {
       "description": "Build with AeonGUI support for in-engine GUI overlays",
       "dependencies": [
+        "cairo",
+        "skia",
+        "fontconfig",
+        "pango",
+        "libxml2",
+        "libjpeg-turbo",
         "aeongui"
       ]
     }

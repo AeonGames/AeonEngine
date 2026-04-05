@@ -81,5 +81,17 @@
     "cmake.buildDirectory": "@CMAKE_BINARY_DIR@",
     "cmake.configureOnOpen": false,
     "cmake.buildBeforeRun": false,
-    "cmake.configureOnEdit": false
+    "cmake.configureOnEdit": false,
+    "C_Cpp.files.exclude": {
+        "mingw64/vcpkg/**": true,
+        "mingw64/vcpkg_installed/**": true,
+        "clang64/vcpkg/**": true,
+        "clang64/vcpkg_installed/**": true,
+        "ucrt64/vcpkg/**": true,
+        "ucrt64/vcpkg_installed/**": true,
+        "msvc64/vcpkg/**": true,
+        "msvc64/vcpkg_installed/**": true,
+        "build/vcpkg/**": true,
+        "build/vcpkg_installed/**": true
+    }
 }
