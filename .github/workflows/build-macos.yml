@@ -54,7 +54,7 @@ jobs:
 
     - name: '🚧 Build'
       run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON
         cmake --build build
 
     - name: '🧪 Run TESTS'
