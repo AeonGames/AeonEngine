@@ -1,4 +1,4 @@
-name: Build on macOS
+name: 🚧🍎 Build on macOS
 
 on: [push, pull_request]
 
@@ -52,7 +52,7 @@ jobs:
           vulkan-validationlayers \
           vulkan-volk
 
-    - name: 'Set up Clang'
+    - name: '🛠️ Set up Clang'
       run: |
         echo "CC=clang" >> $GITHUB_ENV
         echo "CXX=clang++" >> $GITHUB_ENV
@@ -60,9 +60,9 @@ jobs:
     - name: '🚧 Build'
       run: |
         export PATH="/opt/homebrew/opt/bison/bin:$PATH"
-        export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"      
+        export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
         cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON
-        cmake --build build
+        cmake --build build --parallel "$(sysctl -n hw.ncpu)"
 
     - name: '🧪 Run TESTS'
       run: |

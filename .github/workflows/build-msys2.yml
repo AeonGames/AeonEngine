@@ -1,4 +1,4 @@
-name: Build on Windows (MSYS2)
+name: 🚧🪟 Build on Windows (MSYS2)
 
 on: [push, pull_request]
 
@@ -54,7 +54,7 @@ jobs:
     - name: '🚧 Build'
       run: |
         cmake -G "MSYS Makefiles" -B build -DCMAKE_BUILD_TYPE=Release -DUSE_AEONGUI=ON
-        cmake --build build
+        cmake --build build --parallel "$(nproc)"
 
     - name: '🧪 Run TESTS'
       run: |

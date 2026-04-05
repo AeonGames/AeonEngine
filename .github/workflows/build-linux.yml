@@ -1,4 +1,4 @@
-name: Build on Linux
+name: 🚧🐧 Build on Linux
 
 on: [push, pull_request]
 env:
@@ -14,15 +14,16 @@ jobs:
         compiler: [gcc, clang]
 
     steps:
-    - uses: actions/checkout@v6
+    - name: 🧰 Checkout
+      uses: actions/checkout@v6
 
-    - name: Install dependencies (Ubuntu)
+    - name: 📦 Install dependencies (Ubuntu)
       run: >-
         sudo apt-get update ;
         sudo apt-get install -y build-essential software-properties-common gcc g++ llvm clang sed python3 tar wget cmake autoconf automake libtool curl make unzip zlib1g-dev libpng-dev vim-common git portaudio19-dev libogg-dev libvorbis-dev googletest libglu1-mesa-dev freeglut3-dev mesa-common-dev libcairo2-dev libpango1.0-dev libxml2-dev libjpeg-dev libprotobuf-dev protobuf-compiler mesa-vulkan-drivers libvulkan1 libvulkan-dev qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libxkbcommon-dev glslang-dev glslang-tools libglx-mesa0 vulkan-validationlayers flex bison ;
       if: matrix.os == 'ubuntu'
 
-    - name: Setup and run Arch Linux build
+    - name: 🐧 Setup and run Arch Linux build
       run: |
         docker run --rm -v ${{github.workspace}}:/workspace -w /workspace archlinux:latest bash -c "
           pacman -Syu --noconfirm &&
@@ -32,18 +33,18 @@ jobs:
           else
             cmake -B /workspace/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=/workspace/cmake/clang-toolchain.cmake -DUSE_AEONGUI=ON
           fi &&
-          cmake --build /workspace/build
+          cmake --build /workspace/build --parallel "$(nproc)"
         "
       if: matrix.os == 'archlinux'
 
-    - name: Configure CMake (Ubuntu GCC)
+    - name: ⚙️ Configure CMake (Ubuntu GCC)
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON
       if: matrix.os == 'ubuntu' && matrix.compiler == 'gcc'
 
-    - name: Configure CMake (Ubuntu Clang)
+    - name: ⚙️ Configure CMake (Ubuntu Clang)
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/cmake/clang-toolchain.cmake -DUSE_AEONGUI=ON
       if: matrix.os == 'ubuntu' && matrix.compiler == 'clang'
 
-    - name: Build (Ubuntu)
-      run: cmake --build ${{github.workspace}}/build
+    - name: 🔨 Build (Ubuntu)
+      run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
       if: matrix.os == 'ubuntu'
