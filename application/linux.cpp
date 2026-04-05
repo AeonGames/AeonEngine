@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018-2021,2024,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018-2021,2024,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Scene.hpp"
 #include "aeongames/Node.hpp"
+#include "aeongames/GuiOverlay.hpp"
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -149,6 +150,11 @@ namespace AeonGames
         XStoreName ( mDisplay, mWindowId, "AeonGames" );
         XFlush ( mDisplay );
         mRenderer = ConstructRenderer ( aRendererName, reinterpret_cast<void*> ( mWindowId ) );
+        EnumerateGuiOverlayConstructors ( [this] ( const StringId & aIdentifier ) -> bool
+        {
+            mGuiOverlay = ConstructGuiOverlay ( aIdentifier, reinterpret_cast<void*> ( mWindowId ) );
+            return mGuiOverlay == nullptr;
+        } );
     }
 
     Window::~Window()
@@ -175,6 +181,10 @@ namespace AeonGames
         {
             mRenderer->ResizeViewport ( reinterpret_cast<void*> ( mWindowId ), 0, 0, aWidth, aHeight );
             mAspectRatio = static_cast<float> ( aWidth ) / static_cast<float> ( aHeight );
+            if ( mGuiOverlay )
+            {
+                mGuiOverlay->Resize ( aWidth, aHeight );
+            }
         }
         return 0;
     }
@@ -243,6 +253,11 @@ namespace AeonGames
                     projection.Perspective ( aScene.GetFieldOfView(), mAspectRatio, aScene.GetNear(), aScene.GetFar() );
                     mRenderer->SetProjectionMatrix ( reinterpret_cast<void*> ( mWindowId ), projection );
                 }
+                if ( mGuiOverlay )
+                {
+                    mGuiOverlay->BeginFrame ( reinterpret_cast<void*> ( mWindowId ), delta.count() );
+                    mGuiOverlay->EndFrame ( reinterpret_cast<void*> ( mWindowId ) );
+                }
                 mRenderer->BeginRender ( reinterpret_cast<void*> ( mWindowId ) );
                 aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                 {
@@ -253,6 +268,10 @@ namespace AeonGames
                         aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
                     }
                 } );
+                if ( mGuiOverlay )
+                {
+                    mRenderer->RenderOverlay ( reinterpret_cast<void*> ( mWindowId ), *mGuiOverlay );
+                }
                 mRenderer->EndRender ( reinterpret_cast<void*> ( mWindowId ) );
             }
         }

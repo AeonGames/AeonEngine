@@ -33,6 +33,7 @@ limitations under the License.
 #include "VulkanBuffer.hpp"
 #include "VulkanUtilities.hpp"
 #include "aeongames/LogLevel.hpp"
+#include "aeongames/GuiOverlay.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
@@ -985,5 +986,30 @@ namespace AeonGames
         }
         ///@todo finish this
         //it->second.SetClearColor ( R, G, B, A );
+    }
+
+    void VulkanRenderer::RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay )
+    {
+        const uint8_t* pixels = aGuiOverlay.GetPixels();
+        if ( !pixels || !aGuiOverlay.GetWidth() || !aGuiOverlay.GetHeight() )
+        {
+            return;
+        }
+
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+
+        ///@todo Implement Vulkan overlay compositing.
+        /// This requires:
+        /// 1. A staging buffer for pixel upload.
+        /// 2. A VkImage + VkImageView + VkSampler for the overlay texture.
+        /// 3. A simple full-screen quad pipeline (vertex + fragment shader,
+        ///    alpha blending, no depth test).
+        /// 4. A descriptor set binding the overlay texture.
+        /// 5. Recording draw commands into VulkanWindow::GetCommandBuffer().
+        /// The OpenGL backend provides a reference implementation.
     }
 }

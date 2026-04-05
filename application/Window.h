@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <memory>
 #include "aeongames/Renderer.hpp"
+#include "aeongames/GuiOverlay.hpp"
 #include "aeongames/Scene.hpp"
 #ifdef __unix__
 #include <X11/Xlib.h>
@@ -40,6 +41,7 @@ namespace AeonGames
         Colormap mColorMap{None};
 #endif
         std::unique_ptr<Renderer> mRenderer {};
+        std::unique_ptr<GuiOverlay> mGuiOverlay {};
         float mAspectRatio{1.0f};
     };
 }

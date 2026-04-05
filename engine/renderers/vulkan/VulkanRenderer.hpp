@@ -101,6 +101,7 @@ namespace AeonGames
                       uint32_t aFirstInstance = 0 ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
+        void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;
         /// @brief Get the common Vulkan render pass.
         VkRenderPass GetRenderPass() const;
         /// @brief Get the cached VulkanPipeline for a Pipeline resource.

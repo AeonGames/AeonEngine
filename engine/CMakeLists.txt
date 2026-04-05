@@ -38,6 +38,7 @@ set(ENGINE_SDK_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Texture.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Sound.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/GuiOverlay.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Utilities.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceFactory.hpp
@@ -92,6 +93,7 @@ set(ENGINE_CORE_SOURCES
     core/Base64.cpp
     core/Component.cpp
     core/Renderer.cpp
+    core/GuiOverlay.cpp
     core/Texture.cpp
     core/Sound.cpp
     core/Pipeline.cpp

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ limitations under the License.
 #include "aeongames/Scene.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Frustum.hpp"
+#include "aeongames/GuiOverlay.hpp"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -121,6 +122,7 @@ namespace AeonGames
         _In_ LPARAM lParam
     )
     {
+        Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
         switch ( uMsg )
         {
         case WM_CLOSE:
@@ -132,7 +134,6 @@ namespace AeonGames
             break;
         case WM_SIZE:
         {
-            Window* window = reinterpret_cast<Window*> ( GetWindowLongPtr ( hwnd, GWLP_USERDATA ) );
             if ( window )
             {
                 return window->Resize ( LOWORD ( lParam ), HIWORD ( lParam ) );
@@ -201,6 +202,11 @@ namespace AeonGames
                                      nullptr );
         SetWindowLongPtr ( static_cast<HWND> ( mWindowId ), GWLP_USERDATA, ( LONG_PTR ) this );
         mRenderer = ConstructRenderer ( aRendererName, mWindowId );
+        EnumerateGuiOverlayConstructors ( [this] ( const StringId & aIdentifier ) -> bool
+        {
+            mGuiOverlay = ConstructGuiOverlay ( aIdentifier, mWindowId );
+            return mGuiOverlay == nullptr;
+        } );
     }
 
     Window::~Window()
@@ -218,6 +224,10 @@ namespace AeonGames
         {
             mRenderer->ResizeViewport ( mWindowId, 0, 0, aWidth, aHeight );
             mAspectRatio = static_cast<float> ( aWidth ) / static_cast<float> ( aHeight );
+            if ( mGuiOverlay )
+            {
+                mGuiOverlay->Resize ( aWidth, aHeight );
+            }
         }
         return 0;
     }
@@ -248,7 +258,12 @@ namespace AeonGames
                 std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
                 aScene.Update ( delta.count() );
                 last_time = current_time;
-                if ( const Node* camera = aScene.GetCamera() )
+                if ( mGuiOverlay )
+                {
+                    mGuiOverlay->BeginFrame ( mWindowId, delta.count() );
+                    mGuiOverlay->EndFrame ( mWindowId );
+                }
+                if ( const Node * camera = aScene.GetCamera() )
                 {
                     mRenderer->SetViewMatrix ( mWindowId, camera->GetGlobalTransform().GetInverted().GetMatrix() );
                     Matrix4x4 projection {};
@@ -265,6 +280,10 @@ namespace AeonGames
                         aNode.Render ( *mRenderer, mWindowId );
                     }
                 } );
+                if ( mGuiOverlay )
+                {
+                    mRenderer->RenderOverlay ( mWindowId, *mGuiOverlay );
+                }
                 mRenderer->EndRender ( mWindowId );
             }
         }
