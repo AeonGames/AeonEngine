@@ -31,11 +31,14 @@ jobs:
         & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe" update --installPath "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise" --quiet --wait
       if: matrix.compiler == 'msvc'
 
-    - name: 🔃 Update VCPKG
+    - name: 🔃 Pin VCPKG Baseline
       shell: pwsh
       run: |
+        $baseline = (Get-Content "${{ github.workspace }}/vcpkg-configuration.json" | ConvertFrom-Json)."default-registry".baseline
+        Write-Host "Using vcpkg baseline: $baseline"
         cd C:\vcpkg
-        git pull
+        git fetch origin $baseline --depth=1
+        git checkout --force $baseline
         .\bootstrap-vcpkg.bat
       if: matrix.compiler == 'msvc'
 
