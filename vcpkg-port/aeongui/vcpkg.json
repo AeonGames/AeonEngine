@@ -1,0 +1,19 @@
+{
+  "name": "aeongui",
+  "version": "0.9.0",
+  "description": "Cross-platform C++ SVG DOM and rendering library for game UI",
+  "homepage": "https://github.com/AeonGames/AeonGUI",
+  "license": "Apache-2.0",
+  "dependencies": [
+    "cairo",
+    "pango",
+    "fontconfig",
+    "freetype",
+    "harfbuzz",
+    "libxml2",
+    "zlib",
+    "libpng",
+    "libjpeg-turbo",
+    "pkgconf"
+  ]
+}

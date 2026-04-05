@@ -24,6 +24,12 @@ if(COMMAND cmake_policy)
   endif(POLICY CMP0053)
 endif(COMMAND cmake_policy)
 
+# VCPKG_MANIFEST_FEATURES must be set before project() so vcpkg installs the
+# required ports during the configure step.
+if(MSVC AND USE_AEONGUI)
+  list(APPEND VCPKG_MANIFEST_FEATURES "aeongui")
+endif()
+
 project(AeonEngine)
 enable_testing()
 enable_language(CXX)
@@ -113,6 +119,10 @@ else()
 endif()
 option(BUILD_VULKAN_RENDERER "Build the Vulkan renderer" ON)
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
+
+if(MSVC AND USE_AEONGUI)
+  find_package(aeongui CONFIG REQUIRED)
+endif()
 
 if(CLANG_TIDY_EXECUTABLE)
   option(USE_CLANG_TIDY "Use of clang-tidy (Requires CMake 3.6.0 or Higher)"

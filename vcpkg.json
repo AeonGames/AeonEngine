@@ -15,5 +15,13 @@
     "qttools",
     "libxml2",
     "pkgconf"
-  ]
+  ],
+  "features": {
+    "aeongui": {
+      "description": "Build with AeonGUI support for in-engine GUI overlays",
+      "dependencies": [
+        "aeongui"
+      ]
+    }
+  }
 }
