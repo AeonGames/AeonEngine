@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/Material.hpp"
 #include "aeongames/Texture.hpp"
 #include "aeongames/LogLevel.hpp"
+#include "aeongames/GuiOverlay.hpp"
 
 namespace AeonGames
 {
@@ -791,5 +792,92 @@ void main()
     void* OpenGLRenderer::GetContext() const
     {
         return mOpenGLContext;
+    }
+
+    void OpenGLRenderer::RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay )
+    {
+        const uint8_t* pixels = aGuiOverlay.GetPixels();
+        if ( !pixels || !aGuiOverlay.GetWidth() || !aGuiOverlay.GetHeight() )
+        {
+            return;
+        }
+
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+
+        // Upload overlay pixels to a temporary texture
+        GLuint overlayTexture{};
+        glGenTextures ( 1, &overlayTexture );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindTexture ( GL_TEXTURE_2D, overlayTexture );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA,
+                       aGuiOverlay.GetWidth(), aGuiOverlay.GetHeight(),
+                       0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        // Save state
+        GLboolean depthTestEnabled = glIsEnabled ( GL_DEPTH_TEST );
+        GLboolean blendEnabled = glIsEnabled ( GL_BLEND );
+        GLint previousProgram{};
+        glGetIntegerv ( GL_CURRENT_PROGRAM, &previousProgram );
+
+        // Set up for overlay rendering
+        glDisable ( GL_DEPTH_TEST );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnable ( GL_BLEND );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        glUseProgram ( mOverlayProgram );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glActiveTexture ( GL_TEXTURE0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindTexture ( GL_TEXTURE_2D, overlayTexture );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        glBindBuffer ( GL_ARRAY_BUFFER, mOverlayQuad.GetBufferId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof ( float ), 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glEnableVertexAttribArray ( 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glVertexAttribPointer ( 1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof ( float ), reinterpret_cast<const void*> ( 2 * sizeof ( float ) ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDisableVertexAttribArray ( 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDisableVertexAttribArray ( 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_ARRAY_BUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        // Restore state
+        glUseProgram ( previousProgram );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( depthTestEnabled )
+        {
+            glEnable ( GL_DEPTH_TEST );
+        }
+        if ( !blendEnabled )
+        {
+            glDisable ( GL_BLEND );
+        }
+
+        glBindTexture ( GL_TEXTURE_2D, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDeleteTextures ( 1, &overlayTexture );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 }

@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_RENDERER_H
 #define AEONGAMES_RENDERER_H
 
+#include <cstdint>
 #include <string>
 #include <memory>
 #include <functional>
@@ -30,6 +31,7 @@ namespace AeonGames
     class Buffer;
     class Texture;
     class Mesh;
+    class GuiOverlay;
     class Pipeline;
     class Material;
     class Window;
@@ -162,6 +164,17 @@ namespace AeonGames
          * @return A BufferAccessor to the allocated memory.
          */
         virtual BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) = 0;
+        ///@}
+
+        ///@name Overlay rendering
+        ///@{
+        /** Composites a GUI overlay on top of the current frame.
+         * Renders a full-screen quad textured with the overlay's RGBA pixel buffer,
+         * using alpha blending. Must be called between BeginRender and EndRender.
+         * @param aWindowId Platform dependent window handle.
+         * @param aGuiOverlay The GUI overlay whose pixel buffer to composite.
+         */
+        virtual void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) = 0;
         ///@}
     };
     /**@name Factory Functions */
