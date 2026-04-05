@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <memory>
 #include "aeongames/Platform.hpp"
+#include "aeongames/AeonEngine.hpp"
 #include "aeongames/Plugin.hpp"
 #include "aeongames/StringId.hpp"
 #include "aeongames/GuiOverlay.hpp"

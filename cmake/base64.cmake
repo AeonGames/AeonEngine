@@ -50,7 +50,6 @@ function(add_b64_decode_target target_name)
     ${mkdir_commands}
     ${decode_commands}
     DEPENDS aeontool ${input_files}
-    BYPRODUCTS ${output_files}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Decoding base64 files to .${extension} format"
   )
