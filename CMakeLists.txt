@@ -29,7 +29,8 @@ endif(COMMAND cmake_policy)
 
 # VCPKG_MANIFEST_FEATURES must be set before project() so vcpkg installs the
 # required ports during the configure step.
-if(MSVC AND USE_AEONGUI)
+# Note: MSVC is not set until project(), so check the generator instead.
+if(CMAKE_GENERATOR MATCHES "Visual Studio" AND USE_AEONGUI)
   list(APPEND VCPKG_MANIFEST_FEATURES "aeongui")
 endif()
 
