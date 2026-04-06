@@ -220,6 +220,7 @@ void main()
         }
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
+        InitializeOverlay();
         AttachWindow ( static_cast<HWND> ( aWindow ) );
     }
 
@@ -244,6 +245,7 @@ void main()
     {
         mWindowStore.clear();
         MakeCurrent();
+        FinalizeOverlay();
         mTextureStore.clear();
         mMeshStore.clear();
         mMaterialStore.clear();
@@ -372,6 +374,7 @@ void main()
 
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
+        InitializeOverlay();
 
         AttachWindow(aWindow);
         ++mRendererCount;
@@ -387,6 +390,7 @@ void main()
     {
         mWindowStore.clear();
         MakeCurrent();
+        FinalizeOverlay();
         mTextureStore.clear();
         mMeshStore.clear();
         mMaterialStore.clear();
@@ -483,6 +487,17 @@ void main()
     void OpenGLRenderer::FinalizeOverlay()
     {
         OPENGL_CHECK_ERROR_NO_THROW;
+        for ( auto& [window_id, overlay] : mOverlayTextureCache )
+        {
+            ( void ) window_id;
+            if ( glIsTexture ( overlay.texture ) )
+            {
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glDeleteTextures ( 1, &overlay.texture );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+        }
+        mOverlayTextureCache.clear();
         mOverlayQuad.Finalize();
         if(glIsProgram(mOverlayProgram))
         {
@@ -683,6 +698,16 @@ void main()
     }
     void OpenGLRenderer::DetachWindow ( void* aWindowId )
     {
+        auto overlay_it = mOverlayTextureCache.find ( aWindowId );
+        if ( overlay_it != mOverlayTextureCache.end() )
+        {
+            if ( glIsTexture ( overlay_it->second.texture ) )
+            {
+                glDeleteTextures ( 1, &overlay_it->second.texture );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            mOverlayTextureCache.erase ( overlay_it );
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -797,6 +822,8 @@ void main()
     void OpenGLRenderer::RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay )
     {
         const uint8_t* pixels = aGuiOverlay.GetPixels();
+        const uint32_t width = aGuiOverlay.GetWidth();
+        const uint32_t height = aGuiOverlay.GetHeight();
         if ( !pixels || !aGuiOverlay.GetWidth() || !aGuiOverlay.GetHeight() )
         {
             return;
@@ -808,26 +835,51 @@ void main()
             return;
         }
 
-        // Upload overlay pixels to a temporary texture
-        GLuint overlayTexture{};
-        glGenTextures ( 1, &overlayTexture );
+        auto& overlay = mOverlayTextureCache[aWindowId];
+        if ( !glIsTexture ( overlay.texture ) )
+        {
+            glGenTextures ( 1, &overlay.texture );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            overlay.width = 0;
+            overlay.height = 0;
+        }
+
+        glBindTexture ( GL_TEXTURE_2D, overlay.texture );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBindTexture ( GL_TEXTURE_2D, overlayTexture );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA,
-                       aGuiOverlay.GetWidth(), aGuiOverlay.GetHeight(),
-                       0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-        OPENGL_CHECK_ERROR_NO_THROW;
+
+        if ( overlay.width != width || overlay.height != height )
+        {
+            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA,
+                           width, height,
+                           0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            overlay.width = width;
+            overlay.height = height;
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+        else
+        {
+            glTexSubImage2D ( GL_TEXTURE_2D, 0,
+                              0, 0,
+                              width, height,
+                              GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
 
         // Save state
         GLboolean depthTestEnabled = glIsEnabled ( GL_DEPTH_TEST );
         GLboolean blendEnabled = glIsEnabled ( GL_BLEND );
         GLint previousProgram{};
+        GLint previousVertexArray{};
         glGetIntegerv ( GL_CURRENT_PROGRAM, &previousProgram );
+        glGetIntegerv ( GL_VERTEX_ARRAY_BINDING, &previousVertexArray );
 
         // Set up for overlay rendering
         glDisable ( GL_DEPTH_TEST );
@@ -839,9 +891,11 @@ void main()
 
         glUseProgram ( mOverlayProgram );
         OPENGL_CHECK_ERROR_NO_THROW;
+        glBindVertexArray ( mVertexArrayObject );
+        OPENGL_CHECK_ERROR_NO_THROW;
         glActiveTexture ( GL_TEXTURE0 );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBindTexture ( GL_TEXTURE_2D, overlayTexture );
+        glBindTexture ( GL_TEXTURE_2D, overlay.texture );
         OPENGL_CHECK_ERROR_NO_THROW;
 
         glBindBuffer ( GL_ARRAY_BUFFER, mOverlayQuad.GetBufferId() );
@@ -862,6 +916,8 @@ void main()
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindBuffer ( GL_ARRAY_BUFFER, 0 );
         OPENGL_CHECK_ERROR_NO_THROW;
+        glBindVertexArray ( static_cast<GLuint> ( previousVertexArray ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
 
         // Restore state
         glUseProgram ( previousProgram );
@@ -876,8 +932,6 @@ void main()
         }
 
         glBindTexture ( GL_TEXTURE_2D, 0 );
-        OPENGL_CHECK_ERROR_NO_THROW;
-        glDeleteTextures ( 1, &overlayTexture );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 }
