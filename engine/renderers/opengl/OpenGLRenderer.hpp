@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLRENDERER_HPP
 #define AEONGAMES_OPENGLRENDERER_HPP
 
+#include <cstdint>
 #include <unordered_map>
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Transform.hpp"
@@ -131,6 +132,14 @@ namespace AeonGames
         GLuint mOverlayProgram{};
         /// Overlay quadrilateral.
         OpenGLBuffer mOverlayQuad{};
+        /// Per-window cached overlay textures, recreated only when size changes.
+        struct OverlayTextureCache
+        {
+            GLuint texture{};
+            uint32_t width{};
+            uint32_t height{};
+        };
+        std::unordered_map<void*, OverlayTextureCache> mOverlayTextureCache{};
         /**@}*/
         OpenGLPipeline* mCurrentPipeline{nullptr}; ///< Currently bound pipeline.
         std::unordered_map<size_t, OpenGLPipeline> mPipelineStore{}; ///< Loaded pipeline cache.
