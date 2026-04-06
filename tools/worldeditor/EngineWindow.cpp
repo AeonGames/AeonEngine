@@ -308,12 +308,13 @@ namespace AeonGames
                 */
                 if ( mScene && mScene->GetChildrenCount() )
                 {
+                    static constexpr uint32_t camera_component_id = crc32r ( "Camera", 6 );
                     const Frustum& frustum { qWorldEditorApp->GetRenderer()->GetFrustum ( mWinId ) };
                     mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
                     {
-                        if ( &aNode == mScene->GetCamera() )
+                        if ( aNode.GetComponent ( camera_component_id ) != nullptr )
                         {
-                            /* This renders the scene current camera node's frustum */
+                            /* Render a wireframe frustum for every camera node in the scene. */
                             Matrix4x4 projection_matrix{};
                             projection_matrix.Perspective ( mScene->GetFieldOfView(), mAspectRatio, mScene->GetNear(), mScene->GetFar() );
                             projection_matrix.Invert();

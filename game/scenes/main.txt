@@ -3,8 +3,8 @@ name: "Scene"
 camera {
   node: "Camera"
   field_of_view: 60
-  near_plane: 1
-  far_plane: 16000
+  near_plane: 30
+  far_plane: 1600
 }
 node {
   name: "Camera"
@@ -15,11 +15,14 @@ node {
       z: 1
     }
     Rotation {
-      w: 6.12303177e-017
-      z: 1
+      w: 1.16832967e-17
+      x: 6.01053521e-17
+      y: 0.190809026
+      z: -0.981627285
     }
     Translation {
-      y: 200
+      y: 190
+      z: 160
     }
   }
   component {
@@ -30,16 +33,16 @@ node {
     }
     property {
       name: "Near Plane"
-      float: 1
+      float: 30
     }
     property {
       name: "Far Plane"
-      float: 16000
+      float: 1600
     }
   }
 }
 node {
-  name: "Banner"
+  name: "Player"
   local {
     Scale {
       x: 1
@@ -56,7 +59,7 @@ node {
     name: "Model Component"
     property {
       name: "Model"
-      string: "Medieval/models/Banner_01.txt"
+      string: "aerin/aerin.txt"
     }
     property {
       name: "Active Animation"

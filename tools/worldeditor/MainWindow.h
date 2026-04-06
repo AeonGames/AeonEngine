@@ -42,6 +42,7 @@ namespace AeonGames
         void on_actionNewShader_triggered();
         void on_actionOpen_triggered();
         void on_actionSave_triggered();
+        void on_actionSaveAs_triggered();
         void on_actionExit_triggered();
         void on_actionCamera_triggered();
         void fieldOfViewChanged ( double aFieldOfView );

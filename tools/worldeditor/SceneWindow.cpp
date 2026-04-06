@@ -344,13 +344,32 @@ namespace AeonGames
         std::string buffer ( ( std::istreambuf_iterator<char> ( file ) ), std::istreambuf_iterator<char>() );
         file.close();
         mSceneModel.Deserialize ( buffer );
+        mFilePath = mFilename;
     }
-    void SceneWindow::Save ( const std::string& mFilename ) const
+    void SceneWindow::Save ( const std::string& mFilename )
     {
         std::string scene = mSceneModel.Serialize ( false );
         std::ofstream scene_file ( mFilename, std::ifstream::out );
         scene_file.write ( scene.data(), scene.size() );
         scene_file.close();
+        mFilePath = mFilename;
+    }
+    bool SceneWindow::Save()
+    {
+        if ( mFilePath.empty() )
+        {
+            return false;
+        }
+        Save ( mFilePath );
+        return true;
+    }
+    bool SceneWindow::HasFilePath() const
+    {
+        return !mFilePath.empty();
+    }
+    const std::string& SceneWindow::GetFilePath() const
+    {
+        return mFilePath;
     }
     void SceneWindow::SetFieldOfView ( float aFieldOfView )
     {
