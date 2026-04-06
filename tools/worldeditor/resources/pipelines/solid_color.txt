@@ -19,7 +19,7 @@ vert:
   "layout(location = 0) in vec3 VertexPosition;\n"
   "void main()\n"
   "{\n"
-  "gl_Position = ProjectionMatrix * ViewMatrix * /* ModelMatrix **/ vec4(VertexPosition, 1.0);\n"
+  "gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(VertexPosition, 1.0);\n"
   "}\n"
 
 frag:

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2020,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2020,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ int Main ( int argc, char *argv[] )
         {
             if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )
             {
-                window = std::make_unique<AeonGames::Window> ( aIdentifier.GetString(), 0, 0, 640, 480, fullscreen );
+                window = std::make_unique<AeonGames::Window> ( aIdentifier.GetString(), 0, 0, 1280, 720, fullscreen );
                 return false;
             }
             return true;

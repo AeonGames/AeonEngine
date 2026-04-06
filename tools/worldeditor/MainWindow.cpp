@@ -66,6 +66,7 @@ namespace AeonGames
         mdiSubWindow->showMaximized();
         mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
         mUi.actionSave->setEnabled ( true );
+        mUi.actionSaveAs->setEnabled ( true );
     }
 
     void MainWindow::on_actionOpen_triggered()
@@ -88,6 +89,7 @@ namespace AeonGames
             sceneWindow->Open ( fileinfo.absoluteFilePath().toStdString() );
             /** @todo handle open failure. */
             mUi.actionSave->setEnabled ( true );
+            mUi.actionSaveAs->setEnabled ( true );
         }
     }
 
@@ -99,17 +101,44 @@ namespace AeonGames
         {
             return;
         }
+        SceneWindow* sceneWindow = reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() );
+        if ( sceneWindow == nullptr )
+        {
+            return;
+        }
+        if ( sceneWindow->Save() )
+        {
+            if ( sceneWindow->HasFilePath() )
+            {
+                mdiSubWindow->setWindowTitle ( QString::fromStdString ( sceneWindow->GetFilePath() ) );
+            }
+            statusBar()->showMessage ( tr ( "File saved" ), 3000 );
+            return;
+        }
+        on_actionSaveAs_triggered();
+    }
+
+    void MainWindow::on_actionSaveAs_triggered()
+    {
+        QMdiSubWindow*
+        mdiSubWindow = mUi.mdiArea->currentSubWindow ();
+        if ( !mdiSubWindow )
+        {
+            return;
+        }
+        SceneWindow* sceneWindow = reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() );
+        if ( sceneWindow == nullptr )
+        {
+            return;
+        }
         QString filename = QFileDialog::getSaveFileName ( this,
                            tr ( "Save Scene" ),
-                           tr ( "" ),
+                           sceneWindow->HasFilePath() ? QString::fromStdString ( sceneWindow->GetFilePath() ) : tr ( "" ),
                            tr ( "Scene Files (*.scn *.txt)" ) );
         if ( ! ( filename.isEmpty() || filename.isNull() ) )
         {
-            SceneWindow* sceneWindow = reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() );
-            if ( sceneWindow )
-            {
-                sceneWindow->Save ( filename.toStdString() );
-            }
+            sceneWindow->Save ( filename.toStdString() );
+            mdiSubWindow->setWindowTitle ( filename );
         }
     }
 
@@ -137,6 +166,7 @@ namespace AeonGames
         mdiSubWindow->showMaximized();
         mdiSubWindow->setMinimumSize ( QSize ( 128, 128 ) );
         mUi.actionSave->setEnabled ( true );
+        mUi.actionSaveAs->setEnabled ( true );
     }
 
     void MainWindow::fieldOfViewChanged ( double aFieldOfView )

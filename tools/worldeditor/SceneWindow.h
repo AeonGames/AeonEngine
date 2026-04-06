@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <QList>
 #include <memory>
+#include <string>
 #include "ui_SceneWindow.h"
 #include "models/SceneModel.h"
 #include "models/ComponentListModel.h"
@@ -50,7 +51,15 @@ namespace AeonGames
          * @brief Save the scene to a file.
          * @param mFilename Path to the output file.
          */
-        void Save ( const std::string& mFilename ) const;
+        void Save ( const std::string& mFilename );
+        /** @brief Save using current file path if available.
+         *  @return true if saved, false when there is no current path.
+         */
+        bool Save();
+        /** @brief Get whether this scene has a current file path. */
+        bool HasFilePath() const;
+        /** @brief Get current file path for this scene. */
+        const std::string& GetFilePath() const;
         /**
          * @brief Set the camera field of view.
          * @param aFieldOfView Field of view in degrees.
@@ -91,6 +100,7 @@ namespace AeonGames
         PropertyDelegate mPropertyDelegate{};
         EngineWindow* mEngineWindow{};
         QList<QAction *> mComponentAddActions{};
+        std::string mFilePath{};
     };
 }
 #endif
