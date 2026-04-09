@@ -67,7 +67,6 @@ set(ENGINE_CORE_HEADERS
     include/Configuration.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/Platform.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.hpp
-    ${CMAKE_SOURCE_DIR}/include/aeongames/FlyWeight.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Component.hpp

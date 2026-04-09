@@ -36,7 +36,6 @@ set(TEST_SRCS
     ContainerTests.cpp
     DecoderTests.cpp
     DependencyMapTests.cpp
-    FlyWeightTests.cpp
     CRCTests.cpp
     SceneTests.cpp
     MatrixTests.cpp
