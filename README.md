@@ -6,41 +6,89 @@
 
 [![Aeon Games](https://www.aeongames.com/AeonBlack.svg)](https://aeongames.com)
 
+AeonEngine is a cross-platform, plugin-based 3D game engine written in C++. It supports multiple rendering backends, uses Protocol Buffers for asset serialization, and integrates with Blender for content creation workflows.
+
 This is the 3rd iteration of the engine, the first one was started circa 1996 and was lost on a hard drive crash, the second one was started circa 2001 and still exists, but is a mess and a patchwork of collected ideas of 15 years of trying to keep up.
 
-THIS IS A WORK IN PROGRESS.
+> **⚠️ THIS IS A WORK IN PROGRESS.**
+
+---
+
+## ✨ Features
+
+### Rendering
+
+- **Vulkan** — Primary renderer with SPIR-V shader compilation via glslang. On macOS, Vulkan is provided through MoltenVK.
+- **OpenGL 4.5** — Secondary renderer using core profile. Disabled on macOS (Apple does not support OpenGL 4.5).
+- **Minimum common denominator** design — All uniforms use Uniform Buffer Objects (UBOs) so the same shaders work identically across Vulkan, OpenGL, and potential future backends (DirectX, Metal).
+
+### Engine Subsystems
+
+| Subsystem | Description |
+|-----------|-------------|
+| **Scene Graph** | Hierarchical node-based scene management with component system |
+| **Math** | Vector2/3/4, Quaternion, Matrix3x3/4x4, Transform, AABB, Frustum, Plane |
+| **Materials** | Material property system with texture samplers |
+| **Skeletal Animation** | Bone hierarchies, keyframe animation, skeleton/animation resources |
+| **Sound** | Audio via PortAudio with Ogg Vorbis decoding |
+| **Resource Cache** | Centralized resource loading with caching and factory pattern |
+| **GUI Overlay** | Optional in-engine GUI via [AeonGUI](https://github.com/AeonGames/AeonGUI) (Cairo backend) |
+
+### Components
+
+- **Camera** — First-person/third-person camera component
+- **ModelComponent** — Model rendering component (mesh + material + pipeline)
+- **PointLight** — Point light for scene illumination
+
+### Asset Pipeline
+
+All game assets are serialized using [Protocol Buffers](https://protobuf.dev/), including meshes, materials, pipelines, skeletons, animations, scenes, and models.
+
+### Tools
+
+- **aeontool** — Command-line utility for asset conversion (binary ↔ text), packaging, base64 encoding, and pipeline compilation.
+- **WorldEditor** — Qt6-based GUI editor for scene and node hierarchy editing, component management, property inspection, and renderer selection.
+- **Blender Addons** — Export meshes, skeletons, animations, models, collisions, images, and scenes directly from Blender to AeonEngine formats.
+
+### Platforms
+
+| Platform | Toolchains | Notes |
+|----------|-----------|-------|
+| **Windows** | MSVC (Visual Studio 2022+), MSYS2 (MinGW64, Clang64, UCRT64) | Full support (Vulkan + OpenGL) |
+| **Linux** | GCC, Clang | Full support (Vulkan + OpenGL) |
+| **macOS** | Apple Clang (via Homebrew) | Vulkan only (via MoltenVK), no standalone application |
+
+---
 
 ## 🚀 Building
 
-The AeonEngine supports building on multiple platforms with different toolchains. Choose the method that best fits your development environment.
+The AeonEngine uses CMake and supports building on multiple platforms. Choose the method that best fits your environment.
 
-### 🪟 Windows with Visual Studio Code and MSYS2 MinGW
+### 🪟 Windows with MSYS2 MinGW
 
-You do not need to install [Visual Studio Code](https://code.visualstudio.com/) just to build the project,
-but it is highly recommended that you do so if you intend on changing the code, or if you want to develop a game using MSYS2/MinGW.
+[Visual Studio Code](https://code.visualstudio.com/) is not required to build, but is highly recommended for development. The project includes VS Code configuration templates for tasks, launch, and settings.
 
 #### 📦 Install MSYS2
 
-Go to [MSYS2](https://www.msys2.org/) and install MSYS2, while the 32 bit version of the MinGW compiler should work, development is focused on 64 bit, so get that if you don't know what to chose.
+Go to [MSYS2](https://www.msys2.org/) and install MSYS2. Development targets 64-bit, so choose that if you are unsure.
 
-#### 📋 Install required Packages
+#### 📋 Install Required Packages
 
-Bring up an MSYS2 bash terminal for MinGW and update all of your installed packages:
+Open an MSYS2 terminal and update all installed packages:
 
 ```bash
-pacman -Syuu --no-confirm
+pacman -Syuu --noconfirm
 ```
 
-Follow the instructions, you may have to forcefully shut down the terminal and run the same command at least one time.
-After pacman reports no more updates, its time to install all our engine dependencies.
+You may need to close the terminal and run the command again until no more updates are reported.
 
-First install general required system tools:
+Install general system tools:
 
 ```bash
 pacman -S --needed --noconfirm git pactoys make
 ```
 
-The pactoys package installs pacboy which allows instalation of the required packages for the different toolchains as required, so pick a subplatform, either mingw64, clang64 or ucrt64, run the corresponding terminal and proceed to install the required packages:
+The `pactoys` package provides `pacboy`, which installs packages for specific toolchains. Pick a subplatform (mingw64, clang64, or ucrt64), open the corresponding terminal, and install the required packages:
 
 ```bash
 pacboy -S --needed --noconfirm \
@@ -62,32 +110,18 @@ pacboy -S --needed --noconfirm \
     gtest:p
 ```
 
-This has to be done for each required subplatform.
+Repeat for each subplatform you want to target.
 
-#### Install autopep8 and cmake-format (optional, only if you want to create a pull request, or make changes to your own fork)
-
-The CMake script installs a git pre-commit hook to format code using astyle, autopep8 (for the Blender scripts) and cmake-format,
-so you will need these if you want to create any commits.
-
-```bash
-python3 -m pip install autopep8 cmake-format
-```
-
-#### Clone the Repository
+#### 📥 Clone and Build
 
 ```bash
 git clone https://github.com/AeonGames/AeonEngine.git
 cd AeonEngine
-```
-
-#### Build with CMake
-
-```bash
 cmake -G "MSYS Makefiles" -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-#### Run Tests
+#### 🧪 Run Tests
 
 ```bash
 cd build
@@ -96,11 +130,7 @@ ctest --output-on-failure
 
 #### Edit with Visual Studio Code
 
-You can now use the "Open Folder" option in VS Code to open the topmost repo folder and then go to View->Terminal,
-where you'll get prompted to allow bash to run, accept and now you can issue your make commands directly from inside VS Code.
-
-You should be able to run the various executables directly from the terminal or from the debug environment,
-if you run them from the debug environment they will be run through GDB, so you can set breakpoints or issue commands from the Debug Console.
+Open the repository root folder in VS Code (File → Open Folder). Go to View → Terminal to get an integrated bash terminal where you can run build commands directly. Running executables from the debug environment uses GDB, supporting breakpoints and the Debug Console.
 
 ### 🐧 Ubuntu/Linux
 
@@ -109,67 +139,64 @@ if you run them from the debug environment they will be run through GDB, so you 
 ```bash
 sudo apt-get update
 sudo apt-get install -y \
-  build-essential \
-  software-properties-common \
-  gcc \
-  g++ \
-  llvm \
-  clang \
-  sed \
-  python3 \
-  tar \
-  wget \
-  cmake \
-  autoconf \
-  automake \
-  libtool \
-  curl \
-  make \
-  unzip \
-  zlib1g-dev \
-  libpng-dev \
-  vim-common \
-  git \
-  portaudio19-dev \
-  libogg-dev \
-  libvorbis-dev \
-  googletest \
-  libglu1-mesa-dev \
-  freeglut3-dev \
-  mesa-common-dev \
-  libcairo2-dev \
-  libprotobuf-dev \
-  protobuf-compiler \
-  mesa-vulkan-drivers \
-  libvulkan1 \
-  libvulkan-dev \
-  qt6-base-dev \
-  qt6-tools-dev \
-  qt6-tools-dev-tools \
-  qt6-l10n-tools \
-  libxkbcommon-dev \
-  glslang-dev \
-  glslang-tools \
-  libglx-mesa0 \
-  vulkan-validationlayers
+    build-essential \
+    software-properties-common \
+    gcc \
+    g++ \
+    llvm \
+    clang \
+    sed \
+    python3 \
+    tar \
+    wget \
+    cmake \
+    autoconf \
+    automake \
+    libtool \
+    curl \
+    make \
+    unzip \
+    zlib1g-dev \
+    libpng-dev \
+    vim-common \
+    git \
+    portaudio19-dev \
+    libogg-dev \
+    libvorbis-dev \
+    googletest \
+    libglu1-mesa-dev \
+    freeglut3-dev \
+    mesa-common-dev \
+    libcairo2-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
+    mesa-vulkan-drivers \
+    libvulkan1 \
+    libvulkan-dev \
+    qt6-base-dev \
+    qt6-tools-dev \
+    qt6-tools-dev-tools \
+    qt6-l10n-tools \
+    libxkbcommon-dev \
+    glslang-dev \
+    glslang-tools \
+    libglx-mesa0 \
+    vulkan-validationlayers
 ```
 
-#### 📥 Clone the Repository
+#### 📥 Clone and Build
+
+With GCC:
 
 ```bash
 git clone https://github.com/AeonGames/AeonEngine.git
 cd AeonEngine
-```
-
-#### 🔨 Build with CMake
-
-For GCC:
-```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-For Clang:
+With Clang:
+
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/clang-toolchain.cmake
 cmake --build build
@@ -184,48 +211,34 @@ ctest --output-on-failure
 
 ### 🪟 Windows with Visual Studio
 
-Building with Visual Studio uses [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) for dependency management. The engine requires Visual Studio 2022 or later.
+Dependency management uses [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg). Requires Visual Studio 2022 or later.
 
-#### 📦 VCPKG
+#### Prerequisites
 
-The vcpkg executable can now be installed directly from the Visual Studio Updater, the easiest is to install that, the project is already set to automatically download and build the required packages, you may just need to find where the scripts\buildsystems\vcpkg.cmake script is to feed it to cmake.
+1. **vcpkg** — Install via the Visual Studio Installer. The project includes a `vcpkg.json` manifest that automatically downloads and builds required packages—you just need to point CMake at the `vcpkg.cmake` toolchain file.
+2. **Vulkan SDK** — Download and install from [LunarG](https://vulkan.lunarg.com/sdk/home).
+3. **Git for Windows** — Download and install from [git-scm.com](https://git-scm.com/downloads/win).
 
-#### 🌋 Install the Vulkan SDK
+#### 📥 Clone and Build
 
-Download and install the Vulkan SDK from [the LunarG website](https://vulkan.lunarg.com/sdk/home).
-
-#### 🌋 Install Git for Windows
-
-Download and install Git for Windows from [git-scm.com](https://git-scm.com/downloads/win).
-
-#### 📥 Clone the Repository
-
-Open a VS Developer terminal, it can be a simple CMD terminal or Powershell.
+Open a VS Developer Command Prompt or Developer PowerShell:
 
 ```cmd
 git clone https://github.com/AeonGames/AeonEngine.git
 cd AeonEngine
-```
-
-#### 🔨 Generate Solution Files with CMake
-
-```cmd
 cmake -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -B build
+cmake --build build --config Release
 ```
 
-#### 🚧 Build
-
-```cmd
-cmake --build build
-```
-
-Or open the generated solution file in Visual Studio and build from the IDE.
+Or open the generated `.sln` file in Visual Studio and build from the IDE.
 
 ### 🍎 macOS
 
+> **Note:** OpenGL 4.5 is not supported on macOS. Only the Vulkan renderer (via MoltenVK) is available. The standalone application is also disabled on macOS.
+
 #### 🍺 Install Dependencies with Homebrew
 
-First, make sure you have [Homebrew](https://brew.sh/) installed, then install the required dependencies:
+Make sure [Homebrew](https://brew.sh/) is installed, then:
 
 ```bash
 brew update
@@ -246,16 +259,11 @@ brew install \
     molten-vk
 ```
 
-#### 📥 Clone the Repository
+#### 📥 Clone and Build
 
 ```bash
 git clone https://github.com/AeonGames/AeonEngine.git
 cd AeonEngine
-```
-
-#### 🔨 Build with CMake
-
-```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
@@ -267,14 +275,66 @@ cd build
 ctest --output-on-failure
 ```
 
-## Miscelaneus
+---
 
-### Enable/Disable Renderers
+## ⚙️ CMake Options
 
-The BUILD_&lt;API NAME&gt;_RENDERER cmake variable can be used to disable or enable renderers, by default all renderers available on the platform are build, unless one is temporarily disabled due to it being broken or under construction.
+| Option | Default | Description |
+|--------|---------|-------------|
+| `BUILD_VULKAN_RENDERER` | `ON` | Build the Vulkan renderer plugin |
+| `BUILD_OPENGL_RENDERER` | `ON` | Build the OpenGL 4.5 renderer plugin (forced `OFF` on macOS) |
+| `BUILD_STANDALONE_APPLICATION` | `ON` | Build the standalone application/viewer (forced `OFF` on macOS) |
+| `USE_AEONGUI` | `OFF` | Enable AeonGUI library for in-engine GUI overlays |
+| `USE_CLANG_TIDY` | `OFF` | Run clang-tidy static analysis during build (requires clang-tidy) |
+| `PROXY` | (empty) | Proxy server URL for network downloads during build |
 
-In general the following command can be used:
+Example — build with only the Vulkan renderer:
 
 ```bash
-cmake -DBUILD_VULKAN_RENDERER:boolean=<ON/OFF> -DBUILD_OPENGL_RENDERER:boolean=<ON/OFF> ..
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_OPENGL_RENDERER=OFF
+cmake --build build
 ```
+
+---
+
+## 🔧 Contributing
+
+The CMake configuration installs a git pre-commit hook that formats code using **astyle** (C++), **autopep8** (Python/Blender scripts), and **cmake-format** (CMake files). Install the formatters before creating commits:
+
+```bash
+python3 -m pip install autopep8 cmake-format
+```
+
+---
+
+## 📁 Project Structure
+
+```
+AeonEngine/
+├── application/     # Standalone game launcher/viewer
+├── assets/          # Bundled demo assets (Aerin model, Sponza scene)
+├── cmake/           # CMake modules, toolchain files, and templates
+├── engine/          # Core engine library
+│   ├── components/  #   Camera, ModelComponent, PointLight
+│   ├── core/        #   Scene, Node, Renderer, Pipeline, Material, Mesh, etc.
+│   ├── gui/         #   AeonGUI integration (optional)
+│   ├── images/      #   Image loaders (PNG)
+│   ├── math/        #   Vector, Matrix, Quaternion, Transform, AABB, Frustum
+│   ├── renderers/   #   Vulkan and OpenGL renderer plugins
+│   └── sound/       #   PortAudio + Ogg Vorbis audio
+├── game/            # Game data (scenes, shaders, materials, meshes, models)
+├── include/         # Public engine headers (aeongames/)
+├── proto/           # Protocol Buffer definitions for all asset types
+├── tests/           # GTest unit tests
+├── tools/
+│   ├── aeontool/    #   CLI asset conversion and packaging tool
+│   ├── blender/     #   Blender exporter addons
+│   └── worldeditor/ #   Qt6 scene editor GUI
+└── vcpkg-port/      # Custom vcpkg port overlays
+```
+
+---
+
+## 📜 License
+
+Licensed under the [Apache License, Version 2.0](LICENSE.md).
