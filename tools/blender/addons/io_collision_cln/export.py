@@ -26,12 +26,12 @@ import google.protobuf.text_format
 class GTYKdNode():
     kdnode_struct = struct.Struct('Ifii')
     def __init__(self):
-        self.axis       = 0
-        self.distance   = 0
+        self.axis = 0
+        self.distance = 0
         self.near_index = 0
-        self.far_index  = 0
-        self.near       = None
-        self.far        = None
+        self.far_index = 0
+        self.near = None
+        self.far = None
     def write(self,file):
         file.write(GTYKdNode.kdnode_struct.pack(self.axis,self.distance,self.near_index,self.far_index))
 
@@ -40,8 +40,8 @@ class GTYKdLeaf():
     kdleaf_index_struct = struct.Struct('I')
     def __init__(self):
         self.brush_indices = []
-        self.count    = 0
-        self.offset   = 0
+        self.count = 0
+        self.offset = 0
     def write_brush_indices(self,file):
         self.count = len(self.brush_indices)
         if self.count == 1:
@@ -83,16 +83,16 @@ class CLN_OT_exporter(bpy.types.Operator):
     def addplane(self, plane):
         #print("Adding Plane",plane)
         for iplane in self.planes:
-            if ((math.fabs(plane[0] - iplane[0]) <= 0.00001) and \
-                (math.fabs(plane[1] - iplane[1]) <= 0.00001) and \
-                (math.fabs(plane[2] - iplane[2]) <= 0.00001) and \
+            if ((math.fabs(plane[0] - iplane[0]) <= 0.00001) and
+                (math.fabs(plane[1] - iplane[1]) <= 0.00001) and
+                (math.fabs(plane[2] - iplane[2]) <= 0.00001) and
                 (math.fabs(plane[3] - iplane[3]) <= 0.00001)):
                     #print("Exact Match",plane,iplane)
                     return self.planes.index(iplane)
 
-            elif ((math.fabs(-plane[0] - iplane[0]) <= 0.00001) and \
-                  (math.fabs(-plane[1] - iplane[1]) <= 0.00001) and \
-                  (math.fabs(-plane[2] - iplane[2]) <= 0.00001) and \
+            elif ((math.fabs(-plane[0] - iplane[0]) <= 0.00001) and
+                  (math.fabs(-plane[1] - iplane[1]) <= 0.00001) and
+                  (math.fabs(-plane[2] - iplane[2]) <= 0.00001) and
                   (math.fabs(-plane[3] - iplane[3]) <= 0.00001)):
                     #print("Flipped Plane")
                     return -(self.planes.index(iplane)+1)
@@ -118,7 +118,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         node.distance = points[median][node.axis]
         next_axis_index = (axis_index+1) % len(axes)
         node.near = self.build_kd_tree(points[:median],axes,next_axis_index)
-        node.far =  self.build_kd_tree(points[median+1:],axes,next_axis_index)
+        node.far = self.build_kd_tree(points[median+1:],axes,next_axis_index)
         if type(node.near) == GTYKdNode:
             node.near_index = self.kdtreenodes.index(node.near)
         else:
@@ -145,7 +145,7 @@ class CLN_OT_exporter(bpy.types.Operator):
             if side == -1:
                 behind = behind+1
             elif side == 1:
-                front=front+1;
+                front=front+1
         # If there are vertices on both sides of the plane, the polygon is straddling
         if behind != 0 and front != 0:
             return 0
@@ -156,7 +156,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         # Ditto, the polygon lies behind the plane if no vertices in front of
         # the plane, and one or more vertices behind the plane
         if behind != 0:
-            return -1;
+            return -1
         # All vertices lie on the plane so the polygon is coplanar with the plane,
         # decide which way to send it based on the polygon normal's major axis.
         if polygon.normal[node.axis] < 0.0:
@@ -180,10 +180,10 @@ class CLN_OT_exporter(bpy.types.Operator):
         print("Processing Mesh ",mesh_object.name," for collision data.")
         mesh = mesh_object.data
         collision_faces = {}
-        count = 1;
+        count = 1
         for polygon in mesh.polygons:
             print("Processing polygon ",count," out of ",len(mesh.polygons))
-            count = count+1;
+            count = count+1
             # Calculate polygon 6DOP
             sixdop =[
                         float('-inf'),
@@ -194,7 +194,7 @@ class CLN_OT_exporter(bpy.types.Operator):
                         float('inf')
                     ]
             for index in polygon.vertices:
-                # TODO: Apply transforms before calculating sixdop.
+                # Apply transforms before calculating sixdop.
                 sixdop[0] = (max(mesh.vertices[index].co[0],sixdop[0]))
                 sixdop[1] = (max(mesh.vertices[index].co[1],sixdop[1]))
                 sixdop[2] = (max(mesh.vertices[index].co[2],sixdop[2]))
@@ -209,10 +209,10 @@ class CLN_OT_exporter(bpy.types.Operator):
             print("6DOP",collision_faces[polygon])
 
             # Calculate face plane if face normal does not match a 6DOP
-            if  not (math.fabs(polygon.normal[0]) >= 0.999999 and math.fabs(polygon.normal[0]) <= 1.000001) and \
+            if not (math.fabs(polygon.normal[0]) >= 0.999999 and math.fabs(polygon.normal[0]) <= 1.000001) and \
                 not (math.fabs(polygon.normal[1]) >= 0.999999 and math.fabs(polygon.normal[1]) <= 1.000001) and \
                 not (math.fabs(polygon.normal[2]) >= 0.999999 and math.fabs(polygon.normal[2]) <= 1.000001):
-                plane  = [polygon.normal[0],polygon.normal[1],polygon.normal[2],polygon.normal.dot(mesh.vertices[polygon.vertices[0]].co)]
+                plane = [polygon.normal[0],polygon.normal[1],polygon.normal[2],polygon.normal.dot(mesh.vertices[polygon.vertices[0]].co)]
                 print("Polygon Plane: ", plane)
                 collision_faces[polygon].append(self.addplane(plane))
             #else:
@@ -222,7 +222,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         count = 1
         for edge in mesh.edges:
             print("Processing edge ",count," out of ",len(mesh.edges))
-            count = count+1;
+            count = count+1
             adjacent_faces = []
             for polygon in mesh.polygons:
                 if edge.key in polygon.edge_keys:
@@ -241,13 +241,13 @@ class CLN_OT_exporter(bpy.types.Operator):
                         continue
                     elif (mesh.vertices[vertex].co[0] * normal[0] + mesh.vertices[vertex].co[1] * normal[1] + mesh.vertices[vertex].co[2] * normal[2] - distance) >= 0.000001:
                         # plane is pointing in the wrong direction, flip
-                        normal   *= -1
+                        normal *= -1
                         distance *= -1
                         break
 
                 plane_index = self.addplane([normal[0],normal[1],normal[2],distance])
                 collision_faces[adjacent_faces[0]].append(plane_index)
-                # TODO: Add extra bevelling plane to edge using face normal and the normal of the created plane.
+                # Add extra bevelling plane to edge using face normal and the normal of the created plane.
             elif len(adjacent_faces) == 2:
                 # edge is manifold (shared by two faces)
                 # -- This code should work for faces with an angle >= 180 degrees --
@@ -266,7 +266,7 @@ class CLN_OT_exporter(bpy.types.Operator):
                         # Same plane for both faces.
                         collision_faces[adjacent_faces[0]].append(plane_index)
                         collision_faces[adjacent_faces[1]].append(plane_index)
-                        # TODO: Refactor this later.
+                        # Refactor this later.
                         edgedir = mesh.vertices[edge.vertices[0]].co - mesh.vertices[edge.vertices[1]].co
                         edgedir.normalize()
                         normal = normal.cross(edgedir)
@@ -311,9 +311,9 @@ class CLN_OT_exporter(bpy.types.Operator):
         count = 1
         for vertex in mesh.vertices:
             print("Processing vertex ",count," out of ",len(mesh.vertices))
-            count = count+1;
+            count = count+1
             distance = vertex.normal.dot(vertex.co)
-            #TODO: plane must only be added if the vertex is "sharp".
+            # Plane must only be added if the vertex is "sharp".
             plane_index = self.addplane([
                 vertex.normal[0],
                 vertex.normal[1],
@@ -333,13 +333,13 @@ class CLN_OT_exporter(bpy.types.Operator):
 
     def execute(self, context):
         # Initialize instance variables
-        self.planes         = [] # Collision
-        self.plane_indices  = [] # Collision
-        self.brushes        = [] # Polygon Brushes
-        self.kdpoints       = []
-        self.kdtreenodes    = []
-        self.kdtreeleaves   = []
-        self.materials      = {}
+        self.planes = [] # Collision
+        self.plane_indices = [] # Collision
+        self.brushes = [] # Polygon Brushes
+        self.kdpoints = []
+        self.kdtreenodes = []
+        self.kdtreeleaves = []
+        self.materials = {}
         
         seconds = time.time()
         bpy.ops.object.mode_set()
@@ -363,7 +363,7 @@ class CLN_OT_exporter(bpy.types.Operator):
             if (object.type=='MESH'):
                 self.process_collision_mesh(object)
                 # Store center, radii.
-                # TODO: Find a better/faster way to do this
+                # Find a better/faster way to do this
                 collision_buffer_min_x = min(
                     object.bound_box[0][0],
                     object.bound_box[1][0],
