@@ -57,7 +57,6 @@ class MSH_OT_exporterCommon():
                 vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
                             1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.WEIGHT_INDEX:
-                # TODO: Allow for different index size.
                 weights = []
                 for group in self.mesh.vertices[loop.vertex_index].groups:
                     if group.weight > 0:
@@ -214,18 +213,18 @@ class MSH_OT_exporterCommon():
         vertex_struct_string = ''
         # Position and Normal aren't optional (for now)
         attribute = mesh_buffer.Attribute.add()
-        attribute.Semantic   = mesh_pb2.AttributeMsg.POSITION
-        attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-        attribute.Size       = 3
-        attribute.Flags      = mesh_pb2.AttributeMsg.NONE
-        
+        attribute.Semantic = mesh_pb2.AttributeMsg.POSITION
+        attribute.Type = mesh_pb2.AttributeMsg.FLOAT
+        attribute.Size = 3
+        attribute.Flags = mesh_pb2.AttributeMsg.NONE
+
         vertex_struct_string += '3f'
 
         attribute = mesh_buffer.Attribute.add()
-        attribute.Semantic   = mesh_pb2.AttributeMsg.NORMAL
-        attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-        attribute.Size       = 3
-        attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+        attribute.Semantic = mesh_pb2.AttributeMsg.NORMAL
+        attribute.Type = mesh_pb2.AttributeMsg.FLOAT
+        attribute.Size = 3
+        attribute.Flags = mesh_pb2.AttributeMsg.NONE
         vertex_struct_string += '3f'
 
         if(len(mesh.uv_layers) > 0):
@@ -234,47 +233,47 @@ class MSH_OT_exporterCommon():
 
             if self.export_tangents:
                 attribute = mesh_buffer.Attribute.add()
-                attribute.Semantic   = mesh_pb2.AttributeMsg.TANGENT
-                attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-                attribute.Size       = 3
-                attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+                attribute.Semantic = mesh_pb2.AttributeMsg.TANGENT
+                attribute.Type = mesh_pb2.AttributeMsg.FLOAT
+                attribute.Size = 3
+                attribute.Flags = mesh_pb2.AttributeMsg.NONE
                 vertex_struct_string += '3f'
 
                 attribute = mesh_buffer.Attribute.add()
-                attribute.Semantic   = mesh_pb2.AttributeMsg.BITANGENT
-                attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-                attribute.Size       = 3
-                attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+                attribute.Semantic = mesh_pb2.AttributeMsg.BITANGENT
+                attribute.Type = mesh_pb2.AttributeMsg.FLOAT
+                attribute.Size = 3
+                attribute.Flags = mesh_pb2.AttributeMsg.NONE
                 vertex_struct_string += '3f'
 
             if self.export_uvs:
                 attribute = mesh_buffer.Attribute.add()
-                attribute.Semantic   = mesh_pb2.AttributeMsg.TEXCOORD
-                attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-                attribute.Size       = 2
-                attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+                attribute.Semantic = mesh_pb2.AttributeMsg.TEXCOORD
+                attribute.Type = mesh_pb2.AttributeMsg.FLOAT
+                attribute.Size = 2
+                attribute.Flags = mesh_pb2.AttributeMsg.NONE
                 vertex_struct_string += '2f'
 
         # Weights are only included if there is an armature modifier and export_weights is True.
         if self.armature is not None and self.export_weights:
             attribute = mesh_buffer.Attribute.add()
-            attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_INDEX
-            attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
-            attribute.Size       = 4
-            attribute.Flags      = mesh_pb2.AttributeMsg.INTEGER
+            attribute.Semantic = mesh_pb2.AttributeMsg.WEIGHT_INDEX
+            attribute.Type = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
+            attribute.Size = 4
+            attribute.Flags = mesh_pb2.AttributeMsg.INTEGER
             attribute = mesh_buffer.Attribute.add()
-            attribute.Semantic   = mesh_pb2.AttributeMsg.WEIGHT_VALUE
-            attribute.Type       = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
-            attribute.Size       = 4
-            attribute.Flags      = mesh_pb2.AttributeMsg.NORMALIZED
+            attribute.Semantic = mesh_pb2.AttributeMsg.WEIGHT_VALUE
+            attribute.Type = mesh_pb2.AttributeMsg.UNSIGNED_BYTE
+            attribute.Size = 4
+            attribute.Flags = mesh_pb2.AttributeMsg.NORMALIZED
             vertex_struct_string += '8B'
 
         if(len(mesh.color_attributes) > 0 and self.export_colors):
             attribute = mesh_buffer.Attribute.add()
-            attribute.Semantic   = mesh_pb2.AttributeMsg.COLOR
-            attribute.Type       = mesh_pb2.AttributeMsg.FLOAT
-            attribute.Size       = 4
-            attribute.Flags      = mesh_pb2.AttributeMsg.NONE
+            attribute.Semantic = mesh_pb2.AttributeMsg.COLOR
+            attribute.Type = mesh_pb2.AttributeMsg.FLOAT
+            attribute.Size = 4
+            attribute.Flags = mesh_pb2.AttributeMsg.NONE
             vertex_struct_string += '3f'
 
         # Generate Vertex Buffer--------------------------------------
@@ -326,26 +325,37 @@ class MSH_OT_exporterCommon():
             list(pool.map(lambda x: vertex_struct.pack(*x[1]), self.vertices)))
         print("Done")
 
-        index_struct = None
         # Write indices -----------------------------------
-        # TODO: Allow for zero index meshes.
-        mesh_buffer.IndexCount = len(self.indices)
+        # Only write an index buffer if it provides vertex deduplication benefit.
+        if len(self.vertices) < len(self.indices):
+            mesh_buffer.IndexCount = len(self.indices)
 
-        # Save memory space by using best fitting type for indices.
-        if len(self.vertices) < 0x100:
-            mesh_buffer.IndexSize = 1
-            index_struct = struct.Struct('B')
-        elif len(self.vertices) < 0x10000:
-            mesh_buffer.IndexSize = 2
-            index_struct = struct.Struct('H')
+            # Save memory space by using best fitting type for indices.
+            if len(self.vertices) < 0x100:
+                mesh_buffer.IndexSize = 1
+                index_struct = struct.Struct('B')
+            elif len(self.vertices) < 0x10000:
+                mesh_buffer.IndexSize = 2
+                index_struct = struct.Struct('H')
+            else:
+                mesh_buffer.IndexSize = 4
+                index_struct = struct.Struct('I')
+
+            print("Writing", mesh_buffer.IndexCount, "indices.")
+            mesh_buffer.IndexBuffer = b''.join(
+                list(pool.map(index_struct.pack, self.indices)))
+            print("Done")
         else:
-            mesh_buffer.IndexSize = 4
-            index_struct = struct.Struct('I')
-
-        print("Writting", mesh_buffer.IndexCount, "indices.")
-        mesh_buffer.IndexBuffer = b''.join(
-            list(pool.map(index_struct.pack, self.indices)))
-        print("Done")
+            # No index buffer: expand vertices into triangle-draw order
+            # so the GPU can render them sequentially.
+            print("Mesh does not benefit from an index buffer, expanding vertices.")
+            expanded_vertices = [self.vertices[i] for i in self.indices]
+            mesh_buffer.VertexCount = len(expanded_vertices)
+            mesh_buffer.VertexBuffer = b''.join(
+                list(pool.map(lambda x: vertex_struct.pack(*x[1]), expanded_vertices)))
+            mesh_buffer.IndexCount = 0
+            mesh_buffer.IndexSize = 0
+            print("Done")
         pool.close()
         pool.join()
 
