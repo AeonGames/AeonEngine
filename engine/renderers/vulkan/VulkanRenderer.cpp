@@ -174,7 +174,6 @@ namespace AeonGames
         assert ( mVkInstance && "mVkInstance is a nullptr." );
         if ( !mFunctionsLoaded && mVkInstance )
         {
-
             if ( ( vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT> ( vkGetInstanceProcAddr ( mVkInstance, "vkCreateDebugUtilsMessengerEXT" ) ) ) == nullptr )
             {
                 std::cout << LogLevel::Error << "vkGetInstanceProcAddr failed to load vkCreateDebugUtilsMessengerEXT" << std::endl;

@@ -161,6 +161,8 @@ namespace AeonGames
         GetConsoleMode ( hOut, &dwMode );
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         SetConsoleMode ( hOut, dwMode );
+        // Remove current directory from DLL search path (CWE-829)
+        SetDllDirectory ( "" );
 #endif
         ProcessOpts ( argc, argv, gOptionHandlers.data(), gOptionHandlers.size() );
         try

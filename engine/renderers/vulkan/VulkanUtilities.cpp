@@ -95,7 +95,6 @@ namespace AeonGames
         void*                                            aUserData
     )
     {
-
         if ( aMessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT )
         {
             std::cout << LogLevel::Info;
