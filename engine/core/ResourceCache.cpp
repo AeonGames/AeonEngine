@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ namespace AeonGames
         // Don't store nullptrs
         if ( pointer.GetRaw() )
         {
-            gResourceStore.emplace ( std::make_pair<> ( aKey, std::move ( pointer ) ) );
+            gResourceStore.emplace ( std::make_pair ( aKey, std::move ( pointer ) ) );
             return gResourceStore[aKey];
         }
         return unique_nullptr;

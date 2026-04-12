@@ -42,7 +42,7 @@ namespace AeonGames
         template <typename... Args>
         T* Store ( const K& k, Args... args )
         {
-            mStorage.emplace ( std::make_pair<> ( k, std::make_unique<T> ( args... ) ) );
+            mStorage.emplace ( std::make_pair ( k, std::make_unique<T> ( args... ) ) );
             return mStorage[k].get();
         }
         /**
@@ -53,7 +53,7 @@ namespace AeonGames
          */
         T* Store ( const K& k, std::unique_ptr<T>&& pointer )
         {
-            mStorage.emplace ( std::make_pair<> ( k, std::move ( pointer ) ) );
+            mStorage.emplace ( std::make_pair ( k, std::move ( pointer ) ) );
             return mStorage[k].get();
         }
         /**
@@ -133,7 +133,7 @@ namespace AeonGames
          */
         const UniqueAnyPtr& Store ( const K& k, UniqueAnyPtr&& pointer )
         {
-            mStorage.emplace ( std::make_pair<> ( k, std::move ( pointer ) ) );
+            mStorage.emplace ( std::make_pair ( k, std::move ( pointer ) ) );
             return mStorage[k];
         }
 

@@ -587,7 +587,6 @@ namespace AeonGames
             }
             for ( const auto& descriptor_set : descriptor_sets )
             {
-
                 const char* type_name{ ( descriptor_set->binding_count == 1 ) && descriptor_set->bindings[0]->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ?
                                        descriptor_set->bindings[0]->type_description->type_name : "Samplers"};
                 uint32_t hash = crc32i ( type_name,

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -130,7 +130,6 @@ namespace AeonGames
 
     const Vector3 operator* ( const Quaternion & lhs, const Vector3 & rhs )
     {
-
         float t1 = ( -lhs[1] * rhs[0] - lhs[2] * rhs[1] - lhs[3] * rhs[2] );
         float t2 = ( lhs[0] * rhs[0] + lhs[2] * rhs[2] - lhs[3] * rhs[1] );
         float t3 = ( lhs[0] * rhs[1] + lhs[3] * rhs[0] - lhs[1] * rhs[2] );
