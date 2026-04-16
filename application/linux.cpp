@@ -161,10 +161,12 @@ namespace AeonGames
             mInputSystem = ConstructInputSystem ( aIdentifier );
             return mInputSystem == nullptr;
         } );
+        SetInputSystem ( mInputSystem.get() );
     }
 
     Window::~Window()
     {
+        SetInputSystem ( nullptr );
         if ( mRenderer )
         {
             mRenderer->DetachWindow ( this );
@@ -219,35 +221,52 @@ namespace AeonGames
                 }
                 break;
                 case KeyPress:
-                    if ( mInputSystem )
+                {
+                    uint32_t key = XLookupKeysym ( &xevent.xkey, 0 );
+                    bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
+                    if ( !consumed && mInputSystem )
                     {
-                        mInputSystem->OnKeyEvent ( XLookupKeysym ( &xevent.xkey, 0 ), true );
+                        mInputSystem->OnKeyEvent ( key, true );
                     }
-                    break;
+                }
+                break;
                 case KeyRelease:
-                    if ( mInputSystem )
+                {
+                    uint32_t key = XLookupKeysym ( &xevent.xkey, 0 );
+                    bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, false );
+                    if ( !consumed && mInputSystem )
                     {
-                        mInputSystem->OnKeyEvent ( XLookupKeysym ( &xevent.xkey, 0 ), false );
+                        mInputSystem->OnKeyEvent ( key, false );
                     }
-                    break;
+                }
+                break;
                 case ButtonPress:
-                    if ( mInputSystem )
+                {
+                    bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( xevent.xbutton.button, true, xevent.xbutton.x, xevent.xbutton.y );
+                    if ( !consumed && mInputSystem )
                     {
                         mInputSystem->OnMouseButton ( xevent.xbutton.button, true, xevent.xbutton.x, xevent.xbutton.y );
                     }
-                    break;
+                }
+                break;
                 case ButtonRelease:
-                    if ( mInputSystem )
+                {
+                    bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( xevent.xbutton.button, false, xevent.xbutton.x, xevent.xbutton.y );
+                    if ( !consumed && mInputSystem )
                     {
                         mInputSystem->OnMouseButton ( xevent.xbutton.button, false, xevent.xbutton.x, xevent.xbutton.y );
                     }
-                    break;
+                }
+                break;
                 case MotionNotify:
-                    if ( mInputSystem )
+                {
+                    bool consumed = mGuiOverlay && mGuiOverlay->OnMouseMove ( xevent.xmotion.x, xevent.xmotion.y );
+                    if ( !consumed && mInputSystem )
                     {
                         mInputSystem->OnMouseMove ( xevent.xmotion.x, xevent.xmotion.y );
                     }
-                    break;
+                }
+                break;
                 case ClientMessage:
                     if ( static_cast<Atom> ( xevent.xclient.data.l[0] ) == wm_delete_window )
                     {

@@ -31,6 +31,7 @@ limitations under the License.
 #include "aeongames/Plugin.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/AeonEngine.hpp"
+#include "aeongames/InputSystem.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Buffer.hpp"
 #include "aeongames/Texture.hpp"
@@ -366,5 +367,15 @@ namespace AeonGames
     void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size )
     {
         LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
+    }
+
+    static InputSystem* gInputSystem{nullptr};
+    void SetInputSystem ( InputSystem* aInputSystem )
+    {
+        gInputSystem = aInputSystem;
+    }
+    InputSystem* GetInputSystem()
+    {
+        return gInputSystem;
     }
 }

@@ -88,11 +88,13 @@ namespace AeonGames
                 mInputSystem = ConstructInputSystem ( aIdentifier );
                 return mInputSystem == nullptr;
             } );
+            SetInputSystem ( mInputSystem.get() );
         }
     }
 
     Window::~Window()
     {
+        SetInputSystem ( nullptr );
         if ( mRenderer )
         {
             mRenderer->DetachWindow ( this );
@@ -147,50 +149,73 @@ namespace AeonGames
                         switch ( [event type] )
                         {
                         case NSEventTypeKeyDown:
-                            if ( mInputSystem )
+                        {
+                            uint32_t key = [event keyCode];
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
+                            if ( !consumed && mInputSystem )
                             {
-                                mInputSystem->OnKeyEvent ( [event keyCode], true );
+                                mInputSystem->OnKeyEvent ( key, true );
                             }
-                            break;
+                        }
+                        break;
                         case NSEventTypeKeyUp:
-                            if ( mInputSystem )
+                        {
+                            uint32_t key = [event keyCode];
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, false );
+                            if ( !consumed && mInputSystem )
                             {
-                                mInputSystem->OnKeyEvent ( [event keyCode], false );
+                                mInputSystem->OnKeyEvent ( key, false );
                             }
-                            break;
+                        }
+                        break;
                         case NSEventTypeLeftMouseDown:
                         case NSEventTypeRightMouseDown:
                         case NSEventTypeOtherMouseDown:
-                            if ( mInputSystem )
+                        {
+                            NSPoint loc = [event locationInWindow];
+                            NSRect frame = [[mNSWindow contentView] frame];
+                            int32_t x = static_cast<int32_t> ( loc.x );
+                            int32_t y = static_cast<int32_t> ( frame.size.height - loc.y );
+                            int32_t button = static_cast<int32_t> ( [event buttonNumber] );
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( button, true, x, y );
+                            if ( !consumed && mInputSystem )
                             {
-                                NSPoint loc = [event locationInWindow];
-                                NSRect frame = [[mNSWindow contentView] frame];
-                                mInputSystem->OnMouseButton ( static_cast<int32_t> ( [event buttonNumber] ), true,
-                                                              static_cast<int32_t> ( loc.x ), static_cast<int32_t> ( frame.size.height - loc.y ) );
+                                mInputSystem->OnMouseButton ( button, true, x, y );
                             }
-                            break;
+                        }
+                        break;
                         case NSEventTypeLeftMouseUp:
                         case NSEventTypeRightMouseUp:
                         case NSEventTypeOtherMouseUp:
-                            if ( mInputSystem )
+                        {
+                            NSPoint loc = [event locationInWindow];
+                            NSRect frame = [[mNSWindow contentView] frame];
+                            int32_t x = static_cast<int32_t> ( loc.x );
+                            int32_t y = static_cast<int32_t> ( frame.size.height - loc.y );
+                            int32_t button = static_cast<int32_t> ( [event buttonNumber] );
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( button, false, x, y );
+                            if ( !consumed && mInputSystem )
                             {
-                                NSPoint loc = [event locationInWindow];
-                                NSRect frame = [[mNSWindow contentView] frame];
-                                mInputSystem->OnMouseButton ( static_cast<int32_t> ( [event buttonNumber] ), false,
-                                                              static_cast<int32_t> ( loc.x ), static_cast<int32_t> ( frame.size.height - loc.y ) );
+                                mInputSystem->OnMouseButton ( button, false, x, y );
                             }
-                            break;
+                        }
+                        break;
                         case NSEventTypeMouseMoved:
                         case NSEventTypeLeftMouseDragged:
                         case NSEventTypeRightMouseDragged:
                         case NSEventTypeOtherMouseDragged:
-                            if ( mInputSystem )
+                        {
+                            NSPoint loc = [event locationInWindow];
+                            NSRect frame = [[mNSWindow contentView] frame];
+                            int32_t x = static_cast<int32_t> ( loc.x );
+                            int32_t y = static_cast<int32_t> ( frame.size.height - loc.y );
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseMove ( x, y );
+                            if ( !consumed && mInputSystem )
                             {
-                                NSPoint loc = [event locationInWindow];
-                                NSRect frame = [[mNSWindow contentView] frame];
-                                mInputSystem->OnMouseMove ( static_cast<int32_t> ( loc.x ), static_cast<int32_t> ( frame.size.height - loc.y ) );
+                                mInputSystem->OnMouseMove ( x, y );
                             }
-                            break;
+                        }
+                        break;
                         default:
                             break;
                         }

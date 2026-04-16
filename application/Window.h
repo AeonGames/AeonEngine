@@ -46,6 +46,10 @@ namespace AeonGames
         {
             return mInputSystem.get();
         }
+        GuiOverlay* GetGuiOverlay() const
+        {
+            return mGuiOverlay.get();
+        }
     private:
 #if defined(_WIN32)
         HWND mWindowId {};

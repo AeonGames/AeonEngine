@@ -143,58 +143,110 @@ namespace AeonGames
         }
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnKeyEvent ( static_cast<uint32_t> ( wParam ), true );
+                uint32_t key = static_cast<uint32_t> ( wParam );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, true );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnKeyEvent ( key, true );
+                }
             }
             break;
         case WM_KEYUP:
         case WM_SYSKEYUP:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnKeyEvent ( static_cast<uint32_t> ( wParam ), false );
+                uint32_t key = static_cast<uint32_t> ( wParam );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, false );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnKeyEvent ( key, false );
+                }
             }
             break;
         case WM_MOUSEMOVE:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseMove ( static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseMove ( x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseMove ( x, y );
+                }
             }
             break;
         case WM_LBUTTONDOWN:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseButton ( 0, true, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 0, true, x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseButton ( 0, true, x, y );
+                }
             }
             break;
         case WM_LBUTTONUP:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseButton ( 0, false, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 0, false, x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseButton ( 0, false, x, y );
+                }
             }
             break;
         case WM_RBUTTONDOWN:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseButton ( 1, true, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 1, true, x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseButton ( 1, true, x, y );
+                }
             }
             break;
         case WM_RBUTTONUP:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseButton ( 1, false, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 1, false, x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseButton ( 1, false, x, y );
+                }
             }
             break;
         case WM_MBUTTONDOWN:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseButton ( 2, true, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 2, true, x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseButton ( 2, true, x, y );
+                }
             }
             break;
         case WM_MBUTTONUP:
-            if ( window && window->GetInputSystem() )
+            if ( window )
             {
-                window->GetInputSystem()->OnMouseButton ( 2, false, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
+                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 2, false, x, y );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseButton ( 2, false, x, y );
+                }
             }
             break;
         default:
@@ -269,10 +321,12 @@ namespace AeonGames
             mInputSystem = ConstructInputSystem ( aIdentifier );
             return mInputSystem == nullptr;
         } );
+        SetInputSystem ( mInputSystem.get() );
     }
 
     Window::~Window()
     {
+        SetInputSystem ( nullptr );
         if ( mRenderer )
         {
             mRenderer->DetachWindow ( this );

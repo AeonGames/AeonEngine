@@ -24,6 +24,7 @@ limitations under the License.
 namespace AeonGames
 {
     class Renderer;
+    class InputSystem;
     /** @brief Initialize the global engine environment.
      *  @param argc Number of command-line arguments.
      *  @param argv Array of command-line argument strings.
@@ -58,5 +59,19 @@ namespace AeonGames
      * needs not worry to initialize render resources and lazy loading of render resources
      * at the render loop is avoided at runtime.
      **/
+    /** @name Global Input System
+     * Provides game code and components with access to the active InputSystem
+     * without requiring them to know about the Window class.
+     **/
+    ///@{
+    /** @brief Set the global InputSystem pointer.
+     *  @param aInputSystem Pointer to the active InputSystem, or nullptr to clear.
+     */
+    DLL void SetInputSystem ( InputSystem* aInputSystem );
+    /** @brief Get the global InputSystem pointer.
+     *  @return Pointer to the active InputSystem, or nullptr if none is set.
+     */
+    DLL InputSystem* GetInputSystem();
+    ///@}
 }
 #endif

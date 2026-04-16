@@ -78,6 +78,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/InputSystem.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ActionMap.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Base64.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.hpp
@@ -103,6 +104,7 @@ set(ENGINE_CORE_SOURCES
     core/Animation.cpp
     core/SoundSystem.cpp
     core/InputSystem.cpp
+    core/ActionMap.cpp
     core/Utilities.cpp
     core/FrameBuffer.cpp
     core/Model.cpp
