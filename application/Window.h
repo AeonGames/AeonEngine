@@ -19,6 +19,7 @@ limitations under the License.
 #include <memory>
 #include "aeongames/Renderer.hpp"
 #include "aeongames/GuiOverlay.hpp"
+#include "aeongames/InputSystem.hpp"
 #include "aeongames/Scene.hpp"
 #ifdef __unix__
 #include <X11/Xlib.h>
@@ -41,6 +42,10 @@ namespace AeonGames
         ~Window();
         uint32_t Resize ( uint32_t aWidth, uint32_t aHeight );
         void Run ( Scene& aScene );
+        InputSystem* GetInputSystem() const
+        {
+            return mInputSystem.get();
+        }
     private:
 #if defined(_WIN32)
         HWND mWindowId {};
@@ -54,6 +59,7 @@ namespace AeonGames
 #endif
         std::unique_ptr<Renderer> mRenderer {};
         std::unique_ptr<GuiOverlay> mGuiOverlay {};
+        std::unique_ptr<InputSystem> mInputSystem {};
         float mAspectRatio{1.0f};
     };
 }

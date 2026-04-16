@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Scene.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/GuiOverlay.hpp"
+#include "aeongames/InputSystem.hpp"
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -81,6 +82,11 @@ namespace AeonGames
             {
                 mGuiOverlay = ConstructGuiOverlay ( aIdentifier, ( __bridge void* ) mNSView );
                 return mGuiOverlay == nullptr;
+            } );
+            EnumerateInputSystemConstructors ( [this] ( const StringId & aIdentifier ) -> bool
+            {
+                mInputSystem = ConstructInputSystem ( aIdentifier );
+                return mInputSystem == nullptr;
             } );
         }
     }
@@ -141,21 +147,49 @@ namespace AeonGames
                         switch ( [event type] )
                         {
                         case NSEventTypeKeyDown:
+                            if ( mInputSystem )
+                            {
+                                mInputSystem->OnKeyEvent ( [event keyCode], true );
+                            }
                             break;
                         case NSEventTypeKeyUp:
+                            if ( mInputSystem )
+                            {
+                                mInputSystem->OnKeyEvent ( [event keyCode], false );
+                            }
                             break;
                         case NSEventTypeLeftMouseDown:
                         case NSEventTypeRightMouseDown:
                         case NSEventTypeOtherMouseDown:
+                            if ( mInputSystem )
+                            {
+                                NSPoint loc = [event locationInWindow];
+                                NSRect frame = [[mNSWindow contentView] frame];
+                                mInputSystem->OnMouseButton ( static_cast<int32_t> ( [event buttonNumber] ), true,
+                                                              static_cast<int32_t> ( loc.x ), static_cast<int32_t> ( frame.size.height - loc.y ) );
+                            }
                             break;
                         case NSEventTypeLeftMouseUp:
                         case NSEventTypeRightMouseUp:
                         case NSEventTypeOtherMouseUp:
+                            if ( mInputSystem )
+                            {
+                                NSPoint loc = [event locationInWindow];
+                                NSRect frame = [[mNSWindow contentView] frame];
+                                mInputSystem->OnMouseButton ( static_cast<int32_t> ( [event buttonNumber] ), false,
+                                                              static_cast<int32_t> ( loc.x ), static_cast<int32_t> ( frame.size.height - loc.y ) );
+                            }
                             break;
                         case NSEventTypeMouseMoved:
                         case NSEventTypeLeftMouseDragged:
                         case NSEventTypeRightMouseDragged:
                         case NSEventTypeOtherMouseDragged:
+                            if ( mInputSystem )
+                            {
+                                NSPoint loc = [event locationInWindow];
+                                NSRect frame = [[mNSWindow contentView] frame];
+                                mInputSystem->OnMouseMove ( static_cast<int32_t> ( loc.x ), static_cast<int32_t> ( frame.size.height - loc.y ) );
+                            }
                             break;
                         default:
                             break;
@@ -197,6 +231,10 @@ namespace AeonGames
 
                     std::chrono::high_resolution_clock::time_point current_time{std::chrono::high_resolution_clock::now() };
                     std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->Update();
+                    }
                     aScene.Update ( delta.count() );
                     last_time = current_time;
 

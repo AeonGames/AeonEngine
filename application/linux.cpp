@@ -24,6 +24,7 @@ limitations under the License.
 #include "aeongames/Scene.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/GuiOverlay.hpp"
+#include "aeongames/InputSystem.hpp"
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -155,6 +156,11 @@ namespace AeonGames
             mGuiOverlay = ConstructGuiOverlay ( aIdentifier, reinterpret_cast<void*> ( mWindowId ) );
             return mGuiOverlay == nullptr;
         } );
+        EnumerateInputSystemConstructors ( [this] ( const StringId & aIdentifier ) -> bool
+        {
+            mInputSystem = ConstructInputSystem ( aIdentifier );
+            return mInputSystem == nullptr;
+        } );
     }
 
     Window::~Window()
@@ -213,19 +219,34 @@ namespace AeonGames
                 }
                 break;
                 case KeyPress:
-                    //engine.KeyDown ( GetScancode ( XLookupKeysym ( &xEvent.xkey, 0 ) ) );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnKeyEvent ( XLookupKeysym ( &xevent.xkey, 0 ), true );
+                    }
                     break;
                 case KeyRelease:
-                    //engine.KeyUp ( GetScancode ( XLookupKeysym ( &xEvent.xkey, 0 ) ) );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnKeyEvent ( XLookupKeysym ( &xevent.xkey, 0 ), false );
+                    }
                     break;
                 case ButtonPress:
-                    //engine.ButtonDown ( xEvent.xbutton.button, xEvent.xbutton.x, xEvent.xbutton.y );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnMouseButton ( xevent.xbutton.button, true, xevent.xbutton.x, xevent.xbutton.y );
+                    }
                     break;
                 case ButtonRelease:
-                    //engine.ButtonUp ( xEvent.xbutton.button, xEvent.xbutton.x, xEvent.xbutton.y );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnMouseButton ( xevent.xbutton.button, false, xevent.xbutton.x, xevent.xbutton.y );
+                    }
                     break;
                 case MotionNotify:
-                    //engine.MouseMove ( xEvent.xmotion.x, xEvent.xmotion.y );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnMouseMove ( xevent.xmotion.x, xevent.xmotion.y );
+                    }
                     break;
                 case ClientMessage:
                     if ( static_cast<Atom> ( xevent.xclient.data.l[0] ) == wm_delete_window )
@@ -242,6 +263,10 @@ namespace AeonGames
             }
             std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
             std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
+            if ( mInputSystem )
+            {
+                mInputSystem->Update();
+            }
             aScene.Update ( delta.count() );
             last_time = current_time;
             if ( mRenderer )

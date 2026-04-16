@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/GuiOverlay.hpp"
+#include "aeongames/InputSystem.hpp"
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -140,6 +141,62 @@ namespace AeonGames
             }
             return 0;
         }
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnKeyEvent ( static_cast<uint32_t> ( wParam ), true );
+            }
+            break;
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnKeyEvent ( static_cast<uint32_t> ( wParam ), false );
+            }
+            break;
+        case WM_MOUSEMOVE:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseMove ( static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseButton ( 0, true, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
+        case WM_LBUTTONUP:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseButton ( 0, false, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
+        case WM_RBUTTONDOWN:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseButton ( 1, true, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
+        case WM_RBUTTONUP:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseButton ( 1, false, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
+        case WM_MBUTTONDOWN:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseButton ( 2, true, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
+        case WM_MBUTTONUP:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnMouseButton ( 2, false, static_cast<int32_t> ( LOWORD ( lParam ) ), static_cast<int32_t> ( HIWORD ( lParam ) ) );
+            }
+            break;
         default:
             return DefWindowProc ( hwnd, uMsg, wParam, lParam );
         }
@@ -207,6 +264,11 @@ namespace AeonGames
             mGuiOverlay = ConstructGuiOverlay ( aIdentifier, mWindowId );
             return mGuiOverlay == nullptr;
         } );
+        EnumerateInputSystemConstructors ( [this] ( const StringId & aIdentifier ) -> bool
+        {
+            mInputSystem = ConstructInputSystem ( aIdentifier );
+            return mInputSystem == nullptr;
+        } );
     }
 
     Window::~Window()
@@ -256,6 +318,10 @@ namespace AeonGames
             {
                 std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
                 std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
+                if ( mInputSystem )
+                {
+                    mInputSystem->Update();
+                }
                 aScene.Update ( delta.count() );
                 last_time = current_time;
                 if ( mGuiOverlay )
