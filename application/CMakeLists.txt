@@ -12,12 +12,19 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+set(EXECUTABLE_HEADERS Window.h)
+set(EXECUTABLE_SOURCES Main.cpp)
+
 if(UNIX AND NOT APPLE)
   find_package(X11 REQUIRED)
   find_package(OpenGL REQUIRED)
+  list(APPEND EXECUTABLE_SOURCES linux.cpp)
+elseif(APPLE)
+  list(APPEND EXECUTABLE_SOURCES macos.mm)
+elseif(WIN32)
+  list(APPEND EXECUTABLE_SOURCES windows.cpp)
 endif()
-set(EXECUTABLE_HEADERS Window.h)
-set(EXECUTABLE_SOURCES Main.cpp windows.cpp linux.cpp macos.mm)
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
 if(APPLE)
