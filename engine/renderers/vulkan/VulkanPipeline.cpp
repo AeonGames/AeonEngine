@@ -298,11 +298,7 @@ namespace AeonGames
         pipeline_input_assembly_state_create_info.pNext = nullptr;
         pipeline_input_assembly_state_create_info.flags = 0;
         pipeline_input_assembly_state_create_info.topology = TopologyClassToVulkanTopology.at ( mPipeline->GetTopologyClass() );
-#ifdef VK_USE_PLATFORM_METAL_EXT
-        pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_TRUE;
-#else
-        pipeline_input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
-#endif
+        pipeline_input_assembly_state_create_info.primitiveRestartEnable = mVulkanRenderer.HasPrimitiveTopologyListRestart() ? VK_TRUE : VK_FALSE;
         //----------------Viewport State------------------//
         VkPipelineViewportStateCreateInfo pipeline_viewport_state_create_info {};
         pipeline_viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

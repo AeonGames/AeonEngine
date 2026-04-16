@@ -23,6 +23,15 @@ limitations under the License.
 #ifdef __unix__
 #include <X11/Xlib.h>
 #endif
+#ifdef __APPLE__
+#ifdef __OBJC__
+@class NSWindow;
+@class NSView;
+#else
+using NSWindow = void;
+using NSView = void;
+#endif
+#endif
 namespace AeonGames
 {
     class Window
@@ -35,6 +44,9 @@ namespace AeonGames
     private:
 #if defined(_WIN32)
         HWND mWindowId {};
+#elif defined(__APPLE__)
+        NSWindow* mNSWindow {};
+        NSView* mNSView {};
 #elif defined(__unix__)
         Display* mDisplay {};
         ::Window mWindowId{None};

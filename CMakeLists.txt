@@ -222,11 +222,7 @@ add_subdirectory(tools/aeontool)
 add_subdirectory(tools/blender)
 add_subdirectory(engine)
 add_subdirectory(assets)
-if(NOT APPLE)
-  option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
-else()
-  set(BUILD_STANDALONE_APPLICATION OFF CACHE BOOL "Standalone application is disabled on Apple, OpenGL Renderer is required" FORCE)
-endif()
+option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
 if(BUILD_STANDALONE_APPLICATION)
   add_subdirectory(application)
 endif()
@@ -541,7 +537,10 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   # Detect appropriate debugger based on compiler
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
     find_program(LLDB_DAP_EXECUTABLE lldb-dap lldb-vscode
-                PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles /usr/bin /usr/local/bin
+                PATHS ENV MSYSTEM_PREFIX ENV ProgramFiles
+                      /usr/bin /usr/local/bin
+                      /Library/Developer/CommandLineTools/usr/bin
+                      /Applications/Xcode.app/Contents/Developer/usr/bin
               PATH_SUFFIXES
                     bin
                     usr/bin
@@ -591,6 +590,184 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   if(Protobuf_ROOT)
     set(LD_LIBRARY_PATH "{\"name\":\"LD_LIBRARY_PATH\",\"value\":\"${Protobuf_ROOT}/lib\"},")
   endif()
+
+  # Build conditional launch.json configuration blocks
+  set(LAUNCH_CONFIGS "")
+  if(Qt6_FOUND)
+    string(APPEND LAUNCH_CONFIGS "
+            {
+                \"name\": \"World Editor\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    ${QT_QPA_PLATFORM}
+                    ${LD_LIBRARY_PATH}
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    },
+                    {
+                        \"name\":\"ASAN_OPTIONS\",
+                        \"value\":\"abort_on_error=1\"
+                    },
+                    {
+                        \"name\":\"OBJC_DISABLE_INITIALIZE_FORK_SAFETY\",
+                        \"value\":\"YES\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/worldeditor${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },")
+  endif()
+  if(BUILD_STANDALONE_APPLICATION)
+    string(APPEND LAUNCH_CONFIGS "
+            {
+                \"name\": \"Game Window OpenGL\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [\"-r\",\"OpenGL\",\"-s\",\"scenes/main.txt\"],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    },
+                    {
+                        \"name\":\"_Xdebug\",
+                        \"value\": \"1\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },
+            {
+                \"name\": \"Game FullScreen OpenGL\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [\"-f\",\"-r\",\"OpenGL\",\"-s\",\"scenes/main.txt\"],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },
+            {
+                \"name\": \"Game Window Vulkan\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [\"-r\",\"Vulkan\",\"-s\",\"scenes/main.txt\"],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },
+            {
+                \"name\": \"Game FullScreen Vulkan\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [\"-f\",\"-r\",\"Vulkan\",\"-s\",\"scenes/main.txt\"],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/game${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },")
+  endif()
+  if(GTest_FOUND)
+    string(APPEND LAUNCH_CONFIGS "
+            {
+                \"name\": \"Unit Tests\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/unit-tests${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },")
+  endif()
+  string(APPEND LAUNCH_CONFIGS "
+            {
+                \"name\": \"Aeon Tool Convert\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [
+                    \"convert\",\"-i\",\"game/meshes/cube.txt\",\"-o\",\"game/meshes/cube.msh\"
+                ],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/aeontool${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },
+            {
+                \"name\": \"Aeon Tool Base64 Decode\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [
+                    \"base64\",\"decode\",\"-i\",\"game/aerin/textures/Aerin_Body_Diffuse.png.base64\",\"-o\",\"game/aerin/textures/Aerin_Body_Diffuse_TEST.png\"
+                ],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/aeontool${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            },
+            {
+                \"name\": \"Aeon Tool Base64 Encode\",
+                \"type\": \"${DEBUGGER_TYPE}\",
+                \"request\": \"launch\",
+                \"args\": [
+                    \"base64\",\"encode\",\"-i\",\"assets/sponza/sponza.blend\",\"-o\",\"assets/sponza/sponza.blend.base64\"
+                ],
+                \"stopAtEntry\": false,
+                \"cwd\": \"${CMAKE_SOURCE_DIR}\",
+                \"environment\": [
+                    {
+                        \"name\":\"PATH\",
+                        \"value\":\"${DEBUG_PATH}\"
+                    }
+                ],
+                \"externalConsole\": ${USE_EXTERNAL_CONSOLE},
+                \"program\": \"${CMAKE_BINARY_DIR}/bin/aeontool${CMAKE_EXECUTABLE_SUFFIX}\"${DEBUGGER_CONFIG}
+            }")
+
   configure_file("${CMAKE_SOURCE_DIR}/cmake/tasks.json.in"
                  "${CMAKE_SOURCE_DIR}/.vscode/tasks.json")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/settings.json.in"

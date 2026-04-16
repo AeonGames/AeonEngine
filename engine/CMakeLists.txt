@@ -77,6 +77,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/InputSystem.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Base64.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.hpp
@@ -101,6 +102,7 @@ set(ENGINE_CORE_SOURCES
     core/Skeleton.cpp
     core/Animation.cpp
     core/SoundSystem.cpp
+    core/InputSystem.cpp
     core/Utilities.cpp
     core/FrameBuffer.cpp
     core/Model.cpp
@@ -188,5 +190,6 @@ if(USE_AEONGUI)
   add_subdirectory(gui/aeongui)
 endif()
 add_subdirectory(images)
+add_subdirectory(input/desktop)
 add_subdirectory(sound/portaudio)
 add_subdirectory(sound/oggvorbis)

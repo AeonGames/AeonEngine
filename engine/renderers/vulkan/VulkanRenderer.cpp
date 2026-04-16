@@ -156,6 +156,11 @@ namespace AeonGames
     }
 #endif
 
+    bool VulkanRenderer::HasPrimitiveTopologyListRestart() const
+    {
+        return mHasPrimitiveTopologyListRestart;
+    }
+
     uint32_t VulkanRenderer::GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const
     {
         for ( uint32_t i = 0; i < mVkPhysicalDeviceMemoryProperties.memoryTypeCount; ++i )
@@ -464,18 +469,28 @@ namespace AeonGames
         device_queue_create_info.pQueuePriorities = queue_priorities;
 
 #ifdef VK_USE_PLATFORM_METAL_EXT
-        // For some reason this causes a crash on AMD drivers on the RogAlly, so keep it MacOS only while I figure it out.
+        // Query whether the device actually supports primitive topology list restart.
+        VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT supported_restart_features {};
+        supported_restart_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT;
+        supported_restart_features.pNext = nullptr;
+        VkPhysicalDeviceFeatures2 physical_device_features2 {};
+        physical_device_features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        physical_device_features2.pNext = &supported_restart_features;
+        vkGetPhysicalDeviceFeatures2 ( mVkPhysicalDevice, &physical_device_features2 );
+
         VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT physical_device_primitive_topology_list_restart_features {};
         physical_device_primitive_topology_list_restart_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT;
         physical_device_primitive_topology_list_restart_features.pNext = nullptr;
-        physical_device_primitive_topology_list_restart_features.primitiveTopologyListRestart = VK_TRUE;
-        physical_device_primitive_topology_list_restart_features.primitiveTopologyPatchListRestart = VK_TRUE;
+        physical_device_primitive_topology_list_restart_features.primitiveTopologyListRestart = supported_restart_features.primitiveTopologyListRestart;
+        physical_device_primitive_topology_list_restart_features.primitiveTopologyPatchListRestart = supported_restart_features.primitiveTopologyPatchListRestart;
+        bool use_primitive_topology_list_restart = ( supported_restart_features.primitiveTopologyListRestart == VK_TRUE ) ||
+            ( supported_restart_features.primitiveTopologyPatchListRestart == VK_TRUE );
+        mHasPrimitiveTopologyListRestart = ( supported_restart_features.primitiveTopologyListRestart == VK_TRUE );
 #endif
         VkDeviceCreateInfo device_create_info {};
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 #ifdef VK_USE_PLATFORM_METAL_EXT
-        // For some reason this causes a crash on AMD drivers on the RogAlly, so keep it MacOS only while I figure it out.
-        device_create_info.pNext = &physical_device_primitive_topology_list_restart_features;
+        device_create_info.pNext = use_primitive_topology_list_restart ? &physical_device_primitive_topology_list_restart_features : nullptr;
 #else
         device_create_info.pNext = nullptr;
 #endif

@@ -113,6 +113,7 @@ namespace AeonGames
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* GetDisplay() const;
 #endif
+        bool HasPrimitiveTopologyListRestart() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -155,6 +156,7 @@ namespace AeonGames
         std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};
         std::unordered_map<size_t, VulkanTexture> mTextureStore{};
         std::unordered_map<void*, VulkanWindow> mWindowStore{};
+        bool mHasPrimitiveTopologyListRestart{false};
     };
 }
 #endif

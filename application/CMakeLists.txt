@@ -12,13 +12,17 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-if(UNIX)
+if(UNIX AND NOT APPLE)
   find_package(X11 REQUIRED)
   find_package(OpenGL REQUIRED)
 endif()
 set(EXECUTABLE_HEADERS Window.h)
-set(EXECUTABLE_SOURCES Main.cpp windows.cpp linux.cpp)
+set(EXECUTABLE_SOURCES Main.cpp windows.cpp linux.cpp macos.mm)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
-target_link_libraries(game ${X11_LIBRARIES} ${OPENGL_LIBRARIES} AeonEngine)
+if(APPLE)
+  target_link_libraries(game "-framework Cocoa" AeonEngine)
+else()
+  target_link_libraries(game ${X11_LIBRARIES} ${OPENGL_LIBRARIES} AeonEngine)
+endif()
 add_dependencies(game AeonEngine)
