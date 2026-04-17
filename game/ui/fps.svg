@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <defs>
+    <style>
+      @font-face {
+        font-family: 'NotoSansMono';
+        src: url('../fonts/NotoSansMono-VariableFont_wdth,wght.ttf');
+      }
+      .fps-text {
+        font-family: 'NotoSansMono', monospace;
+        font-size: 24px;
+        font-weight: 600;
+        fill: #00ff00;
+        text-anchor: end;
+      }
+    </style>
+  </defs>
+  <text id="fps-text" class="fps-text" x="1260" y="36">FPS: 0</text>
+</svg>

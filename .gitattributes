@@ -51,3 +51,4 @@
 *.blend filter=lfs diff=lfs merge=lfs -text
 *.blend1 filter=lfs diff=lfs merge=lfs -text
 assets/**/*.png filter=lfs diff=lfs merge=lfs -text
+*.ttf filter=lfs diff=lfs merge=lfs -text
