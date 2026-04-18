@@ -60,6 +60,38 @@ All game assets are serialized using [Protocol Buffers](https://protobuf.dev/), 
 
 ---
 
+## 📦 Git LFS
+
+This repository uses [Git Large File Storage (LFS)](https://git-lfs.com/) to manage large binary asset files (meshes, base64-encoded resources, etc.). You **must** install and initialize Git LFS before cloning, otherwise these files will be checked out as small pointer files instead of actual data.
+
+### Quick Setup
+
+1. **Install Git LFS** (one-time per machine):
+
+   - **Windows (MSYS2):** `pacboy -S git-lfs:p`
+   - **Arch Linux:** `pacman -S git-lfs`
+   - **Ubuntu/Linux:** `sudo apt-get install git-lfs`
+   - **macOS:** `brew install git-lfs`
+   - **Windows (Git for Windows):** Git LFS is bundled — no extra install needed.
+
+2. **Initialize Git LFS** (one-time per machine):
+
+   ```bash
+   git lfs install
+   ```
+
+3. **Clone the repository** as usual — LFS files are downloaded automatically:
+
+   ```bash
+   git clone https://github.com/AeonGames/AeonEngine.git
+   ```
+
+If you already cloned without LFS, run `git lfs pull` inside the repository to download the LFS objects.
+
+The tracked patterns are defined in [.gitattributes](.gitattributes) and currently include `*.msh` and `*.b64` files.
+
+---
+
 ## 🚀 Building
 
 The AeonEngine uses CMake and supports building on multiple platforms. Choose the method that best fits your environment.
