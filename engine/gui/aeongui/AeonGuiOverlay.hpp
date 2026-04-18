@@ -43,6 +43,8 @@ namespace AeonGames
 
         void Resize ( uint32_t aWidth, uint32_t aHeight ) final;
 
+        void Navigate ( const std::string& aUrl ) final;
+
     private:
         void ConvertBGRAtoRGBA();
 

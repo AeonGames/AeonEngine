@@ -12,7 +12,13 @@
         fill: #00ff00;
         text-anchor: end;
       }
+      .border {
+        fill: none;
+        stroke: #00ff00;
+        stroke-width: 2;
+      }
     </style>
   </defs>
+  <rect id="border" class="border" x="1" y="1" width="1278" height="718"/>
   <text id="fps-text" class="fps-text" x="1260" y="36">FPS: 0</text>
 </svg>

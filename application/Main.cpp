@@ -100,6 +100,10 @@ int Main ( int argc, char *argv[] )
         }
 
         /* Renderer is available from here on.*/
+        if ( window->GetGuiOverlay() && AeonGames::FileExists ( "game/ui/fps.svg" ) )
+        {
+            window->GetGuiOverlay()->Navigate ( "game/ui/fps.svg" );
+        }
         if ( !scene_path.empty() )
         {
             scene.Load ( scene_path );

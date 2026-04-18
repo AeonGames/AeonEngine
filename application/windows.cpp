@@ -283,7 +283,19 @@ namespace AeonGames
             }
         }
 
-        RECT rect = { aX, aY, static_cast<int32_t> ( aWidth ), static_cast<int32_t> ( aHeight ) };
+        RECT rect = { aX, aY, aX + static_cast<int32_t> ( aWidth ), aY + static_cast<int32_t> ( aHeight ) };
+        if ( !aFullScreen )
+        {
+            AdjustWindowRectEx ( &rect, dwStyle, FALSE, dwExStyle );
+            // Shift the rect so the requested origin (aX, aY) refers to the
+            // outer window position, keeping the title bar/borders on-screen.
+            int32_t dx = aX - rect.left;
+            int32_t dy = aY - rect.top;
+            rect.left += dx;
+            rect.right += dx;
+            rect.top += dy;
+            rect.bottom += dy;
+        }
 
         WNDCLASSEX wcex;
         wcex.cbSize = sizeof ( WNDCLASSEX );

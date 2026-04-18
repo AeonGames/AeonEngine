@@ -103,6 +103,14 @@ namespace AeonGames
          */
         virtual void Resize ( uint32_t aWidth, uint32_t aHeight ) = 0;
         ///@}
+
+        ///@name Navigation
+        ///@{
+        /** Navigates the overlay to the specified URL or file path.
+         * @param aUrl URL or file path to load.
+         */
+        virtual void Navigate ( const std::string& aUrl ) = 0;
+        ///@}
     };
     /**@name Factory Functions */
     /*@{*/

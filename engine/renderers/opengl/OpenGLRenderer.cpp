@@ -79,10 +79,10 @@ void main()
     /// @brief Overlay screen-quad vertex data (positions and texture coordinates).
     const float vertices[] = {
                                  // positions   // texCoords
-                                 -1.0f,  1.0f,  0.0f, 1.0f,
-                                 -1.0f, -1.0f,  0.0f, 0.0f,
-                                 1.0f, -1.0f,  1.0f, 0.0f,
-                                 1.0f,  1.0f,  1.0f, 1.0f
+                                 -1.0f,  1.0f,  0.0f, 0.0f,
+                                 -1.0f, -1.0f,  0.0f, 1.0f,
+                                 1.0f, -1.0f,  1.0f, 1.0f,
+                                 1.0f,  1.0f,  1.0f, 0.0f
                              };
     /// @brief Total byte size of the overlay vertex data.
     constexpr GLuint vertex_size{sizeof(vertices)};

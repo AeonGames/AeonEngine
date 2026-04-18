@@ -98,6 +98,11 @@ namespace AeonGames
         mWindow.ResizeViewport ( aWidth, aHeight );
     }
 
+    void AeonGuiOverlay::Navigate ( const std::string& aUrl )
+    {
+        mWindow.location().assign ( aUrl );
+    }
+
     void AeonGuiOverlay::ConvertBGRAtoRGBA()
     {
         const uint8_t* bgra = mWindow.GetPixels();
