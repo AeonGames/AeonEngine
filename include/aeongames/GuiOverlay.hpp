@@ -93,6 +93,21 @@ namespace AeonGames
          * @return true if the event was consumed by the GUI.
          */
         virtual bool OnTextInput ( uint32_t aCodepoint ) = 0;
+        /** Notifies the overlay of a mouse-wheel event.
+         * @param aDeltaX Horizontal wheel notches (positive = right).
+         * @param aDeltaY Vertical wheel notches (positive = up / away from user).
+         * @return true if the event was consumed by the GUI.
+         *
+         * Default implementation returns false so existing back-ends continue
+         * to compile without modification; back-ends that want to consume
+         * wheel events (e.g., scrollable widgets) should override this.
+         */
+        virtual bool OnMouseWheel ( float aDeltaX, float aDeltaY )
+        {
+            ( void ) aDeltaX;
+            ( void ) aDeltaY;
+            return false;
+        }
         ///@}
 
         ///@name Resize

@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifdef __unix__
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/StringId.hpp"
@@ -121,6 +120,51 @@ namespace AeonGames
     }
 #endif
 
+    /** Translate X11 mouse-button code to a normalized MouseButton value.
+     *  Returns -1 for wheel buttons (4-7) and unknown codes; the caller is
+     *  expected to handle wheel events separately. */
+    static int32_t TranslateX11Button ( unsigned int aButton )
+    {
+        switch ( aButton )
+        {
+        case 1:
+            return MouseButton_Left;
+        case 2:
+            return MouseButton_Middle;
+        case 3:
+            return MouseButton_Right;
+        case 8:
+            return MouseButton_X1;
+        case 9:
+            return MouseButton_X2;
+        default:
+            return -1;
+        }
+    }
+
+    /** Translate an X11 KeyEvent state mask into a KeyModifier bitmask. */
+    static uint32_t TranslateX11Modifiers ( unsigned int aState )
+    {
+        uint32_t mods = KeyModifier_None;
+        if ( aState & ShiftMask )
+        {
+            mods |= KeyModifier_Shift;
+        }
+        if ( aState & ControlMask )
+        {
+            mods |= KeyModifier_Ctrl;
+        }
+        if ( aState & Mod1Mask )
+        {
+            mods |= KeyModifier_Alt;
+        }
+        if ( aState & Mod4Mask )
+        {
+            mods |= KeyModifier_Super;
+        }
+        return mods;
+    }
+
     Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
         mDisplay{XOpenDisplay ( nullptr ) }
     {
@@ -136,7 +180,9 @@ namespace AeonGames
             .background_pixmap = None,
             .background_pixel  = 0,
             .border_pixel      = 0,
-            .event_mask = StructureNotifyMask | KeyPressMask | ExposureMask,
+            .event_mask = StructureNotifyMask | KeyPressMask | KeyReleaseMask
+            | ButtonPressMask | ButtonReleaseMask | PointerMotionMask
+            | FocusChangeMask | ExposureMask,
             .colormap = mColorMap,
         };
         mWindowId = XCreateWindow (
@@ -205,6 +251,17 @@ namespace AeonGames
         XSetWMProtocols ( mDisplay, mWindowId, &wm_delete_window, 1 );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
 
+        // Build a 1x1 invisible cursor used while the cursor is captured.
+        Cursor invisible_cursor = None;
+        Pixmap blank = XCreateBitmapFromData ( mDisplay, mWindowId, "\0", 1, 1 );
+        if ( blank != None )
+        {
+            XColor dummy{};
+            invisible_cursor = XCreatePixmapCursor ( mDisplay, blank, blank, &dummy, &dummy, 0, 0 );
+            XFreePixmap ( mDisplay, blank );
+        }
+        bool prev_cursor_captured = false;
+
         XMapWindow ( mDisplay, mWindowId );
         while ( running )
         {
@@ -223,16 +280,43 @@ namespace AeonGames
                 case KeyPress:
                 {
                     uint32_t key = XLookupKeysym ( &xevent.xkey, 0 );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->SetKeyModifiers ( TranslateX11Modifiers ( xevent.xkey.state ) );
+                    }
                     bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
                     if ( !consumed && mInputSystem )
                     {
                         mInputSystem->OnKeyEvent ( key, true );
+                    }
+                    // Translate to printable characters for text input. Route
+                    // through the GUI overlay first; only forward to the
+                    // InputSystem if the overlay does not consume the codepoint.
+                    char buffer[8] = {};
+                    KeySym sym = NoSymbol;
+                    int len = XLookupString ( &xevent.xkey, buffer, sizeof ( buffer ) - 1, &sym, nullptr );
+                    for ( int i = 0; i < len; ++i )
+                    {
+                        unsigned char c = static_cast<unsigned char> ( buffer[i] );
+                        if ( c >= 0x20 && c != 0x7f )
+                        {
+                            uint32_t codepoint = static_cast<uint32_t> ( c );
+                            bool char_consumed = mGuiOverlay && mGuiOverlay->OnTextInput ( codepoint );
+                            if ( !char_consumed && mInputSystem )
+                            {
+                                mInputSystem->OnChar ( codepoint );
+                            }
+                        }
                     }
                 }
                 break;
                 case KeyRelease:
                 {
                     uint32_t key = XLookupKeysym ( &xevent.xkey, 0 );
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->SetKeyModifiers ( TranslateX11Modifiers ( xevent.xkey.state ) );
+                    }
                     bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, false );
                     if ( !consumed && mInputSystem )
                     {
@@ -242,19 +326,63 @@ namespace AeonGames
                 break;
                 case ButtonPress:
                 {
-                    bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( xevent.xbutton.button, true, xevent.xbutton.x, xevent.xbutton.y );
-                    if ( !consumed && mInputSystem )
+                    // X11 wheel events arrive as button presses 4 (up), 5 (down),
+                    // 6 (left), 7 (right). Translate these into mouse-wheel events.
+                    if ( xevent.xbutton.button >= 4 && xevent.xbutton.button <= 7 )
                     {
-                        mInputSystem->OnMouseButton ( xevent.xbutton.button, true, xevent.xbutton.x, xevent.xbutton.y );
+                        float dx = 0.0f;
+                        float dy = 0.0f;
+                        switch ( xevent.xbutton.button )
+                        {
+                        case 4:
+                            dy = 1.0f;
+                            break;
+                        case 5:
+                            dy = -1.0f;
+                            break;
+                        case 6:
+                            dx = -1.0f;
+                            break;
+                        case 7:
+                            dx = 1.0f;
+                            break;
+                        }
+                        bool consumed = mGuiOverlay && mGuiOverlay->OnMouseWheel ( dx, dy );
+                        if ( !consumed && mInputSystem )
+                        {
+                            mInputSystem->OnMouseWheel ( dx, dy );
+                        }
+                    }
+                    else
+                    {
+                        int32_t btn = TranslateX11Button ( xevent.xbutton.button );
+                        if ( btn >= 0 )
+                        {
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( btn, true, xevent.xbutton.x, xevent.xbutton.y );
+                            if ( !consumed && mInputSystem )
+                            {
+                                mInputSystem->OnMouseButton ( btn, true, xevent.xbutton.x, xevent.xbutton.y );
+                            }
+                        }
                     }
                 }
                 break;
                 case ButtonRelease:
                 {
-                    bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( xevent.xbutton.button, false, xevent.xbutton.x, xevent.xbutton.y );
-                    if ( !consumed && mInputSystem )
+                    // X11 emits a release for wheel events too; ignore those
+                    // since wheel is delta-only.
+                    if ( xevent.xbutton.button >= 4 && xevent.xbutton.button <= 7 )
                     {
-                        mInputSystem->OnMouseButton ( xevent.xbutton.button, false, xevent.xbutton.x, xevent.xbutton.y );
+                        break;
+                    }
+                    int32_t btn = TranslateX11Button ( xevent.xbutton.button );
+                    if ( btn >= 0 )
+                    {
+                        bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( btn, false, xevent.xbutton.x, xevent.xbutton.y );
+                        if ( !consumed && mInputSystem )
+                        {
+                            mInputSystem->OnMouseButton ( btn, false, xevent.xbutton.x, xevent.xbutton.y );
+                        }
                     }
                 }
                 break;
@@ -267,6 +395,18 @@ namespace AeonGames
                     }
                 }
                 break;
+                case FocusIn:
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnFocusGained();
+                    }
+                    break;
+                case FocusOut:
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->OnFocusLost();
+                    }
+                    break;
                 case ClientMessage:
                     if ( static_cast<Atom> ( xevent.xclient.data.l[0] ) == wm_delete_window )
                     {
@@ -284,6 +424,37 @@ namespace AeonGames
             std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
             if ( mInputSystem )
             {
+                bool cursor_captured = mInputSystem->IsCursorCaptured() || mInputSystem->IsRelativeMouseMode();
+                if ( cursor_captured != prev_cursor_captured )
+                {
+                    if ( cursor_captured )
+                    {
+                        if ( invisible_cursor != None )
+                        {
+                            XDefineCursor ( mDisplay, mWindowId, invisible_cursor );
+                        }
+                        XGrabPointer ( mDisplay, mWindowId, True,
+                                       ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+                                       GrabModeAsync, GrabModeAsync,
+                                       mWindowId, None, CurrentTime );
+                    }
+                    else
+                    {
+                        XUngrabPointer ( mDisplay, CurrentTime );
+                        XUndefineCursor ( mDisplay, mWindowId );
+                    }
+                    prev_cursor_captured = cursor_captured;
+                }
+                if ( mInputSystem->IsRelativeMouseMode() )
+                {
+                    XWindowAttributes xwa{};
+                    XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
+                    int cx = xwa.width / 2;
+                    int cy = xwa.height / 2;
+                    XWarpPointer ( mDisplay, None, mWindowId, 0, 0, 0, 0, cx, cy );
+                    // Re-prime mouse position so deltas are measured from center.
+                    mInputSystem->OnMouseMove ( cx, cy );
+                }
                 mInputSystem->Update();
             }
             aScene.Update ( delta.count() );
@@ -320,6 +491,14 @@ namespace AeonGames
             }
         }
         XUnmapWindow ( mDisplay, mWindowId );
+        if ( prev_cursor_captured )
+        {
+            XUngrabPointer ( mDisplay, CurrentTime );
+            XUndefineCursor ( mDisplay, mWindowId );
+        }
+        if ( invisible_cursor != None )
+        {
+            XFreeCursor ( mDisplay, invisible_cursor );
+        }
     }
 }
-#endif

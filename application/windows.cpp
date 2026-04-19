@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifdef _WIN32
 #include "aeongames/Platform.hpp"
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Utilities.hpp"
@@ -116,6 +115,39 @@ int ENTRYPOINT main ( int argc, char *argv[] )
 
 namespace AeonGames
 {
+    /** Build a KeyModifier bitmask from current Win32 keyboard state. */
+    static uint32_t QueryWin32Modifiers()
+    {
+        uint32_t mods = KeyModifier_None;
+        if ( GetKeyState ( VK_SHIFT )   & 0x8000 )
+        {
+            mods |= KeyModifier_Shift;
+        }
+        if ( GetKeyState ( VK_CONTROL ) & 0x8000 )
+        {
+            mods |= KeyModifier_Ctrl;
+        }
+        if ( GetKeyState ( VK_MENU )    & 0x8000 )
+        {
+            mods |= KeyModifier_Alt;
+        }
+        if ( ( GetKeyState ( VK_LWIN ) & 0x8000 ) || ( GetKeyState ( VK_RWIN ) & 0x8000 ) )
+        {
+            mods |= KeyModifier_Super;
+        }
+        return mods;
+    }
+
+    /** Forward a normalized mouse-button event through GUI overlay then InputSystem. */
+    static void DispatchMouseButton ( Window* aWindow, int32_t aButton, bool aPressed, int32_t aX, int32_t aY )
+    {
+        bool consumed = aWindow->GetGuiOverlay() && aWindow->GetGuiOverlay()->OnMouseButton ( aButton, aPressed, aX, aY );
+        if ( !consumed && aWindow->GetInputSystem() )
+        {
+            aWindow->GetInputSystem()->OnMouseButton ( aButton, aPressed, aX, aY );
+        }
+    }
+
     LRESULT CALLBACK AeonEngineWindowProc (
         _In_ HWND   hwnd,
         _In_ UINT   uMsg,
@@ -149,6 +181,7 @@ namespace AeonGames
                 bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, true );
                 if ( !consumed && window->GetInputSystem() )
                 {
+                    window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );
                     window->GetInputSystem()->OnKeyEvent ( key, true );
                 }
             }
@@ -161,15 +194,67 @@ namespace AeonGames
                 bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, false );
                 if ( !consumed && window->GetInputSystem() )
                 {
+                    window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );
                     window->GetInputSystem()->OnKeyEvent ( key, false );
                 }
+            }
+            break;
+        case WM_CHAR:
+            if ( window )
+            {
+                // wParam is a UTF-16 code unit; surrogate pairs arrive as two
+                // separate WM_CHAR messages. Combine them into a single UTF-32
+                // codepoint before forwarding.
+                static uint16_t high_surrogate = 0;
+                uint16_t unit = static_cast<uint16_t> ( wParam );
+                uint32_t codepoint = 0;
+                bool have_codepoint = false;
+                if ( unit >= 0xD800 && unit <= 0xDBFF )
+                {
+                    high_surrogate = unit;
+                }
+                else if ( unit >= 0xDC00 && unit <= 0xDFFF && high_surrogate )
+                {
+                    codepoint = 0x10000u
+                                + ( ( static_cast<uint32_t> ( high_surrogate - 0xD800 ) ) << 10 )
+                                + ( unit - 0xDC00 );
+                    high_surrogate = 0;
+                    have_codepoint = true;
+                }
+                else
+                {
+                    high_surrogate = 0;
+                    codepoint = unit;
+                    have_codepoint = true;
+                }
+                if ( have_codepoint )
+                {
+                    bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnTextInput ( codepoint );
+                    if ( !consumed && window->GetInputSystem() )
+                    {
+                        window->GetInputSystem()->OnChar ( codepoint );
+                    }
+                }
+            }
+            break;
+        case WM_SETFOCUS:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnFocusGained();
+                window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );
+            }
+            break;
+        case WM_KILLFOCUS:
+            if ( window && window->GetInputSystem() )
+            {
+                window->GetInputSystem()->OnFocusLost();
             }
             break;
         case WM_MOUSEMOVE:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
                 bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseMove ( x, y );
                 if ( !consumed && window->GetInputSystem() )
                 {
@@ -180,72 +265,88 @@ namespace AeonGames
         case WM_LBUTTONDOWN:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 0, true, x, y );
-                if ( !consumed && window->GetInputSystem() )
-                {
-                    window->GetInputSystem()->OnMouseButton ( 0, true, x, y );
-                }
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                DispatchMouseButton ( window, MouseButton_Left, true, x, y );
             }
             break;
         case WM_LBUTTONUP:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 0, false, x, y );
-                if ( !consumed && window->GetInputSystem() )
-                {
-                    window->GetInputSystem()->OnMouseButton ( 0, false, x, y );
-                }
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                DispatchMouseButton ( window, MouseButton_Left, false, x, y );
             }
             break;
         case WM_RBUTTONDOWN:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 1, true, x, y );
-                if ( !consumed && window->GetInputSystem() )
-                {
-                    window->GetInputSystem()->OnMouseButton ( 1, true, x, y );
-                }
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                DispatchMouseButton ( window, MouseButton_Right, true, x, y );
             }
             break;
         case WM_RBUTTONUP:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 1, false, x, y );
-                if ( !consumed && window->GetInputSystem() )
-                {
-                    window->GetInputSystem()->OnMouseButton ( 1, false, x, y );
-                }
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                DispatchMouseButton ( window, MouseButton_Right, false, x, y );
             }
             break;
         case WM_MBUTTONDOWN:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 2, true, x, y );
-                if ( !consumed && window->GetInputSystem() )
-                {
-                    window->GetInputSystem()->OnMouseButton ( 2, true, x, y );
-                }
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                DispatchMouseButton ( window, MouseButton_Middle, true, x, y );
             }
             break;
         case WM_MBUTTONUP:
             if ( window )
             {
-                int32_t x = static_cast<int32_t> ( LOWORD ( lParam ) );
-                int32_t y = static_cast<int32_t> ( HIWORD ( lParam ) );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseButton ( 2, false, x, y );
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                DispatchMouseButton ( window, MouseButton_Middle, false, x, y );
+            }
+            break;
+        case WM_XBUTTONDOWN:
+            if ( window )
+            {
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                int32_t btn = ( GET_XBUTTON_WPARAM ( wParam ) == XBUTTON1 ) ? MouseButton_X1 : MouseButton_X2;
+                DispatchMouseButton ( window, btn, true, x, y );
+            }
+            return TRUE;
+        case WM_XBUTTONUP:
+            if ( window )
+            {
+                int32_t x = static_cast<int32_t> ( static_cast<int16_t> ( LOWORD ( lParam ) ) );
+                int32_t y = static_cast<int32_t> ( static_cast<int16_t> ( HIWORD ( lParam ) ) );
+                int32_t btn = ( GET_XBUTTON_WPARAM ( wParam ) == XBUTTON1 ) ? MouseButton_X1 : MouseButton_X2;
+                DispatchMouseButton ( window, btn, false, x, y );
+            }
+            return TRUE;
+        case WM_MOUSEWHEEL:
+            if ( window )
+            {
+                float delta = static_cast<float> ( GET_WHEEL_DELTA_WPARAM ( wParam ) ) / static_cast<float> ( WHEEL_DELTA );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseWheel ( 0.0f, delta );
                 if ( !consumed && window->GetInputSystem() )
                 {
-                    window->GetInputSystem()->OnMouseButton ( 2, false, x, y );
+                    window->GetInputSystem()->OnMouseWheel ( 0.0f, delta );
+                }
+            }
+            break;
+        case WM_MOUSEHWHEEL:
+            if ( window )
+            {
+                float delta = static_cast<float> ( GET_WHEEL_DELTA_WPARAM ( wParam ) ) / static_cast<float> ( WHEEL_DELTA );
+                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnMouseWheel ( delta, 0.0f );
+                if ( !consumed && window->GetInputSystem() )
+                {
+                    window->GetInputSystem()->OnMouseWheel ( delta, 0.0f );
                 }
             }
             break;
@@ -366,6 +467,8 @@ namespace AeonGames
         bool done = false;
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        bool prev_cursor_captured = false;
+        bool cursor_hidden = false;
         while ( !done )
         {
             if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
@@ -384,8 +487,57 @@ namespace AeonGames
             {
                 std::chrono::high_resolution_clock::time_point current_time {std::chrono::high_resolution_clock::now() };
                 std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
+
+                // Apply cursor capture / relative-mouse-mode requests.
                 if ( mInputSystem )
                 {
+                    bool cursor_captured = mInputSystem->IsCursorCaptured() || mInputSystem->IsRelativeMouseMode();
+                    if ( cursor_captured != prev_cursor_captured )
+                    {
+                        if ( cursor_captured )
+                        {
+                            RECT clip;
+                            GetClientRect ( static_cast<HWND> ( mWindowId ), &clip );
+                            POINT tl{clip.left, clip.top};
+                            POINT br{clip.right, clip.bottom};
+                            ClientToScreen ( static_cast<HWND> ( mWindowId ), &tl );
+                            ClientToScreen ( static_cast<HWND> ( mWindowId ), &br );
+                            clip.left = tl.x;
+                            clip.top = tl.y;
+                            clip.right = br.x;
+                            clip.bottom = br.y;
+                            ClipCursor ( &clip );
+                            if ( !cursor_hidden )
+                            {
+                                ShowCursor ( FALSE );
+                                cursor_hidden = true;
+                            }
+                        }
+                        else
+                        {
+                            ClipCursor ( nullptr );
+                            if ( cursor_hidden )
+                            {
+                                ShowCursor ( TRUE );
+                                cursor_hidden = false;
+                            }
+                        }
+                        prev_cursor_captured = cursor_captured;
+                    }
+                    // In relative-mouse mode, recenter the cursor each frame so deltas
+                    // can keep accumulating without the cursor drifting off-window.
+                    if ( mInputSystem->IsRelativeMouseMode() )
+                    {
+                        RECT client;
+                        GetClientRect ( static_cast<HWND> ( mWindowId ), &client );
+                        POINT center{ ( client.right - client.left ) / 2, ( client.bottom - client.top ) / 2 };
+                        POINT screen_center = center;
+                        ClientToScreen ( static_cast<HWND> ( mWindowId ), &screen_center );
+                        SetCursorPos ( screen_center.x, screen_center.y );
+                        // Re-prime the position so the next OnMouseMove yields a delta
+                        // measured from the center, not from the last real cursor pos.
+                        mInputSystem->OnMouseMove ( center.x, center.y );
+                    }
                     mInputSystem->Update();
                 }
                 aScene.Update ( delta.count() );
@@ -420,6 +572,10 @@ namespace AeonGames
             }
         }
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );
+        if ( cursor_hidden )
+        {
+            ClipCursor ( nullptr );
+            ShowCursor ( TRUE );
+        }
     }
 }
-#endif

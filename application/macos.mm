@@ -32,6 +32,7 @@ limitations under the License.
 #include <string>
 #include <stdexcept>
 #import <Cocoa/Cocoa.h>
+#import <CoreGraphics/CoreGraphics.h>
 #include "Window.h"
 
 int Main ( int argc, char *argv[] );
@@ -46,6 +47,50 @@ int ENTRYPOINT main ( int argc, char *argv[] )
 
 namespace AeonGames
 {
+    /** Translate an NSEvent modifier flag mask into a KeyModifier bitmask. */
+    static uint32_t TranslateNSModifiers ( NSEventModifierFlags aFlags )
+    {
+        uint32_t mods = KeyModifier_None;
+        if ( aFlags & NSEventModifierFlagShift )
+        {
+            mods |= KeyModifier_Shift;
+        }
+        if ( aFlags & NSEventModifierFlagControl )
+        {
+            mods |= KeyModifier_Ctrl;
+        }
+        if ( aFlags & NSEventModifierFlagOption )
+        {
+            mods |= KeyModifier_Alt;
+        }
+        if ( aFlags & NSEventModifierFlagCommand )
+        {
+            mods |= KeyModifier_Super;
+        }
+        return mods;
+    }
+
+    /** Translate an NSEvent buttonNumber into a normalized MouseButton value.
+     *  Cocoa already uses 0=Left, 1=Right, 2=Middle, 3+=Other, which lines up
+     *  with MouseButton_Left/Right/Middle/X1/X2; this is just a clamp + name. */
+    static int32_t TranslateNSButton ( NSInteger aButton )
+    {
+        switch ( aButton )
+        {
+        case 0:
+            return MouseButton_Left;
+        case 1:
+            return MouseButton_Right;
+        case 2:
+            return MouseButton_Middle;
+        case 3:
+            return MouseButton_X1;
+        case 4:
+            return MouseButton_X2;
+        default:
+            return -1;
+        }
+    }
     Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
     {
         @autoreleasepool
@@ -151,20 +196,72 @@ namespace AeonGames
                         case NSEventTypeKeyDown:
                         {
                             uint32_t key = [event keyCode];
+                            if ( mInputSystem )
+                            {
+                                mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
+                            }
                             bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
                             if ( !consumed && mInputSystem )
                             {
                                 mInputSystem->OnKeyEvent ( key, true );
+                            }
+                            // Forward typed characters; route through the GUI
+                            // overlay first, fall back to InputSystem only if
+                            // the overlay does not consume them.
+                            NSString* characters = [event characters];
+                            NSUInteger len = [characters length];
+                            for ( NSUInteger i = 0; i < len; ++i )
+                            {
+                                unichar unit = [characters characterAtIndex:i];
+                                uint32_t codepoint = unit;
+                                // Combine UTF-16 surrogate pairs into a UTF-32 codepoint.
+                                if ( unit >= 0xD800 && unit <= 0xDBFF && ( i + 1 ) < len )
+                                {
+                                    unichar low = [characters characterAtIndex:i + 1];
+                                    if ( low >= 0xDC00 && low <= 0xDFFF )
+                                    {
+                                        codepoint = 0x10000u
+                                                    + ( ( static_cast<uint32_t> ( unit - 0xD800 ) ) << 10 )
+                                                    + ( low - 0xDC00 );
+                                        ++i;
+                                    }
+                                }
+                                // Skip control characters; arrow keys, F-keys etc.
+                                // are reported here in the Unicode private area
+                                // (0xF700-0xF8FF) and as control codes (< 0x20).
+                                if ( codepoint < 0x20 || ( codepoint >= 0xF700 && codepoint <= 0xF8FF ) || codepoint == 0x7F )
+                                {
+                                    continue;
+                                }
+                                bool char_consumed = mGuiOverlay && mGuiOverlay->OnTextInput ( codepoint );
+                                if ( !char_consumed && mInputSystem )
+                                {
+                                    mInputSystem->OnChar ( codepoint );
+                                }
                             }
                         }
                         break;
                         case NSEventTypeKeyUp:
                         {
                             uint32_t key = [event keyCode];
+                            if ( mInputSystem )
+                            {
+                                mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
+                            }
                             bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, false );
                             if ( !consumed && mInputSystem )
                             {
                                 mInputSystem->OnKeyEvent ( key, false );
+                            }
+                        }
+                        break;
+                        case NSEventTypeFlagsChanged:
+                        {
+                            // Sent when modifier keys (Shift/Ctrl/Option/Cmd) change
+                            // state without producing a normal key event.
+                            if ( mInputSystem )
+                            {
+                                mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
                             }
                         }
                         break;
@@ -176,11 +273,14 @@ namespace AeonGames
                             NSRect frame = [[mNSWindow contentView] frame];
                             int32_t x = static_cast<int32_t> ( loc.x );
                             int32_t y = static_cast<int32_t> ( frame.size.height - loc.y );
-                            int32_t button = static_cast<int32_t> ( [event buttonNumber] );
-                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( button, true, x, y );
-                            if ( !consumed && mInputSystem )
+                            int32_t button = TranslateNSButton ( [event buttonNumber] );
+                            if ( button >= 0 )
                             {
-                                mInputSystem->OnMouseButton ( button, true, x, y );
+                                bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( button, true, x, y );
+                                if ( !consumed && mInputSystem )
+                                {
+                                    mInputSystem->OnMouseButton ( button, true, x, y );
+                                }
                             }
                         }
                         break;
@@ -192,11 +292,14 @@ namespace AeonGames
                             NSRect frame = [[mNSWindow contentView] frame];
                             int32_t x = static_cast<int32_t> ( loc.x );
                             int32_t y = static_cast<int32_t> ( frame.size.height - loc.y );
-                            int32_t button = static_cast<int32_t> ( [event buttonNumber] );
-                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( button, false, x, y );
-                            if ( !consumed && mInputSystem )
+                            int32_t button = TranslateNSButton ( [event buttonNumber] );
+                            if ( button >= 0 )
                             {
-                                mInputSystem->OnMouseButton ( button, false, x, y );
+                                bool consumed = mGuiOverlay && mGuiOverlay->OnMouseButton ( button, false, x, y );
+                                if ( !consumed && mInputSystem )
+                                {
+                                    mInputSystem->OnMouseButton ( button, false, x, y );
+                                }
                             }
                         }
                         break;
@@ -216,15 +319,63 @@ namespace AeonGames
                             }
                         }
                         break;
+                        case NSEventTypeScrollWheel:
+                        {
+                            // Prefer precise (high-resolution trackpad) deltas
+                            // when available; otherwise fall back to integer
+                            // wheel deltas.
+                            float dx;
+                            float dy;
+                            if ( [event hasPreciseScrollingDeltas] )
+                            {
+                                // Cocoa precise deltas are in pixels; scale to
+                                // approximate "wheel notches" so back-ends get
+                                // values comparable to other platforms.
+                                dx = static_cast<float> ( [event scrollingDeltaX] ) / 10.0f;
+                                dy = static_cast<float> ( [event scrollingDeltaY] ) / 10.0f;
+                            }
+                            else
+                            {
+                                dx = static_cast<float> ( [event scrollingDeltaX] );
+                                dy = static_cast<float> ( [event scrollingDeltaY] );
+                            }
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnMouseWheel ( dx, dy );
+                            if ( !consumed && mInputSystem )
+                            {
+                                mInputSystem->OnMouseWheel ( dx, dy );
+                            }
+                        }
+                        break;
+                        case NSEventTypeAppKitDefined:
+                        {
+                            // Window focus changes arrive as AppKit-defined
+                            // events with specific subtypes.
+                            switch ( [event subtype] )
+                            {
+                            case NSEventSubtypeWindowExposed:
+                                break;
+                            case NSEventSubtypeApplicationActivated:
+                                if ( mInputSystem )
+                                {
+                                    mInputSystem->OnFocusGained();
+                                    mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [NSEvent modifierFlags] ) );
+                                }
+                                break;
+                            case NSEventSubtypeApplicationDeactivated:
+                                if ( mInputSystem )
+                                {
+                                    mInputSystem->OnFocusLost();
+                                }
+                                break;
+                            default:
+                                break;
+                            }
+                        }
+                        break;
                         default:
                             break;
                         }
 
-                        if ( [event type] == NSEventTypeApplicationDefined &&
-                             [event subtype] == NSEventSubtypeApplicationActivated )
-                        {
-                            // Handle window close via application events if needed
-                        }
                         [NSApp sendEvent:event];
                         [NSApp updateWindows];
 
@@ -258,6 +409,48 @@ namespace AeonGames
                     std::chrono::duration<double> delta{std::chrono::duration_cast<std::chrono::duration<double >> ( current_time - last_time ) };
                     if ( mInputSystem )
                     {
+                        // Apply cursor capture / relative-mouse-mode requests.
+                        static bool prev_cursor_captured = false;
+                        static bool cursor_hidden = false;
+                        bool cursor_captured = mInputSystem->IsCursorCaptured() || mInputSystem->IsRelativeMouseMode();
+                        if ( cursor_captured != prev_cursor_captured )
+                        {
+                            if ( cursor_captured )
+                            {
+                                if ( !cursor_hidden )
+                                {
+                                    [NSCursor hide];
+                                    cursor_hidden = true;
+                                }
+                                CGAssociateMouseAndMouseCursorPosition ( false );
+                            }
+                            else
+                            {
+                                CGAssociateMouseAndMouseCursorPosition ( true );
+                                if ( cursor_hidden )
+                                {
+                                    [NSCursor unhide];
+                                    cursor_hidden = false;
+                                }
+                            }
+                            prev_cursor_captured = cursor_captured;
+                        }
+                        // In relative-mouse mode, recenter the cursor in the
+                        // window each frame so deltas keep accumulating.
+                        if ( mInputSystem->IsRelativeMouseMode() )
+                        {
+                            NSRect content = [[mNSWindow contentView] frame];
+                            NSPoint center_view = NSMakePoint ( content.size.width / 2.0, content.size.height / 2.0 );
+                            NSRect center_rect = [mNSWindow convertRectToScreen:NSMakeRect ( center_view.x, center_view.y, 0, 0 )];
+                            // CGWarpMouseCursorPosition uses top-left screen
+                            // coordinates; flip Y from Cocoa's bottom-left.
+                            CGFloat screen_height = [[NSScreen mainScreen] frame].size.height;
+                            CGPoint warp = CGPointMake ( center_rect.origin.x, screen_height - center_rect.origin.y );
+                            CGWarpMouseCursorPosition ( warp );
+                            int32_t cx = static_cast<int32_t> ( content.size.width / 2.0 );
+                            int32_t cy = static_cast<int32_t> ( content.size.height / 2.0 );
+                            mInputSystem->OnMouseMove ( cx, cy );
+                        }
                         mInputSystem->Update();
                     }
                     aScene.Update ( delta.count() );
