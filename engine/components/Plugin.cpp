@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/StringId.hpp"
 #include "ModelComponent.h"
 #include "Camera.h"
+#include "OverTheShoulderCamera.hpp"
 #include "PointLight.h"
 #include <iostream>
 
@@ -34,6 +35,10 @@ extern "C"
         {
             return std::make_unique<AeonGames::Camera>();
         } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::OverTheShoulderCamera>();
+        } );
         AeonGames::RegisterComponentConstructor ( AeonGames::PointLight::GetClassId(), []()
         {
             return std::make_unique<AeonGames::PointLight>();
@@ -45,6 +50,7 @@ extern "C"
     {
         AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );
     }
 
