@@ -26,7 +26,7 @@ from multiprocessing.dummy import Pool as ThreadPool, Lock as ThreadLock
 
 class MSH_OT_exporterCommon():
 
-    def __init__(self, filepath, export_tangents=True, export_uvs=True, export_weights=True, export_colors=True):
+    def __init__(self, filepath, export_tangents=True, export_uvs=True, export_weights=True, export_colors=True, as_text=False):
         self.mesh = None
         self.object = None
         self.armature = None
@@ -37,6 +37,7 @@ class MSH_OT_exporterCommon():
         self.export_uvs = export_uvs
         self.export_weights = export_weights
         self.export_colors = export_colors
+        self.as_text = as_text
 
     def get_vertex(self, loop_and_attributes):
         loop = loop_and_attributes[0]
@@ -375,19 +376,22 @@ class MSH_OT_exporterCommon():
         # number=1))
 
         # Open File for Writing
-        print("Writting", self.filepath, ".")
-        out = open(self.filepath, "wb")
-        magick_struct = struct.Struct('8s')
-        out.write(magick_struct.pack(b'AEONMSH\x00'))
-        out.write(mesh_buffer.SerializeToString())
-        out.close()
-        print("Done.")
-        print("Writting", self.filepath.replace('.msh', '.txt'), ".")
-        out = open(self.filepath.replace('.msh', '.txt'), "wt")
-        out.write("AEONMSH\n")
-        out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
-        out.close()
-        print("Done.")
+        if self.as_text:
+            text_path = self.filepath.replace('.msh', '.txt')
+            print("Writting", text_path, ".")
+            out = open(text_path, "wt")
+            out.write("AEONMSH\n")
+            out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
+            out.close()
+            print("Done.")
+        else:
+            print("Writting", self.filepath, ".")
+            out = open(self.filepath, "wb")
+            magick_struct = struct.Struct('8s')
+            out.write(magick_struct.pack(b'AEONMSH\x00'))
+            out.write(mesh_buffer.SerializeToString())
+            out.close()
+            print("Done.")
 
 
 class MSH_OT_exporter(bpy.types.Operator):
@@ -419,6 +423,11 @@ class MSH_OT_exporter(bpy.types.Operator):
         description="Export vertex color attributes",
         default=True
     )
+    as_text: bpy.props.BoolProperty(
+        name="Export as Text",
+        description="Write the protobuf message as a human-readable text file (.txt) instead of the binary .msh",
+        default=False
+    )
 
     @classmethod
     def poll(cls, context):
@@ -434,7 +443,8 @@ class MSH_OT_exporter(bpy.types.Operator):
             export_tangents=self.export_tangents,
             export_uvs=self.export_uvs,
             export_weights=self.export_weights,
-            export_colors=self.export_colors
+            export_colors=self.export_colors,
+            as_text=self.as_text
         )
         exporter.run(context.active_object)
         return {'FINISHED'}
@@ -482,6 +492,11 @@ class MSHExportAll(bpy.types.Operator):
         description="Export vertex color attributes",
         default=True
     )
+    as_text: bpy.props.BoolProperty(
+        name="Export as Text",
+        description="Write the protobuf message as a human-readable text file (.txt) instead of the binary .msh",
+        default=False
+    )
 
     @classmethod
     def poll(cls, context):
@@ -495,7 +510,8 @@ class MSHExportAll(bpy.types.Operator):
                     export_tangents=self.export_tangents,
                     export_uvs=self.export_uvs,
                     export_weights=self.export_weights,
-                    export_colors=self.export_colors
+                    export_colors=self.export_colors,
+                    as_text=self.as_text
                 )
                 exporter.run(object)
         return {'FINISHED'}

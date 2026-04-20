@@ -41,5 +41,10 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(skl_menu_func)
 
 
+def unregister():
+    bpy.types.TOPBAR_MT_file_export.remove(skl_menu_func)
+    bpy.utils.unregister_class(export.SKL_OT_exporter)
+
+
 if __name__ == "__main__":
     register()

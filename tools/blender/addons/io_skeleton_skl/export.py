@@ -26,6 +26,11 @@ class SKL_OT_exporter(bpy.types.Operator):
     bl_label = "Export AeonGames Skeleton"
 
     filepath: bpy.props.StringProperty(subtype='FILE_PATH')
+    as_text: bpy.props.BoolProperty(
+        name="Export as Text",
+        description="Write the protobuf message as a human-readable text file (.txt) instead of the binary .skl",
+        default=False
+    )
 
     @classmethod
     def poll(cls, context):
@@ -75,19 +80,22 @@ class SKL_OT_exporter(bpy.types.Operator):
             joint.Name = bone.name
 
         # Open File for Writing
-        print("Writting", self.filepath, ".")
-        out = open(self.filepath, "wb")
-        magick_struct = struct.Struct('8s')
-        out.write(magick_struct.pack(b'AEONSKL\x00'))
-        out.write(skeleton_buffer.SerializeToString())
-        out.close()
-        print("Done.")
-        print("Writting", self.filepath.replace('.skl', '.txt'), ".")
-        out = open(self.filepath.replace('.skl', '.txt'), "wt")
-        out.write("AEONSKL\n")
-        out.write(google.protobuf.text_format.MessageToString(skeleton_buffer))
-        out.close()
-        print("Done.")
+        if self.as_text:
+            text_path = self.filepath.replace('.skl', '.txt')
+            print("Writting", text_path, ".")
+            out = open(text_path, "wt")
+            out.write("AEONSKL\n")
+            out.write(google.protobuf.text_format.MessageToString(skeleton_buffer))
+            out.close()
+            print("Done.")
+        else:
+            print("Writting", self.filepath, ".")
+            out = open(self.filepath, "wb")
+            magick_struct = struct.Struct('8s')
+            out.write(magick_struct.pack(b'AEONSKL\x00'))
+            out.write(skeleton_buffer.SerializeToString())
+            out.close()
+            print("Done.")
         return {'FINISHED'}
 
     def invoke(self, context, event):

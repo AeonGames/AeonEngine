@@ -1,0 +1,2411 @@
+AEONSKL
+Version: 1
+Joint {
+  ParentIndex: -1
+  Scale {
+    x: 1.0
+    y: 0.9999997
+    z: 0.99999994
+  }
+  Rotation {
+    w: 5.338507e-08
+    x: 5.338507e-08
+    y: -0.7071067
+    z: -0.7071068
+  }
+  Translation {
+    x: 4.3914033e-06
+    y: 0.013743704
+    z: 1.0348618
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 5.338507e-08
+    x: -5.3385072e-08
+    y: 0.7071067
+    z: 0.7071068
+  }
+  InvertedTranslation {
+    x: 4.3934783e-06
+    y: -1.034862
+    z: -0.013743749
+  }
+  Name: "mixamorig:Hips"
+}
+Joint {
+  Scale {
+    x: 1.0
+    y: 0.99999976
+    z: 0.99999994
+  }
+  Rotation {
+    w: 3.0741685e-05
+    x: -3.1510408e-05
+    y: 0.69955665
+    z: 0.7145772
+  }
+  Translation {
+    x: -6.378667e-06
+    y: 0.021794362
+    z: 1.1366342
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 3.0741674e-05
+    x: 3.1510423e-05
+    y: -0.69955665
+    z: -0.7145772
+  }
+  InvertedTranslation {
+    x: 9.369887e-05
+    y: -1.135915
+    z: -0.045932725
+  }
+  Name: "mixamorig:Spine"
+}
+Joint {
+  ParentIndex: 1
+  Scale {
+    x: 1.0
+    y: 0.99999976
+    z: 0.9999999
+  }
+  Rotation {
+    w: 4.1502575e-05
+    x: -4.223714e-05
+    y: -0.67257816
+    z: -0.7400261
+  }
+  Translation {
+    x: -1.5048505e-05
+    y: 0.019702183
+    z: 1.2351091
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 4.1502564e-05
+    x: 4.223715e-05
+    y: 0.6725782
+    z: 0.7400261
+  }
+  InvertedTranslation {
+    x: -0.00016112126
+    y: -1.2276133
+    z: -0.13729042
+  }
+  Name: "mixamorig:Spine1"
+}
+Joint {
+  ParentIndex: 2
+  Scale {
+    x: 1.0
+    y: 0.99999976
+    z: 0.9999999
+  }
+  Rotation {
+    w: 4.150256e-05
+    x: -4.2236912e-05
+    y: -0.6725782
+    z: -0.74002606
+  }
+  Translation {
+    x: -4.3689615e-06
+    y: 0.011096765
+    z: 1.3250179
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 4.150256e-05
+    x: 4.2236923e-05
+    y: 0.6725782
+    z: 0.74002606
+  }
+  InvertedTranslation {
+    x: -0.00016112081
+    y: -1.3179332
+    z: -0.13729006
+  }
+  Name: "mixamorig:Spine2"
+}
+Joint {
+  ParentIndex: 3
+  Scale {
+    x: 1.0
+    y: 0.9999998
+    z: 0.9999999
+  }
+  Rotation {
+    w: 5.3380887e-08
+    x: 5.3390156e-08
+    y: -0.7071067
+    z: -0.7071068
+  }
+  Translation {
+    x: -1.0930498e-06
+    y: -0.024142735
+    z: 1.4910077
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 5.3382802e-08
+    x: -5.33911e-08
+    y: 0.7071067
+    z: 0.7071068
+  }
+  InvertedTranslation {
+    x: -1.0966739e-06
+    y: -1.491008
+    z: 0.024142705
+  }
+  Name: "mixamorig:Neck"
+}
+Joint {
+  ParentIndex: 4
+  Scale {
+    x: 1.0
+    y: 0.9999998
+    z: 0.9999999
+  }
+  Rotation {
+    w: 5.338556e-08
+    x: 5.3384284e-08
+    y: -0.7071067
+    z: -0.7071068
+  }
+  Translation {
+    x: -3.844547e-06
+    y: -0.009785129
+    z: 1.5865157
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 5.3387474e-08
+    x: -5.338523e-08
+    y: 0.7071067
+    z: 0.7071068
+  }
+  InvertedTranslation {
+    x: -3.8460253e-06
+    y: -1.5865159
+    z: 0.009785062
+  }
+  Name: "mixamorig:Head"
+}
+Joint {
+  ParentIndex: 5
+  Scale {
+    x: 1.0
+    y: 0.9999998
+    z: 0.9999999
+  }
+  Rotation {
+    w: 5.338556e-08
+    x: 5.3384284e-08
+    y: -0.7071067
+    z: -0.7071068
+  }
+  Translation {
+    x: 0.030311884
+    y: 0.08269129
+    z: 1.6503241
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 5.3387474e-08
+    x: -5.338523e-08
+    y: 0.7071067
+    z: 0.7071068
+  }
+  InvertedTranslation {
+    x: 0.030311897
+    y: -1.6503243
+    z: -0.08269136
+  }
+  Name: "mixamorig:RightEye"
+}
+Joint {
+  ParentIndex: 5
+  Scale {
+    x: 1.0
+    y: 0.9999998
+    z: 0.9999999
+  }
+  Rotation {
+    w: 5.338556e-08
+    x: 5.3384284e-08
+    y: -0.7071067
+    z: -0.7071068
+  }
+  Translation {
+    x: -0.030288868
+    y: 0.08268963
+    z: 1.6503221
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 5.3387474e-08
+    x: -5.338523e-08
+    y: 0.7071067
+    z: 0.7071068
+  }
+  InvertedTranslation {
+    x: -0.030288855
+    y: -1.6503223
+    z: -0.08268971
+  }
+  Name: "mixamorig:LeftEye"
+}
+Joint {
+  ParentIndex: 5
+  Scale {
+    x: 1.0
+    y: 0.9999998
+    z: 0.9999999
+  }
+  Rotation {
+    w: 5.338556e-08
+    x: 5.3384284e-08
+    y: -0.7071067
+    z: -0.7071068
+  }
+  Translation {
+    x: -1.4742645e-05
+    y: 0.015745556
+    z: 1.763586
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 5.3387474e-08
+    x: -5.338523e-08
+    y: 0.7071067
+    z: 0.7071068
+  }
+  InvertedTranslation {
+    x: -1.4740269e-05
+    y: -1.7635863
+    z: -0.015745632
+  }
+  Name: "mixamorig:HeadTop_End"
+}
+Joint {
+  ParentIndex: 3
+  Scale {
+    x: 0.99999976
+    y: 0.99999976
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.07525436
+    x: -0.7797086
+    y: 0.6194447
+    z: 0.051763754
+  }
+  Translation {
+    x: -0.046024807
+    y: -0.019610211
+    z: 1.4340488
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.07525439
+    x: 0.7797086
+    y: -0.6194447
+    z: -0.051763736
+  }
+  InvertedTranslation {
+    x: 0.24112475
+    y: 0.027168922
+    z: 1.4142565
+  }
+  Name: "mixamorig:LeftShoulder"
+}
+Joint {
+  ParentIndex: 9
+  Scale {
+    x: 0.99999976
+    y: 0.99999976
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.07031795
+    x: -0.7418007
+    y: 0.66442394
+    z: 0.05768785
+  }
+  Translation {
+    x: -0.15222558
+    y: -0.043740235
+    z: 1.4282441
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.07031799
+    x: 0.7418007
+    y: -0.664424
+    z: -0.057687826
+  }
+  InvertedTranslation {
+    x: 0.2297432
+    y: -0.11646551
+    z: 1.4137267
+  }
+  Name: "mixamorig:LeftArm"
+}
+Joint {
+  ParentIndex: 10
+  Scale {
+    x: 0.99999976
+    y: 0.9999997
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.07489707
+    x: -0.6838289
+    y: 0.7238382
+    z: 0.053167906
+  }
+  Translation {
+    x: -0.42964005
+    y: -0.0736609
+    z: 1.4205219
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.07489701
+    x: 0.6838288
+    y: -0.72383827
+    z: -0.05316791
+  }
+  InvertedTranslation {
+    x: 0.16197982
+    y: -0.38822433
+    z: 1.4251124
+  }
+  Name: "mixamorig:LeftForeArm"
+}
+Joint {
+  ParentIndex: 11
+  Scale {
+    x: 0.99999976
+    y: 0.99999964
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.12543967
+    x: -0.70738477
+    y: 0.69551784
+    z: -0.011260748
+  }
+  Translation {
+    x: -0.71089995
+    y: -0.057003185
+    z: 1.4133451
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000001
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.12543973
+    x: 0.7073847
+    y: -0.69551784
+    z: 0.011260752
+  }
+  InvertedTranslation {
+    x: 0.19077876
+    y: -0.424612
+    z: 1.5131037
+  }
+  Name: "mixamorig:LeftHand"
+}
+Joint {
+  ParentIndex: 12
+  Scale {
+    x: 0.99999994
+    y: 0.9999996
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.23334086
+    x: -0.43556076
+    y: 0.8502063
+    z: -0.18162648
+  }
+  Translation {
+    x: -0.73078144
+    y: -0.027490482
+    z: 1.3996136
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.2333408
+    x: 0.4355607
+    y: -0.8502063
+    z: 0.18162651
+  }
+  InvertedTranslation {
+    x: -0.062727585
+    y: 0.2527015
+    z: 1.557538
+  }
+  Name: "mixamorig:LeftHandThumb1"
+}
+Joint {
+  ParentIndex: 13
+  Scale {
+    x: 0.9999999
+    y: 0.9999996
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.21692756
+    x: -0.44396368
+    y: 0.8563907
+    z: -0.14977883
+  }
+  Translation {
+    x: -0.7569799
+    y: -0.001662245
+    z: 1.3786876
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.21692748
+    x: 0.44396356
+    y: -0.8563908
+    z: 0.14977883
+  }
+  InvertedTranslation {
+    x: -0.059806388
+    y: 0.093749255
+    z: 1.5688967
+  }
+  Name: "mixamorig:LeftHandThumb2"
+}
+Joint {
+  ParentIndex: 14
+  Scale {
+    x: 0.9999998
+    y: 0.99999946
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.22439398
+    x: -0.44023648
+    y: 0.8537392
+    z: -0.16422127
+  }
+  Translation {
+    x: -0.78298116
+    y: 0.013367993
+    z: 1.3623353
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.22439392
+    x: 0.44023645
+    y: -0.8537392
+    z: 0.16422129
+  }
+  InvertedTranslation {
+    x: -0.06460832
+    y: 0.11284364
+    z: 1.5659791
+  }
+  Name: "mixamorig:LeftHandThumb3"
+}
+Joint {
+  ParentIndex: 15
+  Scale {
+    x: 0.9999998
+    y: 0.99999946
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.22439411
+    x: -0.44023645
+    y: 0.8537392
+    z: -0.16422118
+  }
+  Translation {
+    x: -0.7990117
+    y: 0.02891361
+    z: 1.3508046
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.22439401
+    x: 0.44023642
+    y: -0.85373926
+    z: 0.16422118
+  }
+  InvertedTranslation {
+    x: -0.06272982
+    y: 0.087782145
+    z: 1.565979
+  }
+  Name: "mixamorig:LeftHandThumb4"
+}
+Joint {
+  ParentIndex: 12
+  Scale {
+    x: 0.9999998
+    y: 0.99999964
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.14838998
+    x: -0.66145825
+    y: 0.73458594
+    z: -0.028929638
+  }
+  Translation {
+    x: -0.79797703
+    y: -0.026004104
+    z: 1.3983101
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000001
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.14838994
+    x: 0.6614584
+    y: -0.73458594
+    z: 0.028929634
+  }
+  InvertedTranslation {
+    x: 0.16127501
+    y: -0.43148336
+    z: 1.5428964
+  }
+  Name: "mixamorig:LeftHandIndex1"
+}
+Joint {
+  ParentIndex: 17
+  Scale {
+    x: 0.99999976
+    y: 0.9999996
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.17693213
+    x: -0.6544018
+    y: 0.73264056
+    z: -0.060755428
+  }
+  Translation {
+    x: -0.8332366
+    y: -0.021129418
+    z: 1.3896267
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000001
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.17693205
+    x: 0.6544018
+    y: -0.73264056
+    z: 0.06075543
+  }
+  InvertedTranslation {
+    x: 0.1616398
+    y: -0.33268085
+    z: 1.5776535
+  }
+  Name: "mixamorig:LeftHandIndex2"
+}
+Joint {
+  ParentIndex: 18
+  Scale {
+    x: 0.99999976
+    y: 0.9999995
+    z: 0.9999994
+  }
+  Rotation {
+    w: 0.16076982
+    x: -0.65855885
+    y: 0.7339141
+    z: -0.04270227
+  }
+  Translation {
+    x: -0.86014134
+    y: -0.016969759
+    z: 1.3804638
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.16076976
+    x: 0.65855885
+    y: -0.73391414
+    z: 0.042702284
+  }
+  InvertedTranslation {
+    x: 0.16189453
+    y: -0.4386143
+    z: 1.5579543
+  }
+  Name: "mixamorig:LeftHandIndex3"
+}
+Joint {
+  ParentIndex: 19
+  Scale {
+    x: 0.99999976
+    y: 0.9999995
+    z: 0.9999994
+  }
+  Rotation {
+    w: 0.1607698
+    x: -0.65855885
+    y: 0.7339141
+    z: -0.042702265
+  }
+  Translation {
+    x: -0.8829039
+    y: -0.014503967
+    z: 1.3738115
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.16076975
+    x: 0.65855885
+    y: -0.7339141
+    z: 0.04270228
+  }
+  InvertedTranslation {
+    x: 0.1612746
+    y: -0.46244892
+    z: 1.5579542
+  }
+  Name: "mixamorig:LeftHandIndex4"
+}
+Joint {
+  ParentIndex: 12
+  Scale {
+    x: 0.9999998
+    y: 0.9999996
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.13351266
+    x: -0.6948284
+    y: 0.7064618
+    z: -0.017311841
+  }
+  Translation {
+    x: -0.80453813
+    y: -0.048551224
+    z: 1.3986511
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.13351256
+    x: 0.6948284
+    y: -0.7064618
+    z: 0.017311819
+  }
+  InvertedTranslation {
+    x: 0.18329367
+    y: -0.49077275
+    z: 1.526896
+  }
+  Name: "mixamorig:LeftHandMiddle1"
+}
+Joint {
+  ParentIndex: 21
+  Scale {
+    x: 0.9999998
+    y: 0.9999997
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.15810168
+    x: -0.689649
+    y: 0.7054017
+    z: -0.042387195
+  }
+  Translation {
+    x: -0.8405532
+    y: -0.047109764
+    z: 1.3909435
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000001
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.15810159
+    x: 0.689649
+    y: -0.7054017
+    z: 0.042387184
+  }
+  InvertedTranslation {
+    x: 0.18349065
+    y: -0.41792935
+    z: 1.5604938
+  }
+  Name: "mixamorig:LeftHandMiddle2"
+}
+Joint {
+  ParentIndex: 22
+  Scale {
+    x: 0.9999998
+    y: 0.99999964
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.12341437
+    x: -0.69669306
+    y: 0.7066385
+    z: -0.0070570423
+  }
+  Translation {
+    x: -0.86876124
+    y: -0.04632037
+    z: 1.382685
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000001
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.123414285
+    x: 0.696693
+    y: -0.7066385
+    z: 0.0070570423
+  }
+  InvertedTranslation {
+    x: 0.18294492
+    y: -0.600975
+    z: 1.5080026
+  }
+  Name: "mixamorig:LeftHandMiddle3"
+}
+Joint {
+  ParentIndex: 23
+  Scale {
+    x: 0.9999998
+    y: 0.9999996
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.1234132
+    x: -0.69669306
+    y: 0.70663863
+    z: -0.0070556113
+  }
+  Translation {
+    x: -0.8965174
+    y: -0.045153514
+    z: 1.3776046
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000001
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.123413116
+    x: 0.69669306
+    y: -0.7066387
+    z: 0.0070556123
+  }
+  InvertedTranslation {
+    x: 0.1832938
+    y: -0.6292199
+    z: 1.5080001
+  }
+  Name: "mixamorig:LeftHandMiddle4"
+}
+Joint {
+  ParentIndex: 12
+  Scale {
+    x: 0.9999997
+    y: 0.99999976
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.11390508
+    x: -0.7339604
+    y: 0.6695484
+    z: -0.0057210606
+  }
+  Translation {
+    x: -0.8015305
+    y: -0.06713197
+    z: 1.3955808
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.113905124
+    x: 0.7339604
+    y: -0.6695484
+    z: 0.005721101
+  }
+  InvertedTranslation {
+    x: 0.21791372
+    y: -0.54789704
+    z: 1.4989755
+  }
+  Name: "mixamorig:LeftHandRing1"
+}
+Joint {
+  ParentIndex: 25
+  Scale {
+    x: 0.9999997
+    y: 0.9999997
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.13159624
+    x: -0.7309957
+    y: 0.66921496
+    z: -0.021888277
+  }
+  Translation {
+    x: -0.8323917
+    y: -0.0695242
+    z: 1.39009
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.1315963
+    x: 0.7309958
+    y: -0.6692149
+    z: 0.02188829
+  }
+  InvertedTranslation {
+    x: 0.21795751
+    y: -0.5062821
+    z: 1.5251998
+  }
+  Name: "mixamorig:LeftHandRing2"
+}
+Joint {
+  ParentIndex: 26
+  Scale {
+    x: 0.9999997
+    y: 0.99999964
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.14289635
+    x: -0.728871
+    y: 0.668796
+    z: -0.032245155
+  }
+  Translation {
+    x: -0.860884
+    y: -0.0713715
+    z: 1.3836285
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.14289643
+    x: 0.7288709
+    y: -0.66879594
+    z: 0.032245155
+  }
+  InvertedTranslation {
+    x: 0.21815264
+    y: -0.4880842
+    z: 1.5410479
+  }
+  Name: "mixamorig:LeftHandRing3"
+}
+Joint {
+  ParentIndex: 27
+  Scale {
+    x: 0.99999964
+    y: 0.99999964
+    z: 0.9999995
+  }
+  Rotation {
+    w: 0.1428964
+    x: -0.72887117
+    y: 0.6687957
+    z: -0.032245066
+  }
+  Translation {
+    x: -0.88633543
+    y: -0.07331034
+    z: 1.376961
+  }
+  InvertedScale {
+    x: 1.0000004
+    y: 1.0000004
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.14289646
+    x: 0.72887117
+    y: -0.6687957
+    z: 0.032245077
+  }
+  InvertedTranslation {
+    x: 0.2179145
+    y: -0.5144648
+    z: 1.5410478
+  }
+  Name: "mixamorig:LeftHandRing4"
+}
+Joint {
+  ParentIndex: 12
+  Scale {
+    x: 0.9999997
+    y: 0.9999997
+    z: 0.9999994
+  }
+  Rotation {
+    w: 0.105301134
+    x: -0.78001106
+    y: 0.61675966
+    z: -0.010101561
+  }
+  Translation {
+    x: -0.79204345
+    y: -0.086371824
+    z: 1.3894181
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.10530117
+    x: 0.78001106
+    y: -0.61675954
+    z: 0.010101583
+  }
+  InvertedTranslation {
+    x: 0.2645977
+    y: -0.5335771
+    z: 1.4867958
+  }
+  Name: "mixamorig:LeftHandPinky1"
+}
+Joint {
+  ParentIndex: 29
+  Scale {
+    x: 0.99999964
+    y: 0.9999997
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.10899717
+    x: -0.779503
+    y: 0.61670506
+    z: -0.013024925
+  }
+  Translation {
+    x: -0.82643306
+    y: -0.09439537
+    z: 1.383049
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.10899721
+    x: 0.779503
+    y: -0.616705
+    z: 0.013024953
+  }
+  InvertedTranslation {
+    x: 0.26435265
+    y: -0.5553389
+    z: 1.4921277
+  }
+  Name: "mixamorig:LeftHandPinky2"
+}
+Joint {
+  ParentIndex: 30
+  Scale {
+    x: 0.9999997
+    y: 0.99999976
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.09484677
+    x: -0.7813511
+    y: 0.6168397
+    z: -0.0018417479
+  }
+  Translation {
+    x: -0.8466819
+    y: -0.09872568
+    z: 1.3791554
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.0948468
+    x: 0.78135103
+    y: -0.61683977
+    z: 0.0018417671
+  }
+  InvertedTranslation {
+    x: 0.26457268
+    y: -0.6301247
+    z: 1.4702493
+  }
+  Name: "mixamorig:LeftHandPinky3"
+}
+Joint {
+  ParentIndex: 31
+  Scale {
+    x: 0.99999964
+    y: 0.9999997
+    z: 0.99999946
+  }
+  Rotation {
+    w: 0.09484894
+    x: -0.7813509
+    y: 0.61683965
+    z: -0.0018434719
+  }
+  Translation {
+    x: -0.8656612
+    y: -0.10305386
+    z: 1.3761951
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000005
+  }
+  InvertedRotation {
+    w: 0.094848976
+    x: 0.7813509
+    y: -0.6168396
+    z: 0.0018434887
+  }
+  InvertedTranslation {
+    x: 0.2645977
+    y: -0.6498069
+    z: 1.4702529
+  }
+  Name: "mixamorig:LeftHandPinky4"
+}
+Joint {
+  ParentIndex: 3
+  Scale {
+    x: 0.99999976
+    y: 0.9999998
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.075406715
+    x: -0.7794709
+    y: -0.619714
+    z: -0.05189884
+  }
+  Translation {
+    x: 0.046022814
+    y: -0.019623062
+    z: 1.43405
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.07540674
+    x: 0.7794709
+    y: 0.619714
+    z: 0.051898826
+  }
+  InvertedTranslation {
+    x: -0.24167408
+    y: 0.027183875
+    z: 1.4141635
+  }
+  Name: "mixamorig:RightShoulder"
+}
+Joint {
+  ParentIndex: 33
+  Scale {
+    x: 0.99999976
+    y: 0.99999976
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.070506535
+    x: -0.7415904
+    y: -0.6646299
+    z: -0.057791486
+  }
+  Translation {
+    x: 0.15223482
+    y: -0.04367385
+    z: 1.428245
+  }
+  InvertedScale {
+    x: 1.0000002
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.07050655
+    x: 0.7415904
+    y: 0.6646299
+    z: 0.057791475
+  }
+  InvertedTranslation {
+    x: -0.23030703
+    y: -0.11632426
+    z: 1.4136461
+  }
+  Name: "mixamorig:RightArm"
+}
+Joint {
+  ParentIndex: 34
+  Scale {
+    x: 0.99999976
+    y: 0.9999998
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.07508868
+    x: -0.68390363
+    y: -0.72373974
+    z: -0.05327667
+  }
+  Translation {
+    x: 0.42962196
+    y: -0.07342214
+    z: 1.4204992
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.07508866
+    x: 0.6839036
+    y: 0.72373974
+    z: 0.05327668
+  }
+  InvertedTranslation {
+    x: -0.16292398
+    y: -0.3880626
+    z: 1.4250084
+  }
+  Name: "mixamorig:RightForeArm"
+}
+Joint {
+  ParentIndex: 35
+  Scale {
+    x: 0.99999976
+    y: 0.99999994
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.12538923
+    x: -0.7071677
+    y: -0.6957482
+    z: 0.011220563
+  }
+  Translation {
+    x: 0.7109512
+    y: -0.056824632
+    z: 1.4132851
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.12538926
+    x: 0.7071677
+    y: 0.6957482
+    z: -0.011220579
+  }
+  InvertedTranslation {
+    x: -0.1905616
+    y: -0.424913
+    z: 1.5130076
+  }
+  Name: "mixamorig:RightHand"
+}
+Joint {
+  ParentIndex: 36
+  Scale {
+    x: 0.9999998
+    y: 1.0
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.10531953
+    x: -0.77991915
+    y: -0.6168723
+    z: 0.010127425
+  }
+  Translation {
+    x: 0.7920868
+    y: -0.08614099
+    z: 1.3893783
+  }
+  InvertedScale {
+    x: 0.99999994
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.10531956
+    x: 0.7799192
+    y: 0.61687225
+    z: -0.010127461
+  }
+  InvertedTranslation {
+    x: -0.26461017
+    y: -0.53353506
+    z: 1.4867808
+  }
+  Name: "mixamorig:RightHandPinky1"
+}
+Joint {
+  ParentIndex: 37
+  Scale {
+    x: 0.9999998
+    y: 1.0000001
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.109011024
+    x: -0.779412
+    y: -0.6168171
+    z: 0.013047681
+  }
+  Translation {
+    x: 0.8264784
+    y: -0.094154045
+    z: 1.3830075
+  }
+  InvertedScale {
+    x: 0.9999999
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.10901104
+    x: 0.779412
+    y: 0.6168171
+    z: -0.013047703
+  }
+  InvertedTranslation {
+    x: -0.26436716
+    y: -0.5553134
+    z: 1.4921057
+  }
+  Name: "mixamorig:RightHandPinky2"
+}
+Joint {
+  ParentIndex: 38
+  Scale {
+    x: 0.9999998
+    y: 1.0000001
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.09486757
+    x: -0.78125936
+    y: -0.6169526
+    z: 0.0018666807
+  }
+  Translation {
+    x: 0.8467279
+    y: -0.09847837
+    z: 1.3791133
+  }
+  InvertedScale {
+    x: 0.9999999
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.09486762
+    x: 0.7812595
+    y: 0.6169526
+    z: -0.0018667096
+  }
+  InvertedTranslation {
+    x: -0.26458633
+    y: -0.6300779
+    z: 1.4702369
+  }
+  Name: "mixamorig:RightHandPinky3"
+}
+Joint {
+  ParentIndex: 39
+  Scale {
+    x: 0.9999998
+    y: 1.0
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.09486757
+    x: -0.7812594
+    y: -0.61695254
+    z: 0.001866671
+  }
+  Translation {
+    x: 0.8657077
+    y: -0.1028009
+    z: 1.376152
+  }
+  InvertedScale {
+    x: 0.9999999
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.094867624
+    x: 0.78125936
+    y: 0.6169526
+    z: -0.0018666998
+  }
+  InvertedTranslation {
+    x: -0.264611
+    y: -0.6497677
+    z: 1.4702368
+  }
+  Name: "mixamorig:RightHandPinky4"
+}
+Joint {
+  ParentIndex: 36
+  Scale {
+    x: 0.99999976
+    y: 1.0
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.11392728
+    x: -0.73385954
+    y: -0.6696548
+    z: 0.0057652136
+  }
+  Translation {
+    x: 0.80156803
+    y: -0.06689736
+    z: 1.3955408
+  }
+  InvertedScale {
+    x: 0.99999994
+    y: 1.0000002
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.11392733
+    x: 0.73385954
+    y: 0.6696548
+    z: -0.005765229
+  }
+  InvertedTranslation {
+    x: -0.21789777
+    y: -0.5478139
+    z: 1.4989805
+  }
+  Name: "mixamorig:RightHandRing1"
+}
+Joint {
+  ParentIndex: 41
+  Scale {
+    x: 0.99999976
+    y: 1.0000001
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.13161139
+    x: -0.73089534
+    y: -0.6693202
+    z: 0.021930834
+  }
+  Translation {
+    x: 0.8324299
+    y: -0.0692801
+    z: 1.3900476
+  }
+  InvertedScale {
+    x: 0.9999999
+    y: 1.0000002
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.13161142
+    x: 0.7308953
+    y: 0.6693202
+    z: -0.021930832
+  }
+  InvertedTranslation {
+    x: -0.2179419
+    y: -0.50621825
+    z: 1.5251942
+  }
+  Name: "mixamorig:RightHandRing2"
+}
+Joint {
+  ParentIndex: 42
+  Scale {
+    x: 0.9999997
+    y: 1.0000001
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.1429052
+    x: -0.72877127
+    y: -0.6689008
+    z: 0.03228508
+  }
+  Translation {
+    x: 0.860923
+    y: -0.071119055
+    z: 1.3835843
+  }
+  InvertedScale {
+    x: 0.9999999
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.14290525
+    x: 0.7287713
+    y: 0.6689008
+    z: -0.03228509
+  }
+  InvertedTranslation {
+    x: -0.21813685
+    y: -0.48804083
+    z: 1.5410339
+  }
+  Name: "mixamorig:RightHandRing3"
+}
+Joint {
+  ParentIndex: 43
+  Scale {
+    x: 0.9999997
+    y: 1.0000001
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.1429052
+    x: -0.72877127
+    y: -0.6689008
+    z: 0.032285072
+  }
+  Translation {
+    x: 0.88637364
+    y: -0.07305041
+    z: 1.376916
+  }
+  InvertedScale {
+    x: 0.9999999
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.14290527
+    x: 0.7287713
+    y: 0.6689008
+    z: -0.032285083
+  }
+  InvertedTranslation {
+    x: -0.21789795
+    y: -0.5144203
+    z: 1.5410341
+  }
+  Name: "mixamorig:RightHandRing4"
+}
+Joint {
+  ParentIndex: 36
+  Scale {
+    x: 0.9999998
+    y: 0.99999994
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.13352162
+    x: -0.6947231
+    y: -0.7065624
+    z: 0.017359706
+  }
+  Translation {
+    x: 0.80457044
+    y: -0.04831517
+    z: 1.3986111
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.13352157
+    x: 0.6947231
+    y: 0.7065624
+    z: -0.01735969
+  }
+  InvertedTranslation {
+    x: -0.18325563
+    y: -0.4907113
+    z: 1.5268928
+  }
+  Name: "mixamorig:RightHandMiddle1"
+}
+Joint {
+  ParentIndex: 45
+  Scale {
+    x: 0.99999976
+    y: 0.99999994
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.15811226
+    x: -0.6895424
+    y: -0.70550007
+    z: 0.042444196
+  }
+  Translation {
+    x: 0.8405847
+    y: -0.04686287
+    z: 1.3909014
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.1581122
+    x: 0.6895424
+    y: 0.70550007
+    z: -0.042444184
+  }
+  InvertedTranslation {
+    x: -0.18345293
+    y: -0.41784376
+    z: 1.560493
+  }
+  Name: "mixamorig:RightHandMiddle2"
+}
+Joint {
+  ParentIndex: 46
+  Scale {
+    x: 0.99999976
+    y: 0.99999994
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.1234266
+    x: -0.6965875
+    y: -0.7067399
+    z: 0.0071048723
+  }
+  Translation {
+    x: 0.8687923
+    y: -0.046065185
+    z: 1.3826408
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.123426534
+    x: 0.69658756
+    y: 0.7067399
+    z: -0.0071048667
+  }
+  InvertedTranslation {
+    x: -0.18290743
+    y: -0.600907
+    z: 1.5080036
+  }
+  Name: "mixamorig:RightHandMiddle3"
+}
+Joint {
+  ParentIndex: 47
+  Scale {
+    x: 0.9999998
+    y: 0.99999994
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.12342642
+    x: -0.69658756
+    y: -0.70673996
+    z: 0.007104824
+  }
+  Translation {
+    x: 0.89654833
+    y: -0.04489013
+    z: 1.3775586
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.12342636
+    x: 0.6965875
+    y: 0.70673996
+    z: -0.007104824
+  }
+  InvertedTranslation {
+    x: -0.18325573
+    y: -0.6291473
+    z: 1.5080035
+  }
+  Name: "mixamorig:RightHandMiddle4"
+}
+Joint {
+  ParentIndex: 36
+  Scale {
+    x: 0.9999997
+    y: 0.99999994
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.14839515
+    x: -0.6613491
+    y: -0.73468083
+    z: 0.028987555
+  }
+  Translation {
+    x: 0.7980024
+    y: -0.025770102
+    z: 1.3982701
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.14839509
+    x: 0.6613491
+    y: 0.7346809
+    z: -0.028987559
+  }
+  InvertedTranslation {
+    x: -0.16121931
+    y: -0.43140617
+    z: 1.5428965
+  }
+  Name: "mixamorig:RightHandIndex1"
+}
+Joint {
+  ParentIndex: 49
+  Scale {
+    x: 0.9999997
+    y: 0.9999998
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.17692539
+    x: -0.6542945
+    y: -0.73273355
+    z: 0.060809005
+  }
+  Translation {
+    x: 0.83326036
+    y: -0.020885205
+    z: 1.3895841
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000002
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.17692536
+    x: 0.6542945
+    y: 0.73273355
+    z: -0.060809016
+  }
+  InvertedTranslation {
+    x: -0.16158473
+    y: -0.33263987
+    z: 1.5776391
+  }
+  Name: "mixamorig:RightHandIndex2"
+}
+Joint {
+  ParentIndex: 50
+  Scale {
+    x: 0.99999976
+    y: 0.9999999
+    z: 0.99999964
+  }
+  Rotation {
+    w: 0.16076319
+    x: -0.65845174
+    y: -0.7340088
+    z: 0.042750563
+  }
+  Translation {
+    x: 0.86016345
+    y: -0.016717765
+    z: 1.3804202
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.16076313
+    x: 0.65845174
+    y: 0.7340088
+    z: -0.042750582
+  }
+  InvertedTranslation {
+    x: -0.16183928
+    y: -0.4385849
+    z: 1.5579386
+  }
+  Name: "mixamorig:RightHandIndex3"
+}
+Joint {
+  ParentIndex: 51
+  Scale {
+    x: 0.9999997
+    y: 0.9999999
+    z: 0.9999996
+  }
+  Rotation {
+    w: 0.1607633
+    x: -0.65845174
+    y: -0.7340088
+    z: 0.04275047
+  }
+  Translation {
+    x: 0.88292456
+    y: -0.014245413
+    z: 1.373767
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000004
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.16076322
+    x: 0.65845174
+    y: 0.7340088
+    z: -0.0427505
+  }
+  InvertedTranslation {
+    x: -0.16121985
+    y: -0.46241888
+    z: 1.5579387
+  }
+  Name: "mixamorig:RightHandIndex4"
+}
+Joint {
+  ParentIndex: 36
+  Scale {
+    x: 0.9999998
+    y: 0.9999997
+    z: 0.99999976
+  }
+  Rotation {
+    w: 0.23358808
+    x: -0.43543375
+    y: -0.8500772
+    z: 0.1822171
+  }
+  Translation {
+    x: 0.73080885
+    y: -0.027251445
+    z: 1.3996336
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.23358798
+    x: 0.43543363
+    y: 0.85007715
+    z: -0.18221709
+  }
+  InvertedTranslation {
+    x: 0.06268508
+    y: 0.2546209
+    z: 1.5572536
+  }
+  Name: "mixamorig:RightHandThumb1"
+}
+Joint {
+  ParentIndex: 53
+  Scale {
+    x: 0.9999998
+    y: 0.99999976
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.21690749
+    x: -0.44397825
+    y: -0.8563758
+    z: 0.14984974
+  }
+  Translation {
+    x: 0.756997
+    y: -0.0014362149
+    z: 1.3786477
+  }
+  InvertedScale {
+    x: 1.0000001
+    y: 1.0000002
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.21690746
+    x: 0.44397825
+    y: 0.8563758
+    z: -0.14984974
+  }
+  InvertedTranslation {
+    x: 0.059780743
+    y: 0.093747735
+    z: 1.5688707
+  }
+  Name: "mixamorig:RightHandThumb2"
+}
+Joint {
+  ParentIndex: 54
+  Scale {
+    x: 0.9999998
+    y: 0.99999976
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.22437984
+    x: -0.44024888
+    y: -0.8537212
+    z: 0.1643009
+  }
+  Translation {
+    x: 0.7829929
+    y: 0.01359724
+    z: 1.3622952
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000002
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.22437984
+    x: 0.44024888
+    y: 0.8537213
+    z: -0.16430092
+  }
+  InvertedTranslation {
+    x: 0.0645719
+    y: 0.11287742
+    z: 1.5659506
+  }
+  Name: "mixamorig:RightHandThumb3"
+}
+Joint {
+  ParentIndex: 55
+  Scale {
+    x: 0.99999976
+    y: 0.99999976
+    z: 0.9999997
+  }
+  Rotation {
+    w: 0.22438067
+    x: -0.4402489
+    y: -0.8537206
+    z: 0.16430277
+  }
+  Translation {
+    x: 0.7990182
+    y: 0.029147735
+    z: 1.3507632
+  }
+  InvertedScale {
+    x: 1.0
+    y: 1.0000001
+    z: 1.0000004
+  }
+  InvertedRotation {
+    w: 0.2243806
+    x: 0.44024882
+    y: 0.85372066
+    z: -0.16430277
+  }
+  InvertedTranslation {
+    x: 0.06268558
+    y: 0.087822735
+    z: 1.5659503
+  }
+  Name: "mixamorig:RightHandThumb4"
+}
+Joint {
+  Scale {
+    x: 1.0
+    y: 0.99999976
+    z: 1.0000002
+  }
+  Rotation {
+    w: 0.69725215
+    x: -0.7167884
+    y: -0.005292271
+    z: -0.0050807237
+  }
+  Translation {
+    x: -0.08869956
+    y: -0.0054452224
+    z: 0.96594405
+  }
+  InvertedScale {
+    x: 1.0
+    y: 0.9999998
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.69725215
+    x: 0.7167884
+    y: 0.0052921786
+    z: 0.0050806412
+  }
+  InvertedTranslation {
+    x: 0.07452854
+    y: 0.96662265
+    z: 0.032120988
+  }
+  Name: "mixamorig:LeftUpLeg"
+}
+Joint {
+  ParentIndex: 57
+  Scale {
+    x: 1.0
+    y: 0.9999998
+    z: 1.0000002
+  }
+  Rotation {
+    w: 0.66236264
+    x: -0.749183
+    y: -0.00051948224
+    z: -0.0005562852
+  }
+  Translation {
+    x: -0.08224702
+    y: -0.017593512
+    z: 0.52636874
+  }
+  InvertedScale {
+    x: 0.99999994
+    y: 0.99999976
+    z: 1.0000002
+  }
+  InvertedRotation {
+    w: 0.66236264
+    x: 0.749183
+    y: 0.00051940314
+    z: 0.0005562056
+  }
+  InvertedTranslation {
+    x: 0.08144674
+    y: 0.5203692
+    z: 0.08197974
+  }
+  Name: "mixamorig:LeftLeg"
+}
+Joint {
+  ParentIndex: 58
+  Scale {
+    x: 1.0000001
+    y: 1.0000001
+    z: 1.0
+  }
+  Rotation {
+    w: 0.94235116
+    x: -0.3346214
+    y: -0.0010629881
+    z: 0.001294152
+  }
+  Translation {
+    x: -0.08157714
+    y: -0.07177495
+    z: 0.08758795
+  }
+  InvertedScale {
+    x: 0.9999998
+    y: 0.99999964
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.9423513
+    x: 0.3346214
+    y: 0.0010630316
+    z: -0.0012941393
+  }
+  InvertedTranslation {
+    x: 0.08170316
+    y: 0.11079886
+    z: -0.02294166
+  }
+  Name: "mixamorig:LeftFoot"
+}
+Joint {
+  ParentIndex: 59
+  Scale {
+    x: 1.0000001
+    y: 1.0000004
+    z: 0.99999976
+  }
+  Rotation {
+    w: 0.9999992
+    x: -1.928957e-05
+    y: 0.0012523428
+    z: 9.5554795e-05
+  }
+  Translation {
+    x: -0.0818147
+    y: 0.034942217
+    z: 0.00086376816
+  }
+  InvertedScale {
+    x: 0.9999998
+    y: 0.9999995
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.9999992
+    x: 1.928941e-05
+    y: -0.0012523428
+    z: -9.555478e-05
+  }
+  InvertedTranslation {
+    x: 0.08180991
+    y: -0.03495782
+    z: -0.00066020235
+  }
+  Name: "mixamorig:LeftToeBase"
+}
+Joint {
+  ParentIndex: 60
+  Scale {
+    x: 1.0000001
+    y: 1.0000004
+    z: 0.99999976
+  }
+  Rotation {
+    w: 0.9999992
+    x: -1.9297766e-05
+    y: 0.0012523422
+    z: 9.5514406e-05
+  }
+  Translation {
+    x: -0.08183237
+    y: 0.12745509
+    z: 0.00086021976
+  }
+  InvertedScale {
+    x: 0.9999998
+    y: 0.9999995
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.9999992
+    x: 1.9297606e-05
+    y: -0.0012523424
+    z: -9.5514384e-05
+  }
+  InvertedTranslation {
+    x: 0.08180992
+    y: -0.12747064
+    z: -0.0006602045
+  }
+  Name: "mixamorig:LeftToe_End"
+}
+Joint {
+  Scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0000001
+  }
+  Rotation {
+    w: 0.69723874
+    x: -0.716801
+    y: 0.005246261
+    z: 0.005196847
+  }
+  Translation {
+    x: 0.08869657
+    y: -0.005396873
+    z: 0.9659803
+  }
+  InvertedScale {
+    x: 0.99999994
+    y: 0.9999998
+    z: 1.0
+  }
+  InvertedRotation {
+    w: 0.6972387
+    x: 0.71680105
+    y: -0.0052461834
+    z: -0.005196775
+  }
+  InvertedTranslation {
+    x: -0.07442481
+    y: 0.96666586
+    z: 0.032128103
+  }
+  Name: "mixamorig:RightUpLeg"
+}
+Joint {
+  ParentIndex: 62
+  Scale {
+    x: 1.0
+    y: 0.99999994
+    z: 1.0000001
+  }
+  Rotation {
+    w: 0.6623596
+    x: -0.7491857
+    y: 0.00054615084
+    z: 0.0005847589
+  }
+  Translation {
+    x: 0.08220119
+    y: -0.017563276
+    z: 0.5263637
+  }
+  InvertedScale {
+    x: 1.0
+    y: 0.9999998
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.66235965
+    x: 0.7491856
+    y: -0.00054608396
+    z: -0.0005846897
+  }
+  InvertedTranslation {
+    x: -0.08135989
+    y: 0.5203733
+    z: 0.08195399
+  }
+  Name: "mixamorig:RightLeg"
+}
+Joint {
+  ParentIndex: 63
+  Scale {
+    x: 0.99999994
+    y: 1.0
+    z: 1.0
+  }
+  Rotation {
+    w: 0.94235003
+    x: -0.3346252
+    y: 0.001064087
+    z: -0.0011191833
+  }
+  Translation {
+    x: 0.081496954
+    y: -0.0717487
+    z: 0.08758032
+  }
+  InvertedScale {
+    x: 1.0
+    y: 0.9999998
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.94235003
+    x: 0.3346252
+    y: -0.0010641239
+    z: 0.0011191717
+  }
+  InvertedTranslation {
+    x: -0.081588954
+    y: 0.110801
+    z: -0.022941737
+  }
+  Name: "mixamorig:RightFoot"
+}
+Joint {
+  ParentIndex: 64
+  Scale {
+    x: 0.99999994
+    y: 1.0000002
+    z: 0.9999999
+  }
+  Rotation {
+    w: 0.99999934
+    x: -1.894684e-05
+    y: -0.0011779518
+    z: 5.7027508e-05
+  }
+  Translation {
+    x: 0.08168906
+    y: 0.034966774
+    z: 0.0008561015
+  }
+  InvertedScale {
+    x: 1.0
+    y: 0.99999976
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.9999994
+    x: 1.8946712e-05
+    y: 0.0011779519
+    z: -5.702751e-05
+  }
+  InvertedTranslation {
+    x: -0.08169486
+    y: -0.034957428
+    z: -0.0006649676
+  }
+  Name: "mixamorig:RightToeBase"
+}
+Joint {
+  ParentIndex: 65
+  Scale {
+    x: 0.99999994
+    y: 1.0000001
+    z: 0.9999999
+  }
+  Rotation {
+    w: 0.99999934
+    x: -1.8958226e-05
+    y: -0.001177952
+    z: 5.7027697e-05
+  }
+  Translation {
+    x: 0.0816785
+    y: 0.12747975
+    z: 0.00085258344
+  }
+  InvertedScale {
+    x: 1.0
+    y: 0.9999999
+    z: 1.0000001
+  }
+  InvertedRotation {
+    w: 0.9999994
+    x: 1.89581e-05
+    y: 0.001177952
+    z: -5.70277e-05
+  }
+  InvertedTranslation {
+    x: -0.08169486
+    y: -0.1274704
+    z: -0.00066497043
+  }
+  Name: "mixamorig:RightToe_End"
+}

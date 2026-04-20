@@ -39,5 +39,11 @@ def register():
     bpy.utils.register_class(export.IMG_OT_exporter)
     bpy.types.TOPBAR_MT_file_export.append(img_menu_func)
 
+
+def unregister():
+    bpy.types.TOPBAR_MT_file_export.remove(img_menu_func)
+    bpy.utils.unregister_class(export.IMG_OT_exporter)
+
+
 if __name__ == "__main__":
     register()

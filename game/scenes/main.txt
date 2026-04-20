@@ -3,8 +3,8 @@ name: "Scene"
 camera {
   node: "Camera"
   field_of_view: 60
-  near_plane: 30
-  far_plane: 1600
+  near_plane: 0.3
+  far_plane: 50
 }
 node {
   name: "Camera"
@@ -21,8 +21,8 @@ node {
       z: -0.981627285
     }
     Translation {
-      y: 190
-      z: 160
+      y: 1.9
+      z: 1.6
     }
   }
   component {
@@ -33,11 +33,11 @@ node {
     }
     property {
       name: "Near Plane"
-      float: 30
+      float: 0.1
     }
     property {
       name: "Far Plane"
-      float: 1600
+      float: 50
     }
   }
 }

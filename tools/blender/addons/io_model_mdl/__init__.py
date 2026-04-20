@@ -41,5 +41,10 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(mdl_menu_func)
 
 
+def unregister():
+    bpy.types.TOPBAR_MT_file_export.remove(mdl_menu_func)
+    bpy.utils.unregister_class(export.MDL_OT_exporter)
+
+
 if __name__ == "__main__":
     register()

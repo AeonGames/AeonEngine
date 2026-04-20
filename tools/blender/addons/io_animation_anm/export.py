@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2019,2021 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2017,2019,2021,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,39 +20,72 @@ import animation_pb2
 import google.protobuf.text_format
 
 
+def _get_action_fcurves(action, slot=None):
+    """Return the FCurves collection for an Action.
+
+    Handles both the legacy (pre-Blender 4.4) Action.fcurves API and the
+    slotted-actions API introduced in 4.4 / required in 5.x, where fcurves
+    live on ``action.layers[i].strips[j].channelbag(slot).fcurves``.
+
+    If ``slot`` is None, the first slot that has a channelbag is used.
+    Returns ``None`` if no fcurves can be found.
+    """
+    # Legacy path: some Blender versions still expose Action.fcurves.
+    legacy = getattr(action, "fcurves", None)
+    if legacy is not None:
+        return legacy
+    # Slotted path.
+    layers = getattr(action, "layers", None)
+    if not layers:
+        return None
+    layer = layers[0]
+    strips = getattr(layer, "strips", None)
+    if not strips:
+        return None
+    strip = strips[0]
+    candidate_slots = [slot] if slot is not None else list(getattr(action, "slots", []))
+    for s in candidate_slots:
+        if s is None:
+            continue
+        cb = strip.channelbag(s)
+        if cb is not None:
+            return cb.fcurves
+    return None
+
+
 class Bone():
 
-    def __init__(self, action, bone):
-        self.action = action
+    def __init__(self, fcurves, bone):
+        self.fcurves = fcurves
         self.bone = bone
         self.scale = (
-            action.fcurves.find("pose.bones[\"" + bone.name + "\"].scale", 0),
-            action.fcurves.find("pose.bones[\"" + bone.name + "\"].scale", 1),
-            action.fcurves.find("pose.bones[\"" + bone.name + "\"].scale", 2)
+            fcurves.find("pose.bones[\"" + bone.name + "\"].scale", index=0),
+            fcurves.find("pose.bones[\"" + bone.name + "\"].scale", index=1),
+            fcurves.find("pose.bones[\"" + bone.name + "\"].scale", index=2)
         )
         self.rotation = (
-            action.fcurves.find(
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].rotation_quaternion",
-                0),
-            action.fcurves.find(
+                index=0),
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].rotation_quaternion",
-                1),
-            action.fcurves.find(
+                index=1),
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].rotation_quaternion",
-                2),
-            action.fcurves.find(
+                index=2),
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].rotation_quaternion",
-                3))
+                index=3))
         self.translation = (
-            action.fcurves.find(
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].location",
-                0),
-            action.fcurves.find(
+                index=0),
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].location",
-                1),
-            action.fcurves.find(
+                index=1),
+            fcurves.find(
                 "pose.bones[\"" + bone.name + "\"].location",
-                2))
+                index=2))
 
     def get_matrix(self, frame):
         # Sadly, mathutils.Matrix.Scale does not work the way we're forced to
@@ -76,7 +109,7 @@ class Bone():
                 float(frame)), 0.0 if self.translation[1] is None else self.translation[1].evaluate(
                 float(frame)), 0.0 if self.translation[2] is None else self.translation[2].evaluate(
                 float(frame))))
-        return translation * rotation * scale
+        return translation @ rotation @ scale
 
     def __str__(self):
         return "Bone: " + self.bone.name + "\n" + \
@@ -92,6 +125,11 @@ class ANM_OT_exporter(bpy.types.Operator):
     bl_label= "Export AeonGames Animations"
 
     directory: bpy.props.StringProperty(subtype='DIR_PATH')
+    as_text: bpy.props.BoolProperty(
+        name="Export as Text",
+        description="Write the protobuf message as a human-readable text file (.txt) instead of the binary .anm",
+        default=False
+    )
 
     EPSILON = 0.00001
 
@@ -108,9 +146,14 @@ class ANM_OT_exporter(bpy.types.Operator):
             return {'CANCELLED'}
         bpy.ops.object.mode_set()
         current_action = context.active_object.animation_data.action
+        current_slot = getattr(context.active_object.animation_data, "action_slot", None)
         current_frame = context.scene.frame_current
 
         for action in bpy.data.actions:
+            fcurves = _get_action_fcurves(action, current_slot if action is current_action else None)
+            if fcurves is None:
+                print("Skipping action", action.name, "(no fcurves / no usable slot)")
+                continue
             # Create Protocol Buffer
             animation_buffer = animation_pb2.AnimationMsg()
             # Initialize Protocol Buffer Message
@@ -121,7 +164,7 @@ class ANM_OT_exporter(bpy.types.Operator):
             print(action.name)
             bones = []
             for bone in context.active_object.data.bones:
-                bones.append(Bone(action, bone))
+                bones.append(Bone(fcurves, bone))
 
             for frame in range(int(action.frame_range[0]), int(
                     action.frame_range[1]) + 1):
@@ -130,14 +173,14 @@ class ANM_OT_exporter(bpy.types.Operator):
                 for bone in bones:
                     if not bone.bone.parent:
                         frame_matrices.append(
-                            bone.bone.matrix_local * bone.get_matrix(frame))
+                            bone.bone.matrix_local @ bone.get_matrix(frame))
                     else:
                         frame_matrices.append(
                             frame_matrices[
                                 context.active_object.data.bones.find(
-                                    bone.bone.parent.name)] *
-                            bone.bone.parent.matrix_local.inverted() *
-                            bone.bone.matrix_local *
+                                    bone.bone.parent.name)] @
+                            bone.bone.parent.matrix_local.inverted() @
+                            bone.bone.matrix_local @
                             bone.get_matrix(frame))
                 frame_buffer = animation_buffer.Frame.add()
                 for frame_matrix in frame_matrices:
@@ -148,30 +191,24 @@ class ANM_OT_exporter(bpy.types.Operator):
                     bone_buffer.Rotation.w, bone_buffer.Rotation.x, bone_buffer.Rotation.y, bone_buffer.Rotation.z = rotation
                     bone_buffer.Translation.x, bone_buffer.Translation.y, bone_buffer.Translation.z = translation
 
-            print("Writting", self.directory + "/" + action.name + ".anm", ".")
-            out = open(self.directory + "/" + action.name + ".anm", "wb")
-            magick_struct = struct.Struct('8s')
-            out.write(magick_struct.pack(b'AEONANM\x00'))
-            out.write(animation_buffer.SerializeToString())
-            out.close()
-            print("Done.")
-            print(
-                "Writting",
-                self.directory +
-                "/" +
-                action.name +
-                ".anm.txt",
-                ".")
-            out = open(
-                self.directory +
-                os.sep +
-                action.name +
-                ".anm.txt",
-                "wt")
-            out.write("AEONANM\n")
-            out.write(
-                google.protobuf.text_format.MessageToString(animation_buffer))
-            out.close()
+            anm_path = self.directory + os.sep + action.name + ".anm"
+            if self.as_text:
+                text_path = self.directory + os.sep + action.name + ".txt"
+                print("Writting", text_path, ".")
+                out = open(text_path, "wt")
+                out.write("AEONANM\n")
+                out.write(
+                    google.protobuf.text_format.MessageToString(animation_buffer))
+                out.close()
+                print("Done.")
+            else:
+                print("Writting", anm_path, ".")
+                out = open(anm_path, "wb")
+                magick_struct = struct.Struct('8s')
+                out.write(magick_struct.pack(b'AEONANM\x00'))
+                out.write(animation_buffer.SerializeToString())
+                out.close()
+                print("Done.")
         current_action = context.active_object.animation_data.action
         current_frame = context.scene.frame_current
         print("Done.")
