@@ -20,6 +20,7 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/Vector3.hpp"
+#include "aeongames/Quaternion.hpp"
 
 namespace AeonGames
 {
@@ -164,36 +165,33 @@ namespace AeonGames
 
     void OverTheShoulderCamera::Update ( Node& aNode, double /*aDelta*/ )
     {
-        // Resolve the parent Node (the character). If the parent is the
-        // scene root rather than a Node, fall back to the world origin so
-        // this component remains well-defined while prototyping.
-        Vector3 parent_origin{0.0f, 0.0f, 0.0f};
-        if ( Node * parent = GetNodePtr ( aNode.GetParent() ) )
-        {
-            parent_origin = parent->GetGlobalTransform().GetTranslation();
-        }
-
-        // Apply the over-the-shoulder offset in world space for this first
-        // pass (no yaw tracking yet). The caller is expected to tune these
-        // three floats to match the engine's axis convention; with Z-up /
-        // +Y-forward that maps to (right, -back, up), so a positive
-        // mDistanceBehind moves the camera along -Y.
-        Vector3 offset{ mShoulderOffset, -mDistanceBehind, mHeightOffset };
-        Vector3 camera_position = parent_origin + offset;
-
-        Transform global = aNode.GetGlobalTransform();
-        global.SetTranslation ( camera_position );
-        aNode.SetGlobalTransform ( global );
-
-        // Mirror the Camera component behaviour: if this node is the active
-        // scene camera, push projection parameters into the scene.
+        // The OTSC lives on the same node as the character/model, so it
+        // must NOT mutate the node's transform. Instead, when this node is
+        // the active scene camera, compute a virtual view transform offset
+        // from the character and push it (and the projection parameters)
+        // into the scene. The renderer reads scene->GetViewMatrix().
         auto scene = aNode.GetScene();
-        if ( scene && scene->GetCamera() == &aNode )
+        if ( !scene || scene->GetCamera() != &aNode )
         {
-            scene->SetFieldOfView ( mFieldOfView );
-            scene->SetNear ( mNearPlane );
-            scene->SetFar ( mFarPlane );
+            return;
         }
+
+        const Transform& character = aNode.GetGlobalTransform();
+
+        // Offset is expressed in the character's local frame so that the
+        // camera orbits with the character as it turns. Axis convention
+        // assumed: +X right, +Y forward, +Z up (so "behind" = -Y).
+        Vector3 local_offset{ mShoulderOffset, -mDistanceBehind, mHeightOffset };
+        Vector3 world_offset = character.GetRotation() * local_offset;
+
+        Transform view_transform;
+        view_transform.SetTranslation ( character.GetTranslation() + world_offset );
+        view_transform.SetRotation ( character.GetRotation() );
+
+        scene->SetViewMatrix ( view_transform.GetInvertedMatrix() );
+        scene->SetFieldOfView ( mFieldOfView );
+        scene->SetNear ( mNearPlane );
+        scene->SetFar ( mFarPlane );
     }
 
     void OverTheShoulderCamera::Render ( const Node& /*aNode*/, Renderer& /*aRenderer*/, void* /*aWindowId*/ )

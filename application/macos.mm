@@ -458,9 +458,9 @@ namespace AeonGames
 
                     if ( mRenderer )
                     {
-                        if ( const Node * camera = aScene.GetCamera() )
+                        if ( aScene.GetCamera() )
                         {
-                            mRenderer->SetViewMatrix ( ( __bridge void* ) mNSView, camera->GetGlobalTransform().GetInverted().GetMatrix() );
+                            mRenderer->SetViewMatrix ( ( __bridge void* ) mNSView, aScene.GetViewMatrix() );
                             Matrix4x4 projection{};
                             projection.Perspective ( aScene.GetFieldOfView(), mAspectRatio, aScene.GetNear(), aScene.GetFar() );
                             mRenderer->SetProjectionMatrix ( ( __bridge void* ) mNSView, projection );

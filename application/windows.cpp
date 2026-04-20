@@ -547,9 +547,9 @@ namespace AeonGames
                     mGuiOverlay->BeginFrame ( mWindowId, delta.count() );
                     mGuiOverlay->EndFrame ( mWindowId );
                 }
-                if ( const Node * camera = aScene.GetCamera() )
+                if ( aScene.GetCamera() )
                 {
-                    mRenderer->SetViewMatrix ( mWindowId, camera->GetGlobalTransform().GetInverted().GetMatrix() );
+                    mRenderer->SetViewMatrix ( mWindowId, aScene.GetViewMatrix() );
                     Matrix4x4 projection {};
                     projection.Perspective ( aScene.GetFieldOfView(), mAspectRatio, aScene.GetNear(), aScene.GetFar() );
                     mRenderer->SetProjectionMatrix ( mWindowId, projection );

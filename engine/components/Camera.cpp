@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -132,6 +132,7 @@ namespace AeonGames
         auto scene = aNode.GetScene();
         if ( scene && scene->GetCamera() == &aNode )
         {
+            scene->SetViewMatrix ( aNode.GetGlobalTransform().GetInvertedMatrix() );
             scene->SetFieldOfView ( mFieldOfView );
             scene->SetNear ( mNearPlane );
             scene->SetFar ( mFarPlane );

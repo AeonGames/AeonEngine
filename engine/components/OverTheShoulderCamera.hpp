@@ -22,12 +22,14 @@ namespace AeonGames
     class Node;
     /** @brief Over-the-shoulder camera component.
      *
-     * Positions the owning node behind and to the side of its parent node's
-     * origin, producing a classic third-person "over the shoulder" framing.
-     * The parent is expected to be the character node (typically the one
-     * carrying a ModelComponent). The camera's own translation is set each
-     * Update() as: parent_global_translation + (right, up, back) in world
-     * space. Rotation is left untouched for this initial version.
+     * Lives on the same node as the character (typically the node carrying a
+     * ModelComponent). The component does not modify the owning node's
+     * transform; instead, when the owning node is the active scene camera it
+     * computes a virtual view position offset from the node's origin in the
+     * node's local frame -- (right, back, up) tied to the node rotation --
+     * and writes the resulting view matrix and projection parameters into
+     * the scene. The renderer then picks these up via Scene::GetViewMatrix()
+     * and the field-of-view / near / far getters.
      */
     class OverTheShoulderCamera final : public Component
     {
@@ -46,11 +48,14 @@ namespace AeonGames
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
 
-        /** Horizontal offset from the character origin (positive = right shoulder). */
+        /** Horizontal offset from the character origin in the node's local
+         * frame (positive = right shoulder). */
         float GetShoulderOffset() const;
-        /** Vertical offset from the character origin (positive = up). */
+        /** Vertical offset from the character origin in the node's local
+         * frame (positive = up). */
         float GetHeightOffset() const;
-        /** Distance behind the character along world -Y (positive = farther back). */
+        /** Distance behind the character along the node's local -forward
+         * axis (positive = farther back). */
         float GetDistanceBehind() const;
         float GetFieldOfView() const;
         float GetNearPlane() const;
