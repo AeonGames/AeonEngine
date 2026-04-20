@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2022 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2022,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ namespace AeonGames
         QSettings settings{};
         settings.beginGroup ( "Camera" );
         setFieldOfView ( settings.value ( "FieldOfView", 60.0f ).toDouble() );
-        setNear ( settings.value ( "Near", 1.0f ).toDouble() );
-        setFar ( settings.value ( "Far", 1600.0f ).toDouble() );
+        setNear ( settings.value ( "Near", 0.01f ).toDouble() );
+        setFar ( settings.value ( "Far", 16.0f ).toDouble() );
         settings.endGroup();
     }
 
@@ -89,8 +89,8 @@ namespace AeonGames
         if ( mUi.buttonBox->buttonRole ( aButton ) == QDialogButtonBox::ResetRole )
         {
             setFieldOfView ( 60.0 );
-            setNear ( 1.0 );
-            setFar ( 1600.0 );
+            setNear ( 0.01 );
+            setFar ( 16.0 );
         }
     }
 }

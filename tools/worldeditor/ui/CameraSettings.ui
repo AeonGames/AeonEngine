@@ -71,11 +71,17 @@
        </item>
        <item row="2" column="1">
         <widget class="QDoubleSpinBox" name="dblNear">
+         <property name="decimals">
+          <number>4</number>
+         </property>
          <property name="minimum">
-          <double>1.000000000000000</double>
+          <double>0.010000000000000</double>
          </property>
          <property name="maximum">
           <double>1000000000000000000.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
          </property>
         </widget>
        </item>
@@ -88,14 +94,17 @@
        </item>
        <item row="3" column="1">
         <widget class="QDoubleSpinBox" name="dblFar">
+         <property name="decimals">
+          <number>4</number>
+         </property>
          <property name="minimum">
-          <double>1.000000000000000</double>
+          <double>0.010000000000000</double>
          </property>
          <property name="maximum">
           <double>1000000000000000000.000000000000000</double>
          </property>
          <property name="value">
-          <double>1600.000000000000000</double>
+          <double>16.000000000000000</double>
          </property>
         </widget>
        </item>

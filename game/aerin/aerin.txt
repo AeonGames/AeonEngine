@@ -56,6 +56,9 @@ assembly {
   }
 }
 animation {
+  path: "aerin/animations/Walk.txt"
+}
+animation {
   path: "aerin/animations/Bind.txt"
 }
 animation {

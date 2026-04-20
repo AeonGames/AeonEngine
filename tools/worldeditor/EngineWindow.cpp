@@ -39,10 +39,10 @@ namespace AeonGames
         QWindow{ parent },
         mTimer{},
         mStopWatch{},
-        mFrustumVerticalHalfAngle{}, mStep{ 10 },
+        mFrustumVerticalHalfAngle{}, mStep{ 0.1f },
         mCameraRotation ( QQuaternion::fromAxisAndAngle ( 0.0f, 0.0f, 1.0f, 45.0f ) * QQuaternion::fromAxisAndAngle ( 1.0f, 0.0f, 0.0f, -30.0f ) ),
         // Stand back 3 meters.
-        mCameraLocation { -mCameraRotation.rotatedVector ( forward ) * 300.0f },
+        mCameraLocation { -mCameraRotation.rotatedVector ( forward ) * 3.0f },
         mViewMatrix{}
     {
 #if defined(__APPLE__)
@@ -82,8 +82,8 @@ namespace AeonGames
         QSettings settings{};
         settings.beginGroup ( "Camera" );
         mFieldOfView = settings.value ( "FieldOfView", 60.0f ).toFloat();
-        mNear = settings.value ( "Near", 1.0f ).toFloat();
-        mFar = settings.value ( "Far", 1600.0f ).toFloat();
+        mNear = settings.value ( "Near", 0.01f ).toFloat();
+        mFar = settings.value ( "Far", 16.0f ).toFloat();
         settings.endGroup();
         settings.beginGroup ( "Workspace" );
         mHorizontalSpacing = settings.value ( "HorizontalSpacing", uint32_t ( 16 ) ).toUInt();

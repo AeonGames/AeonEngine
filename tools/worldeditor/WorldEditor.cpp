@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2017-2019,2021,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ namespace AeonGames
         QSettings settings{};
         settings.beginGroup ( "Workspace" );
 
-        QSizeF Scale = settings.value ( "Scale", QSizeF ( 780.0f, 780.0f ) ).toSizeF();
+        QSizeF Scale = settings.value ( "Scale", QSizeF ( 7.8f, 7.8f ) ).toSizeF();
         QColor OddLineColor = settings.value ( "OddLineColor", QColor ( 74, 74, 74 ) ).value<QColor>();
         QColor EvenLineColor = settings.value ( "EvenLineColor", QColor ( 74, 74, 74 ) ).value<QColor>();
         QColor XLineColor = settings.value ( "XLineColor", QColor ( 255, 0, 0 ) ).value<QColor>();
