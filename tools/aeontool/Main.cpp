@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2019,2021,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ limitations under the License.
 #include "Pack.h"
 #include "Base64.h"
 #include "PipelineTool.h"
+#include "Index.h"
 
 int main ( int argc, char *argv[] )
 {
@@ -43,6 +44,7 @@ int main ( int argc, char *argv[] )
         { "pack", [] { return std::make_unique<AeonGames::Pack>(); } },
         { "base64", [] { return std::make_unique<AeonGames::Base64>(); } },
         { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
+        { "index", [] { return std::make_unique<AeonGames::Index>(); } },
     };
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );

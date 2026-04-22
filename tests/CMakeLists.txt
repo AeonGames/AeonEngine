@@ -17,6 +17,7 @@ include_directories(${GTEST_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/engine/include
                     ${CMAKE_CURRENT_BINARY_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
+                    ${ZLIB_INCLUDE_DIR}
                     ${CMAKE_BINARY_DIR}/engine)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/engine/include/Decoder.h
@@ -77,7 +78,8 @@ target_link_libraries(unit-tests
                       AeonEngine
                       Threads::Threads
                       ${GTEST_LIBRARIES}
-                      ${GMOCK_LIBRARIES})
+                      ${GMOCK_LIBRARIES}
+                      ${ZLIB_LIBRARIES})
 if(MSVC)
   # VCPKG compiles GTest/GMock DLLs.
   set_target_properties(

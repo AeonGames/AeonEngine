@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013,2018,2025,2026 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,33 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef AEONGAMES_PACK_H
-#define AEONGAMES_PACK_H
+#ifndef AEONGAMES_INDEX_H
+#define AEONGAMES_INDEX_H
 #include <string>
-#include <cstdint>
 #include "Tool.h"
-#include "aeongames/Package.hpp"
 
 namespace AeonGames
 {
-    /** @brief Tool for packing and unpacking game asset packages. */
-    class Pack : public Tool
+    /** @brief Tool for generating a CRC32 -> path index file from a cooked
+        game asset folder (defaults to a folder named 'game').
+
+        The generated index contains one entry per file under the root
+        folder, each entry being the file's CRC32 (computed over the path
+        relative to the root, using forward slashes) followed by the
+        relative path string. */
+    class Index : public Tool
     {
     public:
-        /** @brief Specifies the pack operation to perform. */
-        enum Action
-        {
-            None = 0,   /**< No action. */
-            Extract,    /**< Extract assets from a package. */
-            Compress,   /**< Compress assets into a package. */
-            Directory   /**< List the directory of a package. */
-        };
         /** @brief Default constructor. */
-        Pack();
+        Index();
         /** @brief Destructor. */
-        ~Pack();
+        ~Index() override;
         /**
-         * @brief Execute the pack tool.
+         * @brief Execute the index tool.
          * @param argc Argument count.
          * @param argv Argument vector.
          * @return Exit status code.
@@ -47,13 +43,9 @@ namespace AeonGames
         int operator() ( int argc, char** argv ) override;
     private:
         void ProcessArgs ( int argc, char** argv );
-        int ExecCompress();
-        int ExecExtract() const;
-        int ExecDirectory() const;
-        Action mAction{};
-        std::string mInputPath;
-        std::string mOutputFile;
-        bool mCompress{true};   /**< If true, deflate eligible files; otherwise store raw. */
+        std::string mRootPath{"game"};
+        std::string mOutputFile{};
+        bool mBinary{false};
     };
 }
 #endif

@@ -18,6 +18,7 @@ set(AEONTOOL_HEADERS
   Pack.h
   Base64.h
   PipelineTool.h
+  Index.h
 )
 set(AEONTOOL_SOURCES
   Main.cpp
@@ -25,6 +26,7 @@ set(AEONTOOL_SOURCES
   Pack.cpp
   Base64.cpp
   PipelineTool.cpp
+  Index.cpp
 )
 
 include_directories(${ZLIB_INCLUDE_DIR}

@@ -13,195 +13,160 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifdef WIN32
-#include <windows.h>
-#endif
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <algorithm>
-#include <cassert>
 #include "Pack.h"
-#include "aeongames/Package.hpp"
 #include "aeongames/CRC.hpp"
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "aeongames/Package.hpp"
 #include "zlib.h"
-#ifndef WIN32
-#include <libgen.h>
-#include <dirent.h>
-#endif
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace AeonGames
 {
-#define CHUNK 16384
-    /* Compress from file source to file dest until EOF on source.
-       def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
-       allocated for processing, Z_STREAM_ERROR if an invalid compression
-       level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
-       version of the library linked do not match, or Z_ERRNO if there is
-       an error reading or writing the files.
-       compressed_size contains the size in bytes of the compressed written file */
-    /** @brief Compress data from source file to dest file using deflate.
-        @param source Input file.
-        @param dest Output file.
-        @param level Compression level.
-        @param compressed_size Receives the compressed data size in bytes.
-        @return Z_OK on success or a zlib error code. */
-    int write_deflated_data ( FILE *source, FILE *dest, int level, uint32_t& compressed_size )
+    namespace
     {
-        int ret, flush;
-        unsigned have;
-        z_stream strm;
-        unsigned char in[CHUNK];
-        unsigned char out[CHUNK];
-        compressed_size = 0;
-        /* allocate deflate state */
-        strm.zalloc = Z_NULL;
-        strm.zfree = Z_NULL;
-        strm.opaque = Z_NULL;
-        ret = deflateInit ( &strm, level );
-        if ( ret != Z_OK )
+        constexpr int kZlibLevel = 5;
+        constexpr size_t kChunk = 16384;
+
+        /** Lowercase the string in place (ASCII only). */
+        std::string ToLowerExt ( const std::filesystem::path& p )
         {
-            return ret;
+            std::string ext = p.extension().string();
+            if ( !ext.empty() && ext.front() == '.' )
+            {
+                ext.erase ( 0, 1 );
+            }
+            std::transform ( ext.begin(), ext.end(), ext.begin(),
+                             [] ( unsigned char c )
+            {
+                return static_cast<char> ( std::tolower ( c ) );
+            } );
+            return ext;
         }
 
-        /* compress until end of file */
-        do
+        /** File extensions whose contents are already compressed; no point
+            re-deflating them and wasting CPU at pack and load time. */
+        bool ShouldStoreRaw ( const std::string& ext )
         {
-            strm.avail_in = static_cast<uInt> ( fread ( in, 1, CHUNK, source ) );
-            if ( ferror ( source ) )
+            static constexpr std::array<const char*, 4> kRaw{ "png", "jpg", "jpeg", "ogg" };
+            for ( const char * e : kRaw )
             {
-                ( void ) deflateEnd ( &strm );
-                return Z_ERRNO;
-            }
-            flush = feof ( source ) ? Z_FINISH : Z_NO_FLUSH;
-            strm.next_in = in;
-
-            /* run deflate() on input until output buffer not full, finish
-               compression if all of source has been read in */
-            do
-            {
-                strm.avail_out = CHUNK;
-                strm.next_out = out;
-                ret = deflate ( &strm, flush ); /* no bad return value */
-                assert ( ret != Z_STREAM_ERROR ); /* state not clobbered */
-                have = CHUNK - strm.avail_out;
-                if ( fwrite ( out, 1, have, dest ) != have || ferror ( dest ) )
+                if ( ext == e )
                 {
-                    ( void ) deflateEnd ( &strm );
-                    return Z_ERRNO;
-                }
-                compressed_size += have;
-            }
-            while ( strm.avail_out == 0 );
-            assert ( strm.avail_in == 0 );  /* all input will be used */
-
-            /* done when last data in file processed */
-        }
-        while ( flush != Z_FINISH );
-        assert ( ret == Z_STREAM_END );     /* stream will be complete */
-
-        /* clean up and return */
-        ( void ) deflateEnd ( &strm );
-        return Z_OK;
-    }
-    bool Pack::ProcessDirectory ( const std::string& path )
-    {
-#ifdef WIN32
-        std::string wildcard = mInputPath + path + "*";
-        WIN32_FIND_DATA wfd;
-        HANDLE hFind = FindFirstFile ( wildcard.c_str(), &wfd );
-        if ( INVALID_HANDLE_VALUE != hFind )
-        {
-            do
-            {
-                if ( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-                {
-                    if ( ( strncmp ( wfd.cFileName, ".\0", 2 ) != 0 ) && ( strncmp ( wfd.cFileName, "..\0", 3 ) != 0 ) )
-                    {
-                        ProcessDirectory ( path + wfd.cFileName + "/" );
-                    }
-                }
-                else
-                {
-                    std::string filepath = path + wfd.cFileName;
-                    uint32_t filepathcrc = crc32i ( filepath.c_str(), filepath.size() );
-                    mStringTable[filepathcrc] = filepath;
-                    mDirectory[filepathcrc].path = filepathcrc;
-                    mDirectory[filepathcrc].uncompressed_size = wfd.nFileSizeLow; //(wfd.nFileSizeHigh * (MAXDWORD+1)) + wfd.nFileSizeLow;
-                    mDirectory[filepathcrc].extension_offset = static_cast<uint32_t> ( filepath.rfind ( '.' ) );
-                    if ( mDirectory[filepathcrc].extension_offset != std::string::npos )
-                    {
-                        ++mDirectory[filepathcrc].extension_offset;
-                    }
-                    else
-                    {
-                        mDirectory[filepathcrc].extension_offset = 0;
-                    }
+                    return true;
                 }
             }
-            while ( FindNextFile ( hFind, &wfd ) );
-            FindClose ( hFind );
-        }
-#else
-        std::string wildcard = mInputPath + path;
-        struct dirent* directory_entry;
-        DIR* dir;
-        if ( ( dir = opendir ( wildcard.c_str() ) ) == NULL )
-        {
             return false;
         }
-        while ( ( directory_entry = readdir ( dir ) ) != NULL )
+
+        /** Deflate the contents of `in` into `out`. Updates `compressed_size`
+            with the number of bytes written.
+            @return Z_OK on success or a zlib error code. */
+        int WriteDeflated ( std::ifstream& in, std::ofstream& out, int level,
+                            uint64_t& compressed_size )
         {
-            struct stat file_stat;
-            std::string fullpath = wildcard + directory_entry->d_name;
-            if ( stat ( fullpath.c_str(), &file_stat ) == 0 )
+            compressed_size = 0;
+            z_stream strm{};
+            strm.zalloc = Z_NULL;
+            strm.zfree = Z_NULL;
+            strm.opaque = Z_NULL;
+            int ret = deflateInit ( &strm, level );
+            if ( ret != Z_OK )
             {
-                if ( S_ISDIR ( file_stat.st_mode ) )
+                return ret;
+            }
+
+            unsigned char inbuf[kChunk];
+            unsigned char outbuf[kChunk];
+            int flush = Z_NO_FLUSH;
+            do
+            {
+                in.read ( reinterpret_cast<char*> ( inbuf ), kChunk );
+                std::streamsize got = in.gcount();
+                if ( in.bad() )
                 {
-                    if ( ( strncmp ( directory_entry->d_name, ".\0", 2 ) != 0 ) && ( strncmp ( directory_entry->d_name, "..\0", 3 ) != 0 ) )
+                    deflateEnd ( &strm );
+                    return Z_ERRNO;
+                }
+                strm.avail_in = static_cast<uInt> ( got );
+                strm.next_in = inbuf;
+                flush = in.eof() ? Z_FINISH : Z_NO_FLUSH;
+                do
+                {
+                    strm.avail_out = kChunk;
+                    strm.next_out = outbuf;
+                    ret = deflate ( &strm, flush );
+                    assert ( ret != Z_STREAM_ERROR );
+                    const uInt have = kChunk - strm.avail_out;
+                    if ( have != 0 )
                     {
-                        ProcessDirectory ( path + directory_entry->d_name + "/" );
+                        out.write ( reinterpret_cast<const char*> ( outbuf ), have );
+                        if ( !out )
+                        {
+                            deflateEnd ( &strm );
+                            return Z_ERRNO;
+                        }
+                        compressed_size += have;
                     }
                 }
-                else if ( S_ISREG ( file_stat.st_mode ) )
+                while ( strm.avail_out == 0 );
+                assert ( strm.avail_in == 0 );
+            }
+            while ( flush != Z_FINISH );
+            deflateEnd ( &strm );
+            return ( ret == Z_STREAM_END ) ? Z_OK : Z_DATA_ERROR;
+        }
+
+        /** Copy the entire contents of `in` to `out`, returning the number of
+            bytes copied. */
+        uint64_t CopyRaw ( std::ifstream& in, std::ofstream& out )
+        {
+            uint64_t copied = 0;
+            char buf[kChunk];
+            while ( in )
+            {
+                in.read ( buf, kChunk );
+                std::streamsize got = in.gcount();
+                if ( got > 0 )
                 {
-                    std::string filepath = path + directory_entry->d_name;
-                    uint32_t filepathcrc = crc32i ( filepath.c_str(), filepath.length() );
-                    mStringTable[filepathcrc] = filepath;
-                    mDirectory[filepathcrc].path = filepathcrc;
-                    mDirectory[filepathcrc].uncompressed_size = file_stat.st_size;
-                    mDirectory[filepathcrc].compressed_size = mDirectory[filepathcrc].uncompressed_size;
-                    mDirectory[filepathcrc].extension_offset = filepath.rfind ( '.' );
-                    if ( mDirectory[filepathcrc].extension_offset != std::string::npos )
-                    {
-                        ++mDirectory[filepathcrc].extension_offset;
-                    }
-                    else
-                    {
-                        mDirectory[filepathcrc].extension_offset = 0;
-                    }
+                    out.write ( buf, got );
+                    copied += static_cast<uint64_t> ( got );
                 }
             }
+            return copied;
         }
-        closedir ( dir );
-#endif
-        return true;
+
+        struct PackEntry
+        {
+            uint32_t crc;
+            std::string relative_path; /**< forward-slash relative path */
+            std::filesystem::path absolute_path;
+            uint64_t uncompressed_size;
+            std::string ext_lower;
+        };
     }
 
-    Pack::Pack()
-        = default;
-    Pack::~Pack()
-        = default;
+    Pack::Pack() = default;
+    Pack::~Pack() = default;
+
     void Pack::ProcessArgs ( int argc, char** argv )
     {
         if ( argc < 2 || ( strcmp ( argv[1], "pack" ) != 0 ) )
         {
             std::ostringstream stream;
-            stream << "Invalid tool name, expected pack, got " << ( ( argc < 2 ) ? "nothing" : argv[1] ) << std::endl;
+            stream << "Invalid tool name, expected pack, got "
+                   << ( ( argc < 2 ) ? "nothing" : argv[1] ) << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
         for ( int i = 2; i < argc; ++i )
@@ -210,27 +175,49 @@ namespace AeonGames
             {
                 if ( argv[i][1] == '-' )
                 {
-                    if ( strncmp ( &argv[i][2], "in", sizeof ( "in" ) ) == 0 )
+                    if ( strcmp ( &argv[i][2], "in" ) == 0 )
                     {
-                        i++;
+                        if ( ++i >= argc )
+                        {
+                            throw std::runtime_error ( "Missing value for --in." );
+                        }
                         mInputPath = argv[i];
                     }
-                    else if ( strncmp ( &argv[i][2], "out", sizeof ( "out" ) ) == 0 )
+                    else if ( strcmp ( &argv[i][2], "out" ) == 0 )
                     {
-                        i++;
+                        if ( ++i >= argc )
+                        {
+                            throw std::runtime_error ( "Missing value for --out." );
+                        }
                         mOutputFile = argv[i];
                     }
-                    else if ( strncmp ( &argv[i][2], "extract\0", 8 ) == 0 )
+                    else if ( strcmp ( &argv[i][2], "extract" ) == 0 )
                     {
                         mAction = Action::Extract;
                     }
-                    else if ( strncmp ( &argv[i][2], "compress\0", 9 ) == 0 )
+                    else if ( strcmp ( &argv[i][2], "compress" ) == 0 )
                     {
                         mAction = Action::Compress;
                     }
-                    else if ( strncmp ( &argv[i][2], "directory\0", 10 ) == 0 )
+                    else if ( strcmp ( &argv[i][2], "directory" ) == 0 )
                     {
                         mAction = Action::Directory;
+                    }
+                    else if ( strcmp ( &argv[i][2], "store" ) == 0 )
+                    {
+                        mCompress = false;
+                    }
+                    else if ( strcmp ( &argv[i][2], "help" ) == 0 )
+                    {
+                        std::cout << "Usage: aeontool pack [options] <input>\n"
+                                  << "  -c, --compress   Build an AEONPKG file (default action)\n"
+                                  << "  -d, --directory  List the contents of a package or directory\n"
+                                  << "  -e, --extract    Extract a package back to a directory\n"
+                                  << "  -i, --in <path>  Input directory (compress) or package (extract/dir)\n"
+                                  << "  -o, --out <path> Output package file (compress) or directory (extract)\n"
+                                  << "      --store      Store files raw (no zlib compression)\n"
+                                  << "      --help       Show this help" << std::endl;
+                        return;
                     }
                 }
                 else
@@ -238,11 +225,17 @@ namespace AeonGames
                     switch ( argv[i][1] )
                     {
                     case 'i':
-                        i++;
+                        if ( ++i >= argc )
+                        {
+                            throw std::runtime_error ( "Missing value for -i." );
+                        }
                         mInputPath = argv[i];
                         break;
                     case 'o':
-                        i++;
+                        if ( ++i >= argc )
+                        {
+                            throw std::runtime_error ( "Missing value for -o." );
+                        }
                         mOutputFile = argv[i];
                         break;
                     case 'c':
@@ -253,6 +246,8 @@ namespace AeonGames
                         break;
                     case 'd':
                         mAction = Action::Directory;
+                        break;
+                    default:
                         break;
                     }
                 }
@@ -266,11 +261,14 @@ namespace AeonGames
         {
             throw std::runtime_error ( "No Input path provided." );
         }
+        if ( mAction == Action::None )
+        {
+            mAction = Action::Compress;
+        }
     }
+
     int Pack::operator() ( int argc, char** argv )
     {
-        mStringTable.clear();
-        mDirectory.clear();
         ProcessArgs ( argc, argv );
         switch ( mAction )
         {
@@ -285,10 +283,49 @@ namespace AeonGames
         }
         return -1;
     }
+
     int Pack::ExecExtract() const
     {
+        namespace fs = std::filesystem;
+        if ( !fs::is_regular_file ( mInputPath ) )
+        {
+            std::ostringstream oss;
+            oss << "Input '" << mInputPath << "' is not a package file.";
+            throw std::runtime_error ( oss.str() );
+        }
+        fs::path out_dir = mOutputFile.empty()
+                           ? fs::path ( mInputPath ).stem()
+                           : fs::path ( mOutputFile );
+        if ( out_dir.empty() )
+        {
+            out_dir = "extracted";
+        }
+
+        Package package{mInputPath};
+        const auto& index = package.GetIndexTable();
+        for ( const auto& [crc, relative] : index )
+        {
+            const fs::path target = out_dir / relative;
+            std::error_code ec;
+            fs::create_directories ( target.parent_path(), ec );
+            const size_t sz = package.GetFileSize ( crc );
+            std::vector<char> buffer ( sz );
+            package.LoadFile ( crc, buffer.data(), buffer.size() );
+            std::ofstream f ( target, std::ios::out | std::ios::binary | std::ios::trunc );
+            if ( !f.is_open() )
+            {
+                std::cout << "WARNING, could not write " << target.string() << std::endl;
+                continue;
+            }
+            f.write ( buffer.data(), static_cast<std::streamsize> ( buffer.size() ) );
+            std::cout << std::setfill ( '0' ) << std::setw ( 8 ) << std::hex
+                      << crc << std::dec << " -> " << target.string()
+                      << " (" << sz << " bytes)" << std::endl;
+        }
+        std::cout << "Extracted " << index.size() << " files to " << out_dir.string() << std::endl;
         return 0;
     }
+
     int Pack::ExecDirectory() const
     {
         try
@@ -296,7 +333,8 @@ namespace AeonGames
             Package package{mInputPath};
             for ( auto& i : package.GetIndexTable() )
             {
-                std::cout << std::setfill ( '0' ) << std::setw ( 10 ) << /*std::hex <<*/ i.first << "\t" << i.second << std::endl;
+                std::cout << std::setfill ( '0' ) << std::setw ( 8 ) << std::hex
+                          << i.first << "\t" << i.second << std::endl;
             }
         }
         catch ( const std::runtime_error& e )
@@ -306,185 +344,175 @@ namespace AeonGames
         }
         return 0;
     }
-    int Pack::ExecCompress() const
+
+    int Pack::ExecCompress()
     {
-#if 0
-// Commented out, this old file format might change in the future.
-#ifdef _WIN32
-        DWORD file_attributes = GetFileAttributes ( mInputPath.c_str() );
-        char drive[_MAX_DRIVE];
-        char   dir[_MAX_DIR];
-        char fname[_MAX_FNAME];
-        _splitpath ( mInputPath.c_str(), drive, dir, fname, NULL );
-        if ( fname[0] == 0 )
+        namespace fs = std::filesystem;
+        fs::path input ( mInputPath );
+        if ( !fs::is_directory ( input ) )
         {
-            dir[strlen ( dir ) - 1] = 0;
+            std::ostringstream oss;
+            oss << "Input '" << mInputPath << "' is not a directory.";
+            throw std::runtime_error ( oss.str() );
         }
         if ( mOutputFile.empty() )
         {
-            mOutputFile = drive;
-            mOutputFile += dir;
-            mOutputFile += fname;
+            mOutputFile = input.filename().string();
+            if ( mOutputFile.empty() )
+            {
+                mOutputFile = "package";
+            }
             mOutputFile += ".pkg";
         }
 
-        mRootPath = drive;
-        mRootPath += dir;
-        mRootPath += fname;
-        mBaseName = mRootPath.substr ( mRootPath.find_last_of ( '/' ) + 1 );
-        mRootPath.erase ( mRootPath.find_last_of ( '/' ) + 1 );
-        if ( file_attributes & FILE_ATTRIBUTE_DIRECTORY )
-        {
-            std::cout << mInputPath << " is a directory" << std::endl;
-            if ( mInputPath[mInputPath.length() - 1] != '/' )
-            {
-                mInputPath += "/";
-            }
-            if ( !ProcessDirectory ( "" ) )
-            {
-                return -1;
-            }
-        }
-        else if ( file_attributes != INVALID_FILE_ATTRIBUTES )
-        {
-            std::cout << mInputPath << " is a file" << std::endl;
-        }
-        else
-        {
-            std::cout << mInputPath << " is not a file or a directory" << std::endl;
-            return -1;
-        }
-#else
-        struct stat file_stat;
-        char path_buffer[1024];
-        char file_buffer[1024];
-        char* path;
-        char* file;
-        sprintf ( path_buffer, "%s", mInputPath.c_str() );
-        sprintf ( file_buffer, "%s", mInputPath.c_str() );
-        path = dirname ( path_buffer );
-        file = basename ( file_buffer );
-        if ( mOutputFile.empty() )
-        {
-            mOutputFile = path;
-            mOutputFile += "/";
-            mOutputFile += file;
-            mOutputFile += ".pkg";
-        }
-        mRootPath = path;
-        mRootPath += "/";
-        mRootPath += file;
-        if ( stat ( mInputPath.c_str(), &file_stat ) != 0 )
-        {
-            return -1;
-        }
-        if ( S_ISDIR ( file_stat.st_mode ) )
-        {
-            std::cout << mInputPath << " is a directory" << std::endl;
-            if ( mInputPath[mInputPath.length() - 1] != '/' )
-            {
-                mInputPath += "/";
-            }
-            if ( !ProcessDirectory ( "" ) )
-            {
-                return -1;
-            }
-        }
-#endif
-        std::cout << "Packing into: " << mOutputFile << std::endl;
-        PKGHeader header;
-        header.id[0] = 'A';
-        header.id[1] = 'E';
-        header.id[2] = 'O';
-        header.id[3] = 'N';
-        header.id[4] = 'P';
-        header.id[5] = 'K';
-        header.id[6] = 'G';
-        header.id[7] = 0;
-        header.version[0] = 0;
-        header.version[1] = 1;
-        header.file_count = static_cast<uint32_t> ( mDirectory.size() );
-        FILE* out = fopen ( mOutputFile.c_str(), "wb" );
-        if ( out == NULL )
-        {
-            return -1;
-        }
-        fseek ( out, sizeof ( PKGHeader ) + ( sizeof ( PKGDirectoryEntry ) *header.file_count ), SEEK_SET );
-        for ( std::unordered_map<uint32_t, PKGDirectoryEntry>::iterator i = mDirectory.begin(); i != mDirectory.end(); ++i )
-        {
-            size_t bytes_read;
-            uint8_t buffer[1024];
-            std::string fullpath = mInputPath + mStringTable[i->first];
-            std::cout << std::setfill ( '0' ) << std::setw ( 8 ) << std::hex << i->first << " " << fullpath << std::endl;
+        // Resolve so we can skip the output if it lives inside the input dir.
+        std::error_code ec;
+        const fs::path output_canonical =
+            fs::weakly_canonical ( fs::absolute ( fs::path ( mOutputFile ) ), ec );
 
-            i->second.compressed_size = 0;
-            FILE* in = fopen ( fullpath.c_str(), "rb" );
-            if ( in == NULL )
+        // Pass 1: collect entries.
+        std::vector<PackEntry> entries;
+        for ( const auto& it : fs::recursive_directory_iterator ( input ) )
+        {
+            if ( !it.is_regular_file() )
             {
-                std::cout << "WARNING, could not read " << fullpath << std::endl;
                 continue;
             }
-            i->second.offset = ftell ( out );
-            std::string extension;
-            size_t ext_idx = fullpath.rfind ( "." );
-            if ( ext_idx != std::string::npos )
+            // Skip the output package itself if it sits under the input dir.
+            std::error_code ec2;
+            const fs::path candidate = fs::weakly_canonical ( fs::absolute ( it.path() ), ec2 );
+            if ( !ec && !ec2 && candidate == output_canonical )
             {
-                extension = fullpath.substr ( ext_idx + 1 );
-                std::transform ( extension.begin(), extension.end(), extension.begin(), ::tolower );
+                continue;
             }
-            else
+            // Skip standalone index files; they're regenerated on demand.
+            const std::string filename = it.path().filename().string();
+            if ( filename == "index.idx" || filename == "index.txt" )
             {
-                extension.clear();
+                continue;
             }
-            if ( ( mAction == Action::Compress ) && ( extension != "png" ) ) /* don't compress PNG files which are already compressed */
-            {
-                i->second.compression_type = 1;
-                if ( write_deflated_data ( in, out, 5, i->second.compressed_size ) != Z_OK )
-                {
-                    std::cout << "Deflate Failed on" << fullpath << std::endl;
-                }
-            }
-            else
-            {
-                i->second.compression_type = 0;
-                while ( ( bytes_read = fread ( buffer, sizeof ( uint8_t ), 1024, in ) ) != 0 )
-                {
-                    i->second.compressed_size += static_cast<uint32_t> ( fwrite ( buffer, sizeof ( uint8_t ), bytes_read, out ) );
-                }
-                assert ( ( i->second.compression_type == 0 ) && ( i->second.uncompressed_size == i->second.compressed_size ) );
-            }
-            fclose ( in );
+
+            PackEntry e;
+            e.relative_path = fs::relative ( it.path(), input ).generic_string();
+            e.crc = crc32i ( e.relative_path.c_str(), e.relative_path.size() );
+            e.absolute_path = it.path();
+            e.uncompressed_size = static_cast<uint64_t> ( fs::file_size ( it.path() ) );
+            e.ext_lower = ToLowerExt ( it.path() );
+            entries.push_back ( std::move ( e ) );
+        }
+        std::sort ( entries.begin(), entries.end(),
+                    [] ( const PackEntry & a, const PackEntry & b )
+        {
+            return a.crc < b.crc;
+        } );
+
+        // Compute string blob and per-entry path offsets.
+        std::vector<uint32_t> path_offsets ( entries.size() );
+        std::vector<char> string_blob;
+        for ( size_t i = 0; i < entries.size(); ++i )
+        {
+            path_offsets[i] = static_cast<uint32_t> ( string_blob.size() );
+            string_blob.insert ( string_blob.end(),
+                                 entries[i].relative_path.begin(),
+                                 entries[i].relative_path.end() );
+            string_blob.push_back ( '\0' );
         }
 
-        // Write String table------------------------------------------------------------------------------------------------
-        header.string_table_offset = ftell ( out );
-        uint32_t string_table_size = static_cast<uint32_t> ( mStringTable.size() );
-        fwrite ( &string_table_size, sizeof ( uint32_t ), 1, out );
-        fseek ( out, sizeof ( uint32_t ) * 2 * string_table_size, SEEK_CUR );
-        std::unordered_map<uint32_t, uint32_t> string_table_offsets;
-        for ( std::unordered_map<uint32_t, std::string>::iterator i = mStringTable.begin(); i != mStringTable.end(); ++i )
+        // Header layout.
+        PKGHeader header{};
+        std::memcpy ( header.id, "AEONPKG", 8 );
+        header.version[0] = 1;
+        header.version[1] = 0;
+        header.flags = 0;
+        header.file_count = static_cast<uint32_t> ( entries.size() );
+        header.index_offset = static_cast<uint32_t> ( sizeof ( PKGHeader ) );
+        header.strings_offset = header.index_offset +
+                                static_cast<uint32_t> ( entries.size() * sizeof ( PKGDirectoryEntry ) );
+        header.pad = 0;
+        const uint64_t data_offset_start =
+            static_cast<uint64_t> ( header.strings_offset ) + string_blob.size();
+
+        // Open output. Write header + zeroed entry table + string blob first,
+        // then payloads, then seek back and rewrite the entry table with
+        // populated offsets/sizes/compression.
+        std::ofstream out ( mOutputFile, std::ios::out | std::ios::binary | std::ios::trunc );
+        if ( !out.is_open() )
         {
-            string_table_offsets[i->first] = ftell ( out ) - header.string_table_offset;
-            fwrite ( i->second.c_str(), i->second.size(), 1, out );
-            fwrite ( "\0", 1, 1, out );
+            std::ostringstream oss;
+            oss << "Could not open output file '" << mOutputFile << "' for writing.";
+            throw std::runtime_error ( oss.str() );
         }
-        fseek ( out, header.string_table_offset + sizeof ( uint32_t ), SEEK_SET );
-        for ( std::unordered_map<uint32_t, uint32_t>::iterator i = string_table_offsets.begin(); i != string_table_offsets.end(); ++i )
+        out.write ( reinterpret_cast<const char*> ( &header ), sizeof ( header ) );
+
+        std::vector<PKGDirectoryEntry> table ( entries.size() );
+        for ( size_t i = 0; i < entries.size(); ++i )
         {
-            fwrite ( &i->first, sizeof ( uint32_t ), 1, out );
-            fwrite ( &i->second, sizeof ( uint32_t ), 1, out );
+            table[i].crc = entries[i].crc;
+            table[i].path_offset = path_offsets[i];
+            table[i].uncompressed_size = entries[i].uncompressed_size;
+            // data_offset / compressed_size / compression filled below.
+            std::memset ( table[i].reserved, 0, sizeof ( table[i].reserved ) );
         }
-        //-------------------------------------------------------------------------------------------------------------------
-        fseek ( out, 0, SEEK_END );
-        header.file_size = static_cast<uint32_t> ( ftell ( out ) );
-        fseek ( out, 0, SEEK_SET );
-        fwrite ( &header, sizeof ( PKGHeader ), 1, out );
-        for ( std::unordered_map<uint32_t, PKGDirectoryEntry>::iterator i = mDirectory.begin(); i != mDirectory.end(); ++i )
+        if ( !table.empty() )
         {
-            fwrite ( &i->second, sizeof ( PKGDirectoryEntry ), 1, out );
+            out.write ( reinterpret_cast<const char*> ( table.data() ),
+                        static_cast<std::streamsize> ( table.size() * sizeof ( PKGDirectoryEntry ) ) );
         }
-        fclose ( out );
-#endif
+        if ( !string_blob.empty() )
+        {
+            out.write ( string_blob.data(), static_cast<std::streamsize> ( string_blob.size() ) );
+        }
+
+        assert ( static_cast<uint64_t> ( out.tellp() ) == data_offset_start );
+
+        // Pass 2: write payloads.
+        for ( size_t i = 0; i < entries.size(); ++i )
+        {
+            const PackEntry& e = entries[i];
+            std::ifstream in ( e.absolute_path, std::ios::in | std::ios::binary );
+            if ( !in.is_open() )
+            {
+                std::cout << "WARNING, could not read " << e.absolute_path.string() << std::endl;
+                table[i].data_offset = static_cast<uint64_t> ( out.tellp() );
+                table[i].compressed_size = 0;
+                table[i].compression = NONE;
+                continue;
+            }
+            table[i].data_offset = static_cast<uint64_t> ( out.tellp() );
+            const bool deflate_it = mCompress && !ShouldStoreRaw ( e.ext_lower );
+            if ( deflate_it )
+            {
+                uint64_t cs = 0;
+                int ret = WriteDeflated ( in, out, kZlibLevel, cs );
+                if ( ret != Z_OK )
+                {
+                    std::cout << "Deflate failed (" << ret << ") on " << e.absolute_path.string() << std::endl;
+                }
+                table[i].compressed_size = cs;
+                table[i].compression = ZLIB;
+            }
+            else
+            {
+                table[i].compressed_size = CopyRaw ( in, out );
+                table[i].compression = NONE;
+            }
+            std::cout << std::setfill ( '0' ) << std::setw ( 8 ) << std::hex
+                      << e.crc << std::dec << " " << e.relative_path
+                      << " (" << table[i].compressed_size << "/" << e.uncompressed_size
+                      << ( table[i].compression == ZLIB ? " zlib" : " raw" )
+                      << ")" << std::endl;
+        }
+
+        // Rewrite the entry table with populated fields.
+        out.seekp ( header.index_offset, std::ios::beg );
+        if ( !table.empty() )
+        {
+            out.write ( reinterpret_cast<const char*> ( table.data() ),
+                        static_cast<std::streamsize> ( table.size() * sizeof ( PKGDirectoryEntry ) ) );
+        }
+        out.close();
+
+        std::cout << "Wrote " << entries.size() << " entries to " << mOutputFile << std::endl;
         return 0;
     }
 }
