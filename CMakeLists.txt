@@ -134,7 +134,7 @@ if(USE_AEONGUI)
     set(AEONGUI_BACKEND "Cairo" CACHE STRING "" FORCE)
     FetchContent_Declare(AeonGUI
       GIT_REPOSITORY https://github.com/AeonGames/AeonGUI.git
-      GIT_TAG        58755c8342a78d0479949e923cc1310e358a572f
+      GIT_TAG        db3ed04ba78856c0d43f8515232e2dfead0dbcaf
       GIT_SHALLOW    OFF
     )
     FetchContent_MakeAvailable(AeonGUI)
