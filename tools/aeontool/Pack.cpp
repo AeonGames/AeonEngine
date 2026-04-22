@@ -429,8 +429,6 @@ namespace AeonGames
         header.strings_offset = header.index_offset +
                                 static_cast<uint32_t> ( entries.size() * sizeof ( PKGDirectoryEntry ) );
         header.pad = 0;
-        const uint64_t data_offset_start =
-            static_cast<uint64_t> ( header.strings_offset ) + string_blob.size();
 
         // Open output. Write header + zeroed entry table + string blob first,
         // then payloads, then seek back and rewrite the entry table with
@@ -463,7 +461,7 @@ namespace AeonGames
             out.write ( string_blob.data(), static_cast<std::streamsize> ( string_blob.size() ) );
         }
 
-        assert ( static_cast<uint64_t> ( out.tellp() ) == data_offset_start );
+        assert ( static_cast<uint64_t> ( out.tellp() ) == static_cast<uint64_t> ( header.strings_offset ) + string_blob.size() );
 
         // Pass 2: write payloads.
         for ( size_t i = 0; i < entries.size(); ++i )
