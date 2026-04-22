@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@ limitations under the License.
 */
 #include <tuple>
 #include <sstream>
+#include <iomanip>
 #include <exception>
 #include <unordered_map>
+#include "aeongames/AeonEngine.hpp"
 #include "aeongames/ResourceFactory.hpp"
 #include "aeongames/ResourceCache.hpp"
 #include "aeongames/ResourceId.hpp"
@@ -30,10 +32,27 @@ namespace AeonGames
         auto it = Constructors.find ( aResourceId.GetType() );
         if ( it != Constructors.end() )
         {
-            return std::get<0> ( it->second ) ( aResourceId.GetPath() );
+            try
+            {
+                return std::get<0> ( it->second ) ( aResourceId.GetPath() );
+            }
+            catch ( const std::exception& e )
+            {
+                std::ostringstream stream;
+                std::string path = GetResourcePath ( aResourceId.GetPath() );
+                stream << "Failed to construct resource (type 0x"
+                       << std::hex << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetType()
+                       << ", crc 0x" << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetPath()
+                       << ", path: " << ( path.empty() ? "<unknown>" : path ) << "): " << e.what();
+                throw std::runtime_error ( stream.str() );
+            }
         }
         std::ostringstream stream;
-        stream << "No constructor registered for type " << aResourceId.GetType();
+        std::string path = GetResourcePath ( aResourceId.GetPath() );
+        stream << "No constructor registered for type 0x"
+               << std::hex << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetType()
+               << " (resource crc 0x" << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetPath()
+               << ", path: " << ( path.empty() ? "<unknown>" : path ) << ")";
         throw std::runtime_error ( stream.str().c_str() );
     }
     bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor, UniqueAnyPtr&& aDefaultResource )

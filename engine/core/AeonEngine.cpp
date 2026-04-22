@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <memory>
 #include <stdexcept>
 #include "aeongames/ProtoBufClasses.hpp"
@@ -361,12 +363,23 @@ namespace AeonGames
                 return;
             }
         }
-        std::cout << LogLevel::Error << "Resource not found." << std::endl;
-        throw std::runtime_error ( "Resource not found." );
+        std::ostringstream oss;
+        oss << "Resource not found (crc 0x" << std::hex << std::setw ( 8 ) << std::setfill ( '0' ) << crc << ").";
+        std::cout << LogLevel::Error << oss.str() << std::endl;
+        throw std::runtime_error ( oss.str() );
     }
     void LoadResource ( const std::string& aFileName, void* buffer, size_t buffer_size )
     {
-        LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
+        try
+        {
+            LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
+        }
+        catch ( const std::runtime_error& e )
+        {
+            std::ostringstream oss;
+            oss << e.what() << " [path: " << aFileName << "]";
+            throw std::runtime_error ( oss.str() );
+        }
     }
 
     static InputSystem* gInputSystem{nullptr};
