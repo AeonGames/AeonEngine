@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    FPS counter overlay demo.
+
+    Layout strategy:
+      * <body> is a flex column container by default in our HTML
+        layout engine.  Setting margin: 0 makes it cover the full
+        window (the window is the containing block).
+      * The <div id="fps"> uses `margin-left: auto`, which Yoga
+        honors as "push to the end of the cross axis" — i.e. the
+        right edge of the body — while `margin-top: 8px` keeps it
+        a few pixels below the top edge.
+      * The div has an explicit pixel width and font-size so the
+        text never reflows or rescales when the window is resized;
+        it stays in the same place relative to the top-right
+        corner.  If the window is shrunk narrower than the div,
+        the div will overflow (and be clipped by the window edge),
+        which is the intended behaviour.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style>
+      body {
+        margin: 0;
+      }
+      @font-face {
+        font-family: 'NotoSansMono';
+        src: url('../fonts/NotoSansMono-VariableFont_wdth,wght.ttf');
+      }
+      .fps {
+        margin-left: auto;
+        margin-top: 8px;
+        margin-right: 8px;
+        width: 120px;
+        height: 28px;
+        color: #00ff00;
+        font-family: 'NotoSansMono', monospace;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fps">FPS: <span id="fps-count">0</span></div>
+  </body>
+</html>
