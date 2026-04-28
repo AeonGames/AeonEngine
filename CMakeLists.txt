@@ -135,7 +135,7 @@ if(USE_AEONGUI)
     set(ENABLE_HTML ON CACHE BOOL "" FORCE)
     FetchContent_Declare(AeonGUI
       GIT_REPOSITORY https://github.com/AeonGames/AeonGUI.git
-      GIT_TAG        bde5b8c729d76bc8dbdcb9b9b31e261009fd8982
+      GIT_TAG        87bdf03da24009b57a2f9961144071c87b24df00
       GIT_SHALLOW    OFF
     )
     FetchContent_MakeAvailable(AeonGUI)
