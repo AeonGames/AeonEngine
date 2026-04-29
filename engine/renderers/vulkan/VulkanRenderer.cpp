@@ -64,6 +64,7 @@ namespace AeonGames
             InitializeDevice();
             InitializeCommandPools();
             AttachWindow ( aWindow );
+            InitializeOverlay();
         }
         catch ( ... )
         {
@@ -75,6 +76,7 @@ namespace AeonGames
     VulkanRenderer::~VulkanRenderer()
     {
         vkQueueWaitIdle ( mVkQueue );
+        FinalizeOverlay();
         mWindowStore.clear();
         mTextureStore.clear();
         mMaterialStore.clear();
@@ -1002,10 +1004,362 @@ namespace AeonGames
         //it->second.SetClearColor ( R, G, B, A );
     }
 
+    static const char overlay_vertex_shader_code[] =
+        R"(#version 450
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoords;
+
+layout (location = 0) out vec2 TexCoords;
+
+void main()
+{
+    gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);
+    TexCoords = aTexCoords;
+}
+)";
+
+    static const char overlay_fragment_shader_code[] =
+        R"(#version 450
+layout (location = 0) in vec2 TexCoords;
+
+layout (location = 0) out vec4 FragColor;
+
+layout (set = 0, binding = 0) uniform sampler2D OverlayTexture;
+
+void main()
+{
+    FragColor = texture(OverlayTexture, TexCoords);
+}
+)";
+
+    static const float overlay_vertices[] =
+    {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f, 1.0f
+    };
+
+    void VulkanRenderer::InitializeOverlay()
+    {
+        // Compile shaders to SPIR-V
+        CompilerLinker compiler_linker;
+        compiler_linker.AddShaderSource ( EShLangVertex, overlay_vertex_shader_code );
+        compiler_linker.AddShaderSource ( EShLangFragment, overlay_fragment_shader_code );
+        if ( CompilerLinker::FailCode result = compiler_linker.CompileAndLink() )
+        {
+            std::ostringstream stream;
+            stream << "Overlay shader " << ( ( result == CompilerLinker::EFailCompile ) ? "compilation" : "linking" )
+                   << " failed:" << std::endl << compiler_linker.GetLog();
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        const auto& vert_spirv = compiler_linker.GetSpirV ( EShLangVertex );
+        const auto& frag_spirv = compiler_linker.GetSpirV ( EShLangFragment );
+
+        VkShaderModule vert_module{ VK_NULL_HANDLE };
+        VkShaderModule frag_module{ VK_NULL_HANDLE };
+
+        VkShaderModuleCreateInfo shader_module_create_info{};
+        shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        shader_module_create_info.codeSize = vert_spirv.size() * sizeof ( uint32_t );
+        shader_module_create_info.pCode = vert_spirv.data();
+        if ( VkResult result = vkCreateShaderModule ( mVkDevice, &shader_module_create_info, nullptr, &vert_module ) )
+        {
+            std::ostringstream stream;
+            stream << "Overlay vertex shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        shader_module_create_info.codeSize = frag_spirv.size() * sizeof ( uint32_t );
+        shader_module_create_info.pCode = frag_spirv.data();
+        if ( VkResult result = vkCreateShaderModule ( mVkDevice, &shader_module_create_info, nullptr, &frag_module ) )
+        {
+            vkDestroyShaderModule ( mVkDevice, vert_module, nullptr );
+            std::ostringstream stream;
+            stream << "Overlay fragment shader module creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        // Create sampler
+        VkSamplerCreateInfo sampler_create_info{};
+        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_create_info.magFilter = VK_FILTER_NEAREST;
+        sampler_create_info.minFilter = VK_FILTER_NEAREST;
+        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.maxLod = 1.0f;
+        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        if ( VkResult result = vkCreateSampler ( mVkDevice, &sampler_create_info, nullptr, &mOverlaySampler ) )
+        {
+            vkDestroyShaderModule ( mVkDevice, vert_module, nullptr );
+            vkDestroyShaderModule ( mVkDevice, frag_module, nullptr );
+            std::ostringstream stream;
+            stream << "Overlay sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        // Create descriptor set layout (one combined image sampler)
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = 0;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
+        descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_layout_create_info.bindingCount = 1;
+        descriptor_set_layout_create_info.pBindings = &binding;
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr, &mOverlayDescriptorSetLayout ) )
+        {
+            vkDestroyShaderModule ( mVkDevice, vert_module, nullptr );
+            vkDestroyShaderModule ( mVkDevice, frag_module, nullptr );
+            std::ostringstream stream;
+            stream << "Overlay descriptor set layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        // Create pipeline layout
+        VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
+        pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipeline_layout_create_info.setLayoutCount = 1;
+        pipeline_layout_create_info.pSetLayouts = &mOverlayDescriptorSetLayout;
+        if ( VkResult result = vkCreatePipelineLayout ( mVkDevice, &pipeline_layout_create_info, nullptr, &mOverlayPipelineLayout ) )
+        {
+            vkDestroyShaderModule ( mVkDevice, vert_module, nullptr );
+            vkDestroyShaderModule ( mVkDevice, frag_module, nullptr );
+            std::ostringstream stream;
+            stream << "Overlay pipeline layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        // Shader stages
+        std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages{};
+        shader_stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        shader_stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+        shader_stages[0].module = vert_module;
+        shader_stages[0].pName = "main";
+        shader_stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        shader_stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        shader_stages[1].module = frag_module;
+        shader_stages[1].pName = "main";
+
+        // Vertex input: 2 floats position + 2 floats texcoord
+        VkVertexInputBindingDescription vertex_binding{};
+        vertex_binding.binding = 0;
+        vertex_binding.stride = 4 * sizeof ( float );
+        vertex_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        std::array<VkVertexInputAttributeDescription, 2> vertex_attributes{};
+        vertex_attributes[0].location = 0;
+        vertex_attributes[0].binding = 0;
+        vertex_attributes[0].format = VK_FORMAT_R32G32_SFLOAT;
+        vertex_attributes[0].offset = 0;
+        vertex_attributes[1].location = 1;
+        vertex_attributes[1].binding = 0;
+        vertex_attributes[1].format = VK_FORMAT_R32G32_SFLOAT;
+        vertex_attributes[1].offset = 2 * sizeof ( float );
+
+        VkPipelineVertexInputStateCreateInfo vertex_input_state{};
+        vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertex_input_state.vertexBindingDescriptionCount = 1;
+        vertex_input_state.pVertexBindingDescriptions = &vertex_binding;
+        vertex_input_state.vertexAttributeDescriptionCount = static_cast<uint32_t> ( vertex_attributes.size() );
+        vertex_input_state.pVertexAttributeDescriptions = vertex_attributes.data();
+
+        VkPipelineInputAssemblyStateCreateInfo input_assembly{};
+        input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+
+        VkPipelineViewportStateCreateInfo viewport_state{};
+        viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewport_state.viewportCount = 1;
+        viewport_state.scissorCount = 1;
+
+        VkPipelineRasterizationStateCreateInfo rasterization{};
+        rasterization.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterization.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterization.cullMode = VK_CULL_MODE_NONE;
+        rasterization.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterization.lineWidth = 1.0f;
+
+        VkPipelineMultisampleStateCreateInfo multisample{};
+        multisample.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+        VkPipelineDepthStencilStateCreateInfo depth_stencil{};
+        depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depth_stencil.depthTestEnable = VK_FALSE;
+        depth_stencil.depthWriteEnable = VK_FALSE;
+
+        VkPipelineColorBlendAttachmentState blend_attachment{};
+        blend_attachment.blendEnable = VK_TRUE;
+        blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+        blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
+        blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+
+        VkPipelineColorBlendStateCreateInfo color_blend{};
+        color_blend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        color_blend.attachmentCount = 1;
+        color_blend.pAttachments = &blend_attachment;
+
+        std::array<VkDynamicState, 2> dynamic_states{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        VkPipelineDynamicStateCreateInfo dynamic_state{};
+        dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamic_state.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
+        dynamic_state.pDynamicStates = dynamic_states.data();
+
+        VkGraphicsPipelineCreateInfo pipeline_create_info{};
+        pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipeline_create_info.stageCount = static_cast<uint32_t> ( shader_stages.size() );
+        pipeline_create_info.pStages = shader_stages.data();
+        pipeline_create_info.pVertexInputState = &vertex_input_state;
+        pipeline_create_info.pInputAssemblyState = &input_assembly;
+        pipeline_create_info.pViewportState = &viewport_state;
+        pipeline_create_info.pRasterizationState = &rasterization;
+        pipeline_create_info.pMultisampleState = &multisample;
+        pipeline_create_info.pDepthStencilState = &depth_stencil;
+        pipeline_create_info.pColorBlendState = &color_blend;
+        pipeline_create_info.pDynamicState = &dynamic_state;
+        pipeline_create_info.layout = mOverlayPipelineLayout;
+        pipeline_create_info.renderPass = GetRenderPass();
+        pipeline_create_info.subpass = 0;
+
+        if ( VkResult result = vkCreateGraphicsPipelines ( mVkDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &mOverlayPipeline ) )
+        {
+            vkDestroyShaderModule ( mVkDevice, vert_module, nullptr );
+            vkDestroyShaderModule ( mVkDevice, frag_module, nullptr );
+            std::ostringstream stream;
+            stream << "Overlay pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        vkDestroyShaderModule ( mVkDevice, vert_module, nullptr );
+        vkDestroyShaderModule ( mVkDevice, frag_module, nullptr );
+
+        // Create vertex buffer
+        VkBufferCreateInfo buffer_create_info{};
+        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        buffer_create_info.size = sizeof ( overlay_vertices );
+        buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        if ( VkResult result = vkCreateBuffer ( mVkDevice, &buffer_create_info, nullptr, &mOverlayVertexBuffer ) )
+        {
+            std::ostringstream stream;
+            stream << "Overlay vertex buffer creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkMemoryRequirements mem_reqs{};
+        vkGetBufferMemoryRequirements ( mVkDevice, mOverlayVertexBuffer, &mem_reqs );
+        VkMemoryAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        alloc_info.allocationSize = mem_reqs.size;
+        alloc_info.memoryTypeIndex = FindMemoryTypeIndex ( mem_reqs.memoryTypeBits,
+                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+        if ( VkResult result = vkAllocateMemory ( mVkDevice, &alloc_info, nullptr, &mOverlayVertexBufferMemory ) )
+        {
+            std::ostringstream stream;
+            stream << "Overlay vertex buffer memory allocation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str();
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        vkBindBufferMemory ( mVkDevice, mOverlayVertexBuffer, mOverlayVertexBufferMemory, 0 );
+
+        void* mapped = nullptr;
+        vkMapMemory ( mVkDevice, mOverlayVertexBufferMemory, 0, sizeof ( overlay_vertices ), 0, &mapped );
+        memcpy ( mapped, overlay_vertices, sizeof ( overlay_vertices ) );
+        vkUnmapMemory ( mVkDevice, mOverlayVertexBufferMemory );
+    }
+
+    void VulkanRenderer::FinalizeOverlay()
+    {
+        if ( mVkDevice == VK_NULL_HANDLE )
+        {
+            return;
+        }
+        for ( auto& [window_id, cache] : mOverlayTextureCache )
+        {
+            ( void ) window_id;
+            if ( cache.stagingBuffer != VK_NULL_HANDLE )
+            {
+                vkDestroyBuffer ( mVkDevice, cache.stagingBuffer, nullptr );
+            }
+            if ( cache.stagingMemory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVkDevice, cache.stagingMemory, nullptr );
+            }
+            if ( cache.descriptorPool != VK_NULL_HANDLE )
+            {
+                vkDestroyDescriptorPool ( mVkDevice, cache.descriptorPool, nullptr );
+            }
+            if ( cache.imageView != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVkDevice, cache.imageView, nullptr );
+            }
+            if ( cache.image != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( mVkDevice, cache.image, nullptr );
+            }
+            if ( cache.memory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVkDevice, cache.memory, nullptr );
+            }
+        }
+        mOverlayTextureCache.clear();
+        if ( mOverlayVertexBuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyBuffer ( mVkDevice, mOverlayVertexBuffer, nullptr );
+            mOverlayVertexBuffer = VK_NULL_HANDLE;
+        }
+        if ( mOverlayVertexBufferMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( mVkDevice, mOverlayVertexBufferMemory, nullptr );
+            mOverlayVertexBufferMemory = VK_NULL_HANDLE;
+        }
+        if ( mOverlayPipeline != VK_NULL_HANDLE )
+        {
+            vkDestroyPipeline ( mVkDevice, mOverlayPipeline, nullptr );
+            mOverlayPipeline = VK_NULL_HANDLE;
+        }
+        if ( mOverlayPipelineLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyPipelineLayout ( mVkDevice, mOverlayPipelineLayout, nullptr );
+            mOverlayPipelineLayout = VK_NULL_HANDLE;
+        }
+        if ( mOverlayDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVkDevice, mOverlayDescriptorSetLayout, nullptr );
+            mOverlayDescriptorSetLayout = VK_NULL_HANDLE;
+        }
+        if ( mOverlaySampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( mVkDevice, mOverlaySampler, nullptr );
+            mOverlaySampler = VK_NULL_HANDLE;
+        }
+    }
+
     void VulkanRenderer::RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay )
     {
         const uint8_t* pixels = aGuiOverlay.GetPixels();
-        if ( !pixels || !aGuiOverlay.GetWidth() || !aGuiOverlay.GetHeight() )
+        const uint32_t width = aGuiOverlay.GetWidth();
+        const uint32_t height = aGuiOverlay.GetHeight();
+        if ( !pixels || !width || !height )
         {
             return;
         }
@@ -1016,14 +1370,190 @@ namespace AeonGames
             return;
         }
 
-        ///@todo Implement Vulkan overlay compositing.
-        /// This requires:
-        /// 1. A staging buffer for pixel upload.
-        /// 2. A VkImage + VkImageView + VkSampler for the overlay texture.
-        /// 3. A simple full-screen quad pipeline (vertex + fragment shader,
-        ///    alpha blending, no depth test).
-        /// 4. A descriptor set binding the overlay texture.
-        /// 5. Recording draw commands into VulkanWindow::GetCommandBuffer().
-        /// The OpenGL backend provides a reference implementation.
+        auto& cache = mOverlayTextureCache[aWindowId];
+        const VkDeviceSize image_size = static_cast<VkDeviceSize> ( width ) * height * 4;
+
+        // Recreate texture resources if size changed
+        if ( cache.width != width || cache.height != height )
+        {
+            vkQueueWaitIdle ( mVkQueue );
+
+            // Clean up old resources
+            if ( cache.stagingBuffer != VK_NULL_HANDLE )
+            {
+                vkDestroyBuffer ( mVkDevice, cache.stagingBuffer, nullptr );
+                cache.stagingBuffer = VK_NULL_HANDLE;
+            }
+            if ( cache.stagingMemory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVkDevice, cache.stagingMemory, nullptr );
+                cache.stagingMemory = VK_NULL_HANDLE;
+            }
+            if ( cache.descriptorPool != VK_NULL_HANDLE )
+            {
+                vkDestroyDescriptorPool ( mVkDevice, cache.descriptorPool, nullptr );
+                cache.descriptorPool = VK_NULL_HANDLE;
+                cache.descriptorSet = VK_NULL_HANDLE;
+            }
+            if ( cache.imageView != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVkDevice, cache.imageView, nullptr );
+                cache.imageView = VK_NULL_HANDLE;
+            }
+            if ( cache.image != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( mVkDevice, cache.image, nullptr );
+                cache.image = VK_NULL_HANDLE;
+            }
+            if ( cache.memory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVkDevice, cache.memory, nullptr );
+                cache.memory = VK_NULL_HANDLE;
+            }
+
+            // Create staging buffer
+            VkBufferCreateInfo staging_buffer_info{};
+            staging_buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            staging_buffer_info.size = image_size;
+            staging_buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            staging_buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            vkCreateBuffer ( mVkDevice, &staging_buffer_info, nullptr, &cache.stagingBuffer );
+
+            VkMemoryRequirements staging_mem_reqs{};
+            vkGetBufferMemoryRequirements ( mVkDevice, cache.stagingBuffer, &staging_mem_reqs );
+            VkMemoryAllocateInfo staging_alloc_info{};
+            staging_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            staging_alloc_info.allocationSize = staging_mem_reqs.size;
+            staging_alloc_info.memoryTypeIndex = FindMemoryTypeIndex ( staging_mem_reqs.memoryTypeBits,
+                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            vkAllocateMemory ( mVkDevice, &staging_alloc_info, nullptr, &cache.stagingMemory );
+            vkBindBufferMemory ( mVkDevice, cache.stagingBuffer, cache.stagingMemory, 0 );
+
+            // Create image
+            VkImageCreateInfo image_info{};
+            image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_info.imageType = VK_IMAGE_TYPE_2D;
+            image_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+            image_info.extent = { width, height, 1 };
+            image_info.mipLevels = 1;
+            image_info.arrayLayers = 1;
+            image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            vkCreateImage ( mVkDevice, &image_info, nullptr, &cache.image );
+
+            VkMemoryRequirements img_mem_reqs{};
+            vkGetImageMemoryRequirements ( mVkDevice, cache.image, &img_mem_reqs );
+            VkMemoryAllocateInfo img_alloc_info{};
+            img_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            img_alloc_info.allocationSize = img_mem_reqs.size;
+            img_alloc_info.memoryTypeIndex = FindMemoryTypeIndex ( img_mem_reqs.memoryTypeBits,
+                                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+            vkAllocateMemory ( mVkDevice, &img_alloc_info, nullptr, &cache.memory );
+            vkBindImageMemory ( mVkDevice, cache.image, cache.memory, 0 );
+
+            // Create image view
+            VkImageViewCreateInfo view_info{};
+            view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            view_info.image = cache.image;
+            view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            view_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+            view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            view_info.subresourceRange.levelCount = 1;
+            view_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( mVkDevice, &view_info, nullptr, &cache.imageView );
+
+            // Create descriptor pool and set
+            VkDescriptorPoolSize pool_size{};
+            pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            pool_size.descriptorCount = 1;
+            VkDescriptorPoolCreateInfo pool_info{};
+            pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            pool_info.maxSets = 1;
+            pool_info.poolSizeCount = 1;
+            pool_info.pPoolSizes = &pool_size;
+            vkCreateDescriptorPool ( mVkDevice, &pool_info, nullptr, &cache.descriptorPool );
+
+            VkDescriptorSetAllocateInfo set_alloc_info{};
+            set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            set_alloc_info.descriptorPool = cache.descriptorPool;
+            set_alloc_info.descriptorSetCount = 1;
+            set_alloc_info.pSetLayouts = &mOverlayDescriptorSetLayout;
+            vkAllocateDescriptorSets ( mVkDevice, &set_alloc_info, &cache.descriptorSet );
+
+            // Update descriptor set
+            VkDescriptorImageInfo descriptor_image_info{};
+            descriptor_image_info.sampler = mOverlaySampler;
+            descriptor_image_info.imageView = cache.imageView;
+            descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            VkWriteDescriptorSet write_set{};
+            write_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_set.dstSet = cache.descriptorSet;
+            write_set.dstBinding = 0;
+            write_set.descriptorCount = 1;
+            write_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write_set.pImageInfo = &descriptor_image_info;
+            vkUpdateDescriptorSets ( mVkDevice, 1, &write_set, 0, nullptr );
+
+            cache.width = width;
+            cache.height = height;
+        }
+
+        // Upload pixels to staging buffer
+        void* mapped = nullptr;
+        vkMapMemory ( mVkDevice, cache.stagingMemory, 0, image_size, 0, &mapped );
+        memcpy ( mapped, pixels, image_size );
+        vkUnmapMemory ( mVkDevice, cache.stagingMemory );
+
+        // Copy staging buffer to image via single-time commands
+        VkCommandBuffer cmd = BeginSingleTimeCommands();
+
+        // Transition image to transfer dst
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = cache.image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier ( cmd,
+                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+
+        // Copy buffer to image
+        VkBufferImageCopy region{};
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = { width, height, 1 };
+        vkCmdCopyBufferToImage ( cmd, cache.stagingBuffer, cache.image,
+                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region );
+
+        // Transition image to shader read
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( cmd,
+                               VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+
+        EndSingleTimeCommands ( cmd );
+
+        // Draw the overlay quad within the current render pass
+        VkCommandBuffer render_cmd = it->second.GetCommandBuffer();
+        vkCmdBindPipeline ( render_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mOverlayPipeline );
+        vkCmdBindDescriptorSets ( render_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  mOverlayPipelineLayout, 0, 1, &cache.descriptorSet, 0, nullptr );
+        VkDeviceSize offset = 0;
+        vkCmdBindVertexBuffers ( render_cmd, 0, 1, &mOverlayVertexBuffer, &offset );
+        vkCmdDraw ( render_cmd, 4, 1, 0, 0 );
     }
 }

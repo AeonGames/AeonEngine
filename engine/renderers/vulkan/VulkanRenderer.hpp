@@ -119,6 +119,7 @@ namespace AeonGames
         void InitializeDevice();
         void InitializeCommandPools();
         void InitializeDebug();
+        void InitializeOverlay();
         void SetupLayersAndExtensions();
         void SetupDebug();
         void LoadFunctions();
@@ -126,6 +127,7 @@ namespace AeonGames
         void FinalizeDevice();
         void FinalizeCommandPools();
         void FinalizeDebug();
+        void FinalizeOverlay();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
@@ -157,6 +159,27 @@ namespace AeonGames
         std::unordered_map<size_t, VulkanTexture> mTextureStore{};
         std::unordered_map<void*, VulkanWindow> mWindowStore{};
         bool mHasPrimitiveTopologyListRestart{false};
+
+        // Overlay resources
+        VkPipeline mOverlayPipeline{ VK_NULL_HANDLE };
+        VkPipelineLayout mOverlayPipelineLayout{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mOverlayDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkSampler mOverlaySampler{ VK_NULL_HANDLE };
+        VkBuffer mOverlayVertexBuffer{ VK_NULL_HANDLE };
+        VkDeviceMemory mOverlayVertexBufferMemory{ VK_NULL_HANDLE };
+        struct OverlayTextureCache
+        {
+            VkImage image{ VK_NULL_HANDLE };
+            VkDeviceMemory memory{ VK_NULL_HANDLE };
+            VkImageView imageView{ VK_NULL_HANDLE };
+            VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
+            VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
+            VkBuffer stagingBuffer{ VK_NULL_HANDLE };
+            VkDeviceMemory stagingMemory{ VK_NULL_HANDLE };
+            uint32_t width{};
+            uint32_t height{};
+        };
+        std::unordered_map<void*, OverlayTextureCache> mOverlayTextureCache{};
     };
 }
 #endif
