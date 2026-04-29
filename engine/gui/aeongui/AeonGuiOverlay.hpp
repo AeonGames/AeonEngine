@@ -46,8 +46,6 @@ namespace AeonGames
         void Navigate ( const std::string& aUrl ) final;
 
     private:
-        void ConvertBGRAtoRGBA();
-
         AeonGUI::DOM::Window mWindow;
         std::vector<uint8_t> mPixelBuffer{};
     };

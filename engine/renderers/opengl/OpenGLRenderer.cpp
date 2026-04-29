@@ -51,7 +51,7 @@ void main()
 }
 )";
     /// @brief Length of the overlay vertex shader source.
-    const GLint vertex_shader_len { sizeof(vertex_shader_code) /*/ sizeof(vertex_shader_code[0])*/};
+    const GLint vertex_shader_len { sizeof ( vertex_shader_code ) /*/ sizeof(vertex_shader_code[0])*/};
     /// @brief Pointer to the overlay vertex shader source.
     const GLchar* const vertex_shader_code_ptr = vertex_shader_code;
 
@@ -72,32 +72,33 @@ void main()
 )";
 
     /// @brief Length of the overlay fragment shader source.
-    const GLint fragment_shader_len { sizeof(fragment_shader_code) /*/ sizeof(fragment_shader_code[0])*/};
+    const GLint fragment_shader_len { sizeof ( fragment_shader_code ) /*/ sizeof(fragment_shader_code[0])*/};
     /// @brief Pointer to the overlay fragment shader source.
     const GLchar* const fragment_shader_code_ptr = fragment_shader_code;
 
     /// @brief Overlay screen-quad vertex data (positions and texture coordinates).
-    const float vertices[] = {
-                                 // positions   // texCoords
-                                 -1.0f,  1.0f,  0.0f, 0.0f,
-                                 -1.0f, -1.0f,  0.0f, 1.0f,
-                                 1.0f, -1.0f,  1.0f, 1.0f,
-                                 1.0f,  1.0f,  1.0f, 0.0f
-                             };
+    const float vertices[] =
+    {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 0.0f,
+        -1.0f, -1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f,  1.0f, 1.0f,
+        1.0f,  1.0f,  1.0f, 0.0f
+    };
     /// @brief Total byte size of the overlay vertex data.
-    constexpr GLuint vertex_size{sizeof(vertices)};
+    constexpr GLuint vertex_size{sizeof ( vertices ) };
 
 #ifdef _WIN32
     static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsString = nullptr;
     static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribs = nullptr;
     const int ContextAttribs[] =
-        {
-            WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-            WGL_CONTEXT_MINOR_VERSION_ARB, 5,
-            WGL_CONTEXT_PROFILE_MASK_ARB,
-            WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-            0
-        };
+    {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+        WGL_CONTEXT_PROFILE_MASK_ARB,
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0
+    };
 
     static ATOM gRendererWindowClass{0};
     static std::atomic<size_t> mRendererCount{0};
@@ -105,7 +106,7 @@ void main()
     static HWND CreateRendererWindow()
     {
         RECT rect = { 0, 0, 10, 10 };
-        if(gRendererWindowClass == 0)
+        if ( gRendererWindowClass == 0 )
         {
             WNDCLASSEX wcex;
             wcex.cbSize = sizeof ( WNDCLASSEX );
@@ -133,11 +134,11 @@ void main()
                                 GetModuleHandle ( nullptr ),
                                 nullptr );
     }
-    static void DestroyRendererWindow(HWND hWnd)
+    static void DestroyRendererWindow ( HWND hWnd )
     {
-        assert(mRendererCount);
+        assert ( mRendererCount );
         DestroyWindow ( hWnd );
-        if(--mRendererCount == 0)
+        if ( --mRendererCount == 0 )
         {
             UnregisterClass ( reinterpret_cast<LPCSTR> (
 #if defined(_M_X64) || defined(__amd64__)
@@ -147,9 +148,9 @@ void main()
             gRendererWindowClass = 0;
         }
     }
-    OpenGLRenderer::OpenGLRenderer(void* aWindow) :
-        mWindowId{CreateRendererWindow()},
-        mDeviceContext{GetDC(mWindowId)}
+    OpenGLRenderer::OpenGLRenderer ( void* aWindow ) :
+        mWindowId{CreateRendererWindow() },
+        mDeviceContext{GetDC ( mWindowId ) }
     {
         PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
@@ -224,9 +225,9 @@ void main()
         AttachWindow ( static_cast<HWND> ( aWindow ) );
     }
 
-    bool OpenGLRenderer::MakeCurrent(HDC aDeviceContext)
+    bool OpenGLRenderer::MakeCurrent ( HDC aDeviceContext )
     {
-        if ( !wglMakeCurrent ( (aDeviceContext==nullptr) ? mDeviceContext : aDeviceContext, mOpenGLContext ) )
+        if ( !wglMakeCurrent ( ( aDeviceContext == nullptr ) ? mDeviceContext : aDeviceContext, mOpenGLContext ) )
         {
             LPSTR pBuffer = NULL;
             FormatMessage ( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -250,7 +251,7 @@ void main()
         mMeshStore.clear();
         mMaterialStore.clear();
         mPipelineStore.clear();
-        wglMakeCurrent (nullptr, nullptr);
+        wglMakeCurrent ( nullptr, nullptr );
         if ( wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) ) != TRUE )
         {
             std::cout << LogLevel::Error << "wglDeleteContext failed." << std::endl;
@@ -263,18 +264,18 @@ void main()
     }
 #elif defined(__unix__)
     static int context_attribs[] =
-        {
-            GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-            GLX_CONTEXT_MINOR_VERSION_ARB, 5,
-            GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-            None
-        };
+    {
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+        None
+    };
 
-    static GLXFBConfig GetGLXConfig ( Display* display, ::Window window)
+    static GLXFBConfig GetGLXConfig ( Display* display, ::Window window )
     {
         XWindowAttributes xwa{};
-        XGetWindowAttributes(display, window, &xwa);
-        VisualID xwvid = XVisualIDFromVisual(xwa.visual);
+        XGetWindowAttributes ( display, window, &xwa );
+        VisualID xwvid = XVisualIDFromVisual ( xwa.visual );
 
         int frame_buffer_config_count{};
         GLXFBConfig *frame_buffer_configs =
@@ -287,43 +288,46 @@ void main()
             throw std::runtime_error ( "Failed to retrieve a framebuffer config" );
         }
 
-        (void) std::remove_if(frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
-                              [display,xwvid] ( const GLXFBConfig & x ) -> bool
-                              {
-                                  XVisualInfo *xvi = glXGetVisualFromFBConfig(display, x);
-                                  if(xvi && xvi->visualid == xwvid)
-    {
-        XFree(xvi);
-            return false;
-        }
-        XFree(xvi);
-        return true;
-                              });
+        ( void ) std::remove_if ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
+                                  [display, xwvid] ( const GLXFBConfig & x ) -> bool
+        {
+            XVisualInfo *xvi = glXGetVisualFromFBConfig ( display, x );
+            if ( xvi && xvi->visualid == xwvid )
+            {
+                XFree ( xvi );
+                return false;
+            }
+            XFree ( xvi );
+            return true;
+        } );
 
         GLXFBConfig result = frame_buffer_configs[ 0 ];
         XFree ( frame_buffer_configs );
         return result;
     }
 
-    OpenGLRenderer::OpenGLRenderer(void* aWindow)
+    OpenGLRenderer::OpenGLRenderer ( void* aWindow )
     {
-        if(mRendererCount == 0)
+        if ( mRendererCount == 0 )
         {
             XSetErrorHandler ( [] ( Display * mDisplay, XErrorEvent * error_event ) -> int
-                               {
-                                   char error_string[1024];
-                                   XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
-                                   std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
-                                   std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
-                                   return 0;
-                               } );
-            if(mDisplay){XCloseDisplay(mDisplay);}
+            {
+                char error_string[1024];
+                XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
+                std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
+                std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
+                return 0;
+            } );
+            if ( mDisplay )
+            {
+                XCloseDisplay ( mDisplay );
+            }
             mDisplay = XOpenDisplay ( nullptr );
         }
 
@@ -339,7 +343,7 @@ void main()
             }
         }
 
-        GLXFBConfig glxconfig = GetGLXConfig(mDisplay,reinterpret_cast<::Window>(aWindow));
+        GLXFBConfig glxconfig = GetGLXConfig ( mDisplay, reinterpret_cast<::Window> ( aWindow ) );
 
         if ( nullptr == ( mOpenGLContext = glXCreateContextAttribsARB ( mDisplay, glxconfig, nullptr,
                                            True, context_attribs ) ) )
@@ -360,7 +364,7 @@ void main()
             "Direct GLX rendering context obtained" << std::endl;
         }
 
-        if ( !MakeCurrent(reinterpret_cast<::Window>(reinterpret_cast<::Window>(aWindow))) )
+        if ( !MakeCurrent ( reinterpret_cast<::Window> ( reinterpret_cast<::Window> ( aWindow ) ) ) )
         {
             std::cout << LogLevel::Error << "glXMakeCurrent failed." << std::endl;
             throw std::runtime_error ( "glXMakeCurrent failed." );
@@ -376,14 +380,14 @@ void main()
         glBindVertexArray ( mVertexArrayObject );
         InitializeOverlay();
 
-        AttachWindow(aWindow);
+        AttachWindow ( aWindow );
         ++mRendererCount;
     }
 
 
-    bool OpenGLRenderer::MakeCurrent(::Window aWindowId)
+    bool OpenGLRenderer::MakeCurrent ( ::Window aWindowId )
     {
-        return glXMakeCurrent (mDisplay, (aWindowId) ? aWindowId : None , (aWindowId) ? mOpenGLContext : nullptr );
+        return glXMakeCurrent ( mDisplay, ( aWindowId ) ? aWindowId : None, ( aWindowId ) ? mOpenGLContext : nullptr );
     }
 
     OpenGLRenderer::~OpenGLRenderer()
@@ -400,9 +404,9 @@ void main()
             glXDestroyContext ( mDisplay, mOpenGLContext );
             mOpenGLContext = None;
         }
-        if(--mRendererCount == 0)
+        if ( --mRendererCount == 0 )
         {
-            XCloseDisplay(mDisplay);
+            XCloseDisplay ( mDisplay );
             mDisplay = None;
         }
     }
@@ -416,7 +420,7 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
         GLuint vertex_shader = glCreateShader ( GL_VERTEX_SHADER );
         OPENGL_CHECK_ERROR_THROW;
-        glShaderSource (vertex_shader,1,&vertex_shader_code_ptr,&vertex_shader_len );
+        glShaderSource ( vertex_shader, 1, &vertex_shader_code_ptr, &vertex_shader_len );
         OPENGL_CHECK_ERROR_THROW;
         glCompileShader ( vertex_shader );
         OPENGL_CHECK_ERROR_THROW;
@@ -476,12 +480,12 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
         glDeleteShader ( fragment_shader );
         OPENGL_CHECK_ERROR_THROW;
-        glUseProgram(mOverlayProgram);
+        glUseProgram ( mOverlayProgram );
         OPENGL_CHECK_ERROR_THROW;
         glUniform1i ( 0, 0 );
         OPENGL_CHECK_ERROR_THROW;
         /* End of Overlay Program Initialization. */
-        mOverlayQuad.Initialize(vertex_size, GL_STATIC_DRAW, vertices);
+        mOverlayQuad.Initialize ( vertex_size, GL_STATIC_DRAW, vertices );
     }
 
     void OpenGLRenderer::FinalizeOverlay()
@@ -499,12 +503,12 @@ void main()
         }
         mOverlayTextureCache.clear();
         mOverlayQuad.Finalize();
-        if(glIsProgram(mOverlayProgram))
+        if ( glIsProgram ( mOverlayProgram ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
-            glUseProgram(0);
+            glUseProgram ( 0 );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteProgram(mOverlayProgram);
+            glDeleteProgram ( mOverlayProgram );
             OPENGL_CHECK_ERROR_NO_THROW;
             mOverlayProgram = 0;
         }
@@ -519,103 +523,121 @@ void main()
 
     void OpenGLRenderer::LoadMesh ( const Mesh& aMesh )
     {
-        auto it = mMeshStore.find(aMesh.GetConsecutiveId());
-        if(it!=mMeshStore.end())
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it != mMeshStore.end() )
         {
             std::cout << LogLevel::Warning << "Mesh with id " << aMesh.GetConsecutiveId() << " already loaded." << std::endl;
             return;
         }
-        mMeshStore.emplace(aMesh.GetConsecutiveId(),OpenGLMesh{*this,aMesh});
+        mMeshStore.emplace ( aMesh.GetConsecutiveId(), OpenGLMesh{*this, aMesh} );
     }
 
     void OpenGLRenderer::UnloadMesh ( const Mesh& aMesh )
     {
-        auto it = mMeshStore.find(aMesh.GetConsecutiveId());
-        if(it!=mMeshStore.end())
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it != mMeshStore.end() )
         {
-            mMeshStore.erase(it);
+            mMeshStore.erase ( it );
         }
     }
 
-    void OpenGLRenderer::BindMesh(const Mesh& aMesh)
+    void OpenGLRenderer::BindMesh ( const Mesh& aMesh )
     {
-        auto it = mMeshStore.find(aMesh.GetConsecutiveId());
-        if(it==mMeshStore.end())
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it == mMeshStore.end() )
         {
-            LoadMesh(aMesh);
-            it = mMeshStore.find(aMesh.GetConsecutiveId());
+            LoadMesh ( aMesh );
+            it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         }
         it->second.Bind();
-        if (mCurrentPipeline != nullptr)
+        if ( mCurrentPipeline != nullptr )
         {
-            it->second.EnableAttributes(mCurrentPipeline->GetVertexAttributes());
+            it->second.EnableAttributes ( mCurrentPipeline->GetVertexAttributes() );
         }
     }
 
-    void OpenGLRenderer::LoadPipeline(const Pipeline& aPipeline)
+    void OpenGLRenderer::LoadPipeline ( const Pipeline& aPipeline )
     {
-        auto it = mPipelineStore.find(aPipeline.GetConsecutiveId());
-        if(it!=mPipelineStore.end())
+        auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+        if ( it != mPipelineStore.end() )
         {
             std::cout << LogLevel::Error << "OpenGL object already loaded." << std::endl;
             throw std::runtime_error ( "OpenGL object already loaded." );
         }
-        mPipelineStore.emplace(aPipeline.GetConsecutiveId(),OpenGLPipeline{*this,aPipeline});
+        mPipelineStore.emplace ( aPipeline.GetConsecutiveId(), OpenGLPipeline{*this, aPipeline} );
     }
 
-    void OpenGLRenderer::UnloadPipeline(const Pipeline& aPipeline)
+    void OpenGLRenderer::UnloadPipeline ( const Pipeline& aPipeline )
     {
-        auto it = mPipelineStore.find(aPipeline.GetConsecutiveId());
-        if(it==mPipelineStore.end()){return;};
-        mPipelineStore.erase(it);
-    }
-
-    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline)
-    {
-        auto it = mPipelineStore.find(aPipeline.GetConsecutiveId());
-        if(it==mPipelineStore.end())
+        auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+        if ( it == mPipelineStore.end() )
         {
-            LoadPipeline(aPipeline);
-            it = mPipelineStore.find(aPipeline.GetConsecutiveId());
+            return;
+        };
+        mPipelineStore.erase ( it );
+    }
+
+    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline )
+    {
+        auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+        if ( it == mPipelineStore.end() )
+        {
+            LoadPipeline ( aPipeline );
+            it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         };
         mCurrentPipeline = &it->second;
         glUseProgram ( mCurrentPipeline->GetProgramId() );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    void OpenGLRenderer::SetMaterial ( const Material& aMaterial)
+    void OpenGLRenderer::SetMaterial ( const Material& aMaterial )
     {
-        if(mCurrentPipeline == nullptr){return;}
-        auto it = mMaterialStore.find(aMaterial.GetConsecutiveId());
-        if(it==mMaterialStore.end())
+        if ( mCurrentPipeline == nullptr )
         {
-            LoadMaterial(aMaterial);
-            it = mMaterialStore.find(aMaterial.GetConsecutiveId());
+            return;
+        }
+        auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+        if ( it == mMaterialStore.end() )
+        {
+            LoadMaterial ( aMaterial );
+            it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         };
-        it->second.Bind(*mCurrentPipeline);
+        it->second.Bind ( *mCurrentPipeline );
     }
 
-    void OpenGLRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer) const
+    void OpenGLRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const
     {
-        if(mCurrentPipeline == nullptr){return;}
-        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::SKELETON ) };
-        if ( uniform_block == nullptr ){return;}
-        const OpenGLMemoryPoolBuffer* memory_pool_buffer = reinterpret_cast<const OpenGLMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
-        if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&>(memory_pool_buffer->GetBuffer()).GetBufferId() : 0 )
+        if ( mCurrentPipeline == nullptr )
         {
-            assert(static_cast<const size_t>(uniform_block->size) >= aSkeletonBuffer.GetSize());
+            return;
+        }
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::SKELETON ) };
+        if ( uniform_block == nullptr )
+        {
+            return;
+        }
+        const OpenGLMemoryPoolBuffer* memory_pool_buffer = reinterpret_cast<const OpenGLMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
+        if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&> ( memory_pool_buffer->GetBuffer() ).GetBufferId() : 0 )
+        {
+            assert ( static_cast<const size_t> ( uniform_block->size ) >= aSkeletonBuffer.GetSize() );
             glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
             OPENGL_CHECK_ERROR_THROW;
         };
     }
 
-    void OpenGLRenderer::SetMatrices ( const OpenGLBuffer& aMatricesBuffer) const
+    void OpenGLRenderer::SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const
     {
-        if(mCurrentPipeline == nullptr){return;}
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
         const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::MATRICES ) };
-        if ( uniform_block == nullptr ){return;}
+        if ( uniform_block == nullptr )
+        {
+            return;
+        }
 
-        assert(static_cast<const size_t>(uniform_block->size) == aMatricesBuffer.GetSize());
+        assert ( static_cast<const size_t> ( uniform_block->size ) == aMatricesBuffer.GetSize() );
         glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aMatricesBuffer.GetBufferId(), 0, aMatricesBuffer.GetSize() );
         OPENGL_CHECK_ERROR_THROW;
 
@@ -623,46 +645,55 @@ void main()
         //OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLRenderer::LoadMaterial(const Material& aMaterial)
+    void OpenGLRenderer::LoadMaterial ( const Material& aMaterial )
     {
-        auto it = mMaterialStore.find(aMaterial.GetConsecutiveId());
-        if(it!=mMaterialStore.end()){return;}
-        mMaterialStore.emplace(
-            aMaterial.GetConsecutiveId(),
-            OpenGLMaterial{*this,aMaterial});
-    }
-
-    void OpenGLRenderer::UnloadMaterial(const Material& aMaterial)
-    {
-        auto it = mMaterialStore.find(aMaterial.GetConsecutiveId());
-        if(it==mMaterialStore.end()){return;}
-        mMaterialStore.erase(it);
-    }
-
-    void OpenGLRenderer::LoadTexture(const Texture& aTexture)
-    {
-        auto it = mTextureStore.find(aTexture.GetConsecutiveId());
-        if(it!=mTextureStore.end())
+        auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+        if ( it != mMaterialStore.end() )
         {
             return;
         }
-        mTextureStore.emplace(aTexture.GetConsecutiveId(),OpenGLTexture{*this,aTexture});
+        mMaterialStore.emplace (
+            aMaterial.GetConsecutiveId(),
+            OpenGLMaterial{*this, aMaterial} );
     }
 
-    void OpenGLRenderer::UnloadTexture(const Texture& aTexture)
+    void OpenGLRenderer::UnloadMaterial ( const Material& aMaterial )
     {
-        auto it = mTextureStore.find(aTexture.GetConsecutiveId());
-        if(it==mTextureStore.end()){return;}
-        mTextureStore.erase(it);
+        auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+        if ( it == mMaterialStore.end() )
+        {
+            return;
+        }
+        mMaterialStore.erase ( it );
+    }
+
+    void OpenGLRenderer::LoadTexture ( const Texture& aTexture )
+    {
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it != mTextureStore.end() )
+        {
+            return;
+        }
+        mTextureStore.emplace ( aTexture.GetConsecutiveId(), OpenGLTexture{*this, aTexture} );
+    }
+
+    void OpenGLRenderer::UnloadTexture ( const Texture& aTexture )
+    {
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it == mTextureStore.end() )
+        {
+            return;
+        }
+        mTextureStore.erase ( it );
     }
 
     GLuint OpenGLRenderer::GetTextureId ( const Texture& aTexture )
     {
-        auto it = mTextureStore.find(aTexture.GetConsecutiveId());
-        if(it==mTextureStore.end())
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it == mTextureStore.end() )
         {
-            LoadTexture(aTexture);
-            it = mTextureStore.find(aTexture.GetConsecutiveId());
+            LoadTexture ( aTexture );
+            it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         }
         return it->second.GetTextureId();
     }
@@ -691,9 +722,9 @@ void main()
             return;
         }
 #if defined(__unix__)
-        mWindowStore.emplace ( aWindowId, OpenGLWindow{*this, mDisplay, reinterpret_cast<::Window>(aWindowId)} );
+        mWindowStore.emplace ( aWindowId, OpenGLWindow {*this, mDisplay, reinterpret_cast<::Window> ( aWindowId ) } );
 #elif defined(_WIN32)
-        mWindowStore.emplace ( aWindowId, OpenGLWindow{*this, reinterpret_cast<::HWND>(aWindowId)} );
+        mWindowStore.emplace ( aWindowId, OpenGLWindow {*this, reinterpret_cast<::HWND> ( aWindowId ) } );
 #endif
     }
     void OpenGLRenderer::DetachWindow ( void* aWindowId )
@@ -851,7 +882,7 @@ void main()
         {
             glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA,
                            width, height,
-                           0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+                           0, GL_BGRA, GL_UNSIGNED_BYTE, pixels );
             OPENGL_CHECK_ERROR_NO_THROW;
             overlay.width = width;
             overlay.height = height;
@@ -869,7 +900,7 @@ void main()
             glTexSubImage2D ( GL_TEXTURE_2D, 0,
                               0, 0,
                               width, height,
-                              GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+                              GL_BGRA, GL_UNSIGNED_BYTE, pixels );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
 

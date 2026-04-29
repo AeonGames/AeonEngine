@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <cstring>
 #include "AeonGuiOverlay.hpp"
 
 namespace AeonGames
@@ -35,16 +36,43 @@ namespace AeonGames
     {
         ( void ) aWindowId;
         mWindow.Draw();
-        ConvertBGRAtoRGBA();
+        // If stride matches width*4, we can use the canvas pixels directly.
+        // Otherwise, copy row-by-row to remove padding.
+        size_t width = mWindow.GetWidth();
+        size_t height = mWindow.GetHeight();
+        size_t stride = mWindow.GetStride();
+        const uint8_t* src = mWindow.GetPixels();
+        if ( !src || !width || !height )
+        {
+            mPixelBuffer.clear();
+            return;
+        }
+        size_t row_bytes = width * 4;
+        if ( stride == row_bytes )
+        {
+            // No padding — point directly, no copy needed.
+            mPixelBuffer.clear();
+        }
+        else
+        {
+            // Strip stride padding.
+            mPixelBuffer.resize ( height * row_bytes );
+            for ( size_t y = 0; y < height; ++y )
+            {
+                memcpy ( mPixelBuffer.data() + y * row_bytes, src + y * stride, row_bytes );
+            }
+        }
     }
 
     const uint8_t* AeonGuiOverlay::GetPixels() const
     {
-        if ( mPixelBuffer.empty() )
+        // If mPixelBuffer is populated, stride padding was stripped.
+        // Otherwise, the canvas pixels are usable directly.
+        if ( !mPixelBuffer.empty() )
         {
-            return nullptr;
+            return mPixelBuffer.data();
         }
-        return mPixelBuffer.data();
+        return mWindow.GetPixels();
     }
 
     uint32_t AeonGuiOverlay::GetWidth() const
@@ -103,32 +131,5 @@ namespace AeonGames
         mWindow.location().assign ( aUrl );
     }
 
-    void AeonGuiOverlay::ConvertBGRAtoRGBA()
-    {
-        const uint8_t* bgra = mWindow.GetPixels();
-        size_t width = mWindow.GetWidth();
-        size_t height = mWindow.GetHeight();
-        size_t stride = mWindow.GetStride();
-        if ( !bgra || !width || !height )
-        {
-            mPixelBuffer.clear();
-            return;
-        }
-        size_t pixelCount = width * height;
-        mPixelBuffer.resize ( pixelCount * 4 );
-        for ( size_t y = 0; y < height; ++y )
-        {
-            const uint8_t* srcRow = bgra + y * stride;
-            uint8_t* dstRow = mPixelBuffer.data() + y * width * 4;
-            for ( size_t x = 0; x < width; ++x )
-            {
-                const uint8_t* src = srcRow + x * 4;
-                uint8_t* dst = dstRow + x * 4;
-                dst[0] = src[2]; // R <- B
-                dst[1] = src[1]; // G <- G
-                dst[2] = src[0]; // B <- R
-                dst[3] = src[3]; // A <- A
-            }
-        }
-    }
+
 }
