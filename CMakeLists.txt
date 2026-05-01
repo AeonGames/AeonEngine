@@ -131,11 +131,10 @@ if(USE_AEONGUI)
     include(FetchContent)
     set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
     set(DISABLE_DEMOS ON CACHE BOOL "" FORCE)
-    set(AEONGUI_BACKEND "Cairo" CACHE STRING "" FORCE)
-    set(ENABLE_HTML ON CACHE BOOL "" FORCE)
+    set(BACKEND "Cairo" CACHE STRING "" FORCE)
     FetchContent_Declare(AeonGUI
       GIT_REPOSITORY https://github.com/AeonGames/AeonGUI.git
-      GIT_TAG        87bdf03da24009b57a2f9961144071c87b24df00
+      GIT_TAG        b124097e1c8bbefb386e63559f6488cfa891b569
       GIT_SHALLOW    OFF
     )
     FetchContent_MakeAvailable(AeonGUI)

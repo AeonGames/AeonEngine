@@ -1,15 +1,14 @@
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL https://github.com/AeonGames/AeonGUI.git
-    REF 87bdf03da24009b57a2f9961144071c87b24df00
+    REF b124097e1c8bbefb386e63559f6488cfa891b569
 )
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-        -DAEONGUI_BACKEND=Cairo
+        -DBACKEND=Cairo
         -DBUILD_UNIT_TESTS=OFF
-        -DENABLE_HTML=ON
         -DDISABLE_DEMOS=ON
         -DFETCHCONTENT_FULLY_DISCONNECTED=OFF
 )
