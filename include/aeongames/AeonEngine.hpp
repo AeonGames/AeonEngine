@@ -19,6 +19,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <functional>
+#include <cstdint>
 #include "Platform.hpp"
 
 namespace AeonGames
