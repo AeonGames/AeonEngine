@@ -1,6 +1,6 @@
 include(${CMAKE_SOURCE_DIR}/cmake/base64.cmake)
 
-add_custom_target(install_aerin
+add_custom_target(install-aerin
     COMMAND ${CMAKE_COMMAND} -E make_directory
         "${CMAKE_SOURCE_DIR}/game/aerin/textures/"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -30,7 +30,10 @@ add_custom_target(install_aerin
     COMMENT "Installing Aerin assets"
 )
 
-add_b64_encode_target(encode-sponza
+add_custom_target(install-sponza
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${CMAKE_SOURCE_DIR}/game/sponza/textures/"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/arch_stone_wall_01_BaseColor.png"
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/arch_stone_wall_01_Metalness.png"
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/arch_stone_wall_01_Normal.png"
@@ -127,4 +130,7 @@ add_b64_encode_target(encode-sponza
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/wood_tile_01_Metalness.png"
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/wood_tile_01_Normal.png"
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/wood_tile_01_Roughness.png"
+    "${CMAKE_SOURCE_DIR}/game/sponza/textures/"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Installing Sponza assets"
 )
