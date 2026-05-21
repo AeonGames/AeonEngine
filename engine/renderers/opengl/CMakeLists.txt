@@ -17,38 +17,13 @@ if(UNIX)
   find_package(X11)
 endif()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+set(GLCOREARB_H_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/GL/glcorearb.h")
 
 set(CMAKE_REQUIRED_QUIET OFF)
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_BINARY_DIR})
-
-check_include_file_cxx("GL/glcorearb.h" HAS_GLCOREARB_H)
-if(NOT HAS_GLCOREARB_H)
-  message(STATUS "Downloading KHR/khrplatform.h")
-  file(DOWNLOAD https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h
-                "${CMAKE_CURRENT_BINARY_DIR}/KHR/khrplatform.h"
-       SHOW_PROGRESS)
-  message(STATUS "Downloading GL/glcorearb.h")
-  file(DOWNLOAD https://www.khronos.org/registry/OpenGL/api/GL/glcorearb.h
-                "${CMAKE_CURRENT_BINARY_DIR}/GL/glcorearb.h"
-       SHOW_PROGRESS)
-  set(HAS_GLCOREARB_H 1 CACHE INTERNAL "Downloaded header file" FORCE)
-  set(GLCOREARB_H_PATH "${CMAKE_CURRENT_BINARY_DIR}/GL/glcorearb.h")
-else()
-  find_file(GLCOREARB_H_PATH NAMES "glcorearb.h" PATHS ${CMAKE_CURRENT_BINARY_DIR} PATH_SUFFIXES $ENV{MSYSTEM_CHOST}/include/GL GL NO_CACHE)
-endif()
-
-if(WIN32)
-  check_include_files("GL/gl.h;GL/wglext.h" HAS_WGLEXT_H)
-  if(NOT HAS_WGLEXT_H)
-    message(STATUS "Downloading GL/wglext.h")
-    file(DOWNLOAD https://www.khronos.org/registry/OpenGL/api/GL/wglext.h
-                  "${CMAKE_CURRENT_BINARY_DIR}/GL/wglext.h"
-         SHOW_PROGRESS)
-    set(HAS_WGLEXT_H 1 CACHE INTERNAL "Downloaded header file" FORCE)
-  endif()
-endif()
 
 # Generate glDeclarations.h, glDefinitions.h and glAssignments.h from
 # glFunctions.txt using pure CMake (replaces the previous sed-based pipeline,

@@ -9,7 +9,9 @@ else
 fi
 
 YEAR=`date +"%Y"`
-FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(c|cpp|h|hpp|mm)$"`
+# Third-party headers under engine/renderers/opengl/include/ are excluded from
+# copyright and astyle checks since they are imported verbatim from upstream.
+FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(c|cpp|h|hpp|mm)$" | grep -v "^engine/renderers/opengl/include/"`
 PYTHON_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(py)$"`
 PROTO_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(proto)$"`
 TEXT_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E "\.(yml|txt|md)$"`
