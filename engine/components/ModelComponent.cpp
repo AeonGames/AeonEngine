@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -99,9 +99,9 @@ namespace AeonGames
             }
             break;
         case ModelComponentPropertyIds[1]:
-            if ( std::holds_alternative<size_t> ( aProperty ) )
+            if ( std::holds_alternative<unsigned long long> ( aProperty ) )
             {
-                SetActiveAnimation ( std::get<size_t> ( aProperty ) );
+                SetActiveAnimation ( std::get<unsigned long long> ( aProperty ) );
             }
             break;
         case ModelComponentPropertyIds[2]:

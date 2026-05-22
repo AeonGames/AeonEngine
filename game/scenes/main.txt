@@ -3,7 +3,7 @@ name: "Scene"
 camera {
   node: "Camera"
   field_of_view: 60
-  near_plane: 0.3
+  near_plane: 0.1
   far_plane: 50
 }
 node {
@@ -63,7 +63,7 @@ node {
     }
     property {
       name: "Active Animation"
-      unsigned_long_long: 0
+      unsigned_long_long: 2
     }
     property {
       name: "Starting Frame"

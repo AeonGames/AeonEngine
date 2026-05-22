@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016,2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016,2018,2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -102,9 +102,9 @@ namespace AeonGames
         case ComponentPropertyMsg::kUnsigned:
             return static_cast<unsigned> ( aComponentPropertyMsg.int_() );
         case ComponentPropertyMsg::kUnsignedLong:
-            return static_cast<long> ( aComponentPropertyMsg.unsigned_long() );
+            return static_cast<unsigned long> ( aComponentPropertyMsg.unsigned_long() );
         case ComponentPropertyMsg::kUnsignedLongLong:
-            return static_cast<long long> ( aComponentPropertyMsg.unsigned_long_long() );
+            return static_cast<unsigned long long> ( aComponentPropertyMsg.unsigned_long_long() );
         case ComponentPropertyMsg::kFloat:
             return static_cast<float> ( aComponentPropertyMsg.float_() );
         case ComponentPropertyMsg::kDouble:
