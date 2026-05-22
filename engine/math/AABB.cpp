@@ -61,7 +61,7 @@ namespace AeonGames
 
     Transform AABB::GetTransform() const
     {
-        return {mRadii.IsZero() ? Vector3{1, 1, 1} : mRadii, Quaternion{}, mCenter};
+        return {mRadii, Quaternion{}, mCenter};
     }
 
     float AABB::GetDistanceToPlane ( const Plane & aPlane ) const

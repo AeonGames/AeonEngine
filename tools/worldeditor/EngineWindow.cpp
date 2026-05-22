@@ -347,7 +347,7 @@ namespace AeonGames
                             // Render Node Root
                             qWorldEditorApp->GetRenderer()->Render (
                                 mWinId,
-                                aNode.GetGlobalTransform(),
+                                aNode.GetGlobalTransform() * Transform{Vector3{0.001, 0.001, 0.001}, Quaternion{1, 0, 0, 0}, Vector3{0, 0, 0}},
                                 qWorldEditorApp->GetAABBWireMesh(),
                                 qWorldEditorApp->GetSolidColorPipeline(),
                                 &qWorldEditorApp->GetSolidColorMaterial(),
@@ -357,7 +357,7 @@ namespace AeonGames
                             // Render AABB Center
                             qWorldEditorApp->GetRenderer()->Render (
                                 mWinId,
-                                Transform{Vector3{1, 1, 1},
+                                Transform{Vector3{0.001, 0.001, 0.001},
                                           Quaternion{1, 0, 0, 0},
                                           Vector3{transformed_aabb.GetCenter() }},
                                 qWorldEditorApp->GetAABBWireMesh(),
