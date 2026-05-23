@@ -32,6 +32,7 @@ namespace AeonGames
     class SceneMsg;
     class Node;
     class Renderer;
+    class InputSystem;
     /*! \brief Scene class.
       Scene is the container for all elements in a game level,
       takes care of collision, rendering and updates to all elements therein.
@@ -180,6 +181,17 @@ namespace AeonGames
         /** Get the far clipping plane distance.
             @return Far plane distance. */
         DLL float GetFar() const;
+        /** @name Input */
+        /**@{*/
+        /** Set the InputSystem associated with this scene.
+         *  The scene does not take ownership; the caller must guarantee
+         *  the pointer outlives the scene's usage (or reset it to nullptr).
+         *  Components can query the InputSystem during Update via
+         *  GetInputSystem() to drive gameplay from raw input. */
+        DLL void SetInputSystem ( InputSystem* aInputSystem );
+        /** Get the InputSystem associated with this scene, or nullptr. */
+        DLL InputSystem* GetInputSystem() const;
+        /**@}*/
     private:
         friend class Node;
         Matrix4x4 mViewMatrix{};
@@ -201,6 +213,7 @@ namespace AeonGames
         std::vector<std::unique_ptr<Node >> mNodeStorage{};
 #endif
         Node* mCamera {};
+        InputSystem* mInputSystem {};
     };
 }
 #endif

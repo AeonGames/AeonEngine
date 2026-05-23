@@ -247,6 +247,7 @@ namespace AeonGames
     {
         bool running{true};
         XEvent xevent;
+        aScene.SetInputSystem ( mInputSystem.get() );
         Atom wm_delete_window = XInternAtom ( mDisplay, "WM_DELETE_WINDOW", 0 );
         XSetWMProtocols ( mDisplay, mWindowId, &wm_delete_window, 1 );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };

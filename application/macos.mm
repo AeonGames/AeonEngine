@@ -172,6 +172,7 @@ namespace AeonGames
     {
         bool running{true};
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        aScene.SetInputSystem ( mInputSystem.get() );
 
         @autoreleasepool
         {

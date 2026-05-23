@@ -1,0 +1,214 @@
+/*
+Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+#include <array>
+#include "CharacterController.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Transform.hpp"
+#include "aeongames/InputSystem.hpp"
+
+namespace AeonGames
+{
+    static const StringId CharacterControllerStringId{"Character Controller"};
+    const StringId& CharacterController::GetClassId()
+    {
+        return CharacterControllerStringId;
+    }
+
+    // Default key bindings. These currently target Win32 virtual key codes
+    // (W=0x57, A=0x41, S=0x53, D=0x44, arrows=0x25..0x28). The Win32 front
+    // end forwards wParam directly to InputSystem::OnKeyEvent, so these
+    // values work as-is on Windows. Other front-ends will eventually need
+    // a translation layer or platform-specific default bindings.
+    namespace
+    {
+        constexpr uint32_t kKeyW    = 0x57;
+        constexpr uint32_t kKeyA    = 0x41;
+        constexpr uint32_t kKeyS    = 0x53;
+        constexpr uint32_t kKeyD    = 0x44;
+        constexpr uint32_t kKeyLeft = 0x25;
+        constexpr uint32_t kKeyUp   = 0x26;
+        constexpr uint32_t kKeyRight = 0x27;
+        constexpr uint32_t kKeyDown = 0x28;
+    }
+
+    CharacterController::CharacterController() : Component{}
+    {
+        mActionMap.Bind ( Action_MoveForward,  { ActionMap::BindingType::Key, kKeyW } );
+        mActionMap.Bind ( Action_MoveForward,  { ActionMap::BindingType::Key, kKeyUp } );
+        mActionMap.Bind ( Action_MoveBackward, { ActionMap::BindingType::Key, kKeyS } );
+        mActionMap.Bind ( Action_MoveBackward, { ActionMap::BindingType::Key, kKeyDown } );
+        mActionMap.Bind ( Action_StrafeLeft,   { ActionMap::BindingType::Key, kKeyA } );
+        mActionMap.Bind ( Action_StrafeRight,  { ActionMap::BindingType::Key, kKeyD } );
+        mActionMap.Bind ( Action_TurnLeft,     { ActionMap::BindingType::Key, kKeyLeft } );
+        mActionMap.Bind ( Action_TurnRight,    { ActionMap::BindingType::Key, kKeyRight } );
+    }
+
+    CharacterController::~CharacterController() = default;
+
+    const StringId& CharacterController::GetId() const
+    {
+        return CharacterControllerStringId;
+    }
+
+    static constexpr std::array<const StringId, 2> CharacterControllerPropertyIds
+    {
+        {
+            {"Move Speed"},
+            {"Turn Speed"}
+        }
+    };
+
+    size_t CharacterController::GetPropertyCount () const
+    {
+        return CharacterControllerPropertyIds.size();
+    }
+
+    const StringId* CharacterController::GetPropertyInfoArray () const
+    {
+        return CharacterControllerPropertyIds.data();
+    }
+
+    float CharacterController::GetMoveSpeed() const
+    {
+        return mMoveSpeed;
+    }
+    float CharacterController::GetTurnSpeed() const
+    {
+        return mTurnSpeed;
+    }
+    void CharacterController::SetMoveSpeed ( float aMoveSpeed )
+    {
+        mMoveSpeed = aMoveSpeed;
+    }
+    void CharacterController::SetTurnSpeed ( float aTurnSpeed )
+    {
+        mTurnSpeed = aTurnSpeed;
+    }
+
+    ActionMap& CharacterController::GetActionMap()
+    {
+        return mActionMap;
+    }
+    const ActionMap& CharacterController::GetActionMap() const
+    {
+        return mActionMap;
+    }
+
+    Property CharacterController::GetProperty ( const StringId& aId ) const
+    {
+        switch ( aId )
+        {
+        case CharacterControllerPropertyIds[0]:
+            return GetMoveSpeed();
+        case CharacterControllerPropertyIds[1]:
+            return GetTurnSpeed();
+        }
+        return Property{};
+    }
+
+    void CharacterController::SetProperty ( uint32_t aId, const Property& aProperty )
+    {
+        if ( !std::holds_alternative<float> ( aProperty ) )
+        {
+            return;
+        }
+        float value = std::get<float> ( aProperty );
+        switch ( aId )
+        {
+        case CharacterControllerPropertyIds[0]:
+            SetMoveSpeed ( value );
+            break;
+        case CharacterControllerPropertyIds[1]:
+            SetTurnSpeed ( value );
+            break;
+        }
+    }
+
+    void CharacterController::Update ( Node& aNode, double aDelta )
+    {
+        Scene* scene = aNode.GetScene();
+        if ( !scene )
+        {
+            return;
+        }
+        InputSystem* input = scene->GetInputSystem();
+        if ( !input )
+        {
+            return;
+        }
+
+        float forward = 0.0f;
+        if ( mActionMap.IsActionDown ( Action_MoveForward,  *input ) )
+        {
+            forward += 1.0f;
+        }
+        if ( mActionMap.IsActionDown ( Action_MoveBackward, *input ) )
+        {
+            forward -= 1.0f;
+        }
+
+        float strafe = 0.0f;
+        if ( mActionMap.IsActionDown ( Action_StrafeRight, *input ) )
+        {
+            strafe += 1.0f;
+        }
+        if ( mActionMap.IsActionDown ( Action_StrafeLeft,  *input ) )
+        {
+            strafe -= 1.0f;
+        }
+
+        float turn = 0.0f;
+        if ( mActionMap.IsActionDown ( Action_TurnLeft,  *input ) )
+        {
+            turn += 1.0f;
+        }
+        if ( mActionMap.IsActionDown ( Action_TurnRight, *input ) )
+        {
+            turn -= 1.0f;
+        }
+
+        if ( forward == 0.0f && strafe == 0.0f && turn == 0.0f )
+        {
+            return;
+        }
+
+        const float dt = static_cast<float> ( aDelta );
+
+        // Axis convention (matches OverTheShoulderCamera): +X right, +Y forward, +Z up.
+        Transform t = aNode.GetLocalTransform();
+        if ( forward != 0.0f || strafe != 0.0f )
+        {
+            t.MoveInObjectSpace ( strafe * mMoveSpeed * dt,
+                                  forward * mMoveSpeed * dt,
+                                  0.0f );
+        }
+        if ( turn != 0.0f )
+        {
+            t.RotateObjectSpace ( turn * mTurnSpeed * dt, 0.0f, 0.0f, 1.0f );
+        }
+        aNode.SetLocalTransform ( t );
+    }
+
+    void CharacterController::Render ( const Node& /*aNode*/, Renderer& /*aRenderer*/, void* /*aWindowId*/ )
+    {
+    }
+
+    void CharacterController::ProcessMessage ( Node& /*aNode*/, uint32_t /*aMessageType*/, const void* /*aMessageData*/ )
+    {
+    }
+}

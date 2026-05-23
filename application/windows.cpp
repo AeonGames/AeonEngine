@@ -465,6 +465,7 @@ namespace AeonGames
     {
         MSG msg;
         bool done = false;
+        aScene.SetInputSystem ( mInputSystem.get() );
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_SHOW );
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
         bool prev_cursor_captured = false;

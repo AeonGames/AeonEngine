@@ -1,45 +1,10 @@
 AEONSCE
 name: "Scene"
 camera {
-  node: "Camera"
+  node: "Player"
   field_of_view: 60
   near_plane: 0.1
   far_plane: 50
-}
-node {
-  name: "Camera"
-  local {
-    Scale {
-      x: 1
-      y: 1
-      z: 1
-    }
-    Rotation {
-      w: 1.16832967e-17
-      x: 6.01053521e-17
-      y: 0.190809026
-      z: -0.981627285
-    }
-    Translation {
-      y: 1.9
-      z: 1.6
-    }
-  }
-  component {
-    name: "Camera"
-    property {
-      name: "Field of View"
-      float: 60
-    }
-    property {
-      name: "Near Plane"
-      float: 0.1
-    }
-    property {
-      name: "Far Plane"
-      float: 50
-    }
-  }
 }
 node {
   name: "Player"
@@ -70,4 +35,43 @@ node {
       double: 0
     }
   }
+  component {
+    name: "Character Controller"
+    property {
+      name: "Move Speed"
+      float: 3
+    }
+    property {
+      name: "Turn Speed"
+      float: 120
+    }
+  }
+  component {
+    name: "OverTheShoulderCamera"
+    property {
+      name: "Shoulder Offset"
+      float: 0.5
+    }
+    property {
+      name: "Height Offset"
+      float: 1.7
+    }
+    property {
+      name: "Distance Behind"
+      float: 3
+    }
+    property {
+      name: "Field of View"
+      float: 60
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 50
+    }
+  }
 }
+

@@ -109,6 +109,16 @@ namespace AeonGames
         return mCamera;
     }
 
+    void Scene::SetInputSystem ( InputSystem* aInputSystem )
+    {
+        mInputSystem = aInputSystem;
+    }
+
+    InputSystem* Scene::GetInputSystem() const
+    {
+        return mInputSystem;
+    }
+
     void Scene::SetFieldOfView ( float aFieldOfView )
     {
         mFieldOfView = aFieldOfView;
