@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_POINTLIGHT_H
 #define AEONGAMES_POINTLIGHT_H
 #include "aeongames/Component.hpp"
+#include "aeongames/Vector3.hpp"
 
 namespace AeonGames
 {
@@ -41,7 +42,23 @@ namespace AeonGames
         ///@}
         /** @brief Returns the class identifier for the PointLight component. */
         static const StringId& GetClassId();
+
+        float GetColorR() const;
+        float GetColorG() const;
+        float GetColorB() const;
+        float GetIntensity() const;
+        float GetRadius() const;
+        void  SetColorR ( float aR );
+        void  SetColorG ( float aG );
+        void  SetColorB ( float aB );
+        void  SetIntensity ( float aIntensity );
+        void  SetRadius ( float aRadius );
     private:
+        float mColorR{1.0f};
+        float mColorG{1.0f};
+        float mColorB{1.0f};
+        float mIntensity{1.0f};
+        float mRadius{10.0f};
     };
 }
 #endif
