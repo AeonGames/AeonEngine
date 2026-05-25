@@ -1,0 +1,6 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "meshes/PoleSign.txt"
+  }
+}

@@ -46,9 +46,9 @@ class MDL_OT_exporter(bpy.types.Operator):
         description="Export every action in the .blend to .anm files under animations/ and reference them from the model",
         default=True
     )
-    export_images: bpy.props.BoolProperty(
-        name="Images",
-        description="Save image-texture nodes referenced by exported meshes into images/",
+    export_textures: bpy.props.BoolProperty(
+        name="Textures",
+        description="Save image-texture nodes referenced by exported meshes into textures/",
         default=True
     )
     # Mesh vertex attribute toggles (forwarded to io_mesh_msh).
@@ -85,7 +85,7 @@ class MDL_OT_exporter(bpy.types.Operator):
         col.prop(self, "export_meshes")
         col.prop(self, "export_skeleton")
         col.prop(self, "export_animations")
-        col.prop(self, "export_images")
+        col.prop(self, "export_textures")
         layout.separator()
         attr_col = layout.column(heading="Mesh Attributes")
         attr_col.enabled = self.export_meshes
@@ -106,8 +106,8 @@ class MDL_OT_exporter(bpy.types.Operator):
             os.makedirs(self.directory + "meshes")
         if self.export_skeleton and not os.path.exists(self.directory + "skeletons"):
             os.makedirs(self.directory + "skeletons")
-        if self.export_images and not os.path.exists(self.directory + "images"):
-            os.makedirs(self.directory + "images")
+        if self.export_textures and not os.path.exists(self.directory + "textures"):
+            os.makedirs(self.directory + "textures")
         if self.export_animations and animations_available and not os.path.exists(self.directory + "animations"):
             os.makedirs(self.directory + "animations")
 
@@ -138,9 +138,9 @@ class MDL_OT_exporter(bpy.types.Operator):
                     export_uvs=self.export_uvs,
                     export_weights=self.export_weights,
                     export_colors=self.export_colors)
-                if not self.export_images:
+                if not self.export_textures:
                     continue
-                # Export All images referenced by the mesh materials
+                # Export all textures referenced by the mesh materials
                 for material in object.data.materials:
                     print("Material:",material.name, material.use_nodes)
                     for node in material.node_tree.nodes:
@@ -171,7 +171,7 @@ class MDL_OT_exporter(bpy.types.Operator):
                                         'WEBP': '.webp',
                                     }
                                     basename += ext_map.get(node.image.file_format, '.png')
-                            target = os.path.join(self.directory, "images", basename)
+                            target = os.path.join(self.directory, "textures", basename)
                             # Skip if the file already exists at the
                             # destination, and especially if the source
                             # image on disk *is* the destination -- saving
