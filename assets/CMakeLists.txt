@@ -134,3 +134,5 @@ add_custom_target(install-sponza
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Installing Sponza assets"
 )
+
+add_subdirectory(shadercode)
