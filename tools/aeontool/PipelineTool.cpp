@@ -30,6 +30,7 @@ limitations under the License.
 #include <ostream>
 #include <iostream>
 #include <cstring>
+#include <array>
 #include <filesystem>
 #include "PipelineTool.h"
 #include "CodeFieldValuePrinter.hpp"
@@ -39,7 +40,64 @@ namespace AeonGames
 {
     PipelineTool::PipelineTool() = default;
     PipelineTool::~PipelineTool() = default;
-    void PipelineTool::ProcessArgs ( int argc, char** argv )
+
+    static void PrintPipelineUsage()
+    {
+        std::cout <<
+        "Usage: aeontool pipeline [options]\n"
+        "\n"
+        "Packs shader source files (.vert, .frag, .comp, .tesc, .tese, .geom)\n"
+        "into a pipeline file (.pln binary or .txt text), or extracts the\n"
+        "shader sources back from a pipeline file.\n"
+        "\n"
+        "Options:\n"
+        "  -h, --help          Show this help message and exit.\n"
+        "  -i, --in  <path>    Input file path.\n"
+        "                      If the path has no extension, shader files\n"
+        "                      with that base name and the supported shader\n"
+        "                      extensions are picked up automatically.\n"
+        "                      If the extension is .pln or .txt, the shaders\n"
+        "                      are extracted from the pipeline file.\n"
+        "  -o, --out <path>    Output file path. Defaults to the input path.\n"
+        "                      When packing, must end in .pln or .txt.\n"
+        "\n"
+        "Per-stage overrides (packing only). These take precedence over\n"
+        "base-name auto-discovery and allow several pipelines to share the\n"
+        "same source file:\n"
+        "      --vert <file>   Vertex shader source.\n"
+        "      --frag <file>   Fragment shader source.\n"
+        "      --comp <file>   Compute shader source.\n"
+        "      --tesc <file>   Tessellation control shader source.\n"
+        "      --tese <file>   Tessellation evaluation shader source.\n"
+        "      --geom <file>   Geometry shader source.\n"
+        "\n"
+        "Examples:\n"
+        "  aeontool pipeline -i shader -o shader.pln\n"
+        "  aeontool pipeline -i shader.pln -o shader\n"
+        "  aeontool pipeline --vert no_skeleton.vert --frag shared.frag \\\n"
+        "                    -o no_skeleton.txt\n"
+                  << std::flush;
+    }
+
+    /// Supported shader stage extensions (ordered for deterministic help/iteration).
+    static const std::array<const char*, 6> kStageExtensions
+    {
+        ".vert", ".frag", ".comp", ".tesc", ".tese", ".geom"
+    };
+
+    static bool IsStageExtension ( const char* ext )
+    {
+        for ( const char * known : kStageExtensions )
+        {
+            if ( strcmp ( ext, known ) == 0 )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool PipelineTool::ProcessArgs ( int argc, char** argv )
     {
         if ( argc < 2 || ( strcmp ( argv[1], "pipeline" ) != 0 ) )
         {
@@ -53,21 +111,48 @@ namespace AeonGames
             {
                 if ( argv[i][1] == '-' )
                 {
-                    if ( strncmp ( &argv[i][2], "in", sizeof ( "in" ) ) == 0 )
+                    const char* opt = &argv[i][2];
+                    if ( strcmp ( opt, "help" ) == 0 )
+                    {
+                        PrintPipelineUsage();
+                        return false;
+                    }
+                    else if ( strncmp ( opt, "in", sizeof ( "in" ) ) == 0 )
                     {
                         i++;
                         mInputFile = argv[i];
                     }
-                    else if ( strncmp ( &argv[i][2], "out", sizeof ( "out" ) ) == 0 )
+                    else if ( strncmp ( opt, "out", sizeof ( "out" ) ) == 0 )
                     {
                         i++;
                         mOutputFile = argv[i];
+                    }
+                    else
+                    {
+                        // Per-stage overrides: --vert/--frag/--comp/--tesc/--tese/--geom
+                        std::string ext = std::string ( "." ) + opt;
+                        if ( IsStageExtension ( ext.c_str() ) )
+                        {
+                            if ( i + 1 >= argc )
+                            {
+                                throw std::runtime_error ( "Missing value for --" + std::string ( opt ) );
+                            }
+                            i++;
+                            mStageFiles[ext] = argv[i];
+                        }
+                        else
+                        {
+                            throw std::runtime_error ( "Unknown option: --" + std::string ( opt ) );
+                        }
                     }
                 }
                 else
                 {
                     switch ( argv[i][1] )
                     {
+                    case 'h':
+                        PrintPipelineUsage();
+                        return false;
                     case 'i':
                         i++;
                         mInputFile = argv[i];
@@ -84,14 +169,19 @@ namespace AeonGames
                 mInputFile = argv[i];
             }
         }
-        if ( mInputFile.empty() )
+        if ( mInputFile.empty() && mStageFiles.empty() )
         {
             throw std::runtime_error ( "No Input file provided." );
         }
-        else if ( mOutputFile.empty() )
+        if ( mOutputFile.empty() )
         {
+            if ( mInputFile.empty() )
+            {
+                throw std::runtime_error ( "No Output file provided. --out is required when only per-stage overrides are used." );
+            }
             mOutputFile = mInputFile;
         }
+        return true;
     }
 
     /// @brief Map from shader file extension to its mutable PipelineMsg accessor.
@@ -118,11 +208,19 @@ namespace AeonGames
 
     int PipelineTool::operator() ( int argc, char** argv )
     {
-        ProcessArgs ( argc, argv );
+        if ( !ProcessArgs ( argc, argv ) )
+        {
+            return 0;
+        }
         std::filesystem::path input_path{mInputFile};
         std::filesystem::path output_path{mOutputFile};
         char magick_number[8] = "AEONPLN";
-        if ( !input_path.has_extension() )
+
+        const bool packing_mode = !mStageFiles.empty() ||
+                                  mInputFile.empty() ||
+                                  !input_path.has_extension();
+
+        if ( packing_mode )
         {
             if ( output_path.extension() != ".pln" && output_path.extension() != ".txt" )
             {
@@ -130,22 +228,60 @@ namespace AeonGames
             }
             PipelineMsg pipeline_msg;
             bool found_shader{false};
-            for ( const auto& [extension, setter] : ShaderTypeToExtension )
+
+            // 1. Base-name auto-discovery (only when input path is an extensionless base).
+            if ( !mInputFile.empty() && !input_path.has_extension() )
             {
-                std::filesystem::path shader_path{input_path.replace_extension ( extension ) };
-                if ( std::filesystem::exists ( shader_path ) )
+                for ( const auto& [extension, setter] : ShaderTypeToExtension )
                 {
-                    std::ifstream shader_file ( shader_path );
-                    if ( !shader_file )
+                    if ( mStageFiles.count ( extension ) )
                     {
-                        throw std::runtime_error ( "Failed to open shader file: " + shader_path.string() );
+                        // Will be filled in by per-stage overrides below.
+                        continue;
                     }
-                    std::string shader_code ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
-                    shader_file.close();
-                    setter ( &pipeline_msg )->assign ( shader_code );
-                    found_shader = true;
+                    std::filesystem::path shader_path{std::filesystem::path{mInputFile} .replace_extension ( extension ) };
+                    if ( std::filesystem::exists ( shader_path ) )
+                    {
+                        std::ifstream shader_file ( shader_path );
+                        if ( !shader_file )
+                        {
+                            throw std::runtime_error ( "Failed to open shader file: " + shader_path.string() );
+                        }
+                        std::string shader_code ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
+                        shader_file.close();
+                        setter ( &pipeline_msg )->assign ( shader_code );
+                        found_shader = true;
+                    }
                 }
             }
+
+            // 2. Per-stage overrides take precedence.
+            for ( const auto& [extension, path] : mStageFiles )
+            {
+                std::function<std::string* ( PipelineMsg* ) > setter;
+                for ( const auto& [known_ext, known_setter] : ShaderTypeToExtension )
+                {
+                    if ( extension == known_ext )
+                    {
+                        setter = known_setter;
+                        break;
+                    }
+                }
+                if ( !setter )
+                {
+                    throw std::runtime_error ( "Unknown stage extension: " + extension );
+                }
+                std::ifstream shader_file ( path );
+                if ( !shader_file )
+                {
+                    throw std::runtime_error ( "Failed to open shader file: " + path );
+                }
+                std::string shader_code ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
+                shader_file.close();
+                setter ( &pipeline_msg )->assign ( shader_code );
+                found_shader = true;
+            }
+
             if ( found_shader )
             {
                 if ( output_path.extension() == ".pln" )
@@ -259,7 +395,6 @@ namespace AeonGames
         {
             throw std::runtime_error ( "Unsupported file extension" );
         }
-
         return 0;
     }
 }

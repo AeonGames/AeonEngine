@@ -18,6 +18,7 @@ node {
       w: 1
     }
     Translation {
+      y: -2
     }
   }
   component {
@@ -74,4 +75,33 @@ node {
     }
   }
 }
-
+node {
+  name: "Sign"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      w: 1
+    }
+    Translation {
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      string: "polesign/polesign.txt"
+    }
+    property {
+      name: "Active Animation"
+      string: ""
+    }
+    property {
+      name: "Starting Frame"
+      double: 0
+    }
+  }
+}

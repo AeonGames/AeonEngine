@@ -378,6 +378,7 @@ namespace AeonGames
         {
             std::ostringstream oss;
             oss << e.what() << " [path: " << aFileName << "]";
+            std::cout << LogLevel::Error << oss.str() << std::endl;
             throw std::runtime_error ( oss.str() );
         }
     }

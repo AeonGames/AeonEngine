@@ -41,9 +41,11 @@ namespace AeonGames
          */
         int operator() ( int argc, char** argv ) override;
     private:
-        void ProcessArgs ( int argc, char** argv );
+        bool ProcessArgs ( int argc, char** argv );
         std::string mInputFile;
         std::string mOutputFile;
+        /// Per-stage shader source file overrides keyed by extension (".vert", ".frag", ...).
+        std::unordered_map<std::string, std::string> mStageFiles;
     };
 }
 #endif

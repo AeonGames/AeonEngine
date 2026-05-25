@@ -1,6 +1,12 @@
 AEONMDL
+default_pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+}
+default_material {
+    path: "polesign/materials/default.txt"
+}
 assembly {
   mesh {
-    path: "meshes/PoleSign.txt"
+    path: "polesign/meshes/PoleSign.txt"
   }
 }
