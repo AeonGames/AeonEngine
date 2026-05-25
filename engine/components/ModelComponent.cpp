@@ -99,9 +99,9 @@ namespace AeonGames
             }
             break;
         case ModelComponentPropertyIds[1]:
-            if ( std::holds_alternative<unsigned long long> ( aProperty ) )
+            if ( std::holds_alternative<std::string> ( aProperty ) )
             {
-                SetActiveAnimation ( std::get<unsigned long long> ( aProperty ) );
+                SetActiveAnimation ( std::get<std::string> ( aProperty ) );
             }
             break;
         case ModelComponentPropertyIds[2]:
@@ -113,10 +113,25 @@ namespace AeonGames
         }
     }
 
+    const std::vector<std::string>& ModelComponent::GetPropertyEnumValues ( const StringId& aId ) const
+    {
+        static const std::vector<std::string> empty{};
+        if ( aId == ModelComponentPropertyIds[1] )
+        {
+            if ( auto model = mModel.Cast<Model>() )
+            {
+                return model->GetAnimationNames();
+            }
+        }
+        return empty;
+    }
+
     void ModelComponent::SetModel ( const ResourceId& aModel )
     {
         mModel = aModel;
         mModel.Store();
+        mLastResolvedModel = nullptr;
+        mActiveAnimationIndex = Model::INVALID_ANIMATION_INDEX;
     }
 
     const ResourceId& ModelComponent::GetModel() const noexcept
@@ -124,13 +139,15 @@ namespace AeonGames
         return mModel;
     }
 
-    void ModelComponent::SetActiveAnimation ( size_t aActiveAnimation ) noexcept
+    void ModelComponent::SetActiveAnimation ( std::string_view aActiveAnimation )
     {
-        mActiveAnimation = aActiveAnimation;
+        mActiveAnimation.assign ( aActiveAnimation );
         mCurrentSample = mStartingFrame;
+        mLastResolvedModel = nullptr;
+        mActiveAnimationIndex = Model::INVALID_ANIMATION_INDEX;
     }
 
-    const size_t& ModelComponent::GetActiveAnimation() const noexcept
+    const std::string& ModelComponent::GetActiveAnimation() const noexcept
     {
         return mActiveAnimation;
     }
@@ -149,6 +166,14 @@ namespace AeonGames
     {
         if ( auto model = mModel.Cast<Model>() )
         {
+            // Refresh the cached animation index when either the model or
+            // active animation name changes (SetModel/SetActiveAnimation
+            // clear mLastResolvedModel, so this also triggers on reload).
+            if ( model != mLastResolvedModel )
+            {
+                mActiveAnimationIndex = model->GetAnimationIndexByName ( mActiveAnimation );
+                mLastResolvedModel = model;
+            }
             AABB aabb;
             for ( auto& i : model->GetAssemblies() )
             {
@@ -163,11 +188,10 @@ namespace AeonGames
             {
                 float* skeleton_buffer = reinterpret_cast<float*> ( mSkeleton.data() );
                 assert ( ( skeleton->GetJoints().size() * sizeof ( float ) * 16 ) < mSkeleton.size() );
-                const std::vector<ResourceId>& animations = model->GetAnimations();
-                if ( animations.size() && animations.size() > mActiveAnimation )
+                if ( mActiveAnimationIndex != Model::INVALID_ANIMATION_INDEX )
                 {
                     // Use animation transforms
-                    auto animation = animations[mActiveAnimation].Cast<Animation>();
+                    auto animation = model->GetAnimationResources() [mActiveAnimationIndex].Cast<Animation>();
                     mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
                     for ( size_t i = 0; i < skeleton->GetJoints().size(); ++i )
                     {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -104,10 +104,14 @@ namespace AeonGames
             mAssemblies.emplace_back ( mesh, pipeline, material );
         }
         // Animations -----------------------------------------------------------------------------
-        mAnimations.reserve ( aModelMsg.animation_size() );
+        mAnimationNames.reserve ( aModelMsg.animation_size() );
+        mAnimationResources.reserve ( aModelMsg.animation_size() );
         for ( auto& animation : aModelMsg.animation() )
         {
-            mAnimations.emplace_back ( ResourceId{"Animation"_crc32, GetReferenceMsgId ( animation ) } ).Store();
+            mAnimationNames.emplace_back ( animation.name() );
+            ResourceId resource{"Animation"_crc32, GetReferenceMsgId ( animation.reference() ) };
+            resource.Store();
+            mAnimationResources.emplace_back ( std::move ( resource ) );
         }
     }
 
@@ -115,7 +119,8 @@ namespace AeonGames
     {
         /**@todo refcount Resource Id's? */
         mAssemblies.clear();
-        mAnimations.clear();
+        mAnimationNames.clear();
+        mAnimationResources.clear();
     }
 
     const std::vector<Model::Assembly>& Model::GetAssemblies() const
@@ -128,9 +133,26 @@ namespace AeonGames
         return mSkeleton.Cast<Skeleton>();
     }
 
-    const std::vector<ResourceId>& Model::GetAnimations() const
+    const std::vector<std::string>& Model::GetAnimationNames() const
     {
-        return mAnimations;
+        return mAnimationNames;
+    }
+
+    const std::vector<ResourceId>& Model::GetAnimationResources() const
+    {
+        return mAnimationResources;
+    }
+
+    size_t Model::GetAnimationIndexByName ( std::string_view aName ) const
+    {
+        for ( size_t i = 0; i < mAnimationNames.size(); ++i )
+        {
+            if ( mAnimationNames[i] == aName )
+            {
+                return i;
+            }
+        }
+        return INVALID_ANIMATION_INDEX;
     }
 
     void Model::LoadRendererResources ( Renderer& aRenderer ) const

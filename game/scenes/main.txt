@@ -28,7 +28,7 @@ node {
     }
     property {
       name: "Active Animation"
-      unsigned_long_long: 2
+      string: "Idle"
     }
     property {
       name: "Starting Frame"

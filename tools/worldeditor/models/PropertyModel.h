@@ -27,6 +27,18 @@ namespace AeonGames
     {
         Q_OBJECT
     public:
+        /** @brief Custom item-data roles exposed by property models. */
+        enum Roles
+        {
+            /** @brief QStringList of allowed values for an enumerable property.
+             *
+             * Returned by data() when a property is constrained to a closed set
+             * of values. PropertyDelegate uses this to decide whether to build a
+             * combo-box editor instead of the default editor for the value's
+             * underlying type. Returns an empty/invalid QVariant for free-form
+             * properties. */
+            EnumValuesRole = Qt::UserRole + 1
+        };
         /**
          * @brief Construct the property model.
          * @param parent Parent QObject.

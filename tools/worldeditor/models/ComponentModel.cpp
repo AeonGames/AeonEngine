@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2021,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2021,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -84,6 +84,26 @@ namespace AeonGames
     {
         if ( mComponent && index.isValid() )
         {
+            if ( role == PropertyModel::EnumValuesRole )
+            {
+                if ( index.column() == 1 )
+                {
+                    const std::vector<std::string>& values =
+                        mComponent->GetPropertyEnumValues (
+                            mComponent->GetPropertyInfoArray() [index.row()] );
+                    if ( !values.empty() )
+                    {
+                        QStringList list;
+                        list.reserve ( static_cast<int> ( values.size() ) );
+                        for ( const auto& value : values )
+                        {
+                            list.append ( QString::fromStdString ( value ) );
+                        }
+                        return list;
+                    }
+                }
+                return QVariant();
+            }
             if ( role == Qt::EditRole || role == Qt::DisplayRole )
                 switch ( index.column() )
                 {

@@ -16,6 +16,9 @@ limitations under the License.
 #ifndef AEONGAMES_MODELCOMPONENT_H
 #define AEONGAMES_MODELCOMPONENT_H
 #include <array>
+#include <string>
+#include <string_view>
+#include <vector>
 #include "aeongames/Component.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/BufferAccessor.hpp"
@@ -25,6 +28,7 @@ namespace AeonGames
     class Node;
     class Window;
     class Buffer;
+    class Model;
     /** @brief Component that attaches a 3D model with skeletal animation support to a scene node. */
     class ModelComponent final : public Component
     {
@@ -39,6 +43,7 @@ namespace AeonGames
         const StringId* GetPropertyInfoArray () const final;
         Property GetProperty ( const StringId& aId ) const final;
         void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const std::vector<std::string>& GetPropertyEnumValues ( const StringId& aId ) const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
@@ -51,11 +56,11 @@ namespace AeonGames
         void SetModel ( const ResourceId& aModel );
         /** @brief Returns the current model resource identifier. */
         const ResourceId& GetModel() const noexcept;
-        /** @brief Sets the active animation index.
-            @param aActiveAnimation Zero-based index of the animation to activate. */
-        void SetActiveAnimation ( size_t aActiveAnimation ) noexcept;
-        /** @brief Returns the active animation index. */
-        const size_t& GetActiveAnimation() const noexcept;
+        /** @brief Sets the active animation by name.
+            @param aActiveAnimation Name of the animation as declared by the model. */
+        void SetActiveAnimation ( std::string_view aActiveAnimation );
+        /** @brief Returns the name of the active animation. */
+        const std::string& GetActiveAnimation() const noexcept;
         /** @brief Sets the starting frame for the active animation.
             @param aAnimationDelta Starting frame value. */
         void SetStartingFrame ( double aAnimationDelta ) noexcept;
@@ -67,10 +72,15 @@ namespace AeonGames
     private:
         // Properties
         ResourceId mModel{};
-        size_t mActiveAnimation{};
+        std::string mActiveAnimation{};
         double mStartingFrame{};
         // Private Data
         double mCurrentSample{};
+        // Cached resolution of mActiveAnimation against the currently loaded
+        // model. Invalidated when the model or the active animation name
+        // changes, or when the underlying Model pointer changes (e.g. reload).
+        const Model* mLastResolvedModel{nullptr};
+        size_t mActiveAnimationIndex{static_cast<size_t> ( -1 ) };
         // 128 is the maximum number of bones per model
         std::array<uint8_t, 16 * 128 * sizeof ( float ) > mSkeleton{};
     };

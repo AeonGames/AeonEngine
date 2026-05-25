@@ -16,12 +16,16 @@ limitations under the License.
 
 #include "PropertyDelegate.h"
 #include "WorldEditor.h"
+#include "../models/PropertyModel.h"
 #include <iostream>
 #include <limits>
 #include <algorithm>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QLineEdit>
+#include <QComboBox>
+#include <QStringList>
+#include <QTimer>
 
 namespace AeonGames
 {
@@ -74,6 +78,32 @@ namespace AeonGames
             const QStyleOptionViewItem &option,
             const QModelIndex &index ) const
     {
+        // If the property exposes a closed set of allowed values, present a
+        // drop-down regardless of the underlying value type.
+        QStringList enum_values =
+            index.model()->data ( index, PropertyModel::EnumValuesRole ).toStringList();
+        if ( !enum_values.isEmpty() )
+        {
+            QComboBox* combo = new QComboBox ( parent );
+            combo->setFrame ( false );
+            // Paint an opaque background so the underlying cell text isn't
+            // visible through the editor.
+            combo->setAutoFillBackground ( true );
+            combo->addItems ( enum_values );
+            // Open the drop-down as soon as the editor is shown so a single
+            // double-click reveals the choices immediately.
+            QTimer::singleShot ( 0, combo, &QComboBox::showPopup );
+            // Commit the selection and close the editor on user activation so
+            // picking an entry takes effect without requiring Enter.
+            connect ( combo, QOverload<int>::of ( &QComboBox::activated ), this,
+                      [this, combo] ( int )
+            {
+                PropertyDelegate* self = const_cast<PropertyDelegate*> ( this );
+                emit self->commitData ( combo );
+                emit self->closeEditor ( combo );
+            } );
+            return combo;
+        }
         QVariant value = index.model()->data ( index, Qt::EditRole );
         int user_type{value.userType() };
         switch ( user_type )
@@ -107,6 +137,20 @@ namespace AeonGames
                                            const QModelIndex &index ) const
     {
         QVariant value = index.model()->data ( index, Qt::EditRole );
+        // If the editor is the enum drop-down, select the current value.
+        if ( QComboBox * combo = qobject_cast<QComboBox * > ( editor ) )
+        {
+            int current = combo->findText ( value.toString() );
+            if ( current >= 0 )
+            {
+                combo->setCurrentIndex ( current );
+            }
+            else
+            {
+                combo->setEditText ( value.toString() );
+            }
+            return;
+        }
         int user_type{value.userType() };
         switch ( user_type )
         {
@@ -148,6 +192,12 @@ namespace AeonGames
     void PropertyDelegate::setModelData ( QWidget *editor, QAbstractItemModel *model,
                                           const QModelIndex &index ) const
     {
+        // Commit drop-down selection as a QString back to the model.
+        if ( QComboBox * combo = qobject_cast<QComboBox * > ( editor ) )
+        {
+            model->setData ( index, combo->currentText(), Qt::EditRole );
+            return;
+        }
         QVariant value = index.model()->data ( index, Qt::EditRole );
         int user_type{value.userType() };
         switch ( user_type )

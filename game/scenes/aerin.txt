@@ -22,7 +22,7 @@ node {
     }
     property {
       name: "Active Animation"
-      unsigned_long_long: 1
+      string: "Bind"
     }
     property {
       name: "Starting Frame"

@@ -18,6 +18,8 @@ limitations under the License.
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <string>
+#include <string_view>
 #include "aeongames/Platform.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/Resource.hpp"
@@ -39,6 +41,8 @@ namespace AeonGames
                          ResourceId,
                          ResourceId,
                          ResourceId >;
+        /** @brief Sentinel returned by GetAnimationIndexByName when no animation matches. */
+        static constexpr size_t INVALID_ANIMATION_INDEX = static_cast<size_t> ( -1 );
         DLL Model();
         DLL ~Model();
         /** @brief Load model data from a protobuf message.
@@ -56,9 +60,19 @@ namespace AeonGames
         /** @brief Get the skeleton associated with this model.
          *  @return Pointer to the skeleton, or nullptr if none. */
         DLL const Skeleton* GetSkeleton() const;
+        /** @brief Get the list of animation names exposed by this model.
+         *  @return Reference to the vector of animation names. Indices align
+         *          with GetAnimationResources(). */
+        DLL const std::vector<std::string>& GetAnimationNames() const;
         /** @brief Get the list of animation resource identifiers.
-         *  @return Reference to the vector of animation ResourceIds. */
-        DLL const std::vector<ResourceId>& GetAnimations() const;
+         *  @return Reference to the vector of animation ResourceIds. Indices
+         *          align with GetAnimationNames(). */
+        DLL const std::vector<ResourceId>& GetAnimationResources() const;
+        /** @brief Look up the index of a named animation.
+         *  @param aName Animation name as exposed by the model.
+         *  @return Zero-based index into the animation arrays, or
+         *          INVALID_ANIMATION_INDEX if no animation matches. */
+        DLL size_t GetAnimationIndexByName ( std::string_view aName ) const;
         /** @brief Load renderer-specific resources for this model.
          *  @param aRenderer reference to the renderer. */
         DLL void LoadRendererResources ( Renderer& aRenderer ) const;
@@ -68,7 +82,8 @@ namespace AeonGames
     private:
         ResourceId mSkeleton;
         std::vector<Assembly> mAssemblies{};
-        std::vector<ResourceId> mAnimations;
+        std::vector<std::string> mAnimationNames{};
+        std::vector<ResourceId> mAnimationResources{};
     };
 }
 #endif

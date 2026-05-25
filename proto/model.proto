@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018,2021 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016-2018,2021,2026 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,16 @@ message AssemblyMsg
 	ReferenceMsg        material    = 3;
 }
 
+message AnimationRefMsg
+{
+    string              name        = 1;
+    ReferenceMsg        reference   = 2;
+}
+
 message ModelMsg {
 	ReferenceMsg             default_pipeline         = 1;
 	ReferenceMsg             default_material         = 2;
     ReferenceMsg             skeleton                 = 3;
     repeated AssemblyMsg     assembly                 = 4;
-    repeated ReferenceMsg    animation                = 5;
+    repeated AnimationRefMsg animation                = 5;
 }

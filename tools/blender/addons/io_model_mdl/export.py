@@ -217,7 +217,8 @@ class MDL_OT_exporter(bpy.types.Operator):
                         as_text=self.as_text)
                     for action in bpy.data.actions:
                         ref = model_buffer.animation.add()
-                        ref.path = "animations" + '/' + action.name + (".txt" if self.as_text else ".anm")
+                        ref.name = action.name
+                        ref.reference.path = "animations" + '/' + action.name + (".txt" if self.as_text else ".anm")
             else:
                 print("Skipping object", object.name, "of type", object.type)
         

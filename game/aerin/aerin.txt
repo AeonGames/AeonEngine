@@ -56,14 +56,26 @@ assembly {
   }
 }
 animation {
-  path: "aerin/animations/Walk.txt"
+  name: "Walk"
+  reference {
+    path: "aerin/animations/Walk.txt"
+  }
 }
 animation {
-  path: "aerin/animations/Bind.txt"
+  name: "Bind"
+  reference {
+    path: "aerin/animations/Bind.txt"
+  }
 }
 animation {
-  path: "aerin/animations/Idle.txt"
+  name: "Idle"
+  reference {
+    path: "aerin/animations/Idle.txt"
+  }
 }
 animation {
-  path: "aerin/animations/CatWalk.txt"
+  name: "CatWalk"
+  reference {
+    path: "aerin/animations/CatWalk.txt"
+  }
 }

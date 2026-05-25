@@ -19,6 +19,7 @@ limitations under the License.
 #include <functional>
 #include <variant>
 #include <string>
+#include <vector>
 #include <type_traits>
 #include "aeongames/Platform.hpp"
 #include "aeongames/StringId.hpp"
@@ -72,6 +73,28 @@ namespace AeonGames
          * @note If the type of the value passed does not match the expected types no change should be made.
         */
         virtual void SetProperty ( uint32_t aId, const Property& aProperty ) = 0;
+        /** @brief Return the list of allowed values for an enumerable property.
+         *
+         * Components override this to expose a closed set of valid values for a
+         * property (e.g. selecting from a known list of animations or states).
+         * The default implementation returns a reference to an empty vector,
+         * indicating the property is free-form. Tools (such as the world
+         * editor) use a non-empty list to present a drop-down editor.
+         *
+         * Overrides must return a reference to data owned by the component
+         * (or by a resource it holds) so no copying occurs.
+         *
+         *  @param aId Identifier of the property to enumerate.
+         *  @return Reference to the vector of allowed values, or an empty
+         *          vector if the property is not enumerable in the
+         *          component's current state.
+         */
+        virtual const std::vector<std::string>& GetPropertyEnumValues ( const StringId& aId ) const
+        {
+            ( void ) aId;
+            static const std::vector<std::string> empty{};
+            return empty;
+        }
         /** @brief Update the component state.
          *  @param aNode  Node this component is attached to.
          *  @param aDelta Elapsed time since the last update, in seconds.
