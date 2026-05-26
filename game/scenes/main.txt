@@ -97,7 +97,7 @@ node {
     }
     property {
       name: "Active Animation"
-      string: ""
+      string: "Idle"
     }
     property {
       name: "Starting Frame"

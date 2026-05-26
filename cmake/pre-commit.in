@@ -19,27 +19,85 @@ CMAKE_FILES=`git diff --cached $against --name-only --diff-filter=ACMR | grep -E
 
 EXIT_CODE=0
 
-# Remove trailing spaces
-for FILE in $TEXT_FILES; do
-	"${SED_EXECUTABLE}" -i 's/[ \t]*$//' $FILE
+for_each_file() {
+	FILE_LIST="$1"
+	CALLBACK="$2"
+	if [ -z "$FILE_LIST" ]; then
+		return 0
+	fi
+	while IFS= read -r FILE; do
+		[ -n "$FILE" ] || continue
+		"$CALLBACK" "$FILE"
+	done <<EOF
+$FILE_LIST
+EOF
+}
+
+remove_trailing_spaces() {
+	FILE="$1"
+	"${SED_EXECUTABLE}" -i 's/[ \t]*$//' "$FILE"
 	if [ $? -ne 0 ]; then
 		echo "[!] $FILE" >&2
-        EXIT_CODE=1
+		EXIT_CODE=1
 	fi
-done
+}
+
+remove_tabs() {
+	FILE="$1"
+	"${SED_EXECUTABLE}" -i 's/\t/    /' "$FILE"
+	if [ $? -ne 0 ]; then
+		echo "[!] $FILE" >&2
+		EXIT_CODE=1
+	fi
+}
+
+format_cmake_file() {
+	FILE="$1"
+	"${CMAKE_FORMAT_EXECUTABLE}" -i "$FILE"
+	if [ $? -ne 0 ]; then
+		echo "[!] $FILE" >&2
+		EXIT_CODE=1
+	fi
+}
+
+format_python_file() {
+	FILE="$1"
+	"${AUTOPEP8_EXECUTABLE}" --in-place --aggressive --aggressive "$FILE"
+	if [ $? -ne 0 ]; then
+		echo "[!] $FILE" >&2
+		EXIT_CODE=1
+	fi
+}
+
+check_copyright() {
+	FILE="$1"
+	"${GREP_EXECUTABLE}" -qIl "Copyright (C) [0-9,-]*$YEAR" "$FILE"
+	if [ $? -ne 0 ]; then
+		echo "[!] $FILE" >&2
+		EXIT_CODE=1
+	fi
+}
+
+format_source_file() {
+	FILE="$1"
+	"${ASTYLE_EXECUTABLE}" --quiet ${ASTYLE_OPTIONS} "$FILE"
+	if [ $? -ne 0 ]; then
+		echo "[!] Formating $FILE failed," >&2
+		echo "[!] is astyle installed?." >&2
+		exit 1
+	fi
+	git add "$FILE"
+}
+
+# Remove trailing spaces
+for_each_file "$TEXT_FILES" remove_trailing_spaces
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] sed failed when removing trailing spaces." >&2
     exit 1
 fi
 
 # Remove Tabs
-for FILE in $TEXT_FILES; do
-	"${SED_EXECUTABLE}" -i 's/\t/    /' $FILE
-	if [ $? -ne 0 ]; then
-		echo "[!] $FILE" >&2
-        EXIT_CODE=1
-	fi
-done
+for_each_file "$TEXT_FILES" remove_tabs
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] sed failed when removing tabs." >&2
     exit 1
@@ -47,13 +105,7 @@ fi
 
 # Format CMake Files only if the executable exists
 if [ -f "${CMAKE_FORMAT_EXECUTABLE}" ]; then
-	for FILE in $CMAKE_FILES; do
-		"${CMAKE_FORMAT_EXECUTABLE}" -i $FILE
-		if [ $? -ne 0 ]; then
-			echo "[!] $FILE" >&2
-			EXIT_CODE=1
-		fi
-	done
+	for_each_file "$CMAKE_FILES" format_cmake_file
 fi
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] cmake-format failed." >&2
@@ -62,26 +114,14 @@ fi
 
 # Format Python Files only if the executable exists
 if [ -f "${AUTOPEP8_EXECUTABLE}" ]; then
-	for FILE in $PYTHON_FILES; do
-		"${AUTOPEP8_EXECUTABLE}" --in-place --aggressive --aggressive $FILE
-		if [ $? -ne 0 ]; then
-			echo "[!] $FILE" >&2
-			EXIT_CODE=1
-		fi
-	done
+	for_each_file "$PYTHON_FILES" format_python_file
 fi
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] autopep8 failed." >&2
     exit 1
 fi
 
-for FILE in $FILES; do
-	"${GREP_EXECUTABLE}" -qIl "Copyright (C) [0-9,-]*$YEAR" $FILE
-	if [ $? -ne 0 ]; then
-		echo "[!] $FILE" >&2
-        EXIT_CODE=1
-	fi
-done
+for_each_file "$FILES" check_copyright
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] have an out of date copyright notice," >&2
     echo "[!] please update it to include the current year." >&2
@@ -89,13 +129,7 @@ if [ $EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-for FILE in $PYTHON_FILES; do
-	"${GREP_EXECUTABLE}" -qIl "Copyright (C) [0-9,-]*$YEAR" $FILE
-	if [ $? -ne 0 ]; then
-		echo "[!] $FILE" >&2
-        EXIT_CODE=1
-	fi
-done
+for_each_file "$PYTHON_FILES" check_copyright
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] have an out of date copyright notice," >&2
     echo "[!] please update it to include the current year." >&2
@@ -103,13 +137,7 @@ if [ $EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-for FILE in $PROTO_FILES; do
-	"${GREP_EXECUTABLE}" -qIl "Copyright (C) [0-9,-]*$YEAR" $FILE
-	if [ $? -ne 0 ]; then
-		echo "[!] $FILE" >&2
-        EXIT_CODE=1
-	fi
-done
+for_each_file "$PROTO_FILES" check_copyright
 if [ $EXIT_CODE -ne 0 ]; then
     echo "[!] have an out of date copyright notice," >&2
     echo "[!] please update it to include the current year." >&2
@@ -117,12 +145,4 @@ if [ $EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-for FILE in $FILES; do
-	${ASTYLE_EXECUTABLE} --quiet ${ASTYLE_OPTIONS} $FILE
-	if [ $? -ne 0 ]; then
-		echo "[!] Formating $FILE failed," >&2
-		echo "[!] is astyle installed?." >&2
-		exit 1
-	fi
-	git add $FILE
-done
+for_each_file "$FILES" format_source_file
