@@ -76,10 +76,18 @@ void main()
       {
             vec3 tnorm = normalize ( mat3(ViewMatrix * ModelMatrix) * VertexNormal );
             vec4 eyeCoords = ViewMatrix * ModelMatrix * vec4 ( VertexPosition, 1.0 );
-            // Accumulate Lambertian contribution over the per-frame light list,
-            // branching by light type (point / spot / directional). See
+            // In eye space the camera sits at the origin, so the view
+            // direction is just the negated, normalized eye-space position.
+            vec3 V = normalize ( -eyeCoords.xyz );
+            // Material constants for the specular term. Hardcoded here until
+            // Ks / shininess are pulled from the Material UBO.
+            const vec3  Ks        = vec3 ( 0.4 );
+            const float Shininess = 32.0;
+            // Accumulate diffuse (Lambert) and specular (Blinn-Phong) over the
+            // per-frame light list, branching by light type. See
             // include/aeongames/GpuLight.hpp for the per-field interpretation.
-            vec3 accum = vec3 ( 0.0 );
+            vec3 diffuse_accum  = vec3 ( 0.0 );
+            vec3 specular_accum = vec3 ( 0.0 );
             for ( int i = 0; i < 64; i++ )
             {
                   if ( i >= int(LightCount) ) { break; }
@@ -108,10 +116,18 @@ void main()
                               attenuation *= smoothstep ( L.direction_cosOuter.w, L.cos_inner, cos_a );
                         }
                   }
-                  float lambert = max ( dot ( to_light, tnorm ), 0.0 );
-                  accum += L.color_intensity.rgb * L.color_intensity.a * lambert * attenuation;
+                  vec3  light_radiance = L.color_intensity.rgb * L.color_intensity.a * attenuation;
+                  float NdotL = max ( dot ( to_light, tnorm ), 0.0 );
+                  diffuse_accum += light_radiance * NdotL;
+                  if ( NdotL > 0.0 )
+                  {
+                        // Blinn-Phong: half-vector between view and light.
+                        vec3  H     = normalize ( to_light + V );
+                        float NdotH = max ( dot ( tnorm, H ), 0.0 );
+                        specular_accum += light_radiance * pow ( NdotH, Shininess );
+                  }
             }
-            LightIntensity = Kd * accum;
+            LightIntensity = Kd * diffuse_accum + Ks * specular_accum;
       }
       else
       {
