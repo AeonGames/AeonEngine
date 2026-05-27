@@ -22,6 +22,7 @@ limitations under the License.
 */
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
+#include "aeongames/FrameLightContainer.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -192,6 +193,17 @@ namespace AeonGames
         /** Get the InputSystem associated with this scene, or nullptr. */
         DLL InputSystem* GetInputSystem() const;
         /**@}*/
+
+        /** @name Per-frame light list */
+        /**@{*/
+        /** @brief Append a light to the scene's per-frame list.
+         *  Intended to be called from light components' Update(). The
+         *  list is reset at the start of Scene::Update so each frame
+         *  starts empty. Calls past MAX_LIGHTS_PER_FRAME are dropped. */
+        DLL void AddLight ( const GpuLight& aLight );
+        /** @brief Read-only view of the lights submitted this frame. */
+        DLL std::span<const GpuLight> GetFrameLights() const;
+        /**@}*/
     private:
         friend class Node;
         Matrix4x4 mViewMatrix{};
@@ -214,6 +226,7 @@ namespace AeonGames
 #endif
         Node* mCamera {};
         InputSystem* mInputSystem {};
+        FrameLightContainer mFrameLights{};
     };
 }
 #endif

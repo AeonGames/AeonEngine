@@ -119,6 +119,16 @@ namespace AeonGames
         return mInputSystem;
     }
 
+    void Scene::AddLight ( const GpuLight& aLight )
+    {
+        mFrameLights.Add ( aLight );
+    }
+
+    std::span<const GpuLight> Scene::GetFrameLights() const
+    {
+        return mFrameLights.Get();
+    }
+
     void Scene::SetFieldOfView ( float aFieldOfView )
     {
         mFieldOfView = aFieldOfView;
@@ -193,6 +203,7 @@ namespace AeonGames
 
     void Scene::Update ( const double delta )
     {
+        mFrameLights.Reset();
         LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
         {
             aNode.Update ( delta );

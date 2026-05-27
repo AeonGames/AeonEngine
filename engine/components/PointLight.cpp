@@ -22,7 +22,11 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Buffer.hpp"
 #include "aeongames/Renderer.hpp"
+#include "aeongames/GpuLight.hpp"
 #include "aeongames/Node.hpp"
+#include "aeongames/Scene.hpp"
+#include "aeongames/Transform.hpp"
+#include "aeongames/Vector3.hpp"
 
 namespace AeonGames
 {
@@ -152,18 +156,30 @@ namespace AeonGames
 
     void PointLight::Update ( Node& aNode, double aDelta )
     {
+        // Publish this light's world-space state to the scene's per-frame
+        // light list. The scene resets the list at the start of every
+        // Update pass, so each frame starts empty and the order in which
+        // lights are appended does not matter to the renderer.
+        Scene* scene = aNode.GetScene();
+        if ( !scene )
+        {
+            return;
+        }
+        const Vector3& world_pos = aNode.GetGlobalTransform().GetTranslation();
+        GpuLight light{};
+        light.position_radius = Vector4{ world_pos.GetX(), world_pos.GetY(), world_pos.GetZ(), mRadius };
+        light.color_intensity = Vector4{ mColorR, mColorG, mColorB, mIntensity };
+        // Direction is unused for point lights; the default initializer
+        // leaves it as a sentinel so shaders can detect non-spot lights.
+        light.type            = static_cast<uint32_t> ( LightType::Point );
+        scene->AddLight ( light );
     }
 
     void PointLight::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
     {
-#if 0
-        // Publish this light's world-space position and color to the renderer
-        // so subsequent draw calls within this frame can read it from the
-        // Lights UBO.
-        const Vector3& world_pos = aNode.GetGlobalTransform().GetTranslation();
-        Vector3 scaled_color{mColorR * mIntensity, mColorG * mIntensity, mColorB * mIntensity};
-        aRenderer.SetLight ( aWindowId, world_pos, scaled_color, mRadius );
-#endif
+        // Lights are uploaded to the GPU by the renderer using the
+        // per-frame list collected in Update(); nothing to do here yet.
+        // A future visualization (debug gizmo) could go here.
     }
 
     void PointLight::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
