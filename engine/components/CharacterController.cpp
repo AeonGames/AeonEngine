@@ -15,7 +15,9 @@ limitations under the License.
 */
 
 #include <array>
+#include <string_view>
 #include "CharacterController.hpp"
+#include "ModelComponent.h"
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
 #include "aeongames/Transform.hpp"
@@ -182,26 +184,70 @@ namespace AeonGames
             turn -= 1.0f;
         }
 
-        if ( forward == 0.0f && strafe == 0.0f && turn == 0.0f )
+        // Map current input intent to a named animation clip. The names
+        // must match the animations declared in the model's .mdl file
+        // (see game/aerin/aerin.txt for the canonical list). Forward +
+        // strafe combinations use the dedicated "strafe walk" clips when
+        // available; pure strafing or pure turning fall back to the
+        // in-place strafe and turn clips. With no input the character
+        // returns to the idle pose.
+        std::string_view desired_animation = "Idle";
+        if ( forward != 0.0f && strafe < 0.0f )
         {
-            return;
+            desired_animation = "Left Strafe Walk";
+        }
+        else if ( forward != 0.0f && strafe > 0.0f )
+        {
+            desired_animation = "Right Strafe Walk";
+        }
+        else if ( forward != 0.0f )
+        {
+            desired_animation = "Walking";
+        }
+        else if ( strafe < 0.0f )
+        {
+            desired_animation = "Left Strafe";
+        }
+        else if ( strafe > 0.0f )
+        {
+            desired_animation = "Strafe Right";
+        }
+        else if ( turn > 0.0f )
+        {
+            desired_animation = "Left Turn";
+        }
+        else if ( turn < 0.0f )
+        {
+            desired_animation = "Right Turn";
+        }
+
+        if ( Component * component = aNode.GetComponent ( ModelComponent::GetClassId() ) )
+        {
+            auto* model_component = static_cast<ModelComponent*> ( component );
+            if ( model_component->GetActiveAnimation() != desired_animation )
+            {
+                model_component->SetActiveAnimation ( desired_animation );
+            }
         }
 
         const float dt = static_cast<float> ( aDelta );
 
         // Axis convention (matches OverTheShoulderCamera): +X right, +Y forward, +Z up.
-        Transform t = aNode.GetLocalTransform();
-        if ( forward != 0.0f || strafe != 0.0f )
+        if ( forward != 0.0f || strafe != 0.0f || turn != 0.0f )
         {
-            t.MoveInObjectSpace ( strafe * mMoveSpeed * dt,
-                                  forward * mMoveSpeed * dt,
-                                  0.0f );
+            Transform t = aNode.GetLocalTransform();
+            if ( forward != 0.0f || strafe != 0.0f )
+            {
+                t.MoveInObjectSpace ( strafe * mMoveSpeed * dt,
+                                      forward * mMoveSpeed * dt,
+                                      0.0f );
+            }
+            if ( turn != 0.0f )
+            {
+                t.RotateObjectSpace ( turn * mTurnSpeed * dt, 0.0f, 0.0f, 1.0f );
+            }
+            aNode.SetLocalTransform ( t );
         }
-        if ( turn != 0.0f )
-        {
-            t.RotateObjectSpace ( turn * mTurnSpeed * dt, 0.0f, 0.0f, 1.0f );
-        }
-        aNode.SetLocalTransform ( t );
     }
 
     void CharacterController::Render ( const Node& /*aNode*/, Renderer& /*aRenderer*/, void* /*aWindowId*/ )

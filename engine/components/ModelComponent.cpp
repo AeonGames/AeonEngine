@@ -25,11 +25,54 @@ limitations under the License.
 #include "aeongames/Skeleton.hpp"
 #include "aeongames/Animation.hpp"
 #include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Vector3.hpp"
+#include "aeongames/Quaternion.hpp"
+#include "aeongames/Transform.hpp"
 #include "aeongames/Buffer.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Model.hpp"
 #include "ModelComponent.h"
+
+namespace
+{
+    // Hermite smoothstep ease - removes the linear ramp's velocity
+    // discontinuities at the start and end of the blend, which is the
+    // main reason a constant-rate crossfade still reads as "snappy".
+    inline float SmoothStep ( float t )
+    {
+        if ( t <= 0.0f )
+        {
+            return 0.0f;
+        }
+        if ( t >= 1.0f )
+        {
+            return 1.0f;
+        }
+        return t * t * ( 3.0f - 2.0f * t );
+    }
+
+    // Linearly interpolate scale and translation, slerp the rotation
+    // quaternion. Slerp gives constant angular velocity along the
+    // shortest arc which is noticeably smoother than nlerp for the
+    // larger per-bone rotation deltas that occur between full body
+    // animations like Idle <-> Walking.
+    AeonGames::Transform BlendTransform (
+        const AeonGames::Transform& a,
+        const AeonGames::Transform& b,
+        float t )
+    {
+        const AeonGames::Vector3& sa = a.GetScale();
+        const AeonGames::Vector3& sb = b.GetScale();
+        const AeonGames::Vector3& ta = a.GetTranslation();
+        const AeonGames::Vector3& tb = b.GetTranslation();
+        AeonGames::Vector3 scale = sa + ( sb - sa ) * t;
+        AeonGames::Vector3 translation = ta + ( tb - ta ) * t;
+        AeonGames::Quaternion rotation =
+            AeonGames::SlerpQuats ( a.GetRotation(), b.GetRotation(), t );
+        return AeonGames::Transform{ scale, rotation, translation };
+    }
+}
 
 namespace AeonGames
 {
@@ -141,10 +184,38 @@ namespace AeonGames
 
     void ModelComponent::SetActiveAnimation ( std::string_view aActiveAnimation )
     {
-        mActiveAnimation.assign ( aActiveAnimation );
-        mCurrentSample = mStartingFrame;
-        mLastResolvedModel = nullptr;
-        mActiveAnimationIndex = Model::INVALID_ANIMATION_INDEX;
+        // No-op when the active animation is unchanged so callers can
+        // safely poke this every frame without restarting playback or
+        // re-triggering a crossfade. Also no-op if the same target is
+        // already pending so rapid repeat requests don't keep deferring
+        // the switch.
+        if ( aActiveAnimation == mActiveAnimation && !mPendingAnimationSwitch )
+        {
+            return;
+        }
+        if ( mPendingAnimationSwitch && aActiveAnimation == mPendingAnimation )
+        {
+            return;
+        }
+        // No previous clip to blend from yet, or blending is disabled:
+        // switch immediately and skip the snapshot machinery entirely.
+        if ( mBlendDuration <= 0.0f ||
+             mActiveAnimationIndex == Model::INVALID_ANIMATION_INDEX )
+        {
+            mActiveAnimation.assign ( aActiveAnimation );
+            mCurrentSample = mStartingFrame;
+            mLastResolvedModel = nullptr;
+            mActiveAnimationIndex = Model::INVALID_ANIMATION_INDEX;
+            mPendingAnimationSwitch = false;
+            mHasBlendSnapshot = false;
+            mBlendElapsed = 0.0f;
+            return;
+        }
+        // Defer the actual swap until Update() so we can first capture
+        // the pose currently being rendered (which may itself be the
+        // result of an in-flight crossfade) and blend out from it.
+        mPendingAnimation.assign ( aActiveAnimation );
+        mPendingAnimationSwitch = true;
     }
 
     const std::string& ModelComponent::GetActiveAnimation() const noexcept
@@ -160,6 +231,16 @@ namespace AeonGames
     const double& ModelComponent::GetStartingFrame() const noexcept
     {
         return mStartingFrame;
+    }
+
+    void ModelComponent::SetBlendDuration ( float aSeconds ) noexcept
+    {
+        mBlendDuration = aSeconds < 0.0f ? 0.0f : aSeconds;
+    }
+
+    float ModelComponent::GetBlendDuration() const noexcept
+    {
+        return mBlendDuration;
     }
 
     void ModelComponent::Update ( Node& aNode, double aDelta )
@@ -190,14 +271,84 @@ namespace AeonGames
                 assert ( ( skeleton->GetJoints().size() * sizeof ( float ) * 16 ) < mSkeleton.size() );
                 if ( mActiveAnimationIndex != Model::INVALID_ANIMATION_INDEX )
                 {
-                    // Use animation transforms
+                    const size_t joint_count = skeleton->GetJoints().size();
+
+                    // Step 1: figure out the pose for this frame using
+                    // the *currently active* animation (plus any in-flight
+                    // snapshot blend). This is what would normally be
+                    // written to the skeleton buffer.
                     auto animation = model->GetAnimationResources() [mActiveAnimationIndex].Cast<Animation>();
                     mCurrentSample = animation->AddTimeToSample ( mCurrentSample, aDelta );
-                    for ( size_t i = 0; i < skeleton->GetJoints().size(); ++i )
+
+                    float blend_weight = 1.0f;
+                    bool snapshot_active = mHasBlendSnapshot && mBlendDuration > 0.0f &&
+                                           mBlendSnapshot.size() >= joint_count;
+                    if ( snapshot_active )
                     {
-                        Matrix4x4 matrix{ animation->GetTransform ( i, mCurrentSample ) *
-                                          skeleton->GetJoints() [i].GetInvertedTransform() };
-                        memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                        mBlendElapsed += static_cast<float> ( aDelta );
+                        blend_weight = SmoothStep ( mBlendElapsed / mBlendDuration );
+                        if ( mBlendElapsed >= mBlendDuration )
+                        {
+                            snapshot_active = false;
+                            mHasBlendSnapshot = false;
+                            mBlendElapsed = 0.0f;
+                            blend_weight = 1.0f;
+                        }
+                    }
+
+                    // Compute the per-bone pose for this frame. We keep it
+                    // in a small local buffer so the same poses can be
+                    // captured into mBlendSnapshot if a pending switch was
+                    // queued via SetActiveAnimation().
+                    std::vector<Transform> frame_pose;
+                    frame_pose.resize ( joint_count );
+                    for ( size_t i = 0; i < joint_count; ++i )
+                    {
+                        Transform current_xform = animation->GetTransform ( i, mCurrentSample );
+                        if ( snapshot_active )
+                        {
+                            frame_pose[i] = BlendTransform ( mBlendSnapshot[i], current_xform, blend_weight );
+                        }
+                        else
+                        {
+                            frame_pose[i] = current_xform;
+                        }
+                    }
+
+                    // Step 2: if a switch was requested since the last
+                    // Update, freeze this frame's pose as the new snapshot
+                    // and promote the pending animation to active. The
+                    // next frame will start interpolating from the pose
+                    // we're about to render this frame -> no pop.
+                    if ( mPendingAnimationSwitch )
+                    {
+                        mBlendSnapshot = std::move ( frame_pose );
+                        mHasBlendSnapshot = true;
+                        mBlendElapsed = 0.0f;
+
+                        mActiveAnimation = std::move ( mPendingAnimation );
+                        mPendingAnimation.clear();
+                        mPendingAnimationSwitch = false;
+                        mActiveAnimationIndex = model->GetAnimationIndexByName ( mActiveAnimation );
+                        mLastResolvedModel = model;
+                        mCurrentSample = mStartingFrame;
+
+                        // Write the snapshot pose itself for this frame.
+                        for ( size_t i = 0; i < joint_count; ++i )
+                        {
+                            Matrix4x4 matrix{ mBlendSnapshot[i] *
+                                              skeleton->GetJoints() [i].GetInvertedTransform() };
+                            memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                        }
+                    }
+                    else
+                    {
+                        for ( size_t i = 0; i < joint_count; ++i )
+                        {
+                            Matrix4x4 matrix{ frame_pose[i] *
+                                              skeleton->GetJoints() [i].GetInvertedTransform() };
+                            memcpy ( skeleton_buffer + ( i * 16 ), matrix.GetMatrix4x4(), sizeof ( float ) * 16 );
+                        }
                     }
                 }
                 else

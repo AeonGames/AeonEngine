@@ -79,3 +79,39 @@ animation {
     path: "aerin/animations/Running.txt"
   }
 }
+animation {
+  name: "Left Strafe"
+  reference {
+    path: "aerin/animations/Left Strafe.txt"
+  }
+}
+animation {
+  name: "Strafe Right"
+  reference {
+    path: "aerin/animations/Strafe Right.txt"
+  }
+}
+animation {
+  name: "Left Strafe Walk"
+  reference {
+    path: "aerin/animations/Left Strafe Walk.txt"
+  }
+}
+animation {
+  name: "Right Strafe Walk"
+  reference {
+    path: "aerin/animations/Right Strafe Walk.txt"
+  }
+}
+animation {
+  name: "Left Turn"
+  reference {
+    path: "aerin/animations/Left Turn.txt"
+  }
+}
+animation {
+  name: "Right Turn"
+  reference {
+    path: "aerin/animations/Right Turn.txt"
+  }
+}

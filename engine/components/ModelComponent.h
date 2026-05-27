@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Component.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/BufferAccessor.hpp"
+#include "aeongames/Transform.hpp"
 
 namespace AeonGames
 {
@@ -66,6 +67,12 @@ namespace AeonGames
         void SetStartingFrame ( double aAnimationDelta ) noexcept;
         /** @brief Returns the starting frame for the active animation. */
         const double& GetStartingFrame() const noexcept;
+        /** @brief Sets the crossfade duration used when switching animations.
+            @param aSeconds Blend duration in seconds. A value of 0 disables
+            crossfading and switches animations instantly. */
+        void SetBlendDuration ( float aSeconds ) noexcept;
+        /** @brief Returns the crossfade duration in seconds. */
+        float GetBlendDuration() const noexcept;
         ///@}
         /** @brief Returns the class identifier for the ModelComponent. */
         static const StringId& GetClassId();
@@ -81,6 +88,17 @@ namespace AeonGames
         // changes, or when the underlying Model pointer changes (e.g. reload).
         const Model* mLastResolvedModel{nullptr};
         size_t mActiveAnimationIndex{static_cast<size_t> ( -1 ) };
+        // Crossfade state. When a new animation is requested mid-render we
+        // capture the currently-displayed per-bone pose into mBlendSnapshot
+        // and then interpolate from that frozen pose to the freshly started
+        // animation. This avoids the popping that occurs when switching
+        // animations again while a previous crossfade is still in flight.
+        std::string mPendingAnimation{};
+        bool mPendingAnimationSwitch{false};
+        std::vector<Transform> mBlendSnapshot{};
+        bool mHasBlendSnapshot{false};
+        float mBlendDuration{0.25f};
+        float mBlendElapsed{0.0f};
         // 128 is the maximum number of bones per model
         std::array<uint8_t, 16 * 128 * sizeof ( float ) > mSkeleton{};
     };
