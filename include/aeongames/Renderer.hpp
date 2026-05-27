@@ -17,12 +17,14 @@ limitations under the License.
 #define AEONGAMES_RENDERER_H
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <memory>
 #include <functional>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Pipeline.hpp"
+#include "aeongames/GpuLight.hpp"
 
 namespace AeonGames
 {
@@ -105,6 +107,15 @@ namespace AeonGames
          * @param aMatrix The view matrix.
         */
         virtual void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) = 0;
+        /** Uploads the per-frame lights for a specific window surface.
+         *  The data is copied into the window's @c Lights uniform buffer so the
+         *  caller's span does not need to outlive this call. Lights past
+         *  @ref MAX_LIGHTS_PER_FRAME are silently dropped.
+         *  @param aWindowId Platform depended window handle.
+         *  @param aLights Span of lights collected during this frame's
+         *                 @c Scene::Update (see @ref Scene::GetFrameLights).
+        */
+        virtual void SetLights ( void* aWindowId, std::span<const GpuLight> aLights ) = 0;
         /** Sets the color to be used to clear the window background.
          * @param aWindowId Platform depended window handle.
          * @param R Red component of the clear color.

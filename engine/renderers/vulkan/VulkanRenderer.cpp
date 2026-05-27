@@ -923,6 +923,16 @@ namespace AeonGames
         it->second.SetViewMatrix ( aMatrix );
     }
 
+    void VulkanRenderer::SetLights ( void* aWindowId, std::span<const GpuLight> aLights )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetLights ( aLights );
+    }
+
     void VulkanRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         auto it = mWindowStore.find ( aWindowId );
@@ -1033,13 +1043,13 @@ void main()
 )";
 
     static const float overlay_vertices[] =
-    {
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-        1.0f, -1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f, 1.0f
-    };
+        {
+            // positions   // texCoords
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f,  0.0f, 0.0f,
+            1.0f, -1.0f,  1.0f, 0.0f,
+            1.0f,  1.0f,  1.0f, 1.0f
+        };
 
     void VulkanRenderer::InitializeOverlay()
     {

@@ -555,6 +555,7 @@ namespace AeonGames
                     projection.Perspective ( aScene.GetFieldOfView(), mAspectRatio, aScene.GetNear(), aScene.GetFar() );
                     mRenderer->SetProjectionMatrix ( mWindowId, projection );
                 }
+                mRenderer->SetLights ( mWindowId, aScene.GetFrameLights() );
                 mRenderer->BeginRender ( mWindowId );
                 aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                 {

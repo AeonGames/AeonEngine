@@ -206,7 +206,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
 
         GLchar name[256];
-        GLint indices[64];
+        std::vector<GLint> indices;
         GLsizei length{};
         GLint size{};
         GLenum type{};
@@ -223,7 +223,6 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &block_uniform_count );
             OPENGL_CHECK_ERROR_THROW;
-            assert ( block_uniform_count <= 64 );
 
             const uint32_t name_crc{crc32i ( name, length ) };
             auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name_crc,
@@ -236,7 +235,8 @@ namespace AeonGames
             it->uniforms.reserve ( block_uniform_count );
             if ( block_uniform_count > 0 )
             {
-                glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
+                indices.resize ( static_cast<size_t> ( block_uniform_count ) );
+                glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices.data() );
                 OPENGL_CHECK_ERROR_THROW;
                 for ( GLint j = 0; j < block_uniform_count; ++j )
                 {

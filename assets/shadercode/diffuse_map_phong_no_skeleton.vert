@@ -27,6 +27,28 @@ uniform Material{
       vec3 Kd;
 };
 
+// Per-frame light list, populated by Renderer::SetLights from
+// Scene::GetFrameLights. Mirrors the C++ GpuLightsBlock / GpuLight types in
+// include/aeongames/GpuLight.hpp.
+struct GpuLight {
+      vec4  position_radius;
+      vec4  color_intensity;
+      vec4  direction_cosOuter;
+      uvec4 type_pad;
+};
+#ifdef VULKAN
+layout(set = 4, binding = 0, std140)
+#else
+layout(binding = 3, std140)
+#endif
+uniform Lights{
+      uint     LightCount;
+      uint     _LightsPad0;
+      uint     _LightsPad1;
+      uint     _LightsPad2;
+      GpuLight Lights_data[64];
+};
+
 #ifdef VULKAN
 layout(set = 3, binding = 0, std140)
 #else
@@ -49,10 +71,22 @@ void main()
 {
       if ( length ( VertexNormal ) != 0 )
       {
-            vec3 tnorm = normalize ( mat3(ViewMatrix) * VertexNormal );
-            vec4 eyeCoords = ViewMatrix /* * ModelMatrix */ * vec4 ( VertexPosition, 1.0 );
-            vec3 s = normalize ( LightPosition - eyeCoords.xyz );
-            LightIntensity = Kd * max ( dot ( s, tnorm ), 0.0 );
+            vec3 tnorm = normalize ( mat3(ViewMatrix * ModelMatrix) * VertexNormal );
+            vec4 eyeCoords = ViewMatrix * ModelMatrix * vec4 ( VertexPosition, 1.0 );
+            // Accumulate Lambertian contribution over the per-frame point-light list.
+            // Spot/directional types are deferred to Slice 2; treat everything as a
+            // point light using position_radius.xyz in world space (transformed into
+            // eye space via ViewMatrix).
+            vec3 accum = vec3 ( 0.0 );
+            for ( int i = 0; i < 64; i++ )
+            {
+                  if ( i >= int(LightCount) ) { break; }
+                  vec3 light_eye = ( ViewMatrix * vec4 ( Lights_data[i].position_radius.xyz, 1.0 ) ).xyz;
+                  vec3 s = normalize ( light_eye - eyeCoords.xyz );
+                  float lambert = max ( dot ( s, tnorm ), 0.0 );
+                  accum += Lights_data[i].color_intensity.rgb * Lights_data[i].color_intensity.a * lambert;
+            }
+            LightIntensity = Kd * accum;
       }
       else
       {

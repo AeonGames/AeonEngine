@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
 #include "aeongames/Material.hpp"
+#include "aeongames/GpuLight.hpp"
 #include "aeongames/MemoryPool.hpp" ///<- This is here just for the literals
 #include "OpenGLWindow.hpp"
 #include "OpenGLRenderer.hpp"
@@ -37,6 +38,12 @@ namespace AeonGames
     void OpenGLWindow::Initialize()
     {
         mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
+        // Per-frame Lights UBO: count + padding + MAX_LIGHTS_PER_FRAME records.
+        // Zero-initialized so an empty scene draws unlit (count == 0) safely.
+        {
+            GpuLightsBlock empty{};
+            mLights.Initialize ( sizeof ( GpuLightsBlock ), GL_DYNAMIC_DRAW, &empty );
+        }
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_BLEND );
@@ -118,7 +125,8 @@ namespace AeonGames
         mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
         mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
         mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
-        mMatrices{std::move ( aOpenGLWindow.mMatrices ) }
+        mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
+        mLights{std::move ( aOpenGLWindow.mLights ) }
     {
         std::swap ( mDisplay, aOpenGLWindow.mDisplay );
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
@@ -134,6 +142,7 @@ namespace AeonGames
             mOpenGLRenderer.MakeCurrent();
             mMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
+            mLights.Finalize();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -178,7 +187,8 @@ namespace AeonGames
         mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
         mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
         mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
-        mMatrices{std::move ( aOpenGLWindow.mMatrices ) }
+        mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
+        mLights{std::move ( aOpenGLWindow.mLights ) }
     {
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
         std::swap ( mFrustum, aOpenGLWindow.mFrustum );
@@ -194,6 +204,7 @@ namespace AeonGames
             mOpenGLRenderer.MakeCurrent();
             mMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
+            mLights.Finalize();
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -222,6 +233,7 @@ namespace AeonGames
 
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         mOpenGLRenderer.SetMatrices ( mMatrices );
+        mOpenGLRenderer.SetLights ( mLights );
 
         if ( aMaterial )
         {
@@ -335,6 +347,25 @@ namespace AeonGames
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
         mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
+    }
+
+    void OpenGLWindow::SetLights ( std::span<const GpuLight> aLights )
+    {
+        // Build the std140 Lights block on the stack and upload in one shot.
+        // Lights past MAX_LIGHTS_PER_FRAME are silently truncated.
+        GpuLightsBlock block{};
+        const std::size_t capped = std::min<std::size_t> ( aLights.size(), MAX_LIGHTS_PER_FRAME );
+        block.count = static_cast<uint32_t> ( capped );
+        for ( std::size_t i = 0; i < capped; ++i )
+        {
+            block.lights[i] = aLights[i];
+        }
+#if defined(_WIN32)
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+        mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
+        mLights.WriteMemory ( 0, sizeof ( GpuLightsBlock ), &block );
     }
 
     const Matrix4x4 & OpenGLWindow::GetProjectionMatrix() const

@@ -49,7 +49,8 @@ namespace AeonGames
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
         mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
-        mMatrices { aVulkanRenderer }
+        mMatrices { aVulkanRenderer },
+        mLights { aVulkanRenderer }
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
         try
@@ -66,7 +67,8 @@ namespace AeonGames
     VulkanWindow::VulkanWindow ( VulkanWindow&& aVulkanWindow ) :
         mVulkanRenderer { aVulkanWindow.mVulkanRenderer },
         mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
-        mMatrices{std::move ( aVulkanWindow.mMatrices ) }
+        mMatrices{std::move ( aVulkanWindow.mMatrices ) },
+        mLights{std::move ( aVulkanWindow.mLights ) }
     {
         std::cout << LogLevel::Debug << "Moving VulkanWindow." << std::endl;
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
@@ -89,6 +91,8 @@ namespace AeonGames
         std::swap ( mVkRenderPass, aVulkanWindow.mVkRenderPass );
         std::swap ( mMatricesDescriptorPool, aVulkanWindow.mMatricesDescriptorPool );
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
+        std::swap ( mLightsDescriptorPool, aVulkanWindow.mLightsDescriptorPool );
+        std::swap ( mLightsDescriptorSet, aVulkanWindow.mLightsDescriptorSet );
         std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
         std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
         std::swap ( mVkAcquireSemaphore, aVulkanWindow.mVkAcquireSemaphore );
@@ -586,9 +590,56 @@ namespace AeonGames
         mMatrices.Finalize();
     }
 
+    void VulkanWindow::InitializeLights()
+    {
+        GpuLightsBlock empty{};
+        mLights.Initialize (
+            sizeof ( GpuLightsBlock ),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            &empty );
+
+        VkDescriptorSetLayoutCreateInfo lights_descriptor_set_layout_create_info{};
+        lights_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        lights_descriptor_set_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding lights_descriptor_set_layout_binding{};
+        lights_descriptor_set_layout_binding.binding = 0;
+        lights_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        lights_descriptor_set_layout_binding.descriptorCount = 1;
+        lights_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        lights_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+        lights_descriptor_set_layout_create_info.pBindings = &lights_descriptor_set_layout_binding;
+
+        mLightsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mLightsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mLightsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( lights_descriptor_set_layout_create_info ) );
+        VkDescriptorBufferInfo descriptor_buffer_info{};
+        descriptor_buffer_info.buffer = mLights.GetBuffer();
+        descriptor_buffer_info.offset = 0;
+        descriptor_buffer_info.range = mLights.GetSize();
+        VkWriteDescriptorSet write_descriptor_set{};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.pNext = nullptr;
+        write_descriptor_set.dstSet = mLightsDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = 1;
+        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+    }
+
+    void VulkanWindow::FinalizeLights()
+    {
+        DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mLightsDescriptorPool );
+        mLights.Finalize();
+    }
+
     void VulkanWindow::Initialize()
     {
         InitializeMatrices();
+        InitializeLights();
         InitializeSurface();
         InitializeRenderPass();
         InitializeSwapchain();
@@ -615,6 +666,7 @@ namespace AeonGames
         FinalizeSwapchain();
         FinalizeRenderPass();
         FinalizeSurface();
+        FinalizeLights();
         FinalizeMatrices();
     }
 
@@ -671,6 +723,18 @@ namespace AeonGames
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
         mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+    }
+
+    void VulkanWindow::SetLights ( std::span<const GpuLight> aLights )
+    {
+        GpuLightsBlock block{};
+        const size_t count = std::min ( aLights.size(), static_cast<size_t> ( MAX_LIGHTS_PER_FRAME ) );
+        block.count = static_cast<uint32_t> ( count );
+        for ( size_t i = 0; i < count; ++i )
+        {
+            block.lights[i] = aLights[i];
+        }
+        mLights.WriteMemory ( 0, sizeof ( GpuLightsBlock ), &block );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
@@ -849,6 +913,16 @@ namespace AeonGames
                                       matrix_set_index,
                                       1,
                                       &mMatricesDescriptorSet, 0, nullptr );
+        }
+
+        if ( uint32_t lights_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::LIGHTS ); lights_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      lights_set_index,
+                                      1,
+                                      &mLightsDescriptorSet, 0, nullptr );
         }
 
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )

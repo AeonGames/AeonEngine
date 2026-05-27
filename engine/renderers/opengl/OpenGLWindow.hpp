@@ -17,12 +17,14 @@ limitations under the License.
 #define AEONGAMES_OPENGLWINDOW_HPP
 
 #include <cstdint>
+#include <span>
 #include <vector>
 #include <mutex>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Texture.hpp"
+#include "aeongames/GpuLight.hpp"
 #include "OpenGLFunctions.hpp"
 #include "OpenGLBuffer.hpp"
 #include "OpenGLFrameBuffer.hpp"
@@ -71,6 +73,8 @@ namespace AeonGames
         void SetProjectionMatrix ( const Matrix4x4& aMatrix );
         /// @brief Set the view matrix for this window.
         void SetViewMatrix ( const Matrix4x4& aMatrix );
+        /// @brief Upload the per-frame light list to this window's Lights UBO.
+        void SetLights ( std::span<const GpuLight> aLights );
         /// @brief Set the clear color for this window.
         void SetClearColor ( float R, float G, float B, float A );
         /// @brief Get the current projection matrix.
@@ -99,6 +103,7 @@ namespace AeonGames
         OpenGLFrameBuffer mFrameBuffer{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
         OpenGLBuffer mMatrices{};
+        OpenGLBuffer mLights{};
     };
 }
 #endif

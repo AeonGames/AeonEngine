@@ -58,5 +58,29 @@ namespace AeonGames
                     "Vector4 must be a tight 4xfloat for GPU layout compatibility." );
     static_assert ( sizeof ( GpuLight ) == 64,
                     "GpuLight must stay 16-byte aligned at 64 bytes for std140/std430." );
+
+    /** @brief CPU-side mirror of the @c Lights uniform block layout.
+     *
+     *  Matches the std140 layout expected by shaders:
+     *  @code
+     *  layout(std140) uniform Lights {
+     *      uint     count;
+     *      // 3 x uint padding so the array starts on a 16-byte boundary.
+     *      GpuLight lights[MAX_LIGHTS_PER_FRAME];
+     *  };
+     *  @endcode
+     *
+     *  Total size is 16 B header + 64 B * MAX_LIGHTS_PER_FRAME records, e.g.
+     *  4112 B at MAX_LIGHTS_PER_FRAME == 64. This fits comfortably in the
+     *  uniform-block size guaranteed by GL 4.5+ (16 KB) and Vulkan
+     *  (maxUniformBufferRange, typically 16 KB or 64 KB). */
+    struct GpuLightsBlock
+    {
+        uint32_t count            { 0 };
+        uint32_t _pad[3]          { 0, 0, 0 };
+        GpuLight lights[MAX_LIGHTS_PER_FRAME] {};
+    };
+    static_assert ( sizeof ( GpuLightsBlock ) == 16 + 64 * MAX_LIGHTS_PER_FRAME,
+                    "GpuLightsBlock layout must match the shader-side std140 Lights block." );
 }
 #endif

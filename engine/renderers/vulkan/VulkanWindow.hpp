@@ -17,8 +17,10 @@ limitations under the License.
 #define AEONGAMES_VULKANWINDOW_HPP
 
 #include <cstdint>
+#include <span>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "aeongames/GpuLight.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "VulkanMemoryPoolBuffer.hpp"
@@ -73,6 +75,8 @@ namespace AeonGames
         void SetProjectionMatrix ( const Matrix4x4& aMatrix );
         /// @brief Set the view matrix for this window.
         void SetViewMatrix ( const Matrix4x4& aMatrix );
+        /// @brief Upload per-frame light list to the Lights UBO.
+        void SetLights ( std::span<const GpuLight> aLights );
         /// @brief Get the current projection matrix.
         const Matrix4x4& GetProjectionMatrix() const;
         /// @brief Get the current view matrix.
@@ -98,6 +102,7 @@ namespace AeonGames
         void InitializeFrameBuffers();
         void InitializeCommandBuffer();
         void InitializeMatrices();
+        void InitializeLights();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
@@ -106,6 +111,7 @@ namespace AeonGames
         void FinalizeFrameBuffers();
         void FinalizeCommandBuffer();
         void FinalizeMatrices();
+        void FinalizeLights();
 
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
@@ -114,6 +120,7 @@ namespace AeonGames
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         VulkanBuffer mMatrices;
+        VulkanBuffer mLights;
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
@@ -133,6 +140,8 @@ namespace AeonGames
 
         VkDescriptorPool mMatricesDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mLightsDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mLightsDescriptorSet{VK_NULL_HANDLE};
         VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
         VkFence mVkFence{ VK_NULL_HANDLE };
 

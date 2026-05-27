@@ -7,6 +7,45 @@ camera {
   far_plane: 50
 }
 node {
+  name: "Light"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      w: 1
+    }
+    Translation {
+      z: 5
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1
+    }
+    property {
+      name: "Color G"
+      float: 1
+    }
+    property {
+      name: "Color B"
+      float: 1
+    }
+    property {
+      name: "Intensity"
+      float: 1
+    }
+    property {
+      name: "Radius"
+      float: 10
+    }
+  }
+}
+node {
   name: "Player"
   local {
     Scale {

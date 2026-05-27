@@ -70,6 +70,8 @@ namespace AeonGames
         void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const;
         /// @brief Bind the matrices uniform buffer for the current draw.
         void SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const;
+        /// @brief Bind the per-frame lights uniform buffer for the current draw.
+        void SetLights ( const OpenGLBuffer& aLightsBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -83,6 +85,7 @@ namespace AeonGames
         void DetachWindow ( void* aWindowId ) final;
         void SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
         void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
+        void SetLights ( void* aWindowId, std::span<const GpuLight> aLights ) final;
         void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) final;
         void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender ( void* aWindowId ) final;

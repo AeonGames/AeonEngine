@@ -78,13 +78,13 @@ void main()
 
     /// @brief Overlay screen-quad vertex data (positions and texture coordinates).
     const float vertices[] =
-    {
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 0.0f,
-        -1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f, -1.0f,  1.0f, 1.0f,
-        1.0f,  1.0f,  1.0f, 0.0f
-    };
+        {
+            // positions   // texCoords
+            -1.0f,  1.0f,  0.0f, 0.0f,
+            -1.0f, -1.0f,  0.0f, 1.0f,
+            1.0f, -1.0f,  1.0f, 1.0f,
+            1.0f,  1.0f,  1.0f, 0.0f
+        };
     /// @brief Total byte size of the overlay vertex data.
     constexpr GLuint vertex_size{sizeof ( vertices ) };
 
@@ -92,13 +92,13 @@ void main()
     static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsString = nullptr;
     static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribs = nullptr;
     const int ContextAttribs[] =
-    {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-        WGL_CONTEXT_MINOR_VERSION_ARB, 5,
-        WGL_CONTEXT_PROFILE_MASK_ARB,
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-        0
-    };
+        {
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+            WGL_CONTEXT_PROFILE_MASK_ARB,
+            WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+            0
+        };
 
     static ATOM gRendererWindowClass{0};
     static std::atomic<size_t> mRendererCount{0};
@@ -264,12 +264,12 @@ void main()
     }
 #elif defined(__unix__)
     static int context_attribs[] =
-    {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 5,
-        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-        None
-    };
+        {
+            GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+            GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+            GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+            None
+        };
 
     static GLXFBConfig GetGLXConfig ( Display* display, ::Window window )
     {
@@ -290,16 +290,16 @@ void main()
 
         ( void ) std::remove_if ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
                                   [display, xwvid] ( const GLXFBConfig & x ) -> bool
-        {
-            XVisualInfo *xvi = glXGetVisualFromFBConfig ( display, x );
-            if ( xvi && xvi->visualid == xwvid )
-            {
-                XFree ( xvi );
-                return false;
-            }
-            XFree ( xvi );
-            return true;
-        } );
+                                  {
+                                      XVisualInfo *xvi = glXGetVisualFromFBConfig ( display, x );
+                                      if ( xvi && xvi->visualid == xwvid )
+    {
+        XFree ( xvi );
+            return false;
+        }
+        XFree ( xvi );
+        return true;
+                                  } );
 
         GLXFBConfig result = frame_buffer_configs[ 0 ];
         XFree ( frame_buffer_configs );
@@ -311,19 +311,19 @@ void main()
         if ( mRendererCount == 0 )
         {
             XSetErrorHandler ( [] ( Display * mDisplay, XErrorEvent * error_event ) -> int
-            {
-                char error_string[1024];
-                XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
-                std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
-                return 0;
-            } );
+                               {
+                                   char error_string[1024];
+                                   XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
+                                   std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
+                                   return 0;
+                               } );
             if ( mDisplay )
             {
                 XCloseDisplay ( mDisplay );
@@ -645,6 +645,24 @@ void main()
         //OPENGL_CHECK_ERROR_THROW;
     }
 
+    void OpenGLRenderer::SetLights ( const OpenGLBuffer& aLightsBuffer ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::LIGHTS ) };
+        if ( uniform_block == nullptr )
+        {
+            // Pipeline doesn't sample lights (e.g. unlit shader); silently skip,
+            // same convention as SetSkeleton.
+            return;
+        }
+        assert ( static_cast<const size_t> ( uniform_block->size ) <= aLightsBuffer.GetSize() );
+        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aLightsBuffer.GetBufferId(), 0, aLightsBuffer.GetSize() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
     void OpenGLRenderer::LoadMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
@@ -765,6 +783,16 @@ void main()
             return;
         }
         it->second.SetViewMatrix ( aMatrix );
+    }
+
+    void OpenGLRenderer::SetLights ( void* aWindowId, std::span<const GpuLight> aLights )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetLights ( aLights );
     }
 
     void OpenGLRenderer::SetClearColor ( void* aWindowId, float R, float G, float B, float A )
