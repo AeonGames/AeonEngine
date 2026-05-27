@@ -22,6 +22,8 @@ limitations under the License.
 #include "OverTheShoulderCamera.hpp"
 #include "CharacterController.hpp"
 #include "PointLight.h"
+#include "SpotLight.h"
+#include "DirectionalLight.h"
 #include <iostream>
 
 extern "C"
@@ -48,6 +50,14 @@ extern "C"
         {
             return std::make_unique<AeonGames::PointLight>();
         } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::SpotLight::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::SpotLight>();
+        } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::DirectionalLight::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::DirectionalLight>();
+        } );
         return true;
     }
 
@@ -58,6 +68,8 @@ extern "C"
         AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::CharacterController::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::SpotLight::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::DirectionalLight::GetClassId() );
     }
 
     PLUGIN PluginModuleInterface PMI =

@@ -34,7 +34,10 @@ struct GpuLight {
       vec4  position_radius;
       vec4  color_intensity;
       vec4  direction_cosOuter;
-      uvec4 type_pad;
+      uint  type;
+      float cos_inner;
+      uint  _pad0;
+      uint  _pad1;
 };
 #ifdef VULKAN
 layout(set = 4, binding = 0, std140)
@@ -73,18 +76,40 @@ void main()
       {
             vec3 tnorm = normalize ( mat3(ViewMatrix * ModelMatrix) * VertexNormal );
             vec4 eyeCoords = ViewMatrix * ModelMatrix * vec4 ( VertexPosition, 1.0 );
-            // Accumulate Lambertian contribution over the per-frame point-light list.
-            // Spot/directional types are deferred to Slice 2; treat everything as a
-            // point light using position_radius.xyz in world space (transformed into
-            // eye space via ViewMatrix).
+            // Accumulate Lambertian contribution over the per-frame light list,
+            // branching by light type (point / spot / directional). See
+            // include/aeongames/GpuLight.hpp for the per-field interpretation.
             vec3 accum = vec3 ( 0.0 );
             for ( int i = 0; i < 64; i++ )
             {
                   if ( i >= int(LightCount) ) { break; }
-                  vec3 light_eye = ( ViewMatrix * vec4 ( Lights_data[i].position_radius.xyz, 1.0 ) ).xyz;
-                  vec3 s = normalize ( light_eye - eyeCoords.xyz );
-                  float lambert = max ( dot ( s, tnorm ), 0.0 );
-                  accum += Lights_data[i].color_intensity.rgb * Lights_data[i].color_intensity.a * lambert;
+                  GpuLight L = Lights_data[i];
+                  vec3 to_light;
+                  float attenuation = 1.0;
+                  if ( L.type == 2u )
+                  {
+                        // Directional: direction_cosOuter.xyz is the world-space
+                        // to-light direction (i.e. -lightDir).
+                        to_light = normalize ( ( ViewMatrix * vec4 ( L.direction_cosOuter.xyz, 0.0 ) ).xyz );
+                  }
+                  else
+                  {
+                        vec3 light_eye = ( ViewMatrix * vec4 ( L.position_radius.xyz, 1.0 ) ).xyz;
+                        vec3 d = light_eye - eyeCoords.xyz;
+                        float dist = length ( d );
+                        to_light = d / max ( dist, 1e-5 );
+                        float r = max ( L.position_radius.w, 1e-5 );
+                        float falloff = clamp ( 1.0 - ( dist * dist ) / ( r * r ), 0.0, 1.0 );
+                        attenuation = falloff * falloff;
+                        if ( L.type == 1u )
+                        {
+                              vec3 spot_dir = normalize ( ( ViewMatrix * vec4 ( L.direction_cosOuter.xyz, 0.0 ) ).xyz );
+                              float cos_a = dot ( to_light, spot_dir );
+                              attenuation *= smoothstep ( L.direction_cosOuter.w, L.cos_inner, cos_a );
+                        }
+                  }
+                  float lambert = max ( dot ( to_light, tnorm ), 0.0 );
+                  accum += L.color_intensity.rgb * L.color_intensity.a * lambert * attenuation;
             }
             LightIntensity = Kd * accum;
       }

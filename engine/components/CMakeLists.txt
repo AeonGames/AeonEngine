@@ -1,5 +1,5 @@
-set(NODES_HEADERS ModelComponent.h PointLight.h Camera.h OverTheShoulderCamera.hpp CharacterController.hpp)
-set(NODES_SOURCES Plugin.cpp ModelComponent.cpp PointLight.cpp Camera.cpp OverTheShoulderCamera.cpp CharacterController.cpp)
+set(NODES_HEADERS ModelComponent.h PointLight.h SpotLight.h DirectionalLight.h Camera.h OverTheShoulderCamera.hpp CharacterController.hpp)
+set(NODES_SOURCES Plugin.cpp ModelComponent.cpp PointLight.cpp SpotLight.cpp DirectionalLight.cpp Camera.cpp OverTheShoulderCamera.cpp CharacterController.cpp)
 add_library(AeonEngineComponents SHARED ${NODES_HEADERS} ${NODES_SOURCES})
 if(MSVC)
   set_target_properties(

@@ -46,6 +46,90 @@ node {
   }
 }
 node {
+  name: "SpotLight"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      x: 0.7071068
+      w: 0.7071068
+    }
+    Translation {
+      x: 2
+      z: 3
+    }
+  }
+  component {
+    name: "Spot Light"
+    property {
+      name: "Color R"
+      float: 0.2
+    }
+    property {
+      name: "Color G"
+      float: 1
+    }
+    property {
+      name: "Color B"
+      float: 0.6
+    }
+    property {
+      name: "Intensity"
+      float: 4
+    }
+    property {
+      name: "Radius"
+      float: 8
+    }
+    property {
+      name: "Inner Angle"
+      float: 15
+    }
+    property {
+      name: "Outer Angle"
+      float: 25
+    }
+  }
+}
+node {
+  name: "Sun"
+  local {
+    Scale {
+      x: 1
+      y: 1
+      z: 1
+    }
+    Rotation {
+      x: 0.3826834
+      w: 0.9238795
+    }
+    Translation {
+    }
+  }
+  component {
+    name: "Directional Light"
+    property {
+      name: "Color R"
+      float: 1
+    }
+    property {
+      name: "Color G"
+      float: 0.85
+    }
+    property {
+      name: "Color B"
+      float: 0.7
+    }
+    property {
+      name: "Intensity"
+      float: 0.35
+    }
+  }
+}
+node {
   name: "Player"
   local {
     Scale {

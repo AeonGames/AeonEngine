@@ -39,11 +39,14 @@ namespace AeonGames
      *  All vectors are 4-component on purpose so the layout matches what GLSL
      *  sees with no padding surprises. Per-type interpretation:
      *  - @b Point:       position_radius = (worldPos.xyz, radius),
-     *                    direction_cosOuter = unused (set to (0,0,-1, -1)).
+     *                    direction_cosOuter = unused (set to (0,0,-1, -1)),
+     *                    cos_inner = unused.
      *  - @b Spot:        position_radius = (worldPos.xyz, radius),
-     *                    direction_cosOuter = (-lightDir.xyz, cos(outer)).
+     *                    direction_cosOuter = (-lightDir.xyz, cos(outer)),
+     *                    cos_inner = cos(inner) with inner < outer (cos_inner > cos_outer).
      *  - @b Directional: position_radius = (0,0,0, 0) (no falloff),
-     *                    direction_cosOuter = (-lightDir.xyz, -1).
+     *                    direction_cosOuter = (-lightDir.xyz, -1),
+     *                    cos_inner = unused.
      *  color_intensity packs the linear RGB color in .rgb and a scalar
      *  intensity multiplier in .a so shaders can do a single mad. */
     struct GpuLight
@@ -52,7 +55,8 @@ namespace AeonGames
         Vector4  color_intensity    { 1.0f, 1.0f,  1.0f,  1.0f };
         Vector4  direction_cosOuter { 0.0f, 0.0f, -1.0f, -1.0f };
         uint32_t type               { static_cast<uint32_t> ( LightType::Point ) };
-        uint32_t _pad[3]            { 0, 0, 0 };
+        float    cos_inner          { 1.0f };
+        uint32_t _pad[2]            { 0, 0 };
     };
     static_assert ( sizeof ( Vector4 ) == 16,
                     "Vector4 must be a tight 4xfloat for GPU layout compatibility." );
