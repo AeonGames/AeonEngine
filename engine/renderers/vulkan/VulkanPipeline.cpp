@@ -607,8 +607,25 @@ namespace AeonGames
             }
             for ( const auto& descriptor_set : descriptor_sets )
             {
-                const char* type_name{ ( descriptor_set->binding_count == 1 ) && descriptor_set->bindings[0]->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ?
-                                       descriptor_set->bindings[0]->type_description->type_name : "Samplers"};
+                // A descriptor set that contains a single buffer block (uniform
+                // or storage, including their dynamic variants) is named after
+                // the block itself so the engine can look it up by CRC32 of
+                // the GLSL block name (see Mesh::BindingLocations). Any other
+                // shape — most commonly a single combined image sampler or a
+                // genuine multi-binding set — is collapsed under the legacy
+                // "Samplers" bucket. Storage buffers were previously omitted
+                // here, which made every clustered/forward+ SSBO collide on
+                // that bucket; keep this list in sync with new buffer kinds.
+                const auto first_descriptor_type = descriptor_set->bindings[0]->descriptor_type;
+                const bool is_named_buffer_block =
+                    ( descriptor_set->binding_count == 1 ) &&
+                    ( first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+                      first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC ||
+                      first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER ||
+                      first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC );
+                const char* type_name{ is_named_buffer_block
+                                       ? descriptor_set->bindings[0]->type_description->type_name
+                                       : "Samplers" };
                 uint32_t hash = crc32i ( type_name,
                                          strlen ( type_name ) );
 
