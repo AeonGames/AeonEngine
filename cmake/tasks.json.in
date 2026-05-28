@@ -14,14 +14,6 @@
                 "kind": "build",
                 "isDefault": true
             }
-        },
-        {
-            "label": "Run Electron",
-            "type": "shell",
-            "command": "${CMAKE_BINARY_DIR}/bin/electron${CMAKE_EXECUTABLE_SUFFIX}",
-            "options": {
-                "cwd": "${CMAKE_SOURCE_DIR}"
-            }
         }
     ]
 }

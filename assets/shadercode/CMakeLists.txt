@@ -14,9 +14,6 @@
 set(PIPELINES
     "diffuse_map_phong|vert=diffuse_map_phong.vert|frag=diffuse_map_phong.frag"
     "diffuse_map_phong_no_skeleton|vert=diffuse_map_phong_no_skeleton.vert|frag=diffuse_map_phong.frag"
-    "fixed_phong|vert=fixed_phong.vert|frag=fixed_phong.frag"
-    "fixed_phong_with_skeleton|vert=fixed_phong_with_skeleton.vert|frag=fixed_phong.frag"
-    "fixed_phong_with_skeleton_and_texture|vert=fixed_phong_with_skeleton_and_texture.vert|frag=fixed_phong_with_skeleton_and_texture.frag"
 )
 
 set(SHADER_SOURCE_DIR   ${CMAKE_CURRENT_SOURCE_DIR})

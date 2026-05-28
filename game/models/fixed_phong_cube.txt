@@ -1,9 +1,0 @@
-AEONMDL
-default_pipeline {
-    path: "shaders/fixed_phong.txt"
-}
-assembly {
-    mesh {
-        path: "meshes/cube.txt"
-    }
-}
