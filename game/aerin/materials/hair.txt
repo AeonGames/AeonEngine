@@ -1,19 +1,23 @@
 AEONMTL
 property {
-  name: "LightPosition"
-  vector3 {
-    x: 0
-    y: 0
-    z: 0
-  }
-}
-property {
   name: "Kd"
   vector3 {
     x: 1
     y: 1
     z: 1
   }
+}
+property {
+  name: "Ks"
+  vector3 {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+}
+property {
+  name: "Shininess"
+  scalar_float: 32
 }
 sampler {
   name: "DiffuseMap"

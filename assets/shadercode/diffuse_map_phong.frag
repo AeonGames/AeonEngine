@@ -20,8 +20,9 @@ layout(set = 1, binding = 0, std140)
 layout(binding = 1, std140)
 #endif
 uniform Material{
-      vec3 LightPosition;
-      vec3 Kd;
+      vec3  Kd;
+      vec3  Ks;
+      float Shininess;
 };
 
 // Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
@@ -78,10 +79,6 @@ void main()
       // In eye space the camera sits at the origin, so the view direction is
       // just the negated, normalized eye-space position.
       vec3 V = normalize ( -eyeCoords );
-      // Material constants for the specular term. Hardcoded here until Ks /
-      // shininess are pulled from the Material UBO.
-      const vec3  Ks        = vec3 ( 0.4 );
-      const float Shininess = 32.0;
       vec3 diffuse_accum  = vec3 ( 0.0 );
       vec3 specular_accum = vec3 ( 0.0 );
       for ( int i = 0; i < 64; i++ )
