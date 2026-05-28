@@ -30,6 +30,16 @@ add_custom_target(install-aerin
     COMMENT "Installing Aerin assets"
 )
 
+add_custom_target(install-polesign
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${CMAKE_SOURCE_DIR}/game/polesign/textures/"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/assets/polesign/textures/polesign.png"
+        "${CMAKE_SOURCE_DIR}/game/polesign/textures/"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Installing PoleSign assets"
+)
+
 add_custom_target(install-sponza
     COMMAND ${CMAKE_COMMAND} -E make_directory
         "${CMAKE_SOURCE_DIR}/game/sponza/textures/"
