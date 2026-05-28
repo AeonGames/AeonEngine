@@ -49,6 +49,7 @@ namespace AeonGames
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
         mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
+        mStorageMemoryPoolBuffer{mVulkanRenderer, 1_mb},
         mMatrices { aVulkanRenderer },
         mLights { aVulkanRenderer }
     {
@@ -67,6 +68,7 @@ namespace AeonGames
     VulkanWindow::VulkanWindow ( VulkanWindow&& aVulkanWindow ) :
         mVulkanRenderer { aVulkanWindow.mVulkanRenderer },
         mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
+        mStorageMemoryPoolBuffer{std::move ( aVulkanWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aVulkanWindow.mMatrices ) },
         mLights{std::move ( aVulkanWindow.mLights ) }
     {
@@ -872,6 +874,7 @@ namespace AeonGames
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
         mMemoryPoolBuffer.Reset();
+        mStorageMemoryPoolBuffer.Reset();
     }
 
     static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap
@@ -1058,6 +1061,11 @@ namespace AeonGames
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
+    }
+
+    BufferAccessor VulkanWindow::AllocateSingleFrameStorageMemory ( size_t aSize )
+    {
+        return mStorageMemoryPoolBuffer.Allocate ( aSize );
     }
 
     VkRenderPass VulkanWindow::GetRenderPass() const

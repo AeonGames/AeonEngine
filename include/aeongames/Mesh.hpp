@@ -68,11 +68,15 @@ namespace AeonGames
         /** @brief CRC32-based binding location identifiers for descriptor sets. */
         enum  BindingLocations : uint32_t
         {
-            MATRICES = "Matrices"_crc32, ///< Matrices binding.
-            MATERIAL = "Material"_crc32, ///< Material binding.
-            SKELETON = "Skeleton"_crc32, ///< Skeleton binding.
-            LIGHTS   = "Lights"_crc32,   ///< Per-frame lights binding.
-            SAMPLERS = "Samplers"_crc32, ///< Samplers binding.
+            MATRICES          = "Matrices"_crc32,        ///< Matrices binding.
+            MATERIAL          = "Material"_crc32,        ///< Material binding.
+            SKELETON          = "Skeleton"_crc32,        ///< Skeleton binding.
+            LIGHTS            = "Lights"_crc32,          ///< Per-frame lights binding.
+            SAMPLERS          = "Samplers"_crc32,        ///< Samplers binding.
+            CLUSTER_AABBS     = "ClusterAABBs"_crc32,    ///< Clustered shading: per-cluster view-space AABB list (SSBO).
+            LIGHT_INDEX_LIST  = "LightIndexList"_crc32,  ///< Clustered shading: flat light-index list per cluster (SSBO).
+            LIGHT_GRID        = "LightGrid"_crc32,       ///< Clustered shading: per-cluster (offset, count) into LightIndexList (SSBO).
+            CLUSTER_PARAMS    = "ClusterParams"_crc32,   ///< Clustered shading: tile/slice dimensions and depth-slicing constants (UBO).
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */

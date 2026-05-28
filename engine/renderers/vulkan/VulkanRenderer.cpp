@@ -1003,6 +1003,17 @@ namespace AeonGames
         return it->second.AllocateSingleFrameUniformMemory ( aSize );
     }
 
+    BufferAccessor VulkanRenderer::AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.AllocateSingleFrameStorageMemory ( aSize );
+    }
+
     void VulkanRenderer::SetClearColor ( void* aWindowId, float R, float G, float B, float A )
     {
         auto it = mWindowStore.find ( aWindowId );

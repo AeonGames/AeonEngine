@@ -873,6 +873,17 @@ void main()
         return it->second.AllocateSingleFrameUniformMemory ( aSize );
     }
 
+    BufferAccessor OpenGLRenderer::AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.AllocateSingleFrameStorageMemory ( aSize );
+    }
+
     void* OpenGLRenderer::GetContext() const
     {
         return mOpenGLContext;

@@ -51,6 +51,7 @@ set(VULKAN_RENDERER_HEADERS
     VulkanMaterial.hpp
     VulkanTexture.hpp
     VulkanMemoryPoolBuffer.hpp
+    VulkanStorageMemoryPoolBuffer.hpp
     VulkanFrameBuffer.hpp
     VulkanDescriptorSet.hpp
     )
@@ -65,6 +66,7 @@ set(VULKAN_RENDERER_SOURCES
     VulkanMaterial.cpp
     VulkanTexture.cpp
     VulkanMemoryPoolBuffer.cpp
+    VulkanStorageMemoryPoolBuffer.cpp
     VulkanFrameBuffer.cpp
     Plugin.cpp)
 

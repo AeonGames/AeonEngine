@@ -175,6 +175,12 @@ namespace AeonGames
          * @return A BufferAccessor to the allocated memory.
          */
         virtual BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) = 0;
+        /** Allocates storage (SSBO) buffer memory that is valid for a single frame.
+         * @param aWindowId Platform dependent window handle.
+         * @param aSize Size in bytes of the requested allocation.
+         * @return A BufferAccessor to the allocated memory.
+         */
+        virtual BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) = 0;
         ///@}
 
         ///@name Overlay rendering

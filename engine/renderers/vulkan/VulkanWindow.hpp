@@ -24,6 +24,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "VulkanMemoryPoolBuffer.hpp"
+#include "VulkanStorageMemoryPoolBuffer.hpp"
 #include "VulkanPipeline.hpp"
 
 namespace AeonGames
@@ -87,6 +88,8 @@ namespace AeonGames
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
         /// @brief Allocate transient uniform memory for the current frame.
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        /// @brief Allocate transient storage (SSBO) memory for the current frame.
+        BufferAccessor AllocateSingleFrameStorageMemory ( size_t aSize );
         /// @brief Get the Vulkan render pass for this window.
         VkRenderPass GetRenderPass() const;
         /// @brief Get the current command buffer being recorded.
@@ -117,6 +120,7 @@ namespace AeonGames
         void* mWindowId{};
         Frustum mFrustum{};
         VulkanMemoryPoolBuffer mMemoryPoolBuffer;
+        VulkanStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         VulkanBuffer mMatrices;

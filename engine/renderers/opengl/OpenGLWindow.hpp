@@ -29,6 +29,7 @@ limitations under the License.
 #include "OpenGLBuffer.hpp"
 #include "OpenGLFrameBuffer.hpp"
 #include "OpenGLMemoryPoolBuffer.hpp"
+#include "OpenGLStorageMemoryPoolBuffer.hpp"
 
 namespace AeonGames
 {
@@ -67,6 +68,8 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0 ) const;
         /// @brief Allocate transient uniform memory for the current frame.
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
+        /// @brief Allocate transient storage (SSBO) memory for the current frame.
+        BufferAccessor AllocateSingleFrameStorageMemory ( size_t aSize );
         /// @brief Write pixel data to the overlay texture.
         void WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels );
         /// @brief Set the projection matrix for this window.
@@ -102,6 +105,7 @@ namespace AeonGames
         //OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
         OpenGLFrameBuffer mFrameBuffer{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
+        OpenGLStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
         OpenGLBuffer mMatrices{};
         OpenGLBuffer mLights{};
     };

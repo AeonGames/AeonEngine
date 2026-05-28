@@ -103,6 +103,7 @@ namespace AeonGames
                       uint32_t aFirstInstance = 0 ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
+        BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;
         void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;
 #if defined(_WIN32)
         bool MakeCurrent ( HDC aDeviceContext = nullptr );

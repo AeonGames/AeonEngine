@@ -110,11 +110,13 @@ namespace AeonGames
         mDisplay{aDisplay},
         mWindowId{aWindow},
         mFrameBuffer{},
-        mMemoryPoolBuffer{aOpenGLRenderer}
+        mMemoryPoolBuffer{aOpenGLRenderer},
+        mStorageMemoryPoolBuffer{aOpenGLRenderer}
     {
         mOpenGLRenderer.MakeCurrent ( mWindowId );
         mFrameBuffer.Initialize();
         mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
+        mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
         XWindowAttributes xwa;
         XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
         glViewport ( xwa.x, xwa.y, xwa.width, xwa.height );
@@ -125,6 +127,7 @@ namespace AeonGames
         mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
         mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
         mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
+        mStorageMemoryPoolBuffer{std::move ( aOpenGLWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
         mLights{std::move ( aOpenGLWindow.mLights ) }
     {
@@ -141,6 +144,7 @@ namespace AeonGames
         {
             mOpenGLRenderer.MakeCurrent();
             mMemoryPoolBuffer.Finalize();
+            mStorageMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
             mLights.Finalize();
             mFrameBuffer.Finalize();
@@ -161,7 +165,8 @@ namespace AeonGames
         mDeviceContext{GetDC ( mWindowId ) },
         //mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV},
         mFrameBuffer{},
-        mMemoryPoolBuffer{aOpenGLRenderer}
+        mMemoryPoolBuffer{aOpenGLRenderer},
+        mStorageMemoryPoolBuffer{aOpenGLRenderer}
     {
         RECT rect{};
         GetWindowRect ( mWindowId, &rect );
@@ -178,6 +183,7 @@ namespace AeonGames
         mOpenGLRenderer.MakeCurrent ( mDeviceContext );
         mFrameBuffer.Initialize();
         mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
+        mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
         glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
         Initialize();
@@ -187,6 +193,7 @@ namespace AeonGames
         mOpenGLRenderer { aOpenGLWindow.mOpenGLRenderer },
         mFrameBuffer{std::move ( aOpenGLWindow.mFrameBuffer ) },
         mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
+        mStorageMemoryPoolBuffer{std::move ( aOpenGLWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
         mLights{std::move ( aOpenGLWindow.mLights ) }
     {
@@ -203,6 +210,7 @@ namespace AeonGames
         {
             mOpenGLRenderer.MakeCurrent();
             mMemoryPoolBuffer.Finalize();
+            mStorageMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
             mLights.Finalize();
             mFrameBuffer.Finalize();
@@ -265,6 +273,11 @@ namespace AeonGames
         return mMemoryPoolBuffer.Allocate ( aSize );
     }
 
+    BufferAccessor OpenGLWindow::AllocateSingleFrameStorageMemory ( size_t aSize )
+    {
+        return mStorageMemoryPoolBuffer.Allocate ( aSize );
+    }
+
     void OpenGLWindow::BeginRender()
     {
 #if defined(_WIN32)
@@ -322,6 +335,7 @@ namespace AeonGames
 #endif
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
+        mStorageMemoryPoolBuffer.Reset();
     }
     void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
     {

@@ -273,7 +273,8 @@ set(OPENGL_RENDERER_HEADERS
     OpenGLMaterial.hpp
     OpenGLTexture.hpp
     OpenGLFrameBuffer.hpp
-    OpenGLMemoryPoolBuffer.hpp)
+    OpenGLMemoryPoolBuffer.hpp
+    OpenGLStorageMemoryPoolBuffer.hpp)
 
 set(OPENGL_RENDERER_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/glProxyFunctions.cpp
@@ -287,6 +288,7 @@ set(OPENGL_RENDERER_SOURCES
     OpenGLFunctions.cpp
     OpenGLFrameBuffer.cpp
     OpenGLMemoryPoolBuffer.cpp
+    OpenGLStorageMemoryPoolBuffer.cpp
     Plugin.cpp)
 
 # set_source_files_properties(OpenGLFunctions.cpp PROPERTIES COMPILE_FLAGS "-E")
