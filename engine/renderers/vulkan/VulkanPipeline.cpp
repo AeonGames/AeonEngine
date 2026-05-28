@@ -395,21 +395,45 @@ namespace AeonGames
             std::cout << LogLevel::Error << "More descriptor sets than available slots" << std::endl;
             throw std::runtime_error ( "More descriptor sets than available slots" );
         }
+        // Shader-declared set indices can be sparse (e.g. {0,1,2,4} when set
+        // 3 is unused). Vulkan's pSetLayouts is dense and indexed by set
+        // number, so the highest set index drives setLayoutCount and any
+        // gaps must be filled with a valid (empty) layout - VK_NULL_HANDLE
+        // is not accepted.
+        uint32_t set_layout_count = 0;
         for ( const auto& i : mDescriptorSets )
         {
-            if ( i.set >= mDescriptorSets.size() )
+            if ( i.set >= descriptor_set_layouts.size() )
             {
                 std::cout << LogLevel::Error << "Set index out of bounds" << std::endl;
                 throw std::runtime_error ( "Set index out of bounds" );
             }
             descriptor_set_layouts[i.set] = mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
+            set_layout_count = std::max ( set_layout_count, i.set + 1 );
+        }
+        if ( set_layout_count > 0 )
+        {
+            VkDescriptorSetLayoutCreateInfo empty_descriptor_set_layout_create_info{};
+            empty_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            VkDescriptorSetLayout empty_layout = VK_NULL_HANDLE;
+            for ( uint32_t i = 0; i < set_layout_count; ++i )
+            {
+                if ( descriptor_set_layouts[i] == VK_NULL_HANDLE )
+                {
+                    if ( empty_layout == VK_NULL_HANDLE )
+                    {
+                        empty_layout = mVulkanRenderer.GetDescriptorSetLayout ( empty_descriptor_set_layout_create_info );
+                    }
+                    descriptor_set_layouts[i] = empty_layout;
+                }
+            }
         }
 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
         pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipeline_layout_create_info.pNext = nullptr;
-        pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t> ( mDescriptorSets.size() );
-        pipeline_layout_create_info.pSetLayouts = mDescriptorSets.size() ? descriptor_set_layouts.data() : nullptr;
+        pipeline_layout_create_info.setLayoutCount = set_layout_count;
+        pipeline_layout_create_info.pSetLayouts = set_layout_count ? descriptor_set_layouts.data() : nullptr;
         pipeline_layout_create_info.pushConstantRangeCount = mPushConstantModelMatrix.offset == 0 && mPushConstantModelMatrix.size == 0 ? 0 : 1;
         pipeline_layout_create_info.pPushConstantRanges = pipeline_layout_create_info.pushConstantRangeCount ? &mPushConstantModelMatrix : nullptr;
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
