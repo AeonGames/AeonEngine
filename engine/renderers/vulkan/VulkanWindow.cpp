@@ -784,7 +784,7 @@ namespace AeonGames
         }
     }
 
-    void VulkanWindow::BeginRender()
+    void VulkanWindow::BeginFrame()
     {
         if ( VkResult result = vkWaitForFences ( mVulkanRenderer.GetDevice(), 1,
                                &mVkFence,
@@ -818,7 +818,10 @@ namespace AeonGames
 
         vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &mVkViewport );
         vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &mVkScissor );
+    }
 
+    void VulkanWindow::BeginRenderPass()
+    {
         /* [0] is color, [1] is depth/stencil.*/
         /**@todo Allow for changing the clear values.*/
         std::array<VkClearValue, 2> clear_values{ { { {{0}} }, { {{0}} } } };
@@ -837,6 +840,12 @@ namespace AeonGames
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+    }
+
+    void VulkanWindow::BeginRender()
+    {
+        BeginFrame();
+        BeginRenderPass();
     }
 
     void VulkanWindow::EndRender()
@@ -975,6 +984,52 @@ namespace AeonGames
                 aVertexStart,
                 aFirstInstance );
         }
+    }
+
+    void VulkanWindow::Dispatch ( const Pipeline& aPipeline,
+                                  uint32_t aGroupCountX,
+                                  uint32_t aGroupCountY,
+                                  uint32_t aGroupCountZ ) const
+    {
+        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetVkComputePipeline() );
+
+        if ( uint32_t matrix_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      matrix_set_index,
+                                      1,
+                                      &mMatricesDescriptorSet, 0, nullptr );
+        }
+
+        if ( uint32_t lights_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::LIGHTS ); lights_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      lights_set_index,
+                                      1,
+                                      &mLightsDescriptorSet, 0, nullptr );
+        }
+
+        vkCmdDispatch ( mVkCommandBuffer, aGroupCountX, aGroupCountY, aGroupCountZ );
+    }
+
+    void VulkanWindow::Barrier() const
+    {
+        VkMemoryBarrier memory_barrier{};
+        memory_barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+        memory_barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0,
+                               1, &memory_barrier,
+                               0, nullptr,
+                               0, nullptr );
     }
 
     void VulkanWindow::FinalizeSurface()

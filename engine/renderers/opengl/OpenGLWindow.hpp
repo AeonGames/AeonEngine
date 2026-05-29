@@ -54,6 +54,10 @@ namespace AeonGames
         void* GetWindowId() const;
         /// @brief Begin rendering a new frame.
         void BeginRender();
+        /// @brief Begin the frame: make the context current and bind the framebuffer.
+        void BeginFrame();
+        /// @brief Begin the render pass: clear buffers and enable depth testing.
+        void BeginRenderPass();
         /// @brief End the current frame and present.
         void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
@@ -66,6 +70,18 @@ namespace AeonGames
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0 ) const;
+        /** @brief Dispatch the compute stage of a pipeline.
+         *  @param aPipeline Pipeline whose compute stage to dispatch.
+         *  @param aGroupCountX Number of workgroups in X.
+         *  @param aGroupCountY Number of workgroups in Y.
+         *  @param aGroupCountZ Number of workgroups in Z.
+         */
+        void Dispatch ( const Pipeline& aPipeline,
+                        uint32_t aGroupCountX,
+                        uint32_t aGroupCountY = 1,
+                        uint32_t aGroupCountZ = 1 ) const;
+        /// @brief Insert a memory barrier making SSBO writes visible to subsequent shader reads.
+        void Barrier() const;
         /// @brief Allocate transient uniform memory for the current frame.
         BufferAccessor AllocateSingleFrameUniformMemory ( size_t aSize );
         /// @brief Allocate transient storage (SSBO) memory for the current frame.

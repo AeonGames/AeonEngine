@@ -952,6 +952,24 @@ namespace AeonGames
         }
         it->second.BeginRender();
     }
+    void VulkanRenderer::BeginFrame ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginFrame();
+    }
+    void VulkanRenderer::BeginRenderPass ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginRenderPass();
+    }
     void VulkanRenderer::EndRender ( void* aWindowId )
     {
         auto it = mWindowStore.find ( aWindowId );
@@ -979,6 +997,30 @@ namespace AeonGames
             return;
         }
         it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
+    }
+
+    void VulkanRenderer::Dispatch ( void* aWindowId,
+                                    const Pipeline& aPipeline,
+                                    uint32_t aGroupCountX,
+                                    uint32_t aGroupCountY,
+                                    uint32_t aGroupCountZ ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ );
+    }
+
+    void VulkanRenderer::Barrier ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Barrier();
     }
 
     const Frustum& VulkanRenderer::GetFrustum ( void* aWindowId ) const

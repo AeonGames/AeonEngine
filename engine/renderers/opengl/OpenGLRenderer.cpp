@@ -823,6 +823,24 @@ void main()
         }
         it->second.BeginRender();
     }
+    void OpenGLRenderer::BeginFrame ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginFrame();
+    }
+    void OpenGLRenderer::BeginRenderPass ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginRenderPass();
+    }
     void OpenGLRenderer::EndRender ( void* aWindowId )
     {
         auto it = mWindowStore.find ( aWindowId );
@@ -850,6 +868,30 @@ void main()
             return;
         }
         it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
+    }
+
+    void OpenGLRenderer::Dispatch ( void* aWindowId,
+                                    const Pipeline& aPipeline,
+                                    uint32_t aGroupCountX,
+                                    uint32_t aGroupCountY,
+                                    uint32_t aGroupCountZ ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ );
+    }
+
+    void OpenGLRenderer::Barrier ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Barrier();
     }
 
     const Frustum& OpenGLRenderer::GetFrustum ( void* aWindowId ) const

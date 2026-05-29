@@ -280,14 +280,40 @@ namespace AeonGames
 
     void OpenGLWindow::BeginRender()
     {
+        BeginFrame();
+        BeginRenderPass();
+    }
+
+    void OpenGLWindow::BeginFrame()
+    {
 #if defined(_WIN32)
         mOpenGLRenderer.MakeCurrent ( mDeviceContext );
 #elif defined(__unix__)
         mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
         mFrameBuffer.Bind();
+    }
+
+    void OpenGLWindow::BeginRenderPass()
+    {
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
+    }
+
+    void OpenGLWindow::Dispatch ( const Pipeline& aPipeline,
+                                  uint32_t aGroupCountX,
+                                  uint32_t aGroupCountY,
+                                  uint32_t aGroupCountZ ) const
+    {
+        mOpenGLRenderer.BindPipeline ( aPipeline );
+        glDispatchCompute ( aGroupCountX, aGroupCountY, aGroupCountZ );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::Barrier() const
+    {
+        glMemoryBarrier ( GL_SHADER_STORAGE_BARRIER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLWindow::EndRender()

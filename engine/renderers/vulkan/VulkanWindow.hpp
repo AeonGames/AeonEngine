@@ -47,6 +47,13 @@ namespace AeonGames
         VulkanWindow& operator= ( const VulkanWindow& aVulkanWindow ) = delete;
         VulkanWindow& operator= ( VulkanWindow&& aVulkanWindow ) = delete;
 
+        /// @brief Begin the frame: acquire the swapchain image and begin the
+        ///        command buffer. Compute dispatches may be recorded after this
+        ///        and before BeginRenderPass.
+        void BeginFrame();
+        /// @brief Begin the main render pass. Must be called after BeginFrame.
+        void BeginRenderPass();
+        /// @brief Convenience: BeginFrame followed by BeginRenderPass.
         void BeginRender();
         /// @brief End the current frame, submit commands, and present.
         void EndRender();
@@ -72,6 +79,18 @@ namespace AeonGames
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0 ) const;
+        /** @brief Dispatch the compute stage of a pipeline.
+         *  @param aPipeline Pipeline whose compute stage to dispatch.
+         *  @param aGroupCountX Number of workgroups in X.
+         *  @param aGroupCountY Number of workgroups in Y.
+         *  @param aGroupCountZ Number of workgroups in Z.
+         */
+        void Dispatch ( const Pipeline& aPipeline,
+                        uint32_t aGroupCountX,
+                        uint32_t aGroupCountY = 1,
+                        uint32_t aGroupCountZ = 1 ) const;
+        /// @brief Insert a memory barrier making SSBO writes visible to subsequent shader reads.
+        void Barrier() const;
         /// @brief Set the projection matrix for this window.
         void SetProjectionMatrix ( const Matrix4x4& aMatrix );
         /// @brief Set the view matrix for this window.

@@ -88,6 +88,8 @@ namespace AeonGames
         void SetLights ( void* aWindowId, std::span<const GpuLight> aLights ) final;
         void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender ( void* aWindowId ) final;
+        void BeginFrame ( void* aWindowId ) final;
+        void BeginRenderPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,
@@ -100,6 +102,12 @@ namespace AeonGames
                       uint32_t aVertexCount = 0xffffffff,
                       uint32_t aInstanceCount = 1,
                       uint32_t aFirstInstance = 0 ) const final;
+        void Dispatch ( void* aWindowId,
+                        const Pipeline& aPipeline,
+                        uint32_t aGroupCountX,
+                        uint32_t aGroupCountY = 1,
+                        uint32_t aGroupCountZ = 1 ) const final;
+        void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
         BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;

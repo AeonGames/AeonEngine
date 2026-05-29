@@ -136,6 +136,18 @@ namespace AeonGames
          * @param aWindowId Platform dependent window handle.
          */
         virtual void BeginRender ( void* aWindowId ) = 0;
+        /** Begins the frame for the given window surface: acquires resources and
+         * starts command recording, but does not begin the render pass. Compute
+         * Dispatch and Barrier calls must be recorded between BeginFrame and
+         * BeginRenderPass.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void BeginFrame ( void* aWindowId ) = 0;
+        /** Begins the main render pass for the given window surface. Must be
+         * called after BeginFrame.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void BeginRenderPass ( void* aWindowId ) = 0;
         /** Ends the current render pass for the given window surface.
          * @param aWindowId Platform dependent window handle.
          */
@@ -164,6 +176,27 @@ namespace AeonGames
                               uint32_t aVertexCount = 0xffffffff,
                               uint32_t aInstanceCount = 1,
                               uint32_t aFirstInstance = 0 ) const = 0;
+        /** Dispatches the compute stage of a pipeline.
+         * Group counts are measured in workgroups, not invocations. For
+         * backends with an explicit render pass (Vulkan), this must be recorded
+         * between BeginFrame and BeginRenderPass.
+         * @param aWindowId Platform dependent window handle.
+         * @param aPipeline Pipeline whose compute stage to dispatch.
+         * @param aGroupCountX Number of workgroups in X.
+         * @param aGroupCountY Number of workgroups in Y.
+         * @param aGroupCountZ Number of workgroups in Z.
+         */
+        virtual void Dispatch ( void* aWindowId,
+                                const Pipeline& aPipeline,
+                                uint32_t aGroupCountX,
+                                uint32_t aGroupCountY = 1,
+                                uint32_t aGroupCountZ = 1 ) const = 0;
+        /** Inserts a memory barrier ensuring shader storage-buffer (SSBO)
+         * writes from a preceding Dispatch are visible to subsequent shader
+         * reads (compute or graphics).
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void Barrier ( void* aWindowId ) const = 0;
         /** Returns the view frustum for the given window surface.
          * @param aWindowId Platform dependent window handle.
          * @return A const reference to the current view frustum.
