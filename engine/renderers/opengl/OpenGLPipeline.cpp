@@ -30,6 +30,7 @@ namespace AeonGames
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
         mAttributes.swap ( aOpenGLPipeline.mAttributes );
         mUniformBlocks.swap ( aOpenGLPipeline.mUniformBlocks );
+        mStorageBlocks.swap ( aOpenGLPipeline.mStorageBlocks );
         mSamplerLocations.swap ( aOpenGLPipeline.mSamplerLocations );
     }
 
@@ -157,6 +158,7 @@ namespace AeonGames
         }
         ReflectAttributes();
         ReflectUniforms();
+        ReflectStorageBlocks();
     }
 
     void OpenGLPipeline::ReflectAttributes()
@@ -347,6 +349,62 @@ namespace AeonGames
             return a.name < b;
         } );
         if ( it == mUniformBlocks.end() )
+        {
+            return nullptr;
+        }
+        return &*it;
+    }
+
+    void OpenGLPipeline::ReflectStorageBlocks()
+    {
+        mStorageBlocks.clear();
+        GLint storage_block_count{0};
+        glGetProgramInterfaceiv ( mProgramId, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &storage_block_count );
+        OPENGL_CHECK_ERROR_THROW;
+        if ( storage_block_count <= 0 )
+        {
+            return;
+        }
+        mStorageBlocks.reserve ( static_cast<size_t> ( storage_block_count ) );
+
+        const GLenum props[] = { GL_BUFFER_BINDING, GL_BUFFER_DATA_SIZE };
+        GLint values[2] {};
+        GLchar name[256] {};
+        GLsizei length{};
+        for ( GLint i = 0; i < storage_block_count; ++i )
+        {
+            glGetProgramResourceName ( mProgramId, GL_SHADER_STORAGE_BLOCK,
+                                       static_cast<GLuint> ( i ),
+                                       sizeof ( name ), &length, name );
+            OPENGL_CHECK_ERROR_THROW;
+            glGetProgramResourceiv ( mProgramId, GL_SHADER_STORAGE_BLOCK,
+                                     static_cast<GLuint> ( i ),
+                                     2, props, 2, nullptr, values );
+            OPENGL_CHECK_ERROR_THROW;
+            const GLint binding = values[0];
+            const GLint size    = values[1];
+            const uint32_t name_crc{crc32i ( name, length ) };
+            auto it = std::lower_bound ( mStorageBlocks.begin(), mStorageBlocks.end(), name_crc,
+                                         [] ( const OpenGLUniformBlock & a, const uint32_t b )
+            {
+                return a.name < b;
+            } );
+            mStorageBlocks.insert ( it, { name_crc, size, binding } );
+        }
+        for ( const auto& block : mStorageBlocks )
+        {
+            std::cout << LogLevel::Debug << "Storage Block: " << block.name << " (crc: " << std::hex << block.name << std::dec << ", size: " << block.size << ", binding: " << block.binding << ")" << std::endl;
+        }
+    }
+
+    const OpenGLUniformBlock* OpenGLPipeline::GetStorageBlock ( uint32_t name ) const
+    {
+        auto it = std::lower_bound ( mStorageBlocks.begin(), mStorageBlocks.end(), name,
+                                     [] ( const OpenGLUniformBlock & a, const uint32_t b )
+        {
+            return a.name < b;
+        } );
+        if ( it == mStorageBlocks.end() || it->name != name )
         {
             return nullptr;
         }

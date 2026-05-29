@@ -43,17 +43,21 @@ namespace AeonGames
         const std::vector<OpenGLVariable>& GetVertexAttributes () const;
         /// @brief Get a uniform block by its name hash, or nullptr if not found.
         const OpenGLUniformBlock* GetUniformBlock ( uint32_t name ) const;
+        /// @brief Get a shader storage block (SSBO) by its name hash, or nullptr if not found.
+        const OpenGLUniformBlock* GetStorageBlock ( uint32_t name ) const;
         /// @brief Get the uniform location of a sampler by its name hash.
         const GLuint GetSamplerLocation ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes();
         void ReflectUniforms();
+        void ReflectStorageBlocks();
         const OpenGLRenderer& mOpenGLRenderer;
         const Pipeline* mPipeline{};
         GLint mProgramId{};
         std::vector<OpenGLVariable> mAttributes{};
         std::vector<OpenGLSamplerLocation> mSamplerLocations{};
         std::vector<OpenGLUniformBlock> mUniformBlocks{};
+        std::vector<OpenGLUniformBlock> mStorageBlocks{};
     };
 }
 #endif

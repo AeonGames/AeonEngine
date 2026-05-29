@@ -153,6 +153,10 @@ glBindBufferBase
 glBindBufferRange
 glUniformBlockBinding
 glGetActiveUniformsiv
+// Program interface query (SSBO reflection)
+glGetProgramInterfaceiv
+glGetProgramResourceName
+glGetProgramResourceiv
 glNamedBufferData
 glNamedBufferSubData
 glMapNamedBuffer
