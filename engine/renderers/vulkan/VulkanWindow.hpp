@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
+#include "aeongames/Renderer.hpp"
 #include "VulkanMemoryPoolBuffer.hpp"
 #include "VulkanStorageMemoryPoolBuffer.hpp"
 #include "VulkanPipeline.hpp"
@@ -84,11 +85,13 @@ namespace AeonGames
          *  @param aGroupCountX Number of workgroups in X.
          *  @param aGroupCountY Number of workgroups in Y.
          *  @param aGroupCountZ Number of workgroups in Z.
+         *  @param aStorageBuffers Storage buffers (SSBOs) to bind for this dispatch.
          */
         void Dispatch ( const Pipeline& aPipeline,
                         uint32_t aGroupCountX,
                         uint32_t aGroupCountY = 1,
-                        uint32_t aGroupCountZ = 1 ) const;
+                        uint32_t aGroupCountZ = 1,
+                        std::span<const StorageBufferBinding> aStorageBuffers = {} ) const;
         /// @brief Insert a memory barrier making SSBO writes visible to subsequent shader reads.
         void Barrier() const;
         /// @brief Set the projection matrix for this window.

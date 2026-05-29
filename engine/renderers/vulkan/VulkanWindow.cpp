@@ -38,6 +38,8 @@ limitations under the License.
 #include "aeongames/Material.hpp"
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/MemoryPool.hpp"
+#include "aeongames/BufferAccessor.hpp"
+#include "aeongames/CRC.hpp"
 
 #if defined(__APPLE__)
 // Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
@@ -989,7 +991,8 @@ namespace AeonGames
     void VulkanWindow::Dispatch ( const Pipeline& aPipeline,
                                   uint32_t aGroupCountX,
                                   uint32_t aGroupCountY,
-                                  uint32_t aGroupCountZ ) const
+                                  uint32_t aGroupCountZ,
+                                  std::span<const StorageBufferBinding> aStorageBuffers ) const
     {
         const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetVkComputePipeline() );
@@ -1012,6 +1015,28 @@ namespace AeonGames
                                       lights_set_index,
                                       1,
                                       &mLightsDescriptorSet, 0, nullptr );
+        }
+
+        for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
+        {
+            if ( storage_buffer.mBuffer == nullptr )
+            {
+                continue;
+            }
+            uint32_t storage_set_index = pipeline->GetDescriptorSetIndex ( storage_buffer.mBinding );
+            if ( storage_set_index == std::numeric_limits<uint32_t>::max() )
+            {
+                continue;
+            }
+            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( storage_buffer.mBuffer->GetMemoryPoolBuffer() );
+            uint32_t offset = static_cast<uint32_t> ( storage_buffer.mBuffer->GetOffset() );
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      storage_set_index,
+                                      1,
+                                      &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
         }
 
         vkCmdDispatch ( mVkCommandBuffer, aGroupCountX, aGroupCountY, aGroupCountZ );

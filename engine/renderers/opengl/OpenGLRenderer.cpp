@@ -625,6 +625,25 @@ void main()
         };
     }
 
+    void OpenGLRenderer::BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* storage_block{ mCurrentPipeline->GetStorageBlock ( aBinding ) };
+        if ( storage_block == nullptr )
+        {
+            return;
+        }
+        const MemoryPoolBuffer* memory_pool_buffer = aBuffer.GetMemoryPoolBuffer();
+        if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&> ( memory_pool_buffer->GetBuffer() ).GetBufferId() : 0 )
+        {
+            glBindBufferRange ( GL_SHADER_STORAGE_BUFFER, storage_block->binding, buffer_id, aBuffer.GetOffset(), aBuffer.GetSize() );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+    }
+
     void OpenGLRenderer::SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const
     {
         if ( mCurrentPipeline == nullptr )
@@ -874,14 +893,15 @@ void main()
                                     const Pipeline& aPipeline,
                                     uint32_t aGroupCountX,
                                     uint32_t aGroupCountY,
-                                    uint32_t aGroupCountZ ) const
+                                    uint32_t aGroupCountZ,
+                                    std::span<const StorageBufferBinding> aStorageBuffers ) const
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ );
+        it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ, aStorageBuffers );
     }
 
     void OpenGLRenderer::Barrier ( void* aWindowId ) const

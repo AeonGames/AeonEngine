@@ -38,6 +38,16 @@ namespace AeonGames
     class Material;
     class Window;
     class BufferAccessor;
+    /** A storage buffer (SSBO) binding for a compute dispatch.
+     *  Maps a shader storage block — identified by the CRC32 of its GLSL block
+     *  name (e.g. "Output"_crc32 or a Mesh::BindingLocations value) — to a
+     *  single-frame storage allocation obtained from
+     *  Renderer::AllocateSingleFrameStorageMemory. */
+    struct StorageBufferBinding
+    {
+        uint32_t mBinding;             /**< CRC32 of the GLSL storage block name. */
+        const BufferAccessor* mBuffer; /**< Storage allocation to bind. */
+    };
     /** Abstract base class for rendering backends.
      *
      * Defines the interface for loading and unloading GPU resources, managing
@@ -185,12 +195,17 @@ namespace AeonGames
          * @param aGroupCountX Number of workgroups in X.
          * @param aGroupCountY Number of workgroups in Y.
          * @param aGroupCountZ Number of workgroups in Z.
+         * @param aStorageBuffers Storage buffers (SSBOs) to bind for this
+         *        dispatch, each mapped to a shader storage block by the CRC32
+         *        of its GLSL block name. Blocks the pipeline does not declare
+         *        are silently ignored.
          */
         virtual void Dispatch ( void* aWindowId,
                                 const Pipeline& aPipeline,
                                 uint32_t aGroupCountX,
                                 uint32_t aGroupCountY = 1,
-                                uint32_t aGroupCountZ = 1 ) const = 0;
+                                uint32_t aGroupCountZ = 1,
+                                std::span<const StorageBufferBinding> aStorageBuffers = {} ) const = 0;
         /** Inserts a memory barrier ensuring shader storage-buffer (SSBO)
          * writes from a preceding Dispatch are visible to subsequent shader
          * reads (compute or graphics).

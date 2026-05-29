@@ -45,7 +45,8 @@ set(TEST_SRCS
     PackageTests.cpp
     ResourceCacheTests.cpp
     ResourceIdTests.cpp
-    UniqueAnyPtrTests.cpp)
+    UniqueAnyPtrTests.cpp
+    ComputeTests.cpp)
 
 source_group("Tested" FILES ${TESTED_SRCS})
 source_group("Tests" FILES ${TEST_SRCS})
@@ -93,4 +94,4 @@ else()
     unit-tests
     PROPERTIES COMPILE_FLAGS "-DSOURCE_PATH=\"\\\"${CMAKE_SOURCE_DIR}\\\"\"")
 endif()
-add_test(NAME unit-tests COMMAND unit-tests)
+add_test(NAME unit-tests COMMAND unit-tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

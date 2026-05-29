@@ -68,6 +68,9 @@ namespace AeonGames
 
         /// @brief Upload skeleton joint matrices for skinned rendering.
         void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const;
+        /// @brief Bind a storage buffer (SSBO) to the current pipeline's
+        ///        storage block identified by the CRC32 of its GLSL block name.
+        void BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const;
         /// @brief Bind the matrices uniform buffer for the current draw.
         void SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const;
         /// @brief Bind the per-frame lights uniform buffer for the current draw.
@@ -107,7 +110,8 @@ namespace AeonGames
                         const Pipeline& aPipeline,
                         uint32_t aGroupCountX,
                         uint32_t aGroupCountY = 1,
-                        uint32_t aGroupCountZ = 1 ) const final;
+                        uint32_t aGroupCountZ = 1,
+                        std::span<const StorageBufferBinding> aStorageBuffers = {} ) const final;
         void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;

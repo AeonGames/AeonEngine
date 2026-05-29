@@ -303,9 +303,17 @@ namespace AeonGames
     void OpenGLWindow::Dispatch ( const Pipeline& aPipeline,
                                   uint32_t aGroupCountX,
                                   uint32_t aGroupCountY,
-                                  uint32_t aGroupCountZ ) const
+                                  uint32_t aGroupCountZ,
+                                  std::span<const StorageBufferBinding> aStorageBuffers ) const
     {
         mOpenGLRenderer.BindPipeline ( aPipeline );
+        for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
+        {
+            if ( storage_buffer.mBuffer != nullptr )
+            {
+                mOpenGLRenderer.BindStorageBuffer ( storage_buffer.mBinding, *storage_buffer.mBuffer );
+            }
+        }
         glDispatchCompute ( aGroupCountX, aGroupCountY, aGroupCountZ );
         OPENGL_CHECK_ERROR_NO_THROW;
     }

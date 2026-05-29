@@ -184,6 +184,31 @@ namespace AeonGames
             }
             const int defaultVersion = mOptions & EOptionDefaultDesktop ? 110 : 100;
             glslang::DefaultTBuiltInResource.maxDrawBuffers = true;
+            // Compute-stage limits are otherwise left zero-initialized, which
+            // would reject any non-trivial local_size; use glslang's standard
+            // desktop defaults so compute shaders can declare workgroups.
+            glslang::DefaultTBuiltInResource.maxComputeWorkGroupCountX = 65535;
+            glslang::DefaultTBuiltInResource.maxComputeWorkGroupCountY = 65535;
+            glslang::DefaultTBuiltInResource.maxComputeWorkGroupCountZ = 65535;
+            glslang::DefaultTBuiltInResource.maxComputeWorkGroupSizeX = 1024;
+            glslang::DefaultTBuiltInResource.maxComputeWorkGroupSizeY = 1024;
+            glslang::DefaultTBuiltInResource.maxComputeWorkGroupSizeZ = 64;
+            glslang::DefaultTBuiltInResource.maxComputeUniformComponents = 1024;
+            glslang::DefaultTBuiltInResource.maxComputeTextureImageUnits = 16;
+            glslang::DefaultTBuiltInResource.maxComputeImageUniforms = 8;
+            glslang::DefaultTBuiltInResource.maxComputeAtomicCounters = 8;
+            glslang::DefaultTBuiltInResource.maxComputeAtomicCounterBuffers = 1;
+            // Allow dynamic (non-constant) indexing of arrays, otherwise
+            // expressions like buffer[gl_GlobalInvocationID.x] are rejected.
+            glslang::DefaultTBuiltInResource.limits.nonInductiveForLoops = true;
+            glslang::DefaultTBuiltInResource.limits.whileLoops = true;
+            glslang::DefaultTBuiltInResource.limits.doWhileLoops = true;
+            glslang::DefaultTBuiltInResource.limits.generalUniformIndexing = true;
+            glslang::DefaultTBuiltInResource.limits.generalAttributeMatrixVectorIndexing = true;
+            glslang::DefaultTBuiltInResource.limits.generalVaryingIndexing = true;
+            glslang::DefaultTBuiltInResource.limits.generalSamplerIndexing = true;
+            glslang::DefaultTBuiltInResource.limits.generalVariableIndexing = true;
+            glslang::DefaultTBuiltInResource.limits.generalConstantMatrixVectorIndexing = true;
             if ( !shaders.back().parse ( &glslang::DefaultTBuiltInResource, defaultVersion, false, messages ) )
             {
                 compile_failed = true;

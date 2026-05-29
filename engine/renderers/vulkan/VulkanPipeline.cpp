@@ -724,7 +724,20 @@ namespace AeonGames
                     {
                         layout_binding = it->descriptor_set_layout_bindings.insert ( layout_binding, VkDescriptorSetLayoutBinding{} );
                         layout_binding->binding = descriptor_set_binding.binding;
-                        layout_binding->descriptorType = ( hash == Mesh::BindingLocations::SKELETON ) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
+                        // Buffers served from the engine's single-frame pools are
+                        // bound with dynamic offsets, so their layout entries must
+                        // use the dynamic descriptor variants: the skeleton uniform
+                        // pool and any storage buffer (storage pool).
+                        VkDescriptorType descriptor_type = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
+                        if ( hash == Mesh::BindingLocations::SKELETON )
+                        {
+                            descriptor_type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+                        }
+                        else if ( descriptor_type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER )
+                        {
+                            descriptor_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+                        }
+                        layout_binding->descriptorType = descriptor_type;
                         layout_binding->descriptorCount = descriptor_set_binding.count;
                         //layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->stageFlags = VK_SHADER_STAGE_ALL;
