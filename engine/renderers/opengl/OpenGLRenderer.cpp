@@ -682,6 +682,24 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
+    void OpenGLRenderer::SetClusterParams ( const OpenGLBuffer& aClusterParamsBuffer ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::CLUSTER_PARAMS ) };
+        if ( uniform_block == nullptr )
+        {
+            // Pipeline doesn't use clustered shading; silently skip,
+            // same convention as SetLights/SetSkeleton.
+            return;
+        }
+        assert ( static_cast<const size_t> ( uniform_block->size ) <= aClusterParamsBuffer.GetSize() );
+        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aClusterParamsBuffer.GetBufferId(), 0, aClusterParamsBuffer.GetSize() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
     void OpenGLRenderer::LoadMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );

@@ -53,7 +53,8 @@ namespace AeonGames
         mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
         mStorageMemoryPoolBuffer{mVulkanRenderer, 1_mb},
         mMatrices { aVulkanRenderer },
-        mLights { aVulkanRenderer }
+        mLights { aVulkanRenderer },
+        mClusterParams { aVulkanRenderer }
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
         try
@@ -72,7 +73,8 @@ namespace AeonGames
         mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
         mStorageMemoryPoolBuffer{std::move ( aVulkanWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aVulkanWindow.mMatrices ) },
-        mLights{std::move ( aVulkanWindow.mLights ) }
+        mLights{std::move ( aVulkanWindow.mLights ) },
+        mClusterParams{std::move ( aVulkanWindow.mClusterParams ) }
     {
         std::cout << LogLevel::Debug << "Moving VulkanWindow." << std::endl;
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
@@ -97,6 +99,8 @@ namespace AeonGames
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
         std::swap ( mLightsDescriptorPool, aVulkanWindow.mLightsDescriptorPool );
         std::swap ( mLightsDescriptorSet, aVulkanWindow.mLightsDescriptorSet );
+        std::swap ( mClusterParamsDescriptorPool, aVulkanWindow.mClusterParamsDescriptorPool );
+        std::swap ( mClusterParamsDescriptorSet, aVulkanWindow.mClusterParamsDescriptorSet );
         std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
         std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
         std::swap ( mVkAcquireSemaphore, aVulkanWindow.mVkAcquireSemaphore );
@@ -640,10 +644,66 @@ namespace AeonGames
         mLights.Finalize();
     }
 
+    void VulkanWindow::InitializeClusterParams()
+    {
+        GpuClusterParams empty{};
+        mClusterParams.Initialize (
+            sizeof ( GpuClusterParams ),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            &empty );
+
+        VkDescriptorSetLayoutCreateInfo cluster_params_descriptor_set_layout_create_info{};
+        cluster_params_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        cluster_params_descriptor_set_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding cluster_params_descriptor_set_layout_binding{};
+        cluster_params_descriptor_set_layout_binding.binding = 0;
+        cluster_params_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cluster_params_descriptor_set_layout_binding.descriptorCount = 1;
+        cluster_params_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        cluster_params_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+        cluster_params_descriptor_set_layout_create_info.pBindings = &cluster_params_descriptor_set_layout_binding;
+
+        mClusterParamsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mClusterParamsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mClusterParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( cluster_params_descriptor_set_layout_create_info ) );
+        VkDescriptorBufferInfo descriptor_buffer_info{};
+        descriptor_buffer_info.buffer = mClusterParams.GetBuffer();
+        descriptor_buffer_info.offset = 0;
+        descriptor_buffer_info.range = mClusterParams.GetSize();
+        VkWriteDescriptorSet write_descriptor_set{};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.pNext = nullptr;
+        write_descriptor_set.dstSet = mClusterParamsDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = 1;
+        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+    }
+
+    void VulkanWindow::FinalizeClusterParams()
+    {
+        DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mClusterParamsDescriptorPool );
+        mClusterParams.Finalize();
+    }
+
+    void VulkanWindow::UpdateClusterParams()
+    {
+        GpuClusterParams params{};
+        params.inverse_projection = Matrix4x4 ( mProjectionMatrix ).GetInvertedMatrix4x4();
+        params.screen[0] = mVkViewport.width;
+        params.screen[1] = mVkViewport.height;
+        mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
+    }
+
     void VulkanWindow::Initialize()
     {
         InitializeMatrices();
         InitializeLights();
+        InitializeClusterParams();
         InitializeSurface();
         InitializeRenderPass();
         InitializeSwapchain();
@@ -670,6 +730,7 @@ namespace AeonGames
         FinalizeSwapchain();
         FinalizeRenderPass();
         FinalizeSurface();
+        FinalizeClusterParams();
         FinalizeLights();
         FinalizeMatrices();
     }
@@ -713,6 +774,7 @@ namespace AeonGames
         mVkScissor.offset.y = ( aY < 0 ) ? 0 : aY;
         mVkScissor.extent.width = ( aX + aWidth > mVkSurfaceCapabilitiesKHR.currentExtent.width ) ? mVkSurfaceCapabilitiesKHR.currentExtent.width : aX + aWidth;
         mVkScissor.extent.height = ( aY + aHeight > mVkSurfaceCapabilitiesKHR.currentExtent.height ) ? mVkSurfaceCapabilitiesKHR.currentExtent.height : aY + aHeight;
+        UpdateClusterParams();
     }
 
     void VulkanWindow::SetProjectionMatrix ( const Matrix4x4& aMatrix )
@@ -720,6 +782,7 @@ namespace AeonGames
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        UpdateClusterParams();
     }
 
     void VulkanWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
@@ -939,6 +1002,16 @@ namespace AeonGames
                                       &mLightsDescriptorSet, 0, nullptr );
         }
 
+        if ( uint32_t cluster_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      cluster_params_set_index,
+                                      1,
+                                      &mClusterParamsDescriptorSet, 0, nullptr );
+        }
+
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
         {
             vkCmdPushConstants ( mVkCommandBuffer,
@@ -1015,6 +1088,16 @@ namespace AeonGames
                                       lights_set_index,
                                       1,
                                       &mLightsDescriptorSet, 0, nullptr );
+        }
+
+        if ( uint32_t cluster_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      cluster_params_set_index,
+                                      1,
+                                      &mClusterParamsDescriptorSet, 0, nullptr );
         }
 
         for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )

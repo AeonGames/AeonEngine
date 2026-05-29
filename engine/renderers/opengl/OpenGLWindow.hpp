@@ -25,6 +25,7 @@ limitations under the License.
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Texture.hpp"
 #include "aeongames/GpuLight.hpp"
+#include "aeongames/GpuClusterParams.hpp"
 #include "aeongames/Renderer.hpp"
 #include "OpenGLFunctions.hpp"
 #include "OpenGLBuffer.hpp"
@@ -110,6 +111,9 @@ namespace AeonGames
     private:
         void Initialize();
         void SwapBuffers();
+        /// @brief Recompute and upload the ClusterParams UBO from the current
+        ///        (render-space) projection matrix and viewport.
+        void UpdateClusterParams();
         OpenGLRenderer& mOpenGLRenderer;
 #if defined(_WIN32)
         HWND mWindowId {};
@@ -127,6 +131,7 @@ namespace AeonGames
         OpenGLStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
         OpenGLBuffer mMatrices{};
         OpenGLBuffer mLights{};
+        OpenGLBuffer mClusterParams{};
     };
 }
 #endif

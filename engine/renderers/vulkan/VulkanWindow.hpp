@@ -21,6 +21,7 @@ limitations under the License.
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "aeongames/GpuLight.hpp"
+#include "aeongames/GpuClusterParams.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Renderer.hpp"
@@ -128,6 +129,7 @@ namespace AeonGames
         void InitializeCommandBuffer();
         void InitializeMatrices();
         void InitializeLights();
+        void InitializeClusterParams();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
@@ -137,6 +139,11 @@ namespace AeonGames
         void FinalizeCommandBuffer();
         void FinalizeMatrices();
         void FinalizeLights();
+        void FinalizeClusterParams();
+        /// @brief Recompute and upload the ClusterParams UBO from the current
+        ///        projection matrix and viewport. Cheap; called on projection
+        ///        or viewport change.
+        void UpdateClusterParams();
 
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
@@ -147,6 +154,7 @@ namespace AeonGames
         Matrix4x4 mViewMatrix{};
         VulkanBuffer mMatrices;
         VulkanBuffer mLights;
+        VulkanBuffer mClusterParams;
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
@@ -168,6 +176,8 @@ namespace AeonGames
         VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mLightsDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mLightsDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mClusterParamsDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mClusterParamsDescriptorSet{VK_NULL_HANDLE};
         VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
         VkFence mVkFence{ VK_NULL_HANDLE };
 

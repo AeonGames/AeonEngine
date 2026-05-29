@@ -406,6 +406,12 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt -o
           ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.prg
   COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt"
+  COMMAND
+          $<TARGET_FILE:aeontool> convert -i
+          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt -o
+          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.prg
+  COMMAND
           ${CMAKE_COMMAND} -E echo "Generating development textures"
   COMMAND ${CMAKE_COMMAND} -DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -P
           ${CMAKE_SOURCE_DIR}/cmake/GenerateDevelopmentTextures.cmake
@@ -416,6 +422,7 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt
+          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt
           ${CMAKE_SOURCE_DIR}/game/images/development.svg.in
   COMMENT "Generating binary game assets")
 

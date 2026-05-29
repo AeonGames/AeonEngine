@@ -75,6 +75,8 @@ namespace AeonGames
         void SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const;
         /// @brief Bind the per-frame lights uniform buffer for the current draw.
         void SetLights ( const OpenGLBuffer& aLightsBuffer ) const;
+        /// @brief Bind the clustered-shading params uniform buffer for the current draw/dispatch.
+        void SetClusterParams ( const OpenGLBuffer& aClusterParamsBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;

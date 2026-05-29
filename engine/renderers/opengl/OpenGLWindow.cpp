@@ -44,6 +44,12 @@ namespace AeonGames
             GpuLightsBlock empty{};
             mLights.Initialize ( sizeof ( GpuLightsBlock ), GL_DYNAMIC_DRAW, &empty );
         }
+        // ClusterParams UBO: clustered-shading grid + inverse projection.
+        // Zero/identity-initialized; populated on the first SetProjectionMatrix.
+        {
+            GpuClusterParams empty{};
+            mClusterParams.Initialize ( sizeof ( GpuClusterParams ), GL_DYNAMIC_DRAW, &empty );
+        }
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_BLEND );
@@ -129,7 +135,8 @@ namespace AeonGames
         mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
         mStorageMemoryPoolBuffer{std::move ( aOpenGLWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
-        mLights{std::move ( aOpenGLWindow.mLights ) }
+        mLights{std::move ( aOpenGLWindow.mLights ) },
+        mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) }
     {
         std::swap ( mDisplay, aOpenGLWindow.mDisplay );
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
@@ -147,6 +154,7 @@ namespace AeonGames
             mStorageMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
             mLights.Finalize();
+            mClusterParams.Finalize();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -195,7 +203,8 @@ namespace AeonGames
         mMemoryPoolBuffer{std::move ( aOpenGLWindow.mMemoryPoolBuffer ) },
         mStorageMemoryPoolBuffer{std::move ( aOpenGLWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
-        mLights{std::move ( aOpenGLWindow.mLights ) }
+        mLights{std::move ( aOpenGLWindow.mLights ) },
+        mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) }
     {
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
         std::swap ( mFrustum, aOpenGLWindow.mFrustum );
@@ -213,6 +222,7 @@ namespace AeonGames
             mStorageMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
             mLights.Finalize();
+            mClusterParams.Finalize();
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -242,6 +252,7 @@ namespace AeonGames
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
+        mOpenGLRenderer.SetClusterParams ( mClusterParams );
 
         if ( aMaterial )
         {
@@ -307,6 +318,7 @@ namespace AeonGames
                                   std::span<const StorageBufferBinding> aStorageBuffers ) const
     {
         mOpenGLRenderer.BindPipeline ( aPipeline );
+        mOpenGLRenderer.SetClusterParams ( mClusterParams );
         for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
         {
             if ( storage_buffer.mBuffer != nullptr )
@@ -388,6 +400,18 @@ namespace AeonGames
         };
         mFrustum = mProjectionMatrix * mViewMatrix;
         mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        UpdateClusterParams();
+    }
+
+    void OpenGLWindow::UpdateClusterParams()
+    {
+        // Build from the render-space (post Z-flip) projection so the cluster
+        // AABBs live in the same view space the fragments are shaded in.
+        GpuClusterParams params{};
+        params.inverse_projection = mProjectionMatrix.GetInvertedMatrix4x4();
+        // screen[] (viewport size) is left zero here; it is only consumed by the
+        // clustered lighting fragment shader (C3) and set from the framebuffer there.
+        mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
     void OpenGLWindow::SetViewMatrix ( const Matrix4x4& aMatrix )
