@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef AEONGAMES_VULKANSTORAGEMEMORYPOOLBUFFER_HPP
 #define AEONGAMES_VULKANSTORAGEMEMORYPOOLBUFFER_HPP
 #include <cstdint>
+#include <vector>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 #include "VulkanBuffer.hpp"
 #include "aeongames/MemoryPoolBuffer.hpp"
@@ -46,19 +48,28 @@ namespace AeonGames
         void Initialize ( size_t aStackSize );
         /// @brief Release pool buffer and descriptor resources.
         void Finalize();
-        /// @brief Get the Vulkan descriptor set for this pool buffer.
-        const VkDescriptorSet& GetDescriptorSet() const;
+        /** @brief Get the descriptor set bound to the allocation at @p aOffset.
+         *
+         * Each allocation owns a descriptor set whose buffer range is exactly
+         * the allocation, so it is bound with a zero dynamic offset. This keeps
+         * @c (effectiveOffset + range) within the pool buffer for every
+         * allocation, unlike a single shared whole-buffer descriptor. */
+        const VkDescriptorSet& GetDescriptorSet ( size_t aOffset ) const;
         BufferAccessor Allocate ( size_t aSize ) final;
         void Reset() final;
         const Buffer& GetBuffer() const final;
     private:
+        /// @brief Maximum number of live storage allocations per frame.
+        static constexpr uint32_t kMaxDescriptorSets = 16;
         void InitializeDescriptorPool();
         void FinalizeDescriptorPool();
-        void InitializeDescriptorSet();
         const VulkanRenderer& mVulkanRenderer;
         size_t mOffset{0};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
-        VkDescriptorSet mVkDescriptorSet{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mVkDescriptorSetLayout{ VK_NULL_HANDLE };
+        std::vector<VkDescriptorSet> mVkDescriptorSets{};
+        uint32_t mDescriptorSetIndex{0};
+        std::unordered_map<size_t, VkDescriptorSet> mOffsetToDescriptorSet{};
         VulkanBuffer mStorageBuffer;
     };
 }

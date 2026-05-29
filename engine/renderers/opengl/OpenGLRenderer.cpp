@@ -656,7 +656,7 @@ void main()
             return;
         }
 
-        assert ( static_cast<const size_t> ( uniform_block->size ) == aMatricesBuffer.GetSize() );
+        assert ( static_cast<const size_t> ( uniform_block->size ) <= aMatricesBuffer.GetSize() );
         glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aMatricesBuffer.GetBufferId(), 0, aMatricesBuffer.GetSize() );
         OPENGL_CHECK_ERROR_THROW;
 

@@ -318,6 +318,8 @@ namespace AeonGames
                                   std::span<const StorageBufferBinding> aStorageBuffers ) const
     {
         mOpenGLRenderer.BindPipeline ( aPipeline );
+        mOpenGLRenderer.SetMatrices ( mMatrices );
+        mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
         for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
         {

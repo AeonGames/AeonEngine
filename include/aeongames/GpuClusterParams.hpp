@@ -35,6 +35,13 @@ namespace AeonGames
     constexpr uint32_t CLUSTER_COUNT = CLUSTER_GRID_X * CLUSTER_GRID_Y * CLUSTER_GRID_Z;
     ///@}
 
+    /** @brief Maximum number of lights stored per cluster (fixed-cap version).
+     *  light_cull.comp appends up to this many light indices into each cluster's
+     *  slot of the LightIndexList SSBO; lights past the cap are dropped (the C7
+     *  heatmap surfaces overflow). The LightIndexList is sized
+     *  CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER uints. */
+    constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 128;
+
     /** @brief Per-cluster view-space axis-aligned bounding box (ClusterAABBs SSBO element).
      *
      *  Two std430-friendly vec4s. The @c .xyz of each holds the min/max view-space
@@ -48,6 +55,21 @@ namespace AeonGames
                     "Vector4 must be a tight 4xfloat for GPU layout compatibility." );
     static_assert ( sizeof ( GpuClusterAABB ) == 32,
                     "GpuClusterAABB must stay 16-byte aligned at 32 bytes for std430." );
+
+    /** @brief CPU-side mirror of one @c LightGrid SSBO entry.
+     *
+     *  One per cluster: @c offset is the start index into the LightIndexList
+     *  SSBO and @c count is the number of lights written for that cluster. In
+     *  the fixed-cap version @c offset == cluster_index * MAX_LIGHTS_PER_CLUSTER;
+     *  storing it explicitly keeps the shading-side lookup identical to the
+     *  future flat-index storage (Phase R1). Matches a std430 @c uvec2. */
+    struct GpuLightGridCell
+    {
+        uint32_t offset { 0 };
+        uint32_t count  { 0 };
+    };
+    static_assert ( sizeof ( GpuLightGridCell ) == 8,
+                    "GpuLightGridCell must match a std430 uvec2 (8 bytes)." );
 
     /** @brief CPU-side mirror of the @c ClusterParams uniform block.
      *

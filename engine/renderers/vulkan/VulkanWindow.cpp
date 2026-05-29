@@ -51,7 +51,7 @@ namespace AeonGames
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
         mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
-        mStorageMemoryPoolBuffer{mVulkanRenderer, 1_mb},
+        mStorageMemoryPoolBuffer{mVulkanRenderer, 8_mb},
         mMatrices { aVulkanRenderer },
         mLights { aVulkanRenderer },
         mClusterParams { aVulkanRenderer }
@@ -1113,13 +1113,16 @@ namespace AeonGames
             }
             const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
                 reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( storage_buffer.mBuffer->GetMemoryPoolBuffer() );
-            uint32_t offset = static_cast<uint32_t> ( storage_buffer.mBuffer->GetOffset() );
+            size_t offset = storage_buffer.mBuffer->GetOffset();
+            // The allocation's descriptor already covers exactly [offset, offset+size];
+            // bind it with a zero dynamic offset.
+            uint32_t dynamic_offset = 0;
             vkCmdBindDescriptorSets ( mVkCommandBuffer,
                                       VK_PIPELINE_BIND_POINT_COMPUTE,
                                       pipeline->GetPipelineLayout(),
                                       storage_set_index,
                                       1,
-                                      &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
+                                      &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
         }
 
         vkCmdDispatch ( mVkCommandBuffer, aGroupCountX, aGroupCountY, aGroupCountZ );
