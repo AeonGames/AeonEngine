@@ -1,0 +1,12 @@
+AEONPLN
+comp:
+"#version 450\n"
+"layout(local_size_x = 64) in;\n"
+"layout(std430, binding = 0) writeonly buffer Output\n"
+"{\n"
+"    uint values[];\n"
+"};\n"
+"void main()\n"
+"{\n"
+"    values[gl_GlobalInvocationID.x] = gl_GlobalInvocationID.x;\n"
+"}\n"

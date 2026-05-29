@@ -44,8 +44,10 @@ namespace AeonGames
         VulkanPipeline& operator= ( VulkanPipeline&& ) = delete;
         /// @brief Get the Vulkan pipeline layout handle.
         const VkPipelineLayout GetPipelineLayout() const;
-        /// @brief Get the Vulkan pipeline handle.
+        /// @brief Get the Vulkan graphics pipeline handle (VK_NULL_HANDLE if none).
         const VkPipeline GetVkPipeline() const;
+        /// @brief Get the Vulkan compute pipeline handle (VK_NULL_HANDLE if none).
+        const VkPipeline GetVkComputePipeline() const;
         /// @brief Get the source Pipeline resource.
         const Pipeline* GetPipeline() const;
         /// @brief Get a descriptor set layout by its name hash.
@@ -62,6 +64,7 @@ namespace AeonGames
         const Pipeline* mPipeline{nullptr};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
+        VkPipeline mVkComputePipeline{ VK_NULL_HANDLE };
         uint32_t mVertexStride{0};
         std::vector<VkVertexInputAttributeDescription> mVertexAttributes{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};

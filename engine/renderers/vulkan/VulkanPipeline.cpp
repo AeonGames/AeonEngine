@@ -155,6 +155,7 @@ namespace AeonGames
         std::swap ( mPipeline, aVulkanPipeline.mPipeline );
         std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
+        std::swap ( mVkComputePipeline, aVulkanPipeline.mVkComputePipeline );
         std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
         std::swap ( mPushConstantModelMatrix, aVulkanPipeline.mPushConstantModelMatrix );
         mVertexAttributes.swap ( aVulkanPipeline.mVertexAttributes );
@@ -204,6 +205,12 @@ namespace AeonGames
             aPipeline.GetShaderCode ( GEOM )
         };
 
+        // Graphics and compute pipelines are distinct Vulkan objects, so a
+        // single asset can declare both: graphics stages (vert/frag/tesc/
+        // tese/geom) build a graphics pipeline, and a comp stage builds a
+        // compute pipeline. Both share the same layout. The compute stage is
+        // kept out of the graphics stage array because a graphics pipeline
+        // must not contain VK_SHADER_STAGE_COMPUTE_BIT.
         for ( uint32_t i = 0; i < ShaderType::COUNT; ++i )
         {
             if ( shader_codes.at ( i ).empty() )
@@ -224,6 +231,8 @@ namespace AeonGames
 
         uint32_t pipeline_shader_stage_create_info_count{0};
         std::array<VkPipelineShaderStageCreateInfo, ShaderType::COUNT> pipeline_shader_stage_create_infos{ {} };
+        VkPipelineShaderStageCreateInfo compute_shader_stage_create_info{};
+        bool has_compute_stage{false};
         for ( uint32_t i = 0; i < ShaderType::COUNT; ++i )
         {
             const std::vector<uint32_t>& spirv{compiler_linker.GetSpirV ( ShaderTypeToEShLanguage.at ( i ) ) };
@@ -268,13 +277,23 @@ namespace AeonGames
             spvReflectDestroyShaderModule ( &module );
             //--------Reflection-END----------//
             //----------------Shader Stages------------------//
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].pNext = nullptr;
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].flags = 0;
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].module = shader_modules[i];
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].pName = "main";
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count].stage = ShaderTypeToShaderStageFlagBit.at ( static_cast<ShaderType> ( i ) );
-            pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count++].pSpecializationInfo = nullptr;
+            VkPipelineShaderStageCreateInfo stage_create_info{};
+            stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            stage_create_info.pNext = nullptr;
+            stage_create_info.flags = 0;
+            stage_create_info.module = shader_modules[i];
+            stage_create_info.pName = "main";
+            stage_create_info.stage = ShaderTypeToShaderStageFlagBit.at ( static_cast<ShaderType> ( i ) );
+            stage_create_info.pSpecializationInfo = nullptr;
+            if ( i == COMP )
+            {
+                compute_shader_stage_create_info = stage_create_info;
+                has_compute_stage = true;
+            }
+            else
+            {
+                pipeline_shader_stage_create_infos[pipeline_shader_stage_create_info_count++] = stage_create_info;
+            }
         }
 
         //----------------Vertex Input------------------//
@@ -445,33 +464,56 @@ namespace AeonGames
         }
 
         //----------------Shader Stages------------------//
-        VkGraphicsPipelineCreateInfo graphics_pipeline_create_info {};
-        graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        graphics_pipeline_create_info.pNext = nullptr;
-        graphics_pipeline_create_info.flags = 0;
-        graphics_pipeline_create_info.stageCount = pipeline_shader_stage_create_info_count;
-        graphics_pipeline_create_info.pStages = pipeline_shader_stage_create_infos.data();
-        graphics_pipeline_create_info.pVertexInputState = &pipeline_vertex_input_state_create_info;
-        graphics_pipeline_create_info.pInputAssemblyState = &pipeline_input_assembly_state_create_info;
-        graphics_pipeline_create_info.pTessellationState = nullptr;
-        graphics_pipeline_create_info.pViewportState = &pipeline_viewport_state_create_info;
-        graphics_pipeline_create_info.pRasterizationState = &pipeline_rasterization_state_create_info;
-        graphics_pipeline_create_info.pMultisampleState = &pipeline_multisample_state_create_info;
-        graphics_pipeline_create_info.pDepthStencilState = &pipeline_depth_stencil_state_create_info;
-        graphics_pipeline_create_info.pColorBlendState = &pipeline_color_blend_state_create_info;
-        graphics_pipeline_create_info.pDynamicState = &pipeline_dynamic_state_create_info;
-        graphics_pipeline_create_info.layout = mVkPipelineLayout;
-        graphics_pipeline_create_info.renderPass = mVulkanRenderer.GetRenderPass();
-        graphics_pipeline_create_info.subpass = 0;
-        graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
-        graphics_pipeline_create_info.basePipelineIndex = 0;
-
-        if ( VkResult result = vkCreateGraphicsPipelines ( mVulkanRenderer.GetDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_create_info, nullptr, &mVkPipeline ) )
+        if ( pipeline_shader_stage_create_info_count > 0 )
         {
-            std::ostringstream stream;
-            stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
-            std::cout << LogLevel::Error << stream.str() << std::endl;
-            throw std::runtime_error ( stream.str().c_str() );
+            VkGraphicsPipelineCreateInfo graphics_pipeline_create_info {};
+            graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+            graphics_pipeline_create_info.pNext = nullptr;
+            graphics_pipeline_create_info.flags = 0;
+            graphics_pipeline_create_info.stageCount = pipeline_shader_stage_create_info_count;
+            graphics_pipeline_create_info.pStages = pipeline_shader_stage_create_infos.data();
+            graphics_pipeline_create_info.pVertexInputState = &pipeline_vertex_input_state_create_info;
+            graphics_pipeline_create_info.pInputAssemblyState = &pipeline_input_assembly_state_create_info;
+            graphics_pipeline_create_info.pTessellationState = nullptr;
+            graphics_pipeline_create_info.pViewportState = &pipeline_viewport_state_create_info;
+            graphics_pipeline_create_info.pRasterizationState = &pipeline_rasterization_state_create_info;
+            graphics_pipeline_create_info.pMultisampleState = &pipeline_multisample_state_create_info;
+            graphics_pipeline_create_info.pDepthStencilState = &pipeline_depth_stencil_state_create_info;
+            graphics_pipeline_create_info.pColorBlendState = &pipeline_color_blend_state_create_info;
+            graphics_pipeline_create_info.pDynamicState = &pipeline_dynamic_state_create_info;
+            graphics_pipeline_create_info.layout = mVkPipelineLayout;
+            graphics_pipeline_create_info.renderPass = mVulkanRenderer.GetRenderPass();
+            graphics_pipeline_create_info.subpass = 0;
+            graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
+            graphics_pipeline_create_info.basePipelineIndex = 0;
+
+            if ( VkResult result = vkCreateGraphicsPipelines ( mVulkanRenderer.GetDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_create_info, nullptr, &mVkPipeline ) )
+            {
+                std::ostringstream stream;
+                stream << "Pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+
+        if ( has_compute_stage )
+        {
+            VkComputePipelineCreateInfo compute_pipeline_create_info{};
+            compute_pipeline_create_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+            compute_pipeline_create_info.pNext = nullptr;
+            compute_pipeline_create_info.flags = 0;
+            compute_pipeline_create_info.stage = compute_shader_stage_create_info;
+            compute_pipeline_create_info.layout = mVkPipelineLayout;
+            compute_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
+            compute_pipeline_create_info.basePipelineIndex = 0;
+
+            if ( VkResult result = vkCreateComputePipelines ( mVulkanRenderer.GetDevice(), VK_NULL_HANDLE, 1, &compute_pipeline_create_info, nullptr, &mVkComputePipeline ) )
+            {
+                std::ostringstream stream;
+                stream << "Compute pipeline creation failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
         }
         for ( auto& i : shader_modules )
         {
@@ -486,6 +528,7 @@ namespace AeonGames
     VulkanPipeline::~VulkanPipeline()
     {
         vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkPipeline, nullptr );
+        vkDestroyPipeline ( mVulkanRenderer.GetDevice(), mVkComputePipeline, nullptr );
         vkDestroyPipelineLayout ( mVulkanRenderer.GetDevice(), mVkPipelineLayout, nullptr );
     }
 
@@ -497,6 +540,11 @@ namespace AeonGames
     const VkPipeline VulkanPipeline::GetVkPipeline() const
     {
         return mVkPipeline;
+    }
+
+    const VkPipeline VulkanPipeline::GetVkComputePipeline() const
+    {
+        return mVkComputePipeline;
     }
 
     const Pipeline* VulkanPipeline::GetPipeline() const
