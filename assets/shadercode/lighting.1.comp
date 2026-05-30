@@ -1,0 +1,203 @@
+// Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#version 450
+
+layout(local_size_x = 64) in;
+
+// Phase B: cull the light list against each cluster's AABB.
+// Per-window clustered-shading parameters (auto-bound by the renderer).
+#ifdef VULKAN
+layout(set = 0, binding = 0, std140)
+#else
+layout(binding = 0, std140)
+#endif
+uniform ClusterParams
+{
+    mat4  inverse_projection;
+    uvec4 grid;   // x,y,z cluster counts; w = total cluster count
+    vec4  screen; // viewport width, height, unused, unused
+};
+
+// Transform matrices. ModelMatrix is unused here (compute has no draw), but the
+// block layout must match what the renderer uploads, which differs per backend.
+#ifdef VULKAN
+layout(set = 1, binding = 0, std140)
+#else
+layout(binding = 1, std140)
+#endif
+uniform Matrices
+{
+#ifndef VULKAN
+    mat4 ModelMatrix;
+#endif
+    mat4 ProjectionMatrix;
+    mat4 ViewMatrix;
+};
+
+// Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
+struct GpuLight
+{
+    vec4  position_radius;
+    vec4  color_intensity;
+    vec4  direction_cosOuter;
+    uint  type;
+    float cos_inner;
+    uint  _pad0;
+    uint  _pad1;
+};
+#ifdef VULKAN
+layout(set = 2, binding = 0, std430)
+#else
+layout(binding = 3, std430)
+#endif
+readonly buffer Lights
+{
+    uint     LightCount;
+    uint     _LightsPad0;
+    uint     _LightsPad1;
+    uint     _LightsPad2;
+    GpuLight Lights_data[];
+};
+
+// Per-cluster view-space AABBs produced by the cluster-build stage (phase A).
+struct ClusterAABB
+{
+    vec4 min_point;
+    vec4 max_point;
+};
+#ifdef VULKAN
+layout(set = 3, binding = 0, std430)
+#else
+layout(binding = 0, std430)
+#endif
+readonly buffer ClusterAABBs
+{
+    ClusterAABB cluster_aabbs[];
+};
+
+// Per-cluster (offset, count) into LightIndexList.
+#ifdef VULKAN
+layout(set = 4, binding = 0, std430)
+#else
+layout(binding = 1, std430)
+#endif
+writeonly buffer LightGrid
+{
+    uvec2 light_grid[];
+};
+
+// Flat per-cluster light-index slots (fixed cap MAX_LIGHTS_PER_CLUSTER each).
+#ifdef VULKAN
+layout(set = 5, binding = 0, std430)
+#else
+layout(binding = 2, std430)
+#endif
+writeonly buffer LightIndexList
+{
+    uint light_index_list[];
+};
+
+const uint MAX_LIGHTS_PER_CLUSTER = 128u;
+
+// Squared-distance sphere vs AABB overlap test.
+bool sphere_aabb_intersect(vec3 center, float radius, vec3 aabb_min, vec3 aabb_max)
+{
+    vec3 closest = clamp(center, aabb_min, aabb_max);
+    vec3 d = closest - center;
+    return dot(d, d) <= radius * radius;
+}
+
+// Spot cone vs bounding-sphere test (Ericson / Bart Wronski). The cone tip is
+// at the light, opening along forward (the light's travel direction) with the
+// given half-angle and range. Returns true if the sphere may lie inside the
+// cone, so clusters off to the side or behind the spot are rejected.
+bool cone_sphere_intersect(vec3 tip, vec3 forward, float range,
+                           float cos_angle, float sin_angle,
+                           vec3 sphere_center, float sphere_radius)
+{
+    vec3  v      = sphere_center - tip;
+    float v_len2 = dot(v, v);
+    float v1_len = dot(v, forward);
+    float distance_closest = cos_angle * sqrt(max(v_len2 - v1_len * v1_len, 0.0))
+                             - v1_len * sin_angle;
+    bool angle_cull = distance_closest > sphere_radius;
+    bool front_cull = v1_len > sphere_radius + range;
+    bool back_cull  = v1_len < -sphere_radius;
+    return !(angle_cull || front_cull || back_cull);
+}
+
+void main()
+{
+    uint cluster_index = gl_GlobalInvocationID.x;
+    if (cluster_index >= grid.w)
+    {
+        return;
+    }
+
+    ClusterAABB aabb = cluster_aabbs[cluster_index];
+    vec3 aabb_min = aabb.min_point.xyz;
+    vec3 aabb_max = aabb.max_point.xyz;
+
+    uint offset = cluster_index * MAX_LIGHTS_PER_CLUSTER;
+    uint count = 0u;
+
+    uint light_count = LightCount;
+    for (uint i = 0u; i < light_count; ++i)
+    {
+        GpuLight L = Lights_data[i];
+        // Directional lights touch every fragment; they bypass clustering
+        // and are shaded separately (phase C5).
+        if (L.type == 2u)
+        {
+            continue;
+        }
+        // World -> view space. The cluster AABBs are built from the render
+        // projection, whose vertical axis is flipped on OpenGL; mirror the
+        // light into the same space so the overlap test stays consistent.
+        vec4 vp = ViewMatrix * vec4(L.position_radius.xyz, 1.0);
+#ifndef VULKAN
+        vp.z = -vp.z;
+#endif
+        float radius = max(L.position_radius.w, 1e-5);
+        if (sphere_aabb_intersect(vp.xyz, radius, aabb_min, aabb_max))
+        {
+            bool keep = true;
+            if (L.type == 1u)
+            {
+                // Spot: reject clusters outside the cone. The cone opens along
+                // the light's travel direction (-direction_cosOuter.xyz),
+                // mirrored into the same flipped view space as the AABBs.
+                vec4 vfwd = ViewMatrix * vec4(-L.direction_cosOuter.xyz, 0.0);
+#ifndef VULKAN
+                vfwd.z = -vfwd.z;
+#endif
+                vec3  forward = normalize(vfwd.xyz);
+                vec3  sphere_center = 0.5 * (aabb_min + aabb_max);
+                float sphere_radius = 0.5 * length(aabb_max - aabb_min);
+                float cos_outer = L.direction_cosOuter.w;
+                float sin_outer = sqrt(max(1.0 - cos_outer * cos_outer, 0.0));
+                keep = cone_sphere_intersect(vp.xyz, forward, radius,
+                                             cos_outer, sin_outer,
+                                             sphere_center, sphere_radius);
+            }
+            if (keep && count < MAX_LIGHTS_PER_CLUSTER)
+            {
+                light_index_list[offset + count] = i;
+                count++;
+            }
+        }
+    }
+
+    light_grid[cluster_index] = uvec2(offset, count);
+}
