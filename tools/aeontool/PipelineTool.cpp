@@ -337,7 +337,9 @@ namespace AeonGames
                         }
                     }
                     std::string text_string;
-                    std::ofstream text_file ( mOutputFile, std::ios::out );
+                    // Open in binary mode so newlines are written as LF rather
+                    // than being translated to CRLF by the Windows CRT.
+                    std::ofstream text_file ( mOutputFile, std::ios::out | std::ios::binary );
                     if ( !printer.PrintToString ( pipeline_msg, &text_string ) )
                     {
                         std::cerr << "Failed to serialize pipeline message to text format.";
@@ -403,7 +405,7 @@ namespace AeonGames
                 {
                     std::filesystem::path shader_path = base_path;
                     shader_path.replace_extension ( extension );
-                    std::ofstream shader_file ( shader_path, std::ios::out );
+                    std::ofstream shader_file ( shader_path, std::ios::out | std::ios::binary );
                     if ( !shader_file )
                     {
                         throw std::runtime_error ( "Failed to create shader file: " + shader_path.string() );
@@ -433,7 +435,7 @@ namespace AeonGames
                 {
                     shader_path.replace_extension ( ".comp" );
                 }
-                std::ofstream shader_file ( shader_path, std::ios::out );
+                std::ofstream shader_file ( shader_path, std::ios::out | std::ios::binary );
                 if ( !shader_file )
                 {
                     throw std::runtime_error ( "Failed to create shader file: " + shader_path.string() );
