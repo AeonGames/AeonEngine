@@ -116,7 +116,8 @@ namespace AeonGames
                         uint32_t aGroupCountX,
                         uint32_t aGroupCountY = 1,
                         uint32_t aGroupCountZ = 1,
-                        std::span<const StorageBufferBinding> aStorageBuffers = {} ) const final;
+                        std::span<const StorageBufferBinding> aStorageBuffers = {},
+                        uint32_t aComputeStageIndex = 0 ) const final;
         void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;

@@ -208,7 +208,8 @@ namespace AeonGames
                                 uint32_t aGroupCountX,
                                 uint32_t aGroupCountY = 1,
                                 uint32_t aGroupCountZ = 1,
-                                std::span<const StorageBufferBinding> aStorageBuffers = {} ) const = 0;
+                                std::span<const StorageBufferBinding> aStorageBuffers = {},
+                                uint32_t aComputeStageIndex = 0 ) const = 0;
         /** Inserts a memory barrier ensuring shader storage-buffer (SSBO)
          * writes from a preceding Dispatch are visible to subsequent shader
          * reads (compute or graphics).

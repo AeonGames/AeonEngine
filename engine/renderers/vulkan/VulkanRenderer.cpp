@@ -1004,14 +1004,15 @@ namespace AeonGames
                                     uint32_t aGroupCountX,
                                     uint32_t aGroupCountY,
                                     uint32_t aGroupCountZ,
-                                    std::span<const StorageBufferBinding> aStorageBuffers ) const
+                                    std::span<const StorageBufferBinding> aStorageBuffers,
+                                    uint32_t aComputeStageIndex ) const
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ, aStorageBuffers );
+        it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ, aStorageBuffers, aComputeStageIndex );
     }
 
     void VulkanRenderer::Barrier ( void* aWindowId ) const

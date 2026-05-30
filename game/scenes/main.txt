@@ -6,6 +6,9 @@ camera {
   near_plane: 0.1
   far_plane: 50
 }
+lighting_pipeline {
+  path: "shaders/lighting.txt"
+}
 node {
   name: "Light"
   local {

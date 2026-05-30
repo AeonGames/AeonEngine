@@ -283,6 +283,110 @@ namespace AeonGames
         renderer.reset();
         DestroyWindow ( hwnd );
     }
+
+    /** @brief Dispatch the combined shaders/lighting pipeline, which carries
+     *  both clustering compute stages (cluster-build then light-cull) as a
+     *  single ordered multi-compute Pipeline, and verify the per-cluster light
+     *  grid is populated.
+     *
+     *  This exercises the multi-stage path end to end: one Pipeline resource,
+     *  two compute stages selected by index, sharing a merged descriptor-set
+     *  layout. The fixture mirrors RunLightCullTest but loads a single pipeline
+     *  instead of two separate ones. */
+    static void RunCombinedLightingTest ( const char* aRendererName )
+    {
+        HWND hwnd = CreateHiddenRenderWindow();
+        ASSERT_NE ( hwnd, nullptr );
+        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        if ( renderer == nullptr )
+        {
+            DestroyWindow ( hwnd );
+            GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
+        }
+        renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
+
+        constexpr float near_plane = 1.0f;
+        constexpr float far_plane = 100.0f;
+        Matrix4x4 projection{};
+        projection.Perspective ( 90.0f, 1.0f, near_plane, far_plane );
+        renderer->SetProjectionMatrix ( hwnd, projection );
+        renderer->SetViewMatrix ( hwnd, Matrix4x4{} );
+
+        GpuLight light{};
+        light.position_radius = Vector4{ 0.0f, 10.0f, 0.0f, 5.0f };
+        light.color_intensity = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
+        light.type = static_cast<uint32_t> ( LightType::Point );
+        const GpuLight lights[] { light };
+        renderer->SetLights ( hwnd, lights );
+
+        constexpr uint32_t local_size = 64;
+        const uint32_t group_count = ( CLUSTER_COUNT + local_size - 1 ) / local_size;
+
+        // One pipeline resource carrying both compute stages in dispatch order.
+        Pipeline lighting;
+        lighting.LoadFromId ( "shaders/lighting.txt"_crc32 );
+        ASSERT_EQ ( lighting.GetComputeStageCount(), 2u )
+                << "combined lighting pipeline must carry two compute stages";
+        renderer->LoadPipeline ( lighting );
+
+        renderer->BeginFrame ( hwnd );
+        BufferAccessor aabb_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
+        BufferAccessor grid_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+        BufferAccessor index_buffer =
+            renderer->AllocateSingleFrameStorageMemory (
+                hwnd, CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+
+        // All three SSBOs are bound for every stage; reflection drops the
+        // blocks a given stage does not declare (matching DispatchClustering).
+        const StorageBufferBinding bindings[]
+        {
+            { "ClusterAABBs"_crc32, &aabb_buffer },
+            { "LightGrid"_crc32, &grid_buffer },
+            { "LightIndexList"_crc32, &index_buffer }
+        };
+
+        // Stage 0: build the cluster AABBs.
+        renderer->Dispatch ( hwnd, lighting, group_count, 1, 1, bindings, 0 );
+        renderer->Barrier ( hwnd );
+        // Stage 1: cull lights against those AABBs.
+        renderer->Dispatch ( hwnd, lighting, group_count, 1, 1, bindings, 1 );
+        renderer->Barrier ( hwnd );
+        renderer->BeginRenderPass ( hwnd );
+        renderer->EndRender ( hwnd );
+
+        renderer->BeginFrame ( hwnd );
+
+        const GpuLightGridCell* grid = static_cast<const GpuLightGridCell*> ( grid_buffer.Map() );
+        ASSERT_NE ( grid, nullptr );
+        uint32_t total_lights = 0;
+        uint32_t over_cap = 0;
+        uint32_t bad_offset = 0;
+        for ( uint32_t i = 0; i < CLUSTER_COUNT; ++i )
+        {
+            total_lights += grid[i].count;
+            if ( grid[i].count > MAX_LIGHTS_PER_CLUSTER )
+            {
+                ++over_cap;
+            }
+            if ( grid[i].offset != i * MAX_LIGHTS_PER_CLUSTER )
+            {
+                ++bad_offset;
+            }
+        }
+        grid_buffer.Unmap();
+
+        EXPECT_GT ( total_lights, 0u )
+                << "no cluster picked up the single point light";
+        EXPECT_EQ ( over_cap, 0u )
+                << "a cluster exceeded MAX_LIGHTS_PER_CLUSTER";
+        EXPECT_EQ ( bad_offset, 0u )
+                << "a cluster wrote an unexpected light-index offset";
+
+        renderer.reset();
+        DestroyWindow ( hwnd );
+    }
 #endif
 
     TEST ( ComputeTest, OpenGLNoopCompute )
@@ -336,6 +440,24 @@ namespace AeonGames
         RunLightCullTest ( "Vulkan" );
 #else
         GTEST_SKIP() << "Light cull test requires Win32 windowing.";
+#endif
+    }
+
+    TEST ( ComputeTest, OpenGLCombinedLighting )
+    {
+#ifdef _WIN32
+        RunCombinedLightingTest ( "OpenGL" );
+#else
+        GTEST_SKIP() << "Combined lighting test requires Win32 windowing.";
+#endif
+    }
+
+    TEST ( ComputeTest, VulkanCombinedLighting )
+    {
+#ifdef _WIN32
+        RunCombinedLightingTest ( "Vulkan" );
+#else
+        GTEST_SKIP() << "Combined lighting test requires Win32 windowing.";
 #endif
     }
 }
