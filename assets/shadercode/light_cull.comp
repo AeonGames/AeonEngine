@@ -107,6 +107,19 @@ writeonly buffer LightIndexList
     uint light_index_list[];
 };
 
+// Global allocator handing out compact ranges in light_index_list (Phase R1).
+// cluster_build resets it to zero each frame; each cluster atomically reserves
+// exactly the number of indices it keeps, so the flat list packs with no gaps.
+#ifdef VULKAN
+layout(set = 6, binding = 0, std430)
+#else
+layout(binding = 4, std430)
+#endif
+buffer LightIndexCounter
+{
+    uint light_index_counter;
+};
+
 const uint MAX_LIGHTS_PER_CLUSTER = 128u;
 
 // Squared-distance sphere vs AABB overlap test.
@@ -148,7 +161,9 @@ void main()
     vec3 aabb_min = aabb.min_point.xyz;
     vec3 aabb_max = aabb.max_point.xyz;
 
-    uint offset = cluster_index * MAX_LIGHTS_PER_CLUSTER;
+    // Gather the lights this cluster keeps into a local scratch list, capped at
+    // MAX_LIGHTS_PER_CLUSTER, then reserve a compact range in the shared list.
+    uint local_indices[MAX_LIGHTS_PER_CLUSTER];
     uint count = 0u;
 
     uint light_count = LightCount;
@@ -192,11 +207,29 @@ void main()
             }
             if (keep && count < MAX_LIGHTS_PER_CLUSTER)
             {
-                light_index_list[offset + count] = i;
+                local_indices[count] = i;
                 count++;
             }
         }
     }
 
-    light_grid[cluster_index] = uvec2(offset, count);
+    // Reserve a compact, contiguous range in the shared flat list. Clusters past
+    // the global budget drop their overflow (count clamped to the remaining
+    // space) so writes never run off the end of the buffer.
+    uint capacity = grid.w * 32u; // LIGHT_INDEX_LIST_CAPACITY = CLUSTER_COUNT * 32
+    uint base = atomicAdd(light_index_counter, count);
+    if (base >= capacity)
+    {
+        count = 0u;
+    }
+    else if (base + count > capacity)
+    {
+        count = capacity - base;
+    }
+    for (uint j = 0u; j < count; ++j)
+    {
+        light_index_list[base + j] = local_indices[j];
+    }
+
+    light_grid[cluster_index] = uvec2(base, count);
 }

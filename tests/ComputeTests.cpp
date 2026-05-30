@@ -233,9 +233,15 @@ namespace AeonGames
             renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
         BufferAccessor index_buffer =
             renderer->AllocateSingleFrameStorageMemory (
-                hwnd, CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+                hwnd, LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
+        BufferAccessor counter_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( uint32_t ) );
 
-        const StorageBufferBinding build_bindings[] { { "ClusterAABBs"_crc32, &aabb_buffer } };
+        const StorageBufferBinding build_bindings[]
+        {
+            { "ClusterAABBs"_crc32, &aabb_buffer },
+            { "LightIndexCounter"_crc32, &counter_buffer }
+        };
         renderer->Dispatch ( hwnd, cluster_build, group_count, 1, 1, build_bindings );
         renderer->Barrier ( hwnd );
 
@@ -243,7 +249,8 @@ namespace AeonGames
         {
             { "ClusterAABBs"_crc32, &aabb_buffer },
             { "LightGrid"_crc32, &grid_buffer },
-            { "LightIndexList"_crc32, &index_buffer }
+            { "LightIndexList"_crc32, &index_buffer },
+            { "LightIndexCounter"_crc32, &counter_buffer }
         };
         renderer->Dispatch ( hwnd, light_cull, group_count, 1, 1, cull_bindings );
         renderer->Barrier ( hwnd );
@@ -266,7 +273,10 @@ namespace AeonGames
             {
                 ++over_cap;
             }
-            if ( grid[i].offset != i * MAX_LIGHTS_PER_CLUSTER )
+            // Flat-index storage: each populated cell reserves a compact range
+            // that stays inside the shared list (offset + count <= capacity).
+            if ( grid[i].count > 0 &&
+                 grid[i].offset + grid[i].count > LIGHT_INDEX_LIST_CAPACITY )
             {
                 ++bad_offset;
             }
@@ -278,7 +288,14 @@ namespace AeonGames
         EXPECT_EQ ( over_cap, 0u )
                 << "a cluster exceeded MAX_LIGHTS_PER_CLUSTER";
         EXPECT_EQ ( bad_offset, 0u )
-                << "a cluster wrote an unexpected light-index offset";
+                << "a cluster reserved a range outside the flat light-index list";
+
+        // The global allocator must have handed out exactly total_lights slots.
+        const uint32_t* counter = static_cast<const uint32_t*> ( counter_buffer.Map() );
+        ASSERT_NE ( counter, nullptr );
+        EXPECT_EQ ( *counter, total_lights )
+                << "flat light-index allocator count disagrees with per-cluster sums";
+        counter_buffer.Unmap();
 
         renderer.reset();
         DestroyWindow ( hwnd );
@@ -336,15 +353,18 @@ namespace AeonGames
             renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
         BufferAccessor index_buffer =
             renderer->AllocateSingleFrameStorageMemory (
-                hwnd, CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+                hwnd, LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
+        BufferAccessor counter_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( uint32_t ) );
 
-        // All three SSBOs are bound for every stage; reflection drops the
+        // All four SSBOs are bound for every stage; reflection drops the
         // blocks a given stage does not declare (matching DispatchClustering).
         const StorageBufferBinding bindings[]
         {
             { "ClusterAABBs"_crc32, &aabb_buffer },
             { "LightGrid"_crc32, &grid_buffer },
-            { "LightIndexList"_crc32, &index_buffer }
+            { "LightIndexList"_crc32, &index_buffer },
+            { "LightIndexCounter"_crc32, &counter_buffer }
         };
 
         // Stage 0: build the cluster AABBs.
@@ -370,7 +390,10 @@ namespace AeonGames
             {
                 ++over_cap;
             }
-            if ( grid[i].offset != i * MAX_LIGHTS_PER_CLUSTER )
+            // Flat-index storage: each populated cell reserves a compact range
+            // that stays inside the shared list (offset + count <= capacity).
+            if ( grid[i].count > 0 &&
+                 grid[i].offset + grid[i].count > LIGHT_INDEX_LIST_CAPACITY )
             {
                 ++bad_offset;
             }
@@ -382,7 +405,14 @@ namespace AeonGames
         EXPECT_EQ ( over_cap, 0u )
                 << "a cluster exceeded MAX_LIGHTS_PER_CLUSTER";
         EXPECT_EQ ( bad_offset, 0u )
-                << "a cluster wrote an unexpected light-index offset";
+                << "a cluster reserved a range outside the flat light-index list";
+
+        // The global allocator must have handed out exactly total_lights slots.
+        const uint32_t* counter = static_cast<const uint32_t*> ( counter_buffer.Map() );
+        ASSERT_NE ( counter, nullptr );
+        EXPECT_EQ ( *counter, total_lights )
+                << "flat light-index allocator count disagrees with per-cluster sums";
+        counter_buffer.Unmap();
 
         renderer.reset();
         DestroyWindow ( hwnd );

@@ -318,7 +318,7 @@ namespace AeonGames
             // shader valid, empty light buffers so it reads zero lights per
             // cluster instead of sampling an unbound buffer.
             mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
-            mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+            mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
             if ( void * grid = mFrameLightGrid.Map() )
             {
                 std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
@@ -338,13 +338,17 @@ namespace AeonGames
         // stage does not declare.
         BufferAccessor cluster_aabbs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
         mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
-        mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+        mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
+        // Global atomic allocator for the flat LightIndexList (R1). cluster_build
+        // zeroes it from invocation 0, so no host-side initialisation is needed.
+        BufferAccessor light_index_counter = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
 
         const StorageBufferBinding bindings[]
         {
             { Mesh::BindingLocations::CLUSTER_AABBS, &cluster_aabbs },
             { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
             { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
+            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &light_index_counter },
         };
 
         // Dispatch every compute stage in declared order, inserting a barrier

@@ -38,9 +38,18 @@ namespace AeonGames
     /** @brief Maximum number of lights stored per cluster (fixed-cap version).
      *  light_cull.comp appends up to this many light indices into each cluster's
      *  slot of the LightIndexList SSBO; lights past the cap are dropped (the C7
-     *  heatmap surfaces overflow). The LightIndexList is sized
-     *  CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER uints. */
+     *  heatmap surfaces overflow). It remains the per-cluster gather cap in the
+     *  flat-index storage (Phase R1): each cluster gathers at most this many
+     *  indices locally before reserving a compact range in the shared list. */
     constexpr uint32_t MAX_LIGHTS_PER_CLUSTER = 128;
+
+    /** @brief Total capacity of the shared flat LightIndexList (Phase R1).
+     *  Instead of reserving a fixed MAX_LIGHTS_PER_CLUSTER slot per cluster
+     *  (CLUSTER_COUNT * 128 uints), light_cull packs the indices it keeps into a
+     *  single global list and hands out compact ranges with an atomic counter.
+     *  Budgeting 32 indices per cluster on average cuts the list to a quarter of
+     *  the fixed-cap size; clusters past the budget drop their overflow. */
+    constexpr uint32_t LIGHT_INDEX_LIST_CAPACITY = CLUSTER_COUNT * 32;
 
     /** @brief Per-cluster view-space axis-aligned bounding box (ClusterAABBs SSBO element).
      *
@@ -60,9 +69,10 @@ namespace AeonGames
      *
      *  One per cluster: @c offset is the start index into the LightIndexList
      *  SSBO and @c count is the number of lights written for that cluster. In
-     *  the fixed-cap version @c offset == cluster_index * MAX_LIGHTS_PER_CLUSTER;
-     *  storing it explicitly keeps the shading-side lookup identical to the
-     *  future flat-index storage (Phase R1). Matches a std430 @c uvec2. */
+     *  the flat-index storage (Phase R1) @c offset is a compact base handed out
+     *  by the global atomic allocator rather than @c cluster_index * cap, so the
+     *  shading-side lookup stays @c light_index_list[offset + j]. Matches a
+     *  std430 @c uvec2. */
     struct GpuLightGridCell
     {
         uint32_t offset { 0 };

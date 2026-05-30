@@ -49,6 +49,23 @@ writeonly buffer ClusterAABBs
     ClusterAABB cluster_aabbs[];
 };
 
+// Global allocator for the flat LightIndexList (Phase R1). It lives at set = 6
+// so it does not collide with any block declared by the light-cull stage of
+// this same pipeline; the renderer merges descriptor sets across all stages.
+// On OpenGL the SSBO binding (4) must match the light-cull stage exactly: the
+// renderer reflects one binding per block name across both stage programs.
+// cluster_build resets it to zero from invocation 0 so the light-cull stage
+// that runs next (after a barrier) starts every frame from a clean offset.
+#ifdef VULKAN
+layout(set = 6, binding = 0, std430)
+#else
+layout(binding = 4, std430)
+#endif
+buffer LightIndexCounter
+{
+    uint light_index_counter;
+};
+
 // Unproject an NDC point (z in [-1,1]) into view space and divide by w.
 vec3 unproject(vec3 ndc)
 {
@@ -59,6 +76,12 @@ vec3 unproject(vec3 ndc)
 void main()
 {
     uint cluster_index = gl_GlobalInvocationID.x;
+    // Reset the shared light-index allocator once per frame. The inter-stage
+    // barrier guarantees this store is visible before any light-cull atomicAdd.
+    if (cluster_index == 0u)
+    {
+        light_index_counter = 0u;
+    }
     if (cluster_index >= grid.w)
     {
         return;
