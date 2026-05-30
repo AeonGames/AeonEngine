@@ -556,7 +556,7 @@ namespace AeonGames
                     mRenderer->SetProjectionMatrix ( mWindowId, projection );
                 }
                 mRenderer->SetLights ( mWindowId, aScene.GetFrameLights() );
-                mRenderer->BeginRender ( mWindowId );
+                mRenderer->BeginRender ( mWindowId, aScene.GetLightingPipeline() );
                 aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                 {
                     AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();

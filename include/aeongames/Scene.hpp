@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/FrameLightContainer.hpp"
+#include "aeongames/ResourceId.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -34,6 +35,7 @@ namespace AeonGames
     class Node;
     class Renderer;
     class InputSystem;
+    class Pipeline;
     /*! \brief Scene class.
       Scene is the container for all elements in a game level,
       takes care of collision, rendering and updates to all elements therein.
@@ -204,6 +206,16 @@ namespace AeonGames
         /** @brief Read-only view of the lights submitted this frame. */
         DLL std::span<const GpuLight> GetFrameLights() const;
         /**@}*/
+
+        /** @name Per-frame lighting/clustering compute pipeline */
+        /**@{*/
+        /** @brief Set the compute pipeline dispatched once per frame (e.g. light
+         *  clustering) by resource id. Pass an empty id to disable. */
+        DLL void SetLightingPipeline ( const ResourceId& aResourceId );
+        /** @brief Get the per-frame compute pipeline, loading it from the cache
+         *  if set, or nullptr when none is configured. */
+        DLL const Pipeline* GetLightingPipeline() const;
+        /**@}*/
     private:
         friend class Node;
         Matrix4x4 mViewMatrix{};
@@ -227,6 +239,7 @@ namespace AeonGames
         Node* mCamera {};
         InputSystem* mInputSystem {};
         FrameLightContainer mFrameLights{};
+        ResourceId mLightingPipeline{};
     };
 }
 #endif

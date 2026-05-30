@@ -1,4 +1,4 @@
-// Copyright (C) 2018,2019,2021 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018,2019,2021,2026 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ syntax = "proto3";
 package AeonGames;
 
 import "transform.proto";
+import "reference.proto";
 
 message ComponentPropertyMsg{
     string name = 1;
@@ -56,7 +57,8 @@ message CameraMsg {
 }
 
 message SceneMsg{
-    string              name   = 1;
-    CameraMsg        camera = 2;
-    repeated NodeMsg node   = 3;
+    string              name              = 1;
+    CameraMsg           camera            = 2;
+    optional ReferenceMsg lighting_pipeline = 3;
+    repeated NodeMsg    node              = 4;
 }

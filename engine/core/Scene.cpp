@@ -18,7 +18,10 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/Renderer.hpp"
+#include "aeongames/Pipeline.hpp"
 #include "aeongames/ProtoBufHelpers.hpp"
+#include "aeongames/ProtoBufUtils.hpp"
+#include "aeongames/CRC.hpp"
 #include <cstring>
 #include <cassert>
 #include <algorithm>
@@ -127,6 +130,20 @@ namespace AeonGames
     std::span<const GpuLight> Scene::GetFrameLights() const
     {
         return mFrameLights.Get();
+    }
+
+    void Scene::SetLightingPipeline ( const ResourceId& aResourceId )
+    {
+        mLightingPipeline = aResourceId;
+    }
+
+    const Pipeline* Scene::GetLightingPipeline() const
+    {
+        if ( mLightingPipeline.GetPath() == 0 )
+        {
+            return nullptr;
+        }
+        return mLightingPipeline.Get<Pipeline>();
     }
 
     void Scene::SetFieldOfView ( float aFieldOfView )
@@ -403,6 +420,18 @@ namespace AeonGames
             scene_buffer.mutable_camera()->set_near_plane ( mNear );
             scene_buffer.mutable_camera()->set_far_plane ( mFar );
         }
+        if ( mLightingPipeline.GetPath() != 0 )
+        {
+            std::string path = mLightingPipeline.GetPathString();
+            if ( !path.empty() )
+            {
+                *scene_buffer.mutable_lighting_pipeline()->mutable_path() = path;
+            }
+            else
+            {
+                scene_buffer.mutable_lighting_pipeline()->set_id ( mLightingPipeline.GetPath() );
+            }
+        }
         std::unordered_map<const Node*, NodeMsg*> node_map;
         LoopTraverseDFSPreOrder (
             [&node_map] ( const Node & node )
@@ -483,6 +512,14 @@ namespace AeonGames
         mNear = ( mNear == 0.0f ) ? 1.0f : mNear;
         mFar = scene_buffer.camera().far_plane();
         mFar = ( mFar == 0.0f ) ? 1600.0f : mFar;
+        if ( scene_buffer.has_lighting_pipeline() )
+        {
+            mLightingPipeline = ResourceId{ "Pipeline"_crc32, GetReferenceMsgId ( scene_buffer.lighting_pipeline() ) };
+        }
+        else
+        {
+            mLightingPipeline = ResourceId{};
+        }
         if ( mCamera )
         {
             mViewMatrix = mCamera->GetGlobalTransform().GetInvertedMatrix();

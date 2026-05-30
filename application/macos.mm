@@ -471,7 +471,7 @@ namespace AeonGames
                             mGuiOverlay->BeginFrame ( ( __bridge void* ) mNSView, delta.count() );
                             mGuiOverlay->EndFrame ( ( __bridge void* ) mNSView );
                         }
-                        mRenderer->BeginRender ( ( __bridge void* ) mNSView );
+                        mRenderer->BeginRender ( ( __bridge void* ) mNSView, aScene.GetLightingPipeline() );
                         aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                         {
                             AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
