@@ -37,8 +37,12 @@ namespace AeonGames
         OpenGLPipeline& operator= ( const OpenGLPipeline& ) = delete;
         OpenGLPipeline& operator= ( OpenGLPipeline&& ) = delete;
         ~OpenGLPipeline();
-        /// @brief Get the linked shader program identifier.
+        /// @brief Get the linked graphics shader program identifier (0 if none).
         GLint GetProgramId() const;
+        /// @brief Get the number of compute shader programs (ordered stages).
+        uint32_t GetComputeStageCount() const;
+        /// @brief Get the linked compute program identifier for an ordered stage.
+        GLuint GetComputeProgramId ( uint32_t aIndex ) const;
         /// @brief Get the reflected vertex attribute descriptions.
         const std::vector<OpenGLVariable>& GetVertexAttributes () const;
         /// @brief Get a uniform block by its name hash, or nullptr if not found.
@@ -49,11 +53,12 @@ namespace AeonGames
         const GLuint GetSamplerLocation ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes();
-        void ReflectUniforms();
-        void ReflectStorageBlocks();
+        void ReflectUniforms ( GLuint aProgramId, bool aReflectSamplers );
+        void ReflectStorageBlocks ( GLuint aProgramId );
         const OpenGLRenderer& mOpenGLRenderer;
         const Pipeline* mPipeline{};
         GLint mProgramId{};
+        std::vector<GLuint> mComputeProgramIds{};
         std::vector<OpenGLVariable> mAttributes{};
         std::vector<OpenGLSamplerLocation> mSamplerLocations{};
         std::vector<OpenGLUniformBlock> mUniformBlocks{};

@@ -211,6 +211,10 @@ namespace AeonGames
         std::swap ( mDeviceContext, aOpenGLWindow.mDeviceContext );
         std::swap ( mProjectionMatrix, aOpenGLWindow.mProjectionMatrix );
         std::swap ( mViewMatrix, aOpenGLWindow.mViewMatrix );
+        std::swap ( mFrameLightGrid, aOpenGLWindow.mFrameLightGrid );
+        std::swap ( mFrameLightIndexList, aOpenGLWindow.mFrameLightIndexList );
+        std::swap ( mViewportWidth, aOpenGLWindow.mViewportWidth );
+        std::swap ( mViewportHeight, aOpenGLWindow.mViewportHeight );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -289,10 +293,43 @@ namespace AeonGames
         return mStorageMemoryPoolBuffer.Allocate ( aSize );
     }
 
-    void OpenGLWindow::BeginRender()
+    void OpenGLWindow::BeginRender ( const Pipeline* aComputePipeline )
     {
         BeginFrame();
+        if ( aComputePipeline != nullptr )
+        {
+            DispatchClustering ( *aComputePipeline );
+        }
         BeginRenderPass();
+    }
+
+    void OpenGLWindow::DispatchClustering ( const Pipeline& aComputePipeline )
+    {
+        // One workgroup per 64 clusters (clustering compute stages use local_size_x=64).
+        constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
+
+        // Allocate the per-frame clustering buffers once. They are bound for
+        // every compute stage; reflection silently drops the blocks a given
+        // stage does not declare.
+        BufferAccessor cluster_aabbs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
+        mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+        mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::CLUSTER_AABBS, &cluster_aabbs },
+            { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
+            { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
+        };
+
+        // Dispatch every compute stage in declared order, inserting a barrier
+        // between stages so each stage observes the previous stage's writes.
+        const uint32_t stage_count = aComputePipeline.GetComputeStageCount();
+        for ( uint32_t stage = 0; stage < stage_count; ++stage )
+        {
+            Dispatch ( aComputePipeline, group_count, 1, 1, bindings, stage );
+            Barrier();
+        }
     }
 
     void OpenGLWindow::BeginFrame()
@@ -315,9 +352,10 @@ namespace AeonGames
                                   uint32_t aGroupCountX,
                                   uint32_t aGroupCountY,
                                   uint32_t aGroupCountZ,
-                                  std::span<const StorageBufferBinding> aStorageBuffers ) const
+                                  std::span<const StorageBufferBinding> aStorageBuffers,
+                                  uint32_t aComputeStageIndex ) const
     {
-        mOpenGLRenderer.BindPipeline ( aPipeline );
+        mOpenGLRenderer.BindComputePipeline ( aPipeline, aComputeStageIndex );
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
@@ -411,8 +449,8 @@ namespace AeonGames
         // AABBs live in the same view space the fragments are shaded in.
         GpuClusterParams params{};
         params.inverse_projection = mProjectionMatrix.GetInvertedMatrix4x4();
-        // screen[] (viewport size) is left zero here; it is only consumed by the
-        // clustered lighting fragment shader (C3) and set from the framebuffer there.
+        params.screen[0] = static_cast<float> ( mViewportWidth );
+        params.screen[1] = static_cast<float> ( mViewportHeight );
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
@@ -470,6 +508,9 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             mFrameBuffer.Resize ( aWidth, aHeight );
             //mOverlay.Resize ( aWidth, aHeight );
+            mViewportWidth = aWidth;
+            mViewportHeight = aHeight;
+            UpdateClusterParams();
         }
     }
 }

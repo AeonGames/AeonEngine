@@ -144,8 +144,11 @@ namespace AeonGames
         virtual void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) = 0;
         /** Begins a render pass for the given window surface.
          * @param aWindowId Platform dependent window handle.
+         * @param aComputePipeline Optional pipeline whose ordered compute stages
+         *        are dispatched once per frame (e.g. light clustering) before the
+         *        render pass begins. When nullptr no per-frame compute is run.
          */
-        virtual void BeginRender ( void* aWindowId ) = 0;
+        virtual void BeginRender ( void* aWindowId, const Pipeline* aComputePipeline = nullptr ) = 0;
         /** Begins the frame for the given window surface: acquires resources and
          * starts command recording, but does not begin the render pass. Compute
          * Dispatch and Barrier calls must be recorded between BeginFrame and

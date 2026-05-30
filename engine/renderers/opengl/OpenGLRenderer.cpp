@@ -590,6 +590,19 @@ void main()
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
+    void OpenGLRenderer::BindComputePipeline ( const Pipeline& aPipeline, uint32_t aComputeStageIndex )
+    {
+        auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+        if ( it == mPipelineStore.end() )
+        {
+            LoadPipeline ( aPipeline );
+            it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+        };
+        mCurrentPipeline = &it->second;
+        glUseProgram ( mCurrentPipeline->GetComputeProgramId ( aComputeStageIndex ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLRenderer::SetMaterial ( const Material& aMaterial )
     {
         if ( mCurrentPipeline == nullptr )
@@ -851,14 +864,14 @@ void main()
         it->second.ResizeViewport ( aX, aY, aWidth, aHeight );
     }
 
-    void OpenGLRenderer::BeginRender ( void* aWindowId )
+    void OpenGLRenderer::BeginRender ( void* aWindowId, const Pipeline* aComputePipeline )
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.BeginRender();
+        it->second.BeginRender ( aComputePipeline );
     }
     void OpenGLRenderer::BeginFrame ( void* aWindowId )
     {

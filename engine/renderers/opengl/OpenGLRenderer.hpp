@@ -63,6 +63,9 @@ namespace AeonGames
         void BindMesh ( const Mesh& aMesh );
         /// @brief Bind a pipeline (shader program) for rendering.
         void BindPipeline ( const Pipeline& aPipeline );
+        /// @brief Bind a pipeline's compute program for the given ordered
+        ///        compute stage for subsequent dispatch.
+        void BindComputePipeline ( const Pipeline& aPipeline, uint32_t aComputeStageIndex );
         /// @brief Set the active material for rendering.
         void SetMaterial ( const Material& aMaterial );
 
@@ -93,7 +96,7 @@ namespace AeonGames
         void SetLights ( void* aWindowId, std::span<const GpuLight> aLights ) final;
         void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) final;
         void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
-        void BeginRender ( void* aWindowId ) final;
+        void BeginRender ( void* aWindowId, const Pipeline* aComputePipeline = nullptr ) final;
         void BeginFrame ( void* aWindowId ) final;
         void BeginRenderPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;

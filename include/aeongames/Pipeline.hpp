@@ -156,6 +156,18 @@ namespace AeonGames
          */
         DLL const std::string_view GetShaderCode ( ShaderType aType ) const;
 
+        /** Get the number of compute shader stages in this pipeline.
+         * Compute stages are ordered; index 0 is dispatched first.
+         * @return The number of compute shader stages.
+         */
+        DLL uint32_t GetComputeStageCount() const;
+
+        /** Get the shader source code for a compute stage by index.
+         * @param aIndex Zero-based index of the compute stage.
+         * @return String view of the compute shader source code.
+         */
+        DLL const std::string_view GetComputeShaderCode ( uint32_t aIndex ) const;
+
         /** Load pipeline configuration from a protobuf message.
          * @param aPipelineMsg The protobuf message to load from.
          */
@@ -169,6 +181,7 @@ namespace AeonGames
         std::vector<std::string> mSamplerDescriptors{};
 #endif
         std::array<std::string, ShaderType::COUNT> mShaderCode {};
+        std::vector<std::string> mComputeStages {};
         uint32_t mTopologyClass{ TOPOLOGY_CLASS_TRIANGLE };
     };
 }

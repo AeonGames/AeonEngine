@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -206,6 +206,16 @@ namespace AeonGames
         return mShaderCode[aType];
     }
 
+    uint32_t Pipeline::GetComputeStageCount() const
+    {
+        return static_cast<uint32_t> ( mComputeStages.size() );
+    }
+
+    const std::string_view Pipeline::GetComputeShaderCode ( uint32_t aIndex ) const
+    {
+        return mComputeStages.at ( aIndex );
+    }
+
     void Pipeline::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
     {
         LoadFromProtoBufObject<Pipeline, PipelineMsg, "AEONPLN"_mgk> ( *this, aBuffer, aBufferSize );
@@ -215,10 +225,15 @@ namespace AeonGames
     {
         mShaderCode[VERT] = aPipelineMsg.vert();
         mShaderCode[FRAG] = aPipelineMsg.frag();
-        mShaderCode[COMP] = aPipelineMsg.comp();
         mShaderCode[TESC] = aPipelineMsg.tesc();
         mShaderCode[TESE] = aPipelineMsg.tese();
         mShaderCode[GEOM] = aPipelineMsg.geom();
+        mComputeStages.clear();
+        mComputeStages.reserve ( aPipelineMsg.comp_size() );
+        for ( const std::string& comp : aPipelineMsg.comp() )
+        {
+            mComputeStages.emplace_back ( comp );
+        }
         if ( aPipelineMsg.has_topology_class() )
         {
             mTopologyClass = static_cast<uint32_t> ( aPipelineMsg.topology_class() );
@@ -236,5 +251,6 @@ namespace AeonGames
         {
             i.clear();
         }
+        mComputeStages.clear();
     }
 }

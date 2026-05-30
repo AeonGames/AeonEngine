@@ -943,14 +943,14 @@ namespace AeonGames
         it->second.ResizeViewport ( aX, aY, aWidth, aHeight );
     }
 
-    void VulkanRenderer::BeginRender ( void* aWindowId )
+    void VulkanRenderer::BeginRender ( void* aWindowId, const Pipeline* aComputePipeline )
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.BeginRender();
+        it->second.BeginRender ( aComputePipeline );
     }
     void VulkanRenderer::BeginFrame ( void* aWindowId )
     {

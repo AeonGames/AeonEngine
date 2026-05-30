@@ -138,7 +138,7 @@ namespace AeonGames
                                 throw std::runtime_error ( "Missing value for --" + std::string ( opt ) );
                             }
                             i++;
-                            mStageFiles[ext] = argv[i];
+                            mStageFiles.emplace_back ( ext, argv[i] );
                         }
                         else
                         {
@@ -185,22 +185,22 @@ namespace AeonGames
     }
 
     /// @brief Map from shader file extension to its mutable PipelineMsg accessor.
+    /// Compute shaders are handled separately because the `comp` field is repeated.
     const std::unordered_map<const char*, std::function<std::string * ( PipelineMsg* ) >> ShaderTypeToExtension
     {
         { ".vert", &PipelineMsg::mutable_vert },
         { ".frag", &PipelineMsg::mutable_frag },
-        { ".comp", &PipelineMsg::mutable_comp },
         { ".tesc", &PipelineMsg::mutable_tesc },
         { ".tese", &PipelineMsg::mutable_tese },
         { ".geom", &PipelineMsg::mutable_geom }
     };
 
     /// @brief Map from shader file extension to its const PipelineMsg getter.
+    /// Compute shaders are handled separately because the `comp` field is repeated.
     const std::unordered_map<const char*, std::function<const std::string& ( const PipelineMsg* ) >> ShaderTypeToGetter
     {
         { ".vert", &PipelineMsg::vert },
         { ".frag", &PipelineMsg::frag },
-        { ".comp", &PipelineMsg::comp },
         { ".tesc", &PipelineMsg::tesc },
         { ".tese", &PipelineMsg::tese },
         { ".geom", &PipelineMsg::geom }
@@ -229,12 +229,36 @@ namespace AeonGames
             PipelineMsg pipeline_msg;
             bool found_shader{false};
 
+            // Helper: read a shader source file in full.
+            auto read_shader = [] ( const std::filesystem::path & shader_path ) -> std::string
+            {
+                std::ifstream shader_file ( shader_path );
+                if ( !shader_file )
+                {
+                    throw std::runtime_error ( "Failed to open shader file: " + shader_path.string() );
+                }
+                return std::string ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
+            };
+
+            // Helper: was this stage extension provided as a per-stage override?
+            auto stage_overridden = [this] ( const std::string & ext ) -> bool
+            {
+                for ( const auto& [stage_ext, stage_path] : mStageFiles )
+                {
+                    if ( stage_ext == ext )
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
             // 1. Base-name auto-discovery (only when input path is an extensionless base).
             if ( !mInputFile.empty() && !input_path.has_extension() )
             {
                 for ( const auto& [extension, setter] : ShaderTypeToExtension )
                 {
-                    if ( mStageFiles.count ( extension ) )
+                    if ( stage_overridden ( extension ) )
                     {
                         // Will be filled in by per-stage overrides below.
                         continue;
@@ -242,22 +266,34 @@ namespace AeonGames
                     std::filesystem::path shader_path{std::filesystem::path{mInputFile} .replace_extension ( extension ) };
                     if ( std::filesystem::exists ( shader_path ) )
                     {
-                        std::ifstream shader_file ( shader_path );
-                        if ( !shader_file )
-                        {
-                            throw std::runtime_error ( "Failed to open shader file: " + shader_path.string() );
-                        }
-                        std::string shader_code ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
-                        shader_file.close();
-                        setter ( &pipeline_msg )->assign ( shader_code );
+                        setter ( &pipeline_msg )->assign ( read_shader ( shader_path ) );
+                        found_shader = true;
+                    }
+                }
+                // Compute stage auto-discovery (single base.comp); multiple compute
+                // stages must be provided explicitly via repeated --comp overrides.
+                if ( !stage_overridden ( ".comp" ) )
+                {
+                    std::filesystem::path shader_path{std::filesystem::path{mInputFile} .replace_extension ( ".comp" ) };
+                    if ( std::filesystem::exists ( shader_path ) )
+                    {
+                        pipeline_msg.add_comp ( read_shader ( shader_path ) );
                         found_shader = true;
                     }
                 }
             }
 
-            // 2. Per-stage overrides take precedence.
+            // 2. Per-stage overrides take precedence and preserve command-line order.
             for ( const auto& [extension, path] : mStageFiles )
             {
+                std::string shader_code = read_shader ( path );
+                if ( extension == ".comp" )
+                {
+                    // Compute stages are ordered; append in command-line order.
+                    pipeline_msg.add_comp ( std::move ( shader_code ) );
+                    found_shader = true;
+                    continue;
+                }
                 std::function<std::string* ( PipelineMsg* ) > setter;
                 for ( const auto& [known_ext, known_setter] : ShaderTypeToExtension )
                 {
@@ -271,14 +307,7 @@ namespace AeonGames
                 {
                     throw std::runtime_error ( "Unknown stage extension: " + extension );
                 }
-                std::ifstream shader_file ( path );
-                if ( !shader_file )
-                {
-                    throw std::runtime_error ( "Failed to open shader file: " + path );
-                }
-                std::string shader_code ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
-                shader_file.close();
-                setter ( &pipeline_msg )->assign ( shader_code );
+                setter ( &pipeline_msg )->assign ( std::move ( shader_code ) );
                 found_shader = true;
             }
 
@@ -384,6 +413,35 @@ namespace AeonGames
                     std::cout << "Extracted: " << shader_path.filename().string() << std::endl;
                     extracted_any = true;
                 }
+            }
+
+            // Extract compute stages (repeated). Multiple stages get an index
+            // suffix so they land on distinct files.
+            for ( int i = 0; i < pipeline_msg.comp_size(); ++i )
+            {
+                const std::string& shader_code = pipeline_msg.comp ( i );
+                if ( shader_code.empty() )
+                {
+                    continue;
+                }
+                std::filesystem::path shader_path = base_path;
+                if ( pipeline_msg.comp_size() > 1 )
+                {
+                    shader_path = base_path.string() + "." + std::to_string ( i ) + ".comp";
+                }
+                else
+                {
+                    shader_path.replace_extension ( ".comp" );
+                }
+                std::ofstream shader_file ( shader_path, std::ios::out );
+                if ( !shader_file )
+                {
+                    throw std::runtime_error ( "Failed to create shader file: " + shader_path.string() );
+                }
+                shader_file << shader_code;
+                shader_file.close();
+                std::cout << "Extracted: " << shader_path.filename().string() << std::endl;
+                extracted_any = true;
             }
 
             if ( !extracted_any )

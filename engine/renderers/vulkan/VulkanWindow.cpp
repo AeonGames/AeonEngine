@@ -40,6 +40,7 @@ limitations under the License.
 #include "aeongames/MemoryPool.hpp"
 #include "aeongames/BufferAccessor.hpp"
 #include "aeongames/CRC.hpp"
+#include "aeongames/ResourceId.hpp"
 
 #if defined(__APPLE__)
 // Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
@@ -101,6 +102,8 @@ namespace AeonGames
         std::swap ( mLightsDescriptorSet, aVulkanWindow.mLightsDescriptorSet );
         std::swap ( mClusterParamsDescriptorPool, aVulkanWindow.mClusterParamsDescriptorPool );
         std::swap ( mClusterParamsDescriptorSet, aVulkanWindow.mClusterParamsDescriptorSet );
+        std::swap ( mFrameLightGrid, aVulkanWindow.mFrameLightGrid );
+        std::swap ( mFrameLightIndexList, aVulkanWindow.mFrameLightIndexList );
         std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
         std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
         std::swap ( mVkAcquireSemaphore, aVulkanWindow.mVkAcquireSemaphore );
@@ -907,10 +910,43 @@ namespace AeonGames
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
     }
 
-    void VulkanWindow::BeginRender()
+    void VulkanWindow::BeginRender ( const Pipeline* aComputePipeline )
     {
         BeginFrame();
+        if ( aComputePipeline != nullptr )
+        {
+            DispatchClustering ( *aComputePipeline );
+        }
         BeginRenderPass();
+    }
+
+    void VulkanWindow::DispatchClustering ( const Pipeline& aComputePipeline )
+    {
+        // One workgroup per 64 clusters (clustering compute stages use local_size_x=64).
+        constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
+
+        // Allocate the per-frame clustering buffers once. They are bound for
+        // every compute stage; reflection silently drops the blocks a given
+        // stage does not declare.
+        BufferAccessor cluster_aabbs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
+        mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+        mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::CLUSTER_AABBS, &cluster_aabbs },
+            { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
+            { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
+        };
+
+        // Dispatch every compute stage in declared order, inserting a barrier
+        // between stages so each stage observes the previous stage's writes.
+        const uint32_t stage_count = aComputePipeline.GetComputeStageCount();
+        for ( uint32_t stage = 0; stage < stage_count; ++stage )
+        {
+            Dispatch ( aComputePipeline, group_count, 1, 1, bindings, stage );
+            Barrier();
+        }
     }
 
     void VulkanWindow::EndRender()
@@ -1065,10 +1101,11 @@ namespace AeonGames
                                   uint32_t aGroupCountX,
                                   uint32_t aGroupCountY,
                                   uint32_t aGroupCountZ,
-                                  std::span<const StorageBufferBinding> aStorageBuffers ) const
+                                  std::span<const StorageBufferBinding> aStorageBuffers,
+                                  uint32_t aComputeStageIndex ) const
     {
         const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
-        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetVkComputePipeline() );
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetVkComputePipeline ( aComputeStageIndex ) );
 
         if ( uint32_t matrix_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
         {

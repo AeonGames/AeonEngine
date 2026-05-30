@@ -28,6 +28,7 @@ namespace AeonGames
     {
         std::swap ( mPipeline, aOpenGLPipeline.mPipeline );
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
+        mComputeProgramIds.swap ( aOpenGLPipeline.mComputeProgramIds );
         mAttributes.swap ( aOpenGLPipeline.mAttributes );
         mUniformBlocks.swap ( aOpenGLPipeline.mUniformBlocks );
         mStorageBlocks.swap ( aOpenGLPipeline.mStorageBlocks );
@@ -47,118 +48,140 @@ namespace AeonGames
     OpenGLPipeline::OpenGLPipeline ( const OpenGLRenderer& aOpenGLRenderer, const Pipeline& aPipeline ) :
         mOpenGLRenderer{aOpenGLRenderer}, mPipeline{&aPipeline}
     {
-        mProgramId = glCreateProgram();
-        OPENGL_CHECK_ERROR_THROW;
-        GLint compile_status;
-        GLint link_status;
-
-        std::array<std::string_view, ShaderType::COUNT> shader_codes =
+        // Compiles a single shader stage source and attaches it to the given
+        // program, throwing on any compilation error.
+        auto compile_and_attach = [] ( GLuint program, GLenum gl_type, std::string_view source, ShaderType log_type )
         {
-            aPipeline.GetShaderCode ( VERT ),
-            aPipeline.GetShaderCode ( FRAG ),
-            aPipeline.GetShaderCode ( COMP ),
-            aPipeline.GetShaderCode ( TESC ),
-            aPipeline.GetShaderCode ( TESE ),
-            aPipeline.GetShaderCode ( GEOM )
-        };
-
-        std::array<uint32_t, ShaderType::COUNT> shader_ids =
-        {
-            shader_codes.at ( VERT ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( VERT ) ),
-            shader_codes.at ( FRAG ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( FRAG ) ),
-            shader_codes.at ( COMP ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( COMP ) ),
-            shader_codes.at ( TESC ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( TESC ) ),
-            shader_codes.at ( TESE ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( TESE ) ),
-            shader_codes.at ( GEOM ).empty() ? 0 : glCreateShader ( ShaderTypeToGLShaderType.at ( GEOM ) )
-        };
-        OPENGL_CHECK_ERROR_THROW;
-
-        //-------------------------
-        for ( size_t i = 0; i < shader_codes.size(); ++i )
-        {
-            if ( shader_ids.at ( i ) == 0 )
-            {
-                continue;
-            }
-            const auto* source_ptr = reinterpret_cast<const GLchar *> ( shader_codes.at ( i ).data() );
-            auto source_len = static_cast<GLint> ( shader_codes.at ( i ).length() );
-
-            glShaderSource (
-                shader_ids.at ( i ),
-                1,
-                &source_ptr,
-                &source_len );
+            GLuint shader_id = glCreateShader ( gl_type );
             OPENGL_CHECK_ERROR_THROW;
-
-            glCompileShader ( shader_ids.at ( i ) );
+            const auto* source_ptr = reinterpret_cast<const GLchar*> ( source.data() );
+            auto source_len = static_cast<GLint> ( source.length() );
+            glShaderSource ( shader_id, 1, &source_ptr, &source_len );
             OPENGL_CHECK_ERROR_THROW;
-            glGetShaderiv ( shader_ids.at ( i ), GL_COMPILE_STATUS, &compile_status );
+            glCompileShader ( shader_id );
+            OPENGL_CHECK_ERROR_THROW;
+            GLint compile_status{};
+            glGetShaderiv ( shader_id, GL_COMPILE_STATUS, &compile_status );
             OPENGL_CHECK_ERROR_THROW;
             if ( compile_status != GL_TRUE )
             {
-                GLint info_log_len;
-                glGetShaderiv ( shader_ids.at ( i ), GL_INFO_LOG_LENGTH, &info_log_len );
+                GLint info_log_len{};
+                glGetShaderiv ( shader_id, GL_INFO_LOG_LENGTH, &info_log_len );
                 OPENGL_CHECK_ERROR_THROW;
-                std::string log_string;
-                log_string.resize ( info_log_len );
                 if ( info_log_len > 1 )
                 {
-                    glGetShaderInfoLog ( shader_ids.at ( i ), info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+                    std::string log_string;
+                    log_string.resize ( info_log_len );
+                    glGetShaderInfoLog ( shader_id, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
                     OPENGL_CHECK_ERROR_THROW;
-                    std::cout << shader_codes.at ( i ) << std::endl;
+                    std::cout << source << std::endl;
                     std::cout << log_string << std::endl;
                     std::cout << LogLevel::Error << log_string << std::endl;
                     throw std::runtime_error ( log_string.c_str() );
                 }
-                log_string = ShaderTypeToString.at ( static_cast<ShaderType> ( i ) );
-                std::cout << LogLevel::Error << "Error Compiling Shaders." << std::endl;
+                std::cout << LogLevel::Error << "Error Compiling " << ShaderTypeToString.at ( log_type ) << " Shader." << std::endl;
                 throw std::runtime_error ( "Error Compiling Shaders." );
             }
-            glAttachShader ( mProgramId, shader_ids.at ( i ) );
+            glAttachShader ( program, shader_id );
             OPENGL_CHECK_ERROR_THROW;
-        }
-        //-------------------------
+            return shader_id;
+        };
 
-        glLinkProgram ( mProgramId );
-        OPENGL_CHECK_ERROR_THROW;
-        glGetProgramiv ( mProgramId, GL_LINK_STATUS, &link_status );
-        OPENGL_CHECK_ERROR_THROW;
-        if ( link_status != GL_TRUE )
+        // Links a program and logs any link error.
+        auto link_program = [] ( GLuint program )
         {
-            GLint info_log_len;
-            glGetProgramiv ( mProgramId, GL_INFO_LOG_LENGTH, &info_log_len );
+            glLinkProgram ( program );
             OPENGL_CHECK_ERROR_THROW;
-            std::string log_string;
-            log_string.resize ( info_log_len );
-            if ( info_log_len > 1 )
+            GLint link_status{};
+            glGetProgramiv ( program, GL_LINK_STATUS, &link_status );
+            OPENGL_CHECK_ERROR_THROW;
+            if ( link_status != GL_TRUE )
             {
-                glGetProgramInfoLog ( mProgramId, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
-                for ( const auto& shader_code : shader_codes )
+                GLint info_log_len{};
+                glGetProgramiv ( program, GL_INFO_LOG_LENGTH, &info_log_len );
+                OPENGL_CHECK_ERROR_THROW;
+                if ( info_log_len > 1 )
                 {
-                    if ( shader_code.empty() )
-                    {
-                        continue;
-                    }
-                    std::cout << shader_code << std::endl;
+                    std::string log_string;
+                    log_string.resize ( info_log_len );
+                    glGetProgramInfoLog ( program, info_log_len, nullptr, const_cast<GLchar*> ( log_string.data() ) );
+                    std::cout << log_string << std::endl;
+                    OPENGL_CHECK_ERROR_THROW;
                 }
-                std::cout << log_string << std::endl;
+            }
+        };
+
+        // Graphics stages are linked together into a single graphics program.
+        // Compute stages cannot share a GL program with graphics stages, so
+        // each compute stage is linked into its own dedicated program.
+        static constexpr std::array<ShaderType, 5> graphics_stages{ { VERT, FRAG, TESC, TESE, GEOM } };
+        std::vector<GLuint> graphics_shader_ids;
+        bool has_graphics_stage{false};
+        for ( ShaderType stage : graphics_stages )
+        {
+            if ( !aPipeline.GetShaderCode ( stage ).empty() )
+            {
+                has_graphics_stage = true;
+                break;
+            }
+        }
+
+        if ( has_graphics_stage )
+        {
+            mProgramId = glCreateProgram();
+            OPENGL_CHECK_ERROR_THROW;
+            for ( ShaderType stage : graphics_stages )
+            {
+                const std::string_view code{ aPipeline.GetShaderCode ( stage ) };
+                if ( code.empty() )
+                {
+                    continue;
+                }
+                graphics_shader_ids.push_back ( compile_and_attach ( mProgramId, ShaderTypeToGLShaderType.at ( stage ), code, stage ) );
+            }
+            link_program ( mProgramId );
+            for ( GLuint shader_id : graphics_shader_ids )
+            {
+                glDetachShader ( mProgramId, shader_id );
+                OPENGL_CHECK_ERROR_THROW;
+                glDeleteShader ( shader_id );
                 OPENGL_CHECK_ERROR_THROW;
             }
         }
-        for ( const auto& shader_id : shader_ids )
+
+        const uint32_t compute_stage_count = aPipeline.GetComputeStageCount();
+        mComputeProgramIds.reserve ( compute_stage_count );
+        for ( uint32_t c = 0; c < compute_stage_count; ++c )
         {
-            if ( shader_id == 0 )
-            {
-                continue;
-            }
-            glDetachShader ( mProgramId, shader_id );
+            GLuint program = glCreateProgram();
+            OPENGL_CHECK_ERROR_THROW;
+            GLuint shader_id = compile_and_attach ( program, GL_COMPUTE_SHADER, aPipeline.GetComputeShaderCode ( c ), COMP );
+            link_program ( program );
+            glDetachShader ( program, shader_id );
             OPENGL_CHECK_ERROR_THROW;
             glDeleteShader ( shader_id );
             OPENGL_CHECK_ERROR_THROW;
+            mComputeProgramIds.push_back ( program );
         }
-        ReflectAttributes();
-        ReflectUniforms();
-        ReflectStorageBlocks();
+
+        // Reflection. Attributes and samplers only come from the graphics
+        // program; uniform and storage blocks are merged across the graphics
+        // program and every compute program so the renderer can resolve a
+        // block by name regardless of which stage uses it.
+        mUniformBlocks.clear();
+        mStorageBlocks.clear();
+        mSamplerLocations.clear();
+        if ( mProgramId != 0 )
+        {
+            ReflectAttributes();
+            ReflectUniforms ( mProgramId, true );
+            ReflectStorageBlocks ( mProgramId );
+        }
+        for ( GLuint program : mComputeProgramIds )
+        {
+            ReflectUniforms ( program, false );
+            ReflectStorageBlocks ( program );
+        }
     }
 
     void OpenGLPipeline::ReflectAttributes()
@@ -198,13 +221,11 @@ namespace AeonGames
         }
     }
 
-    void OpenGLPipeline::ReflectUniforms()
+    void OpenGLPipeline::ReflectUniforms ( GLuint aProgramId, bool aReflectSamplers )
     {
-        mSamplerLocations.clear();
-        mUniformBlocks.clear();
         GLint block_uniform_count{};
         GLint uniform_block_count = 0;
-        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_block_count );
+        glGetProgramiv ( aProgramId, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_block_count );
         OPENGL_CHECK_ERROR_THROW;
 
         GLchar name[256];
@@ -214,16 +235,15 @@ namespace AeonGames
         GLenum type{};
         GLint binding_offset_or_location{};
 
-        mUniformBlocks.reserve ( uniform_block_count );
         for ( GLint i = 0; i < uniform_block_count; ++i )
         {
-            glGetActiveUniformBlockName ( mProgramId, i, sizeof ( name ), &length, name );
+            glGetActiveUniformBlockName ( aProgramId, i, sizeof ( name ), &length, name );
             OPENGL_CHECK_ERROR_THROW;
-            glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_DATA_SIZE, &size );
+            glGetActiveUniformBlockiv ( aProgramId, i, GL_UNIFORM_BLOCK_DATA_SIZE, &size );
             OPENGL_CHECK_ERROR_THROW;
-            glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_BINDING, &binding_offset_or_location );
+            glGetActiveUniformBlockiv ( aProgramId, i, GL_UNIFORM_BLOCK_BINDING, &binding_offset_or_location );
             OPENGL_CHECK_ERROR_THROW;
-            glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &block_uniform_count );
+            glGetActiveUniformBlockiv ( aProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &block_uniform_count );
             OPENGL_CHECK_ERROR_THROW;
 
             const uint32_t name_crc{crc32i ( name, length ) };
@@ -232,21 +252,27 @@ namespace AeonGames
             {
                 return a.name < b;
             } );
-            mUniformBlocks.insert ( it, { name_crc, size, binding_offset_or_location } );
+            // A block of the same name reflected from another program (graphics
+            // or a different compute stage) is already recorded; skip it.
+            if ( it != mUniformBlocks.end() && it->name == name_crc )
+            {
+                continue;
+            }
+            it = mUniformBlocks.insert ( it, { name_crc, size, binding_offset_or_location } );
 
             it->uniforms.reserve ( block_uniform_count );
             if ( block_uniform_count > 0 )
             {
                 indices.resize ( static_cast<size_t> ( block_uniform_count ) );
-                glGetActiveUniformBlockiv ( mProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices.data() );
+                glGetActiveUniformBlockiv ( aProgramId, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices.data() );
                 OPENGL_CHECK_ERROR_THROW;
                 for ( GLint j = 0; j < block_uniform_count; ++j )
                 {
                     GLuint uniform_index = static_cast<GLuint> ( indices[ static_cast<size_t> ( j ) ] );
-                    glGetActiveUniform ( mProgramId, uniform_index, sizeof ( name ), &length, &size, &type, name );
+                    glGetActiveUniform ( aProgramId, uniform_index, sizeof ( name ), &length, &size, &type, name );
                     OPENGL_CHECK_ERROR_THROW;
 
-                    glGetActiveUniformsiv ( mProgramId, 1, &uniform_index, GL_UNIFORM_OFFSET, &binding_offset_or_location );
+                    glGetActiveUniformsiv ( aProgramId, 1, &uniform_index, GL_UNIFORM_OFFSET, &binding_offset_or_location );
                     OPENGL_CHECK_ERROR_THROW;
 
                     uint32_t name_crc{crc32i ( name, length ) };
@@ -260,13 +286,18 @@ namespace AeonGames
             }
         }
 
+        if ( !aReflectSamplers )
+        {
+            return;
+        }
+
         GLint uniform_count;
         GLint sampler_count{0};
-        glGetProgramiv ( mProgramId, GL_ACTIVE_UNIFORMS, &uniform_count );
+        glGetProgramiv ( aProgramId, GL_ACTIVE_UNIFORMS, &uniform_count );
         OPENGL_CHECK_ERROR_THROW;
         for ( GLint i = 0; i < uniform_count; ++i )
         {
-            glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
+            glGetActiveUniform ( aProgramId, i, sizeof ( name ), &length, &size, &type, name );
             OPENGL_CHECK_ERROR_THROW;
             sampler_count += ( type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_3D ||
                                type == GL_SAMPLER_2D_ARRAY || type == GL_SAMPLER_2D_SHADOW || type == GL_SAMPLER_CUBE_SHADOW ) ? 1 : 0;
@@ -274,12 +305,12 @@ namespace AeonGames
         mSamplerLocations.reserve ( sampler_count );
         for ( GLint i = 0; i < uniform_count; ++i )
         {
-            glGetActiveUniform ( mProgramId, i, sizeof ( name ), &length, &size, &type, name );
+            glGetActiveUniform ( aProgramId, i, sizeof ( name ), &length, &size, &type, name );
             OPENGL_CHECK_ERROR_THROW;
             if ( type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_3D ||
                  type == GL_SAMPLER_2D_ARRAY || type == GL_SAMPLER_2D_SHADOW || type == GL_SAMPLER_CUBE_SHADOW )
             {
-                binding_offset_or_location =  glGetUniformLocation ( mProgramId, name );
+                binding_offset_or_location =  glGetUniformLocation ( aProgramId, name );
                 OPENGL_CHECK_ERROR_THROW;
                 uint32_t name_crc{crc32i ( name, length ) };
                 auto il = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_crc,
@@ -314,12 +345,32 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             mProgramId = 0;
         }
+        for ( GLuint& compute_program : mComputeProgramIds )
+        {
+            if ( glIsProgram ( compute_program ) )
+            {
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glDeleteProgram ( compute_program );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                compute_program = 0;
+            }
+        }
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     GLint OpenGLPipeline::GetProgramId() const
     {
         return mProgramId;
+    }
+
+    uint32_t OpenGLPipeline::GetComputeStageCount() const
+    {
+        return static_cast<uint32_t> ( mComputeProgramIds.size() );
+    }
+
+    GLuint OpenGLPipeline::GetComputeProgramId ( uint32_t aIndex ) const
+    {
+        return mComputeProgramIds.at ( aIndex );
     }
 
     const std::vector<OpenGLVariable>& OpenGLPipeline::GetVertexAttributes() const
@@ -355,17 +406,16 @@ namespace AeonGames
         return &*it;
     }
 
-    void OpenGLPipeline::ReflectStorageBlocks()
+    void OpenGLPipeline::ReflectStorageBlocks ( GLuint aProgramId )
     {
-        mStorageBlocks.clear();
         GLint storage_block_count{0};
-        glGetProgramInterfaceiv ( mProgramId, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &storage_block_count );
+        glGetProgramInterfaceiv ( aProgramId, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &storage_block_count );
         OPENGL_CHECK_ERROR_THROW;
         if ( storage_block_count <= 0 )
         {
             return;
         }
-        mStorageBlocks.reserve ( static_cast<size_t> ( storage_block_count ) );
+        mStorageBlocks.reserve ( mStorageBlocks.size() + static_cast<size_t> ( storage_block_count ) );
 
         const GLenum props[] = { GL_BUFFER_BINDING, GL_BUFFER_DATA_SIZE };
         GLint values[2] {};
@@ -373,11 +423,11 @@ namespace AeonGames
         GLsizei length{};
         for ( GLint i = 0; i < storage_block_count; ++i )
         {
-            glGetProgramResourceName ( mProgramId, GL_SHADER_STORAGE_BLOCK,
+            glGetProgramResourceName ( aProgramId, GL_SHADER_STORAGE_BLOCK,
                                        static_cast<GLuint> ( i ),
                                        sizeof ( name ), &length, name );
             OPENGL_CHECK_ERROR_THROW;
-            glGetProgramResourceiv ( mProgramId, GL_SHADER_STORAGE_BLOCK,
+            glGetProgramResourceiv ( aProgramId, GL_SHADER_STORAGE_BLOCK,
                                      static_cast<GLuint> ( i ),
                                      2, props, 2, nullptr, values );
             OPENGL_CHECK_ERROR_THROW;
@@ -389,6 +439,12 @@ namespace AeonGames
             {
                 return a.name < b;
             } );
+            // A block of the same name reflected from another program is
+            // already recorded; skip it.
+            if ( it != mStorageBlocks.end() && it->name == name_crc )
+            {
+                continue;
+            }
             mStorageBlocks.insert ( it, { name_crc, size, binding } );
         }
         for ( const auto& block : mStorageBlocks )

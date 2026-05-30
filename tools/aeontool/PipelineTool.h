@@ -21,6 +21,8 @@ limitations under the License.
 #include <unordered_map>
 #include <functional>
 #include <tuple>
+#include <vector>
+#include <utility>
 #include "Tool.h"
 
 namespace AeonGames
@@ -44,8 +46,10 @@ namespace AeonGames
         bool ProcessArgs ( int argc, char** argv );
         std::string mInputFile;
         std::string mOutputFile;
-        /// Per-stage shader source file overrides keyed by extension (".vert", ".frag", ...).
-        std::unordered_map<std::string, std::string> mStageFiles;
+        /// Per-stage shader source file overrides as (extension, path) pairs in
+        /// command-line order. Order matters for compute stages, which may appear
+        /// multiple times (".comp").
+        std::vector<std::pair<std::string, std::string>> mStageFiles;
     };
 }
 #endif

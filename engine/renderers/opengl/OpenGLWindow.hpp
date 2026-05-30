@@ -27,6 +27,8 @@ limitations under the License.
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuClusterParams.hpp"
 #include "aeongames/Renderer.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/BufferAccessor.hpp"
 #include "OpenGLFunctions.hpp"
 #include "OpenGLBuffer.hpp"
 #include "OpenGLFrameBuffer.hpp"
@@ -54,8 +56,9 @@ namespace AeonGames
         ~OpenGLWindow();
         /// @brief Get the native window identifier.
         void* GetWindowId() const;
-        /// @brief Begin rendering a new frame.
-        void BeginRender();
+        /// @brief BeginFrame, optionally dispatch the per-frame compute
+        ///        pipeline's ordered stages, then BeginRenderPass.
+        void BeginRender ( const Pipeline* aComputePipeline = nullptr );
         /// @brief Begin the frame: make the context current and bind the framebuffer.
         void BeginFrame();
         /// @brief Begin the render pass: clear buffers and enable depth testing.
@@ -78,12 +81,14 @@ namespace AeonGames
          *  @param aGroupCountY Number of workgroups in Y.
          *  @param aGroupCountZ Number of workgroups in Z.
          *  @param aStorageBuffers Storage buffers (SSBOs) to bind for this dispatch.
+         *  @param aComputeStageIndex Ordered compute stage to dispatch.
          */
         void Dispatch ( const Pipeline& aPipeline,
                         uint32_t aGroupCountX,
                         uint32_t aGroupCountY = 1,
                         uint32_t aGroupCountZ = 1,
-                        std::span<const StorageBufferBinding> aStorageBuffers = {} ) const;
+                        std::span<const StorageBufferBinding> aStorageBuffers = {},
+                        uint32_t aComputeStageIndex = 0 ) const;
         /// @brief Insert a memory barrier making SSBO writes visible to subsequent shader reads.
         void Barrier() const;
         /// @brief Allocate transient uniform memory for the current frame.
@@ -114,6 +119,10 @@ namespace AeonGames
         /// @brief Recompute and upload the ClusterParams UBO from the current
         ///        (render-space) projection matrix and viewport.
         void UpdateClusterParams();
+        /// @brief Dispatch every ordered compute stage of the given pipeline,
+        ///        binding the per-frame clustering SSBOs and inserting a barrier
+        ///        between stages. Recorded between BeginFrame and BeginRenderPass.
+        void DispatchClustering ( const Pipeline& aComputePipeline );
         OpenGLRenderer& mOpenGLRenderer;
 #if defined(_WIN32)
         HWND mWindowId {};
@@ -132,6 +141,10 @@ namespace AeonGames
         OpenGLBuffer mMatrices{};
         OpenGLBuffer mLights{};
         OpenGLBuffer mClusterParams{};
+        BufferAccessor mFrameLightGrid{};
+        BufferAccessor mFrameLightIndexList{};
+        uint32_t mViewportWidth{0};
+        uint32_t mViewportHeight{0};
     };
 }
 #endif
