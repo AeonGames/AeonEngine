@@ -917,6 +917,19 @@ namespace AeonGames
         {
             DispatchClustering ( *aComputePipeline );
         }
+        else
+        {
+            // No clustering this frame: still hand the clustered fragment
+            // shader valid, empty light buffers so it reads zero lights per
+            // cluster instead of sampling an unbound buffer.
+            mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+            mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+            if ( void * grid = mFrameLightGrid.Map() )
+            {
+                std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+                mFrameLightGrid.Unmap();
+            }
+        }
         BeginRenderPass();
     }
 
@@ -1047,6 +1060,34 @@ namespace AeonGames
                                       1,
                                       &mClusterParamsDescriptorSet, 0, nullptr );
         }
+
+        // Clustered Forward+ light lists, produced by the lighting compute
+        // pipeline in BeginRender. Bound per draw for pipelines that declare
+        // them; mirrors the storage-buffer binding done in Dispatch().
+        auto bind_cluster_storage = [&] ( uint32_t aBinding, const BufferAccessor & aAccessor )
+        {
+            if ( aAccessor.GetMemoryPoolBuffer() == nullptr )
+            {
+                return;
+            }
+            uint32_t storage_set_index = pipeline->GetDescriptorSetIndex ( aBinding );
+            if ( storage_set_index == std::numeric_limits<uint32_t>::max() )
+            {
+                return;
+            }
+            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aAccessor.GetMemoryPoolBuffer() );
+            size_t offset = aAccessor.GetOffset();
+            uint32_t dynamic_offset = 0;
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      storage_set_index,
+                                      1,
+                                      &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+        };
+        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
 
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
         {

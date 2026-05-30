@@ -32,6 +32,7 @@ limitations under the License.
 #include <algorithm>
 #include <array>
 #include <utility>
+#include <cstring>
 
 namespace AeonGames
 {
@@ -257,6 +258,14 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        // Clustered Forward+ light lists, produced by the lighting compute
+        // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer
+        // silently skips pipelines that don't declare these blocks.
+        if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
+        {
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
+        }
 
         if ( aMaterial )
         {
@@ -299,6 +308,19 @@ namespace AeonGames
         if ( aComputePipeline != nullptr )
         {
             DispatchClustering ( *aComputePipeline );
+        }
+        else
+        {
+            // No clustering this frame: still hand the clustered fragment
+            // shader valid, empty light buffers so it reads zero lights per
+            // cluster instead of sampling an unbound buffer.
+            mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+            mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * MAX_LIGHTS_PER_CLUSTER * sizeof ( uint32_t ) );
+            if ( void * grid = mFrameLightGrid.Map() )
+            {
+                std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+                mFrameLightGrid.Unmap();
+            }
         }
         BeginRenderPass();
     }
