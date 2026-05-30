@@ -16,9 +16,9 @@ limitations under the License.
 #ifndef AEONGAMES_FRAMELIGHTCONTAINER_HPP
 #define AEONGAMES_FRAMELIGHTCONTAINER_HPP
 
-#include <array>
 #include <cstddef>
 #include <span>
+#include <vector>
 #include "aeongames/GpuLight.hpp"
 
 namespace AeonGames
@@ -26,18 +26,17 @@ namespace AeonGames
     /** @brief Per-scene CPU-side container for lights submitted by
      *  light components during a frame.
      *
-     *  Backed by an inline @c std::array sized to @ref MAX_LIGHTS_PER_FRAME
-     *  plus a running count, so no heap allocations ever happen and the
-     *  payload lives in-place inside whichever subsystem composes one
-     *  (Scene today, future deferred-pass packers tomorrow).
+     *  Backed by a @c std::vector capped at @ref MAX_LIGHTS_PER_FRAME. The
+     *  cap is large (thousands of lights) since Clustered Forward+ culls the
+     *  set per cluster, so the backing store is heap-allocated rather than an
+     *  inline array to keep whichever subsystem composes one (Scene today,
+     *  future deferred-pass packers tomorrow) small. Capacity is reserved
+     *  lazily and reused across frames, so steady-state frames allocate
+     *  nothing.
      *
      *  @note Not thread-safe. Safe today because Scene::Update runs a
      *  sequential DFS traversal, so all Add() calls happen on one thread
-     *  and Get()/Reset() are only used outside the update phase. If node
-     *  updates ever get parallelized, switch @c mCount to
-     *  @c std::atomic<std::size_t> and have Add() reserve a slot with
-     *  @c fetch_add(1, std::memory_order_relaxed) — writes to disjoint
-     *  array elements are race-free, so no mutex is needed. */
+     *  and Get()/Reset() are only used outside the update phase. */
     class FrameLightContainer
     {
     public:
@@ -45,26 +44,25 @@ namespace AeonGames
          *  @ref MAX_LIGHTS_PER_FRAME entries are queued. */
         void Add ( const GpuLight& aLight )
         {
-            if ( mCount >= MAX_LIGHTS_PER_FRAME )
+            if ( mLights.size() >= MAX_LIGHTS_PER_FRAME )
             {
                 return;
             }
-            mLights[mCount++] = aLight;
+            mLights.emplace_back ( aLight );
         }
         /** @brief Read-only view of the lights queued this frame. */
         std::span<const GpuLight> Get() const
         {
-            return { mLights.data(), mCount };
+            return { mLights.data(), mLights.size() };
         }
-        /** @brief Drop all queued lights without touching the backing
-         *  storage (the array stays in-place). */
+        /** @brief Drop all queued lights, keeping the backing capacity so
+         *  subsequent frames reuse it without reallocating. */
         void Reset()
         {
-            mCount = 0;
+            mLights.clear();
         }
     private:
-        std::size_t mCount{};
-        std::array<GpuLight, MAX_LIGHTS_PER_FRAME> mLights{};
+        std::vector<GpuLight> mLights{};
     };
 }
 #endif

@@ -16,15 +16,17 @@ limitations under the License.
 #ifndef AEONGAMES_GPULIGHT_HPP
 #define AEONGAMES_GPULIGHT_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include "aeongames/Vector4.hpp"
 
 namespace AeonGames
 {
     /** @brief Maximum number of lights uploaded to the GPU per frame.
-     *  Sized to keep the per-frame Lights uniform buffer small and to
-     *  bound the per-cluster index list once Clustered Forward+ is in. */
-    constexpr uint32_t MAX_LIGHTS_PER_FRAME = 64;
+     *  Backed by a shader storage buffer (SSBO) so the cap can be large:
+     *  Clustered Forward+ culls this set down per cluster, so the shading
+     *  cost stays bounded by @ref MAX_LIGHTS_PER_CLUSTER regardless. */
+    constexpr uint32_t MAX_LIGHTS_PER_FRAME = 4096;
 
     /** @brief Light type tag for the shared GPU representation. */
     enum class LightType : uint32_t
@@ -63,28 +65,34 @@ namespace AeonGames
     static_assert ( sizeof ( GpuLight ) == 64,
                     "GpuLight must stay 16-byte aligned at 64 bytes for std140/std430." );
 
-    /** @brief CPU-side mirror of the @c Lights uniform block layout.
+    /** @brief CPU-side mirror of the @c Lights storage block header.
      *
-     *  Matches the std140 layout expected by shaders:
+     *  The per-frame Lights data is a shader storage buffer (SSBO) laid out
+     *  as a 16-byte header followed by a tightly packed @ref GpuLight array:
      *  @code
-     *  layout(std140) uniform Lights {
-     *      uint     count;
+     *  layout(std430) readonly buffer Lights {
+     *      uint     LightCount;
      *      // 3 x uint padding so the array starts on a 16-byte boundary.
-     *      GpuLight lights[MAX_LIGHTS_PER_FRAME];
+     *      GpuLight Lights_data[];
      *  };
      *  @endcode
      *
-     *  Total size is 16 B header + 64 B * MAX_LIGHTS_PER_FRAME records, e.g.
-     *  4112 B at MAX_LIGHTS_PER_FRAME == 64. This fits comfortably in the
-     *  uniform-block size guaranteed by GL 4.5+ (16 KB) and Vulkan
-     *  (maxUniformBufferRange, typically 16 KB or 64 KB). */
-    struct GpuLightsBlock
+     *  Only this header is ever materialized CPU-side; the light records are
+     *  streamed straight from the submitting container, so nothing allocates
+     *  the full @ref GpuLightsBufferSize on the stack. */
+    struct GpuLightsHeader
     {
-        uint32_t count            { 0 };
-        uint32_t _pad[3]          { 0, 0, 0 };
-        GpuLight lights[MAX_LIGHTS_PER_FRAME] {};
+        uint32_t count   { 0 };
+        uint32_t _pad[3] { 0, 0, 0 };
     };
-    static_assert ( sizeof ( GpuLightsBlock ) == 16 + 64 * MAX_LIGHTS_PER_FRAME,
-                    "GpuLightsBlock layout must match the shader-side std140 Lights block." );
+    static_assert ( sizeof ( GpuLightsHeader ) == 16,
+                    "GpuLightsHeader must stay 16 bytes to match the std430 Lights block header." );
+
+    /** @brief Total byte size of the per-frame Lights storage buffer:
+     *  16-byte header + @ref MAX_LIGHTS_PER_FRAME tightly packed records.
+     *  At 4096 lights this is ~256 KB, well within the storage-buffer range
+     *  guaranteed by GL 4.5+ and Vulkan (maxStorageBufferRange). */
+    constexpr std::size_t GpuLightsBufferSize =
+        sizeof ( GpuLightsHeader ) + sizeof ( GpuLight ) * MAX_LIGHTS_PER_FRAME;
 }
 #endif

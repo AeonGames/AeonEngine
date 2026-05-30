@@ -36,16 +36,16 @@ struct GpuLight {
       uint  _pad1;
 };
 #ifdef VULKAN
-layout(set = 4, binding = 0, std140)
+layout(set = 4, binding = 0, std430)
 #else
-layout(binding = 3, std140)
+layout(binding = 2, std430)
 #endif
-uniform Lights{
+readonly buffer Lights{
       uint     LightCount;
       uint     _LightsPad0;
       uint     _LightsPad1;
       uint     _LightsPad2;
-      GpuLight Lights_data[64];
+      GpuLight Lights_data[];
 };
 
 // Clustered-shading parameters, shared with the lighting compute pipeline.
@@ -237,7 +237,7 @@ void main()
       for ( uint n = 0u; n < count; ++n )
       {
             uint li = light_index_list[offset + n];
-            if ( li >= LightCount || li >= 64u )
+            if ( li >= LightCount )
             {
                   continue;
             }
@@ -246,7 +246,7 @@ void main()
 
       // Directional lights bypass clustering (they touch every fragment), so
       // the cull stage skips them; shade them here for every fragment.
-      for ( uint i = 0u; i < LightCount && i < 64u; ++i )
+      for ( uint i = 0u; i < LightCount; ++i )
       {
             if ( Lights_data[i].type == 2u )
             {

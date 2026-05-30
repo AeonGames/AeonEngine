@@ -683,15 +683,14 @@ void main()
         {
             return;
         }
-        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::LIGHTS ) };
-        if ( uniform_block == nullptr )
+        const OpenGLUniformBlock* storage_block{ mCurrentPipeline->GetStorageBlock ( Mesh::LIGHTS ) };
+        if ( storage_block == nullptr )
         {
             // Pipeline doesn't sample lights (e.g. unlit shader); silently skip,
             // same convention as SetSkeleton.
             return;
         }
-        assert ( static_cast<const size_t> ( uniform_block->size ) <= aLightsBuffer.GetSize() );
-        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aLightsBuffer.GetBufferId(), 0, aLightsBuffer.GetSize() );
+        glBindBufferRange ( GL_SHADER_STORAGE_BUFFER, storage_block->binding, aLightsBuffer.GetBufferId(), 0, aLightsBuffer.GetSize() );
         OPENGL_CHECK_ERROR_THROW;
     }
 

@@ -40,11 +40,13 @@ namespace AeonGames
     void OpenGLWindow::Initialize()
     {
         mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
-        // Per-frame Lights UBO: count + padding + MAX_LIGHTS_PER_FRAME records.
-        // Zero-initialized so an empty scene draws unlit (count == 0) safely.
+        // Per-frame Lights SSBO: 16-byte header (count) + MAX_LIGHTS_PER_FRAME
+        // records. A storage buffer, not a UBO, because the light cap is large.
+        // The header is zeroed so an empty scene draws unlit (count == 0) safely.
         {
-            GpuLightsBlock empty{};
-            mLights.Initialize ( sizeof ( GpuLightsBlock ), GL_DYNAMIC_DRAW, &empty );
+            const GpuLightsHeader empty_header{};
+            mLights.Initialize ( static_cast<GLsizei> ( GpuLightsBufferSize ), GL_DYNAMIC_DRAW, nullptr );
+            mLights.WriteMemory ( 0, sizeof ( empty_header ), &empty_header );
         }
         // ClusterParams UBO: clustered-shading grid + inverse projection.
         // Zero/identity-initialized; populated on the first SetProjectionMatrix.
@@ -493,21 +495,21 @@ namespace AeonGames
 
     void OpenGLWindow::SetLights ( std::span<const GpuLight> aLights )
     {
-        // Build the std140 Lights block on the stack and upload in one shot.
-        // Lights past MAX_LIGHTS_PER_FRAME are silently truncated.
-        GpuLightsBlock block{};
+        // Stream the light records into the SSBO: write the 16-byte header
+        // (count) then the tightly packed array. Lights past
+        // MAX_LIGHTS_PER_FRAME are silently truncated.
         const std::size_t capped = std::min<std::size_t> ( aLights.size(), MAX_LIGHTS_PER_FRAME );
-        block.count = static_cast<uint32_t> ( capped );
-        for ( std::size_t i = 0; i < capped; ++i )
-        {
-            block.lights[i] = aLights[i];
-        }
+        const GpuLightsHeader header{ static_cast<uint32_t> ( capped ), { 0, 0, 0 } };
 #if defined(_WIN32)
         mOpenGLRenderer.MakeCurrent ( mDeviceContext );
 #elif defined(__unix__)
         mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
-        mLights.WriteMemory ( 0, sizeof ( GpuLightsBlock ), &block );
+        mLights.WriteMemory ( 0, sizeof ( header ), &header );
+        if ( capped > 0 )
+        {
+            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), capped * sizeof ( GpuLight ), aLights.data() );
+        }
     }
 
     const Matrix4x4 & OpenGLWindow::GetProjectionMatrix() const

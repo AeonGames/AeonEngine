@@ -604,25 +604,29 @@ namespace AeonGames
 
     void VulkanWindow::InitializeLights()
     {
-        GpuLightsBlock empty{};
+        // Per-frame Lights is a persistent storage buffer (SSBO): the light cap
+        // is large (MAX_LIGHTS_PER_FRAME) so it no longer fits a uniform buffer.
         mLights.Initialize (
-            sizeof ( GpuLightsBlock ),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            GpuLightsBufferSize,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &empty );
+            nullptr );
+        // Zero the header so a frame that draws before SetLights reads no lights.
+        const GpuLightsHeader empty_header{};
+        mLights.WriteMemory ( 0, sizeof ( empty_header ), &empty_header );
 
         VkDescriptorSetLayoutCreateInfo lights_descriptor_set_layout_create_info{};
         lights_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         lights_descriptor_set_layout_create_info.bindingCount = 1;
         VkDescriptorSetLayoutBinding lights_descriptor_set_layout_binding{};
         lights_descriptor_set_layout_binding.binding = 0;
-        lights_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        lights_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         lights_descriptor_set_layout_binding.descriptorCount = 1;
         lights_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
         lights_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         lights_descriptor_set_layout_create_info.pBindings = &lights_descriptor_set_layout_binding;
 
-        mLightsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mLightsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1}} );
         mLightsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mLightsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( lights_descriptor_set_layout_create_info ) );
         VkDescriptorBufferInfo descriptor_buffer_info{};
         descriptor_buffer_info.buffer = mLights.GetBuffer();
@@ -634,7 +638,7 @@ namespace AeonGames
         write_descriptor_set.dstSet = mLightsDescriptorSet;
         write_descriptor_set.dstBinding = 0;
         write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         write_descriptor_set.descriptorCount = 1;
         write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
         write_descriptor_set.pImageInfo = nullptr;
@@ -805,14 +809,16 @@ namespace AeonGames
 
     void VulkanWindow::SetLights ( std::span<const GpuLight> aLights )
     {
-        GpuLightsBlock block{};
+        // Stream the light records straight into the SSBO: write the 16-byte
+        // header (count) then the tightly packed array, so nothing materializes
+        // the full ~256 KB buffer on the stack.
         const size_t count = std::min ( aLights.size(), static_cast<size_t> ( MAX_LIGHTS_PER_FRAME ) );
-        block.count = static_cast<uint32_t> ( count );
-        for ( size_t i = 0; i < count; ++i )
+        const GpuLightsHeader header{ static_cast<uint32_t> ( count ), { 0, 0, 0 } };
+        mLights.WriteMemory ( 0, sizeof ( header ), &header );
+        if ( count > 0 )
         {
-            block.lights[i] = aLights[i];
+            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), count * sizeof ( GpuLight ), aLights.data() );
         }
-        mLights.WriteMemory ( 0, sizeof ( GpuLightsBlock ), &block );
     }
 
     const Matrix4x4 & VulkanWindow::GetProjectionMatrix() const
