@@ -33,6 +33,7 @@ limitations under the License.
 #include <array>
 #include <utility>
 #include <cstring>
+#include <cstdlib>
 
 namespace AeonGames
 {
@@ -473,6 +474,13 @@ namespace AeonGames
         params.inverse_projection = mProjectionMatrix.GetInvertedMatrix4x4();
         params.screen[0] = static_cast<float> ( mViewportWidth );
         params.screen[1] = static_cast<float> ( mViewportHeight );
+        // Debug cluster heatmap toggle, read once from the environment.
+        static const bool heatmap = []
+        {
+            const char* value = std::getenv ( "AEON_CLUSTER_HEATMAP" );
+            return value != nullptr && value[0] != '\0' && value[0] != '0';
+        } ();
+        params.screen[2] = heatmap ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 

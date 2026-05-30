@@ -168,8 +168,46 @@ void accumulate_light ( GpuLight L, vec3 N, vec3 V,
       }
 }
 
+// Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
+// A cluster reaching this count has overflowed and dropped lights.
+const uint HEATMAP_OVERFLOW = 128u;
+// Light count mapped to the top of the heat ramp; small so typical scenes show
+// useful gradients rather than a flat blue.
+const float HEATMAP_REFERENCE = 16.0;
+
+// Map t in [0,1] to a blue -> cyan -> green -> yellow -> red heat ramp.
+vec3 heat_color ( float t )
+{
+      t = clamp ( t, 0.0, 1.0 );
+      float r = smoothstep ( 0.5, 0.9, t );
+      float g = ( t < 0.5 ) ? smoothstep ( 0.0, 0.5, t ) : smoothstep ( 1.0, 0.6, t );
+      float b = smoothstep ( 0.5, 0.1, t );
+      return clamp ( vec3 ( r, g, b ), 0.0, 1.0 );
+}
+
 void main()
 {
+      // Debug: cluster light-count heatmap. cluster_screen.z is the runtime
+      // toggle (set from the AEON_CLUSTER_HEATMAP environment variable). Black =
+      // empty cluster, ramp blue->red by light count, white = overflow.
+      if ( cluster_screen.z > 0.5 )
+      {
+            uint heat_cluster = fragment_cluster_index();
+            uint heat_count = light_grid[heat_cluster].y;
+            if ( heat_count == 0u )
+            {
+                  FragColor = vec4 ( 0.0, 0.0, 0.0, 1.0 );
+            }
+            else if ( heat_count >= HEATMAP_OVERFLOW )
+            {
+                  FragColor = vec4 ( 1.0, 1.0, 1.0, 1.0 );
+            }
+            else
+            {
+                  FragColor = vec4 ( heat_color ( float ( heat_count ) / HEATMAP_REFERENCE ), 1.0 );
+            }
+            return;
+      }
       if ( !gl_FrontFacing )
       {
             FragColor = vec4 ( 1.0, 0.5, 0.5, 1.0 );

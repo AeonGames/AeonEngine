@@ -25,6 +25,7 @@ limitations under the License.
 #include <array>
 #include <utility>
 #include <cstring>
+#include <cstdlib>
 #include <cassert>
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Material.hpp"
@@ -699,6 +700,13 @@ namespace AeonGames
         params.inverse_projection = Matrix4x4 ( mProjectionMatrix ).GetInvertedMatrix4x4();
         params.screen[0] = mVkViewport.width;
         params.screen[1] = mVkViewport.height;
+        // Debug cluster heatmap toggle, read once from the environment.
+        static const bool heatmap = []
+        {
+            const char* value = std::getenv ( "AEON_CLUSTER_HEATMAP" );
+            return value != nullptr && value[0] != '\0' && value[0] != '0';
+        } ();
+        params.screen[2] = heatmap ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
