@@ -14,6 +14,7 @@
 
 import bpy
 import os
+import bmesh
 import struct
 import mathutils
 import mesh_pb2
@@ -42,18 +43,26 @@ class MSH_OT_exporterCommon():
     def get_vertex(self, loop_and_attributes):
         loop = loop_and_attributes[0]
         attributes = loop_and_attributes[1]
-        mesh_world_matrix = mathutils.Matrix(self.object.matrix_world)
         vertex = []
 
         for attribute in attributes:
             if attribute.Semantic == mesh_pb2.AttributeMsg.POSITION:
-                vertex.extend(list(self.mesh.vertices[loop.vertex_index].co @ mesh_world_matrix)[:3])
+                # Points carry translation, so transform by the full matrix.
+                position = self.world_matrix @ self.mesh.vertices[loop.vertex_index].co
+                vertex.extend([position.x, position.y, position.z])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.NORMAL:
-                vertex.extend(list(self.mesh.vertices[loop.vertex_index].normal @ mesh_world_matrix)[:3])
+                # Use the per-loop (split) normal so hard edges are preserved,
+                # transformed by the inverse-transpose to survive non-uniform scale.
+                normal = (self.normal_matrix @ loop.normal).normalized()
+                vertex.extend([normal.x, normal.y, normal.z])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.TANGENT:
-                vertex.extend(list(self.mesh.vertices[loop.vertex_index].normal @ mesh_world_matrix)[:3])
+                # Real per-loop tangent from calc_tangents, rotated into world space.
+                tangent = (self.world_3x3 @ loop.tangent).normalized()
+                vertex.extend([tangent.x, tangent.y, tangent.z])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.BITANGENT:
-                vertex.extend(list(self.mesh.vertices[loop.vertex_index].normal @ mesh_world_matrix)[:3])
+                # Real per-loop bitangent from calc_tangents, rotated into world space.
+                bitangent = (self.world_3x3 @ loop.bitangent).normalized()
+                vertex.extend([bitangent.x, bitangent.y, bitangent.z])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.TEXCOORD:
                 vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
                             1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
@@ -130,77 +139,34 @@ class MSH_OT_exporterCommon():
             dictionary[key] = index
         return dictionary
 
-    def fill_mesh_buffer(self, mesh_buffer, mesh_object):
-        self.mesh = mesh_object.data
+    def fill_mesh_buffer(self, mesh_buffer, mesh_object, material_index=None):
+        # Warn if the source mesh contains n-gons: calc_tangents() only accepts
+        # tris/quads, so we triangulate below to keep the export working, but
+        # the user gets cleaner, more predictable results by triangulating or
+        # quadrangulating the mesh themselves before export.
+        if any(len(polygon.vertices) > 4 for polygon in mesh_object.data.polygons):
+            print(
+                "Warning: mesh '" + mesh_object.name + "' contains n-gons; "
+                "triangulating on export. Consider triangulating or "
+                "quadrangulating the mesh before exporting.")
+        # Work on a triangulated copy of the mesh: calc_tangents() only accepts
+        # tris/quads, so n-gons (common in Sponza) would otherwise abort the
+        # export. Triangulating a copy leaves the user's original data intact.
+        mesh = mesh_object.data.copy()
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bmesh.ops.triangulate(bm, faces=bm.faces)
+        bm.to_mesh(mesh)
+        bm.free()
+        self.mesh = mesh
         self.object = mesh_object
+        # Cache the transforms used to take vertex attributes into world space:
+        # points by the full matrix, tangents/bitangents by its 3x3 rotation,
+        # and normals by the inverse-transpose so non-uniform scale is handled.
+        self.world_matrix = mesh_object.matrix_world.copy()
+        self.world_3x3 = self.world_matrix.to_3x3()
+        self.normal_matrix = self.world_3x3.inverted_safe().transposed()
         pool = ThreadPool()
-        # Store center, radii.
-        mesh_buffer_min_x = min(
-            mesh_object.bound_box[0][0],
-            mesh_object.bound_box[1][0],
-            mesh_object.bound_box[2][0],
-            mesh_object.bound_box[3][0],
-            mesh_object.bound_box[4][0],
-            mesh_object.bound_box[5][0],
-            mesh_object.bound_box[6][0],
-            mesh_object.bound_box[7][0])
-        mesh_buffer_max_x = max(
-            mesh_object.bound_box[0][0],
-            mesh_object.bound_box[1][0],
-            mesh_object.bound_box[2][0],
-            mesh_object.bound_box[3][0],
-            mesh_object.bound_box[4][0],
-            mesh_object.bound_box[5][0],
-            mesh_object.bound_box[6][0],
-            mesh_object.bound_box[7][0])
-        mesh_buffer_min_y = min(
-            mesh_object.bound_box[0][1],
-            mesh_object.bound_box[1][1],
-            mesh_object.bound_box[2][1],
-            mesh_object.bound_box[3][1],
-            mesh_object.bound_box[4][1],
-            mesh_object.bound_box[5][1],
-            mesh_object.bound_box[6][1],
-            mesh_object.bound_box[7][1])
-        mesh_buffer_max_y = max(
-            mesh_object.bound_box[0][1],
-            mesh_object.bound_box[1][1],
-            mesh_object.bound_box[2][1],
-            mesh_object.bound_box[3][1],
-            mesh_object.bound_box[4][1],
-            mesh_object.bound_box[5][1],
-            mesh_object.bound_box[6][1],
-            mesh_object.bound_box[7][1])
-        mesh_buffer_min_z = min(
-            mesh_object.bound_box[0][2],
-            mesh_object.bound_box[1][2],
-            mesh_object.bound_box[2][2],
-            mesh_object.bound_box[3][2],
-            mesh_object.bound_box[4][2],
-            mesh_object.bound_box[5][2],
-            mesh_object.bound_box[6][2],
-            mesh_object.bound_box[7][2])
-        mesh_buffer_max_z = max(
-            mesh_object.bound_box[0][2],
-            mesh_object.bound_box[1][2],
-            mesh_object.bound_box[2][2],
-            mesh_object.bound_box[3][2],
-            mesh_object.bound_box[4][2],
-            mesh_object.bound_box[5][2],
-            mesh_object.bound_box[6][2],
-            mesh_object.bound_box[7][2])
-        mesh_buffer.Center.x = (
-            mesh_buffer_min_x + mesh_buffer_max_x) / 2
-        mesh_buffer.Center.y = (
-            mesh_buffer_min_y + mesh_buffer_max_y) / 2
-        mesh_buffer.Center.z = (
-            mesh_buffer_min_z + mesh_buffer_max_z) / 2
-
-        mesh_buffer.Radii.x = mesh_buffer_max_x - mesh_buffer.Center.x
-        mesh_buffer.Radii.y = mesh_buffer_max_y - mesh_buffer.Center.y
-        mesh_buffer.Radii.z = mesh_buffer_max_z - mesh_buffer.Center.z
-
-        mesh = mesh_object.data
 
         # if this mesh is modified by an armature, find out which one.
         self.armature = None
@@ -277,8 +243,17 @@ class MSH_OT_exporterCommon():
             attribute.Flags = mesh_pb2.AttributeMsg.NONE
             vertex_struct_string += '3f'
 
+        # Restrict to the polygons that reference the requested material slot
+        # when a split was asked for; otherwise process the whole mesh.
+        if material_index is None:
+            polygons = mesh.polygons
+        else:
+            polygons = [p for p in mesh.polygons if p.material_index == material_index]
+        loops = [mesh.loops[loop_index]
+                 for polygon in polygons for loop_index in polygon.loop_indices]
+
         # Generate Vertex Buffer--------------------------------------
-        self.vertices = list(pool.map(self.get_vertex, zip(mesh.loops, itertools.repeat(mesh_buffer.Attribute))))
+        self.vertices = list(pool.map(self.get_vertex, zip(loops, itertools.repeat(mesh_buffer.Attribute))))
         self.vertices.sort(key=operator.itemgetter(1))
         # The next line of code is so dense;
         # every single statement has so many things going on...
@@ -296,7 +271,7 @@ class MSH_OT_exporterCommon():
                 self.vertices))):
             index_dictionary.update(entry)
         self.indices = []
-        for polygon in mesh.polygons:
+        for polygon in polygons:
             polygon_count = polygon_count + 1
             # print("\rPolygon ", polygon_count, " of ", len(
             #    mesh.polygons))
@@ -310,6 +285,21 @@ class MSH_OT_exporterCommon():
                 self.indices.append(index_dictionary[polygon.loop_indices[i]])
                 self.indices.append(index_dictionary[polygon.loop_indices[
                                     (i + 1) % len(polygon.loop_indices)]])
+        # Compute the bounding sphere from the generated world-space positions.
+        # POSITION is always the first attribute, so it occupies the first three
+        # floats of every vertex; deriving the bounds here keeps them consistent
+        # with the exported (world-space) geometry and any per-material split.
+        if self.vertices:
+            xs = [vertex[1][0] for vertex in self.vertices]
+            ys = [vertex[1][1] for vertex in self.vertices]
+            zs = [vertex[1][2] for vertex in self.vertices]
+            mesh_buffer.Center.x = (min(xs) + max(xs)) / 2
+            mesh_buffer.Center.y = (min(ys) + max(ys)) / 2
+            mesh_buffer.Center.z = (min(zs) + max(zs)) / 2
+            mesh_buffer.Radii.x = max(xs) - mesh_buffer.Center.x
+            mesh_buffer.Radii.y = max(ys) - mesh_buffer.Center.y
+            mesh_buffer.Radii.z = max(zs) - mesh_buffer.Center.z
+
         # Write vertices -----------------------------------
         vertex_struct = struct.Struct(vertex_struct_string)
         print(
@@ -359,14 +349,16 @@ class MSH_OT_exporterCommon():
             print("Done")
         pool.close()
         pool.join()
+        # Release the temporary triangulated mesh datablock created above.
+        bpy.data.meshes.remove(mesh)
 
-    def run(self, mesh_object):
+    def run(self, mesh_object, material_index=None):
         # Create Protocol Buffer
         mesh_buffer = mesh_pb2.MeshMsg()
         # Initialize Protocol Buffer Message
         mesh_buffer.Version = 1
 
-        self.fill_mesh_buffer(mesh_buffer, mesh_object)
+        self.fill_mesh_buffer(mesh_buffer, mesh_object, material_index)
         # cProfile.runctx('self.fill_mesh_buffer(mesh_buffer, object)', globals(), locals())
         # print(
         # timeit.timeit(
@@ -428,6 +420,11 @@ class MSH_OT_exporter(bpy.types.Operator):
         description="Write the protobuf message as a human-readable text file (.txt) instead of the binary .msh",
         default=False
     )
+    material_index: bpy.props.IntProperty(
+        name="Material Index",
+        description="Only export polygons assigned to this material slot; -1 exports the whole mesh",
+        default=-1
+    )
 
     @classmethod
     def poll(cls, context):
@@ -446,7 +443,8 @@ class MSH_OT_exporter(bpy.types.Operator):
             export_colors=self.export_colors,
             as_text=self.as_text
         )
-        exporter.run(context.active_object)
+        material_index = None if self.material_index < 0 else self.material_index
+        exporter.run(context.active_object, material_index)
         return {'FINISHED'}
 
     def invoke(self, context, event):

@@ -1,0 +1,20 @@
+schema_version = "1.0.0"
+
+id = "io_material_mtl"
+version = "1.0.0"
+name = "AeonGames Material Format (.mtl)"
+tagline = "Exports a material to an AeonGames Material (MTL) file"
+maintainer = "Rodrigo Hernandez <contact@email.com>"
+type = "add-on"
+
+tags = ["Import-Export", "Material"]
+
+blender_version_min = "5.0.0"
+
+license = ["SPDX:Apache-2.0"]
+
+website = "https://github.com/AeonGames/AeonEngine"
+
+wheels = [
+        "./wheels/protobuf-5.29.5-py3-none-any.whl",
+]

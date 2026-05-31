@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2023,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -27,6 +27,7 @@ set(BLENDER_ADDONS
     io_animation_anm
     io_collision_cln
     io_images
+    io_material_mtl
     io_mesh_msh
     io_model_mdl
     io_skeleton_skl

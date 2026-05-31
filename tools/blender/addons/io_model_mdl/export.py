@@ -51,6 +51,16 @@ class MDL_OT_exporter(bpy.types.Operator):
         description="Save image-texture nodes referenced by exported meshes into textures/",
         default=True
     )
+    export_materials: bpy.props.BoolProperty(
+        name="Materials",
+        description="Export a Phong material (.mtl) per used material slot under materials/ and reference it from each assembly",
+        default=True
+    )
+    resource_prefix: bpy.props.StringProperty(
+        name="Resource Prefix",
+        description="Path prefix (relative to the game resource root) prepended to generated mesh/material/texture references, e.g. 'sponza'",
+        default=""
+    )
     # Mesh vertex attribute toggles (forwarded to io_mesh_msh).
     export_tangents: bpy.props.BoolProperty(
         name="Tangents",
@@ -79,6 +89,11 @@ class MDL_OT_exporter(bpy.types.Operator):
         is_skl_enabled, is_skl_loaded = addon_utils.check('io_skeleton_skl')
         return is_msh_loaded and is_msh_enabled and is_skl_loaded and is_skl_enabled
 
+    @staticmethod
+    def safe_name(name):
+        # Make a Blender datablock name safe to use as a filename component.
+        return "".join(c if (c.isalnum() or c in "._-") else "_" for c in name)
+
     def draw(self, context):
         layout = self.layout
         col = layout.column(heading="Include")
@@ -86,6 +101,9 @@ class MDL_OT_exporter(bpy.types.Operator):
         col.prop(self, "export_skeleton")
         col.prop(self, "export_animations")
         col.prop(self, "export_textures")
+        col.prop(self, "export_materials")
+        layout.separator()
+        layout.prop(self, "resource_prefix")
         layout.separator()
         attr_col = layout.column(heading="Mesh Attributes")
         attr_col.enabled = self.export_meshes
@@ -102,12 +120,22 @@ class MDL_OT_exporter(bpy.types.Operator):
         if self.export_animations and not animations_available:
             print("Animations requested but io_animation_anm addon is not enabled; skipping animation export.")
 
+        is_mtl_enabled, is_mtl_loaded = addon_utils.check('io_material_mtl')
+        materials_available = is_mtl_enabled and is_mtl_loaded
+        if self.export_materials and not materials_available:
+            print("Materials requested but io_material_mtl addon is not enabled; skipping material export.")
+
+        # Path prefix (relative to the resource root) for generated references.
+        resource_prefix = (self.resource_prefix + "/") if self.resource_prefix else ""
+
         if self.export_meshes and not os.path.exists(self.directory + "meshes"):
             os.makedirs(self.directory + "meshes")
         if self.export_skeleton and not os.path.exists(self.directory + "skeletons"):
             os.makedirs(self.directory + "skeletons")
         if self.export_textures and not os.path.exists(self.directory + "textures"):
             os.makedirs(self.directory + "textures")
+        if self.export_materials and materials_available and not os.path.exists(self.directory + "materials"):
+            os.makedirs(self.directory + "materials")
         if self.export_animations and animations_available and not os.path.exists(self.directory + "animations"):
             os.makedirs(self.directory + "animations")
 
@@ -127,21 +155,68 @@ class MDL_OT_exporter(bpy.types.Operator):
                     print("Skipping mesh", object.name, "(meshes disabled)")
                     continue
                 print("Exporting", object.name, "of type", object.type)
-                assembly = model_buffer.assembly.add()
                 mesh_ext = ".txt" if self.as_text else ".msh"
-                assembly.mesh.path = "meshes" + '/' + object.name + mesh_ext
-                bpy.ops.export_mesh.msh(
-                    'EXEC_DEFAULT',
-                    filepath=self.directory + "meshes" + os.sep + object.name + ".msh",
-                    as_text=self.as_text,
-                    export_tangents=self.export_tangents,
-                    export_uvs=self.export_uvs,
-                    export_weights=self.export_weights,
-                    export_colors=self.export_colors)
+                mat_ext = ".txt" if self.as_text else ".mtl"
+                # Pick the Phong pipeline variant matching the mesh's rig state.
+                has_armature = any(
+                    modifier.type == 'ARMATURE' for modifier in object.modifiers)
+                pipeline_path = ("shaders/diffuse_map_phong.txt" if has_armature
+                                 else "shaders/diffuse_map_phong_no_skeleton.txt")
+
+                materials = object.data.materials
+                # Determine which material slots actually have geometry.
+                used_indices = sorted({polygon.material_index
+                                       for polygon in object.data.polygons})
+                used_indices = [index for index in used_indices
+                                if index < len(materials) and materials[index] is not None]
+                # Only suffix mesh names when a single object spans several slots.
+                split = len(used_indices) > 1
+
+                if used_indices:
+                    for material_index in used_indices:
+                        material = materials[material_index]
+                        mesh_name = (object.name + "_" + self.safe_name(material.name)
+                                     if split else object.name)
+                        assembly = model_buffer.assembly.add()
+                        assembly.mesh.path = resource_prefix + "meshes/" + mesh_name + mesh_ext
+                        assembly.pipeline.path = pipeline_path
+                        bpy.ops.export_mesh.msh(
+                            'EXEC_DEFAULT',
+                            filepath=self.directory + "meshes" + os.sep + mesh_name + ".msh",
+                            as_text=self.as_text,
+                            export_tangents=self.export_tangents,
+                            export_uvs=self.export_uvs,
+                            export_weights=self.export_weights,
+                            export_colors=self.export_colors,
+                            material_index=material_index)
+                        if self.export_materials and materials_available:
+                            material_name = self.safe_name(material.name)
+                            assembly.material.path = resource_prefix + "materials/" + material_name + mat_ext
+                            bpy.ops.export_material.mtl(
+                                'EXEC_DEFAULT',
+                                filepath=self.directory + "materials" + os.sep + material_name + ".mtl",
+                                material_name=material.name,
+                                texture_dir=resource_prefix + "textures",
+                                as_text=self.as_text)
+                else:
+                    # No usable material slots: export the whole mesh as one assembly.
+                    assembly = model_buffer.assembly.add()
+                    assembly.mesh.path = resource_prefix + "meshes/" + object.name + mesh_ext
+                    assembly.pipeline.path = pipeline_path
+                    bpy.ops.export_mesh.msh(
+                        'EXEC_DEFAULT',
+                        filepath=self.directory + "meshes" + os.sep + object.name + ".msh",
+                        as_text=self.as_text,
+                        export_tangents=self.export_tangents,
+                        export_uvs=self.export_uvs,
+                        export_weights=self.export_weights,
+                        export_colors=self.export_colors)
                 if not self.export_textures:
                     continue
                 # Export all textures referenced by the mesh materials
                 for material in object.data.materials:
+                    if material is None or material.node_tree is None:
+                        continue
                     print("Material:",material.name, material.use_nodes)
                     for node in material.node_tree.nodes:
                         print("\tNode:",node.bl_idname,node.label)
@@ -205,7 +280,7 @@ class MDL_OT_exporter(bpy.types.Operator):
                                         as_text=self.as_text)
                     # Reference skeleton in model if this is the first armature
                     if not model_buffer.HasField('skeleton'):
-                        model_buffer.skeleton.path = "skeletons" + '/' + object.name + skl_ext
+                        model_buffer.skeleton.path = resource_prefix + "skeletons/" + object.name + skl_ext
                 else:
                     print("Skipping skeleton", object.name, "(skeleton disabled)")
                 # Export all actions for this armature as .anm files.
@@ -218,7 +293,7 @@ class MDL_OT_exporter(bpy.types.Operator):
                     for action in bpy.data.actions:
                         ref = model_buffer.animation.add()
                         ref.name = action.name
-                        ref.reference.path = "animations" + '/' + action.name + (".txt" if self.as_text else ".anm")
+                        ref.reference.path = resource_prefix + "animations/" + action.name + (".txt" if self.as_text else ".anm")
             else:
                 print("Skipping object", object.name, "of type", object.type)
         
