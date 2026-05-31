@@ -1276,15 +1276,18 @@ namespace AeonGames
         {
             const VulkanMemoryPoolBuffer* memory_pool_buffer =
                 reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeleton->GetMemoryPoolBuffer() );
-            uint32_t offset = static_cast<uint32_t> ( aSkeleton->GetOffset() );
+            size_t offset = aSkeleton->GetOffset();
             if ( uint32_t skeleton_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SKELETON ); skeleton_set_index != std::numeric_limits<uint32_t>::max() )
             {
+                // Each allocation owns a descriptor whose range is exactly the
+                // allocation, so the dynamic offset is zero.
+                uint32_t dynamic_offset = 0;
                 vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                           VK_PIPELINE_BIND_POINT_GRAPHICS,
                                           pipeline->GetPipelineLayout(),
                                           skeleton_set_index,
                                           1,
-                                          &memory_pool_buffer->GetDescriptorSet(), 1, &offset );
+                                          &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
             }
         }
         mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer );
