@@ -81,6 +81,18 @@ target_link_libraries(unit-tests
                       ${GTEST_LIBRARIES}
                       ${GMOCK_LIBRARIES}
                       ${ZLIB_LIBRARIES})
+
+if(BUILD_VULKAN_RENDERER)
+  # Link the Vulkan loader so the compute tests can probe for a usable Vulkan
+  # driver before exercising the VulkanRenderer backend. This lets headless CI
+  # runners (which ship a loader but no compatible driver) skip the GPU tests
+  # gracefully instead of crashing.
+  find_package(Vulkan)
+  if(Vulkan_FOUND)
+    target_link_libraries(unit-tests Vulkan::Vulkan)
+    target_compile_definitions(unit-tests PRIVATE AEON_TEST_HAVE_VULKAN)
+  endif()
+endif()
 if(MSVC)
   # VCPKG compiles GTest/GMock DLLs.
   set_target_properties(

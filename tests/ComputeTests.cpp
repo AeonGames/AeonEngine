@@ -31,7 +31,11 @@ limitations under the License.
 #include "aeongames/GpuClusterParams.hpp"
 #include "aeongames/GpuLight.hpp"
 #ifdef _WIN32
+#include <string_view>
 #include "aeongames/Platform.hpp"
+#ifdef AEON_TEST_HAVE_VULKAN
+#include <vulkan/vulkan.h>
+#endif
 #endif
 
 using namespace ::testing;
@@ -54,6 +58,42 @@ namespace AeonGames
                                 GetModuleHandle ( nullptr ), nullptr );
     }
 
+#ifdef AEON_TEST_HAVE_VULKAN
+    /** @brief Probe whether the host has a usable Vulkan implementation.
+     *
+     *  Returns true only when a Vulkan instance can be created and at least one
+     *  physical device is enumerable. Headless CI runners may ship a Vulkan
+     *  loader yet have no compatible driver, in which case instance creation
+     *  returns VK_ERROR_INCOMPATIBLE_DRIVER and this returns false so the
+     *  GPU-dependent tests skip instead of crashing. */
+    static bool IsVulkanAvailableOnHost()
+    {
+        VkApplicationInfo app_info{};
+        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        app_info.pApplicationName = "AeonComputeTests";
+        app_info.applicationVersion = VK_MAKE_VERSION ( 1, 0, 0 );
+        app_info.pEngineName = "AeonEngine";
+        app_info.engineVersion = VK_MAKE_VERSION ( 1, 0, 0 );
+        app_info.apiVersion = VK_API_VERSION_1_0;
+
+        VkInstanceCreateInfo create_info{};
+        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        create_info.pApplicationInfo = &app_info;
+
+        VkInstance instance = VK_NULL_HANDLE;
+        if ( vkCreateInstance ( &create_info, nullptr, &instance ) != VK_SUCCESS )
+        {
+            return false;
+        }
+
+        uint32_t physical_device_count = 0;
+        VkResult result = vkEnumeratePhysicalDevices ( instance, &physical_device_count, nullptr );
+        vkDestroyInstance ( instance, nullptr );
+
+        return result == VK_SUCCESS && physical_device_count > 0;
+    }
+#endif
+
     /** @brief Construct a renderer, returning nullptr (instead of throwing or
      *  aborting) when the backend is unavailable on the host.
      *
@@ -64,6 +104,19 @@ namespace AeonGames
      *  than fail the suite. */
     static std::unique_ptr<Renderer> TryConstructRenderer ( const char* aRendererName, void* aWindow )
     {
+#ifdef AEON_TEST_HAVE_VULKAN
+        // Some headless runners ship a Vulkan loader but no compatible driver.
+        // On those hosts VulkanRenderer construction does not fail cleanly and
+        // later dereferences a null instance, raising a Win32 SEH access
+        // violation (0xc0000005) that GTest reports as a hard failure instead
+        // of a skip. Probe for a usable Vulkan instance/device up front so we
+        // can bail out before touching the broken backend.
+        if ( std::string_view{ aRendererName } == "Vulkan" && !IsVulkanAvailableOnHost() )
+        {
+            std::cerr << aRendererName << " renderer unavailable on this host: no compatible Vulkan driver." << std::endl;
+            return nullptr;
+        }
+#endif
         try
         {
             return ConstructRenderer ( std::string ( aRendererName ), aWindow );
