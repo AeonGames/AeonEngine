@@ -21,6 +21,8 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 - **Vulkan** — Primary renderer with SPIR-V shader compilation via glslang. On macOS, Vulkan is provided through MoltenVK.
 - **OpenGL 4.5** — Secondary renderer using core profile. Disabled on macOS (Apple does not support OpenGL 4.5).
 - **Minimum common denominator** design — All uniforms use Uniform Buffer Objects (UBOs) so the same shaders work identically across Vulkan, OpenGL, and potential future backends (DirectX, Metal).
+- **Compute pipelines** — A unified Pipeline asset can carry both graphics and multiple ordered compute stages. The Renderer interface exposes `Dispatch` and `Barrier`, and both backends support Shader Storage Buffer Objects (SSBOs) with SPIR-V reflection and transient storage-buffer memory pools.
+- **Clustered Forward+ lighting** — A compute-driven light culling pipeline bins lights into view-space clusters (`cluster_build`), culls them per cluster (`light_cull`, including a cone-vs-cluster test for spot lights), and packs a global light-index list via an atomic allocator. An optional depth pre-pass marks active clusters so only visible clusters are shaded. Per-frame lights are uploaded as an SSBO (cap 4096). A cluster light-count heatmap debug view is available.
 
 ### Engine Subsystems
 
@@ -28,7 +30,8 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 |-----------|-------------|
 | **Scene Graph** | Hierarchical node-based scene management with component system |
 | **Math** | Vector2/3/4, Quaternion, Matrix3x3/4x4, Transform, AABB, Frustum, Plane |
-| **Materials** | Material property system with texture samplers |
+| **Lighting** | Point, spot, and directional lights with radius attenuation and cone falloff; per-pixel Blinn-Phong shading; clustered Forward+ light culling. Per-frame lights collected on the Scene and uploaded to the GPU. |
+| **Materials** | Phong material model (`Kd`, `Ks`, `Shininess`) with texture samplers; `Ks`/`Shininess` carried in the Material UBO |
 | **Skeletal Animation** | Bone hierarchies, keyframe animation, skeleton/animation resources |
 | **Sound** | Audio via PortAudio with Ogg Vorbis decoding |
 | **Resource Cache** | Centralized resource loading with caching and factory pattern |
@@ -38,7 +41,8 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 
 - **Camera** — First-person/third-person camera component
 - **ModelComponent** — Model rendering component (mesh + material + pipeline)
-- **PointLight** — Point light for scene illumination
+- **PointLight / SpotLight / DirectionalLight** — Scene illumination with radius attenuation and spot-cone falloff
+- **CharacterController** — Movement/turn controller wired to the input system
 
 ### Asset Pipeline
 
@@ -48,7 +52,7 @@ All game assets are serialized using [Protocol Buffers](https://protobuf.dev/), 
 
 - **aeontool** — Command-line utility for asset conversion (binary ↔ text), packaging, base64 encoding, and pipeline compilation.
 - **WorldEditor** — Qt6-based GUI editor for scene and node hierarchy editing, component management, property inspection, and renderer selection.
-- **Blender Addons** — Export meshes, skeletons, animations, models, collisions, images, and scenes directly from Blender to AeonEngine formats.
+- **Blender Addons** — Export meshes, materials, skeletons, animations, models, collisions, images, and scenes directly from Blender to AeonEngine formats. The model exporter splits multi-material objects into one assembly per material slot, mapping each Blender Principled BSDF to the engine's Phong material.
 
 ### Platforms
 
