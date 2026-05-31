@@ -387,6 +387,12 @@ namespace AeonGames
 #endif
         if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
         {
+            // On failure the loader may still have written a non-null (but
+            // unusable) handle into mVkInstance. Per the Vulkan spec, a failed
+            // vkCreateInstance must not be paired with vkDestroyInstance, so
+            // reset the handle to VK_NULL_HANDLE here; otherwise the destructor
+            // would call vkDestroyInstance on a garbage pointer and crash.
+            mVkInstance = VK_NULL_HANDLE;
             std::ostringstream stream;
             stream << "Could not create VulkanRenderer instance. error code: ( " << GetVulkanResultString ( result ) << " )";
             std::string error_string = stream.str();
