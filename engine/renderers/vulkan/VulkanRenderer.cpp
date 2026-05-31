@@ -75,7 +75,14 @@ namespace AeonGames
 
     VulkanRenderer::~VulkanRenderer()
     {
-        vkQueueWaitIdle ( mVkQueue );
+        // The destructor may run on a partially-constructed renderer when the
+        // constructor's exception handler unwinds (e.g. no compatible Vulkan
+        // driver). Guard against null handles so cleanup never calls Vulkan
+        // entry points with invalid arguments, which would abort the process.
+        if ( mVkQueue != VK_NULL_HANDLE )
+        {
+            vkQueueWaitIdle ( mVkQueue );
+        }
         FinalizeOverlay();
         mWindowStore.clear();
         mTextureStore.clear();

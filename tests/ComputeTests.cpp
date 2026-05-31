@@ -18,6 +18,8 @@ limitations under the License.
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <exception>
+#include <iostream>
 #include "gtest/gtest.h"
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Renderer.hpp"
@@ -52,6 +54,32 @@ namespace AeonGames
                                 GetModuleHandle ( nullptr ), nullptr );
     }
 
+    /** @brief Construct a renderer, returning nullptr (instead of throwing or
+     *  aborting) when the backend is unavailable on the host.
+     *
+     *  Headless CI runners have no GPU/driver, so renderer construction fails:
+     *  OpenGL throws (e.g. "Failed retrieving a pointer to wglGetExtensionsString")
+     *  and Vulkan throws on VK_ERROR_INCOMPATIBLE_DRIVER. Swallowing the
+     *  exception lets the GPU-dependent tests GTEST_SKIP() gracefully rather
+     *  than fail the suite. */
+    static std::unique_ptr<Renderer> TryConstructRenderer ( const char* aRendererName, void* aWindow )
+    {
+        try
+        {
+            return ConstructRenderer ( std::string ( aRendererName ), aWindow );
+        }
+        catch ( const std::exception& e )
+        {
+            std::cerr << aRendererName << " renderer unavailable on this host: " << e.what() << std::endl;
+            return nullptr;
+        }
+        catch ( ... )
+        {
+            std::cerr << aRendererName << " renderer unavailable on this host." << std::endl;
+            return nullptr;
+        }
+    }
+
     /** @brief Dispatch shaders/noop_compute on the given backend and verify that
      *  the shader wrote each invocation's global index into an output SSBO.
      *
@@ -61,7 +89,7 @@ namespace AeonGames
     {
         HWND hwnd = CreateHiddenRenderWindow();
         ASSERT_NE ( hwnd, nullptr );
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
             DestroyWindow ( hwnd );
@@ -114,7 +142,7 @@ namespace AeonGames
     {
         HWND hwnd = CreateHiddenRenderWindow();
         ASSERT_NE ( hwnd, nullptr );
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
             DestroyWindow ( hwnd );
@@ -204,7 +232,7 @@ namespace AeonGames
     {
         HWND hwnd = CreateHiddenRenderWindow();
         ASSERT_NE ( hwnd, nullptr );
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
             DestroyWindow ( hwnd );
@@ -333,7 +361,7 @@ namespace AeonGames
     {
         HWND hwnd = CreateHiddenRenderWindow();
         ASSERT_NE ( hwnd, nullptr );
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
             DestroyWindow ( hwnd );
@@ -460,7 +488,7 @@ namespace AeonGames
     {
         HWND hwnd = CreateHiddenRenderWindow();
         ASSERT_NE ( hwnd, nullptr );
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
             DestroyWindow ( hwnd );
