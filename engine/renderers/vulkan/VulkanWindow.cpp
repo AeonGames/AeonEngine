@@ -711,6 +711,9 @@ namespace AeonGames
             return value != nullptr && value[0] != '\0' && value[0] != '0';
         } ();
         params.screen[2] = heatmap ? 1.0f : 0.0f;
+        // screen.w gates active-cluster culling in the light-cull stage: it is
+        // only set once the depth pre-pass mark stage has run this frame.
+        params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
@@ -836,6 +839,16 @@ namespace AeonGames
         return mFrustum;
     }
 
+    const BufferAccessor & VulkanWindow::GetFrameLightGrid() const
+    {
+        return mFrameLightGrid;
+    }
+
+    const BufferAccessor & VulkanWindow::GetFrameClusterActive() const
+    {
+        return mFrameClusterActive;
+    }
+
     void VulkanWindow::InitializeCommandBuffer()
     {
         VkCommandPoolCreateInfo command_pool_create_info{};
@@ -929,10 +942,30 @@ namespace AeonGames
         BeginFrame();
         if ( aComputePipeline != nullptr )
         {
-            DispatchClustering ( *aComputePipeline );
+            // Enable active-cluster culling for this frame and refresh the
+            // ClusterParams UBO so the light-cull stage sees screen.w = 1.
+            mActiveCullEnabled = true;
+            UpdateClusterParams();
+            // Lazily load the renderer-owned marking pipeline that substitutes
+            // the scene's draw pipelines during the depth pre-pass.
+            if ( !mClusterMarkLoaded )
+            {
+                mClusterMarkPipeline.LoadFromId ( "shaders/cluster_mark.txt"_crc32 );
+                mClusterMarkLoaded = true;
+            }
+            // Stage 0: build the cluster AABBs, reset the index allocator and
+            // clear the per-cluster active flags before the mark pass runs.
+            DispatchClusterBuild ( *aComputePipeline );
+            Barrier();
+            // Begin the depth pre-pass; the application's first geometry
+            // traversal records into it with the marking pipeline substituted.
+            BeginRenderPass();
+            mDepthPrePassActive = true;
         }
         else
         {
+            mActiveCullEnabled = false;
+            UpdateClusterParams();
             // No clustering this frame: still hand the clustered fragment
             // shader valid, empty light buffers so it reads zero lights per
             // cluster instead of sampling an unbound buffer.
@@ -943,37 +976,79 @@ namespace AeonGames
                 std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
                 mFrameLightGrid.Unmap();
             }
+            BeginRenderPass();
         }
+    }
+
+    void VulkanWindow::EndDepthPrePass ( const Pipeline* aComputePipeline )
+    {
+        mDepthPrePassActive = false;
+        // End the depth pre-pass render pass so light culling can run outside
+        // any render pass.
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+        // The mark pass wrote the per-cluster active flags from the fragment
+        // shader; make those writes visible to the light-cull compute stage.
+        Barrier();
+        if ( aComputePipeline != nullptr )
+        {
+            DispatchLightCull ( *aComputePipeline );
+        }
+        // Begin the main color pass; the application's second geometry
+        // traversal shades normally using the now-populated light grid.
         BeginRenderPass();
     }
 
-    void VulkanWindow::DispatchClustering ( const Pipeline& aComputePipeline )
+    void VulkanWindow::DispatchClusterBuild ( const Pipeline& aComputePipeline )
     {
         // One workgroup per 64 clusters (clustering compute stages use local_size_x=64).
         constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
 
-        // Allocate the per-frame clustering buffers once. They are bound for
-        // every compute stage; reflection silently drops the blocks a given
-        // stage does not declare.
-        BufferAccessor cluster_aabbs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
+        // Allocate the per-frame clustering buffers. They persist as members so
+        // both this build dispatch and the post-mark light-cull dispatch bind
+        // the same storage; reflection silently drops the blocks a given stage
+        // does not declare.
+        mFrameClusterAABBs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
         mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
         mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
         // Global atomic allocator for the flat LightIndexList (R1). cluster_build
         // zeroes it from invocation 0, so no host-side initialisation is needed.
-        BufferAccessor light_index_counter = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
+        mFrameLightIndexCounter = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
+        // Per-cluster active flags (R2): cluster_build clears them, the mark
+        // pass sets them, the light-cull stage reads them.
+        mFrameClusterActive = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( uint32_t ) );
 
         const StorageBufferBinding bindings[]
         {
-            { Mesh::BindingLocations::CLUSTER_AABBS, &cluster_aabbs },
+            { Mesh::BindingLocations::CLUSTER_AABBS, &mFrameClusterAABBs },
             { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
             { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
-            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &light_index_counter },
+            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &mFrameLightIndexCounter },
+            { Mesh::BindingLocations::CLUSTER_ACTIVE, &mFrameClusterActive },
         };
 
-        // Dispatch every compute stage in declared order, inserting a barrier
-        // between stages so each stage observes the previous stage's writes.
+        // Stage 0 only: build AABBs, reset the allocator and clear active flags.
+        Dispatch ( aComputePipeline, group_count, 1, 1, bindings, 0 );
+    }
+
+    void VulkanWindow::DispatchLightCull ( const Pipeline& aComputePipeline )
+    {
+        constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
+
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::CLUSTER_AABBS, &mFrameClusterAABBs },
+            { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
+            { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
+            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &mFrameLightIndexCounter },
+            { Mesh::BindingLocations::CLUSTER_ACTIVE, &mFrameClusterActive },
+        };
+
+        // Stages 1..N: cull lights against the AABBs, skipping the clusters the
+        // depth pre-pass left inactive. A barrier between stages keeps each
+        // stage's writes visible to the next and, after the last stage, to the
+        // fragment shader of the main color pass.
         const uint32_t stage_count = aComputePipeline.GetComputeStageCount();
-        for ( uint32_t stage = 0; stage < stage_count; ++stage )
+        for ( uint32_t stage = 1; stage < stage_count; ++stage )
         {
             Dispatch ( aComputePipeline, group_count, 1, 1, bindings, stage );
             Barrier();
@@ -1044,6 +1119,84 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
+        // During the depth pre-pass, substitute the renderer-owned marking
+        // pipeline: it records only the cluster each fragment occupies into the
+        // ClusterActive SSBO and ignores material and lighting state.
+        if ( mDepthPrePassActive )
+        {
+            const VulkanPipeline* mark_pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
+            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+
+            if ( uint32_t matrix_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          mark_pipeline->GetPipelineLayout(),
+                                          matrix_set_index,
+                                          1,
+                                          &mMatricesDescriptorSet, 0, nullptr );
+            }
+
+            if ( uint32_t cluster_params_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          mark_pipeline->GetPipelineLayout(),
+                                          cluster_params_set_index,
+                                          1,
+                                          &mClusterParamsDescriptorSet, 0, nullptr );
+            }
+
+            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
+            {
+                if ( uint32_t active_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_ACTIVE ); active_set_index != std::numeric_limits<uint32_t>::max() )
+                {
+                    const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                        reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( mFrameClusterActive.GetMemoryPoolBuffer() );
+                    size_t offset = mFrameClusterActive.GetOffset();
+                    uint32_t dynamic_offset = 0;
+                    vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                              VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                              mark_pipeline->GetPipelineLayout(),
+                                              active_set_index,
+                                              1,
+                                              &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+                }
+            }
+
+            if ( const VkPushConstantRange& push_constant_model_matrix = mark_pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
+            {
+                vkCmdPushConstants ( mVkCommandBuffer,
+                                     mark_pipeline->GetPipelineLayout(),
+                                     push_constant_model_matrix.stageFlags,
+                                     push_constant_model_matrix.offset, push_constant_model_matrix.size,
+                                     aModelMatrix.GetMatrix4x4() );
+            }
+
+            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer );
+            if ( aMesh.GetIndexCount() )
+            {
+                vkCmdDrawIndexed (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                    aInstanceCount,
+                    aVertexStart,
+                    0,
+                    aFirstInstance );
+            }
+            else
+            {
+                vkCmdDraw (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                    aInstanceCount,
+                    aVertexStart,
+                    aFirstInstance );
+            }
+            return;
+        }
+
         const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
@@ -1230,8 +1383,11 @@ namespace AeonGames
         memory_barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
         memory_barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
         memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        // Source covers both compute (clustering stages) and the graphics
+        // stages of the depth pre-pass mark, whose fragment shader writes the
+        // per-cluster active flags read by the following light-cull dispatch.
         vkCmdPipelineBarrier ( mVkCommandBuffer,
-                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                0,
                                1, &memory_barrier,

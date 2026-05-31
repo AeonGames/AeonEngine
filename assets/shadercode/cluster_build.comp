@@ -58,6 +58,19 @@ buffer LightIndexCounter
     uint light_index_counter;
 };
 
+// Per-cluster active flag (Phase R2). cluster_build clears every cluster to 0;
+// the depth pre-pass mark stage sets the clusters that contain geometry, and
+// light_cull skips the rest when active-cluster culling is enabled.
+#ifdef VULKAN
+layout(set = 3, binding = 0, std430)
+#else
+layout(binding = 2, std430)
+#endif
+buffer ClusterActive
+{
+    uint cluster_active[];
+};
+
 // Unproject an NDC point (z in [-1,1]) into view space and divide by w.
 vec3 unproject(vec3 ndc)
 {
@@ -78,6 +91,9 @@ void main()
     {
         return;
     }
+
+    // Clear this cluster's active flag before the depth pre-pass marks it.
+    cluster_active[cluster_index] = 0u;
 
     uint gx = grid.x;
     uint gy = grid.y;

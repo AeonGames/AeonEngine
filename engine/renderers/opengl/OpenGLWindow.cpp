@@ -255,6 +255,34 @@ namespace AeonGames
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance ) const
     {
+        // During the depth pre-pass, substitute the renderer-owned marking
+        // pipeline: it records only the cluster each fragment occupies into the
+        // ClusterActive SSBO and ignores material and lighting state.
+        if ( mDepthPrePassActive )
+        {
+            mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
+            mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
+            mOpenGLRenderer.SetMatrices ( mMatrices );
+            mOpenGLRenderer.SetClusterParams ( mClusterParams );
+            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
+            {
+                mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
+            }
+            mOpenGLRenderer.BindMesh ( aMesh );
+            if ( aMesh.GetIndexCount() )
+            {
+                glDrawElementsInstanced ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                          GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            else
+            {
+                glDrawArraysInstanced ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            return;
+        }
+
         mOpenGLRenderer.BindPipeline ( aPipeline );
 
         mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
@@ -310,10 +338,30 @@ namespace AeonGames
         BeginFrame();
         if ( aComputePipeline != nullptr )
         {
-            DispatchClustering ( *aComputePipeline );
+            // Enable active-cluster culling for this frame and refresh the
+            // ClusterParams UBO so the light-cull stage sees screen.w = 1.
+            mActiveCullEnabled = true;
+            UpdateClusterParams();
+            // Lazily load the renderer-owned marking pipeline that substitutes
+            // the scene's draw pipelines during the depth pre-pass.
+            if ( !mClusterMarkLoaded )
+            {
+                mClusterMarkPipeline.LoadFromId ( "shaders/cluster_mark.txt"_crc32 );
+                mClusterMarkLoaded = true;
+            }
+            // Stage 0: build the cluster AABBs, reset the index allocator and
+            // clear the per-cluster active flags before the mark pass runs.
+            DispatchClusterBuild ( *aComputePipeline );
+            Barrier();
+            // Begin the depth pre-pass; the application's first geometry
+            // traversal records into it with the marking pipeline substituted.
+            BeginRenderPass();
+            mDepthPrePassActive = true;
         }
         else
         {
+            mActiveCullEnabled = false;
+            UpdateClusterParams();
             // No clustering this frame: still hand the clustered fragment
             // shader valid, empty light buffers so it reads zero lights per
             // cluster instead of sampling an unbound buffer.
@@ -324,37 +372,76 @@ namespace AeonGames
                 std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
                 mFrameLightGrid.Unmap();
             }
+            BeginRenderPass();
         }
+    }
+
+    void OpenGLWindow::EndDepthPrePass ( const Pipeline* aComputePipeline )
+    {
+        mDepthPrePassActive = false;
+        // The mark pass wrote the per-cluster active flags from the fragment
+        // shader; make those writes visible to the light-cull compute stage.
+        Barrier();
+        if ( aComputePipeline != nullptr )
+        {
+            DispatchLightCull ( *aComputePipeline );
+        }
+        // Begin the main color pass; the application's second geometry
+        // traversal shades normally using the now-populated light grid.
         BeginRenderPass();
     }
 
-    void OpenGLWindow::DispatchClustering ( const Pipeline& aComputePipeline )
+    void OpenGLWindow::DispatchClusterBuild ( const Pipeline& aComputePipeline )
     {
         // One workgroup per 64 clusters (clustering compute stages use local_size_x=64).
         constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
 
-        // Allocate the per-frame clustering buffers once. They are bound for
-        // every compute stage; reflection silently drops the blocks a given
-        // stage does not declare.
-        BufferAccessor cluster_aabbs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
+        // Allocate the per-frame clustering buffers. They persist as members so
+        // both this build dispatch and the post-mark light-cull dispatch bind
+        // the same storage; reflection silently drops the blocks a given stage
+        // does not declare.
+        mFrameClusterAABBs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
         mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
         mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
         // Global atomic allocator for the flat LightIndexList (R1). cluster_build
         // zeroes it from invocation 0, so no host-side initialisation is needed.
-        BufferAccessor light_index_counter = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
+        mFrameLightIndexCounter = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
+        // Per-cluster active flags (R2): cluster_build clears them, the mark
+        // pass sets them, the light-cull stage reads them.
+        mFrameClusterActive = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( uint32_t ) );
 
         const StorageBufferBinding bindings[]
         {
-            { Mesh::BindingLocations::CLUSTER_AABBS, &cluster_aabbs },
+            { Mesh::BindingLocations::CLUSTER_AABBS, &mFrameClusterAABBs },
             { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
             { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
-            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &light_index_counter },
+            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &mFrameLightIndexCounter },
+            { Mesh::BindingLocations::CLUSTER_ACTIVE, &mFrameClusterActive },
         };
 
-        // Dispatch every compute stage in declared order, inserting a barrier
-        // between stages so each stage observes the previous stage's writes.
+        // Stage 0 only: build AABBs, reset the allocator and clear active flags.
+        Dispatch ( aComputePipeline, group_count, 1, 1, bindings, 0 );
+    }
+
+    void OpenGLWindow::DispatchLightCull ( const Pipeline& aComputePipeline )
+    {
+        constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
+
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::CLUSTER_AABBS, &mFrameClusterAABBs },
+            { Mesh::BindingLocations::LIGHT_GRID, &mFrameLightGrid },
+            { Mesh::BindingLocations::LIGHT_INDEX_LIST, &mFrameLightIndexList },
+            { Mesh::BindingLocations::LIGHT_INDEX_COUNTER, &mFrameLightIndexCounter },
+            { Mesh::BindingLocations::CLUSTER_ACTIVE, &mFrameClusterActive },
+        };
+
+        // Stages 1..N: cull lights against the AABBs, skipping the clusters the
+        // depth pre-pass left inactive. A barrier between stages keeps each
+        // stage's writes visible to the next and, after the last stage, to the
+        // fragment shader of the main color pass.
         const uint32_t stage_count = aComputePipeline.GetComputeStageCount();
-        for ( uint32_t stage = 0; stage < stage_count; ++stage )
+        for ( uint32_t stage = 1; stage < stage_count; ++stage )
         {
             Dispatch ( aComputePipeline, group_count, 1, 1, bindings, stage );
             Barrier();
@@ -487,6 +574,9 @@ namespace AeonGames
             return value != nullptr && value[0] != '\0' && value[0] != '0';
         } ();
         params.screen[2] = heatmap ? 1.0f : 0.0f;
+        // screen.w gates active-cluster culling in the light-cull stage: it is
+        // only set once the depth pre-pass mark stage has run this frame.
+        params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
@@ -528,6 +618,16 @@ namespace AeonGames
     const Frustum & OpenGLWindow::GetFrustum() const
     {
         return mFrustum;
+    }
+
+    const BufferAccessor & OpenGLWindow::GetFrameLightGrid() const
+    {
+        return mFrameLightGrid;
+    }
+
+    const BufferAccessor & OpenGLWindow::GetFrameClusterActive() const
+    {
+        return mFrameClusterActive;
     }
 
     void OpenGLWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )

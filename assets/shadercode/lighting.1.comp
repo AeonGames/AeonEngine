@@ -26,7 +26,7 @@ uniform ClusterParams
 {
     mat4  inverse_projection;
     uvec4 grid;   // x,y,z cluster counts; w = total cluster count
-    vec4  screen; // viewport width, height, unused, unused
+    vec4  screen; // viewport width, height, heatmap-toggle, active-cull-enable
 };
 
 // Transform matrices. ModelMatrix is unused here (compute has no draw), but the
@@ -122,6 +122,19 @@ buffer LightIndexCounter
     uint light_index_counter;
 };
 
+// Per-cluster active flag set by the depth pre-pass mark stage (Phase R2).
+// Lives at set = 7 / GL binding = 5 to match lighting.0.comp exactly (the
+// renderer reflects one binding per block name across both stage programs).
+#ifdef VULKAN
+layout(set = 7, binding = 0, std430)
+#else
+layout(binding = 5, std430)
+#endif
+readonly buffer ClusterActive
+{
+    uint cluster_active[];
+};
+
 const uint MAX_LIGHTS_PER_CLUSTER = 128u;
 
 // Squared-distance sphere vs AABB overlap test.
@@ -156,6 +169,14 @@ void main()
     uint cluster_index = gl_GlobalInvocationID.x;
     if (cluster_index >= grid.w)
     {
+        return;
+    }
+
+    // Active-cluster culling (Phase R2): when enabled, clusters the depth
+    // pre-pass did not mark as occupied carry no lights, so skip them.
+    if (screen.w > 0.5 && cluster_active[cluster_index] == 0u)
+    {
+        light_grid[cluster_index] = uvec2(0u, 0u);
         return;
     }
 

@@ -66,6 +66,20 @@ buffer LightIndexCounter
     uint light_index_counter;
 };
 
+// Per-cluster active flag (Phase R2). Lives at set = 7 / GL binding = 5 so it
+// matches the light-cull stage of this same pipeline exactly (the renderer
+// reflects one binding per block name across both stage programs). cluster_build
+// clears every cluster; the depth pre-pass mark stage sets the occupied ones.
+#ifdef VULKAN
+layout(set = 7, binding = 0, std430)
+#else
+layout(binding = 5, std430)
+#endif
+buffer ClusterActive
+{
+    uint cluster_active[];
+};
+
 // Unproject an NDC point (z in [-1,1]) into view space and divide by w.
 vec3 unproject(vec3 ndc)
 {
@@ -86,6 +100,9 @@ void main()
     {
         return;
     }
+
+    // Clear this cluster's active flag before the depth pre-pass marks it.
+    cluster_active[cluster_index] = 0u;
 
     uint gx = grid.x;
     uint gy = grid.y;

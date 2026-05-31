@@ -502,7 +502,12 @@ namespace AeonGames
         device_create_info.ppEnabledLayerNames = mDeviceLayerNames.data();
         device_create_info.enabledExtensionCount = static_cast<uint32_t> ( mDeviceExtensionNames.size() );
         device_create_info.ppEnabledExtensionNames = mDeviceExtensionNames.data();
-        device_create_info.pEnabledFeatures = nullptr;
+        // The cluster_mark fragment shader writes the per-cluster active-flag
+        // storage buffer during the depth pre-pass; that requires the
+        // fragmentStoresAndAtomics device feature.
+        VkPhysicalDeviceFeatures enabled_features {};
+        enabled_features.fragmentStoresAndAtomics = VK_TRUE;
+        device_create_info.pEnabledFeatures = &enabled_features;
 
         /// @todo Grab best device rather than first one
         if ( VkResult result = vkCreateDevice ( mVkPhysicalDevice, &device_create_info, nullptr, &mVkDevice ) )
@@ -970,6 +975,15 @@ namespace AeonGames
         }
         it->second.BeginRenderPass();
     }
+    void VulkanRenderer::EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndDepthPrePass ( aComputePipeline );
+    }
     void VulkanRenderer::EndRender ( void* aWindowId )
     {
         auto it = mWindowStore.find ( aWindowId );
@@ -1034,6 +1048,26 @@ namespace AeonGames
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.GetFrustum();
+    }
+
+    const BufferAccessor* VulkanRenderer::GetFrameLightGrid ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return nullptr;
+        }
+        return &it->second.GetFrameLightGrid();
+    }
+
+    const BufferAccessor* VulkanRenderer::GetFrameClusterActive ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return nullptr;
+        }
+        return &it->second.GetFrameClusterActive();
     }
 
     BufferAccessor VulkanRenderer::AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize )

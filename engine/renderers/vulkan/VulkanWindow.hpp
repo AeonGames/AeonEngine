@@ -61,6 +61,10 @@ namespace AeonGames
         void BeginRender ( const Pipeline* aComputePipeline = nullptr );
         /// @brief End the current frame, submit commands, and present.
         void EndRender();
+        /// @brief End the depth pre-pass: end its render pass, make the mark
+        ///        stage's ClusterActive writes visible, dispatch the remaining
+        ///        (light-cull) compute stages, then begin the main color pass.
+        void EndDepthPrePass ( const Pipeline* aComputePipeline );
         /** @brief Render a mesh with the given pipeline, material, and transform.
          *  @param aModelMatrix Model-to-world transform matrix.
          *  @param aMesh Mesh geometry to render.
@@ -111,6 +115,12 @@ namespace AeonGames
         const Matrix4x4& GetViewMatrix() const;
         /// @brief Get the view frustum derived from the current matrices.
         const Frustum& GetFrustum() const;
+        /// @brief Get the current frame's per-cluster light grid (offset/count)
+        ///        SSBO. For test/debug introspection of the clustering result.
+        const BufferAccessor& GetFrameLightGrid() const;
+        /// @brief Get the current frame's per-cluster active-flag SSBO produced
+        ///        by the depth pre-pass mark stage. For test/debug introspection.
+        const BufferAccessor& GetFrameClusterActive() const;
         /// @brief Resize the rendering viewport.
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
         /// @brief Allocate transient uniform memory for the current frame.
@@ -148,10 +158,12 @@ namespace AeonGames
         ///        projection matrix and viewport. Cheap; called on projection
         ///        or viewport change.
         void UpdateClusterParams();
-        /// @brief Dispatch every ordered compute stage of the given pipeline,
-        ///        binding the per-frame clustering SSBOs and inserting a barrier
-        ///        between stages. Recorded between BeginFrame and BeginRenderPass.
-        void DispatchClustering ( const Pipeline& aComputePipeline );
+        /// @brief Dispatch compute stage 0 (cluster build) and allocate the
+        ///        per-frame clustering SSBOs. Runs before the depth pre-pass.
+        void DispatchClusterBuild ( const Pipeline& aComputePipeline );
+        /// @brief Dispatch the remaining compute stages (light culling) after
+        ///        the depth pre-pass has flagged the active clusters.
+        void DispatchLightCull ( const Pipeline& aComputePipeline );
 
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
@@ -165,6 +177,19 @@ namespace AeonGames
         VulkanBuffer mClusterParams;
         BufferAccessor mFrameLightGrid{};
         BufferAccessor mFrameLightIndexList{};
+        BufferAccessor mFrameClusterAABBs{};
+        BufferAccessor mFrameLightIndexCounter{};
+        BufferAccessor mFrameClusterActive{};
+        // Renderer-owned depth pre-pass marking pipeline (Phase R2), loaded
+        // lazily the first frame clustering runs.
+        Pipeline mClusterMarkPipeline{};
+        bool mClusterMarkLoaded{false};
+        // True while recording the depth pre-pass: Render substitutes the
+        // marking pipeline instead of the scene's draw pipelines.
+        bool mDepthPrePassActive{false};
+        // Drives ClusterParams.screen.w; enables active-cluster culling once
+        // the mark stage has run this frame.
+        bool mActiveCullEnabled{false};
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };

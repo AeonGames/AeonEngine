@@ -16,6 +16,7 @@ set(PIPELINES
     "diffuse_map_phong_no_skeleton|vert=diffuse_map_phong_no_skeleton.vert|frag=diffuse_map_phong.frag"
     "cluster_build|comp=cluster_build.comp"
     "light_cull|comp=light_cull.comp"
+    "cluster_mark|vert=cluster_mark.vert|frag=cluster_mark.frag"
     "lighting|comp=lighting.0.comp|comp=lighting.1.comp"
 )
 

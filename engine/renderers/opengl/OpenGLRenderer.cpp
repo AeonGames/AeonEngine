@@ -890,6 +890,15 @@ void main()
         }
         it->second.BeginRenderPass();
     }
+    void OpenGLRenderer::EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndDepthPrePass ( aComputePipeline );
+    }
     void OpenGLRenderer::EndRender ( void* aWindowId )
     {
         auto it = mWindowStore.find ( aWindowId );
@@ -954,6 +963,24 @@ void main()
             throw std::runtime_error ( "Unknown Window Id." );
         }
         return it->second.GetFrustum();
+    }
+    const BufferAccessor* OpenGLRenderer::GetFrameLightGrid ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return nullptr;
+        }
+        return &it->second.GetFrameLightGrid();
+    }
+    const BufferAccessor* OpenGLRenderer::GetFrameClusterActive ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return nullptr;
+        }
+        return &it->second.GetFrameClusterActive();
     }
     BufferAccessor OpenGLRenderer::AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize )
     {

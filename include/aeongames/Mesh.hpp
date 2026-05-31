@@ -77,6 +77,7 @@ namespace AeonGames
             LIGHT_INDEX_LIST  = "LightIndexList"_crc32,  ///< Clustered shading: flat light-index list per cluster (SSBO).
             LIGHT_GRID        = "LightGrid"_crc32,       ///< Clustered shading: per-cluster (offset, count) into LightIndexList (SSBO).
             LIGHT_INDEX_COUNTER = "LightIndexCounter"_crc32, ///< Clustered shading: global atomic allocator for the flat LightIndexList (SSBO, R1).
+            CLUSTER_ACTIVE    = "ClusterActive"_crc32,   ///< Clustered shading: per-cluster active flag set by the depth pre-pass mark stage (SSBO, R2).
             CLUSTER_PARAMS    = "ClusterParams"_crc32,   ///< Clustered shading: tile/slice dimensions and depth-slicing constants (UBO).
         };
 

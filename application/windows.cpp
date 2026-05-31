@@ -556,7 +556,23 @@ namespace AeonGames
                     mRenderer->SetProjectionMatrix ( mWindowId, projection );
                 }
                 mRenderer->SetLights ( mWindowId, aScene.GetFrameLights() );
-                mRenderer->BeginRender ( mWindowId, aScene.GetLightingPipeline() );
+                const Pipeline* lighting = aScene.GetLightingPipeline();
+                mRenderer->BeginRender ( mWindowId, lighting );
+                if ( lighting )
+                {
+                    // Depth pre-pass: traverse once with the renderer's marking
+                    // pipeline substituted to flag the clusters that actually
+                    // contain visible geometry before light culling runs.
+                    aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                    {
+                        AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
+                        if ( mRenderer->GetFrustum ( mWindowId ).Intersects ( transformed_aabb ) )
+                        {
+                            aNode.Render ( *mRenderer, mWindowId );
+                        }
+                    } );
+                    mRenderer->EndDepthPrePass ( mWindowId, lighting );
+                }
                 aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                 {
                     AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();

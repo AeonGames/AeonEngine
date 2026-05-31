@@ -90,6 +90,7 @@ namespace AeonGames
         void BeginRender ( void* aWindowId, const Pipeline* aComputePipeline = nullptr ) final;
         void BeginFrame ( void* aWindowId ) final;
         void BeginRenderPass ( void* aWindowId ) final;
+        void EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,
@@ -111,6 +112,8 @@ namespace AeonGames
                         uint32_t aComputeStageIndex = 0 ) const final;
         void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
+        const BufferAccessor* GetFrameLightGrid ( void* aWindowId ) const final;
+        const BufferAccessor* GetFrameClusterActive ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
         BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;
         void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;

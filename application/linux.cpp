@@ -476,6 +476,21 @@ namespace AeonGames
                     mGuiOverlay->EndFrame ( reinterpret_cast<void*> ( mWindowId ) );
                 }
                 mRenderer->BeginRender ( reinterpret_cast<void*> ( mWindowId ), aScene.GetLightingPipeline() );
+                const Pipeline* lighting = aScene.GetLightingPipeline();
+                if ( lighting )
+                {
+                    // Depth pre-pass: flag clusters containing visible geometry
+                    // with the renderer's marking pipeline before light culling.
+                    aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                    {
+                        AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
+                        if ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ).Intersects ( transformed_aabb ) )
+                        {
+                            aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
+                        }
+                    } );
+                    mRenderer->EndDepthPrePass ( reinterpret_cast<void*> ( mWindowId ), lighting );
+                }
                 aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                 {
                     AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();

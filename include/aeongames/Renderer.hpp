@@ -161,6 +161,17 @@ namespace AeonGames
          * @param aWindowId Platform dependent window handle.
          */
         virtual void BeginRenderPass ( void* aWindowId ) = 0;
+        /** Ends the depth pre-pass mark render pass, dispatches the remaining
+         * clustering compute stages (light culling, which now gates on the
+         * clusters the mark pass flagged as active), then begins the main color
+         * render pass. Only called when BeginRender was given a lighting
+         * pipeline; the application records the marking geometry traversal
+         * between BeginRender and this call, and the shading traversal after it.
+         * @param aWindowId Platform dependent window handle.
+         * @param aComputePipeline The same lighting pipeline passed to
+         *        BeginRender, whose post-mark stages are dispatched here.
+         */
+        virtual void EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline ) = 0;
         /** Ends the current render pass for the given window surface.
          * @param aWindowId Platform dependent window handle.
          */
@@ -221,6 +232,20 @@ namespace AeonGames
          * @return A const reference to the current view frustum.
          */
         virtual const Frustum& GetFrustum ( void* aWindowId ) const = 0;
+        /** Returns the current frame's per-cluster light grid SSBO for the given
+         * window surface. Intended for test/debug introspection of clustering.
+         * @param aWindowId Platform dependent window handle.
+         * @return Pointer to the light-grid BufferAccessor, or nullptr if the
+         *         window is unknown.
+         */
+        virtual const BufferAccessor* GetFrameLightGrid ( void* aWindowId ) const = 0;
+        /** Returns the current frame's per-cluster active-flag SSBO produced by
+         * the depth pre-pass mark stage. Intended for test/debug introspection.
+         * @param aWindowId Platform dependent window handle.
+         * @return Pointer to the cluster-active BufferAccessor, or nullptr if the
+         *         window is unknown.
+         */
+        virtual const BufferAccessor* GetFrameClusterActive ( void* aWindowId ) const = 0;
         /** Allocates uniform buffer memory that is valid for a single frame.
          * @param aWindowId Platform dependent window handle.
          * @param aSize Size in bytes of the requested allocation.

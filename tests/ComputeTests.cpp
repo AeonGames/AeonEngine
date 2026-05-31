@@ -17,11 +17,13 @@ limitations under the License.
 #include <memory>
 #include <string>
 #include <algorithm>
+#include <vector>
 #include "gtest/gtest.h"
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/BufferAccessor.hpp"
+#include "aeongames/Mesh.hpp"
 #include "aeongames/CRC.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/GpuClusterParams.hpp"
@@ -136,7 +138,18 @@ namespace AeonGames
         renderer->BeginFrame ( hwnd );
         BufferAccessor aabb_buffer =
             renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
-        const StorageBufferBinding bindings[] { { "ClusterAABBs"_crc32, &aabb_buffer } };
+        BufferAccessor counter_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( uint32_t ) );
+        // cluster_build clears the per-cluster active flags (Phase R2), so the
+        // buffer must be bound even though this test does not read it back.
+        BufferAccessor active_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( uint32_t ) );
+        const StorageBufferBinding bindings[]
+        {
+            { "ClusterAABBs"_crc32, &aabb_buffer },
+            { "LightIndexCounter"_crc32, &counter_buffer },
+            { "ClusterActive"_crc32, &active_buffer }
+        };
         renderer->Dispatch ( hwnd, pipeline, group_count, 1, 1, bindings );
         renderer->Barrier ( hwnd );
         renderer->BeginRenderPass ( hwnd );
@@ -236,11 +249,16 @@ namespace AeonGames
                 hwnd, LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
         BufferAccessor counter_buffer =
             renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( uint32_t ) );
+        // Per-cluster active flags: cluster_build clears them, light_cull reads
+        // them when active-cluster culling is enabled (Phase R2).
+        BufferAccessor active_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( uint32_t ) );
 
         const StorageBufferBinding build_bindings[]
         {
             { "ClusterAABBs"_crc32, &aabb_buffer },
-            { "LightIndexCounter"_crc32, &counter_buffer }
+            { "LightIndexCounter"_crc32, &counter_buffer },
+            { "ClusterActive"_crc32, &active_buffer }
         };
         renderer->Dispatch ( hwnd, cluster_build, group_count, 1, 1, build_bindings );
         renderer->Barrier ( hwnd );
@@ -250,7 +268,8 @@ namespace AeonGames
             { "ClusterAABBs"_crc32, &aabb_buffer },
             { "LightGrid"_crc32, &grid_buffer },
             { "LightIndexList"_crc32, &index_buffer },
-            { "LightIndexCounter"_crc32, &counter_buffer }
+            { "LightIndexCounter"_crc32, &counter_buffer },
+            { "ClusterActive"_crc32, &active_buffer }
         };
         renderer->Dispatch ( hwnd, light_cull, group_count, 1, 1, cull_bindings );
         renderer->Barrier ( hwnd );
@@ -356,15 +375,20 @@ namespace AeonGames
                 hwnd, LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
         BufferAccessor counter_buffer =
             renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( uint32_t ) );
+        // Per-cluster active flags: stage 0 clears them, stage 1 reads them when
+        // active-cluster culling is enabled (Phase R2).
+        BufferAccessor active_buffer =
+            renderer->AllocateSingleFrameStorageMemory ( hwnd, CLUSTER_COUNT * sizeof ( uint32_t ) );
 
-        // All four SSBOs are bound for every stage; reflection drops the
+        // All SSBOs are bound for every stage; reflection drops the
         // blocks a given stage does not declare (matching DispatchClustering).
         const StorageBufferBinding bindings[]
         {
             { "ClusterAABBs"_crc32, &aabb_buffer },
             { "LightGrid"_crc32, &grid_buffer },
             { "LightIndexList"_crc32, &index_buffer },
-            { "LightIndexCounter"_crc32, &counter_buffer }
+            { "LightIndexCounter"_crc32, &counter_buffer },
+            { "ClusterActive"_crc32, &active_buffer }
         };
 
         // Stage 0: build the cluster AABBs.
@@ -413,6 +437,146 @@ namespace AeonGames
         EXPECT_EQ ( *counter, total_lights )
                 << "flat light-index allocator count disagrees with per-cluster sums";
         counter_buffer.Unmap();
+
+        renderer.reset();
+        DestroyWindow ( hwnd );
+    }
+
+    /** @brief End-to-end depth-pre-pass active-cluster culling test.
+     *
+     *  Drives the full mark/cull frame lifecycle the application render loop
+     *  uses: BeginRender(lighting) clears the per-cluster active flags and
+     *  builds the cluster AABBs, the depth pre-pass renders a real mesh through
+     *  the cluster_mark pipeline (each covered fragment flags its cluster
+     *  active), EndDepthPrePass(lighting) runs light-cull with active-cluster
+     *  gating (screen.w == 1), and EndRender presents.
+     *
+     *  With gating enabled the light grid may only assign lights to clusters the
+     *  mark stage flagged active, so the asserted invariant is: every cluster
+     *  holding one or more lights is active. The scene is also checked to be
+     *  non-degenerate (some clusters active, some inactive, some lit) so the
+     *  invariant cannot pass vacuously. */
+    static void RunActiveClusterCullTest ( const char* aRendererName )
+    {
+        HWND hwnd = CreateHiddenRenderWindow();
+        ASSERT_NE ( hwnd, nullptr );
+        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string ( aRendererName ), hwnd );
+        if ( renderer == nullptr )
+        {
+            DestroyWindow ( hwnd );
+            GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
+        }
+        renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
+
+        constexpr float near_plane = 1.0f;
+        constexpr float far_plane = 100.0f;
+        Matrix4x4 projection{};
+        projection.Perspective ( 90.0f, 1.0f, near_plane, far_plane );
+        renderer->SetProjectionMatrix ( hwnd, projection );
+        renderer->SetViewMatrix ( hwnd, Matrix4x4{} );
+
+        // A single broad point light overlapping a wide swath of clusters. The
+        // mark stage only flags the clusters the mesh actually covers, so the
+        // gate must cull this light from every unmarked cluster it would
+        // otherwise reach.
+        GpuLight light{};
+        light.position_radius = Vector4{ 0.0f, 10.0f, 0.0f, 30.0f };
+        light.color_intensity = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
+        light.type = static_cast<uint32_t> ( LightType::Point );
+        const GpuLight lights[] { light };
+        renderer->SetLights ( hwnd, lights );
+
+        // The combined lighting pipeline carries both clustering compute stages
+        // and drives the BeginRender (cluster-build) / EndDepthPrePass
+        // (light-cull) mark+cull lifecycle.
+        Pipeline lighting;
+        lighting.LoadFromId ( "shaders/lighting.txt"_crc32 );
+        renderer->LoadPipeline ( lighting );
+
+        // A real mesh whose vertex layout matches the cluster_mark pipeline
+        // (position/normal/tangent/bitangent/uv). cube/suzanne carry only
+        // position+normal and are incompatible with the mark pipeline.
+        Mesh mesh;
+        mesh.LoadFromId ( "polesign/meshes/PoleSign.txt"_crc32 );
+        renderer->LoadMesh ( mesh );
+
+        // Required graphics-pipeline argument to Render(); ignored while the
+        // depth pre-pass substitutes the cluster_mark pipeline.
+        Pipeline shading;
+        shading.LoadFromId ( "shaders/diffuse_map_phong_no_skeleton.txt"_crc32 );
+        renderer->LoadPipeline ( shading );
+
+        // Place the mesh in front of the camera (camera at origin looking +Y).
+        const Matrix4x4 model
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 10.0f, 0.0f, 1.0f
+        };
+
+        // One full gated frame: mark stage (BeginRender + Render) then gated
+        // light-cull (EndDepthPrePass) then present (EndRender).
+        renderer->BeginRender ( hwnd, &lighting );
+        renderer->Render ( hwnd, model, mesh, shading );
+        renderer->EndDepthPrePass ( hwnd, &lighting );
+        renderer->EndRender ( hwnd );
+
+        // Second BeginFrame waits on the previous frame's fence (Vulkan) and
+        // re-makes the GL context current so the frame buffers can be mapped.
+        renderer->BeginFrame ( hwnd );
+
+        const BufferAccessor* grid_accessor = renderer->GetFrameLightGrid ( hwnd );
+        const BufferAccessor* active_accessor = renderer->GetFrameClusterActive ( hwnd );
+        ASSERT_NE ( grid_accessor, nullptr );
+        ASSERT_NE ( active_accessor, nullptr );
+
+        // The two frame buffers are sub-allocations of the same single-frame
+        // storage pool, so they cannot be host-mapped simultaneously. Read each
+        // into a host copy in turn before comparing them.
+        std::vector<GpuLightGridCell> grid ( CLUSTER_COUNT );
+        {
+            const GpuLightGridCell* mapped =
+                static_cast<const GpuLightGridCell*> ( grid_accessor->Map() );
+            ASSERT_NE ( mapped, nullptr );
+            std::copy ( mapped, mapped + CLUSTER_COUNT, grid.begin() );
+            grid_accessor->Unmap();
+        }
+        std::vector<uint32_t> active ( CLUSTER_COUNT );
+        {
+            const uint32_t* mapped =
+                static_cast<const uint32_t*> ( active_accessor->Map() );
+            ASSERT_NE ( mapped, nullptr );
+            std::copy ( mapped, mapped + CLUSTER_COUNT, active.begin() );
+            active_accessor->Unmap();
+        }
+
+        uint32_t lit_clusters = 0;
+        uint32_t active_clusters = 0;
+        uint32_t inactive_clusters = 0;
+        uint32_t leaked_clusters = 0;
+        for ( uint32_t i = 0; i < CLUSTER_COUNT; ++i )
+        {
+            const bool is_active = active[i] != 0u;
+            const bool is_lit = grid[i].count > 0;
+            active_clusters += is_active ? 1u : 0u;
+            inactive_clusters += is_active ? 0u : 1u;
+            lit_clusters += is_lit ? 1u : 0u;
+            // Gate invariant: a light may only land in an active cluster.
+            if ( is_lit && !is_active )
+            {
+                ++leaked_clusters;
+            }
+        }
+
+        EXPECT_EQ ( leaked_clusters, 0u )
+                << "a light was assigned to a cluster the mark stage left inactive";
+        EXPECT_GT ( active_clusters, 0u )
+                << "the mesh marked no clusters active in the depth pre-pass";
+        EXPECT_GT ( inactive_clusters, 0u )
+                << "every cluster was marked active; the gate had nothing to cull";
+        EXPECT_GT ( lit_clusters, 0u )
+                << "the light reached no marked cluster; setup is degenerate";
 
         renderer.reset();
         DestroyWindow ( hwnd );
@@ -488,6 +652,24 @@ namespace AeonGames
         RunCombinedLightingTest ( "Vulkan" );
 #else
         GTEST_SKIP() << "Combined lighting test requires Win32 windowing.";
+#endif
+    }
+
+    TEST ( ComputeTest, OpenGLActiveClusterCull )
+    {
+#ifdef _WIN32
+        RunActiveClusterCullTest ( "OpenGL" );
+#else
+        GTEST_SKIP() << "Active-cluster cull test requires Win32 windowing.";
+#endif
+    }
+
+    TEST ( ComputeTest, VulkanActiveClusterCull )
+    {
+#ifdef _WIN32
+        RunActiveClusterCullTest ( "Vulkan" );
+#else
+        GTEST_SKIP() << "Active-cluster cull test requires Win32 windowing.";
 #endif
     }
 }
