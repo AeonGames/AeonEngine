@@ -66,6 +66,13 @@ class MDL_OT_exporter(bpy.types.Operator):
         description="Export only the currently selected objects instead of every object in the scene",
         default=False
     )
+    force: bpy.props.BoolProperty(
+        name="Force Overwrite",
+        description="Re-export every mesh, material, skeleton, animation and "
+                    "texture even if its file already exists. The model (.mdl) "
+                    "file is always rewritten",
+        default=False
+    )
     # Mesh vertex attribute toggles (forwarded to io_mesh_msh).
     export_tangents: bpy.props.BoolProperty(
         name="Tangents",
@@ -109,6 +116,7 @@ class MDL_OT_exporter(bpy.types.Operator):
         col.prop(self, "export_materials")
         layout.separator()
         layout.prop(self, "resource_prefix")
+        layout.prop(self, "force")
         layout.separator()
         attr_col = layout.column(heading="Mesh Attributes")
         attr_col.enabled = self.export_meshes
@@ -187,37 +195,49 @@ class MDL_OT_exporter(bpy.types.Operator):
                         assembly = model_buffer.assembly.add()
                         assembly.mesh.path = resource_prefix + "meshes/" + mesh_name + mesh_ext
                         assembly.pipeline.path = pipeline_path
-                        bpy.ops.export_mesh.msh(
-                            'EXEC_DEFAULT',
-                            filepath=self.directory + "meshes" + os.sep + mesh_name + ".msh",
-                            as_text=self.as_text,
-                            export_tangents=self.export_tangents,
-                            export_uvs=self.export_uvs,
-                            export_weights=self.export_weights,
-                            export_colors=self.export_colors,
-                            material_index=material_index)
+                        mesh_file = self.directory + "meshes" + os.sep + mesh_name + mesh_ext
+                        if self.force or not os.path.exists(mesh_file):
+                            bpy.ops.export_mesh.msh(
+                                'EXEC_DEFAULT',
+                                filepath=self.directory + "meshes" + os.sep + mesh_name + ".msh",
+                                as_text=self.as_text,
+                                export_tangents=self.export_tangents,
+                                export_uvs=self.export_uvs,
+                                export_weights=self.export_weights,
+                                export_colors=self.export_colors,
+                                material_index=material_index)
+                        else:
+                            print("\tSkipping mesh (already exists):", mesh_file)
                         if self.export_materials and materials_available:
                             material_name = self.safe_name(material.name)
                             assembly.material.path = resource_prefix + "materials/" + material_name + mat_ext
-                            bpy.ops.export_material.mtl(
-                                'EXEC_DEFAULT',
-                                filepath=self.directory + "materials" + os.sep + material_name + ".mtl",
-                                material_name=material.name,
-                                texture_dir=resource_prefix + "textures",
-                                as_text=self.as_text)
+                            material_file = self.directory + "materials" + os.sep + material_name + mat_ext
+                            if self.force or not os.path.exists(material_file):
+                                bpy.ops.export_material.mtl(
+                                    'EXEC_DEFAULT',
+                                    filepath=self.directory + "materials" + os.sep + material_name + ".mtl",
+                                    material_name=material.name,
+                                    texture_dir=resource_prefix + "textures",
+                                    as_text=self.as_text)
+                            else:
+                                print("\tSkipping material (already exists):", material_file)
                 else:
                     # No usable material slots: export the whole mesh as one assembly.
                     assembly = model_buffer.assembly.add()
                     assembly.mesh.path = resource_prefix + "meshes/" + object.name + mesh_ext
                     assembly.pipeline.path = pipeline_path
-                    bpy.ops.export_mesh.msh(
-                        'EXEC_DEFAULT',
-                        filepath=self.directory + "meshes" + os.sep + object.name + ".msh",
-                        as_text=self.as_text,
-                        export_tangents=self.export_tangents,
-                        export_uvs=self.export_uvs,
-                        export_weights=self.export_weights,
-                        export_colors=self.export_colors)
+                    mesh_file = self.directory + "meshes" + os.sep + object.name + mesh_ext
+                    if self.force or not os.path.exists(mesh_file):
+                        bpy.ops.export_mesh.msh(
+                            'EXEC_DEFAULT',
+                            filepath=self.directory + "meshes" + os.sep + object.name + ".msh",
+                            as_text=self.as_text,
+                            export_tangents=self.export_tangents,
+                            export_uvs=self.export_uvs,
+                            export_weights=self.export_weights,
+                            export_colors=self.export_colors)
+                    else:
+                        print("\tSkipping mesh (already exists):", mesh_file)
                 if not self.export_textures:
                     continue
                 # Export all textures referenced by the mesh materials
@@ -269,9 +289,10 @@ class MDL_OT_exporter(bpy.types.Operator):
                             if os.path.exists(target):
                                 if source_abs == target_abs:
                                     print("\t\tSkipping image (source is destination):", target)
-                                else:
+                                    continue
+                                if not self.force:
                                     print("\t\tSkipping image (already exists):", target)
-                                continue
+                                    continue
                             node.image.filepath_raw = target
                             node.image.save()
                             node.image.filepath_raw = original_filepath
@@ -281,10 +302,14 @@ class MDL_OT_exporter(bpy.types.Operator):
                     print("Exporting", object.name, "of type", object.type)
                     skl_ext = ".txt" if self.as_text else ".skl"
                     skeleton_filepath = self.directory + "skeletons" + os.sep + object.name + ".skl"
-                    bpy.ops.export_skeleton.skl(
-                                        'EXEC_DEFAULT',
-                                        filepath=skeleton_filepath,
-                                        as_text=self.as_text)
+                    skeleton_file = self.directory + "skeletons" + os.sep + object.name + skl_ext
+                    if self.force or not os.path.exists(skeleton_file):
+                        bpy.ops.export_skeleton.skl(
+                                            'EXEC_DEFAULT',
+                                            filepath=skeleton_filepath,
+                                            as_text=self.as_text)
+                    else:
+                        print("\tSkipping skeleton (already exists):", skeleton_file)
                     # Reference skeleton in model if this is the first armature
                     if not model_buffer.HasField('skeleton'):
                         model_buffer.skeleton.path = resource_prefix + "skeletons/" + object.name + skl_ext
@@ -292,15 +317,25 @@ class MDL_OT_exporter(bpy.types.Operator):
                     print("Skipping skeleton", object.name, "(skeleton disabled)")
                 # Export all actions for this armature as .anm files.
                 if self.export_animations and animations_available and object.animation_data is not None:
-                    print("Exporting animations for", object.name)
-                    bpy.ops.export_armature.anm(
-                        'EXEC_DEFAULT',
-                        directory=self.directory + "animations" + os.sep,
-                        as_text=self.as_text)
+                    anm_ext = ".txt" if self.as_text else ".anm"
+                    anm_dir = self.directory + "animations" + os.sep
+                    # The anm exporter writes every action at once; skip the
+                    # whole call only when not forcing and all already exist.
+                    missing = any(
+                        not os.path.exists(anm_dir + action.name + anm_ext)
+                        for action in bpy.data.actions)
+                    if self.force or missing:
+                        print("Exporting animations for", object.name)
+                        bpy.ops.export_armature.anm(
+                            'EXEC_DEFAULT',
+                            directory=anm_dir,
+                            as_text=self.as_text)
+                    else:
+                        print("\tSkipping animations (already exist) for", object.name)
                     for action in bpy.data.actions:
                         ref = model_buffer.animation.add()
                         ref.name = action.name
-                        ref.reference.path = resource_prefix + "animations/" + action.name + (".txt" if self.as_text else ".anm")
+                        ref.reference.path = resource_prefix + "animations/" + action.name + anm_ext
             else:
                 print("Skipping object", object.name, "of type", object.type)
         

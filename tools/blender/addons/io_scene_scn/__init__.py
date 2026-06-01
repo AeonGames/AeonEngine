@@ -76,6 +76,15 @@ def register():
                         ".blend file",
             default=""
         )
+    # Per-project scene-name override (output folder + scene file name),
+    # saved inside the .blend file.
+    if not hasattr(bpy.types.Scene, "aeon_export_name"):
+        bpy.types.Scene.aeon_export_name = bpy.props.StringProperty(
+            name="Scene Name",
+            description="Per-project override for the exported scene name, "
+                        "saved in this .blend file",
+            default=""
+        )
     # Session-sticky value, not saved to disk.
     if not hasattr(bpy.types.WindowManager, _SESSION_GAME_ROOT):
         bpy.types.WindowManager.aeon_game_root = bpy.props.StringProperty(
@@ -90,6 +99,8 @@ def unregister():
     bpy.types.TOPBAR_MT_file_export.remove(scn_menu_func)
     if hasattr(bpy.types.WindowManager, _SESSION_GAME_ROOT):
         del bpy.types.WindowManager.aeon_game_root
+    if hasattr(bpy.types.Scene, "aeon_export_name"):
+        del bpy.types.Scene.aeon_export_name
     if hasattr(bpy.types.Scene, _SCENE_GAME_ROOT):
         del bpy.types.Scene.aeon_game_root
     bpy.utils.unregister_class(export.SCN_OT_exporter)

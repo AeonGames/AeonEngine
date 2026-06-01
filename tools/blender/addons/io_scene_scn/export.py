@@ -49,27 +49,42 @@ def resolve_game_root(context):
     return ""
 
 
+def is_valid_game_root(game_root):
+    '''A game root is valid when it resolves to an existing directory.'''
+    if not game_root or not game_root.strip():
+        return False
+    return os.path.isdir(bpy.path.abspath(game_root.strip()))
+
+
 class SCN_OT_exporter(bpy.types.Operator):
 
     '''Exports a scene to an AeonGames Scene (SCN) file'''
     bl_idname = "export_scene.scn"
     bl_label = "Export AeonGames Scene"
 
-    directory: bpy.props.StringProperty(subtype='DIR_PATH')
     game_root: bpy.props.StringProperty(
         name="Game Root",
         subtype='DIR_PATH',
-        description="Root directory assets are exported under. Defaults to the "
-                    "session value, then the per-.blend override, then the "
-                    "global add-on preference. When set, the output directory "
-                    "is <game root>/<resource prefix>",
+        description="Root directory all assets are exported under. The scene "
+                    "file is written to <game root>/scenes/<scene name>.scn and "
+                    "every other asset under <game root>/<scene name>/. A valid "
+                    "(existing) game root is required",
         default=""
     )
     remember_game_root: bpy.props.BoolProperty(
         name="Save Game Root in .blend",
         description="Also store the game root on the scene so it is saved "
                     "inside this .blend file as a per-project override",
-        default=False
+        default=True
+    )
+    export_name: bpy.props.StringProperty(
+        name="Scene Name",
+        description="Overrides the name used for the output folder and scene "
+                    "file. Assets go under <game root>/<scene name>/ and the "
+                    "scene file under <game root>/scenes/<scene name>.scn. "
+                    "Leave empty to use the Blender scene name. Saved in this "
+                    ".blend file",
+        default=""
     )
     as_text: bpy.props.BoolProperty(
         name="Export as Text",
@@ -81,10 +96,12 @@ class SCN_OT_exporter(bpy.types.Operator):
         description="Export one model (.mdl) per unique mesh datablock via io_model_mdl; objects sharing a datablock become instance nodes referencing the same model",
         default=True
     )
-    resource_prefix: bpy.props.StringProperty(
-        name="Resource Prefix",
-        description="Path prefix (relative to the game resource root) prepended to generated model references, e.g. 'sponza'",
-        default=""
+    force: bpy.props.BoolProperty(
+        name="Force Overwrite",
+        description="Re-export every model even if its file already exists. "
+                    "When off, existing model files are reused and only the "
+                    "scene file is rewritten",
+        default=False
     )
     # Mesh vertex attribute toggles (forwarded to io_model_mdl -> io_mesh_msh).
     export_tangents: bpy.props.BoolProperty(name="Tangents", default=True)
@@ -107,10 +124,15 @@ class SCN_OT_exporter(bpy.types.Operator):
         root_box = layout.box()
         root_box.label(text="Export Location")
         root_box.prop(self, "game_root")
-        root_box.prop(self, "resource_prefix")
+        if not is_valid_game_root(self.game_root):
+            root_box.label(text="Game Root must be an existing directory",
+                           icon='ERROR')
+        root_box.prop(self, "export_name",
+                      text="Scene Name (%s)" % context.scene.name)
         root_box.prop(self, "remember_game_root")
         layout.separator()
         layout.prop(self, "export_models")
+        layout.prop(self, "force")
         layout.separator()
         attr_col = layout.column(heading="Mesh Attributes")
         attr_col.enabled = self.export_models
@@ -198,7 +220,8 @@ class SCN_OT_exporter(bpy.types.Operator):
         self._add_float_property(component, "Far Plane", camera.clip_end)
 
     # -- per-mesh model export ----------------------------------------------
-    def _export_model(self, context, representative, model_name, outdir):
+    def _export_model(self, context, representative, model_name, outdir,
+                      resource_prefix):
         '''Export a single mesh datablock as a model, in object-local space,
         by isolating a transform-cleared copy of one representative object in
         the active scene and driving the existing io_model_mdl exporter with
@@ -254,8 +277,9 @@ class SCN_OT_exporter(bpy.types.Operator):
                 export_animations=True,
                 export_textures=True,
                 export_materials=True,
-                resource_prefix=self.resource_prefix,
+                resource_prefix=resource_prefix,
                 selected_only=True,
+                force=self.force,
                 export_tangents=self.export_tangents,
                 export_uvs=self.export_uvs,
                 export_weights=self.export_weights,
@@ -279,48 +303,82 @@ class SCN_OT_exporter(bpy.types.Operator):
                 view_layer.objects.active = prev_active
 
     def execute(self, context):
-        prefix = (self.resource_prefix + "/") if self.resource_prefix else ""
         model_ext = ".txt" if self.as_text else ".mdl"
-
-        # Resolve and persist the game root. When set, it is the export root
-        # and the output directory is <game root>/<resource prefix>; otherwise
-        # fall back to the directory chosen in the file browser.
-        game_root = self.game_root.strip()
-        if game_root:
-            # Session-sticky: remember for further exports this session and let
-            # lower-layer exporters default to the same root.
-            context.window_manager.aeon_game_root = game_root
-            if self.remember_game_root:
-                context.scene.aeon_game_root = game_root
-            rel = self.resource_prefix.strip().strip("/\\")
-            outdir = os.path.join(game_root, *rel.split("/")) if rel else game_root
-            os.makedirs(outdir, exist_ok=True)
-        else:
-            outdir = self.directory.rstrip("/\\")
-
         scene = context.scene
+
+        # A valid (existing) game root is mandatory.
+        game_root = self.game_root.strip()
+        if not is_valid_game_root(game_root):
+            self.report({'ERROR'}, "Game Root must be set to an existing "
+                        "directory before exporting.")
+            return {'CANCELLED'}
+        abs_root = bpy.path.abspath(game_root)
+
+        # Resolve the export name (output folder + scene file basename).
+        export_name = self.export_name.strip() or scene.name
+        name = self.safe_name(export_name)
+
+        # Persist choices: session-sticky game root + per-.blend overrides.
+        context.window_manager.aeon_game_root = game_root
+        if self.remember_game_root:
+            scene.aeon_game_root = game_root
+        scene.aeon_export_name = self.export_name.strip()
+
+        # Layout: scene file under <root>/scenes, all other assets under
+        # <root>/<name>. References inside the scene are game-root-relative,
+        # so models are referenced as "<name>/<model>".
+        assets_dir = os.path.join(abs_root, name)
+        scenes_dir = os.path.join(abs_root, "scenes")
+        os.makedirs(assets_dir, exist_ok=True)
+        os.makedirs(scenes_dir, exist_ok=True)
+        prefix = name + "/"
+
         scene_buffer = scene_pb2.SceneMsg()
-        scene_buffer.name = scene.name
+        scene_buffer.name = export_name
 
         # 1. One model per unique mesh datablock. Remember the model path so
         #    every object using that datablock becomes an instance node.
         mesh_to_model = {}
         if self.export_models:
-            original_scene_name = scene.name
+            # Pre-collect the unique mesh datablocks so we can report progress.
+            representatives = []
+            seen = set()
             for obj in scene.objects:
-                if obj.type != 'MESH' or obj.data in mesh_to_model:
-                    continue
-                model_name = self.safe_name(obj.data.name)
-                print("Exporting model", model_name, "from mesh datablock",
-                      obj.data.name)
-                # io_model_mdl derives the .mdl filename from the scene name.
-                scene.name = model_name
-                try:
-                    self._export_model(context, obj, model_name, outdir)
-                finally:
-                    scene.name = original_scene_name
-                mesh_to_model[obj.data] = prefix + model_name + model_ext
-            scene_buffer.name = original_scene_name
+                if obj.type == 'MESH' and obj.data not in seen:
+                    seen.add(obj.data)
+                    representatives.append(obj)
+            total = len(representatives)
+
+            wm = context.window_manager
+            wm.progress_begin(0, total)
+            original_scene_name = scene.name
+            try:
+                for index, obj in enumerate(representatives):
+                    model_name = self.safe_name(obj.data.name)
+                    model_path = os.path.join(assets_dir, model_name + model_ext)
+                    mesh_to_model[obj.data] = prefix + model_name + model_ext
+                    # Reuse an existing model unless forced; the scene file is
+                    # always rewritten regardless.
+                    if not self.force and os.path.exists(model_path):
+                        print("[%d/%d] Skipping model %s (already exists)"
+                              % (index + 1, total, model_name))
+                        wm.progress_update(index + 1)
+                        continue
+                    print("[%d/%d] Exporting model %s from mesh datablock %s"
+                          % (index + 1, total, model_name, obj.data.name))
+                    self.report({'INFO'}, "Exporting model %d/%d: %s"
+                                % (index + 1, total, model_name))
+                    # io_model_mdl derives the .mdl filename from scene.name.
+                    scene.name = model_name
+                    try:
+                        self._export_model(context, obj, model_name,
+                                           assets_dir, name)
+                    finally:
+                        scene.name = original_scene_name
+                    wm.progress_update(index + 1)
+            finally:
+                wm.progress_end()
+            scene_buffer.name = export_name
 
         # 2. One node per object (mesh instances, lights, cameras).
         camera_nodes = {}
@@ -359,23 +417,18 @@ class SCN_OT_exporter(bpy.types.Operator):
             scene_buffer.camera.near_plane = camera.clip_start
             scene_buffer.camera.far_plane = camera.clip_end
 
-        # 4. Write the scene file. In text mode the model files also use a
-        #    .txt extension, so disambiguate the scene basename if it would
-        #    collide (case-insensitively, for Windows/macOS) with a model file.
-        scene_base = self.safe_name(scene.name)
+        # 4. Write the scene file under <game root>/scenes. It lives in its own
+        #    directory, separate from the per-scene asset folder, so there is no
+        #    filename collision with the generated models.
         if self.as_text:
-            model_bases = {os.path.splitext(os.path.basename(path))[0].lower()
-                           for path in mesh_to_model.values()}
-            if scene_base.lower() in model_bases:
-                scene_base += "_scene"
-            scn_path = os.path.join(outdir, scene_base + ".txt")
+            scn_path = os.path.join(scenes_dir, name + ".txt")
             print("Writing", scn_path, ".")
             with open(scn_path, "wt") as out:
                 out.write("AEONSCN\n")
                 out.write(google.protobuf.text_format.MessageToString(
                     scene_buffer))
         else:
-            scn_path = os.path.join(outdir, scene_base + ".scn")
+            scn_path = os.path.join(scenes_dir, name + ".scn")
             print("Writing", scn_path, ".")
             with open(scn_path, "wb") as out:
                 out.write(struct.Struct('8s').pack(b'AEONSCN\x00'))
@@ -384,13 +437,11 @@ class SCN_OT_exporter(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        # Seed the game root from the session/scene/preference chain and point
-        # the file browser at the resolved <game root>/<resource prefix>.
+        # Seed the game root from the session/scene/preference chain and the
+        # scene-name override from the per-.blend property, then show a plain
+        # properties dialog (no file browser).
         if not self.game_root:
             self.game_root = resolve_game_root(context)
-        if self.game_root and not self.directory:
-            rel = self.resource_prefix.strip().strip("/\\")
-            self.directory = (os.path.join(self.game_root, *rel.split("/"))
-                              if rel else self.game_root)
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
+        if not self.export_name:
+            self.export_name = getattr(context.scene, "aeon_export_name", "")
+        return context.window_manager.invoke_props_dialog(self, width=400)
