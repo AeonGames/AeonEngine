@@ -1,4 +1,4 @@
-AEONSCE
+AEONSCN
 name: "Scene"
 camera {
   node: "Player"

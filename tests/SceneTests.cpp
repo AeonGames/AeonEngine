@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015,2018,2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015,2018,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -318,13 +318,13 @@ namespace AeonGames
     TEST_F ( SceneTest, SerializeAsTextHasProperHeader )
     {
         std::string serialized = mScene.Serialize ( false );
-        EXPECT_EQ ( serialized.substr ( 0, 8 ), "AEONSCE\n" );
+        EXPECT_EQ ( serialized.substr ( 0, 8 ), "AEONSCN\n" );
     }
 
     TEST_F ( SceneTest, SerializeAsBinaryHasProperHeader )
     {
         std::string serialized = mScene.Serialize ( true );
-        EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONSCE" );
+        EXPECT_EQ ( serialized.substr ( 0, 7 ), "AEONSCN" );
         EXPECT_EQ ( serialized[7], 0 );
     }
     TEST_F ( SceneTest, SerializeDeserializeText )

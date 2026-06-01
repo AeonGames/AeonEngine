@@ -61,6 +61,11 @@ class MDL_OT_exporter(bpy.types.Operator):
         description="Path prefix (relative to the game resource root) prepended to generated mesh/material/texture references, e.g. 'sponza'",
         default=""
     )
+    selected_only: bpy.props.BoolProperty(
+        name="Selected Only",
+        description="Export only the currently selected objects instead of every object in the scene",
+        default=False
+    )
     # Mesh vertex attribute toggles (forwarded to io_mesh_msh).
     export_tangents: bpy.props.BoolProperty(
         name="Tangents",
@@ -143,8 +148,10 @@ class MDL_OT_exporter(bpy.types.Operator):
         # Store original selection
         original_selection = context.selected_objects[:]
         original_active = context.view_layer.objects.active
-        
-        for object in context.scene.objects:
+
+        objects_source = (context.selected_objects[:] if self.selected_only
+                          else context.scene.objects)
+        for object in objects_source:
             # Make this object the only selected and active object
             bpy.ops.object.select_all(action='DESELECT')
             object.select_set(True)

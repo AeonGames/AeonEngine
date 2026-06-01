@@ -452,7 +452,7 @@ namespace AeonGames
         std::stringstream serialization;
         if ( aAsBinary )
         {
-            serialization << "AEONSCE" << '\0';
+            serialization << "AEONSCN" << '\0';
             if ( !scene_buffer.SerializeToOstream ( &serialization ) )
             {
                 std::cerr << LogLevel::Error << "Failed to serialize scene to binary format.";
@@ -462,7 +462,7 @@ namespace AeonGames
         else
         {
             std::string text;
-            serialization << "AEONSCE\n";
+            serialization << "AEONSCN\n";
             google::protobuf::TextFormat::Printer printer;
             if ( !printer.PrintToString ( scene_buffer, &text ) )
             {
@@ -479,7 +479,7 @@ namespace AeonGames
         static std::mutex m{};
         static SceneMsg scene_buffer{};
         std::lock_guard<std::mutex> hold ( m );
-        LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCE"_mgk );
+        LoadProtoBufObject ( scene_buffer, aSerializedScene.data(), aSerializedScene.size(), "AEONSCN"_mgk );
         mName = scene_buffer.name();
 
         std::unordered_map<const NodeMsg*, std::tuple<const NodeMsg*, int, Node* >> node_map;

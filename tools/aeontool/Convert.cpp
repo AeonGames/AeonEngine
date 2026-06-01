@@ -25,6 +25,7 @@ limitations under the License.
 #include "material.pb.h"
 #include "mesh.pb.h"
 #include "skeleton.pb.h"
+#include "scene.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -481,6 +482,7 @@ namespace AeonGames
         MaterialMsg material_buffer;
         MeshMsg mesh_buffer;
         SkeletonMsg skeleton_buffer;
+        SceneMsg scene_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };
         bool binary_input = false;
@@ -529,6 +531,13 @@ namespace AeonGames
             /* coverity[fallthrough] */
             case FileType::AEONSKLT:
                 message = &skeleton_buffer;
+                break;
+            /* coverity[unterminated_case] */
+            case FileType::AEONSCNB:
+                binary_input = true;
+            /* coverity[fallthrough] */
+            case FileType::AEONSCNT:
+                message = &scene_buffer;
                 break;
             default:
                 file.close();
@@ -659,6 +668,16 @@ namespace AeonGames
             {
                 retval = ( type[3] == '\0' ) ? Convert::FileType::AEONMSHB :
                          Convert::FileType::AEONMSHT;
+            }
+            else if ( strncmp ( type, "SKL", 3 ) == 0 )
+            {
+                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONSKLB :
+                         Convert::FileType::AEONSKLT;
+            }
+            else if ( strncmp ( type, "SCN", 3 ) == 0 )
+            {
+                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONSCNB :
+                         Convert::FileType::AEONSCNT;
             }
         }
         return retval;
