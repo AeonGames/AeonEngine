@@ -72,7 +72,6 @@ namespace AeonGames
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
                         const Material* aMaterial = nullptr,
-                        const BufferAccessor* aSkeleton = nullptr,
                         Topology aTopology = Topology::TRIANGLE_LIST,
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,

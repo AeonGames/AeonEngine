@@ -1,6 +1,6 @@
 AEONMDL
 default_pipeline {
-    path: "shaders/diffuse_map_phong.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
 }
 default_material {
     path: "aerin/materials/body.txt"

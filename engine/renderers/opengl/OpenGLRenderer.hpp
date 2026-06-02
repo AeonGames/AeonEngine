@@ -69,8 +69,6 @@ namespace AeonGames
         /// @brief Set the active material for rendering.
         void SetMaterial ( const Material& aMaterial );
 
-        /// @brief Upload skeleton joint matrices for skinned rendering.
-        void SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const;
         /// @brief Bind a storage buffer (SSBO) to the current pipeline's
         ///        storage block identified by the CRC32 of its GLSL block name.
         void BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const;
@@ -112,7 +110,6 @@ namespace AeonGames
                       const Mesh& aMesh,
                       const Pipeline& aPipeline,
                       const Material* aMaterial = nullptr,
-                      const BufferAccessor* aSkeleton = nullptr,
                       Topology aTopology = Topology::TRIANGLE_LIST,
                       uint32_t aVertexStart = 0,
                       uint32_t aVertexCount = 0xffffffff,

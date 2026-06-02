@@ -70,7 +70,6 @@ namespace AeonGames
         {
             MATRICES          = "Matrices"_crc32,        ///< Matrices binding.
             MATERIAL          = "Material"_crc32,        ///< Material binding.
-            SKELETON          = "Skeleton"_crc32,        ///< Skeleton binding.
             LIGHTS            = "Lights"_crc32,          ///< Per-frame lights binding.
             SAMPLERS          = "Samplers"_crc32,        ///< Samplers binding.
             CLUSTER_AABBS     = "ClusterAABBs"_crc32,    ///< Clustered shading: per-cluster view-space AABB list (SSBO).

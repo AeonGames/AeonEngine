@@ -250,7 +250,6 @@ namespace AeonGames
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const BufferAccessor* aSkeleton,
                                 Topology aTopology,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
@@ -320,11 +319,6 @@ namespace AeonGames
         if ( aMaterial )
         {
             mOpenGLRenderer.SetMaterial ( *aMaterial );
-        }
-
-        if ( aSkeleton )
-        {
-            mOpenGLRenderer.SetSkeleton ( *aSkeleton );
         }
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter

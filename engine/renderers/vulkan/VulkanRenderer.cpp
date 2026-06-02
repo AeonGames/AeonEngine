@@ -1025,7 +1025,6 @@ namespace AeonGames
                                   const Mesh& aMesh,
                                   const Pipeline& aPipeline,
                                   const Material* aMaterial,
-                                  const BufferAccessor* aSkeleton,
                                   Topology aTopology,
                                   uint32_t aVertexStart,
                                   uint32_t aVertexCount,
@@ -1038,7 +1037,7 @@ namespace AeonGames
         {
             return;
         }
-        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
     }
 
     void VulkanRenderer::Dispatch ( void* aWindowId,

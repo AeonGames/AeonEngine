@@ -1138,7 +1138,6 @@ namespace AeonGames
                                 const Mesh& aMesh,
                                 const Pipeline& aPipeline,
                                 const Material* aMaterial,
-                                const BufferAccessor* aSkeleton,
                                 Topology aTopology,
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
@@ -1312,24 +1311,6 @@ namespace AeonGames
         if ( aMaterial != nullptr )
         {
             mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
-        }
-        if ( aSkeleton != nullptr )
-        {
-            const VulkanMemoryPoolBuffer* memory_pool_buffer =
-                reinterpret_cast<const VulkanMemoryPoolBuffer*> ( aSkeleton->GetMemoryPoolBuffer() );
-            size_t offset = aSkeleton->GetOffset();
-            if ( uint32_t skeleton_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SKELETON ); skeleton_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                // Each allocation owns a descriptor whose range is exactly the
-                // allocation, so the dynamic offset is zero.
-                uint32_t dynamic_offset = 0;
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          pipeline->GetPipelineLayout(),
-                                          skeleton_set_index,
-                                          1,
-                                          &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
-            }
         }
         mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
         if ( aMesh.GetIndexCount() )

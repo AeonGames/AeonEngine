@@ -796,17 +796,13 @@ namespace AeonGames
                         layout_binding->binding = descriptor_set_binding.binding;
                         // Buffers served from the engine's single-frame pools are
                         // bound with dynamic offsets, so their layout entries must
-                        // use the dynamic descriptor variants: the skeleton uniform
-                        // pool and the transient storage pool. The per-frame Lights
-                        // SSBO is the exception: it is a persistent per-window buffer
-                        // bound at offset 0, so it stays a plain storage descriptor.
+                        // use the dynamic storage descriptor variant. The per-frame
+                        // Lights SSBO is the exception: it is a persistent per-window
+                        // buffer bound at offset 0, so it stays a plain storage
+                        // descriptor.
                         VkDescriptorType descriptor_type = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
-                        if ( hash == Mesh::BindingLocations::SKELETON )
-                        {
-                            descriptor_type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-                        }
-                        else if ( descriptor_type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER &&
-                                  hash != Mesh::BindingLocations::LIGHTS )
+                        if ( descriptor_type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER &&
+                             hash != Mesh::BindingLocations::LIGHTS )
                         {
                             descriptor_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
                         }

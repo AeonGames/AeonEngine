@@ -182,7 +182,6 @@ namespace AeonGames
          * @param aMesh Mesh to render.
          * @param aPipeline Pipeline (shaders/state) to use.
          * @param aMaterial Optional material to bind.
-         * @param aSkeleton Optional skeleton buffer for skinned meshes.
          * @param aTopology Primitive topology (default: TRIANGLE_LIST).
          * @param aVertexStart First vertex index.
          * @param aVertexCount Number of vertices to draw (default: all).
@@ -197,7 +196,6 @@ namespace AeonGames
                               const Mesh& aMesh,
                               const Pipeline& aPipeline,
                               const Material* aMaterial = nullptr,
-                              const BufferAccessor* aSkeleton = nullptr,
                               Topology aTopology = Topology::TRIANGLE_LIST,
                               uint32_t aVertexStart = 0,
                               uint32_t aVertexCount = 0xffffffff,

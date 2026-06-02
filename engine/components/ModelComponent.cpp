@@ -368,47 +368,25 @@ namespace AeonGames
     {
         if ( auto model = mModel.Cast<Model>() )
         {
-            BufferAccessor* skeleton_accessor_ptr{nullptr};
-            BufferAccessor skeleton_accessor{};
-            const Skeleton* skeleton{model->GetSkeleton() };
-            if ( skeleton )
-            {
-                size_t used_bones_size = skeleton->GetJoints().size() * sizeof ( float ) * 16;
-                assert ( used_bones_size <= mSkeleton.size() );
-                skeleton_accessor = aRenderer.AllocateSingleFrameUniformMemory ( aWindowId, used_bones_size );
-                skeleton_accessor.WriteMemory ( 0, used_bones_size, mSkeleton.data() );
-                skeleton_accessor_ptr = &skeleton_accessor;
-            }
             const auto& assemblies = model->GetAssemblies();
-            // Draw pipeline substituted for skinned assemblies: the vertices are
-            // already posed in the compute pre-pass, so they are drawn with a
-            // non-skinning shader that consumes the compact 56-byte skinned
-            // layout instead of re-applying the skeleton in the vertex stage.
-            static const ResourceId no_skeleton_pipeline_id{ "Pipeline", "shaders/diffuse_map_phong_no_skeleton.txt" };
             for ( size_t index = 0; index < assemblies.size(); ++index )
             {
                 const auto& i = assemblies[index];
+                // Skinned assemblies are posed by the compute pre-pass and drawn
+                // from the resulting compact vertex buffer; non-skinned ones draw
+                // straight from the mesh's own rest-pose vertices.
                 const BufferAccessor* skinned_vertices_ptr{nullptr};
                 if ( index < mSkinnedVertices.size() &&
                      mSkinnedVertices[index].GetMemoryPoolBuffer() != nullptr )
                 {
                     skinned_vertices_ptr = &mSkinnedVertices[index];
                 }
-                const Pipeline* pipeline = std::get<1> ( i ).Cast<Pipeline>();
-                const Pipeline* no_skeleton_pipeline = nullptr;
-                if ( skinned_vertices_ptr != nullptr )
-                {
-                    no_skeleton_pipeline = no_skeleton_pipeline_id.Get<Pipeline>();
-                }
                 aRenderer.Render (
                     aWindowId,
                     aNode.GetGlobalTransform(),
                     *std::get<0> ( i ).Cast<Mesh>(),
-                    ( no_skeleton_pipeline != nullptr ) ? *no_skeleton_pipeline : *pipeline,
+                    *std::get<1> ( i ).Cast<Pipeline>(),
                     std::get<2> ( i ).Cast<Material>(),
-                    // The skeleton is only needed by the in-shader skinning path;
-                    // a pre-skinned draw passes none.
-                    ( skinned_vertices_ptr != nullptr ) ? nullptr : skeleton_accessor_ptr,
                     Topology::TRIANGLE_LIST,
                     0,
                     0xffffffff,

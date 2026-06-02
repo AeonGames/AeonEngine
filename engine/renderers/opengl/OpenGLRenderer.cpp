@@ -618,26 +618,6 @@ void main()
         it->second.Bind ( *mCurrentPipeline );
     }
 
-    void OpenGLRenderer::SetSkeleton ( const BufferAccessor& aSkeletonBuffer ) const
-    {
-        if ( mCurrentPipeline == nullptr )
-        {
-            return;
-        }
-        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::SKELETON ) };
-        if ( uniform_block == nullptr )
-        {
-            return;
-        }
-        const OpenGLMemoryPoolBuffer* memory_pool_buffer = reinterpret_cast<const OpenGLMemoryPoolBuffer*> ( aSkeletonBuffer.GetMemoryPoolBuffer() );
-        if ( GLuint buffer_id = ( memory_pool_buffer != nullptr ) ? reinterpret_cast<const OpenGLBuffer&> ( memory_pool_buffer->GetBuffer() ).GetBufferId() : 0 )
-        {
-            assert ( static_cast<const size_t> ( uniform_block->size ) >= aSkeletonBuffer.GetSize() );
-            glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, buffer_id, aSkeletonBuffer.GetOffset(), aSkeletonBuffer.GetSize() );
-            OPENGL_CHECK_ERROR_THROW;
-        };
-    }
-
     void OpenGLRenderer::BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const
     {
         if ( mCurrentPipeline == nullptr )
@@ -943,7 +923,6 @@ void main()
                                   const Mesh& aMesh,
                                   const Pipeline& aPipeline,
                                   const Material* aMaterial,
-                                  const BufferAccessor* aSkeleton,
                                   Topology aTopology,
                                   uint32_t aVertexStart,
                                   uint32_t aVertexCount,
@@ -956,7 +935,7 @@ void main()
         {
             return;
         }
-        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
     }
 
     void OpenGLRenderer::Dispatch ( void* aWindowId,

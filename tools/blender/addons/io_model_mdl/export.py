@@ -172,11 +172,9 @@ class MDL_OT_exporter(bpy.types.Operator):
                 print("Exporting", object.name, "of type", object.type)
                 mesh_ext = ".txt" if self.as_text else ".msh"
                 mat_ext = ".txt" if self.as_text else ".mtl"
-                # Pick the Phong pipeline variant matching the mesh's rig state.
-                has_armature = any(
-                    modifier.type == 'ARMATURE' for modifier in object.modifiers)
-                pipeline_path = ("shaders/diffuse_map_phong.txt" if has_armature
-                                 else "shaders/diffuse_map_phong_no_skeleton.txt")
+                # Skinning is applied in a compute pre-pass, so meshes are drawn
+                # with the non-skinning Phong pipeline regardless of rig state.
+                pipeline_path = "shaders/diffuse_map_phong_no_skeleton.txt"
 
                 materials = object.data.materials
                 # Determine which material slots actually have geometry.

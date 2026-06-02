@@ -295,14 +295,14 @@ namespace AeonGames
                     Matrix4x4{},
                     qWorldEditorApp->GetGridMesh(),
                     qWorldEditorApp->GetGridPipeline(),
-                    &qWorldEditorApp->GetXGridMaterial(), nullptr, AeonGames::Topology::LINE_LIST, 0, 2,
+                    &qWorldEditorApp->GetXGridMaterial(), AeonGames::Topology::LINE_LIST, 0, 2,
                     mHorizontalSpacing + 1 );
                 qWorldEditorApp->GetRenderer()->Render (
                     mWinId,
                     Matrix4x4{},
                     qWorldEditorApp->GetGridMesh(),
                     qWorldEditorApp->GetGridPipeline(),
-                    &qWorldEditorApp->GetYGridMaterial(), nullptr, AeonGames::Topology::LINE_LIST, 2, 2,
+                    &qWorldEditorApp->GetYGridMaterial(), AeonGames::Topology::LINE_LIST, 2, 2,
                     mVerticalSpacing + 1 );
                 /** @todo This should be the code path for edit mode,
                  * game mode should just render the scene using Window::Render(const Scene&)
@@ -325,7 +325,6 @@ namespace AeonGames
                                 qWorldEditorApp->GetAABBWireMesh(),
                                 qWorldEditorApp->GetSolidColorPipeline(),
                                 &qWorldEditorApp->GetSolidColorMaterial(),
-                                nullptr,
                                 AeonGames::Topology::LINE_LIST
                             );
                         }
@@ -342,7 +341,6 @@ namespace AeonGames
                                 qWorldEditorApp->GetAABBWireMesh(),
                                 qWorldEditorApp->GetSolidColorPipeline(),
                                 &qWorldEditorApp->GetSolidColorMaterial(),
-                                nullptr,
                                 AeonGames::Topology::LINE_LIST
                             );
                             // Render Node Root
@@ -352,7 +350,6 @@ namespace AeonGames
                                 qWorldEditorApp->GetAABBWireMesh(),
                                 qWorldEditorApp->GetSolidColorPipeline(),
                                 &qWorldEditorApp->GetSolidColorMaterial(),
-                                nullptr,
                                 AeonGames::Topology::LINE_LIST
                             );
                             // Render AABB Center
@@ -364,7 +361,6 @@ namespace AeonGames
                                 qWorldEditorApp->GetAABBWireMesh(),
                                 qWorldEditorApp->GetSolidColorPipeline(),
                                 &qWorldEditorApp->GetSolidColorMaterial(),
-                                nullptr,
                                 AeonGames::Topology::LINE_LIST
                             );
                         }
