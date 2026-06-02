@@ -1,0 +1,5545 @@
+AEONSCN
+name: "sponza"
+camera {
+  node: "PhysCamera001"
+  field_of_view: 58.51198
+  near_plane: 0.1
+  far_plane: 10000.0
+}
+lighting_pipeline {
+  path: "shaders/lighting.txt"
+}
+node {
+  name: "Lamps 1st Floor 21"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.5372996
+      x: -0.0
+      y: -0.0
+      z: -0.8433915
+    }
+    Translation {
+      x: -9.773459
+      y: -4.7402296
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 19"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.99904823
+      z: -0.043619383
+    }
+    Translation {
+      x: 2.1635416
+      y: -4.6642475
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.8433914
+      z: 0.53729963
+    }
+    Translation {
+      x: -13.5982065
+      y: -0.062637106
+      z: 4.5638723
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.852336
+      y: 4.795822
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9659258
+      z: -0.25881904
+    }
+    Translation {
+      x: 2.1830301
+      y: 4.795822
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -8.078811
+      y: 2.9944737
+      z: 1.5240067
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: 0.14418517
+      y: 3.1883667
+      z: 1.5236914
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9659258
+      z: 0.25881904
+    }
+    Translation {
+      x: -9.825387
+      y: 4.794542
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamp 1st Floor Entrance"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 15.610797
+      y: 0.9186579
+      z: 3.8830862
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamp_1st_Floor_Entrance.txt"
+    }
+  }
+}
+node {
+  name: "Exterior"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 1.877865
+      y: -0.49651304
+      z: 8.259137
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Exterior.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -3.9003572
+      y: 3.1694727
+      z: 1.5240391
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 03"
+  local {
+    Scale {
+      x: 0.99999994
+      y: 0.99999994
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9961947
+      z: 0.08715578
+    }
+    Translation {
+      x: -5.9220834
+      y: 4.794542
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.720213
+      y: -6.1392994
+      z: 1.7943835
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_A.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: 8.327026
+      y: 2.9964895
+      z: 1.5240067
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 20"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.76604444
+      z: -0.64278764
+    }
+    Translation {
+      x: -5.847364
+      y: -4.670384
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ceiling 1st Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.40212217
+      y: 0.15080445
+      z: 4.0961604
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ceiling_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Wooden Parts 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 19.543026
+      y: -0.03179779
+      z: 1.5393747
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Wooden_Parts_B.txt"
+    }
+  }
+}
+node {
+  name: "Arch Stones 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+      z: 8.742278e-08
+    }
+    Translation {
+      x: 0.11376464
+      y: 0.016881408
+      z: 4.373891
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Arch_Stones_A.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9659258
+      z: -0.25881904
+    }
+    Translation {
+      x: 2.1830301
+      y: -4.739069
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.146513
+      y: -4.739069
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9848077
+      z: 0.1736482
+    }
+    Translation {
+      x: 10.027344
+      y: 4.795822
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Wood Door"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 19.49186
+      y: -0.03165676
+      z: 0.77861756
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Wood_Door.txt"
+    }
+  }
+}
+node {
+  name: "Arch Stones 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.14015014
+      y: -3.0872087
+      z: 4.0691648
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Arch_Stones_C.txt"
+    }
+  }
+}
+node {
+  name: "Arch Stones 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+      z: 8.742278e-08
+    }
+    Translation {
+      x: 0.11376464
+      y: 0.016881408
+      z: 4.373891
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Arch_Stones_E.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 14"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.0093212
+      y: 0.03623718
+      z: 2.1693685
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_F.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 16"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9914449
+      z: 0.1305262
+    }
+    Translation {
+      x: 2.1634457
+      y: 4.6953483
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 18"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.064915
+      y: -4.720072
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 18.311361
+      y: 3.912816
+      z: 0.8876335
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_D.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8183588
+      y: -6.1333275
+      z: 1.7943835
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 15.481618
+      y: -1.4644958
+      z: 1.5200446
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_B.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.852336
+      y: -4.739069
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9659258
+      z: 0.25881904
+    }
+    Translation {
+      x: -9.825387
+      y: -4.740349
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.1816626
+      y: -6.1333275
+      z: 1.7943835
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_A.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 17"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9659258
+      z: -0.25881904
+    }
+    Translation {
+      x: 10.066172
+      y: 4.7245164
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Stones"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.2055011
+      y: 0.13393188
+      z: 2.8793657
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Stones.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 09"
+  local {
+    Scale {
+      x: 0.99999994
+      y: 0.99999994
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9961947
+      z: 0.08715578
+    }
+    Translation {
+      x: -5.9220834
+      y: -4.740349
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.7769732
+      y: -6.1333275
+      z: 1.7943835
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.230161
+      y: -4.657639
+      z: 1.7943835
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.1955514
+      y: -6.1333275
+      z: 1.7943835
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_A.txt"
+    }
+  }
+}
+node {
+  name: "Ceiling 1st Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 15.272646
+      y: 2.094284
+      z: 3.912449
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ceiling_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.992214
+      y: 4.9496727
+      z: 1.8124776
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_E.txt"
+    }
+  }
+}
+node {
+  name: "Lionhead"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071069
+      z: 0.70710665
+    }
+    Translation {
+      x: -15.945751
+      y: -0.09938076
+      z: 0.22804444
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lionhead.txt"
+    }
+  }
+}
+node {
+  name: "Arch Stones 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.0093212
+      y: 0.03623718
+      z: 2.1693685
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Arch_Stones_B.txt"
+    }
+  }
+}
+node {
+  name: "Floor 1st"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 4.0554175
+      y: 0.04547119
+      z: -0.42519408
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Floor_1st.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 13"
+  local {
+    Scale {
+      x: 0.99999994
+      y: 0.99999994
+      z: 1.0
+    }
+    Rotation {
+      w: 0.9914449
+      z: -0.1305262
+    }
+    Translation {
+      x: 10.158051
+      y: -4.743867
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Master Material"
+  local {
+    Scale {
+      x: 0.01
+      y: 0.01
+      z: 0.01
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 1.9864367
+      y: -13.863934
+      z: 5e-07
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Master_Material.txt"
+    }
+  }
+}
+node {
+  name: "Arch Stones 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.14014892
+      y: 3.114765
+      z: 4.0691648
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Arch_Stones_D.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 14"
+  local {
+    Scale {
+      x: 0.99999994
+      y: 0.99999994
+      z: 1.0
+    }
+    Rotation {
+      w: 0.6755902
+      x: -0.0
+      y: -0.0
+      z: -0.7372774
+    }
+    Translation {
+      x: -9.753705
+      y: 4.7264633
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.148341
+      y: 6.1380095
+      z: 2.5915518
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_G.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.146513
+      y: 4.795822
+      z: 4.823324
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: 4.207321
+      y: 3.1930645
+      z: 1.5227208
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Lamps 1st Floor 15"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.49999997
+      x: -0.0
+      y: -0.0
+      z: -0.8660254
+    }
+    Translation {
+      x: -5.852589
+      y: 4.661562
+      z: 10.383441
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Lamps_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 8.33399
+      y: -2.9306118
+      z: 1.5240067
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 4.207321
+      y: -3.126119
+      z: 1.531667
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: 0.14418487
+      y: -3.126116
+      z: 1.5331703
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -3.892273
+      y: -3.1182942
+      z: 1.5325342
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Columns 1st Floor 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: -8.08284
+      y: -2.943811
+      z: 1.5300218
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Columns_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.84582
+      y: 6.098109
+      z: 1.5980586
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_C.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Doors 11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8833352
+      y: 6.1380095
+      z: 2.5915518
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Doors_F.txt"
+    }
+  }
+}
+node {
+  name: "Wooden Parts 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.076474
+      y: 6.2014203
+      z: 2.262328
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Wooden_Parts_A.txt"
+    }
+  }
+}
+node {
+  name: "Wooden Parts 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 19.440533
+      y: 2.8628948
+      z: 1.4610478
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Wooden_Parts_C.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 13"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 9.965249
+      y: 7.488763
+      z: 2.3209631
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_E.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.130562
+      y: 7.526143
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8983307
+      y: 7.526144
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.851676
+      y: 7.526144
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.714382
+      y: 7.5261436
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_D.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: -12.594609
+      y: 4.6420274
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_D.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 15"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -12.9979315
+      y: -4.105298
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_G.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.718277
+      y: -7.5163255
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.7457104
+      y: -7.516326
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8119916
+      y: -7.516326
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.1883104
+      y: -7.5163274
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.2177353
+      y: -7.5163274
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 13.83851
+      y: -2.884902
+      z: 1.3127902
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Walls 1st Floor 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 17.458132
+      y: -2.9135928
+      z: 1.849075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_1st_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: -3.8596532
+      y: -3.1062744
+      z: 7.4156523
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 0.14297195
+      y: -3.10325
+      z: 7.4148717
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 13"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 4.1581407
+      y: -3.1034036
+      z: 7.415654
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 17"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 8.318652
+      y: -2.9791894
+      z: 7.4156537
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 14"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -3.859653
+      y: 3.1314733
+      z: 7.4156523
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 15"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.14740066
+      y: 3.1207604
+      z: 7.4148703
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 16"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 4.1480045
+      y: 3.1275964
+      z: 7.4156504
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 18"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: 8.317799
+      y: 2.9828439
+      z: 7.4156537
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: -1.8593951
+      y: 3.0848196
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: 2.165101
+      y: 3.0848207
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: 6.153647
+      y: 3.084819
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: -1.8683816
+      y: -3.0724497
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.1561139
+      y: -3.072448
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 6.170251
+      y: -3.0724478
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: 8.420501
+      y: 0.030616054
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 19"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: -8.063949
+      y: -2.9510303
+      z: 7.415651
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 20"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -8.069544
+      y: 2.9921138
+      z: 7.415652
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.873532
+      y: 3.0848196
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: -8.144192
+      y: -0.021669254
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Column 2nd Floor 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: 0.7071067
+    }
+    Translation {
+      x: -5.856928
+      y: -3.0724483
+      z: 7.407275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Column_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Arch Wall 2nd Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.25837982
+      y: 0.020968933
+      z: 9.925777
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Arch_Wall_2nd_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ceiling 2nd Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.14894958
+      y: 0.050252073
+      z: 9.553944
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ceiling_2nd_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.2740788
+      y: -6.109905
+      z: 6.433813
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.932225
+      y: -6.1099057
+      z: 6.433813
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.8407116
+      y: -6.109907
+      z: 6.433813
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -12.501216
+      y: 4.7081447
+      z: 7.270752
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AA.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.634869
+      y: 7.551225
+      z: 7.270752
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AB.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.2743313
+      y: 7.551229
+      z: 7.270752
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AC.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.058539
+      y: 7.5512314
+      z: 7.270752
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AD.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 12.856927
+      y: -4.7360144
+      z: 6.6183376
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AE.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.040163
+      y: -7.5033197
+      z: 6.6183376
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AF.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.1605406
+      y: 7.5512304
+      z: 6.618337
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_AG.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.2705338
+      y: -6.0982213
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.9357705
+      y: -6.0982227
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 13"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.8442564
+      y: -6.0982237
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 14"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8505253
+      y: 6.151771
+      z: 6.4338098
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 15"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.7430053
+      y: 6.1517997
+      z: 6.4338098
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_C.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 16"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8469802
+      y: 6.1400876
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_D.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 17"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.74297
+      y: 6.1516547
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_D.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 18"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.9147946
+      y: -7.430118
+      z: 7.2400904
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_E.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 19"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.841039
+      y: -7.4301195
+      z: 7.2400904
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_E.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 20"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8412056
+      y: 7.4693284
+      z: 7.240396
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_F.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 21"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.742909
+      y: 7.551228
+      z: 7.27075
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_F.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 22"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.160344
+      y: -0.12462028
+      z: 7.2041235
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_G.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 23"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.268888
+      y: 6.1517725
+      z: 6.4338145
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_H.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 24"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.062591
+      y: 6.151773
+      z: 6.4338145
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_I.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 25"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.644359
+      y: 6.1517673
+      z: 6.4338145
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_J.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 26"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.108128
+      y: 4.739437
+      z: 6.433813
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_K.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 27"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.113674
+      y: -4.6791716
+      z: 6.433813
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_L.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 28"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.708705
+      y: -6.109908
+      z: 6.433813
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_M.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 29"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.179429
+      y: 6.1953983
+      z: 6.5484595
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_N.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 30"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.053129
+      y: -6.1532903
+      z: 6.5484595
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_O.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 31"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 11.462424
+      y: -4.7168036
+      z: 6.5484595
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_P.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 32"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.066135
+      y: 6.1400895
+      z: 8.34864
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_Q.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 33"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.272433
+      y: 6.1400886
+      z: 8.34864
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_R.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 34"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.640814
+      y: 6.1400843
+      z: 8.34864
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_S.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 35"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.108128
+      y: 4.7429814
+      z: 7.2400904
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_T.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 36"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.101992
+      y: -4.6756263
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_U.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 37"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.71225
+      y: -6.098225
+      z: 8.3486395
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_V.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 38"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -12.501217
+      y: -0.1318676
+      z: 7.2707524
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_W.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 39"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.2569923
+      y: -7.516328
+      z: 7.2707524
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_X.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 40"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.692322
+      y: -7.516331
+      z: 7.2707524
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_Y.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Door 2nd Floor 41"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -12.501214
+      y: -4.6977735
+      z: 7.270752
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Door_2nd_Floor_Z.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Stones 2nd Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.15320617
+      y: 0.02905426
+      z: 8.437972
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Stones_2nd_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Stonewalls 2nd Floor 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.1390631
+      y: -0.114630125
+      z: 7.8550887
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Stonewalls_2nd_Floor_A.txt"
+    }
+  }
+}
+node {
+  name: "Stonewalls 2nd Floor 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.1390631
+      y: -0.114630125
+      z: 7.8550887
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Stonewalls_2nd_Floor_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Roof"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.8993909
+      y: 0.0030139158
+      z: 15.942468
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Roof.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: -5.789582
+      y: -2.9617271
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.78514
+      y: 2.9483397
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: 8.290707
+      y: -0.020490723
+      z: 12.186183
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: -1.8298806
+      y: -2.9617279
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.8290759
+      y: 2.9483397
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 2.1733022
+      y: -2.9617271
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.1741076
+      y: 2.9483397
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 6.129367
+      y: -2.9617279
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.1338086
+      y: 2.9483397
+      z: 12.183128
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_A.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 4.209257
+      y: -2.942045
+      z: 14.929462
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: -3.8049757
+      y: -2.9420002
+      z: 14.929174
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 0.20972745
+      y: -2.9420455
+      z: 14.930211
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 13"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 4.127832
+      y: 2.9162285
+      z: 14.929175
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 14"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -3.873156
+      y: 2.9162285
+      z: 14.929463
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 15"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.12637359
+      y: 2.9162292
+      z: 14.930212
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Ornament Windows 16"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.7071068
+      z: -0.7071067
+    }
+    Translation {
+      x: 8.24848
+      y: -0.03614257
+      z: 14.931986
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Ornament_Windows_B.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+      z: 8.742278e-08
+    }
+    Translation {
+      x: -11.965725
+      y: -0.01802246
+      z: 16.884779
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_A.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+      z: 8.742278e-08
+    }
+    Translation {
+      x: 10.204414
+      y: -0.14466888
+      z: 16.703466
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_B.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.032136
+      y: 5.472142
+      z: 16.172346
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_C.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -11.028592
+      y: -5.498769
+      z: 16.175005
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_D.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -0.84032834
+      y: 5.476743
+      z: 16.175005
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_E.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -0.8206982
+      y: -5.4987693
+      z: 16.175005
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_F.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 7.446068
+      y: -5.4987683
+      z: 16.175005
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_G.txt"
+    }
+  }
+}
+node {
+  name: "Roof Floor 03 08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+      z: 8.742278e-08
+    }
+    Translation {
+      x: 7.517241
+      y: 5.4767466
+      z: 16.175005
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Roof_Floor_03_H.txt"
+    }
+  }
+}
+node {
+  name: "Sponza Ornament"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -7.899508
+      y: 0.011113815
+      z: 13.326275
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Sponza_Ornament.txt"
+    }
+  }
+}
+node {
+  name: "Walls 3rd Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 1.4462537
+      y: -0.049446717
+      z: 13.452463
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Walls_3rd_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Decals 3rd Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 0.09102356
+      y: -0.18152206
+      z: 12.530001
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Decals_3rd_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Decals 2nd Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 7.54979e-08
+      x: -0.0
+      y: -0.0
+      z: -1.0
+    }
+    Translation {
+      x: 0.1679242
+      y: 0.30849546
+      z: 8.079009
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Decals_2nd_Floor.txt"
+    }
+  }
+}
+node {
+  name: "Decals 1st Floor"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.49999988
+      x: 0.49999994
+      y: 0.50000006
+      z: 0.5000001
+    }
+    Translation {
+      x: -11.116789
+      y: 4.7802944
+      z: 1.1709985
+    }
+  }
+  component {
+    name: "Model Component"
+    property {
+      name: "Model"
+      path: "sponza/Decals_1st_Floor.txt"
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.928595
+      y: -4.742171
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.849446
+      y: -4.742171
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.1935785
+      y: -4.742171
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.141829
+      y: -4.742171
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.024332
+      y: -4.757481
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.824721
+      y: 4.806306
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.928595
+      y: 4.806306
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -1.849446
+      y: 4.806306
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_09"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.1935785
+      y: 4.806306
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_10"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 6.141829
+      y: 4.806306
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_11"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.024332
+      y: 4.7909956
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_12"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 15.619153
+      y: 0.91743493
+      z: 3.2758443
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_13"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.824721
+      y: -4.742171
+      z: 4.1713915
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_1st_floor_14"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -13.589995
+      y: -0.06591804
+      z: 3.8677943
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_01"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.765948
+      y: -4.742171
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_02"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.161498
+      y: -4.6650343
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_03"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.075267
+      y: -4.7258143
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_04"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 10.075267
+      y: 4.727109
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_05"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: 2.0937214
+      y: 4.6540666
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_06"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.84765
+      y: 4.6631374
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.540003
+    }
+    property {
+      name: "Color B"
+      float: 0.191487
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_07"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -9.751104
+      y: 4.729569
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 100.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "lamp_light_2nd_floor_08"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 1.0
+    }
+    Translation {
+      x: -5.848376
+      y: -4.6650343
+      z: 9.2852335
+    }
+  }
+  component {
+    name: "Point Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 0.456014
+    }
+    property {
+      name: "Color B"
+      float: 0.114014
+    }
+    property {
+      name: "Intensity"
+      float: 15.0
+    }
+    property {
+      name: "Radius"
+      float: 0.0
+    }
+  }
+}
+node {
+  name: "SUN"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.60923815
+      x: 0.18680865
+      y: -0.22592568
+      z: -0.73681
+    }
+    Translation {
+      x: -21.704859
+      y: 6.149884
+      z: 43.41434
+    }
+  }
+  component {
+    name: "Directional Light"
+    property {
+      name: "Color R"
+      float: 1.0
+    }
+    property {
+      name: "Color G"
+      float: 1.0
+    }
+    property {
+      name: "Color B"
+      float: 1.0
+    }
+    property {
+      name: "Intensity"
+      float: 5.0
+    }
+  }
+}
+node {
+  name: "PhysCamera001"
+  local {
+    Scale {
+      x: 1.0
+      y: 0.99999994
+      z: 1.0
+    }
+    Rotation {
+      w: 0.40503556
+      x: 0.49313915
+      y: -0.59495443
+      z: -0.48866078
+    }
+    Translation {
+      x: -8.80743
+      y: 0.85825783
+      z: 1.5922196
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 58.51198
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 10000.0
+    }
+  }
+}
+node {
+  name: "PhysCamera002"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.524383
+      x: 0.5362977
+      y: 0.472881
+      z: 0.46237528
+    }
+    Translation {
+      x: 10.531103
+      y: -1.5282513
+      z: 7.3529854
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 58.626778
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 10000.0
+    }
+  }
+}
+node {
+  name: "PhysCamera003"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.5517435
+      x: 0.60166883
+      y: 0.42567426
+      z: 0.39035264
+    }
+    Translation {
+      x: 2.7030184
+      y: -2.1113818
+      z: 1.3548956
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 36.254562
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 10000.0
+    }
+  }
+}
+node {
+  name: "PhysCamera004"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.58393455
+      x: 0.57225084
+      y: -0.4030194
+      z: -0.4112479
+    }
+    Translation {
+      x: -9.594357
+      y: -5.3527803
+      z: 6.921101
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 58.239323
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 10000.0
+    }
+  }
+}
+node {
+  name: "PhysCamera005"
+  local {
+    Scale {
+      x: 1.0
+      y: 1.0
+      z: 0.99999994
+    }
+    Rotation {
+      w: 0.52287626
+      x: 0.6703106
+      y: -0.41519758
+      z: -0.32387522
+    }
+    Translation {
+      x: -2.23714
+      y: -2.360802
+      z: 0.7440546
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 37.217148
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 10000.0
+    }
+  }
+}
+node {
+  name: "PhysCamera006"
+  local {
+    Scale {
+      x: 0.99999994
+      y: 1.0
+      z: 1.0
+    }
+    Rotation {
+      w: 0.5582856
+      x: 0.42338967
+      y: -0.4311309
+      z: -0.56849325
+    }
+    Translation {
+      x: -6.5954857
+      y: 0.62906134
+      z: 10.879123
+    }
+  }
+  component {
+    name: "Camera"
+    property {
+      name: "Field of View"
+      float: 37.243916
+    }
+    property {
+      name: "Near Plane"
+      float: 0.1
+    }
+    property {
+      name: "Far Plane"
+      float: 10000.0
+    }
+  }
+}

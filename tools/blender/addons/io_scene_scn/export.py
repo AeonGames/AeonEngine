@@ -417,6 +417,13 @@ class SCN_OT_exporter(bpy.types.Operator):
             scene_buffer.camera.near_plane = camera.clip_start
             scene_buffer.camera.far_plane = camera.clip_end
 
+        # 3b. Clustered Forward+ lighting pipeline. The engine only runs the
+        #     light-culling/compute passes (and therefore shades anything with
+        #     scene lights) when the scene references a lighting pipeline;
+        #     without it geometry renders unlit. Default to the engine's
+        #     stock lighting program so exported scenes are lit out of the box.
+        scene_buffer.lighting_pipeline.path = "shaders/lighting.txt"
+
         # 4. Write the scene file under <game root>/scenes. It lives in its own
         #    directory, separate from the per-scene asset folder, so there is no
         #    filename collision with the generated models.
