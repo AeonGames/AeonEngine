@@ -21,7 +21,7 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 - **Vulkan** — Primary renderer with SPIR-V shader compilation via glslang. On macOS, Vulkan is provided through MoltenVK.
 - **OpenGL 4.5** — Secondary renderer using core profile. Disabled on macOS (Apple does not support OpenGL 4.5).
 - **Minimum common denominator** design — All uniforms use Uniform Buffer Objects (UBOs) so the same shaders work identically across Vulkan, OpenGL, and potential future backends (DirectX, Metal).
-- **Compute pipelines** — A unified Pipeline asset can carry both graphics and multiple ordered compute stages. The Renderer interface exposes `Dispatch` and `Barrier`, and both backends support Shader Storage Buffer Objects (SSBOs) with SPIR-V reflection and transient storage-buffer memory pools.
+- **Compute pipelines** — A unified Pipeline asset can carry both graphics and multiple ordered compute stages. The Renderer interface exposes `Dispatch` and `Barrier`, and both backends support Shader Storage Buffer Objects (SSBOs) with SPIR-V reflection and transient storage-buffer memory pools. Skeletal meshes are skinned on the GPU in a compute pre-pass that writes posed vertices into a buffer the mesh is drawn from, removing skinning from the vertex shader.
 - **Clustered Forward+ lighting** — A compute-driven light culling pipeline bins lights into view-space clusters (`cluster_build`), culls them per cluster (`light_cull`, including a cone-vs-cluster test for spot lights), and packs a global light-index list via an atomic allocator. An optional depth pre-pass marks active clusters so only visible clusters are shaded. Per-frame lights are uploaded as an SSBO (cap 4096). A cluster light-count heatmap debug view is available.
 
 ### Engine Subsystems
@@ -32,7 +32,7 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 | **Math** | Vector2/3/4, Quaternion, Matrix3x3/4x4, Transform, AABB, Frustum, Plane |
 | **Lighting** | Point, spot, and directional lights with radius attenuation and cone falloff; per-pixel Blinn-Phong shading; clustered Forward+ light culling. Per-frame lights collected on the Scene and uploaded to the GPU. |
 | **Materials** | Phong material model (`Kd`, `Ks`, `Shininess`) with texture samplers; `Ks`/`Shininess` carried in the Material UBO |
-| **Skeletal Animation** | Bone hierarchies, keyframe animation, skeleton/animation resources |
+| **Skeletal Animation** | Bone hierarchies, keyframe animation, skeleton/animation resources; GPU compute skinning runs as a pre-pass that poses vertices into a buffer the mesh is then drawn from |
 | **Sound** | Audio via PortAudio with Ogg Vorbis decoding |
 | **Resource Cache** | Centralized resource loading with caching and factory pattern |
 | **GUI Overlay** | Optional in-engine GUI via [AeonGUI](https://github.com/AeonGames/AeonGUI) (Cairo backend) |
