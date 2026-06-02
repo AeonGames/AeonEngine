@@ -86,7 +86,8 @@ namespace AeonGames
                         uint32_t aVertexStart = 0,
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
-                        uint32_t aFirstInstance = 0 ) const;
+                        uint32_t aFirstInstance = 0,
+                        const BufferAccessor* aSkinnedVertices = nullptr ) const;
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.

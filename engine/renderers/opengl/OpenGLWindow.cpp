@@ -27,6 +27,7 @@ limitations under the License.
 #include "OpenGLWindow.hpp"
 #include "OpenGLRenderer.hpp"
 #include "OpenGLMesh.hpp"
+#include "OpenGLBuffer.hpp"
 #include "OpenGLFunctions.hpp"
 #include <sstream>
 #include <iostream>
@@ -254,8 +255,25 @@ namespace AeonGames
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
-                                uint32_t aFirstInstance ) const
+                                uint32_t aFirstInstance,
+                                const BufferAccessor* aSkinnedVertices ) const
     {
+        // Resolve the optional pre-skinned vertex buffer produced by the compute
+        // skinning pre-pass. When present it is bound as the vertex array source
+        // in place of the mesh's rest-pose vertices.
+        GLuint skinned_vertex_buffer_id = 0;
+        size_t skinned_vertex_offset = 0;
+        // The pre-skinned buffer uses a compact 56-byte stride (weight data
+        // dropped); the attribute pointers must use it instead of the mesh's
+        // own 64-byte stride.
+        size_t skinned_vertex_stride = 0;
+        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
+        {
+            skinned_vertex_buffer_id =
+                reinterpret_cast<const OpenGLBuffer&> ( aSkinnedVertices->GetMemoryPoolBuffer()->GetBuffer() ).GetBufferId();
+            skinned_vertex_offset = aSkinnedVertices->GetOffset();
+            skinned_vertex_stride = 56;
+        }
         // During the depth pre-pass, substitute the renderer-owned marking
         // pipeline: it records only the cluster each fragment occupies into the
         // ClusterActive SSBO and ignores material and lighting state.
@@ -269,7 +287,7 @@ namespace AeonGames
             {
                 mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
             }
-            mOpenGLRenderer.BindMesh ( aMesh );
+            mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
             if ( aMesh.GetIndexCount() )
             {
                 glDrawElementsInstanced ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
@@ -310,7 +328,7 @@ namespace AeonGames
         }
 
         /// @todo Add some sort of way to make use of the aFirstInstance parameter
-        mOpenGLRenderer.BindMesh ( aMesh );
+        mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
         if ( aMesh.GetIndexCount() )
         {
             glDrawElementsInstanced ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),

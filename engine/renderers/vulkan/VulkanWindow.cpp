@@ -19,6 +19,8 @@ limitations under the License.
 #include "VulkanMaterial.hpp"
 #include "VulkanUtilities.hpp"
 #include "VulkanMesh.hpp"
+#include "VulkanBuffer.hpp"
+#include "VulkanStorageMemoryPoolBuffer.hpp"
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -1141,8 +1143,23 @@ namespace AeonGames
                                 uint32_t aVertexStart,
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
-                                uint32_t aFirstInstance ) const
+                                uint32_t aFirstInstance,
+                                const BufferAccessor* aSkinnedVertices ) const
     {
+        // Resolve the optional pre-skinned vertex buffer produced by the compute
+        // skinning pre-pass. When present it is bound as the vertex input in
+        // place of the mesh's rest-pose vertices (the index buffer still comes
+        // from the mesh).
+        VkBuffer skinned_vertex_buffer = VK_NULL_HANDLE;
+        VkDeviceSize skinned_vertex_offset = 0;
+        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
+        {
+            const VulkanStorageMemoryPoolBuffer* storage_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinnedVertices->GetMemoryPoolBuffer() );
+            skinned_vertex_buffer =
+                reinterpret_cast<const VulkanBuffer&> ( storage_pool_buffer->GetBuffer() ).GetBuffer();
+            skinned_vertex_offset = aSkinnedVertices->GetOffset();
+        }
         // During the depth pre-pass, substitute the renderer-owned marking
         // pipeline: it records only the cluster each fragment occupies into the
         // ClusterActive SSBO and ignores material and lighting state.
@@ -1198,7 +1215,7 @@ namespace AeonGames
                                      aModelMatrix.GetMatrix4x4() );
             }
 
-            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer );
+            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
             if ( aMesh.GetIndexCount() )
             {
                 vkCmdDrawIndexed (
@@ -1314,7 +1331,7 @@ namespace AeonGames
                                           &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
             }
         }
-        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer );
+        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
         if ( aMesh.GetIndexCount() )
         {
             vkCmdDrawIndexed (
@@ -1470,6 +1487,23 @@ namespace AeonGames
 
         uint32_t group_count = ( aMesh.GetVertexCount() + 63u ) / 64u;
         vkCmdDispatch ( mVkCommandBuffer, group_count, 1, 1 );
+
+        // The skinned vertices are consumed by the subsequent draw as a vertex
+        // attribute buffer (vertex-input stage), not via a shader read, so the
+        // generic shader-read Barrier() does not cover this hazard. Without this
+        // barrier the draw can race the compute write and fetch stale/partial
+        // data, manifesting as exploded vertices.
+        VkMemoryBarrier vertex_barrier{};
+        vertex_barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+        vertex_barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        vertex_barrier.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                               0,
+                               1, &vertex_barrier,
+                               0, nullptr,
+                               0, nullptr );
     }
 
     void VulkanWindow::Barrier() const

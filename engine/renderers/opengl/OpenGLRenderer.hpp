@@ -60,7 +60,7 @@ namespace AeonGames
         GLuint GetOverlayQuad() const;
 
         /// @brief Bind a mesh for subsequent draw calls.
-        void BindMesh ( const Mesh& aMesh );
+        void BindMesh ( const Mesh& aMesh, GLuint aSkinnedVertexBufferId = 0, size_t aSkinnedVertexOffset = 0, size_t aSkinnedVertexStride = 0 );
         /// @brief Bind a pipeline (shader program) for rendering.
         void BindPipeline ( const Pipeline& aPipeline );
         /// @brief Bind a pipeline's compute program for the given ordered
@@ -117,7 +117,8 @@ namespace AeonGames
                       uint32_t aVertexStart = 0,
                       uint32_t aVertexCount = 0xffffffff,
                       uint32_t aInstanceCount = 1,
-                      uint32_t aFirstInstance = 0 ) const final;
+                      uint32_t aFirstInstance = 0,
+                      const BufferAccessor* aSkinnedVertices = nullptr ) const final;
         void Dispatch ( void* aWindowId,
                         const Pipeline& aPipeline,
                         uint32_t aGroupCountX,

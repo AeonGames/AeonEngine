@@ -1030,14 +1030,15 @@ namespace AeonGames
                                   uint32_t aVertexStart,
                                   uint32_t aVertexCount,
                                   uint32_t aInstanceCount,
-                                  uint32_t aFirstInstance ) const
+                                  uint32_t aFirstInstance,
+                                  const BufferAccessor* aSkinnedVertices ) const
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance );
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aSkeleton, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
     }
 
     void VulkanRenderer::Dispatch ( void* aWindowId,

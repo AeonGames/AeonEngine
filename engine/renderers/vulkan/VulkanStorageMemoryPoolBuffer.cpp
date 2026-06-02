@@ -27,7 +27,7 @@ namespace AeonGames
         mVulkanRenderer { aVulkanRenderer },
         mStorageBuffer { mVulkanRenderer,
                          ( ( aStackSize - 1 ) | ( mVulkanRenderer.GetPhysicalDeviceProperties().limits.minStorageBufferOffsetAlignment - 1 ) ) + 1,
-                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT }
     {
         InitializeDescriptorPool();
@@ -51,7 +51,7 @@ namespace AeonGames
     void VulkanStorageMemoryPoolBuffer::Initialize ( size_t aStackSize )
     {
         mStorageBuffer.Initialize ( ( ( aStackSize - 1 ) | ( mVulkanRenderer.GetPhysicalDeviceProperties().limits.minStorageBufferOffsetAlignment - 1 ) ) + 1,
-                                    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT );
         InitializeDescriptorPool();
     }

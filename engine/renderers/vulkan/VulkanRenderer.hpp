@@ -106,7 +106,8 @@ namespace AeonGames
                       uint32_t aVertexStart = 0,
                       uint32_t aVertexCount = 0xffffffff,
                       uint32_t aInstanceCount = 1,
-                      uint32_t aFirstInstance = 0 ) const final;
+                      uint32_t aFirstInstance = 0,
+                      const BufferAccessor* aSkinnedVertices = nullptr ) const final;
         void Dispatch ( void* aWindowId,
                         const Pipeline& aPipeline,
                         uint32_t aGroupCountX,

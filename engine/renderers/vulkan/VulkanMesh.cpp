@@ -160,10 +160,20 @@ namespace AeonGames
         throw std::runtime_error ( "Invalid Index Size." );
     }
 
-    void VulkanMesh::Bind ( VkCommandBuffer aVkCommandBuffer ) const
+    void VulkanMesh::Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer, VkDeviceSize aSkinnedVertexOffset ) const
     {
-        const VkDeviceSize offset = 0;
-        vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &offset );
+        // When a pre-skinned vertex buffer is supplied, bind it as the vertex
+        // input in place of the mesh's rest-pose vertices. The index buffer is
+        // still sourced from the mesh's own buffer.
+        if ( aSkinnedVertexBuffer != VK_NULL_HANDLE )
+        {
+            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &aSkinnedVertexBuffer, &aSkinnedVertexOffset );
+        }
+        else
+        {
+            const VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &offset );
+        }
         if ( mMesh->GetIndexCount() )
         {
             vkCmdBindIndexBuffer ( aVkCommandBuffer,

@@ -188,6 +188,9 @@ namespace AeonGames
          * @param aVertexCount Number of vertices to draw (default: all).
          * @param aInstanceCount Number of instances to draw.
          * @param aFirstInstance Index of the first instance.
+         * @param aSkinnedVertices Optional pre-skinned vertex buffer produced by
+         *        the compute skinning pre-pass; when set it is bound as the
+         *        vertex input in place of the mesh's rest-pose vertices.
          */
         virtual void Render ( void* aWindowId,
                               const Matrix4x4& aModelMatrix,
@@ -199,7 +202,8 @@ namespace AeonGames
                               uint32_t aVertexStart = 0,
                               uint32_t aVertexCount = 0xffffffff,
                               uint32_t aInstanceCount = 1,
-                              uint32_t aFirstInstance = 0 ) const = 0;
+                              uint32_t aFirstInstance = 0,
+                              const BufferAccessor* aSkinnedVertices = nullptr ) const = 0;
         /** Dispatches the compute stage of a pipeline.
          * Group counts are measured in workgroups, not invocations. For
          * backends with an explicit render pass (Vulkan), this must be recorded

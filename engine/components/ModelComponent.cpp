@@ -379,15 +379,42 @@ namespace AeonGames
                 skeleton_accessor.WriteMemory ( 0, used_bones_size, mSkeleton.data() );
                 skeleton_accessor_ptr = &skeleton_accessor;
             }
-            for ( auto& i : model->GetAssemblies() )
+            const auto& assemblies = model->GetAssemblies();
+            // Draw pipeline substituted for skinned assemblies: the vertices are
+            // already posed in the compute pre-pass, so they are drawn with a
+            // non-skinning shader that consumes the compact 56-byte skinned
+            // layout instead of re-applying the skeleton in the vertex stage.
+            static const ResourceId no_skeleton_pipeline_id{ "Pipeline", "shaders/diffuse_map_phong_no_skeleton.txt" };
+            for ( size_t index = 0; index < assemblies.size(); ++index )
             {
+                const auto& i = assemblies[index];
+                const BufferAccessor* skinned_vertices_ptr{nullptr};
+                if ( index < mSkinnedVertices.size() &&
+                     mSkinnedVertices[index].GetMemoryPoolBuffer() != nullptr )
+                {
+                    skinned_vertices_ptr = &mSkinnedVertices[index];
+                }
+                const Pipeline* pipeline = std::get<1> ( i ).Cast<Pipeline>();
+                const Pipeline* no_skeleton_pipeline = nullptr;
+                if ( skinned_vertices_ptr != nullptr )
+                {
+                    no_skeleton_pipeline = no_skeleton_pipeline_id.Get<Pipeline>();
+                }
                 aRenderer.Render (
                     aWindowId,
                     aNode.GetGlobalTransform(),
                     *std::get<0> ( i ).Cast<Mesh>(),
-                    *std::get<1> ( i ).Cast<Pipeline>(),
+                    ( no_skeleton_pipeline != nullptr ) ? *no_skeleton_pipeline : *pipeline,
                     std::get<2> ( i ).Cast<Material>(),
-                    skeleton_accessor_ptr );
+                    // The skeleton is only needed by the in-shader skinning path;
+                    // a pre-skinned draw passes none.
+                    ( skinned_vertices_ptr != nullptr ) ? nullptr : skeleton_accessor_ptr,
+                    Topology::TRIANGLE_LIST,
+                    0,
+                    0xffffffff,
+                    1,
+                    0,
+                    skinned_vertices_ptr );
             }
         }
     }
@@ -447,7 +474,11 @@ namespace AeonGames
             {
                 continue;
             }
-            size_t skinned_size = static_cast<size_t> ( mesh->GetVertexCount() ) * mesh->GetStride();
+            // The skinned output drops the per-vertex weight data, so it uses
+            // the compact 56-byte stride consumed by the no-skeleton draw
+            // pipeline (position, normal, tangent, bitangent, uv).
+            constexpr size_t kSkinnedVertexStride = 56;
+            size_t skinned_size = static_cast<size_t> ( mesh->GetVertexCount() ) * kSkinnedVertexStride;
             mSkinnedVertices[i] = aRenderer.AllocateSingleFrameStorageMemory ( aWindowId, skinned_size );
             aRenderer.Skin ( aWindowId, *skinning_pipeline, *mesh, skinning_matrices, mSkinnedVertices[i] );
             dispatched = true;

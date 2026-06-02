@@ -36,9 +36,17 @@ namespace AeonGames
         OpenGLMesh& operator= ( const OpenGLMesh& aOpenGLMesh ) = delete;
         OpenGLMesh& operator= ( OpenGLMesh&& aOpenGLMesh ) = delete;
         /// @brief Bind the vertex and index buffers.
-        void Bind() const;
+        /// @param aSkinnedVertexBufferId Optional GL buffer to bind as the
+        ///        vertex array source in place of the mesh's rest-pose vertices
+        ///        (the pre-skinned output of the compute skinning pass).
+        void Bind ( GLuint aSkinnedVertexBufferId = 0 ) const;
         /// @brief Enable the specified vertex attributes for rendering.
-        void EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
+        /// @param aBaseOffset Byte offset added to every attribute pointer, used
+        ///        when the bound vertex buffer is a sub-range of a pooled buffer.
+        /// @param aStrideOverride When non-zero, overrides the mesh stride; used
+        ///        when drawing the compact pre-skinned buffer whose stride drops
+        ///        the per-vertex weight data.
+        void EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes, size_t aBaseOffset = 0, size_t aStrideOverride = 0 ) const;
         /// @brief Disable the specified vertex attributes.
         void DisableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
         /** @brief Get the vertex buffer object id, for binding the static vertex

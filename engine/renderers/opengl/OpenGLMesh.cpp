@@ -59,19 +59,20 @@ namespace AeonGames
         {Mesh::DOUBLE, GL_DOUBLE},
     };
 
-    void OpenGLMesh::Bind() const
+    void OpenGLMesh::Bind ( GLuint aSkinnedVertexBufferId ) const
     {
-        glBindBuffer ( GL_ARRAY_BUFFER, mVertexBuffer.GetBufferId() );
+        glBindBuffer ( GL_ARRAY_BUFFER, ( aSkinnedVertexBufferId != 0 ) ? aSkinnedVertexBufferId : mVertexBuffer.GetBufferId() );
         OPENGL_CHECK_ERROR_THROW;
     }
 
-    void OpenGLMesh::EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const
+    void OpenGLMesh::EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes, size_t aBaseOffset, size_t aStrideOverride ) const
     {
         for ( GLuint i = 0; i < 8; ++i )
         {
             glDisableVertexAttribArray ( i );
         }
 
+        const GLsizei stride = static_cast<GLsizei> ( ( aStrideOverride != 0 ) ? aStrideOverride : mMesh->GetStride() );
         size_t offset{0};
         for ( auto& attribute : mMesh->GetAttributes() )
         {
@@ -97,8 +98,8 @@ namespace AeonGames
                     std::get<1> ( attribute ),
                     MeshTypeToOGL[std::get<2> ( attribute )],
                     std::get<3> ( attribute ) & Mesh::AttributeFlag::NORMALIZED,
-                    static_cast<GLsizei> ( mMesh->GetStride() ),
-                    reinterpret_cast<const void*> ( offset ) );
+                    stride,
+                    reinterpret_cast<const void*> ( offset + aBaseOffset ) );
                 OPENGL_CHECK_ERROR_THROW;
             }
             else
@@ -107,8 +108,8 @@ namespace AeonGames
                     it->location,
                     std::get<1> ( attribute ),
                     MeshTypeToOGL[std::get<2> ( attribute )],
-                    static_cast<GLsizei> ( mMesh->GetStride() ),
-                    reinterpret_cast<const void*> ( offset ) );
+                    stride,
+                    reinterpret_cast<const void*> ( offset + aBaseOffset ) );
             }
             offset += GetAttributeTotalSize ( attribute );
         }

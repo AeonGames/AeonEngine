@@ -688,9 +688,11 @@ namespace AeonGames
      *  normal, tangent, bitangent, uv, packed weight indices, packed weights).
      *  Every vertex is fully weighted to joint 0, whose matrix is a pure
      *  translation, so the expected result is position + translation with the
-     *  directional attributes (identity 3x3) and the uv/weight words left
-     *  unchanged. This proves the compute-skinning math, the interleaved word
-     *  unpacking and the source/skeleton/output SSBO binding path end to end. */
+     *  directional attributes (identity 3x3) and the uv words left unchanged.
+     *  The skinning output drops the weight data, producing the compact 56-byte
+     *  (14-word) layout the no-skeleton draw pipeline consumes. This proves the
+     *  compute-skinning math, the interleaved word unpacking and the
+     *  source/skeleton/output SSBO binding path end to end. */
     static void RunSkinningTest ( const char* aRendererName )
     {
         HWND hwnd = CreateHiddenRenderWindow();
@@ -704,7 +706,8 @@ namespace AeonGames
         renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
 
         constexpr uint32_t local_size = 64;
-        constexpr uint32_t vertex_words = 16; // 64-byte skinned vertex stride.
+        constexpr uint32_t vertex_words = 16; // 64-byte source vertex stride.
+        constexpr uint32_t skinned_words = 14; // 56-byte compact skinned stride.
         constexpr uint32_t vertex_count = 100; // spans two work groups.
 
         // Joint 0 is a pure translation; its 3x3 part is identity.
@@ -754,7 +757,7 @@ namespace AeonGames
         BufferAccessor matrices_buffer = renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( joint0 ) );
         matrices_buffer.WriteMemory ( 0, sizeof ( joint0 ), joint0 );
 
-        BufferAccessor skinned_buffer = renderer->AllocateSingleFrameStorageMemory ( hwnd, source_size );
+        BufferAccessor skinned_buffer = renderer->AllocateSingleFrameStorageMemory ( hwnd, vertex_count * skinned_words * sizeof ( uint32_t ) );
 
         const StorageBufferBinding bindings[]
         {
@@ -779,7 +782,7 @@ namespace AeonGames
         ASSERT_NE ( out, nullptr );
         for ( uint32_t v = 0; v < vertex_count; ++v )
         {
-            const uint32_t* vert = out + v * vertex_words;
+            const uint32_t* vert = out + v * skinned_words;
             // Position translated by joint 0.
             EXPECT_NEAR ( BitsFloat ( vert[0] ), static_cast<float> ( v ) + tx, 1e-4f )
                     << "position.x mismatch at vertex " << v;
@@ -791,11 +794,9 @@ namespace AeonGames
             EXPECT_NEAR ( BitsFloat ( vert[5] ), 1.0f, 1e-5f ) << "normal.z at vertex " << v;
             EXPECT_NEAR ( BitsFloat ( vert[6] ), 1.0f, 1e-5f ) << "tangent.x at vertex " << v;
             EXPECT_NEAR ( BitsFloat ( vert[10] ), 1.0f, 1e-5f ) << "bitangent.y at vertex " << v;
-            // UV and packed weight words are copied verbatim.
+            // UV is copied verbatim; the weight words are dropped from output.
             EXPECT_EQ ( vert[12], FloatBits ( 0.25f ) ) << "uv.x at vertex " << v;
             EXPECT_EQ ( vert[13], FloatBits ( 0.75f ) ) << "uv.y at vertex " << v;
-            EXPECT_EQ ( vert[14], 0u ) << "weight indices at vertex " << v;
-            EXPECT_EQ ( vert[15], 0x000000FFu ) << "weight values at vertex " << v;
         }
         skinned_buffer.Unmap();
 
