@@ -1,0 +1,34 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Lamps_1st_Floor_metal_door.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/metal_door.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Lamps_1st_Floor_lamp_glass_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/lamp_glass_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Lamps_1st_Floor_light_bulb.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/light_bulb.txt"
+  }
+}

@@ -1,0 +1,34 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Wooden_Parts_C_metal_door.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/metal_door.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Wooden_Parts_C_glass.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/glass.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Wooden_Parts_C_wood_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/wood_01.txt"
+  }
+}

@@ -1,0 +1,309 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_arch_stone_wall_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/arch_stone_wall_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_column_1stfloor.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/column_1stfloor.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_column_head_1stfloor.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/column_head_1stfloor.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_stone_trims_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/stone_trims_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_window_frame_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/window_frame_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_stones_01_tile.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/stones_01_tile.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_floor_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/floor_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_stones_2ndfloor.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/stones_2ndfloor.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_door_stoneframe_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/door_stoneframe_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_door_stoneframe_02.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/door_stoneframe_02.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_metal_door.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/metal_door.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_glass.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/glass.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_lamp_glass_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/lamp_glass_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_brickwall_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/brickwall_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_brickwall_02.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/brickwall_02.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_column_head_2ndfloor_02.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/column_head_2ndfloor_02.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_column_brickwall_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/column_brickwall_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_column_head_2ndfloor_03.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/column_head_2ndfloor_03.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_ornament_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/ornament_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_roof_tiles_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/roof_tiles_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_stone_trims_02.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/stone_trims_02.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_wood_door_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/wood_door_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_wood_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/wood_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_ceiling_plaster_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/ceiling_plaster_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_ceiling_plaster_02.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/ceiling_plaster_02.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_dirt_decal.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/dirt_decal.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_ornament_lion.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/ornament_lion.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Master_Material_light_bulb.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/light_bulb.txt"
+  }
+}

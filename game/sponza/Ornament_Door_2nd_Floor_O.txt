@@ -1,0 +1,34 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Ornament_Door_2nd_Floor_O_arch_stone_wall_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/arch_stone_wall_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Ornament_Door_2nd_Floor_O_door_stoneframe_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/door_stoneframe_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Ornament_Door_2nd_Floor_O_metal_door.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/metal_door.txt"
+  }
+}

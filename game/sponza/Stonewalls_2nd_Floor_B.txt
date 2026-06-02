@@ -1,0 +1,34 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Stonewalls_2nd_Floor_B_floor_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/floor_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Stonewalls_2nd_Floor_B_brickwall_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/brickwall_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Stonewalls_2nd_Floor_B_brickwall_02.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/brickwall_02.txt"
+  }
+}

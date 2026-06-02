@@ -1,0 +1,12 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Decals_1st_Floor.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/dirt_decal.txt"
+  }
+}

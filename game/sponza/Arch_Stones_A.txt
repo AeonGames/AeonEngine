@@ -1,0 +1,34 @@
+AEONMDL
+assembly {
+  mesh {
+    path: "sponza/meshes/Arch_Stones_A_arch_stone_wall_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/arch_stone_wall_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Arch_Stones_A_stone_trims_01.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/stone_trims_01.txt"
+  }
+}
+assembly {
+  mesh {
+    path: "sponza/meshes/Arch_Stones_A_metal_door.txt"
+  }
+  pipeline {
+    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+  }
+  material {
+    path: "sponza/materials/metal_door.txt"
+  }
+}

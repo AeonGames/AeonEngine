@@ -1,0 +1,27 @@
+AEONMTL
+property {
+  name: "Kd"
+  vector3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+property {
+  name: "Ks"
+  vector3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+property {
+  name: "Shininess"
+  scalar_float: 64.0
+}
+sampler {
+  name: "DiffuseMap"
+  image {
+    path: "sponza/textures/floor_tiles_01_BaseColor.png"
+  }
+}
