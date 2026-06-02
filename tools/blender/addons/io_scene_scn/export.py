@@ -26,6 +26,37 @@ import google.protobuf.text_format
 # Scene (per-.blend). Kept in sync with the definitions in __init__.py.
 _GAME_ROOT_PROP = "aeon_game_root"
 
+# Blender cameras (and spot/sun lights) look down their local -Z axis with +Y
+# up. The engine convention is +X right, +Y forward (the view direction), +Z up
+# (see Matrix4x4::Frustum, "glFrustum, +X right, +Y forward, +Z up"). Rotating
+# a Blender camera node by -90 degrees about its local X axis maps the engine
+# frame onto the Blender frame: engine +Y (forward) -> Blender -Z (view dir),
+# engine +Z (up) -> Blender +Y (up), engine +X (right) -> Blender +X (right).
+# The node transform is post-multiplied by this so the exported orientation
+# makes the engine camera point the same way as in Blender.
+_BLENDER_TO_ENGINE_CAMERA = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'X')
+
+# The engine's forward Phong shaders (diffuse_map_phong*.txt) write radiance
+# straight to the framebuffer -- there is no exposure, tone mapping or gamma,
+# so any accumulated radiance above ~1.0 clips to white. Blender's light.energy
+# values are physically based (watts for point/spot, W*m^-2 for sun) and tuned
+# for its tone-mapped path tracer, so they blow the LDR image out. Scale them
+# into a roughly [0..1] radiance range. These are art-calibration constants;
+# tune to taste.
+_SUN_INTENSITY_SCALE = 0.2     # W*m^-2 -> engine directional radiance
+_POINT_INTENSITY_SCALE = 0.01  # W      -> engine point / spot radiance
+
+
+def _engine_light_radius(light):
+    '''Finite range (in world units) for a point/spot light. Blender lights
+    without a custom distance have infinite inverse-square range, but the
+    engine's falloff is a finite windowed sphere (clamp(1 - d^2/r^2)^2), so a
+    radius of 0 makes the light contribute nothing. Derive a usable range from
+    the light power when no explicit cutoff is set.'''
+    if light.use_custom_distance:
+        return light.cutoff_distance
+    return math.sqrt(max(light.energy, 0.0))
+
 
 def _get_addon_preferences(context):
     '''Return this addon's AddonPreferences, or None if unavailable.'''
@@ -181,16 +212,18 @@ class SCN_OT_exporter(bpy.types.Operator):
             self._add_float_property(component, "Color R", color[0])
             self._add_float_property(component, "Color G", color[1])
             self._add_float_property(component, "Color B", color[2])
-            self._add_float_property(component, "Intensity", light.energy)
+            self._add_float_property(component, "Intensity",
+                                     light.energy * _SUN_INTENSITY_SCALE)
         elif light.type == 'SPOT':
             component = node_msg.component.add()
             component.name = "Spot Light"
             self._add_float_property(component, "Color R", color[0])
             self._add_float_property(component, "Color G", color[1])
             self._add_float_property(component, "Color B", color[2])
-            self._add_float_property(component, "Intensity", light.energy)
-            radius = light.cutoff_distance if light.use_custom_distance else 0.0
-            self._add_float_property(component, "Radius", radius)
+            self._add_float_property(component, "Intensity",
+                                     light.energy * _POINT_INTENSITY_SCALE)
+            self._add_float_property(component, "Radius",
+                                     _engine_light_radius(light))
             # Blender spot_size is the full cone angle; the engine cone uses
             # half-angles. spot_blend (0..1) is the fraction of the cone that
             # is the soft falloff, measured inward from the outer edge.
@@ -205,9 +238,10 @@ class SCN_OT_exporter(bpy.types.Operator):
             self._add_float_property(component, "Color R", color[0])
             self._add_float_property(component, "Color G", color[1])
             self._add_float_property(component, "Color B", color[2])
-            self._add_float_property(component, "Intensity", light.energy)
-            radius = light.cutoff_distance if light.use_custom_distance else 0.0
-            self._add_float_property(component, "Radius", radius)
+            self._add_float_property(component, "Intensity",
+                                     light.energy * _POINT_INTENSITY_SCALE)
+            self._add_float_property(component, "Radius",
+                                     _engine_light_radius(light))
 
     def _add_camera_component(self, node_msg, camera):
         component = node_msg.component.add()
@@ -400,7 +434,10 @@ class SCN_OT_exporter(bpy.types.Operator):
             elif obj.type == 'CAMERA':
                 node = scene_buffer.node.add()
                 node.name = obj.name
-                self._set_transform(node.local, obj.matrix_world)
+                # Reorient from Blender's -Z-forward/+Y-up camera frame to the
+                # engine's +Y-forward/+Z-up frame so the view direction matches.
+                self._set_transform(node.local,
+                                    obj.matrix_world @ _BLENDER_TO_ENGINE_CAMERA)
                 self._add_camera_component(node, obj.data)
                 camera_nodes[obj] = obj.data
             else:
