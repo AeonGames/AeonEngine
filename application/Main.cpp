@@ -82,10 +82,12 @@ int Main ( int argc, char *argv[] )
         AeonGames::Scene scene{};
 
         ///@todo We now have a function returning a vector of strings, use it here
-        AeonGames::EnumerateRendererConstructors ( [&window, &renderer_name, &fullscreen] ( const AeonGames::StringId & aIdentifier ) -> bool
+        std::string active_renderer_name{};
+        AeonGames::EnumerateRendererConstructors ( [&window, &renderer_name, &active_renderer_name, &fullscreen] ( const AeonGames::StringId & aIdentifier ) -> bool
         {
             if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )
             {
+                active_renderer_name = aIdentifier.GetString();
                 window = std::make_unique<AeonGames::Window> ( aIdentifier.GetString(), 0, 0, 1280, 720, fullscreen );
                 return false;
             }
@@ -108,6 +110,27 @@ int Main ( int argc, char *argv[] )
         {
             scene.Load ( scene_path );
         }
+
+        // Compose the window title: "AeonEngine - <renderer> - <scene>".
+        std::string title{"AeonEngine"};
+        if ( !active_renderer_name.empty() )
+        {
+            title += " - " + active_renderer_name;
+        }
+        if ( !scene_path.empty() )
+        {
+            // Drop any file extension from the scene path for a cleaner title.
+            std::string scene_name{scene_path};
+            std::string::size_type dot = scene_name.find_last_of ( '.' );
+            std::string::size_type slash = scene_name.find_last_of ( "/\\" );
+            if ( dot != std::string::npos && ( slash == std::string::npos || dot > slash ) )
+            {
+                scene_name.erase ( dot );
+            }
+            title += " - " + scene_name;
+        }
+        window->SetTitle ( title );
+
         window->Run ( scene );
     }
     AeonGames::FinalizeGlobalEnvironment();

@@ -168,6 +168,11 @@ namespace AeonGames
         return 0;
     }
 
+    void Window::SetTitle ( const std::string& aTitle )
+    {
+        [mNSWindow setTitle:[NSString stringWithUTF8String:aTitle.c_str()]];
+    }
+
     void Window::Run ( Scene& aScene )
     {
         bool running{true};

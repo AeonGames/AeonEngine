@@ -41,6 +41,7 @@ namespace AeonGames
         Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen );
         ~Window();
         uint32_t Resize ( uint32_t aWidth, uint32_t aHeight );
+        void SetTitle ( const std::string& aTitle );
         void Run ( Scene& aScene );
         InputSystem* GetInputSystem() const
         {

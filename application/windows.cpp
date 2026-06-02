@@ -461,6 +461,11 @@ namespace AeonGames
         return 0;
     }
 
+    void Window::SetTitle ( const std::string& aTitle )
+    {
+        SetWindowText ( static_cast<HWND> ( mWindowId ), aTitle.c_str() );
+    }
+
     void Window::Run ( Scene& aScene )
     {
         MSG msg;

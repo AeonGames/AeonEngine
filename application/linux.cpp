@@ -243,6 +243,11 @@ namespace AeonGames
         return 0;
     }
 
+    void Window::SetTitle ( const std::string& aTitle )
+    {
+        XStoreName ( mDisplay, mWindowId, aTitle.c_str() );
+    }
+
     void Window::Run ( Scene& aScene )
     {
         bool running{true};
