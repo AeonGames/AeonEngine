@@ -41,6 +41,9 @@ namespace AeonGames
         void EnableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
         /// @brief Disable the specified vertex attributes.
         void DisableAttributes ( const std::vector<OpenGLVariable>& aAttributes ) const;
+        /** @brief Get the vertex buffer object id, for binding the static vertex
+         * data as a storage buffer (SSBO) source in compute skinning. */
+        GLuint GetVertexBufferId() const;
     private:
         const OpenGLRenderer& mOpenGLRenderer;
         const Mesh* mMesh{nullptr};

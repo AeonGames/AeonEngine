@@ -242,6 +242,10 @@ namespace AeonGames
             @param aRenderer The renderer to draw with.
             @param aWindowId Platform-specific window handle. */
         DLL void Render ( Renderer& aRenderer, void* aWindowId ) const;
+        /** Dispatch compute skinning for this node and its children before the render pass.
+            @param aRenderer The renderer to dispatch with.
+            @param aWindowId Platform-specific window handle. */
+        DLL void Skin ( Renderer& aRenderer, void* aWindowId ) const;
         /** Deliver a message to this node and its components.
             @param aMessageType Type identifier for the message.
             @param aMessageData Pointer to message-specific data. */

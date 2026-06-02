@@ -221,6 +221,23 @@ namespace AeonGames
                                 uint32_t aGroupCountZ = 1,
                                 std::span<const StorageBufferBinding> aStorageBuffers = {},
                                 uint32_t aComputeStageIndex = 0 ) const = 0;
+        /** Dispatches the compute skinning pre-pass for a single skinned mesh,
+         * transforming the mesh's rest-pose vertices by the supplied per-joint
+         * skinning matrices into an output vertex buffer. Like Dispatch, for
+         * backends with an explicit render pass (Vulkan) this must be recorded
+         * between BeginFrame and BeginRenderPass.
+         * @param aWindowId Platform dependent window handle.
+         * @param aSkinningPipeline Compute pipeline implementing the skinning kernel.
+         * @param aMesh Source mesh whose vertex buffer is bound as SourceVertices.
+         * @param aSkinningMatrices SSBO of per-joint pose*inverse-bind matrices.
+         * @param aSkinnedVertices Output SSBO receiving the skinned vertices,
+         *        sized vertexCount * mesh stride.
+         */
+        virtual void Skin ( void* aWindowId,
+                            const Pipeline& aSkinningPipeline,
+                            const Mesh& aMesh,
+                            const BufferAccessor& aSkinningMatrices,
+                            const BufferAccessor& aSkinnedVertices ) const = 0;
         /** Inserts a memory barrier ensuring shader storage-buffer (SSBO)
          * writes from a preceding Dispatch are visible to subsequent shader
          * reads (compute or graphics).

@@ -114,6 +114,11 @@ namespace AeonGames
                         uint32_t aGroupCountZ = 1,
                         std::span<const StorageBufferBinding> aStorageBuffers = {},
                         uint32_t aComputeStageIndex = 0 ) const final;
+        void Skin ( void* aWindowId,
+                    const Pipeline& aSkinningPipeline,
+                    const Mesh& aMesh,
+                    const BufferAccessor& aSkinningMatrices,
+                    const BufferAccessor& aSkinnedVertices ) const final;
         void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         const BufferAccessor* GetFrameLightGrid ( void* aWindowId ) const final;

@@ -131,4 +131,9 @@ namespace AeonGames
             glDisableVertexAttribArray ( attribute.location );
         }
     }
+
+    GLuint OpenGLMesh::GetVertexBufferId() const
+    {
+        return mVertexBuffer.GetBufferId();
+    }
 }

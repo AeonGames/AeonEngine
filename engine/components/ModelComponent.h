@@ -47,6 +47,7 @@ namespace AeonGames
         const std::vector<std::string>& GetPropertyEnumValues ( const StringId& aId ) const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
+        void Skin ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
 
@@ -101,6 +102,11 @@ namespace AeonGames
         float mBlendElapsed{0.0f};
         // 128 is the maximum number of bones per model
         std::array<uint8_t, 16 * 128 * sizeof ( float ) > mSkeleton{};
+        // Per-assembly skinned output vertex buffers produced by the compute
+        // skinning pre-pass (Skin). Indexed in lockstep with the model's
+        // assemblies; entries for non-skinned assemblies remain default (empty).
+        // Frame-transient: refilled every Skin() and consumed by Render().
+        std::vector<BufferAccessor> mSkinnedVertices{};
     };
 }
 #endif

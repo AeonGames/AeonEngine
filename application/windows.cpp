@@ -552,6 +552,16 @@ namespace AeonGames
                 }
                 mRenderer->SetLights ( mWindowId, aScene.GetFrameLights() );
                 const Pipeline* lighting = aScene.GetLightingPipeline();
+                // Compute skinning pre-pass: dispatch skinning before the render
+                // pass begins so the skinned vertex buffers are ready for both
+                // the depth and shading traversals. BeginFrame() is idempotent,
+                // so the subsequent BeginRender() reuses this frame's command
+                // recording instead of starting a new one.
+                mRenderer->BeginFrame ( mWindowId );
+                aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                {
+                    aNode.Skin ( *mRenderer, mWindowId );
+                } );
                 mRenderer->BeginRender ( mWindowId, lighting );
                 if ( lighting )
                 {

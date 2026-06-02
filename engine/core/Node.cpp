@@ -589,6 +589,14 @@ namespace AeonGames
         }
     }
 
+    void Node::Skin ( Renderer& aRenderer, void* aWindowId ) const
+    {
+        for ( auto& i : mComponentDependencyMap )
+        {
+            GetComponent ( i )->Skin ( *this, aRenderer, aWindowId );
+        }
+    }
+
     size_t Node::GetComponentCount() const
     {
         return mComponents.size();

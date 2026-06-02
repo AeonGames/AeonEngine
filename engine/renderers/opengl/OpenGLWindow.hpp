@@ -92,6 +92,11 @@ namespace AeonGames
                         uint32_t aGroupCountZ = 1,
                         std::span<const StorageBufferBinding> aStorageBuffers = {},
                         uint32_t aComputeStageIndex = 0 ) const;
+        /// @brief Dispatch the compute skinning pre-pass for a single skinned mesh.
+        void Skin ( const Pipeline& aSkinningPipeline,
+                    const Mesh& aMesh,
+                    const BufferAccessor& aSkinningMatrices,
+                    const BufferAccessor& aSkinnedVertices ) const;
         /// @brief Insert a memory barrier making SSBO writes visible to subsequent shader reads.
         void Barrier() const;
         /// @brief Allocate transient uniform memory for the current frame.
@@ -167,6 +172,10 @@ namespace AeonGames
         // True while recording the depth pre-pass: Render substitutes the
         // marking pipeline instead of the scene's draw pipelines.
         bool mDepthPrePassActive{false};
+        // True once BeginFrame() has begun this frame; makes BeginFrame()
+        // idempotent so the app can run a pre-render-pass compute phase
+        // (e.g. skinning) before BeginRender().
+        bool mFrameBegun{false};
         // Drives ClusterParams.screen.w; enables active-cluster culling once
         // the mark stage has run this frame.
         bool mActiveCullEnabled{false};

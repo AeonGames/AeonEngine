@@ -392,6 +392,73 @@ namespace AeonGames
         }
     }
 
+    void ModelComponent::Skin ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
+    {
+        ( void ) aNode;
+        mSkinnedVertices.clear();
+        auto model = mModel.Cast<Model>();
+        if ( !model )
+        {
+            return;
+        }
+        const Skeleton* skeleton{ model->GetSkeleton() };
+        if ( !skeleton )
+        {
+            return;
+        }
+        // The skinning compute pipeline is renderer-agnostic and shared across
+        // every skinned model; fetch (and cache) it from the resource store.
+        static const ResourceId skinning_pipeline_id{ "Pipeline", "shaders/skinning.txt" };
+        const Pipeline* skinning_pipeline = skinning_pipeline_id.Get<Pipeline>();
+        if ( !skinning_pipeline )
+        {
+            return;
+        }
+        // Upload the per-joint pose*inverse-bind matrices computed in Update()
+        // as a storage buffer the compute kernel reads.
+        size_t used_bones_size = skeleton->GetJoints().size() * sizeof ( float ) * 16;
+        assert ( used_bones_size <= mSkeleton.size() );
+        BufferAccessor skinning_matrices = aRenderer.AllocateSingleFrameStorageMemory ( aWindowId, used_bones_size );
+        skinning_matrices.WriteMemory ( 0, used_bones_size, mSkeleton.data() );
+
+        const auto& assemblies = model->GetAssemblies();
+        mSkinnedVertices.resize ( assemblies.size() );
+        bool dispatched = false;
+        for ( size_t i = 0; i < assemblies.size(); ++i )
+        {
+            Mesh* mesh = std::get<0> ( assemblies[i] ).Cast<Mesh>();
+            if ( mesh == nullptr || mesh->GetVertexCount() == 0 )
+            {
+                continue;
+            }
+            // The skinning kernel assumes the canonical 64-byte skinned vertex
+            // layout with packed weight indices/values in the last two words;
+            // skip assemblies whose meshes are not authored that way.
+            bool has_weights = false;
+            for ( const auto& attribute : mesh->GetAttributes() )
+            {
+                if ( std::get<0> ( attribute ) == Mesh::WEIGHT_INDEX )
+                {
+                    has_weights = true;
+                    break;
+                }
+            }
+            if ( !has_weights || mesh->GetStride() != 64 )
+            {
+                continue;
+            }
+            size_t skinned_size = static_cast<size_t> ( mesh->GetVertexCount() ) * mesh->GetStride();
+            mSkinnedVertices[i] = aRenderer.AllocateSingleFrameStorageMemory ( aWindowId, skinned_size );
+            aRenderer.Skin ( aWindowId, *skinning_pipeline, *mesh, skinning_matrices, mSkinnedVertices[i] );
+            dispatched = true;
+        }
+        // Make the compute writes visible to the subsequent draw traversals.
+        if ( dispatched )
+        {
+            aRenderer.Barrier ( aWindowId );
+        }
+    }
+
     void ModelComponent::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
     {
     }

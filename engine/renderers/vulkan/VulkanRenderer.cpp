@@ -1056,6 +1056,20 @@ namespace AeonGames
         it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ, aStorageBuffers, aComputeStageIndex );
     }
 
+    void VulkanRenderer::Skin ( void* aWindowId,
+                                const Pipeline& aSkinningPipeline,
+                                const Mesh& aMesh,
+                                const BufferAccessor& aSkinningMatrices,
+                                const BufferAccessor& aSkinnedVertices ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Skin ( aSkinningPipeline, aMesh, aSkinningMatrices, aSkinnedVertices );
+    }
+
     void VulkanRenderer::Barrier ( void* aWindowId ) const
     {
         auto it = mWindowStore.find ( aWindowId );

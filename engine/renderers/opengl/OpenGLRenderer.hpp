@@ -74,6 +74,12 @@ namespace AeonGames
         /// @brief Bind a storage buffer (SSBO) to the current pipeline's
         ///        storage block identified by the CRC32 of its GLSL block name.
         void BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const;
+        /// @brief Bind a raw GL buffer object to the current pipeline's storage
+        ///        block identified by the CRC32 of its GLSL block name. Used to
+        ///        expose a mesh's own vertex buffer as a compute SSBO source.
+        void BindStorageBufferId ( uint32_t aBinding, GLuint aBufferId, size_t aOffset, size_t aSize ) const;
+        /// @brief Resolve a mesh to its loaded OpenGL wrapper, loading it on demand.
+        const OpenGLMesh* GetOpenGLMesh ( const Mesh& aMesh );
         /// @brief Bind the matrices uniform buffer for the current draw.
         void SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const;
         /// @brief Bind the per-frame lights uniform buffer for the current draw.
@@ -119,6 +125,11 @@ namespace AeonGames
                         uint32_t aGroupCountZ = 1,
                         std::span<const StorageBufferBinding> aStorageBuffers = {},
                         uint32_t aComputeStageIndex = 0 ) const final;
+        void Skin ( void* aWindowId,
+                    const Pipeline& aSkinningPipeline,
+                    const Mesh& aMesh,
+                    const BufferAccessor& aSkinningMatrices,
+                    const BufferAccessor& aSkinnedVertices ) const final;
         void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
         const BufferAccessor* GetFrameLightGrid ( void* aWindowId ) const final;

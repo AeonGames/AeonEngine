@@ -896,6 +896,14 @@ namespace AeonGames
 
     void VulkanWindow::BeginFrame()
     {
+        // Idempotent within a frame: the application may call BeginFrame()
+        // explicitly to run a pre-render-pass compute phase (e.g. skinning)
+        // before BeginRender(), which also calls BeginFrame().
+        if ( mFrameBegun )
+        {
+            return;
+        }
+        mFrameBegun = true;
         if ( VkResult result = vkWaitForFences ( mVulkanRenderer.GetDevice(), 1,
                                &mVkFence,
                                VK_TRUE, UINT64_MAX ) )
@@ -1106,6 +1114,7 @@ namespace AeonGames
         }
         mMemoryPoolBuffer.Reset();
         mStorageMemoryPoolBuffer.Reset();
+        mFrameBegun = false;
     }
 
     static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap
@@ -1393,6 +1402,74 @@ namespace AeonGames
         }
 
         vkCmdDispatch ( mVkCommandBuffer, aGroupCountX, aGroupCountY, aGroupCountZ );
+    }
+
+    void VulkanWindow::Skin ( const Pipeline& aSkinningPipeline,
+                              const Mesh& aMesh,
+                              const BufferAccessor& aSkinningMatrices,
+                              const BufferAccessor& aSkinnedVertices ) const
+    {
+        if ( aMesh.GetVertexCount() == 0 )
+        {
+            return;
+        }
+        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aSkinningPipeline );
+        if ( pipeline == nullptr )
+        {
+            return;
+        }
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetVkComputePipeline ( 0 ) );
+
+        // SkinningMatrices: per-joint pose*inverse-bind matrices (storage pool allocation).
+        if ( uint32_t set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SKINNING_MATRICES ); set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinningMatrices.GetMemoryPoolBuffer() );
+            uint32_t dynamic_offset = 0;
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      set_index,
+                                      1,
+                                      &memory_pool_buffer->GetDescriptorSet ( aSkinningMatrices.GetOffset() ), 1, &dynamic_offset );
+        }
+
+        // SourceVertices: the mesh's own rest-pose vertex buffer, exposed as an SSBO.
+        if ( uint32_t set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SOURCE_VERTICES ); set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            const VulkanMesh* vulkan_mesh = mVulkanRenderer.GetVulkanMesh ( aMesh );
+            if ( vulkan_mesh != nullptr )
+            {
+                VkDescriptorSet source_set = vulkan_mesh->GetSourceVerticesDescriptorSet();
+                if ( source_set != VK_NULL_HANDLE )
+                {
+                    uint32_t dynamic_offset = 0;
+                    vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                              VK_PIPELINE_BIND_POINT_COMPUTE,
+                                              pipeline->GetPipelineLayout(),
+                                              set_index,
+                                              1,
+                                              &source_set, 1, &dynamic_offset );
+                }
+            }
+        }
+
+        // SkinnedVertices: output buffer receiving the skinned vertices (storage pool allocation).
+        if ( uint32_t set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SKINNED_VERTICES ); set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinnedVertices.GetMemoryPoolBuffer() );
+            uint32_t dynamic_offset = 0;
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      set_index,
+                                      1,
+                                      &memory_pool_buffer->GetDescriptorSet ( aSkinnedVertices.GetOffset() ), 1, &dynamic_offset );
+        }
+
+        uint32_t group_count = ( aMesh.GetVertexCount() + 63u ) / 64u;
+        vkCmdDispatch ( mVkCommandBuffer, group_count, 1, 1 );
     }
 
     void VulkanWindow::Barrier() const

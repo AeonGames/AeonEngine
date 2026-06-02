@@ -37,10 +37,20 @@ namespace AeonGames
         VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh ) = delete;
         /// @brief Bind the mesh vertex and index buffers to a command buffer.
         void Bind ( VkCommandBuffer aVkCommandBuffer ) const;
+        /** @brief Get the descriptor set that exposes the static vertex buffer as
+         * a storage buffer (SSBO), for binding as @c SourceVertices in compute
+         * skinning. Bound with a zero dynamic offset; range covers the vertex
+         * region of the mesh buffer. */
+        const VkDescriptorSet& GetSourceVerticesDescriptorSet() const;
     private:
+        void InitializeSourceVerticesDescriptor();
+        void FinalizeSourceVerticesDescriptor();
         const VulkanRenderer& mVulkanRenderer;
         const Mesh* mMesh{nullptr};
         VulkanBuffer mMeshBuffer;
+        VkDescriptorPool mSourceVerticesDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mSourceVerticesDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorSet mSourceVerticesDescriptorSet{ VK_NULL_HANDLE };
     };
 }
 #endif

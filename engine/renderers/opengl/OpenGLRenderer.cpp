@@ -657,6 +657,36 @@ void main()
         }
     }
 
+    void OpenGLRenderer::BindStorageBufferId ( uint32_t aBinding, GLuint aBufferId, size_t aOffset, size_t aSize ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* storage_block{ mCurrentPipeline->GetStorageBlock ( aBinding ) };
+        if ( storage_block == nullptr || aBufferId == 0 )
+        {
+            return;
+        }
+        glBindBufferRange ( GL_SHADER_STORAGE_BUFFER, storage_block->binding, aBufferId, aOffset, aSize );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
+    const OpenGLMesh* OpenGLRenderer::GetOpenGLMesh ( const Mesh& aMesh )
+    {
+        auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        if ( it == mMeshStore.end() )
+        {
+            LoadMesh ( aMesh );
+            it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+        }
+        if ( it != mMeshStore.end() )
+        {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
     void OpenGLRenderer::SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const
     {
         if ( mCurrentPipeline == nullptr )
@@ -942,6 +972,20 @@ void main()
             return;
         }
         it->second.Dispatch ( aPipeline, aGroupCountX, aGroupCountY, aGroupCountZ, aStorageBuffers, aComputeStageIndex );
+    }
+
+    void OpenGLRenderer::Skin ( void* aWindowId,
+                                const Pipeline& aSkinningPipeline,
+                                const Mesh& aMesh,
+                                const BufferAccessor& aSkinningMatrices,
+                                const BufferAccessor& aSkinnedVertices ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Skin ( aSkinningPipeline, aMesh, aSkinningMatrices, aSkinnedVertices );
     }
 
     void OpenGLRenderer::Barrier ( void* aWindowId ) const

@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/MemoryPool.hpp" ///<- This is here just for the literals
 #include "OpenGLWindow.hpp"
 #include "OpenGLRenderer.hpp"
+#include "OpenGLMesh.hpp"
 #include "OpenGLFunctions.hpp"
 #include <sstream>
 #include <iostream>
@@ -450,6 +451,14 @@ namespace AeonGames
 
     void OpenGLWindow::BeginFrame()
     {
+        // Idempotent within a frame: the application may call BeginFrame()
+        // explicitly to run a pre-render-pass compute phase (e.g. skinning)
+        // before BeginRender(), which also calls BeginFrame().
+        if ( mFrameBegun )
+        {
+            return;
+        }
+        mFrameBegun = true;
 #if defined(_WIN32)
         mOpenGLRenderer.MakeCurrent ( mDeviceContext );
 #elif defined(__unix__)
@@ -483,6 +492,30 @@ namespace AeonGames
             }
         }
         glDispatchCompute ( aGroupCountX, aGroupCountY, aGroupCountZ );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::Skin ( const Pipeline& aSkinningPipeline,
+                              const Mesh& aMesh,
+                              const BufferAccessor& aSkinningMatrices,
+                              const BufferAccessor& aSkinnedVertices ) const
+    {
+        if ( aMesh.GetVertexCount() == 0 )
+        {
+            return;
+        }
+        mOpenGLRenderer.BindComputePipeline ( aSkinningPipeline, 0 );
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::SKINNING_MATRICES, aSkinningMatrices );
+        if ( const OpenGLMesh * mesh = mOpenGLRenderer.GetOpenGLMesh ( aMesh ) )
+        {
+            mOpenGLRenderer.BindStorageBufferId ( Mesh::BindingLocations::SOURCE_VERTICES,
+                                                  mesh->GetVertexBufferId(),
+                                                  0,
+                                                  static_cast<size_t> ( aMesh.GetVertexCount() ) * aMesh.GetStride() );
+        }
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::SKINNED_VERTICES, aSkinnedVertices );
+        uint32_t group_count = ( aMesh.GetVertexCount() + 63u ) / 64u;
+        glDispatchCompute ( group_count, 1, 1 );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
@@ -538,6 +571,7 @@ namespace AeonGames
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
         mStorageMemoryPoolBuffer.Reset();
+        mFrameBegun = false;
     }
     void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
     {

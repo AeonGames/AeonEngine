@@ -106,6 +106,19 @@ namespace AeonGames
          *  @param aWindowId Platform-specific window identifier.
          */
         virtual void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) = 0;
+        /** @brief Dispatch compute skinning for the component before the render pass.
+         *  Recorded between BeginFrame and BeginRenderPass; the default does
+         *  nothing so only skinned components need to override it.
+         *  @param aNode     Node this component is attached to.
+         *  @param aRenderer Renderer used for the compute dispatch.
+         *  @param aWindowId Platform-specific window identifier.
+         */
+        virtual void Skin ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
+        {
+            ( void ) aNode;
+            ( void ) aRenderer;
+            ( void ) aWindowId;
+        }
         /** @brief Process an incoming message.
          *  @param aNode        Node this component is attached to.
          *  @param aMessageType Type identifier of the message.

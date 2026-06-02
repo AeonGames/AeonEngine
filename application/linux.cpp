@@ -474,8 +474,18 @@ namespace AeonGames
                     mGuiOverlay->BeginFrame ( reinterpret_cast<void*> ( mWindowId ), delta.count() );
                     mGuiOverlay->EndFrame ( reinterpret_cast<void*> ( mWindowId ) );
                 }
-                mRenderer->BeginRender ( reinterpret_cast<void*> ( mWindowId ), aScene.GetLightingPipeline() );
                 const Pipeline* lighting = aScene.GetLightingPipeline();
+                // Compute skinning pre-pass: dispatch skinning before the render
+                // pass begins so the skinned vertex buffers are ready for both
+                // the depth and shading traversals. BeginFrame() is idempotent,
+                // so the subsequent BeginRender() reuses this frame's command
+                // recording instead of starting a new one.
+                mRenderer->BeginFrame ( reinterpret_cast<void*> ( mWindowId ) );
+                aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                {
+                    aNode.Skin ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
+                } );
+                mRenderer->BeginRender ( reinterpret_cast<void*> ( mWindowId ), lighting );
                 if ( lighting )
                 {
                     // Depth pre-pass: flag clusters containing visible geometry
