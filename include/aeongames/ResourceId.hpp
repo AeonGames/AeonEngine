@@ -42,17 +42,27 @@ namespace AeonGames
          *  @param aType Resource type string.
          *  @param aPath Resource path string. */
         ResourceId ( const std::string& aType, const std::string& aPath ) :
-            mType{crc32i ( aType.data(), aType.length() ) }, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
+            mType{crc32i ( aType.data(), aType.length() ) }, mPath{crc32i ( aPath.data(), aPath.length() ) }
+        {
+            RegisterResourceString ( mType, aType );
+            RegisterResourceString ( mPath, aPath );
+        }
         /** @brief Construct from a type string and a pre-computed path hash.
          *  @param aType Resource type string.
          *  @param aPath CRC32 hash of the resource path. */
         ResourceId ( const std::string& aType, uint32_t aPath ) :
-            mType{crc32i ( aType.data(), aType.length() ) }, mPath{aPath} {}
+            mType{crc32i ( aType.data(), aType.length() ) }, mPath{aPath}
+        {
+            RegisterResourceString ( mType, aType );
+        }
         /** @brief Construct from a pre-computed type hash and a path string.
          *  @param aType CRC32 hash of the resource type.
          *  @param aPath Resource path string. */
         ResourceId ( uint32_t aType, const std::string& aPath ) :
-            mType{aType}, mPath{crc32i ( aPath.data(), aPath.length() ) } {}
+            mType{aType}, mPath{crc32i ( aPath.data(), aPath.length() ) }
+        {
+            RegisterResourceString ( mPath, aPath );
+        }
         ~ResourceId() = default;
 
         /** @brief Check whether the identified resource is currently loaded.

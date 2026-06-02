@@ -48,6 +48,22 @@ namespace AeonGames
     DLL size_t GetResourceSize ( const std::string& aFileName );
     /*! Returns the resource path referenced by its id. */
     DLL std::string GetResourcePath ( uint32_t crc );
+    /** @brief Record the original string that produced a given CRC32 hash.
+     *  Used to recover human readable type names and resource paths for
+     *  diagnostics, particularly when resources are loaded as loose files and
+     *  therefore have no package index to reverse-resolve against.
+     *  @param crc    CRC32 hash of the string.
+     *  @param string The original string. Empty strings are recorded so that an
+     *                empty path can be distinguished from an unknown one. */
+    DLL void RegisterResourceString ( uint32_t crc, const std::string& string );
+    /** @brief Recover the original string previously registered for a CRC32 hash.
+     *  @param crc CRC32 hash to look up.
+     *  @return The registered string, or an empty string if none was registered. */
+    DLL std::string GetResourceString ( uint32_t crc );
+    /** @brief Check whether a string was ever registered for a CRC32 hash.
+     *  @param crc CRC32 hash to look up.
+     *  @return true if a string (possibly empty) is registered for the hash. */
+    DLL bool HasResourceString ( uint32_t crc );
     /*! Loads a specific resource referenced by its CRC into the provided buffer. */
     DLL void LoadResource ( uint32_t crc, void* buffer, size_t buffer_size );
     /*! Loads a specific resource referenced by its path into the provided buffer. */

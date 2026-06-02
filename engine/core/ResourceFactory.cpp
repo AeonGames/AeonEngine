@@ -16,43 +16,79 @@ limitations under the License.
 #include <tuple>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 #include <exception>
 #include <unordered_map>
 #include "aeongames/AeonEngine.hpp"
 #include "aeongames/ResourceFactory.hpp"
 #include "aeongames/ResourceCache.hpp"
 #include "aeongames/ResourceId.hpp"
+#include "aeongames/LogLevel.hpp"
 
 namespace AeonGames
 {
     static std::unordered_map < uint32_t, std::tuple<std::function < UniqueAnyPtr ( uint32_t ) >, UniqueAnyPtr >> Constructors;
 
+    /** @brief Format a CRC32-identified resource component (type or path) for
+        diagnostics, including its human readable name when one is known.
+        @param crc       The CRC32 hash.
+        @param aRegistered Whether a string was explicitly registered for the crc.
+        @param aString   The recovered string (may be empty).
+        @return A string such as 'Model (0x16545ddd)', '"sponza/foo.txt" (0x...)',
+                '<empty> (0x00000000)' or '<unknown> (0x...)'. */
+    static std::string DescribeResourceComponent ( uint32_t crc, bool aRegistered, const std::string& aString )
+    {
+        std::ostringstream stream;
+        if ( aRegistered )
+        {
+            if ( aString.empty() )
+            {
+                stream << "<empty>";
+            }
+            else
+            {
+                stream << '"' << aString << '"';
+            }
+        }
+        else
+        {
+            stream << "<unknown>";
+        }
+        stream << " (0x" << std::hex << std::setw ( 8 ) << std::setfill ( '0' ) << crc << ")";
+        return stream.str();
+    }
+
     UniqueAnyPtr ConstructResource ( const ResourceId& aResourceId )
     {
-        auto it = Constructors.find ( aResourceId.GetType() );
+        const uint32_t type_crc = aResourceId.GetType();
+        const uint32_t path_crc = aResourceId.GetPath();
+        const std::string type_desc =
+            DescribeResourceComponent ( type_crc, HasResourceString ( type_crc ), GetResourceString ( type_crc ) );
+        const std::string path_desc =
+            DescribeResourceComponent ( path_crc, HasResourceString ( path_crc ), GetResourcePath ( path_crc ) );
+
+        auto it = Constructors.find ( type_crc );
         if ( it != Constructors.end() )
         {
+            // Debug log of the actual strings being resolved, so a failing load
+            // can be traced to the exact type and path that were requested.
+            std::cout << LogLevel::Info << "Constructing resource: type " << type_desc
+                      << ", path " << path_desc << std::endl;
             try
             {
-                return std::get<0> ( it->second ) ( aResourceId.GetPath() );
+                return std::get<0> ( it->second ) ( path_crc );
             }
             catch ( const std::exception& e )
             {
                 std::ostringstream stream;
-                std::string path = GetResourcePath ( aResourceId.GetPath() );
-                stream << "Failed to construct resource (type 0x"
-                       << std::hex << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetType()
-                       << ", crc 0x" << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetPath()
-                       << ", path: " << ( path.empty() ? "<unknown>" : path ) << "): " << e.what();
+                stream << "Failed to construct resource (type " << type_desc
+                       << ", path " << path_desc << "): " << e.what();
                 throw std::runtime_error ( stream.str() );
             }
         }
         std::ostringstream stream;
-        std::string path = GetResourcePath ( aResourceId.GetPath() );
-        stream << "No constructor registered for type 0x"
-               << std::hex << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetType()
-               << " (resource crc 0x" << std::setw ( 8 ) << std::setfill ( '0' ) << aResourceId.GetPath()
-               << ", path: " << ( path.empty() ? "<unknown>" : path ) << ")";
+        stream << "No constructor registered for type " << type_desc
+               << " (resource path " << path_desc << ")";
         throw std::runtime_error ( stream.str().c_str() );
     }
     bool RegisterResourceConstructor ( uint32_t aType, const std::function < UniqueAnyPtr ( uint32_t ) > & aConstructor, UniqueAnyPtr&& aDefaultResource )

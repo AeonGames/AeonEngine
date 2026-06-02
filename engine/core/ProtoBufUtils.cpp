@@ -112,7 +112,7 @@ namespace AeonGames
         case ComponentPropertyMsg::kString:
             return aComponentPropertyMsg.string();
         case ComponentPropertyMsg::kPath:
-            return std::filesystem::path ( aComponentPropertyMsg.string() );
+            return std::filesystem::path ( aComponentPropertyMsg.path() );
         case ComponentPropertyMsg::VALUE_NOT_SET:
             /// @todo Add component and property names to the exception message.
             throw std::runtime_error ( "Component property value not set." );

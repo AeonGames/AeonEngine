@@ -18,6 +18,8 @@ limitations under the License.
 #include <iomanip>
 #include <sstream>
 #include <memory>
+#include <mutex>
+#include <unordered_map>
 #include <stdexcept>
 #include "aeongames/ProtoBufClasses.hpp"
 #ifdef _MSC_VER
@@ -250,6 +252,16 @@ namespace AeonGames
             return material;
         } );
 
+        // Record human readable type names for diagnostics (the constructors
+        // above are keyed by CRC32 only).
+        RegisterResourceString ( "Model"_crc32, "Model" );
+        RegisterResourceString ( "Skeleton"_crc32, "Skeleton" );
+        RegisterResourceString ( "Animation"_crc32, "Animation" );
+        RegisterResourceString ( "Texture"_crc32, "Texture" );
+        RegisterResourceString ( "Mesh"_crc32, "Mesh" );
+        RegisterResourceString ( "Pipeline"_crc32, "Pipeline" );
+        RegisterResourceString ( "Material"_crc32, "Material" );
+
         return gInitialized;
     }
 
@@ -285,6 +297,41 @@ namespace AeonGames
     }
 
     static std::vector<Package> gResourcePath{};
+
+    /** Reverse lookup of CRC32 -> original string for resource type names and
+        loose-file resource paths, used purely for diagnostics. */
+    static std::unordered_map<uint32_t, std::string>& gResourceStringRegistry()
+    {
+        static std::unordered_map<uint32_t, std::string> registry{};
+        return registry;
+    }
+    static std::mutex& gResourceStringMutex()
+    {
+        static std::mutex mutex{};
+        return mutex;
+    }
+
+    void RegisterResourceString ( uint32_t crc, const std::string& string )
+    {
+        std::lock_guard<std::mutex> lock ( gResourceStringMutex() );
+        // try_emplace keeps the first registration; all strings hashing to the
+        // same crc are by definition equal, so later writes are redundant.
+        gResourceStringRegistry().try_emplace ( crc, string );
+    }
+
+    std::string GetResourceString ( uint32_t crc )
+    {
+        std::lock_guard<std::mutex> lock ( gResourceStringMutex() );
+        auto it = gResourceStringRegistry().find ( crc );
+        return ( it != gResourceStringRegistry().end() ) ? it->second : std::string{};
+    }
+
+    bool HasResourceString ( uint32_t crc )
+    {
+        std::lock_guard<std::mutex> lock ( gResourceStringMutex() );
+        return gResourceStringRegistry().find ( crc ) != gResourceStringRegistry().end();
+    }
+
     std::vector<std::string> GetResourcePath()
     {
         std::vector<std::string> path;
@@ -345,7 +392,10 @@ namespace AeonGames
                 return resource->second;
             }
         }
-        return std::string{};
+        // Fall back to the reverse string registry: loose-file resources are
+        // not indexed in any package, so this is the only way to recover their
+        // original path (or a registered type name) for diagnostics.
+        return GetResourceString ( crc );
     }
 
     size_t GetResourceSize ( const std::string& aFileName )
