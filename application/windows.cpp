@@ -525,22 +525,12 @@ namespace AeonGames
                         }
                         prev_cursor_captured = cursor_captured;
                     }
-                    // In relative-mouse mode, recenter the cursor each frame so deltas
-                    // can keep accumulating without the cursor drifting off-window.
-                    if ( mInputSystem->IsRelativeMouseMode() )
-                    {
-                        RECT client;
-                        GetClientRect ( static_cast<HWND> ( mWindowId ), &client );
-                        POINT center{ ( client.right - client.left ) / 2, ( client.bottom - client.top ) / 2 };
-                        POINT screen_center = center;
-                        ClientToScreen ( static_cast<HWND> ( mWindowId ), &screen_center );
-                        SetCursorPos ( screen_center.x, screen_center.y );
-                        // Re-prime the position so the next OnMouseMove yields a delta
-                        // measured from the center, not from the last real cursor pos.
-                        mInputSystem->OnMouseMove ( center.x, center.y );
-                    }
-                    mInputSystem->Update();
                 }
+                // Scene update reads input state (key/button polling and mouse
+                // deltas) for this frame. It must run BEFORE the relative-mouse
+                // recentre and InputSystem::Update() below, otherwise the mouse
+                // delta would be zeroed out before any component could read it
+                // and edge-triggered key queries would always miss.
                 aScene.Update ( delta.count() );
                 last_time = current_time;
                 if ( mGuiOverlay )
@@ -587,6 +577,28 @@ namespace AeonGames
                     mRenderer->RenderOverlay ( mWindowId, *mGuiOverlay );
                 }
                 mRenderer->EndRender ( mWindowId );
+
+                // End-of-frame input bookkeeping. Done after the scene has read
+                // this frame's input so deltas/edges are valid during Update().
+                if ( mInputSystem )
+                {
+                    // In relative-mouse mode, recentre the cursor so the next
+                    // frame's delta is measured from the window centre and the
+                    // cursor never drifts off-window during a long look.
+                    if ( mInputSystem->IsRelativeMouseMode() )
+                    {
+                        RECT client;
+                        GetClientRect ( static_cast<HWND> ( mWindowId ), &client );
+                        POINT center{ ( client.right - client.left ) / 2, ( client.bottom - client.top ) / 2 };
+                        POINT screen_center = center;
+                        ClientToScreen ( static_cast<HWND> ( mWindowId ), &screen_center );
+                        SetCursorPos ( screen_center.x, screen_center.y );
+                        mInputSystem->OnMouseMove ( center.x, center.y );
+                    }
+                    // Snapshot current state as "previous" for next frame's
+                    // edge-trigger and delta queries.
+                    mInputSystem->Update();
+                }
             }
         }
         ShowWindow ( static_cast<HWND> ( mWindowId ), SW_HIDE );

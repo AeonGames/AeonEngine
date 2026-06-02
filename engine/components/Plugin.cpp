@@ -21,6 +21,7 @@ limitations under the License.
 #include "Camera.h"
 #include "OverTheShoulderCamera.hpp"
 #include "CharacterController.hpp"
+#include "FreeCamera.hpp"
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "DirectionalLight.h"
@@ -46,6 +47,10 @@ extern "C"
         {
             return std::make_unique<AeonGames::CharacterController>();
         } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::FreeCamera::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::FreeCamera>();
+        } );
         AeonGames::RegisterComponentConstructor ( AeonGames::PointLight::GetClassId(), []()
         {
             return std::make_unique<AeonGames::PointLight>();
@@ -67,6 +72,7 @@ extern "C"
         AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::CharacterController::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::FreeCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::SpotLight::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::DirectionalLight::GetClassId() );

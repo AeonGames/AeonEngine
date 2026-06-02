@@ -5348,7 +5348,7 @@ node {
     }
   }
   component {
-    name: "Camera"
+    name: "Free Camera"
     property {
       name: "Field of View"
       float: 58.51198

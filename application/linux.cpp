@@ -446,18 +446,12 @@ namespace AeonGames
                     }
                     prev_cursor_captured = cursor_captured;
                 }
-                if ( mInputSystem->IsRelativeMouseMode() )
-                {
-                    XWindowAttributes xwa{};
-                    XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
-                    int cx = xwa.width / 2;
-                    int cy = xwa.height / 2;
-                    XWarpPointer ( mDisplay, None, mWindowId, 0, 0, 0, 0, cx, cy );
-                    // Re-prime mouse position so deltas are measured from center.
-                    mInputSystem->OnMouseMove ( cx, cy );
-                }
-                mInputSystem->Update();
             }
+            // Scene update reads input state (key/button polling and mouse
+            // deltas) for this frame. It must run BEFORE the relative-mouse
+            // recentre and InputSystem::Update() below, otherwise the mouse
+            // delta would be zeroed out before any component could read it
+            // and edge-triggered key queries would always miss.
             aScene.Update ( delta.count() );
             last_time = current_time;
             if ( mRenderer )
@@ -505,6 +499,26 @@ namespace AeonGames
                     mRenderer->RenderOverlay ( reinterpret_cast<void*> ( mWindowId ), *mGuiOverlay );
                 }
                 mRenderer->EndRender ( reinterpret_cast<void*> ( mWindowId ) );
+            }
+            // End-of-frame input bookkeeping. Done after the scene has read
+            // this frame's input so deltas/edges are valid during Update().
+            if ( mInputSystem )
+            {
+                // In relative-mouse mode, recentre the pointer so the next
+                // frame's delta is measured from the window centre and the
+                // pointer never drifts off-window during a long look.
+                if ( mInputSystem->IsRelativeMouseMode() )
+                {
+                    XWindowAttributes xwa{};
+                    XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
+                    int cx = xwa.width / 2;
+                    int cy = xwa.height / 2;
+                    XWarpPointer ( mDisplay, None, mWindowId, 0, 0, 0, 0, cx, cy );
+                    mInputSystem->OnMouseMove ( cx, cy );
+                }
+                // Snapshot current state as "previous" for next frame's
+                // edge-trigger and delta queries.
+                mInputSystem->Update();
             }
         }
         XUnmapWindow ( mDisplay, mWindowId );
