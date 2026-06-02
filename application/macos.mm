@@ -464,6 +464,17 @@ namespace AeonGames
 
                     if ( mRenderer )
                     {
+                        // Wait for the previous frame to finish before
+                        // overwriting the per-frame uniform buffers. The
+                        // view/projection matrices and light buffers are
+                        // single-buffered and host-visible, so they must not be
+                        // written while the previous frame's GPU work may still
+                        // be reading them. BeginFrame() waits on the frame
+                        // fence; doing it first closes a write-after-read race
+                        // that shows up as geometry flicker while the camera is
+                        // moving. BeginFrame() is idempotent, so the later
+                        // BeginRender() reuses this frame's command recording.
+                        mRenderer->BeginFrame ( ( __bridge void* ) mNSView );
                         if ( aScene.GetCamera() )
                         {
                             mRenderer->SetViewMatrix ( ( __bridge void* ) mNSView, aScene.GetViewMatrix() );
@@ -480,9 +491,6 @@ namespace AeonGames
                         // Compute skinning pre-pass: dispatch skinning before the
                         // render pass begins so the skinned vertex buffers are
                         // ready for both the depth and shading traversals.
-                        // BeginFrame() is idempotent, so the subsequent
-                        // BeginRender() reuses this frame's command recording.
-                        mRenderer->BeginFrame ( ( __bridge void* ) mNSView );
                         aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                         {
                             aNode.Skin ( *mRenderer, ( __bridge void* ) mNSView );
