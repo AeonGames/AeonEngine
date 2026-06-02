@@ -175,6 +175,9 @@ namespace AeonGames
         VulkanBuffer mMatrices;
         VulkanBuffer mLights;
         VulkanBuffer mClusterParams;
+        // Scratch buffer holding the frustum-culled subset of this frame's
+        // lights; reused across frames so capacity is not reallocated.
+        std::vector<GpuLight> mVisibleLights{};
         BufferAccessor mFrameLightGrid{};
         BufferAccessor mFrameLightIndexList{};
         BufferAccessor mFrameClusterAABBs{};

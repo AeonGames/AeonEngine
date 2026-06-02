@@ -30,6 +30,7 @@ namespace AeonGames
     class AABB;
     class Matrix4x4;
     class Vector3;
+    struct GpuLight;
     /** @brief View frustum defined by six clipping planes, extracted from a projection (or view-projection) matrix. */
     class Frustum
     {
@@ -45,6 +46,16 @@ namespace AeonGames
             @param aAABB The AABB to test.
             @return true if the AABB intersects or is inside the frustum. */
         DLL bool Intersects ( const AABB& aAABB ) const;
+        /** @brief Tests whether a light's volume of influence intersects the frustum.
+
+            Point and spot lights are bounded by a sphere of radius
+            @c position_radius.w centred at @c position_radius.xyz; the enclosing
+            AABB is tested against the frustum. Directional lights have no
+            position or falloff and affect the whole scene, so they are never
+            culled (always returns true).
+            @param aLight The light to test.
+            @return true if the light can influence anything inside the frustum. */
+        DLL bool Intersects ( const GpuLight& aLight ) const;
     private:
         /** @note Frustum planes' normals all point outward */
         std::array<Plane, 6> mPlanes;

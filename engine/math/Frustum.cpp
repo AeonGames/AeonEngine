@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015-2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015-2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/Frustum.hpp"
 #include "aeongames/AABB.hpp"
 #include "aeongames/Matrix4x4.hpp"
+#include "aeongames/GpuLight.hpp"
 #include <iostream>
 
 namespace AeonGames
@@ -91,5 +92,25 @@ namespace AeonGames
             }
         }
         return true;
+    }
+    bool Frustum::Intersects ( const GpuLight & aLight ) const
+    {
+        // Directional lights have no position or falloff radius; they affect
+        // the whole scene, so they are never culled.
+        if ( aLight.type == static_cast<uint32_t> ( LightType::Directional ) )
+        {
+            return true;
+        }
+        // Point and spot lights are bounded by a sphere of radius
+        // position_radius.w centred at position_radius.xyz. Test the enclosing
+        // AABB against the frustum, reusing the AABB overload so no plane
+        // normalization is required (the test is a pure half-space sign test).
+        const float radius = aLight.position_radius.GetW();
+        const AABB bounds
+        {
+            Vector3 { aLight.position_radius.GetX(), aLight.position_radius.GetY(), aLight.position_radius.GetZ() },
+            Vector3 { radius, radius, radius }
+        };
+        return Intersects ( bounds );
     }
 }

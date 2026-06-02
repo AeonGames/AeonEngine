@@ -589,10 +589,25 @@ namespace AeonGames
 
     void OpenGLWindow::SetLights ( std::span<const GpuLight> aLights )
     {
+        // Frustum-cull the lights before uploading: any point/spot light whose
+        // bounding sphere lies entirely outside the view frustum cannot affect
+        // a visible pixel, so dropping it here shrinks the set the per-cluster
+        // light cull has to iterate. Directional lights are always kept.
+        mVisibleLights.clear();
+        for ( const GpuLight& light : aLights )
+        {
+            if ( mVisibleLights.size() >= MAX_LIGHTS_PER_FRAME )
+            {
+                break;
+            }
+            if ( mFrustum.Intersects ( light ) )
+            {
+                mVisibleLights.push_back ( light );
+            }
+        }
         // Stream the light records into the SSBO: write the 16-byte header
-        // (count) then the tightly packed array. Lights past
-        // MAX_LIGHTS_PER_FRAME are silently truncated.
-        const std::size_t capped = std::min<std::size_t> ( aLights.size(), MAX_LIGHTS_PER_FRAME );
+        // (count) then the tightly packed array.
+        const std::size_t capped = mVisibleLights.size();
         const GpuLightsHeader header{ static_cast<uint32_t> ( capped ), { 0, 0, 0 } };
 #if defined(_WIN32)
         mOpenGLRenderer.MakeCurrent ( mDeviceContext );
@@ -602,7 +617,7 @@ namespace AeonGames
         mLights.WriteMemory ( 0, sizeof ( header ), &header );
         if ( capped > 0 )
         {
-            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), capped * sizeof ( GpuLight ), aLights.data() );
+            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), capped * sizeof ( GpuLight ), mVisibleLights.data() );
         }
     }
 

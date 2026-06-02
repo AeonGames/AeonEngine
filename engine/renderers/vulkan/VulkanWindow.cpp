@@ -812,15 +812,30 @@ namespace AeonGames
 
     void VulkanWindow::SetLights ( std::span<const GpuLight> aLights )
     {
-        // Stream the light records straight into the SSBO: write the 16-byte
-        // header (count) then the tightly packed array, so nothing materializes
-        // the full ~256 KB buffer on the stack.
-        const size_t count = std::min ( aLights.size(), static_cast<size_t> ( MAX_LIGHTS_PER_FRAME ) );
+        // Frustum-cull the lights before uploading: any point/spot light whose
+        // bounding sphere lies entirely outside the view frustum cannot affect
+        // a visible pixel, so dropping it here shrinks the set the per-cluster
+        // light cull has to iterate. Directional lights are always kept.
+        mVisibleLights.clear();
+        for ( const GpuLight& light : aLights )
+        {
+            if ( mVisibleLights.size() >= MAX_LIGHTS_PER_FRAME )
+            {
+                break;
+            }
+            if ( mFrustum.Intersects ( light ) )
+            {
+                mVisibleLights.push_back ( light );
+            }
+        }
+        // Stream the light records into the SSBO: write the 16-byte header
+        // (count) then the tightly packed array.
+        const size_t count = mVisibleLights.size();
         const GpuLightsHeader header{ static_cast<uint32_t> ( count ), { 0, 0, 0 } };
         mLights.WriteMemory ( 0, sizeof ( header ), &header );
         if ( count > 0 )
         {
-            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), count * sizeof ( GpuLight ), aLights.data() );
+            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), count * sizeof ( GpuLight ), mVisibleLights.data() );
         }
     }
 

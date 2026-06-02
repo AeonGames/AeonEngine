@@ -33,6 +33,7 @@ set(TESTED_SRCS
 set(TEST_SRCS
     Main.cpp
     AABBTests.cpp
+    FrustumTests.cpp
     ArchiveTests.cpp
     ContainerTests.cpp
     DecoderTests.cpp

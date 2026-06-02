@@ -152,6 +152,9 @@ namespace AeonGames
         OpenGLBuffer mMatrices{};
         OpenGLBuffer mLights{};
         OpenGLBuffer mClusterParams{};
+        // Scratch buffer holding the frustum-culled subset of this frame's
+        // lights; reused across frames so capacity is not reallocated.
+        std::vector<GpuLight> mVisibleLights{};
         BufferAccessor mFrameLightGrid{};
         BufferAccessor mFrameLightIndexList{};
         BufferAccessor mFrameClusterAABBs{};
