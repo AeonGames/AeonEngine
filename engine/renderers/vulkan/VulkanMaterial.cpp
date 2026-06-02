@@ -63,10 +63,13 @@ namespace AeonGames
         {
             descriptor_pool_sizes.push_back ( {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
         }
-        if ( mMaterial->GetSamplers().size() > 0 )
-        {
-            descriptor_pool_sizes.push_back ( {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t> ( mMaterial->GetSamplers().size() ) } );
-        }
+        // A material may declare no samplers yet still be drawn with a pipeline
+        // that statically samples a texture (e.g. an untextured material using a
+        // diffuse-map shader). In that case we bind a single fallback texture so
+        // the required sampler set is never left unbound.
+        const uint32_t sampler_binding_count = mMaterial->GetSamplers().empty() ?
+                                               1u : static_cast<uint32_t> ( mMaterial->GetSamplers().size() );
+        descriptor_pool_sizes.push_back ( {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sampler_binding_count } );
 
         if ( !descriptor_pool_sizes.empty() )
         {
@@ -74,7 +77,7 @@ namespace AeonGames
         }
 
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
-        write_descriptor_sets.reserve ( mMaterial->GetSamplers().size() + ( ( mMaterial->GetUniformBuffer().size() ? 1 : 0 ) ) );
+        write_descriptor_sets.reserve ( sampler_binding_count + ( ( mMaterial->GetUniformBuffer().size() ? 1 : 0 ) ) );
 
         if ( mMaterial->GetUniformBuffer().size() > 0 )
         {
@@ -132,11 +135,10 @@ namespace AeonGames
             write_descriptor_set.pTexelBufferView = nullptr;
         }
 
-        if ( mMaterial->GetSamplers().size() > 0 )
         {
             std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings{};
-            descriptor_set_layout_bindings.reserve ( mMaterial->GetSamplers().size() );
-            for ( uint32_t i = 0; i < mMaterial->GetSamplers().size(); ++i )
+            descriptor_set_layout_bindings.reserve ( sampler_binding_count );
+            for ( uint32_t i = 0; i < sampler_binding_count; ++i )
             {
                 descriptor_set_layout_bindings.push_back (
                     VkDescriptorSetLayoutBinding
@@ -170,7 +172,7 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
 
-            for ( uint32_t i = 0; i < mMaterial->GetSamplers().size(); ++i )
+            for ( uint32_t i = 0; i < sampler_binding_count; ++i )
             {
                 write_descriptor_sets.emplace_back();
                 auto& write_descriptor_set = write_descriptor_sets.back();
@@ -183,7 +185,9 @@ namespace AeonGames
                 write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write_descriptor_set.descriptorCount = 1;
                 write_descriptor_set.pBufferInfo = nullptr;
-                write_descriptor_set.pImageInfo = mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( mMaterial->GetSamplers() [i] ).Get<Texture>() );
+                write_descriptor_set.pImageInfo = mMaterial->GetSamplers().empty() ?
+                                                  mVulkanRenderer.GetDefaultTextureDescriptorImageInfo() :
+                                                  mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( mMaterial->GetSamplers() [i] ).Get<Texture>() );
                 write_descriptor_set.pTexelBufferView = nullptr;
             }
         }

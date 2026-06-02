@@ -35,6 +35,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    class Texture;
     class VulkanTexture;
     class VulkanWindow;
     /** @brief Vulkan rendering backend implementing the Renderer interface. */
@@ -79,6 +80,9 @@ namespace AeonGames
         void UnloadTexture ( const Texture& aTexture ) final;
         /// @brief Get the descriptor image info for a loaded texture.
         const VkDescriptorImageInfo* GetTextureDescriptorImageInfo ( const Texture& aTexture ) const;
+        /// @brief Get the descriptor image info for the fallback texture used by
+        /// materials that lack a sampler required by their pipeline.
+        const VkDescriptorImageInfo* GetDefaultTextureDescriptorImageInfo() const;
 
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
@@ -173,6 +177,10 @@ namespace AeonGames
         std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};
         std::unordered_map<size_t, VulkanTexture> mTextureStore{};
         std::unordered_map<void*, VulkanWindow> mWindowStore{};
+        // Fallback texture bound when a material is missing a sampler that its
+        // pipeline statically uses (e.g. an untextured material drawn with a
+        // diffuse-map shader). Loaded from "textures/default.png".
+        const Texture* mDefaultTexture{ nullptr };
         bool mHasPrimitiveTopologyListRestart{false};
 
         // Overlay resources

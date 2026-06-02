@@ -61,6 +61,8 @@ tags
 game/images/*.svg
 game/config
 game/**/*.png
+# Engine-level fallback texture, committed (loaded unconditionally at startup).
+!game/textures/default.png
 *~
 
 # MacOS preview store

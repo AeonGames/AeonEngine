@@ -38,6 +38,7 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
 #include "aeongames/Texture.hpp"
+#include "aeongames/ResourceId.hpp"
 #include "aeongames/Utilities.hpp"
 #include "aeongames/MemoryPool.hpp"
 #include "SPIR-V/CompilerLinker.hpp"
@@ -65,6 +66,14 @@ namespace AeonGames
             InitializeCommandPools();
             AttachWindow ( aWindow );
             InitializeOverlay();
+            // Load the fallback texture used for materials that lack a sampler
+            // their pipeline statically uses. Requires the device, command
+            // pools and queue to already be initialized for the upload.
+            {
+                ResourceId default_texture{ "Texture"_crc32, "textures/default.png" };
+                mDefaultTexture = default_texture.Get<Texture>();
+                LoadTexture ( *mDefaultTexture );
+            }
         }
         catch ( ... )
         {
@@ -780,6 +789,11 @@ namespace AeonGames
             throw std::runtime_error ( error_string.c_str() );
         }
         return &it->second.GetDescriptorImageInfo();
+    }
+
+    const VkDescriptorImageInfo* VulkanRenderer::GetDefaultTextureDescriptorImageInfo() const
+    {
+        return GetTextureDescriptorImageInfo ( *mDefaultTexture );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const
