@@ -18,6 +18,7 @@ limitations under the License.
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include "gtest/gtest.h"
@@ -662,6 +663,145 @@ namespace AeonGames
         renderer.reset();
         DestroyWindow ( hwnd );
     }
+
+    /** @brief Reinterpret a float's bits as an unsigned 32-bit word, matching the
+     *  raw-word layout the skinning compute shader reads. */
+    static uint32_t FloatBits ( float aValue )
+    {
+        uint32_t bits = 0;
+        std::memcpy ( &bits, &aValue, sizeof ( bits ) );
+        return bits;
+    }
+
+    /** @brief Reinterpret a raw 32-bit word as a float (skinning readback). */
+    static float BitsFloat ( uint32_t aBits )
+    {
+        float value = 0.0f;
+        std::memcpy ( &value, &aBits, sizeof ( value ) );
+        return value;
+    }
+
+    /** @brief Dispatch shaders/skinning over a synthetic skinned vertex buffer
+     *  and verify the GPU produced the expected linear-blend skinned vertices.
+     *
+     *  The source uses the standard 64-byte skinned vertex layout (position,
+     *  normal, tangent, bitangent, uv, packed weight indices, packed weights).
+     *  Every vertex is fully weighted to joint 0, whose matrix is a pure
+     *  translation, so the expected result is position + translation with the
+     *  directional attributes (identity 3x3) and the uv/weight words left
+     *  unchanged. This proves the compute-skinning math, the interleaved word
+     *  unpacking and the source/skeleton/output SSBO binding path end to end. */
+    static void RunSkinningTest ( const char* aRendererName )
+    {
+        HWND hwnd = CreateHiddenRenderWindow();
+        ASSERT_NE ( hwnd, nullptr );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
+        if ( renderer == nullptr )
+        {
+            DestroyWindow ( hwnd );
+            GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
+        }
+        renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
+
+        constexpr uint32_t local_size = 64;
+        constexpr uint32_t vertex_words = 16; // 64-byte skinned vertex stride.
+        constexpr uint32_t vertex_count = 100; // spans two work groups.
+
+        // Joint 0 is a pure translation; its 3x3 part is identity.
+        const float tx = 2.0f, ty = -3.0f, tz = 0.5f;
+        const float joint0[16] =
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            tx,   ty,   tz,   1.0f
+        };
+
+        // Build the synthetic source vertex buffer.
+        std::vector<uint32_t> source ( vertex_count * vertex_words, 0u );
+        for ( uint32_t v = 0; v < vertex_count; ++v )
+        {
+            uint32_t* vert = source.data() + v * vertex_words;
+            // Position varies per vertex so a missed translation is visible.
+            vert[0] = FloatBits ( static_cast<float> ( v ) );
+            vert[1] = FloatBits ( static_cast<float> ( v ) * 2.0f );
+            vert[2] = FloatBits ( static_cast<float> ( v ) * 3.0f );
+            // Normal / tangent / bitangent: fixed orthonormal basis.
+            vert[3] = FloatBits ( 0.0f );
+            vert[4] = FloatBits ( 0.0f );
+            vert[5] = FloatBits ( 1.0f );
+            vert[6] = FloatBits ( 1.0f );
+            vert[7] = FloatBits ( 0.0f );
+            vert[8] = FloatBits ( 0.0f );
+            vert[9]  = FloatBits ( 0.0f );
+            vert[10] = FloatBits ( 1.0f );
+            vert[11] = FloatBits ( 0.0f );
+            // UV.
+            vert[12] = FloatBits ( 0.25f );
+            vert[13] = FloatBits ( 0.75f );
+            // Weight indices: all four influences reference joint 0.
+            vert[14] = 0u;
+            // Weight values: x = 255/255 = 1.0, the rest 0 (unpackUnorm4x8).
+            vert[15] = 0x000000FFu;
+        }
+
+        renderer->BeginFrame ( hwnd );
+
+        const size_t source_size = source.size() * sizeof ( uint32_t );
+        BufferAccessor source_buffer = renderer->AllocateSingleFrameStorageMemory ( hwnd, source_size );
+        source_buffer.WriteMemory ( 0, source_size, source.data() );
+
+        BufferAccessor matrices_buffer = renderer->AllocateSingleFrameStorageMemory ( hwnd, sizeof ( joint0 ) );
+        matrices_buffer.WriteMemory ( 0, sizeof ( joint0 ), joint0 );
+
+        BufferAccessor skinned_buffer = renderer->AllocateSingleFrameStorageMemory ( hwnd, source_size );
+
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::SKINNING_MATRICES, &matrices_buffer },
+            { Mesh::BindingLocations::SOURCE_VERTICES, &source_buffer },
+            { Mesh::BindingLocations::SKINNED_VERTICES, &skinned_buffer },
+        };
+
+        Pipeline skinning;
+        skinning.LoadFromId ( "shaders/skinning.txt"_crc32 );
+        renderer->LoadPipeline ( skinning );
+
+        const uint32_t group_count = ( vertex_count + local_size - 1 ) / local_size;
+        renderer->Dispatch ( hwnd, skinning, group_count, 1, 1, bindings );
+        renderer->Barrier ( hwnd );
+        renderer->BeginRenderPass ( hwnd );
+        renderer->EndRender ( hwnd );
+
+        renderer->BeginFrame ( hwnd );
+
+        const uint32_t* out = static_cast<const uint32_t*> ( skinned_buffer.Map() );
+        ASSERT_NE ( out, nullptr );
+        for ( uint32_t v = 0; v < vertex_count; ++v )
+        {
+            const uint32_t* vert = out + v * vertex_words;
+            // Position translated by joint 0.
+            EXPECT_NEAR ( BitsFloat ( vert[0] ), static_cast<float> ( v ) + tx, 1e-4f )
+                    << "position.x mismatch at vertex " << v;
+            EXPECT_NEAR ( BitsFloat ( vert[1] ), static_cast<float> ( v ) * 2.0f + ty, 1e-4f )
+                    << "position.y mismatch at vertex " << v;
+            EXPECT_NEAR ( BitsFloat ( vert[2] ), static_cast<float> ( v ) * 3.0f + tz, 1e-4f )
+                    << "position.z mismatch at vertex " << v;
+            // Directional attributes pass through a pure translation unchanged.
+            EXPECT_NEAR ( BitsFloat ( vert[5] ), 1.0f, 1e-5f ) << "normal.z at vertex " << v;
+            EXPECT_NEAR ( BitsFloat ( vert[6] ), 1.0f, 1e-5f ) << "tangent.x at vertex " << v;
+            EXPECT_NEAR ( BitsFloat ( vert[10] ), 1.0f, 1e-5f ) << "bitangent.y at vertex " << v;
+            // UV and packed weight words are copied verbatim.
+            EXPECT_EQ ( vert[12], FloatBits ( 0.25f ) ) << "uv.x at vertex " << v;
+            EXPECT_EQ ( vert[13], FloatBits ( 0.75f ) ) << "uv.y at vertex " << v;
+            EXPECT_EQ ( vert[14], 0u ) << "weight indices at vertex " << v;
+            EXPECT_EQ ( vert[15], 0x000000FFu ) << "weight values at vertex " << v;
+        }
+        skinned_buffer.Unmap();
+
+        renderer.reset();
+        DestroyWindow ( hwnd );
+    }
 #endif
 
     TEST ( ComputeTest, OpenGLNoopCompute )
@@ -751,6 +891,24 @@ namespace AeonGames
         RunActiveClusterCullTest ( "Vulkan" );
 #else
         GTEST_SKIP() << "Active-cluster cull test requires Win32 windowing.";
+#endif
+    }
+
+    TEST ( ComputeTest, OpenGLSkinning )
+    {
+#ifdef _WIN32
+        RunSkinningTest ( "OpenGL" );
+#else
+        GTEST_SKIP() << "Skinning test requires Win32 windowing.";
+#endif
+    }
+
+    TEST ( ComputeTest, VulkanSkinning )
+    {
+#ifdef _WIN32
+        RunSkinningTest ( "Vulkan" );
+#else
+        GTEST_SKIP() << "Skinning test requires Win32 windowing.";
 #endif
     }
 }

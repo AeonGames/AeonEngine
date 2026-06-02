@@ -79,6 +79,9 @@ namespace AeonGames
             LIGHT_INDEX_COUNTER = "LightIndexCounter"_crc32, ///< Clustered shading: global atomic allocator for the flat LightIndexList (SSBO, R1).
             CLUSTER_ACTIVE    = "ClusterActive"_crc32,   ///< Clustered shading: per-cluster active flag set by the depth pre-pass mark stage (SSBO, R2).
             CLUSTER_PARAMS    = "ClusterParams"_crc32,   ///< Clustered shading: tile/slice dimensions and depth-slicing constants (UBO).
+            SKINNING_MATRICES = "SkinningMatrices"_crc32, ///< Compute skinning: per-joint pose*inverse-bind matrices (SSBO, R4).
+            SOURCE_VERTICES   = "SourceVertices"_crc32,  ///< Compute skinning: rest-pose source vertex buffer (SSBO, R4).
+            SKINNED_VERTICES  = "SkinnedVertices"_crc32, ///< Compute skinning: skinned output vertex buffer (SSBO, R4).
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */

@@ -18,6 +18,7 @@ set(PIPELINES
     "light_cull|comp=light_cull.comp"
     "cluster_mark|vert=cluster_mark.vert|frag=cluster_mark.frag"
     "lighting|comp=lighting.0.comp|comp=lighting.1.comp"
+    "skinning|comp=skinning.comp"
 )
 
 set(SHADER_SOURCE_DIR   ${CMAKE_CURRENT_SOURCE_DIR})

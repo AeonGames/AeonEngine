@@ -1,0 +1,123 @@
+// Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#version 450
+
+layout(local_size_x = 64) in;
+
+// Final per-joint matrices (pose * inverse-bind), one mat4 per joint, in the
+// same memory layout the vertex-shader Skeleton block consumes.
+#ifdef VULKAN
+layout(set = 0, binding = 0, std430)
+#else
+layout(binding = 0, std430)
+#endif
+readonly buffer SkinningMatrices
+{
+    mat4 skinning_matrices[];
+};
+
+// Source (rest-pose) interleaved vertices, read as raw 32-bit words. The skinned
+// vertex format has a 64-byte (16-word) stride:
+//   word  0..2  : position  (vec3, float)
+//   word  3..5  : normal    (vec3, float)
+//   word  6..8  : tangent   (vec3, float)
+//   word  9..11 : bitangent (vec3, float)
+//   word 12..13 : uv        (vec2, float)
+//   word 13+1=14: weight indices (4 packed unsigned bytes)
+//   word 15     : weight values  (4 packed normalized unsigned bytes)
+#ifdef VULKAN
+layout(set = 1, binding = 0, std430)
+#else
+layout(binding = 1, std430)
+#endif
+readonly buffer SourceVertices
+{
+    uint source_vertices[];
+};
+
+// Destination skinned vertices, same interleaved layout/stride as the source.
+#ifdef VULKAN
+layout(set = 2, binding = 0, std430)
+#else
+layout(binding = 2, std430)
+#endif
+writeonly buffer SkinnedVertices
+{
+    uint skinned_vertices[];
+};
+
+const uint VERTEX_WORDS = 16u; // 64-byte stride / 4 bytes per word.
+
+vec3 read_vec3 ( uint base )
+{
+    return vec3 ( uintBitsToFloat ( source_vertices[base + 0u] ),
+                  uintBitsToFloat ( source_vertices[base + 1u] ),
+                  uintBitsToFloat ( source_vertices[base + 2u] ) );
+}
+
+void write_vec3 ( uint base, vec3 v )
+{
+    skinned_vertices[base + 0u] = floatBitsToUint ( v.x );
+    skinned_vertices[base + 1u] = floatBitsToUint ( v.y );
+    skinned_vertices[base + 2u] = floatBitsToUint ( v.z );
+}
+
+void main()
+{
+    uint vertex_index = gl_GlobalInvocationID.x;
+    uint vertex_count = source_vertices.length() / VERTEX_WORDS;
+    if ( vertex_index >= vertex_count )
+    {
+        return;
+    }
+
+    uint base = vertex_index * VERTEX_WORDS;
+
+    vec3 position  = read_vec3 ( base + 0u );
+    vec3 normal    = read_vec3 ( base + 3u );
+    vec3 tangent   = read_vec3 ( base + 6u );
+    vec3 bitangent = read_vec3 ( base + 9u );
+
+    uint packed_indices = source_vertices[base + 14u];
+    uvec4 weight_indices = uvec4 ( ( packed_indices       ) & 0xFFu,
+                                   ( packed_indices >>  8u ) & 0xFFu,
+                                   ( packed_indices >> 16u ) & 0xFFu,
+                                   ( packed_indices >> 24u ) & 0xFFu );
+    vec4 weights = unpackUnorm4x8 ( source_vertices[base + 15u] );
+
+    // Blend the four influencing joint matrices. The position transform is the
+    // weighted matrix applied once; directional attributes use its 3x3 part.
+    mat4 skin = skinning_matrices[weight_indices[0]] * weights[0] +
+                skinning_matrices[weight_indices[1]] * weights[1] +
+                skinning_matrices[weight_indices[2]] * weights[2] +
+                skinning_matrices[weight_indices[3]] * weights[3];
+    mat3 skin3 = mat3 ( skin );
+
+    vec3 skinned_position = ( skin * vec4 ( position, 1.0 ) ).xyz;
+    vec3 skinned_normal    = ( length ( normal )    != 0.0 ) ? skin3 * normal    : normal;
+    vec3 skinned_tangent   = ( length ( tangent )   != 0.0 ) ? skin3 * tangent   : tangent;
+    vec3 skinned_bitangent = ( length ( bitangent ) != 0.0 ) ? skin3 * bitangent : bitangent;
+
+    write_vec3 ( base + 0u, skinned_position );
+    write_vec3 ( base + 3u, skinned_normal );
+    write_vec3 ( base + 6u, skinned_tangent );
+    write_vec3 ( base + 9u, skinned_bitangent );
+
+    // Pass the texture coordinates and packed weight data through unchanged so
+    // the skinned buffer keeps the exact source vertex layout.
+    skinned_vertices[base + 12u] = source_vertices[base + 12u];
+    skinned_vertices[base + 13u] = source_vertices[base + 13u];
+    skinned_vertices[base + 14u] = source_vertices[base + 14u];
+    skinned_vertices[base + 15u] = source_vertices[base + 15u];
+}
