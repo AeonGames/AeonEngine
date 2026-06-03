@@ -150,6 +150,20 @@ class SCN_OT_exporter(bpy.types.Operator):
         # Make a Blender datablock name safe to use as a filename component.
         return "".join(c if (c.isalnum() or c in "._-") else "_" for c in name)
 
+    @staticmethod
+    def _is_hidden(obj):
+        '''An object counts as hidden (and is skipped on export) when it is
+        hidden in the viewport (eye icon), globally disabled in viewports
+        (monitor icon) or excluded from renders (camera icon).'''
+        if obj.hide_viewport or obj.hide_render:
+            return True
+        try:
+            return obj.hide_get()
+        except RuntimeError:
+            # hide_get() needs a view-layer context; treat as visible if it
+            # cannot be evaluated.
+            return False
+
     def draw(self, context):
         layout = self.layout
         root_box = layout.box()
@@ -378,7 +392,8 @@ class SCN_OT_exporter(bpy.types.Operator):
             representatives = []
             seen = set()
             for obj in scene.objects:
-                if obj.type == 'MESH' and obj.data not in seen:
+                if obj.type == 'MESH' and not self._is_hidden(obj) \
+                        and obj.data not in seen:
                     seen.add(obj.data)
                     representatives.append(obj)
             total = len(representatives)
@@ -414,9 +429,13 @@ class SCN_OT_exporter(bpy.types.Operator):
                 wm.progress_end()
             scene_buffer.name = export_name
 
-        # 2. One node per object (mesh instances, lights, cameras).
+        # 2. One node per object (mesh instances, lights, cameras). Hidden
+        #    objects are skipped so they do not appear in the exported scene.
         camera_nodes = {}
         for obj in scene.objects:
+            if self._is_hidden(obj):
+                print("Skipping hidden object", obj.name)
+                continue
             if obj.type == 'MESH':
                 model_path = mesh_to_model.get(obj.data)
                 if model_path is None:

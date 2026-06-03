@@ -4305,87 +4305,6 @@ node {
   }
 }
 node {
-  name: "Decals 3rd Floor"
-  local {
-    Scale {
-      x: 1.0
-      y: 1.0
-      z: 1.0
-    }
-    Rotation {
-      w: 1.0
-    }
-    Translation {
-      x: 0.09102356
-      y: -0.18152206
-      z: 12.530001
-    }
-  }
-  component {
-    name: "Model Component"
-    property {
-      name: "Model"
-      path: "sponza/Decals_3rd_Floor.txt"
-    }
-  }
-}
-node {
-  name: "Decals 2nd Floor"
-  local {
-    Scale {
-      x: 1.0
-      y: 1.0
-      z: 1.0
-    }
-    Rotation {
-      w: 7.54979e-08
-      x: -0.0
-      y: -0.0
-      z: -1.0
-    }
-    Translation {
-      x: 0.1679242
-      y: 0.30849546
-      z: 8.079009
-    }
-  }
-  component {
-    name: "Model Component"
-    property {
-      name: "Model"
-      path: "sponza/Decals_2nd_Floor.txt"
-    }
-  }
-}
-node {
-  name: "Decals 1st Floor"
-  local {
-    Scale {
-      x: 1.0
-      y: 1.0
-      z: 1.0
-    }
-    Rotation {
-      w: 0.49999988
-      x: 0.49999994
-      y: 0.50000006
-      z: 0.5000001
-    }
-    Translation {
-      x: -11.116789
-      y: 4.7802944
-      z: 1.1709985
-    }
-  }
-  component {
-    name: "Model Component"
-    property {
-      name: "Model"
-      path: "sponza/Decals_1st_Floor.txt"
-    }
-  }
-}
-node {
   name: "lamp_light_1st_floor_01"
   local {
     Scale {
@@ -4418,11 +4337,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4459,11 +4378,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4500,11 +4419,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4541,11 +4460,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4582,11 +4501,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4623,11 +4542,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4664,11 +4583,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4705,11 +4624,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4746,11 +4665,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4787,11 +4706,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4828,11 +4747,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4869,11 +4788,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4910,11 +4829,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4951,11 +4870,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -4992,11 +4911,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5033,11 +4952,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5074,11 +4993,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5115,11 +5034,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5156,11 +5075,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5197,11 +5116,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5238,11 +5157,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 100.0
+      float: 1
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 10
     }
   }
 }
@@ -5279,11 +5198,11 @@ node {
     }
     property {
       name: "Intensity"
-      float: 15.0
+      float: 0.15
     }
     property {
       name: "Radius"
-      float: 0.0
+      float: 3.87298
     }
   }
 }
