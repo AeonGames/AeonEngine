@@ -454,6 +454,11 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/game/images/development.svg.in
   COMMENT "Generating binary game assets")
 
+# Regenerate the shader pipeline .txt files from their assets/shadercode sources
+# before packing them into .prg binaries, so hand-edits to the generated files
+# can never silently diverge from the source of truth.
+add_dependencies(binary-assets shader-pipelines)
+
 #
 # Blender Execution target
 #

@@ -175,6 +175,13 @@ const uint HEATMAP_OVERFLOW = 128u;
 // useful gradients rather than a flat blue.
 const float HEATMAP_REFERENCE = 16.0;
 
+// Flat ambient fill. The engine has no global illumination, so surfaces that
+// face away from every light would otherwise render pure black, crushing the
+// scene and hiding all texture color. This constant lifts the shadows just
+// enough to reveal the diffuse maps, approximating the indirect bounce that
+// the Blender reference render gets from its world lighting.
+const vec3 AMBIENT = vec3 ( 0.25 );
+
 // Map t in [0,1] to a blue -> cyan -> green -> yellow -> red heat ramp.
 vec3 heat_color ( float t )
 {
@@ -254,6 +261,6 @@ void main()
             }
       }
 
-      vec3 LightIntensity = Kd * diffuse_accum + Ks * specular_accum;
+      vec3 LightIntensity = Kd * ( AMBIENT + diffuse_accum ) + Ks * specular_accum;
       FragColor = tex * vec4 ( LightIntensity, 1.0 );
 }

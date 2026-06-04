@@ -46,7 +46,14 @@ readonly buffer SourceVertices
     uint source_vertices[];
 };
 
-// Destination skinned vertices, same interleaved layout/stride as the source.
+// Destination skinned vertices. The skinning output drops the per-vertex
+// weight data (no longer needed once the mesh is posed) so the buffer uses a
+// compact 56-byte (14-word) stride matching diffuse_map_phong_no_skeleton:
+//   word  0..2  : position  (vec3, float)
+//   word  3..5  : normal    (vec3, float)
+//   word  6..8  : tangent   (vec3, float)
+//   word  9..11 : bitangent (vec3, float)
+//   word 12..13 : uv        (vec2, float)
 #ifdef VULKAN
 layout(set = 2, binding = 0, std430)
 #else
@@ -57,7 +64,8 @@ writeonly buffer SkinnedVertices
     uint skinned_vertices[];
 };
 
-const uint VERTEX_WORDS = 16u; // 64-byte stride / 4 bytes per word.
+const uint SRC_VERTEX_WORDS = 16u; // 64-byte source stride / 4 bytes per word.
+const uint DST_VERTEX_WORDS = 14u; // 56-byte skinned stride / 4 bytes per word.
 
 vec3 read_vec3 ( uint base )
 {
@@ -76,25 +84,26 @@ void write_vec3 ( uint base, vec3 v )
 void main()
 {
     uint vertex_index = gl_GlobalInvocationID.x;
-    uint vertex_count = source_vertices.length() / VERTEX_WORDS;
+    uint vertex_count = source_vertices.length() / SRC_VERTEX_WORDS;
     if ( vertex_index >= vertex_count )
     {
         return;
     }
 
-    uint base = vertex_index * VERTEX_WORDS;
+    uint src_base = vertex_index * SRC_VERTEX_WORDS;
+    uint dst_base = vertex_index * DST_VERTEX_WORDS;
 
-    vec3 position  = read_vec3 ( base + 0u );
-    vec3 normal    = read_vec3 ( base + 3u );
-    vec3 tangent   = read_vec3 ( base + 6u );
-    vec3 bitangent = read_vec3 ( base + 9u );
+    vec3 position  = read_vec3 ( src_base + 0u );
+    vec3 normal    = read_vec3 ( src_base + 3u );
+    vec3 tangent   = read_vec3 ( src_base + 6u );
+    vec3 bitangent = read_vec3 ( src_base + 9u );
 
-    uint packed_indices = source_vertices[base + 14u];
+    uint packed_indices = source_vertices[src_base + 14u];
     uvec4 weight_indices = uvec4 ( ( packed_indices       ) & 0xFFu,
                                    ( packed_indices >>  8u ) & 0xFFu,
                                    ( packed_indices >> 16u ) & 0xFFu,
                                    ( packed_indices >> 24u ) & 0xFFu );
-    vec4 weights = unpackUnorm4x8 ( source_vertices[base + 15u] );
+    vec4 weights = unpackUnorm4x8 ( source_vertices[src_base + 15u] );
 
     // Blend the four influencing joint matrices. The position transform is the
     // weighted matrix applied once; directional attributes use its 3x3 part.
@@ -109,15 +118,13 @@ void main()
     vec3 skinned_tangent   = ( length ( tangent )   != 0.0 ) ? skin3 * tangent   : tangent;
     vec3 skinned_bitangent = ( length ( bitangent ) != 0.0 ) ? skin3 * bitangent : bitangent;
 
-    write_vec3 ( base + 0u, skinned_position );
-    write_vec3 ( base + 3u, skinned_normal );
-    write_vec3 ( base + 6u, skinned_tangent );
-    write_vec3 ( base + 9u, skinned_bitangent );
+    write_vec3 ( dst_base + 0u, skinned_position );
+    write_vec3 ( dst_base + 3u, skinned_normal );
+    write_vec3 ( dst_base + 6u, skinned_tangent );
+    write_vec3 ( dst_base + 9u, skinned_bitangent );
 
-    // Pass the texture coordinates and packed weight data through unchanged so
-    // the skinned buffer keeps the exact source vertex layout.
-    skinned_vertices[base + 12u] = source_vertices[base + 12u];
-    skinned_vertices[base + 13u] = source_vertices[base + 13u];
-    skinned_vertices[base + 14u] = source_vertices[base + 14u];
-    skinned_vertices[base + 15u] = source_vertices[base + 15u];
+    // Pass the texture coordinates through unchanged. Weight data is dropped
+    // from the skinned output since the mesh is now fully posed.
+    skinned_vertices[dst_base + 12u] = source_vertices[src_base + 12u];
+    skinned_vertices[dst_base + 13u] = source_vertices[src_base + 13u];
 }
