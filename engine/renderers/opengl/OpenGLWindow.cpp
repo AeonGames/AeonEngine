@@ -183,7 +183,7 @@ namespace AeonGames
         mStorageMemoryPoolBuffer{aOpenGLRenderer}
     {
         RECT rect{};
-        GetWindowRect ( mWindowId, &rect );
+        GetClientRect ( mWindowId, &rect );
         PIXELFORMATDESCRIPTOR pfd{};
         pfd.nSize = sizeof ( PIXELFORMATDESCRIPTOR );
         pfd.nVersion = 1;
@@ -198,7 +198,7 @@ namespace AeonGames
         mFrameBuffer.Initialize();
         mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
         mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
-        glViewport ( rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
+        glViewport ( 0, 0, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
         Initialize();
     }

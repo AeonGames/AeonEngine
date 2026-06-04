@@ -444,6 +444,18 @@ namespace AeonGames
             return mInputSystem == nullptr;
         } );
         SetInputSystem ( mInputSystem.get() );
+
+        // Initialize the viewport from the actual client size. A fullscreen
+        // WS_POPUP is created at its final size before this window's user-data
+        // pointer is installed, so the creation-time WM_SIZE is ignored and
+        // ShowWindow does not resend one. Without this, the renderer's viewport
+        // and scissor (Vulkan render area) would stay zero/stale until a manual
+        // resize, producing a black screen on Vulkan and a stretched, clipped
+        // image on OpenGL.
+        RECT client_rect{};
+        GetClientRect ( static_cast<HWND> ( mWindowId ), &client_rect );
+        Resize ( static_cast<uint32_t> ( client_rect.right - client_rect.left ),
+                 static_cast<uint32_t> ( client_rect.bottom - client_rect.top ) );
     }
 
     Window::~Window()
