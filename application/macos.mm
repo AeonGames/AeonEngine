@@ -33,6 +33,7 @@ limitations under the License.
 #include <stdexcept>
 #import <Cocoa/Cocoa.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <Carbon/Carbon.h>
 #include "Window.h"
 
 int Main ( int argc, char *argv[] );
@@ -207,9 +208,18 @@ namespace AeonGames
                                 mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
                             }
                             bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
-                            if ( !consumed && mInputSystem )
+                            if ( !consumed )
                             {
-                                mInputSystem->OnKeyEvent ( key, true );
+                                // ESC exits the application unless the GUI overlay consumed it.
+                                if ( key == kVK_Escape )
+                                {
+                                    running = false;
+                                    break;
+                                }
+                                if ( mInputSystem )
+                                {
+                                    mInputSystem->OnKeyEvent ( key, true );
+                                }
                             }
                             // Forward typed characters; route through the GUI
                             // overlay first, fall back to InputSystem only if

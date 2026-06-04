@@ -179,10 +179,19 @@ namespace AeonGames
             {
                 uint32_t key = static_cast<uint32_t> ( wParam );
                 bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, true );
-                if ( !consumed && window->GetInputSystem() )
+                if ( !consumed )
                 {
-                    window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );
-                    window->GetInputSystem()->OnKeyEvent ( key, true );
+                    // ESC exits the application unless the GUI overlay consumed it.
+                    if ( key == VK_ESCAPE )
+                    {
+                        PostQuitMessage ( 0 );
+                        break;
+                    }
+                    if ( window->GetInputSystem() )
+                    {
+                        window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );
+                        window->GetInputSystem()->OnKeyEvent ( key, true );
+                    }
                 }
             }
             break;

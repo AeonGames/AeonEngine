@@ -33,6 +33,7 @@ limitations under the License.
 #include <stdexcept>
 #include <cassert>
 #include <X11/Xlib.h>
+#include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include "Window.h"
@@ -291,9 +292,18 @@ namespace AeonGames
                         mInputSystem->SetKeyModifiers ( TranslateX11Modifiers ( xevent.xkey.state ) );
                     }
                     bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
-                    if ( !consumed && mInputSystem )
+                    if ( !consumed )
                     {
-                        mInputSystem->OnKeyEvent ( key, true );
+                        // ESC exits the application unless the GUI overlay consumed it.
+                        if ( key == XK_Escape )
+                        {
+                            running = false;
+                            break;
+                        }
+                        if ( mInputSystem )
+                        {
+                            mInputSystem->OnKeyEvent ( key, true );
+                        }
                     }
                     // Translate to printable characters for text input. Route
                     // through the GUI overlay first; only forward to the
