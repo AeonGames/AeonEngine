@@ -25,10 +25,7 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanBuffer::VulkanBuffer ( const VulkanRenderer & aVulkanRenderer ) : mVulkanRenderer { aVulkanRenderer }
-    {
-        std::cout << LogLevel::Info << __FUNCTION__ << std::endl;
-    }
+    VulkanBuffer::VulkanBuffer ( const VulkanRenderer & aVulkanRenderer ) : mVulkanRenderer { aVulkanRenderer } {}
     VulkanBuffer::VulkanBuffer ( const VulkanRenderer& aVulkanRenderer, const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void *aData ) :
         mVulkanRenderer { aVulkanRenderer },
         mSize { aSize },

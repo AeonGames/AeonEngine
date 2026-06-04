@@ -40,6 +40,21 @@ class MSH_OT_exporterCommon():
         self.export_colors = export_colors
         self.as_text = as_text
 
+    @staticmethod
+    def _select_uv_layer(mesh):
+        # Return the UV layer Blender uses when rendering (active_render),
+        # which matches the look authored in the .blend. Fall back to the
+        # edit-active layer and finally the first layer. None if the mesh has
+        # no UVs at all.
+        if len(mesh.uv_layers) == 0:
+            return None
+        for uv_layer in mesh.uv_layers:
+            if uv_layer.active_render:
+                return uv_layer
+        if mesh.uv_layers.active is not None:
+            return mesh.uv_layers.active
+        return mesh.uv_layers[0]
+
     def get_vertex(self, loop_and_attributes):
         loop = loop_and_attributes[0]
         attributes = loop_and_attributes[1]
@@ -64,8 +79,8 @@ class MSH_OT_exporterCommon():
                 bitangent = (self.world_3x3 @ loop.bitangent).normalized()
                 vertex.extend([bitangent.x, bitangent.y, bitangent.z])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.TEXCOORD:
-                vertex.extend([self.mesh.uv_layers[0].data[loop.index].uv[0],
-                            1.0 - self.mesh.uv_layers[0].data[loop.index].uv[1]])
+                vertex.extend([self.uv_layer.data[loop.index].uv[0],
+                            1.0 - self.uv_layer.data[loop.index].uv[1]])
             elif attribute.Semantic == mesh_pb2.AttributeMsg.WEIGHT_INDEX:
                 weights = []
                 for group in self.mesh.vertices[loop.vertex_index].groups:
@@ -160,6 +175,13 @@ class MSH_OT_exporterCommon():
         bm.free()
         self.mesh = mesh
         self.object = mesh_object
+        # Pick the UV layer Blender actually renders with (active_render),
+        # not blindly uv_layers[0]. Sponza meshes carry a second lightmap UV
+        # set; if it happens to come first, exporting layer 0 would feed
+        # lightmap atlas coordinates to the diffuse sampler, smearing the
+        # wrong part of the texture across columns and walls. Fall back to the
+        # edit-active layer, then to the first one.
+        self.uv_layer = self._select_uv_layer(mesh)
         # Cache the transforms used to take vertex attributes into world space:
         # points by the full matrix, tangents/bitangents by its 3x3 rotation,
         # and normals by the inverse-transpose so non-uniform scale is handled.
@@ -196,7 +218,7 @@ class MSH_OT_exporterCommon():
 
         if(len(mesh.uv_layers) > 0):
 
-            mesh.calc_tangents(uvmap=mesh.uv_layers[0].name)
+            mesh.calc_tangents(uvmap=self.uv_layer.name)
 
             if self.export_tangents:
                 attribute = mesh_buffer.Attribute.add()
