@@ -52,16 +52,16 @@ namespace AeonGames
         DLL const AABB& GetAABB() const;
         /** @brief Sweep an axis-aligned box through the collision geometry.
          *
-         *  Moves a box of half-extents @p aRadii from @p aOrigin along
-         *  @p aDisplacement and returns the fraction of the displacement that
-         *  can be travelled before the box first contacts a brush.
-         *  @param aOrigin Start position of the box center.
+         *  Moves @p aBox along @p aDisplacement and returns the fraction of the
+         *  displacement that can be travelled before the box first contacts a
+         *  brush.
+         *  @param aBox Axis-aligned box (center and half-extents) to sweep; use
+         *         zero half-extents for a ray/point.
          *  @param aDisplacement Displacement vector to sweep along.
-         *  @param aRadii Half-extents of the swept box (zero for a ray/point).
          *  @param[out] aContactPlane Optional. When a contact occurs, receives
          *         the contact plane. Left untouched when nothing is hit.
          *  @return Fraction in [0,1]; 1 means no contact along the displacement. */
-        DLL float Sweep ( const Vector3& aOrigin, const Vector3& aDisplacement, const Vector3& aRadii, Plane* aContactPlane = nullptr ) const;
+        DLL float Sweep ( const AABB& aBox, const Vector3& aDisplacement, Plane* aContactPlane = nullptr ) const;
         /** @brief Cast a ray (point sweep) through the collision geometry.
          *  @param aOrigin Ray origin.
          *  @param aDirection Ray direction and length; the returned fraction is
@@ -70,10 +70,9 @@ namespace AeonGames
          *  @return Fraction in [0,1]; 1 means no contact along the ray. */
         DLL float RayCast ( const Vector3& aOrigin, const Vector3& aDirection, Plane* aContactPlane = nullptr ) const;
         /** @brief Test whether an axis-aligned box overlaps any brush.
-         *  @param aOrigin Box center.
-         *  @param aRadii Box half-extents (zero for a point).
+         *  @param aBox Axis-aligned box (center and half-extents) to test.
          *  @return true if the box intersects the solid volume of any brush. */
-        DLL bool Overlap ( const Vector3& aOrigin, const Vector3& aRadii ) const;
+        DLL bool Overlap ( const AABB& aBox ) const;
     private:
         /** @brief Convex brush: a 6-DOP slab plus a range of bevel planes. */
         struct Brush

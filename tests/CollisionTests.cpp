@@ -37,6 +37,7 @@ limitations under the License.
 #include <string>
 #include <cstdint>
 #include "aeongames/Collision.hpp"
+#include "aeongames/AABB.hpp"
 #include "aeongames/Plane.hpp"
 #include "aeongames/Vector3.hpp"
 #include "gtest/gtest.h"
@@ -128,7 +129,7 @@ namespace AeonGames
         Collision collision;
         LoadCollision ( collision, MakeUnitCube() );
 
-        const float fraction = collision.Sweep ( Vector3{ 0.0f, 5.0f, 0.0f }, Vector3{ 0.0f, -5.0f, 0.0f }, Vector3{ 0.5f, 0.5f, 0.5f } );
+        const float fraction = collision.Sweep ( AABB{ Vector3{ 0.0f, 5.0f, 0.0f }, Vector3{ 0.5f, 0.5f, 0.5f } }, Vector3{ 0.0f, -5.0f, 0.0f } );
         // Top face at y=1 expanded outward by 0.5 -> contact at y=1.5: (5-1.5)/5.
         EXPECT_NEAR ( fraction, 0.7f, 1e-5f );
     }
@@ -139,8 +140,8 @@ namespace AeonGames
         Collision collision;
         LoadCollision ( collision, MakeUnitCube() );
 
-        EXPECT_TRUE ( collision.Overlap ( Vector3{ 0.0f, 0.0f, 0.0f }, Vector3{ 0.1f, 0.1f, 0.1f } ) );
-        EXPECT_FALSE ( collision.Overlap ( Vector3{ 5.0f, 0.0f, 0.0f }, Vector3{ 0.1f, 0.1f, 0.1f } ) );
+        EXPECT_TRUE ( collision.Overlap ( AABB{ Vector3{ 0.0f, 0.0f, 0.0f }, Vector3{ 0.1f, 0.1f, 0.1f } } ) );
+        EXPECT_FALSE ( collision.Overlap ( AABB{ Vector3{ 5.0f, 0.0f, 0.0f }, Vector3{ 0.1f, 0.1f, 0.1f } } ) );
     }
 
     // Two brushes split by a Kd-node: the ray must hit the nearer brush first.

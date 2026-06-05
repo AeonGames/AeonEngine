@@ -45,6 +45,7 @@ limitations under the License.
 #include "aeongames/Model.hpp"
 #include "aeongames/Skeleton.hpp"
 #include "aeongames/Animation.hpp"
+#include "aeongames/Collision.hpp"
 #include "aeongames/Package.hpp"
 #include "aeongames/ResourceFactory.hpp"
 #include "aeongames/LogLevel.hpp"
@@ -252,6 +253,14 @@ namespace AeonGames
             return material;
         } );
 
+        RegisterResourceConstructor ( "Collision"_crc32,
+                                      [] ( uint32_t aPath )
+        {
+            auto collision = std::make_unique<Collision>();
+            collision->LoadFromId ( aPath );
+            return collision;
+        } );
+
         // Record human readable type names for diagnostics (the constructors
         // above are keyed by CRC32 only).
         RegisterResourceString ( "Model"_crc32, "Model" );
@@ -261,6 +270,7 @@ namespace AeonGames
         RegisterResourceString ( "Mesh"_crc32, "Mesh" );
         RegisterResourceString ( "Pipeline"_crc32, "Pipeline" );
         RegisterResourceString ( "Material"_crc32, "Material" );
+        RegisterResourceString ( "Collision"_crc32, "Collision" );
 
         return gInitialized;
     }
@@ -280,6 +290,7 @@ namespace AeonGames
         UnregisterResourceConstructor ( "Animation"_crc32 );
         UnregisterResourceConstructor ( "Skeleton"_crc32 );
         UnregisterResourceConstructor ( "Model"_crc32 );
+        UnregisterResourceConstructor ( "Collision"_crc32 );
         for ( auto& i : gPlugInCache )
         {
             std::get<1> ( i )->ShutDown();

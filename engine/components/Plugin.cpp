@@ -25,6 +25,7 @@ limitations under the License.
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "DirectionalLight.h"
+#include "CollisionComponent.hpp"
 #include <iostream>
 
 extern "C"
@@ -63,6 +64,10 @@ extern "C"
         {
             return std::make_unique<AeonGames::DirectionalLight>();
         } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::CollisionComponent::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::CollisionComponent>();
+        } );
         return true;
     }
 
@@ -76,6 +81,7 @@ extern "C"
         AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::SpotLight::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::DirectionalLight::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::CollisionComponent::GetClassId() );
     }
 
     PLUGIN PluginModuleInterface PMI =

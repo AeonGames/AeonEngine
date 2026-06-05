@@ -244,15 +244,17 @@ namespace AeonGames
         return true;
     }
 
-    float Collision::Sweep ( const Vector3& aOrigin, const Vector3& aDisplacement, const Vector3& aRadii, Plane* aContactPlane ) const
+    float Collision::Sweep ( const AABB& aBox, const Vector3& aDisplacement, Plane* aContactPlane ) const
     {
+        const Vector3& origin = aBox.GetCenter();
+        const Vector3& radii = aBox.GetRadii();
         float best_fraction = 1.0f;
         Plane best_plane{};
 
         auto trace_brush_index = [&] ( int32_t aBrushIndex )
         {
             Plane plane;
-            const float fraction = TraceBrush ( mBrushes[aBrushIndex], aOrigin, aDisplacement, aRadii, plane );
+            const float fraction = TraceBrush ( mBrushes[aBrushIndex], origin, aDisplacement, radii, plane );
             if ( fraction < best_fraction )
             {
                 best_fraction = fraction;
@@ -277,8 +279,8 @@ namespace AeonGames
             while ( top > 0 )
             {
                 const KdNode& node = mKdNodes[stack[--top]];
-                const float radius = aRadii[node.Axis];
-                const float a0 = aOrigin[node.Axis];
+                const float radius = radii[node.Axis];
+                const float a0 = origin[node.Axis];
                 const float a1 = a0 + aDisplacement[node.Axis];
                 const float lo = std::min ( a0, a1 ) - radius;
                 const float hi = std::max ( a0, a1 ) + radius;
@@ -330,11 +332,13 @@ namespace AeonGames
 
     float Collision::RayCast ( const Vector3& aOrigin, const Vector3& aDirection, Plane* aContactPlane ) const
     {
-        return Sweep ( aOrigin, aDirection, Vector3{ 0.0f, 0.0f, 0.0f }, aContactPlane );
+        return Sweep ( AABB{ aOrigin, Vector3{ 0.0f, 0.0f, 0.0f } }, aDirection, aContactPlane );
     }
 
-    bool Collision::Overlap ( const Vector3& aOrigin, const Vector3& aRadii ) const
+    bool Collision::Overlap ( const AABB& aBox ) const
     {
+        const Vector3& origin = aBox.GetCenter();
+        const Vector3& radii = aBox.GetRadii();
         bool overlaps = false;
 
         auto overlap_leaf = [&] ( int32_t aLeafIndex ) -> bool
@@ -342,7 +346,7 @@ namespace AeonGames
             const KdLeaf& leaf = mKdLeaves[aLeafIndex];
             for ( uint32_t k = 0; k < leaf.BrushCount; ++k )
             {
-                if ( OverlapBrush ( mBrushes[mBrushIndices[leaf.BrushStart + k]], aOrigin, aRadii ) )
+                if ( OverlapBrush ( mBrushes[mBrushIndices[leaf.BrushStart + k]], origin, radii ) )
                 {
                     return true;
                 }
@@ -358,8 +362,8 @@ namespace AeonGames
             while ( top > 0 && !overlaps )
             {
                 const KdNode& node = mKdNodes[stack[--top]];
-                const float radius = aRadii[node.Axis];
-                const float coordinate = aOrigin[node.Axis];
+                const float radius = radii[node.Axis];
+                const float coordinate = origin[node.Axis];
                 const float lo = coordinate - radius;
                 const float hi = coordinate + radius;
                 if ( lo < node.Distance )
@@ -396,7 +400,7 @@ namespace AeonGames
         {
             for ( size_t b = 0; b < mBrushes.size() && !overlaps; ++b )
             {
-                overlaps = OverlapBrush ( mBrushes[b], aOrigin, aRadii );
+                overlaps = OverlapBrush ( mBrushes[b], origin, radii );
             }
         }
         return overlaps;
