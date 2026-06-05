@@ -21,6 +21,10 @@ if(UNIX AND NOT APPLE)
   list(APPEND EXECUTABLE_SOURCES linux.cpp)
 elseif(APPLE)
   list(APPEND EXECUTABLE_SOURCES macos.mm)
+  # macos.mm is Objective-C++; the PCH inherited from AeonGUI is compiled as
+  # plain C++ (Objective-C disabled), which triggers "Objective-C was disabled
+  # in PCH file but is currently enabled". Skip PCH for this source file.
+  set_source_files_properties(macos.mm PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 elseif(WIN32)
   list(APPEND EXECUTABLE_SOURCES windows.cpp)
 endif()
