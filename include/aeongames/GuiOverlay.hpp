@@ -126,6 +126,23 @@ namespace AeonGames
          */
         virtual void Navigate ( const std::string& aUrl ) = 0;
         ///@}
+
+        ///@name Compiled Documents
+        ///@{
+        /** Loads a back-end specific pre-compiled document into the overlay.
+         *
+         * The pointer is an opaque handle to a compiled document object owned
+         * by the caller (typically the application, since documents are
+         * application specific). The overlay does not take ownership; the
+         * object must outlive the overlay's use of it. Back-ends that do not
+         * support compiled documents ignore the call.
+         * @param aCompiledDocument Opaque pointer to the back-end compiled document.
+         */
+        virtual void LoadCompiledDocument ( void* aCompiledDocument )
+        {
+            ( void ) aCompiledDocument;
+        }
+        ///@}
     };
     /**@name Factory Functions */
     /*@{*/

@@ -45,6 +45,8 @@ namespace AeonGames
 
         void Navigate ( const std::string& aUrl ) final;
 
+        void LoadCompiledDocument ( void* aCompiledDocument ) final;
+
     private:
         AeonGUI::DOM::Window mWindow;
         std::vector<uint8_t> mPixelBuffer{};

@@ -32,6 +32,9 @@ limitations under the License.
 #include <sstream>
 #include <regex>
 #include <tuple>
+#ifdef AEONGUI_HAVE_COMPILED_FPS
+#include "fps.xmlcxx.hpp"
+#endif
 
 static void GetArgumentIntoString ( const char* aArgument, void* aUserData )
 {
@@ -102,14 +105,21 @@ int Main ( int argc, char *argv[] )
         }
 
         /* Renderer is available from here on.*/
-        if ( window->GetGuiOverlay() && AeonGames::FileExists ( "game/ui/fps.xhtml" ) )
-        {
-            window->GetGuiOverlay()->Navigate ( "game/ui/fps.xhtml" );
-        }
         if ( !scene_path.empty() )
         {
             scene.Load ( scene_path );
         }
+
+#ifdef AEONGUI_HAVE_COMPILED_FPS
+        // The FPS overlay is an application specific document compiled from
+        // application/fps.xhtml by xmlcxx. The application owns it and hands it
+        // to the overlay; it must outlive the run loop below.
+        AeonGames::FpsDocument fps_document{};
+        if ( window->GetGuiOverlay() )
+        {
+            window->GetGuiOverlay()->LoadCompiledDocument ( &fps_document );
+        }
+#endif
 
         // Compose the window title: "AeonEngine - <renderer> - <scene>".
         std::string title{"AeonEngine"};

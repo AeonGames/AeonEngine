@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include <cstring>
 #include "AeonGuiOverlay.hpp"
+#include "aeongui/CompiledDocument.hpp"
 
 namespace AeonGames
 {
@@ -131,5 +132,12 @@ namespace AeonGames
         mWindow.location().assign ( aUrl );
     }
 
+    void AeonGuiOverlay::LoadCompiledDocument ( void* aCompiledDocument )
+    {
+        if ( aCompiledDocument )
+        {
+            mWindow.Load ( *static_cast<AeonGUI::CompiledDocument*> ( aCompiledDocument ) );
+        }
+    }
 
 }

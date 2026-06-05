@@ -6,6 +6,8 @@
 
 [![Aeon Games](https://www.aeongames.com/AeonBlack.svg)](https://aeongames.com)
 
+![Sponza Runtime Render on Vulkan](https://www.aeongames.com/screenshots/SponzaVulkanWindows.png)
+
 AeonEngine is a cross-platform, plugin-based 3D game engine written in C++. It supports multiple rendering backends, uses Protocol Buffers for asset serialization, and integrates with Blender for content creation workflows.
 
 This is the 3rd iteration of the engine, the first one was started circa 1996 and was lost on a hard drive crash, the second one was started circa 2001 and still exists, but is a mess and a patchwork of collected ideas of 15 years of trying to keep up.

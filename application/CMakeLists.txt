@@ -33,3 +33,23 @@ else()
   target_link_libraries(game ${X11_LIBRARIES} ${OPENGL_LIBRARIES} AeonEngine)
 endif()
 add_dependencies(game AeonEngine)
+
+# fps.xhtml is an application specific document, so the application (not the
+# shared AeonGUI overlay/plugin) owns it. Compile it into a CompiledDocument
+# (FpsDocument) with the xmlcxx tool and load it from Main.cpp via the generic
+# GuiOverlay::LoadCompiledDocument seam. xmlcxx only exists when AeonGUI is
+# built as a subproject (FetchContent path); otherwise the overlay is empty.
+if(USE_AEONGUI AND TARGET xmlcxx)
+  if(DEFINED aeongui_SOURCE_DIR)
+    list(APPEND CMAKE_MODULE_PATH "${aeongui_SOURCE_DIR}/cmake")
+  endif()
+  include(xmlcxx)
+  xmlcxx_generate(FPS_DOCUMENT_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/fps.xhtml"
+    CLASS FpsDocument
+    NAMESPACE AeonGames)
+  target_sources(game PRIVATE ${FPS_DOCUMENT_SRCS})
+  target_include_directories(game PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  target_compile_definitions(game PRIVATE AEONGUI_HAVE_COMPILED_FPS)
+  target_link_libraries(game AeonGUI)
+endif()
