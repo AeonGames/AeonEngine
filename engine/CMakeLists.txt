@@ -75,6 +75,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Material.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Model.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Collision.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/InputSystem.hpp
@@ -100,6 +101,7 @@ set(ENGINE_CORE_SOURCES
     core/Pipeline.cpp
     core/Material.cpp
     core/Mesh.cpp
+    core/Collision.cpp
     core/Skeleton.cpp
     core/Animation.cpp
     core/SoundSystem.cpp

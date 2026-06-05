@@ -22,6 +22,7 @@ add_library(ProtoBufClasses SHARED
   vector2.proto
   vector3.proto
   vector4.proto
+  plane.proto
   quaternion.proto
   property.proto
   sampler.proto

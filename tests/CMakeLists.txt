@@ -18,7 +18,8 @@ include_directories(${GTEST_INCLUDE_DIR}
                     ${CMAKE_CURRENT_BINARY_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
                     ${ZLIB_INCLUDE_DIR}
-                    ${CMAKE_BINARY_DIR}/engine)
+                    ${CMAKE_BINARY_DIR}/engine
+                    ${CMAKE_BINARY_DIR}/proto)
 set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/engine/include/Decoder.h
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.hpp
@@ -47,6 +48,7 @@ set(TEST_SRCS
     ResourceCacheTests.cpp
     ResourceIdTests.cpp
     UniqueAnyPtrTests.cpp
+    CollisionTests.cpp
     ComputeTests.cpp)
 
 source_group("Tested" FILES ${TESTED_SRCS})
@@ -78,6 +80,7 @@ endif()
 
 target_link_libraries(unit-tests
                       AeonEngine
+                      ProtoBufClasses
                       Threads::Threads
                       ${GTEST_LIBRARIES}
                       ${GMOCK_LIBRARIES}

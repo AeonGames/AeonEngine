@@ -23,7 +23,7 @@ import struct
 from multiprocessing.dummy import Pool
 import google.protobuf.text_format
 
-class GTYKdNode():
+class CLNKdNode():
     kdnode_struct = struct.Struct('Ifii')
     def __init__(self):
         self.axis = 0
@@ -33,9 +33,9 @@ class GTYKdNode():
         self.near = None
         self.far = None
     def write(self,file):
-        file.write(GTYKdNode.kdnode_struct.pack(self.axis,self.distance,self.near_index,self.far_index))
+        file.write(CLNKdNode.kdnode_struct.pack(self.axis,self.distance,self.near_index,self.far_index))
 
-class GTYKdLeaf():
+class CLNKdLeaf():
     kdleaf_struct = struct.Struct('II')
     kdleaf_index_struct = struct.Struct('I')
     def __init__(self):
@@ -49,18 +49,18 @@ class GTYKdLeaf():
         else:
             self.offset = file.tell()
             for index in self.brush_indices:
-                file.write(GTYKdLeaf.kdleaf_index_struct.pack(index))
+                file.write(CLNKdLeaf.kdleaf_index_struct.pack(index))
     def write(self,file):
-        file.write(GTYKdLeaf.kdleaf_struct.pack(self.count,self.offset))
+        file.write(CLNKdLeaf.kdleaf_struct.pack(self.count,self.offset))
 
-class GTYBrush():
+class CLNBrush():
     brush_struct = struct.Struct('6f2I')
     def __init__(self, sixdop, brush_plane_start, brush_plane_count):
         self.sixdop = sixdop
         self.brush_plane_start = brush_plane_start
         self.brush_plane_count = brush_plane_count
     def write(self,file):
-        file.write(GTYBrush.brush_struct.pack(  self.sixdop[0],
+        file.write(CLNBrush.brush_struct.pack(  self.sixdop[0],
                                                 self.sixdop[1],
                                                 self.sixdop[2],
                                                 self.sixdop[3],
@@ -107,23 +107,23 @@ class CLN_OT_exporter(bpy.types.Operator):
 
     def build_kd_tree(self,points,axes,axis_index):
         if not points:
-            leaf = GTYKdLeaf()
+            leaf = CLNKdLeaf()
             self.kdtreeleaves.append(leaf)
             return leaf
         points.sort(key = lambda point: point[axes[axis_index]])
         median = len(points)//2
-        node = GTYKdNode()
+        node = CLNKdNode()
         self.kdtreenodes.append(node)
         node.axis = axes[axis_index]
         node.distance = points[median][node.axis]
         next_axis_index = (axis_index+1) % len(axes)
         node.near = self.build_kd_tree(points[:median],axes,next_axis_index)
         node.far = self.build_kd_tree(points[median+1:],axes,next_axis_index)
-        if type(node.near) == GTYKdNode:
+        if type(node.near) == CLNKdNode:
             node.near_index = self.kdtreenodes.index(node.near)
         else:
             node.near_index = -(self.kdtreeleaves.index(node.near)+1)
-        if type(node.far) == GTYKdNode:
+        if type(node.far) == CLNKdNode:
             node.far_index = self.kdtreenodes.index(node.far)
         else:
             node.far_index = -(self.kdtreeleaves.index(node.far)+1)
@@ -164,7 +164,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         return 1
 
     def add_brush_to_kd_tree(self,node,polygon,vertices,index):
-        if type(node) == GTYKdNode:
+        if type(node) == CLNKdNode:
             side = self.classify_polygon_to_kd_node(polygon,vertices,node)
             if side == -1:
                 self.add_brush_to_kd_tree(node.near,polygon,vertices,index)
@@ -173,7 +173,7 @@ class CLN_OT_exporter(bpy.types.Operator):
             else:
                 self.add_brush_to_kd_tree(node.near,polygon,vertices,index)
                 self.add_brush_to_kd_tree(node.far,polygon,vertices,index)
-        elif type(node) == GTYKdLeaf:
+        elif type(node) == CLNKdLeaf:
             node.brush_indices.append(index)
 
     def process_collision_mesh(self,mesh_object):
@@ -327,7 +327,7 @@ class CLN_OT_exporter(bpy.types.Operator):
             indices = list(set(face[1:]))
             self.add_brush_to_kd_tree(self.kdtreenodes[0],polygon,mesh.vertices,len(self.brushes))
             # Store 6-DOP,start brush index, brush index count
-            self.brushes.append(GTYBrush(face[0],len(self.plane_indices),len(indices)))
+            self.brushes.append(CLNBrush(face[0],len(self.plane_indices),len(indices)))
             # Store indices
             self.plane_indices.extend(indices)
 
@@ -437,7 +437,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         collision_buffer.Radii.z = collision_buffer_max_z - collision_buffer.Center.z
 
         for plane in self.planes:
-            collision_buffer.Plane.add(x = plane[0],y = plane[1],z = plane[2],w = plane[3])
+            collision_buffer.Plane.add(x = plane[0],y = plane[1],z = plane[2],d = plane[3])
         pool = Pool()
         collision_buffer.PlaneIndices = b''.join(
             list(pool.map(struct.Struct('i').pack, self.plane_indices)))

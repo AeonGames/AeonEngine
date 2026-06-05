@@ -1,4 +1,4 @@
-// Copyright (C) 2022,2023 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2022,2023,2026 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ syntax = "proto3";
 package AeonGames;
 
 import "vector3.proto";
-import "vector4.proto";
+import "plane.proto";
 
 message SixDOPMsg
 {
@@ -48,7 +48,7 @@ message CollisionMsg {
     Vector3Msg Radii                 = 3;
     bytes      PlaneIndices          = 4;
     bytes      BrushIndices          = 5;
-    repeated Vector4Msg Plane        = 6;
+    repeated PlaneMsg   Plane        = 6;
     repeated BrushMsg   Brush        = 7;
     repeated KdTreeNodeMsg KdNode    = 8;
     repeated KdTreeLeafMsg KdLeaf    = 9;
