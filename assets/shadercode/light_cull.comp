@@ -197,13 +197,15 @@ void main()
         {
             continue;
         }
-        // World -> view space. The cluster AABBs are built from the render
-        // projection, whose vertical axis is flipped on OpenGL; mirror the
-        // light into the same space so the overlap test stays consistent.
+        // World -> view space. On OpenGL the cluster AABBs are reconstructed
+        // by the build stage from inverse_projection, which inverts the *full*
+        // render projection (including the vertical Z-flip). A fragment reads
+        // its cluster via that same flipped projection, so a cluster's box
+        // already contains the fragment's true view-space position. Test the
+        // light's true view-space position too (no extra flip), otherwise
+        // lights bin by their mirrored vertical position while fragments look
+        // up the un-mirrored cluster, dropping lights as the camera pitches.
         vec4 vp = ViewMatrix * vec4(L.position_radius.xyz, 1.0);
-#ifndef VULKAN
-        vp.z = -vp.z;
-#endif
         float radius = max(L.position_radius.w, 1e-5);
         if (sphere_aabb_intersect(vp.xyz, radius, aabb_min, aabb_max))
         {
@@ -211,12 +213,9 @@ void main()
             if (L.type == 1u)
             {
                 // Spot: reject clusters outside the cone. The cone opens along
-                // the light's travel direction (-direction_cosOuter.xyz),
-                // mirrored into the same flipped view space as the AABBs.
+                // the light's travel direction (-direction_cosOuter.xyz), in
+                // the same view space as the AABBs (see note above).
                 vec4 vfwd = ViewMatrix * vec4(-L.direction_cosOuter.xyz, 0.0);
-#ifndef VULKAN
-                vfwd.z = -vfwd.z;
-#endif
                 vec3  forward = normalize(vfwd.xyz);
                 vec3  sphere_center = 0.5 * (aabb_min + aabb_max);
                 float sphere_radius = 0.5 * length(aabb_max - aabb_min);
