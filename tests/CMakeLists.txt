@@ -49,7 +49,8 @@ set(TEST_SRCS
     ResourceIdTests.cpp
     UniqueAnyPtrTests.cpp
     CollisionTests.cpp
-    ComputeTests.cpp)
+    ComputeTests.cpp
+    OctreeTests.cpp)
 
 source_group("Tested" FILES ${TESTED_SRCS})
 source_group("Tests" FILES ${TEST_SRCS})

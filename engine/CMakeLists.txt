@@ -85,7 +85,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ProtoBufUtils.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Property.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Clock.hpp
-    # ${CMAKE_SOURCE_DIR}/include/aeongames/Octree.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Octree.hpp
     )
 
 set(ENGINE_CORE_SOURCES
@@ -120,7 +120,7 @@ set(ENGINE_CORE_SOURCES
     core/Clock.cpp
     core/MemoryPool.cpp
     core/BufferAccessor.cpp
-    # core/Octree.cpp
+    core/Octree.cpp
     )
 
 set(ENGINE_MATH_SOURCES
