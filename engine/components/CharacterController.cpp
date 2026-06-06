@@ -18,9 +18,13 @@ limitations under the License.
 #include <string_view>
 #include "CharacterController.hpp"
 #include "ModelComponent.h"
+#include "CollisionComponent.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
 #include "aeongames/Transform.hpp"
+#include "aeongames/Quaternion.hpp"
+#include "aeongames/Vector3.hpp"
+#include "aeongames/AABB.hpp"
 #include "aeongames/InputSystem.hpp"
 
 namespace AeonGames
@@ -238,8 +242,21 @@ namespace AeonGames
             Transform t = aNode.GetLocalTransform();
             if ( forward != 0.0f || strafe != 0.0f )
             {
-                t.MoveInObjectSpace ( strafe * mMoveSpeed * dt,
-                                      forward * mMoveSpeed * dt,
+                float strafe_move = strafe * mMoveSpeed * dt;
+                float forward_move = forward * mMoveSpeed * dt;
+                // Sweep the character's bounds through the scene's collision
+                // geometry and clamp the motion to the first contact so the
+                // character stops at walls. With no collision nodes present the
+                // sweep returns 1 and movement is unaffected. The displacement
+                // is linear in the object-space amounts, so scaling them by the
+                // returned fraction also scales the world displacement.
+                // @note A pure stop can stick if the character starts embedded;
+                // sliding / depenetration is a later refinement.
+                const Transform& global = aNode.GetGlobalTransform();
+                Vector3 world_displacement = global.GetRotation() * Vector3{ strafe_move, forward_move, 0.0f };
+                float fraction = CollisionComponent::Sweep ( *scene, global * aNode.GetAABB(), world_displacement );
+                t.MoveInObjectSpace ( strafe_move * fraction,
+                                      forward_move * fraction,
                                       0.0f );
             }
             if ( turn != 0.0f )
