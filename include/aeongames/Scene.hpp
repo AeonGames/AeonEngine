@@ -24,6 +24,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/FrameLightContainer.hpp"
 #include "aeongames/ResourceId.hpp"
+#include "aeongames/Octree.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -36,6 +37,7 @@ namespace AeonGames
     class Renderer;
     class InputSystem;
     class Pipeline;
+    class Frustum;
     /*! \brief Scene class.
       Scene is the container for all elements in a game level,
       takes care of collision, rendering and updates to all elements therein.
@@ -216,6 +218,25 @@ namespace AeonGames
          *  if set, or nullptr when none is configured. */
         DLL const Pipeline* GetLightingPipeline() const;
         /**@}*/
+
+        /** @name Visibility culling */
+        /**@{*/
+        /** @brief Invoke a callback for every node whose world-space AABB
+         *  intersects the given frustum.
+         *
+         *  Internally backed by a lazily-built octree (rebuilt on the next call
+         *  after the scene changes), falling back to a brute-force traversal when
+         *  the spatial index is empty. Each visited node still passes an exact
+         *  per-node frustum test, so the visited set is identical to a brute-force
+         *  cull, only with whole non-visible subtrees skipped.
+         *  @param aFrustum Frustum to test node bounds against.
+         *  @param aCallback Invoked once per visible node. */
+        DLL void CullVisible ( const Frustum& aFrustum, const std::function<void ( const Node& ) >& aCallback ) const;
+        /** @brief Mark the spatial index stale so it is rebuilt on the next
+         *  CullVisible call. Called automatically when nodes are added, removed,
+         *  or moved; expose publicly so external mutations can request a rebuild. */
+        DLL void InvalidateSpatialIndex();
+        /**@}*/
     private:
         friend class Node;
         Matrix4x4 mViewMatrix{};
@@ -238,6 +259,12 @@ namespace AeonGames
 #endif
         Node* mCamera {};
         InputSystem* mInputSystem {};
+        /// @brief Rebuild the octree from the current node set. Lazy cache helper.
+        void BuildSpatialIndex() const;
+        /// @brief Octree over node world-space AABBs, used by CullVisible.
+        mutable Octree mSpatialIndex{};
+        /// @brief True when mSpatialIndex must be rebuilt before the next query.
+        mutable bool mSpatialIndexDirty{true};
         FrameLightContainer mFrameLights{};
         ResourceId mLightingPipeline{};
     };

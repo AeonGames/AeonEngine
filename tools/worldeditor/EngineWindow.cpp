@@ -311,7 +311,9 @@ namespace AeonGames
                 {
                     static constexpr uint32_t camera_component_id = crc32r ( "Camera", 6 );
                     const Frustum& frustum { qWorldEditorApp->GetRenderer()->GetFrustum ( mWinId ) };
-                    mScene->LoopTraverseDFSPreOrder ( [this, &frustum] ( const Node & aNode )
+                    // Camera nodes always get a wireframe frustum drawn, regardless
+                    // of visibility culling.
+                    mScene->LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
                     {
                         if ( aNode.GetComponent ( camera_component_id ) != nullptr )
                         {
@@ -328,42 +330,42 @@ namespace AeonGames
                                 AeonGames::Topology::LINE_LIST
                             );
                         }
+                    } );
 
+                    mScene->CullVisible ( frustum, [this] ( const Node & aNode )
+                    {
                         AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                        if ( frustum.Intersects ( transformed_aabb ) )
-                        {
-                            // Call Node specific rendering function.
-                            aNode.Render ( *qWorldEditorApp->GetRenderer(), mWinId );
-                            // Render Node AABBss
-                            qWorldEditorApp->GetRenderer()->Render (
-                                mWinId,
-                                transformed_aabb.GetTransform(),
-                                qWorldEditorApp->GetAABBWireMesh(),
-                                qWorldEditorApp->GetSolidColorPipeline(),
-                                &qWorldEditorApp->GetSolidColorMaterial(),
-                                AeonGames::Topology::LINE_LIST
-                            );
-                            // Render Node Root
-                            qWorldEditorApp->GetRenderer()->Render (
-                                mWinId,
-                                aNode.GetGlobalTransform() * Transform{Vector3{0.001, 0.001, 0.001}, Quaternion{1, 0, 0, 0}, Vector3{0, 0, 0}},
-                                qWorldEditorApp->GetAABBWireMesh(),
-                                qWorldEditorApp->GetSolidColorPipeline(),
-                                &qWorldEditorApp->GetSolidColorMaterial(),
-                                AeonGames::Topology::LINE_LIST
-                            );
-                            // Render AABB Center
-                            qWorldEditorApp->GetRenderer()->Render (
-                                mWinId,
-                                Transform{Vector3{0.001, 0.001, 0.001},
-                                          Quaternion{1, 0, 0, 0},
-                                          Vector3{transformed_aabb.GetCenter() }},
-                                qWorldEditorApp->GetAABBWireMesh(),
-                                qWorldEditorApp->GetSolidColorPipeline(),
-                                &qWorldEditorApp->GetSolidColorMaterial(),
-                                AeonGames::Topology::LINE_LIST
-                            );
-                        }
+                        // Call Node specific rendering function.
+                        aNode.Render ( *qWorldEditorApp->GetRenderer(), mWinId );
+                        // Render Node AABBss
+                        qWorldEditorApp->GetRenderer()->Render (
+                            mWinId,
+                            transformed_aabb.GetTransform(),
+                            qWorldEditorApp->GetAABBWireMesh(),
+                            qWorldEditorApp->GetSolidColorPipeline(),
+                            &qWorldEditorApp->GetSolidColorMaterial(),
+                            AeonGames::Topology::LINE_LIST
+                        );
+                        // Render Node Root
+                        qWorldEditorApp->GetRenderer()->Render (
+                            mWinId,
+                            aNode.GetGlobalTransform() * Transform{Vector3{0.001, 0.001, 0.001}, Quaternion{1, 0, 0, 0}, Vector3{0, 0, 0}},
+                            qWorldEditorApp->GetAABBWireMesh(),
+                            qWorldEditorApp->GetSolidColorPipeline(),
+                            &qWorldEditorApp->GetSolidColorMaterial(),
+                            AeonGames::Topology::LINE_LIST
+                        );
+                        // Render AABB Center
+                        qWorldEditorApp->GetRenderer()->Render (
+                            mWinId,
+                            Transform{Vector3{0.001, 0.001, 0.001},
+                                      Quaternion{1, 0, 0, 0},
+                                      Vector3{transformed_aabb.GetCenter() }},
+                            qWorldEditorApp->GetAABBWireMesh(),
+                            qWorldEditorApp->GetSolidColorPipeline(),
+                            &qWorldEditorApp->GetSolidColorMaterial(),
+                            AeonGames::Topology::LINE_LIST
+                        );
                     } );
                 }
                 qWorldEditorApp->GetRenderer()->EndRender ( mWinId );

@@ -63,13 +63,13 @@ namespace AeonGames
          * AABB) determines placement: the node is stored in the deepest cell that
          * fully contains that box.
          *  @param aNode Pointer to the node to add. */
-        DLL void AddNode ( Node* aNode );
+        DLL void AddNode ( const Node* aNode );
         /** @brief Remove a node from the octree.
          *
          * Placement is recomputed from the node's current world-space AABB, so the
          * node must not have moved since it was added. Empty cells are pruned.
          *  @param aNode Pointer to the node to remove. */
-        DLL void RemoveNode ( Node* aNode );
+        DLL void RemoveNode ( const Node* aNode );
         /** @brief Visit every node whose cell intersects the frustum.
          *
          * Descends from the root, skipping whole subtrees whose cell bounds fall
@@ -78,7 +78,7 @@ namespace AeonGames
          * callers should perform an exact per-node test where needed.
          *  @param aFrustum The frustum to test cell bounds against.
          *  @param aCallback Invoked once per node found inside an intersecting cell. */
-        DLL void QueryFrustum ( const Frustum& aFrustum, const std::function<void ( Node* ) >& aCallback ) const;
+        DLL void QueryFrustum ( const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const;
         ///@brief Number of nodes currently stored.
         DLL size_t GetNodeCount() const;
         ///@brief Number of allocated cells (occupied or on the path to an occupied cell).
@@ -90,11 +90,11 @@ namespace AeonGames
     private:
         struct Cell
         {
-            std::vector<Node*> mObjects{};
+            std::vector<const Node*> mObjects{};
             uint8_t mChildExists{0};
         };
         /// @brief Recursive frustum traversal helper.
-        void QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( Node* ) >& aCallback ) const;
+        void QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const;
         AABB mRootBounds{};
         uint32_t mMaxDepth{0};
         size_t mSize{0};

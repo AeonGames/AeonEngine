@@ -153,6 +153,10 @@ namespace AeonGames
             },
             node.mParent );
         } );
+        if ( Scene * scene = GetScene() )
+        {
+            scene->InvalidateSpatialIndex();
+        }
     }
 
     void Node::SetGlobalTransform ( const Transform& aTransform )
@@ -189,11 +193,19 @@ namespace AeonGames
             },
             node.mParent );
         } );
+        if ( Scene * scene = GetScene() )
+        {
+            scene->InvalidateSpatialIndex();
+        }
     }
 
     void Node::SetAABB ( const AABB& aAABB )
     {
         mAABB = aAABB;
+        if ( Scene * scene = GetScene() )
+        {
+            scene->InvalidateSpatialIndex();
+        }
     }
 
     void Node::SetName ( const std::string& aName )

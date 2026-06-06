@@ -94,7 +94,7 @@ namespace AeonGames
 
     Octree::~Octree() = default;
 
-    void Octree::AddNode ( Node* aNode )
+    void Octree::AddNode ( const Node* aNode )
     {
         if ( aNode == nullptr )
         {
@@ -119,7 +119,7 @@ namespace AeonGames
         ++mSize;
     }
 
-    void Octree::RemoveNode ( Node* aNode )
+    void Octree::RemoveNode ( const Node* aNode )
     {
         if ( aNode == nullptr )
         {
@@ -144,7 +144,7 @@ namespace AeonGames
         {
             return;
         }
-        std::vector<Node*>& objects = cell->second.mObjects;
+        std::vector<const Node*>& objects = cell->second.mObjects;
         auto found = std::find ( objects.begin(), objects.end(), aNode );
         if ( found == objects.end() )
         {
@@ -175,19 +175,19 @@ namespace AeonGames
         }
     }
 
-    void Octree::QueryFrustum ( const Frustum& aFrustum, const std::function<void ( Node* ) >& aCallback ) const
+    void Octree::QueryFrustum ( const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const
     {
         QueryFrustum ( 1, mRootBounds, aFrustum, aCallback );
     }
 
-    void Octree::QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( Node* ) >& aCallback ) const
+    void Octree::QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const
     {
         auto cell = mCells.find ( aLocationCode );
         if ( cell == mCells.end() || !aFrustum.Intersects ( aBounds ) )
         {
             return;
         }
-        for ( Node * node : cell->second.mObjects )
+        for ( const Node * node : cell->second.mObjects )
         {
             aCallback ( node );
         }

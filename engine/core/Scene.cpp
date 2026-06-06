@@ -19,6 +19,8 @@ limitations under the License.
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Pipeline.hpp"
+#include "aeongames/Frustum.hpp"
+#include "aeongames/AABB.hpp"
 #include "aeongames/ProtoBufHelpers.hpp"
 #include "aeongames/ProtoBufUtils.hpp"
 #include "aeongames/CRC.hpp"
@@ -227,6 +229,73 @@ namespace AeonGames
         } );
     }
 
+    void Scene::InvalidateSpatialIndex()
+    {
+        mSpatialIndexDirty = true;
+    }
+
+    void Scene::BuildSpatialIndex() const
+    {
+        // Root bounds are the union of every node's world-space AABB; the depth is
+        // a fixed cap (deeper trees buy finer culling at the cost of more cells).
+        constexpr uint32_t kSceneOctreeMaxDepth = 8;
+        bool any = false;
+        AABB bounds{};
+        LoopTraverseDFSPreOrder ( [&any, &bounds] ( const Node & aNode )
+        {
+            const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
+            if ( !any )
+            {
+                bounds = world;
+                any = true;
+            }
+            else
+            {
+                bounds += world;
+            }
+        } );
+        mSpatialIndex = any ? Octree{ bounds, kSceneOctreeMaxDepth } :
+                        Octree{};
+        if ( any )
+        {
+            LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+            {
+                mSpatialIndex.AddNode ( &aNode );
+            } );
+        }
+        mSpatialIndexDirty = false;
+    }
+
+    void Scene::CullVisible ( const Frustum& aFrustum, const std::function<void ( const Node& ) >& aCallback ) const
+    {
+        if ( mSpatialIndexDirty )
+        {
+            BuildSpatialIndex();
+        }
+        if ( mSpatialIndex.GetNodeCount() != 0 )
+        {
+            mSpatialIndex.QueryFrustum ( aFrustum, [&aFrustum, &aCallback] ( const Node * aNode )
+            {
+                const AABB world = aNode->GetGlobalTransform() * aNode->GetAABB();
+                if ( aFrustum.Intersects ( world ) )
+                {
+                    aCallback ( *aNode );
+                }
+            } );
+            return;
+        }
+        // Fallback: empty/degenerate index (e.g. a scene with no nodes). A plain
+        // traversal keeps CullVisible's result identical to a brute-force cull.
+        LoopTraverseDFSPreOrder ( [&aFrustum, &aCallback] ( const Node & aNode )
+        {
+            const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
+            if ( aFrustum.Intersects ( world ) )
+            {
+                aCallback ( aNode );
+            }
+        } );
+    }
+
     void Scene::BroadcastMessage ( uint32_t aMessageType, const void* aMessageData )
     {
         for ( auto & mRootNode : mNodes )
@@ -342,6 +411,7 @@ namespace AeonGames
         // Force a recalculation of the LOCAL transform
         // by setting the GLOBAL transform to itself.
         ( *inserted_node )->SetGlobalTransform ( ( *inserted_node )->mGlobalTransform );
+        mSpatialIndexDirty = true;
         return ( *inserted_node ).get();
     }
 
@@ -368,6 +438,7 @@ namespace AeonGames
         // Force a recalculation of the LOCAL transform
         // by setting the GLOBAL transform to itself.
         mNodes.back()->SetGlobalTransform ( mNodes.back()->mGlobalTransform );
+        mSpatialIndexDirty = true;
         return mNodes.back().get();
     }
 
@@ -390,6 +461,7 @@ namespace AeonGames
             aNode->SetLocalTransform ( aNode->mGlobalTransform );
             std::unique_ptr<Node> removed_node{std::move ( * ( it ) ) };
             mNodes.erase ( it );
+            mSpatialIndexDirty = true;
             return removed_node;
         }
         return nullptr;
@@ -406,6 +478,7 @@ namespace AeonGames
         auto it = mNodes.begin() + aIndex;
         std::unique_ptr<Node> removed_node{std::move ( * ( it ) ) };
         mNodes.erase ( it );
+        mSpatialIndexDirty = true;
         return removed_node;
     }
 

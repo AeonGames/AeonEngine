@@ -168,8 +168,8 @@ namespace AeonGames
         octree.AddNode ( &b );
         octree.AddNode ( &c );
 
-        std::vector<Node*> visited;
-        octree.QueryFrustum ( MakeFrustum(), [&visited] ( Node * node )
+        std::vector<const Node*> visited;
+        octree.QueryFrustum ( MakeFrustum(), [&visited] ( const Node * node )
         {
             visited.push_back ( node );
         } );
@@ -191,7 +191,7 @@ namespace AeonGames
         octree.AddNode ( &b );
 
         size_t count = 0;
-        octree.QueryFrustum ( MakeFrustum(), [&count] ( Node * )
+        octree.QueryFrustum ( MakeFrustum(), [&count] ( const Node * )
         {
             ++count;
         } );
@@ -202,7 +202,7 @@ namespace AeonGames
     {
         Octree octree { AABB { Vector3 { 0.0f, 50.0f, 0.0f }, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
         size_t count = 0;
-        octree.QueryFrustum ( MakeFrustum(), [&count] ( Node * )
+        octree.QueryFrustum ( MakeFrustum(), [&count] ( const Node * )
         {
             ++count;
         } );

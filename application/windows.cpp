@@ -595,24 +595,16 @@ namespace AeonGames
                     // Depth pre-pass: traverse once with the renderer's marking
                     // pipeline substituted to flag the clusters that actually
                     // contain visible geometry before light culling runs.
-                    aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                    aScene.CullVisible ( mRenderer->GetFrustum ( mWindowId ), [this] ( const Node & aNode )
                     {
-                        AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                        if ( mRenderer->GetFrustum ( mWindowId ).Intersects ( transformed_aabb ) )
-                        {
-                            aNode.Render ( *mRenderer, mWindowId );
-                        }
+                        aNode.Render ( *mRenderer, mWindowId );
                     } );
                     mRenderer->EndDepthPrePass ( mWindowId, lighting );
                 }
-                aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                aScene.CullVisible ( mRenderer->GetFrustum ( mWindowId ), [this] ( const Node & aNode )
                 {
-                    AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                    if ( mRenderer->GetFrustum ( mWindowId ).Intersects ( transformed_aabb ) )
-                    {
-                        // Call Node specific rendering function.
-                        aNode.Render ( *mRenderer, mWindowId );
-                    }
+                    // Call Node specific rendering function.
+                    aNode.Render ( *mRenderer, mWindowId );
                 } );
                 if ( mGuiOverlay )
                 {

@@ -506,24 +506,16 @@ namespace AeonGames
                 {
                     // Depth pre-pass: flag clusters containing visible geometry
                     // with the renderer's marking pipeline before light culling.
-                    aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                    aScene.CullVisible ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ), [this] ( const Node & aNode )
                     {
-                        AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                        if ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ).Intersects ( transformed_aabb ) )
-                        {
-                            aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
-                        }
+                        aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
                     } );
                     mRenderer->EndDepthPrePass ( reinterpret_cast<void*> ( mWindowId ), lighting );
                 }
-                aScene.LoopTraverseDFSPreOrder ( [this] ( const Node & aNode )
+                aScene.CullVisible ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ), [this] ( const Node & aNode )
                 {
-                    AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                    if ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ).Intersects ( transformed_aabb ) )
-                    {
-                        // Call Node specific rendering function.
-                        aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
-                    }
+                    // Call Node specific rendering function.
+                    aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
                 } );
                 if ( mGuiOverlay )
                 {

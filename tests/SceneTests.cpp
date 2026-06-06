@@ -15,10 +15,17 @@ limitations under the License.
 */
 #include <cstring>
 #include <memory>
+#include <algorithm>
+#include <vector>
 #include "gtest/gtest.h"
 #include "aeongames/CRC.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
+#include "aeongames/Frustum.hpp"
+#include "aeongames/AABB.hpp"
+#include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Vector3.hpp"
+#include "aeongames/Transform.hpp"
 
 using namespace ::testing;
 namespace AeonGames
@@ -358,5 +365,105 @@ namespace AeonGames
         EXPECT_EQ ( l->GetScene(), &mScene );
         EXPECT_EQ ( m->GetScene(), &mScene );
         EXPECT_EQ ( n->GetScene(), &mScene );
+    }
+
+    // ---- CullVisible (octree-backed visibility query) -------------------------
+
+    namespace
+    {
+        // Perspective view-projection looking down +Y (matches FrustumTests), near
+        // 1, far 100. Geometry around (0,50,0) is comfortably inside it.
+        Frustum MakeCullFrustum()
+        {
+            Matrix4x4 projection {};
+            projection.Perspective ( 60.0f, 4.0f / 3.0f, 1.0f, 100.0f );
+            return Frustum { projection };
+        }
+
+        // Add a unit-AABB node positioned at a world location via its global
+        // transform (exercising the transform path that invalidates the index).
+        Node* AddPositioned ( Scene& aScene, const Vector3& aPosition )
+        {
+            Node* node = aScene.Add ( std::make_unique<Node>() );
+            node->SetAABB ( AABB { Vector3 {}, Vector3 { 1.0f, 1.0f, 1.0f } } );
+            node->SetGlobalTransform ( Transform { Vector3 { 1.0f, 1.0f, 1.0f }, Quaternion {}, aPosition } );
+            return node;
+        }
+
+        // Brute-force reference: the exact set of nodes whose world AABB hits the
+        // frustum, gathered by a plain traversal.
+        std::vector<const Node*> BruteForceVisible ( const Scene& aScene, const Frustum& aFrustum )
+        {
+            std::vector<const Node*> visible;
+            aScene.LoopTraverseDFSPreOrder ( [&aFrustum, &visible] ( const Node & aNode )
+            {
+                const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
+                if ( aFrustum.Intersects ( world ) )
+                {
+                    visible.push_back ( &aNode );
+                }
+            } );
+            std::sort ( visible.begin(), visible.end() );
+            return visible;
+        }
+
+        std::vector<const Node*> CullVisibleSet ( const Scene& aScene, const Frustum& aFrustum )
+        {
+            std::vector<const Node*> visible;
+            aScene.CullVisible ( aFrustum, [&visible] ( const Node & aNode )
+            {
+                visible.push_back ( &aNode );
+            } );
+            std::sort ( visible.begin(), visible.end() );
+            return visible;
+        }
+    }
+
+    TEST ( SceneCullVisible, MatchesBruteForceMixedScene )
+    {
+        Scene scene;
+        AddPositioned ( scene, Vector3 { 0.0f, 50.0f, 0.0f } );   // inside
+        AddPositioned ( scene, Vector3 { 10.0f, 50.0f, 5.0f } );  // inside
+        AddPositioned ( scene, Vector3 { 0.0f, -50.0f, 0.0f } );  // behind camera
+        AddPositioned ( scene, Vector3 { 1000.0f, 50.0f, 0.0f } ); // far to the side
+        AddPositioned ( scene, Vector3 { 0.0f, 90.0f, 0.0f } );   // near the far plane
+        const Frustum frustum = MakeCullFrustum();
+        EXPECT_EQ ( CullVisibleSet ( scene, frustum ), BruteForceVisible ( scene, frustum ) );
+    }
+
+    TEST ( SceneCullVisible, EmptySceneVisitsNothing )
+    {
+        Scene scene;
+        size_t count = 0;
+        scene.CullVisible ( MakeCullFrustum(), [&count] ( const Node& )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, 0u );
+    }
+
+    TEST ( SceneCullVisible, RebuildsAfterNodeMoves )
+    {
+        Scene scene;
+        Node* mover = AddPositioned ( scene, Vector3 { 0.0f, -50.0f, 0.0f } ); // behind
+        const Frustum frustum = MakeCullFrustum();
+        // Initially behind the camera: not visible.
+        EXPECT_TRUE ( CullVisibleSet ( scene, frustum ).empty() );
+        // Move it in front: the index must rebuild and now report it visible.
+        mover->SetGlobalTransform ( Transform { Vector3 { 1.0f, 1.0f, 1.0f }, Quaternion {}, Vector3 { 0.0f, 50.0f, 0.0f } } );
+        const std::vector<const Node*> visible = CullVisibleSet ( scene, frustum );
+        ASSERT_EQ ( visible.size(), 1u );
+        EXPECT_EQ ( visible.front(), mover );
+    }
+
+    TEST ( SceneCullVisible, MatchesBruteForceAfterRemoval )
+    {
+        Scene scene;
+        AddPositioned ( scene, Vector3 { 0.0f, 50.0f, 0.0f } );
+        Node* removable = AddPositioned ( scene, Vector3 { 10.0f, 50.0f, 5.0f } );
+        AddPositioned ( scene, Vector3 { -8.0f, 50.0f, -4.0f } );
+        const Frustum frustum = MakeCullFrustum();
+        scene.Remove ( removable );
+        EXPECT_EQ ( CullVisibleSet ( scene, frustum ), BruteForceVisible ( scene, frustum ) );
     }
 }
