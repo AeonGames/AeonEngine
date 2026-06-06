@@ -55,6 +55,7 @@ tags
 *.skl
 *.mtl
 *.tga
+*.cln
 *.blend1
 
 # Generated files

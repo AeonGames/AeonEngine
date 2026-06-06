@@ -1,0 +1,33 @@
+AEONCLN
+Version: 1
+Center {
+  x: 0
+  y: 0
+  z: 0
+}
+Radii {
+  x: 1
+  y: 1
+  z: 1
+}
+BrushIndices: "\000\000\000\000"
+Brush {
+  SixDOP {
+    positive {
+      x: 1
+      y: 1
+      z: 1
+    }
+    negative {
+      x: 1
+      y: 1
+      z: 1
+    }
+  }
+  PlaneStart: 0
+  PlaneCount: 0
+}
+KdLeaf {
+  BrushStart: 0
+  BrushCount: 1
+}

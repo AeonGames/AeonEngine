@@ -26,6 +26,15 @@ limitations under the License.
 #include "mesh.pb.h"
 #include "skeleton.pb.h"
 #include "scene.pb.h"
+// <windows.h> (pulled in via Platform.hpp) defines near/far as empty macros,
+// which clash with the Near/Far accessors generated for collision.pb.h.
+#if defined(near)
+#undef near
+#endif
+#if defined(far)
+#undef far
+#endif
+#include "collision.pb.h"
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
@@ -483,6 +492,7 @@ namespace AeonGames
         MeshMsg mesh_buffer;
         SkeletonMsg skeleton_buffer;
         SceneMsg scene_buffer;
+        CollisionMsg collision_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };
         bool binary_input = false;
@@ -538,6 +548,13 @@ namespace AeonGames
             /* coverity[fallthrough] */
             case FileType::AEONSCNT:
                 message = &scene_buffer;
+                break;
+            /* coverity[unterminated_case] */
+            case FileType::AEONCLNB:
+                binary_input = true;
+            /* coverity[fallthrough] */
+            case FileType::AEONCLNT:
+                message = &collision_buffer;
                 break;
             default:
                 file.close();
@@ -678,6 +695,11 @@ namespace AeonGames
             {
                 retval = ( type[3] == '\0' ) ? Convert::FileType::AEONSCNB :
                          Convert::FileType::AEONSCNT;
+            }
+            else if ( strncmp ( type, "CLN", 3 ) == 0 )
+            {
+                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONCLNB :
+                         Convert::FileType::AEONCLNT;
             }
         }
         return retval;

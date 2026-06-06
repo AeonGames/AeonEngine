@@ -388,6 +388,12 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
   COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt"
+  COMMAND
+          $<TARGET_FILE:aeontool> convert -i
+          ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt -o
+          ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.cln
+  COMMAND
           ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt"
   COMMAND
           $<TARGET_FILE:aeontool> convert -i
@@ -443,6 +449,7 @@ add_custom_target(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   SOURCES ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt
+          ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt
