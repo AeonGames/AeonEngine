@@ -289,13 +289,13 @@ namespace AeonGames
             mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
             if ( aMesh.GetIndexCount() )
             {
-                glDrawElementsInstanced ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                          GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
+                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             else
             {
-                glDrawArraysInstanced ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
                 OPENGL_CHECK_ERROR_NO_THROW;
             }
             return;
@@ -321,17 +321,19 @@ namespace AeonGames
             mOpenGLRenderer.SetMaterial ( *aMaterial );
         }
 
-        /// @todo Add some sort of way to make use of the aFirstInstance parameter
+        // aFirstInstance is forwarded as the base instance so a single per-frame
+        // instance buffer can hold every batch and each draw selects its slice;
+        // this mirrors the Vulkan path's firstInstance argument.
         mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
         if ( aMesh.GetIndexCount() )
         {
-            glDrawElementsInstanced ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount );
+            glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                  GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            glDrawArraysInstanced ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount );
+            glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }
