@@ -1,6 +1,12 @@
 #version 450
 
-#ifdef VULKAN
+#ifdef INSTANCED
+#ifndef VULKAN
+#extension GL_ARB_shader_draw_parameters : require
+#endif
+#endif
+
+#if defined(VULKAN) && !defined(INSTANCED)
 layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };
 #endif
 #ifdef VULKAN
@@ -16,6 +22,28 @@ uniform Matrices
       mat4 ProjectionMatrix;
       mat4 ViewMatrix;
 };
+
+// Per-instance model matrices for instanced draws (Track E). Under INSTANCED
+// the per-node ModelMatrix is replaced by a lookup into this buffer, indexed by
+// the instance id so a single draw can render many sibling nodes.
+#ifdef INSTANCED
+#ifdef VULKAN
+layout(set = 3, binding = 0, std430)
+#else
+layout(binding = 3, std430)
+#endif
+readonly buffer InstanceMatrices
+{
+      mat4 InstanceModelMatrices[];
+};
+#ifdef VULKAN
+#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceIndex]
+#else
+#define MODEL_MATRIX InstanceModelMatrices[gl_BaseInstanceARB + gl_InstanceID]
+#endif
+#else
+#define MODEL_MATRIX ModelMatrix
+#endif
 
 layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec3 VertexNormal;
@@ -33,13 +61,13 @@ void main()
 {
       if ( length ( VertexNormal ) != 0 )
       {
-            tnorm = normalize ( mat3(ViewMatrix * ModelMatrix) * VertexNormal );
+            tnorm = normalize ( mat3(ViewMatrix * MODEL_MATRIX) * VertexNormal );
       }
       else
       {
             tnorm = vec3 ( 0.0 );
       }
-      eyeCoords = ( ViewMatrix * ModelMatrix * vec4 ( VertexPosition, 1.0 ) ).xyz;
-      gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(VertexPosition, 1.0);
+      eyeCoords = ( ViewMatrix * MODEL_MATRIX * vec4 ( VertexPosition, 1.0 ) ).xyz;
+      gl_Position = ProjectionMatrix * ViewMatrix * MODEL_MATRIX * vec4(VertexPosition, 1.0);
       CoordUV = VertexUV;
 }

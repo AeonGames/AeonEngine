@@ -81,6 +81,7 @@ namespace AeonGames
             SKINNING_MATRICES = "SkinningMatrices"_crc32, ///< Compute skinning: per-joint pose*inverse-bind matrices (SSBO, R4).
             SOURCE_VERTICES   = "SourceVertices"_crc32,  ///< Compute skinning: rest-pose source vertex buffer (SSBO, R4).
             SKINNED_VERTICES  = "SkinnedVertices"_crc32, ///< Compute skinning: skinned output vertex buffer (SSBO, R4).
+            INSTANCE_MATRICES = "InstanceMatrices"_crc32, ///< Instanced rendering: per-instance model matrices indexed by instance id (SSBO).
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */
