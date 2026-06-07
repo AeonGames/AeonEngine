@@ -649,6 +649,18 @@ namespace AeonGames
         return nullptr;
     }
 
+    uint32_t Node::GetInstanceBatchId() const
+    {
+        for ( const auto& component : mComponents )
+        {
+            if ( const uint32_t id = component->GetInstanceBatchId(); id != 0 )
+            {
+                return id;
+            }
+        }
+        return 0;
+    }
+
     std::unique_ptr<Component> Node::RemoveComponent ( uint32_t aId )
     {
         std::unique_ptr<Component> result{};

@@ -48,6 +48,7 @@ namespace AeonGames
         void Update ( Node& aNode, double aDelta ) final;
         void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void Skin ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
+        uint32_t GetInstanceBatchId() const final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
 

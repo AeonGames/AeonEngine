@@ -234,6 +234,12 @@ namespace AeonGames
             @param aId CRC identifier of the component type.
             @return Unique pointer to the removed component, or nullptr if not found. */
         DLL std::unique_ptr<Component> RemoveComponent ( uint32_t aId );
+        /** Get the instance batch id of the first component that reports a
+            non-zero one, or 0 when no component is instanceable.
+            Sibling nodes returning the same non-zero id can be drawn together
+            as instances of shared geometry by Scene::CullVisibleInstances.
+            @return Non-zero shared batch id, or 0. */
+        DLL uint32_t GetInstanceBatchId() const;
         /** @} */
         /** Update this node and its children.
             @param delta Elapsed time in seconds since the last update. */

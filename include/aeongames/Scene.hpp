@@ -232,6 +232,22 @@ namespace AeonGames
          *  @param aFrustum Frustum to test node bounds against.
          *  @param aCallback Invoked once per visible node. */
         DLL void CullVisible ( const Frustum& aFrustum, const std::function<void ( const Node& ) >& aCallback ) const;
+        /** @brief Group visible nodes that can be drawn as instances of shared
+         *  geometry and invoke a callback once per batch.
+         *
+         *  Builds on CullVisible, so every node is frustum-culled individually
+         *  and only visible instances appear in a batch. Nodes whose components
+         *  report a non-zero instance batch id (see Component::GetInstanceBatchId)
+         *  are grouped by that id and reported together with a representative
+         *  node; nodes that are not instanceable (id 0, e.g. skinned models) are
+         *  each reported as a single-node batch so callers can fall back to the
+         *  per-node render path.
+         *  @param aFrustum Frustum to cull instances against.
+         *  @param aCallback Invoked once per batch with a representative node and
+         *         the visible instance nodes sharing its batch id. */
+        DLL void CullVisibleInstances ( const Frustum& aFrustum,
+                                        const std::function<void ( const Node& aRepresentative,
+                                                const std::vector<const Node*>& aInstances ) >& aCallback ) const;
         /** @brief Invoke a callback for every node whose world-space AABB
          *  intersects the given query box.
          *

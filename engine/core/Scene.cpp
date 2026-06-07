@@ -28,6 +28,7 @@ limitations under the License.
 #include <cassert>
 #include <algorithm>
 #include <sstream>
+#include <unordered_map>
 #include <variant>
 
 #include "aeongames/ProtoBufClasses.hpp"
@@ -324,6 +325,33 @@ namespace AeonGames
                 aCallback ( aNode );
             }
         } );
+    }
+
+    void Scene::CullVisibleInstances ( const Frustum& aFrustum,
+                                       const std::function<void ( const Node&, const std::vector<const Node*>& ) >& aCallback ) const
+    {
+        // Instanceable nodes (non-zero batch id) accumulate into per-id groups
+        // that flush once the cull completes; non-instanceable nodes (id 0) are
+        // emitted inline as single-node batches, reusing one scratch vector to
+        // avoid a heap allocation per node. Per-instance frustum culling is
+        // inherited from CullVisible, so only visible nodes ever reach a batch.
+        std::unordered_map<uint32_t, std::vector<const Node*>> batches;
+        std::vector<const Node*> single ( 1, nullptr );
+        CullVisible ( aFrustum, [&aCallback, &batches, &single] ( const Node & aNode )
+        {
+            const uint32_t batch_id = aNode.GetInstanceBatchId();
+            if ( batch_id == 0 )
+            {
+                single[0] = &aNode;
+                aCallback ( aNode, single );
+                return;
+            }
+            batches[batch_id].push_back ( &aNode );
+        } );
+        for ( const auto& batch : batches )
+        {
+            aCallback ( *batch.second.front(), batch.second );
+        }
     }
 
     void Scene::BroadcastMessage ( uint32_t aMessageType, const void* aMessageData )

@@ -119,6 +119,21 @@ namespace AeonGames
             ( void ) aRenderer;
             ( void ) aWindowId;
         }
+        /** @brief Return a stable, non-zero identifier shared by components
+         *  whose geometry can be drawn together in a single instanced draw,
+         *  or 0 when this component cannot be instanced (the default).
+         *
+         *  Sibling nodes whose components report the same non-zero id are
+         *  batched by Scene::CullVisibleInstances into one instanced draw, so
+         *  the id must be identical for components sharing identical geometry
+         *  and distinct otherwise. ModelComponent returns the resource hash of
+         *  a non-skinned model, and 0 for skinned models, which keep per-node
+         *  pose state and must render individually.
+         */
+        virtual uint32_t GetInstanceBatchId() const
+        {
+            return 0;
+        }
         /** @brief Process an incoming message.
          *  @param aNode        Node this component is attached to.
          *  @param aMessageType Type identifier of the message.

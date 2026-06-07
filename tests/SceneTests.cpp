@@ -21,6 +21,7 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
+#include "aeongames/Component.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/AABB.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -543,5 +544,135 @@ namespace AeonGames
         const AABB box { Vector3 { 0.0f, 0.0f, 0.0f }, Vector3 { 4.0f, 4.0f, 4.0f } };
         scene.Remove ( removable );
         EXPECT_EQ ( QueryAABBSet ( scene, box ), BruteForceOverlap ( scene, box ) );
+    }
+
+    // ---- CullVisibleInstances (instance batching for instanced rendering) -----
+
+    namespace
+    {
+        // Minimal component that reports a fixed instance batch id, standing in
+        // for ModelComponent without needing a loaded model asset. A non-zero id
+        // marks the node as instanceable and groups siblings sharing the id.
+        class FakeInstanceComponent : public Component
+        {
+        public:
+            explicit FakeInstanceComponent ( uint32_t aBatchId ) : mBatchId{aBatchId} {}
+            const StringId& GetId() const final
+            {
+                static const StringId id{ "FakeInstanceComponent" };
+                return id;
+            }
+            size_t GetPropertyCount() const final
+            {
+                return 0;
+            }
+            const StringId* GetPropertyInfoArray() const final
+            {
+                return nullptr;
+            }
+            Property GetProperty ( const StringId& ) const final
+            {
+                return Property{};
+            }
+            void SetProperty ( uint32_t, const Property& ) final {}
+            void Update ( Node&, double ) final {}
+            void Render ( const Node&, Renderer&, void* ) final {}
+            void ProcessMessage ( Node&, uint32_t, const void* ) final {}
+            uint32_t GetInstanceBatchId() const final
+            {
+                return mBatchId;
+            }
+        private:
+            uint32_t mBatchId;
+        };
+
+        // Add a visible unit-AABB node tagged with a batch id (0 = not
+        // instanceable). Mirrors AddPositioned but attaches the fake component.
+        Node* AddInstanced ( Scene& aScene, const Vector3& aPosition, uint32_t aBatchId )
+        {
+            Node* node = AddPositioned ( aScene, aPosition );
+            node->AddComponent ( std::make_unique<FakeInstanceComponent> ( aBatchId ) );
+            return node;
+        }
+
+        // Collect the batches produced by CullVisibleInstances, each as a sorted
+        // vector of the instance nodes. The outer vector is sorted by the first
+        // node pointer so comparisons are deterministic.
+        std::vector<std::vector<const Node*>> CullVisibleInstancesBatches ( const Scene& aScene, const Frustum& aFrustum )
+        {
+            std::vector<std::vector<const Node*>> batches;
+            aScene.CullVisibleInstances ( aFrustum, [&batches] ( const Node&, const std::vector<const Node*>& aInstances )
+            {
+                std::vector<const Node*> batch = aInstances;
+                std::sort ( batch.begin(), batch.end() );
+                batches.push_back ( std::move ( batch ) );
+            } );
+            std::sort ( batches.begin(), batches.end() );
+            return batches;
+        }
+    }
+
+    TEST ( SceneCullVisibleInstances, GroupsVisibleSiblingsSharingABatchId )
+    {
+        Scene scene;
+        Node* a = AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 7u );
+        Node* b = AddInstanced ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, 7u );
+        Node* c = AddInstanced ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, 7u );
+        std::vector<const Node*> expected { a, b, c };
+        std::sort ( expected.begin(), expected.end() );
+        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
+        ASSERT_EQ ( batches.size(), 1u );
+        EXPECT_EQ ( batches.front(), expected );
+    }
+
+    TEST ( SceneCullVisibleInstances, SeparatesDistinctBatchIds )
+    {
+        Scene scene;
+        AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 1u );
+        AddInstanced ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, 1u );
+        AddInstanced ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, 2u );
+        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
+        ASSERT_EQ ( batches.size(), 2u );
+        EXPECT_EQ ( batches[0].size() + batches[1].size(), 3u );
+        // One batch of two (id 1) and one batch of one (id 2).
+        EXPECT_TRUE ( ( batches[0].size() == 1u && batches[1].size() == 2u ) ||
+                      ( batches[0].size() == 2u && batches[1].size() == 1u ) );
+    }
+
+    TEST ( SceneCullVisibleInstances, CullsInstancesOutsideTheFrustum )
+    {
+        Scene scene;
+        Node* visible = AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 7u );
+        AddInstanced ( scene, Vector3 { 0.0f, -50.0f, 0.0f }, 7u );  // behind camera
+        AddInstanced ( scene, Vector3 { 1000.0f, 50.0f, 0.0f }, 7u ); // far to the side
+        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
+        ASSERT_EQ ( batches.size(), 1u );
+        ASSERT_EQ ( batches.front().size(), 1u );
+        EXPECT_EQ ( batches.front().front(), visible );
+    }
+
+    TEST ( SceneCullVisibleInstances, NonInstanceableNodesAreSingletonBatches )
+    {
+        Scene scene;
+        Node* a = AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 0u );
+        Node* b = AddInstanced ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, 0u );
+        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
+        ASSERT_EQ ( batches.size(), 2u );
+        EXPECT_EQ ( batches[0].size(), 1u );
+        EXPECT_EQ ( batches[1].size(), 1u );
+        std::vector<std::vector<const Node*>> expected { { a }, { b } };
+        std::sort ( expected.begin(), expected.end() );
+        EXPECT_EQ ( batches, expected );
+    }
+
+    TEST ( SceneCullVisibleInstances, EmptySceneVisitsNothing )
+    {
+        Scene scene;
+        size_t count = 0;
+        scene.CullVisibleInstances ( MakeCullFrustum(), [&count] ( const Node&, const std::vector<const Node*>& )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, 0u );
     }
 }

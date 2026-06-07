@@ -182,6 +182,23 @@ namespace AeonGames
         return mModel;
     }
 
+    uint32_t ModelComponent::GetInstanceBatchId() const
+    {
+        // Only non-skinned models can be instanced: skinned models carry
+        // per-node pose state in their own skeleton buffer and must render
+        // individually. The model's resource path hash is a stable key shared
+        // by every node referencing the same model, so sibling instances of
+        // the same static model group together.
+        if ( auto model = mModel.Cast<Model>() )
+        {
+            if ( model->GetSkeleton() == nullptr )
+            {
+                return mModel.GetPath();
+            }
+        }
+        return 0;
+    }
+
     void ModelComponent::SetActiveAnimation ( std::string_view aActiveAnimation )
     {
         // No-op when the active animation is unchanged so callers can
