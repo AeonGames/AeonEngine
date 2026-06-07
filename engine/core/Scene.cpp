@@ -28,6 +28,7 @@ limitations under the License.
 #include <cassert>
 #include <algorithm>
 #include <sstream>
+#include <span>
 #include <unordered_map>
 #include <variant>
 
@@ -328,29 +329,46 @@ namespace AeonGames
     }
 
     void Scene::CullVisibleInstances ( const Frustum& aFrustum,
-                                       const std::function<void ( const Node&, const std::vector<const Node*>& ) >& aCallback ) const
+                                       const std::function<void ( const Node&, std::span<const Node* const> ) >& aCallback ) const
     {
-        // Instanceable nodes (non-zero batch id) accumulate into per-id groups
-        // that flush once the cull completes; non-instanceable nodes (id 0) are
-        // emitted inline as single-node batches, reusing one scratch vector to
-        // avoid a heap allocation per node. Per-instance frustum culling is
-        // inherited from CullVisible, so only visible nodes ever reach a batch.
-        std::unordered_map<uint32_t, std::vector<const Node*>> batches;
-        std::vector<const Node*> single ( 1, nullptr );
-        CullVisible ( aFrustum, [&aCallback, &batches, &single] ( const Node & aNode )
+        // Gather the frustum-visible nodes into a scratch buffer whose capacity
+        // persists across frames, so this once-per-frame routine performs no
+        // heap allocation in steady state (clear() keeps the storage). Per-node
+        // frustum culling is inherited from CullVisible.
+        mVisibleInstanceScratch.clear();
+        CullVisible ( aFrustum, [this] ( const Node & aNode )
         {
-            const uint32_t batch_id = aNode.GetInstanceBatchId();
-            if ( batch_id == 0 )
-            {
-                single[0] = &aNode;
-                aCallback ( aNode, single );
-                return;
-            }
-            batches[batch_id].push_back ( &aNode );
+            mVisibleInstanceScratch.push_back ( &aNode );
         } );
-        for ( const auto& batch : batches )
+        // Sorting by batch id gathers every instanceable group into a single
+        // contiguous run with no extra storage (std::sort is in place). Nodes
+        // that are not instanceable carry batch id 0 and sort to the front.
+        std::sort ( mVisibleInstanceScratch.begin(), mVisibleInstanceScratch.end(),
+                    [] ( const Node * aLhs, const Node * aRhs )
         {
-            aCallback ( *batch.second.front(), batch.second );
+            return aLhs->GetInstanceBatchId() < aRhs->GetInstanceBatchId();
+        } );
+        const size_t count = mVisibleInstanceScratch.size();
+        const Node* const* data = mVisibleInstanceScratch.data();
+        size_t i = 0;
+        // Non-instanceable nodes (id 0): each is its own single-node batch so the
+        // caller can fall back to the per-node render path.
+        while ( i < count && data[i]->GetInstanceBatchId() == 0 )
+        {
+            aCallback ( *data[i], std::span<const Node* const> ( data + i, 1 ) );
+            ++i;
+        }
+        // Instanceable nodes: each maximal run of equal batch id is one batch.
+        while ( i < count )
+        {
+            const uint32_t batch_id = data[i]->GetInstanceBatchId();
+            size_t j = i + 1;
+            while ( j < count && data[j]->GetInstanceBatchId() == batch_id )
+            {
+                ++j;
+            }
+            aCallback ( *data[i], std::span<const Node* const> ( data + i, j - i ) );
+            i = j;
         }
     }
 

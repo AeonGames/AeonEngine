@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Octree.hpp"
 #include <memory>
 #include <vector>
+#include <span>
 #include <string>
 #include <functional>
 
@@ -242,12 +243,18 @@ namespace AeonGames
          *  node; nodes that are not instanceable (id 0, e.g. skinned models) are
          *  each reported as a single-node batch so callers can fall back to the
          *  per-node render path.
+         *
+         *  Runs once per frame and performs no per-call heap allocation: the
+         *  visible set is gathered into a scratch buffer whose capacity persists
+         *  across calls, sorted in place by batch id, and delivered as spans
+         *  into that buffer. The spans are only valid for the duration of the
+         *  callback.
          *  @param aFrustum Frustum to cull instances against.
          *  @param aCallback Invoked once per batch with a representative node and
          *         the visible instance nodes sharing its batch id. */
         DLL void CullVisibleInstances ( const Frustum& aFrustum,
                                         const std::function<void ( const Node& aRepresentative,
-                                                const std::vector<const Node*>& aInstances ) >& aCallback ) const;
+                                                std::span<const Node* const> aInstances ) >& aCallback ) const;
         /** @brief Invoke a callback for every node whose world-space AABB
          *  intersects the given query box.
          *
@@ -293,6 +300,10 @@ namespace AeonGames
         mutable Octree mSpatialIndex{};
         /// @brief True when mSpatialIndex must be rebuilt before the next query.
         mutable bool mSpatialIndexDirty{true};
+        /// @brief Reused scratch buffer of frustum-visible nodes for
+        /// CullVisibleInstances; its capacity persists so per-frame instance
+        /// batching performs no heap allocation in steady state.
+        mutable std::vector<const Node*> mVisibleInstanceScratch{};
         FrameLightContainer mFrameLights{};
         ResourceId mLightingPipeline{};
     };

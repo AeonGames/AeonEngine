@@ -16,6 +16,7 @@ limitations under the License.
 #include <cstring>
 #include <memory>
 #include <algorithm>
+#include <span>
 #include <vector>
 #include "gtest/gtest.h"
 #include "aeongames/CRC.hpp"
@@ -601,9 +602,9 @@ namespace AeonGames
         std::vector<std::vector<const Node*>> CullVisibleInstancesBatches ( const Scene& aScene, const Frustum& aFrustum )
         {
             std::vector<std::vector<const Node*>> batches;
-            aScene.CullVisibleInstances ( aFrustum, [&batches] ( const Node&, const std::vector<const Node*>& aInstances )
+            aScene.CullVisibleInstances ( aFrustum, [&batches] ( const Node&, std::span<const Node* const> aInstances )
             {
-                std::vector<const Node*> batch = aInstances;
+                std::vector<const Node*> batch ( aInstances.begin(), aInstances.end() );
                 std::sort ( batch.begin(), batch.end() );
                 batches.push_back ( std::move ( batch ) );
             } );
@@ -669,7 +670,7 @@ namespace AeonGames
     {
         Scene scene;
         size_t count = 0;
-        scene.CullVisibleInstances ( MakeCullFrustum(), [&count] ( const Node&, const std::vector<const Node*>& )
+        scene.CullVisibleInstances ( MakeCullFrustum(), [&count] ( const Node&, std::span<const Node* const> )
         {
             ++count;
         } );
