@@ -16,7 +16,6 @@ limitations under the License.
 #include <cstring>
 #include <memory>
 #include <algorithm>
-#include <cmath>
 #include <vector>
 #include "gtest/gtest.h"
 #include "aeongames/CRC.hpp"
@@ -419,24 +418,6 @@ namespace AeonGames
             return visible;
         }
 
-        // True if the two axis-aligned boxes overlap (touching counts), matching
-        // Scene::QueryAABB's predicate.
-        bool BoxesOverlap ( const AABB& aLhs, const AABB& aRhs )
-        {
-            const Vector3& lc = aLhs.GetCenter();
-            const Vector3& lr = aLhs.GetRadii();
-            const Vector3& rc = aRhs.GetCenter();
-            const Vector3& rr = aRhs.GetRadii();
-            for ( int i = 0; i < 3; ++i )
-            {
-                if ( std::abs ( lc[i] - rc[i] ) > lr[i] + rr[i] )
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         // Brute-force reference: the exact set of nodes whose world AABB overlaps
         // the query box, gathered by a plain traversal.
         std::vector<const Node*> BruteForceOverlap ( const Scene& aScene, const AABB& aBox )
@@ -445,7 +426,7 @@ namespace AeonGames
             aScene.LoopTraverseDFSPreOrder ( [&aBox, &hits] ( const Node & aNode )
             {
                 const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
-                if ( BoxesOverlap ( aBox, world ) )
+                if ( aBox.Overlaps ( world ) )
                 {
                     hits.push_back ( &aNode );
                 }

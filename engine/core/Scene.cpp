@@ -26,7 +26,6 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include <cstring>
 #include <cassert>
-#include <cmath>
 #include <algorithm>
 #include <sstream>
 #include <variant>
@@ -46,25 +45,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    namespace
-    {
-        /// @brief True if the two axis-aligned boxes overlap (touching counts).
-        bool AabbOverlap ( const AABB& aLhs, const AABB& aRhs )
-        {
-            const Vector3& lhs_center = aLhs.GetCenter();
-            const Vector3& lhs_radii = aLhs.GetRadii();
-            const Vector3& rhs_center = aRhs.GetCenter();
-            const Vector3& rhs_radii = aRhs.GetRadii();
-            for ( size_t i = 0; i < 3; ++i )
-            {
-                if ( std::abs ( lhs_center[i] - rhs_center[i] ) > lhs_radii[i] + rhs_radii[i] )
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
     /**@todo implement Linear Octrees:
     https://geidav.wordpress.com/2014/08/18/advanced-octrees-2-node-representations/
     */
@@ -327,7 +307,7 @@ namespace AeonGames
             mSpatialIndex.QueryAABB ( aBox, [&aBox, &aCallback] ( const Node * aNode )
             {
                 const AABB world = aNode->GetGlobalTransform() * aNode->GetAABB();
-                if ( AabbOverlap ( aBox, world ) )
+                if ( aBox.Overlaps ( world ) )
                 {
                     aCallback ( *aNode );
                 }
@@ -339,7 +319,7 @@ namespace AeonGames
         LoopTraverseDFSPreOrder ( [&aBox, &aCallback] ( const Node & aNode )
         {
             const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
-            if ( AabbOverlap ( aBox, world ) )
+            if ( aBox.Overlaps ( world ) )
             {
                 aCallback ( aNode );
             }

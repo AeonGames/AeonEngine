@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -374,5 +374,61 @@ namespace AeonGames
 
         EXPECT_TRUE ( foundPositiveCorner );
         EXPECT_TRUE ( foundNegativeCorner );
+    }
+
+    // OctantOf: a point classifies into the expected octant; ties go positive.
+    TEST_F ( AABBTest, OctantOf )
+    {
+        AABB aabb ( Vector3 ( 0.0f, 0.0f, 0.0f ), Vector3 ( 4.0f, 4.0f, 4.0f ) );
+        EXPECT_EQ ( aabb.OctantOf ( Vector3 ( 1.0f, 1.0f, 1.0f ) ), 7u );  // +X+Y+Z
+        EXPECT_EQ ( aabb.OctantOf ( Vector3 ( -1.0f, -1.0f, -1.0f ) ), 0u ); // -X-Y-Z
+        EXPECT_EQ ( aabb.OctantOf ( Vector3 ( 1.0f, -1.0f, -1.0f ) ), 1u ); // +X only
+        EXPECT_EQ ( aabb.OctantOf ( Vector3 ( -1.0f, 1.0f, -1.0f ) ), 2u ); // +Y only
+        EXPECT_EQ ( aabb.OctantOf ( Vector3 ( -1.0f, -1.0f, 1.0f ) ), 4u ); // +Z only
+        // A point exactly on the center is assigned to the positive side.
+        EXPECT_EQ ( aabb.OctantOf ( Vector3 ( 0.0f, 0.0f, 0.0f ) ), 7u );
+    }
+
+    // GetChildOctant: the child box is half-sized and centered in its octant.
+    TEST_F ( AABBTest, GetChildOctant )
+    {
+        AABB aabb ( Vector3 ( 0.0f, 0.0f, 0.0f ), Vector3 ( 4.0f, 4.0f, 4.0f ) );
+        AABB child = aabb.GetChildOctant ( 7u ); // +X+Y+Z
+        EXPECT_FLOAT_EQ ( child.GetRadii() [0], 2.0f );
+        EXPECT_FLOAT_EQ ( child.GetRadii() [1], 2.0f );
+        EXPECT_FLOAT_EQ ( child.GetRadii() [2], 2.0f );
+        EXPECT_FLOAT_EQ ( child.GetCenter() [0], 2.0f );
+        EXPECT_FLOAT_EQ ( child.GetCenter() [1], 2.0f );
+        EXPECT_FLOAT_EQ ( child.GetCenter() [2], 2.0f );
+        AABB opposite = aabb.GetChildOctant ( 0u ); // -X-Y-Z
+        EXPECT_FLOAT_EQ ( opposite.GetCenter() [0], -2.0f );
+        EXPECT_FLOAT_EQ ( opposite.GetCenter() [1], -2.0f );
+        EXPECT_FLOAT_EQ ( opposite.GetCenter() [2], -2.0f );
+    }
+
+    // Contains: full containment is true; partial overlap or being larger is false.
+    TEST_F ( AABBTest, Contains )
+    {
+        AABB outer ( Vector3 ( 0.0f, 0.0f, 0.0f ), Vector3 ( 4.0f, 4.0f, 4.0f ) );
+        AABB inner ( Vector3 ( 1.0f, 1.0f, 1.0f ), Vector3 ( 1.0f, 1.0f, 1.0f ) );
+        EXPECT_TRUE ( outer.Contains ( inner ) );
+        EXPECT_TRUE ( outer.Contains ( outer ) ); // a box contains itself (touching counts)
+        AABB straddling ( Vector3 ( 4.0f, 0.0f, 0.0f ), Vector3 ( 1.0f, 1.0f, 1.0f ) );
+        EXPECT_FALSE ( outer.Contains ( straddling ) );
+        EXPECT_FALSE ( inner.Contains ( outer ) );
+    }
+
+    // Overlaps: symmetric; touching faces count; fully separated boxes do not.
+    TEST_F ( AABBTest, Overlaps )
+    {
+        AABB a ( Vector3 ( 0.0f, 0.0f, 0.0f ), Vector3 ( 1.0f, 1.0f, 1.0f ) );
+        AABB b ( Vector3 ( 1.5f, 0.0f, 0.0f ), Vector3 ( 1.0f, 1.0f, 1.0f ) );
+        EXPECT_TRUE ( a.Overlaps ( b ) );
+        EXPECT_TRUE ( b.Overlaps ( a ) );
+        AABB touching ( Vector3 ( 2.0f, 0.0f, 0.0f ), Vector3 ( 1.0f, 1.0f, 1.0f ) );
+        EXPECT_TRUE ( a.Overlaps ( touching ) ); // faces touch at x=1
+        AABB disjoint ( Vector3 ( 3.0f, 0.0f, 0.0f ), Vector3 ( 1.0f, 1.0f, 1.0f ) );
+        EXPECT_FALSE ( a.Overlaps ( disjoint ) );
+        EXPECT_FALSE ( disjoint.Overlaps ( a ) );
     }
 }

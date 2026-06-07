@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <stdexcept>
+#include <algorithm>
+#include <cmath>
 #include "3DMath.h"
 #include "aeongames/Plane.hpp"
 #include "aeongames/AABB.hpp"
@@ -74,6 +76,60 @@ namespace AeonGames
             ( aPlane.GetNormal() [1] < 0 ) ? mRadii[1] : -mRadii[1],
             ( aPlane.GetNormal() [2] < 0 ) ? mRadii[2] : -mRadii[2]
         } ) - aPlane.GetDistance();
+    }
+    uint8_t AABB::OctantOf ( const Vector3 & aPoint ) const
+    {
+        uint8_t octant = 0;
+        if ( aPoint[0] >= mCenter[0] )
+        {
+            octant |= 1u;
+        }
+        if ( aPoint[1] >= mCenter[1] )
+        {
+            octant |= 2u;
+        }
+        if ( aPoint[2] >= mCenter[2] )
+        {
+            octant |= 4u;
+        }
+        return octant;
+    }
+    AABB AABB::GetChildOctant ( uint8_t aOctant ) const
+    {
+        const Vector3 child_radii { mRadii[0] * 0.5f, mRadii[1] * 0.5f, mRadii[2] * 0.5f };
+        const Vector3 child_center
+        {
+            mCenter[0] + ( ( aOctant & 1u ) ? child_radii[0] : -child_radii[0] ),
+            mCenter[1] + ( ( aOctant & 2u ) ? child_radii[1] : -child_radii[1] ),
+            mCenter[2] + ( ( aOctant & 4u ) ? child_radii[2] : -child_radii[2] )
+        };
+        return AABB { child_center, child_radii };
+    }
+    bool AABB::Contains ( const AABB & aInner ) const
+    {
+        const Vector3& inner_center = aInner.mCenter;
+        const Vector3& inner_radii = aInner.mRadii;
+        for ( size_t i = 0; i < 3; ++i )
+        {
+            if ( std::abs ( inner_center[i] - mCenter[i] ) + inner_radii[i] > mRadii[i] )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool AABB::Overlaps ( const AABB & aOther ) const
+    {
+        const Vector3& other_center = aOther.mCenter;
+        const Vector3& other_radii = aOther.mRadii;
+        for ( size_t i = 0; i < 3; ++i )
+        {
+            if ( std::abs ( mCenter[i] - other_center[i] ) > mRadii[i] + other_radii[i] )
+            {
+                return false;
+            }
+        }
+        return true;
     }
     AABB& AABB::operator+= ( const AABB& lhs )
     {

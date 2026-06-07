@@ -23,6 +23,7 @@ limitations under the License.
 */
 
 #include <array>
+#include <cstdint>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Transform.hpp"
@@ -68,6 +69,25 @@ namespace AeonGames
         In other words returns the required displacement of the AABB along the normal direction
         to leave the AABB just touching the plane from the positive side.*/
         DLL float GetDistanceToPlane ( const Plane& aPlane ) const;
+        /** @brief Index of the octant of this AABB that contains @p aPoint.
+         *
+         *  Octant bits: bit0=+X, bit1=+Y, bit2=+Z. A point lying exactly on the
+         *  center plane of an axis is assigned to the positive side of that axis.
+         *  @param aPoint Point to classify against this box's center.
+         *  @return Octant index in the range [0,7]. */
+        DLL uint8_t OctantOf ( const Vector3& aPoint ) const;
+        /** @brief Bounds of one of this AABB's eight child octants.
+         *  @param aOctant Octant index: bit0=+X, bit1=+Y, bit2=+Z.
+         *  @return The half-sized child box centered in the requested octant. */
+        DLL AABB GetChildOctant ( uint8_t aOctant ) const;
+        /** @brief Test whether another AABB is fully contained within this one.
+         *  @param aInner The box to test for containment.
+         *  @return True if @p aInner lies entirely inside this box. */
+        DLL bool Contains ( const AABB& aInner ) const;
+        /** @brief Test whether this AABB overlaps another (touching counts).
+         *  @param aOther The box to test against.
+         *  @return True if the two boxes intersect or touch. */
+        DLL bool Overlaps ( const AABB& aOther ) const;
         /*! \name Operators */
         //@{
         /** @brief Expand this AABB to enclose another AABB.

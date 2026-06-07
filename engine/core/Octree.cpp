@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 #include <algorithm>
-#include <cmath>
 #include "aeongames/Octree.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Frustum.hpp"
@@ -28,77 +27,6 @@ namespace AeonGames
     {
         /// @brief Maximum depth a 64-bit location code can represent (63 spare bits / 3 bits per level).
         constexpr uint32_t kMaxLocationCodeDepth = 21u;
-
-        /** @brief Bounds of a child octant of @p aParent.
-         *  @param aParent Parent cell bounds.
-         *  @param aOctant Octant index: bit0=+X, bit1=+Y, bit2=+Z. */
-        AABB ChildBounds ( const AABB& aParent, uint8_t aOctant )
-        {
-            const Vector3& center = aParent.GetCenter();
-            const Vector3& radii = aParent.GetRadii();
-            const Vector3 child_radii { radii[0] * 0.5f, radii[1] * 0.5f, radii[2] * 0.5f };
-            const Vector3 child_center
-            {
-                center[0] + ( ( aOctant & 1u ) ? child_radii[0] : -child_radii[0] ),
-                center[1] + ( ( aOctant & 2u ) ? child_radii[1] : -child_radii[1] ),
-                center[2] + ( ( aOctant & 4u ) ? child_radii[2] : -child_radii[2] )
-            };
-            return AABB { child_center, child_radii };
-        }
-
-        /// @brief True if @p aInner is fully contained within @p aOuter.
-        bool Contains ( const AABB& aOuter, const AABB& aInner )
-        {
-            const Vector3& outer_center = aOuter.GetCenter();
-            const Vector3& outer_radii = aOuter.GetRadii();
-            const Vector3& inner_center = aInner.GetCenter();
-            const Vector3& inner_radii = aInner.GetRadii();
-            for ( size_t i = 0; i < 3; ++i )
-            {
-                if ( std::abs ( inner_center[i] - outer_center[i] ) + inner_radii[i] > outer_radii[i] )
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// @brief True if the two axis-aligned boxes overlap (touching counts).
-        bool Overlaps ( const AABB& aLhs, const AABB& aRhs )
-        {
-            const Vector3& lhs_center = aLhs.GetCenter();
-            const Vector3& lhs_radii = aLhs.GetRadii();
-            const Vector3& rhs_center = aRhs.GetCenter();
-            const Vector3& rhs_radii = aRhs.GetRadii();
-            for ( size_t i = 0; i < 3; ++i )
-            {
-                if ( std::abs ( lhs_center[i] - rhs_center[i] ) > lhs_radii[i] + rhs_radii[i] )
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// @brief Index of the octant of @p aCell that contains @p aPoint.
-        uint8_t OctantOf ( const AABB& aCell, const Vector3& aPoint )
-        {
-            const Vector3& center = aCell.GetCenter();
-            uint8_t octant = 0;
-            if ( aPoint[0] >= center[0] )
-            {
-                octant |= 1u;
-            }
-            if ( aPoint[1] >= center[1] )
-            {
-                octant |= 2u;
-            }
-            if ( aPoint[2] >= center[2] )
-            {
-                octant |= 4u;
-            }
-            return octant;
-        }
     }
 
     Octree::Octree() = default;
@@ -122,9 +50,9 @@ namespace AeonGames
         AABB bounds = mRootBounds;
         for ( uint32_t depth = 0; depth < mMaxDepth; ++depth )
         {
-            const uint8_t octant = OctantOf ( bounds, world.GetCenter() );
-            const AABB child = ChildBounds ( bounds, octant );
-            if ( !Contains ( child, world ) )
+            const uint8_t octant = bounds.OctantOf ( world.GetCenter() );
+            const AABB child = bounds.GetChildOctant ( octant );
+            if ( !child.Contains ( world ) )
             {
                 break;
             }
@@ -147,9 +75,9 @@ namespace AeonGames
         AABB bounds = mRootBounds;
         for ( uint32_t depth = 0; depth < mMaxDepth; ++depth )
         {
-            const uint8_t octant = OctantOf ( bounds, world.GetCenter() );
-            const AABB child = ChildBounds ( bounds, octant );
-            if ( !Contains ( child, world ) )
+            const uint8_t octant = bounds.OctantOf ( world.GetCenter() );
+            const AABB child = bounds.GetChildOctant ( octant );
+            if ( !child.Contains ( world ) )
             {
                 break;
             }
@@ -213,7 +141,7 @@ namespace AeonGames
         {
             if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
             {
-                QueryFrustum ( ( aLocationCode << 3 ) | octant, ChildBounds ( aBounds, octant ), aFrustum, aCallback );
+                QueryFrustum ( ( aLocationCode << 3 ) | octant, aBounds.GetChildOctant ( octant ), aFrustum, aCallback );
             }
         }
     }
@@ -226,7 +154,7 @@ namespace AeonGames
     void Octree::QueryAABB ( uint64_t aLocationCode, const AABB& aBounds, const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const
     {
         auto cell = mCells.find ( aLocationCode );
-        if ( cell == mCells.end() || !Overlaps ( aBounds, aBox ) )
+        if ( cell == mCells.end() || !aBounds.Overlaps ( aBox ) )
         {
             return;
         }
@@ -239,7 +167,7 @@ namespace AeonGames
         {
             if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
             {
-                QueryAABB ( ( aLocationCode << 3 ) | octant, ChildBounds ( aBounds, octant ), aBox, aCallback );
+                QueryAABB ( ( aLocationCode << 3 ) | octant, aBounds.GetChildOctant ( octant ), aBox, aCallback );
             }
         }
     }
