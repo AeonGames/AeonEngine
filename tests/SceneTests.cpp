@@ -16,6 +16,7 @@ limitations under the License.
 #include <cstring>
 #include <memory>
 #include <algorithm>
+#include <cmath>
 #include <vector>
 #include "gtest/gtest.h"
 #include "aeongames/CRC.hpp"
@@ -417,6 +418,52 @@ namespace AeonGames
             std::sort ( visible.begin(), visible.end() );
             return visible;
         }
+
+        // True if the two axis-aligned boxes overlap (touching counts), matching
+        // Scene::QueryAABB's predicate.
+        bool BoxesOverlap ( const AABB& aLhs, const AABB& aRhs )
+        {
+            const Vector3& lc = aLhs.GetCenter();
+            const Vector3& lr = aLhs.GetRadii();
+            const Vector3& rc = aRhs.GetCenter();
+            const Vector3& rr = aRhs.GetRadii();
+            for ( int i = 0; i < 3; ++i )
+            {
+                if ( std::abs ( lc[i] - rc[i] ) > lr[i] + rr[i] )
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Brute-force reference: the exact set of nodes whose world AABB overlaps
+        // the query box, gathered by a plain traversal.
+        std::vector<const Node*> BruteForceOverlap ( const Scene& aScene, const AABB& aBox )
+        {
+            std::vector<const Node*> hits;
+            aScene.LoopTraverseDFSPreOrder ( [&aBox, &hits] ( const Node & aNode )
+            {
+                const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
+                if ( BoxesOverlap ( aBox, world ) )
+                {
+                    hits.push_back ( &aNode );
+                }
+            } );
+            std::sort ( hits.begin(), hits.end() );
+            return hits;
+        }
+
+        std::vector<const Node*> QueryAABBSet ( const Scene& aScene, const AABB& aBox )
+        {
+            std::vector<const Node*> hits;
+            aScene.QueryAABB ( aBox, [&hits] ( const Node & aNode )
+            {
+                hits.push_back ( &aNode );
+            } );
+            std::sort ( hits.begin(), hits.end() );
+            return hits;
+        }
     }
 
     TEST ( SceneCullVisible, MatchesBruteForceMixedScene )
@@ -465,5 +512,55 @@ namespace AeonGames
         const Frustum frustum = MakeCullFrustum();
         scene.Remove ( removable );
         EXPECT_EQ ( CullVisibleSet ( scene, frustum ), BruteForceVisible ( scene, frustum ) );
+    }
+
+    // ---- QueryAABB (octree-backed broad-phase for collision) ------------------
+
+    TEST ( SceneQueryAABB, MatchesBruteForceMixedScene )
+    {
+        Scene scene;
+        AddPositioned ( scene, Vector3 { 0.0f, 0.0f, 0.0f } );    // inside the box
+        AddPositioned ( scene, Vector3 { 3.0f, 0.0f, 0.0f } );    // overlapping edge
+        AddPositioned ( scene, Vector3 { 50.0f, 0.0f, 0.0f } );   // far away
+        AddPositioned ( scene, Vector3 { 0.0f, 50.0f, 0.0f } );   // far above
+        AddPositioned ( scene, Vector3 { -2.0f, -2.0f, -2.0f } ); // inside the box
+        const AABB box { Vector3 { 0.0f, 0.0f, 0.0f }, Vector3 { 4.0f, 4.0f, 4.0f } };
+        EXPECT_EQ ( QueryAABBSet ( scene, box ), BruteForceOverlap ( scene, box ) );
+    }
+
+    TEST ( SceneQueryAABB, EmptySceneVisitsNothing )
+    {
+        Scene scene;
+        size_t count = 0;
+        scene.QueryAABB ( AABB { Vector3 {}, Vector3 { 1.0f, 1.0f, 1.0f } }, [&count] ( const Node& )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, 0u );
+    }
+
+    TEST ( SceneQueryAABB, RebuildsAfterNodeMoves )
+    {
+        Scene scene;
+        Node* mover = AddPositioned ( scene, Vector3 { 50.0f, 0.0f, 0.0f } ); // outside
+        const AABB box { Vector3 { 0.0f, 0.0f, 0.0f }, Vector3 { 4.0f, 4.0f, 4.0f } };
+        // Initially outside the query box.
+        EXPECT_TRUE ( QueryAABBSet ( scene, box ).empty() );
+        // Move it into the box: the index must rebuild and now report it.
+        mover->SetGlobalTransform ( Transform { Vector3 { 1.0f, 1.0f, 1.0f }, Quaternion {}, Vector3 { 0.0f, 0.0f, 0.0f } } );
+        const std::vector<const Node*> hits = QueryAABBSet ( scene, box );
+        ASSERT_EQ ( hits.size(), 1u );
+        EXPECT_EQ ( hits.front(), mover );
+    }
+
+    TEST ( SceneQueryAABB, MatchesBruteForceAfterRemoval )
+    {
+        Scene scene;
+        AddPositioned ( scene, Vector3 { 0.0f, 0.0f, 0.0f } );
+        Node* removable = AddPositioned ( scene, Vector3 { 2.0f, 0.0f, 0.0f } );
+        AddPositioned ( scene, Vector3 { -2.0f, 1.0f, 0.0f } );
+        const AABB box { Vector3 { 0.0f, 0.0f, 0.0f }, Vector3 { 4.0f, 4.0f, 4.0f } };
+        scene.Remove ( removable );
+        EXPECT_EQ ( QueryAABBSet ( scene, box ), BruteForceOverlap ( scene, box ) );
     }
 }

@@ -63,6 +63,23 @@ namespace AeonGames
             return true;
         }
 
+        /// @brief True if the two axis-aligned boxes overlap (touching counts).
+        bool Overlaps ( const AABB& aLhs, const AABB& aRhs )
+        {
+            const Vector3& lhs_center = aLhs.GetCenter();
+            const Vector3& lhs_radii = aLhs.GetRadii();
+            const Vector3& rhs_center = aRhs.GetCenter();
+            const Vector3& rhs_radii = aRhs.GetRadii();
+            for ( size_t i = 0; i < 3; ++i )
+            {
+                if ( std::abs ( lhs_center[i] - rhs_center[i] ) > lhs_radii[i] + rhs_radii[i] )
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         /// @brief Index of the octant of @p aCell that contains @p aPoint.
         uint8_t OctantOf ( const AABB& aCell, const Vector3& aPoint )
         {
@@ -197,6 +214,32 @@ namespace AeonGames
             if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
             {
                 QueryFrustum ( ( aLocationCode << 3 ) | octant, ChildBounds ( aBounds, octant ), aFrustum, aCallback );
+            }
+        }
+    }
+
+    void Octree::QueryAABB ( const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const
+    {
+        QueryAABB ( 1, mRootBounds, aBox, aCallback );
+    }
+
+    void Octree::QueryAABB ( uint64_t aLocationCode, const AABB& aBounds, const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const
+    {
+        auto cell = mCells.find ( aLocationCode );
+        if ( cell == mCells.end() || !Overlaps ( aBounds, aBox ) )
+        {
+            return;
+        }
+        for ( const Node * node : cell->second.mObjects )
+        {
+            aCallback ( node );
+        }
+        const uint8_t child_exists = cell->second.mChildExists;
+        for ( uint8_t octant = 0; octant < 8; ++octant )
+        {
+            if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+            {
+                QueryAABB ( ( aLocationCode << 3 ) | octant, ChildBounds ( aBounds, octant ), aBox, aCallback );
             }
         }
     }

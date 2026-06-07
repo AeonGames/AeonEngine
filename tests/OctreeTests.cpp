@@ -208,4 +208,58 @@ namespace AeonGames
         } );
         EXPECT_EQ ( count, 0u );
     }
+
+    TEST ( OctreeTest, QueryAABBReturnsOverlappingNodes )
+    {
+        // A query box covering the whole root reaches every stored node.
+        Octree octree { AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        Node a = MakeNode ( Vector3 { 6.0f, 6.0f, 6.0f }, Vector3 { 0.5f, 0.5f, 0.5f } );
+        Node b = MakeNode ( Vector3 { -6.0f, -6.0f, -6.0f }, Vector3 { 0.5f, 0.5f, 0.5f } );
+        Node c = MakeNode ( Vector3 {}, Vector3 { 0.5f, 0.5f, 0.5f } );
+        octree.AddNode ( &a );
+        octree.AddNode ( &b );
+        octree.AddNode ( &c );
+
+        std::vector<const Node*> visited;
+        octree.QueryAABB ( AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, [&visited] ( const Node * node )
+        {
+            visited.push_back ( node );
+        } );
+
+        EXPECT_EQ ( visited.size(), 3u );
+        EXPECT_NE ( std::find ( visited.begin(), visited.end(), &a ), visited.end() );
+        EXPECT_NE ( std::find ( visited.begin(), visited.end(), &b ), visited.end() );
+        EXPECT_NE ( std::find ( visited.begin(), visited.end(), &c ), visited.end() );
+    }
+
+    TEST ( OctreeTest, QueryAABBSkipsDisjointSubtrees )
+    {
+        // A small query box in the +X+Y+Z octant must not visit a node living in
+        // the opposite octant, since that whole subtree is skipped.
+        Octree octree { AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        Node positive = MakeNode ( Vector3 { 6.0f, 6.0f, 6.0f }, Vector3 { 0.5f, 0.5f, 0.5f } );
+        Node negative = MakeNode ( Vector3 { -6.0f, -6.0f, -6.0f }, Vector3 { 0.5f, 0.5f, 0.5f } );
+        octree.AddNode ( &positive );
+        octree.AddNode ( &negative );
+
+        std::vector<const Node*> visited;
+        octree.QueryAABB ( AABB { Vector3 { 6.0f, 6.0f, 6.0f }, Vector3 { 0.5f, 0.5f, 0.5f } }, [&visited] ( const Node * node )
+        {
+            visited.push_back ( node );
+        } );
+
+        EXPECT_NE ( std::find ( visited.begin(), visited.end(), &positive ), visited.end() );
+        EXPECT_EQ ( std::find ( visited.begin(), visited.end(), &negative ), visited.end() );
+    }
+
+    TEST ( OctreeTest, QueryAABBEmptyOctreeVisitsNothing )
+    {
+        Octree octree { AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        size_t count = 0;
+        octree.QueryAABB ( AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, [&count] ( const Node * )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, 0u );
+    }
 }

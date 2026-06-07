@@ -79,6 +79,16 @@ namespace AeonGames
          *  @param aFrustum The frustum to test cell bounds against.
          *  @param aCallback Invoked once per node found inside an intersecting cell. */
         DLL void QueryFrustum ( const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const;
+        /** @brief Visit every node whose cell intersects the query box.
+         *
+         * Descends from the root, skipping whole subtrees whose cell bounds fall
+         * entirely outside @p aBox. Like QueryFrustum this is a conservative broad
+         * phase: the callback may be invoked on nodes whose own AABB does not
+         * actually overlap @p aBox, so callers needing an exact result should
+         * re-test each node.
+         *  @param aBox The query box to test cell bounds against.
+         *  @param aCallback Invoked once per node found inside an intersecting cell. */
+        DLL void QueryAABB ( const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const;
         ///@brief Number of nodes currently stored.
         DLL size_t GetNodeCount() const;
         ///@brief Number of allocated cells (occupied or on the path to an occupied cell).
@@ -95,6 +105,8 @@ namespace AeonGames
         };
         /// @brief Recursive frustum traversal helper.
         void QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const;
+        /// @brief Recursive box traversal helper.
+        void QueryAABB ( uint64_t aLocationCode, const AABB& aBounds, const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const;
         AABB mRootBounds{};
         uint32_t mMaxDepth{0};
         size_t mSize{0};

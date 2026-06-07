@@ -183,17 +183,6 @@ namespace AeonGames
 
     namespace
     {
-        // Axis-aligned overlap test between an explicit world-space query box
-        // [aMin,aMax] and a node's world-space AABB.
-        bool AabbOverlap ( const Vector3& aMin, const Vector3& aMax, const AABB& aWorldAABB )
-        {
-            const Vector3& center = aWorldAABB.GetCenter();
-            const Vector3& radii = aWorldAABB.GetRadii();
-            return ! ( center.GetX() - radii.GetX() > aMax.GetX() || center.GetX() + radii.GetX() < aMin.GetX() ||
-                       center.GetY() - radii.GetY() > aMax.GetY() || center.GetY() + radii.GetY() < aMin.GetY() ||
-                       center.GetZ() - radii.GetZ() > aMax.GetZ() || center.GetZ() + radii.GetZ() < aMin.GetZ() );
-        }
-
         Vector3 ComponentMin ( const Vector3& a, const Vector3& b )
         {
             return Vector3{ std::min ( a.GetX(), b.GetX() ), std::min ( a.GetY(), b.GetY() ), std::min ( a.GetZ(), b.GetZ() ) };
@@ -213,16 +202,13 @@ namespace AeonGames
         Vector3 endpoint = center + aDisplacement;
         Vector3 query_min = ComponentMin ( center, endpoint ) - radii;
         Vector3 query_max = ComponentMax ( center, endpoint ) + radii;
+        const AABB query_box { ( query_min + query_max ) * 0.5f, ( query_max - query_min ) * 0.5f };
 
         float nearest = 1.0f;
-        aScene.LoopTraverseDFSPreOrder ( [&] ( Node & node )
+        aScene.QueryAABB ( query_box, [&] ( const Node & node )
         {
             Component* component = node.GetComponent ( CollisionComponent::GetClassId() );
             if ( !component )
-            {
-                return;
-            }
-            if ( !AabbOverlap ( query_min, query_max, node.GetGlobalTransform() * node.GetAABB() ) )
             {
                 return;
             }
@@ -238,7 +224,7 @@ namespace AeonGames
                 }
                 if ( aHitNode )
                 {
-                    *aHitNode = &node;
+                    *aHitNode = const_cast<Node*> ( &node );
                 }
             }
         } );
@@ -252,11 +238,8 @@ namespace AeonGames
 
     bool CollisionComponent::Overlap ( Scene& aScene, const AABB& aBox, Node** aHitNode )
     {
-        Vector3 query_min = aBox.GetCenter() - aBox.GetRadii();
-        Vector3 query_max = aBox.GetCenter() + aBox.GetRadii();
-
         bool overlapped = false;
-        aScene.LoopTraverseDFSPreOrder ( [&] ( Node & node )
+        aScene.QueryAABB ( aBox, [&] ( const Node & node )
         {
             if ( overlapped )
             {
@@ -267,17 +250,13 @@ namespace AeonGames
             {
                 return;
             }
-            if ( !AabbOverlap ( query_min, query_max, node.GetGlobalTransform() * node.GetAABB() ) )
-            {
-                return;
-            }
             auto* collider = static_cast<CollisionComponent*> ( component );
             if ( collider->Overlap ( node, aBox ) )
             {
                 overlapped = true;
                 if ( aHitNode )
                 {
-                    *aHitNode = &node;
+                    *aHitNode = const_cast<Node*> ( &node );
                 }
             }
         } );

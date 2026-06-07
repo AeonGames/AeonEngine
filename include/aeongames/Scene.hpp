@@ -232,9 +232,21 @@ namespace AeonGames
          *  @param aFrustum Frustum to test node bounds against.
          *  @param aCallback Invoked once per visible node. */
         DLL void CullVisible ( const Frustum& aFrustum, const std::function<void ( const Node& ) >& aCallback ) const;
+        /** @brief Invoke a callback for every node whose world-space AABB
+         *  intersects the given query box.
+         *
+         *  Shares the lazily-built octree with CullVisible as a broad-phase
+         *  accelerator, falling back to a brute-force traversal when the spatial
+         *  index is empty. Each visited node still passes an exact AABB overlap
+         *  test, so the visited set is identical to a brute-force scan; intended
+         *  as the broad phase for collision queries.
+         *  @param aBox World-space box to test node bounds against.
+         *  @param aCallback Invoked once per overlapping node. */
+        DLL void QueryAABB ( const AABB& aBox, const std::function<void ( const Node& ) >& aCallback ) const;
         /** @brief Mark the spatial index stale so it is rebuilt on the next
-         *  CullVisible call. Called automatically when nodes are added, removed,
-         *  or moved; expose publicly so external mutations can request a rebuild. */
+         *  CullVisible or QueryAABB call. Called automatically when nodes are
+         *  added, removed, or moved; expose publicly so external mutations can
+         *  request a rebuild. */
         DLL void InvalidateSpatialIndex();
         /**@}*/
     private:
