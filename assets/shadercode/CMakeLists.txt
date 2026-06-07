@@ -12,7 +12,7 @@
 # target (e.g. `make shader-pipelines`).
 
 set(PIPELINES
-    "diffuse_map_phong|vert=diffuse_map_phong.vert|frag=diffuse_map_phong.frag"
+#    "diffuse_map_phong|vert=diffuse_map_phong.vert|frag=diffuse_map_phong.frag"
     "diffuse_map_phong_no_skeleton|vert=diffuse_map_phong_no_skeleton.vert|frag=diffuse_map_phong.frag"
     "cluster_build|comp=cluster_build.comp"
     "light_cull|comp=light_cull.comp"
