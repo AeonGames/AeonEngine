@@ -16,12 +16,14 @@ limitations under the License.
 #ifndef AEONGAMES_MODELCOMPONENT_H
 #define AEONGAMES_MODELCOMPONENT_H
 #include <array>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 #include "aeongames/Component.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/BufferAccessor.hpp"
+#include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Transform.hpp"
 
 namespace AeonGames
@@ -46,9 +48,8 @@ namespace AeonGames
         void SetProperty ( uint32_t, const Property& aProperty ) final;
         const std::vector<std::string>& GetPropertyEnumValues ( const StringId& aId ) const final;
         void Update ( Node& aNode, double aDelta ) final;
-        void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
+        void Collect ( const Node& aNode, std::vector<RenderItem>& aQueue ) const final;
         void Skin ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
-        uint32_t GetInstanceBatchId() const final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
 
@@ -106,7 +107,7 @@ namespace AeonGames
         // Per-assembly skinned output vertex buffers produced by the compute
         // skinning pre-pass (Skin). Indexed in lockstep with the model's
         // assemblies; entries for non-skinned assemblies remain default (empty).
-        // Frame-transient: refilled every Skin() and consumed by Render().
+        // Frame-transient: refilled every Skin() and consumed by Collect().
         std::vector<BufferAccessor> mSkinnedVertices{};
     };
 }

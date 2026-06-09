@@ -38,6 +38,7 @@ namespace AeonGames
     class Texture;
     class VulkanTexture;
     class VulkanWindow;
+    class Scene;
     /** @brief Vulkan rendering backend implementing the Renderer interface. */
     class VulkanRenderer final : public Renderer
     {
@@ -106,7 +107,8 @@ namespace AeonGames
                       uint32_t aVertexCount = 0xffffffff,
                       uint32_t aInstanceCount = 1,
                       uint32_t aFirstInstance = 0,
-                      const BufferAccessor* aSkinnedVertices = nullptr ) const final;
+                      const BufferAccessor* aSkinnedVertices = nullptr,
+                      RenderPass aRenderPass = RenderPass::Shading ) const final;
         void Dispatch ( void* aWindowId,
                         const Pipeline& aPipeline,
                         uint32_t aGroupCountX,
@@ -126,6 +128,7 @@ namespace AeonGames
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
         BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;
         void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;
+        void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr ) final;
         /// @brief Get the common Vulkan render pass.
         VkRenderPass GetRenderPass() const;
         /// @brief Get the cached VulkanPipeline for a Pipeline resource.

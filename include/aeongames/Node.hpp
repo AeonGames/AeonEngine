@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <span>
 #include <bitset>
 #include <functional>
 #include <limits>
@@ -234,20 +235,15 @@ namespace AeonGames
             @param aId CRC identifier of the component type.
             @return Unique pointer to the removed component, or nullptr if not found. */
         DLL std::unique_ptr<Component> RemoveComponent ( uint32_t aId );
-        /** Get the instance batch id of the first component that reports a
-            non-zero one, or 0 when no component is instanceable.
-            Sibling nodes returning the same non-zero id can be drawn together
-            as instances of shared geometry by Scene::CullVisibleInstances.
-            @return Non-zero shared batch id, or 0. */
-        DLL uint32_t GetInstanceBatchId() const;
         /** @} */
         /** Update this node and its children.
             @param delta Elapsed time in seconds since the last update. */
         DLL void Update ( const double delta );
-        /** Render this node and its children.
-            @param aRenderer The renderer to draw with.
-            @param aWindowId Platform-specific window handle. */
-        DLL void Render ( Renderer& aRenderer, void* aWindowId ) const;
+        /** Append this node's draw items, gathered from all its components, to
+            the scene render queue. Read-only; the submit phase decides how the
+            queued items are drawn (including instancing).
+            @param aQueue Render queue to append draw items to. */
+        DLL void Collect ( std::vector<RenderItem>& aQueue ) const;
         /** Dispatch compute skinning for this node and its children before the render pass.
             @param aRenderer The renderer to dispatch with.
             @param aWindowId Platform-specific window handle. */

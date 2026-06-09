@@ -547,20 +547,31 @@ namespace AeonGames
         EXPECT_EQ ( QueryAABBSet ( scene, box ), BruteForceOverlap ( scene, box ) );
     }
 
-    // ---- CullVisibleInstances (instance batching for instanced rendering) -----
+    // ---- BuildRenderQueue / ForEachRenderBatch (render-queue batching) --------
 
     namespace
     {
-        // Minimal component that reports a fixed instance batch id, standing in
-        // for ModelComponent without needing a loaded model asset. A non-zero id
-        // marks the node as instanceable and groups siblings sharing the id.
-        class FakeInstanceComponent : public Component
+        // Distinct non-null sentinels standing in for loaded resources. The
+        // render queue only compares and stores these pointers (the submit phase,
+        // which would dereference them, is exercised by the GPU backends), so
+        // fake addresses are enough to test collection, sorting and batching.
+        const Mesh* const kMeshA = reinterpret_cast<const Mesh*> ( 0x1000 );
+        const Mesh* const kMeshB = reinterpret_cast<const Mesh*> ( 0x2000 );
+        const Pipeline* const kPipeline = reinterpret_cast<const Pipeline*> ( 0x3000 );
+        const Material* const kMaterial = reinterpret_cast<const Material*> ( 0x4000 );
+
+        // Minimal component that declares a single draw, standing in for
+        // ModelComponent without needing a loaded model asset. Collect appends
+        // one RenderItem built from the fixed resources and the node transform.
+        class FakeRenderComponent : public Component
         {
         public:
-            explicit FakeInstanceComponent ( uint32_t aBatchId ) : mBatchId{aBatchId} {}
+            FakeRenderComponent ( const Mesh* aMesh, const Pipeline* aPipeline,
+                                  const Material* aMaterial, const BufferAccessor* aSkinned )
+                : mMesh{aMesh}, mPipeline{aPipeline}, mMaterial{aMaterial}, mSkinned{aSkinned} {}
             const StringId& GetId() const final
             {
-                static const StringId id{ "FakeInstanceComponent" };
+                static const StringId id{ "FakeRenderComponent" };
                 return id;
             }
             size_t GetPropertyCount() const final
@@ -577,100 +588,101 @@ namespace AeonGames
             }
             void SetProperty ( uint32_t, const Property& ) final {}
             void Update ( Node&, double ) final {}
-            void Render ( const Node&, Renderer&, void* ) final {}
-            void ProcessMessage ( Node&, uint32_t, const void* ) final {}
-            uint32_t GetInstanceBatchId() const final
+            void Collect ( const Node& aNode, std::vector<RenderItem>& aQueue ) const final
             {
-                return mBatchId;
+                aQueue.push_back ( RenderItem{ mMesh, mPipeline, mMaterial, mSkinned, aNode.GetGlobalTransform() } );
             }
+            void ProcessMessage ( Node&, uint32_t, const void* ) final {}
         private:
-            uint32_t mBatchId;
+            const Mesh* mMesh;
+            const Pipeline* mPipeline;
+            const Material* mMaterial;
+            const BufferAccessor* mSkinned;
         };
 
-        // Add a visible unit-AABB node tagged with a batch id (0 = not
-        // instanceable). Mirrors AddPositioned but attaches the fake component.
-        Node* AddInstanced ( Scene& aScene, const Vector3& aPosition, uint32_t aBatchId )
+        // Add a visible unit-AABB node that declares one draw of the given
+        // resources. Mirrors AddPositioned but attaches the fake component.
+        Node* AddDrawable ( Scene& aScene, const Vector3& aPosition, const Mesh* aMesh,
+                            const Pipeline* aPipeline, const Material* aMaterial,
+                            const BufferAccessor* aSkinned = nullptr )
         {
             Node* node = AddPositioned ( aScene, aPosition );
-            node->AddComponent ( std::make_unique<FakeInstanceComponent> ( aBatchId ) );
+            node->AddComponent ( std::make_unique<FakeRenderComponent> ( aMesh, aPipeline, aMaterial, aSkinned ) );
             return node;
         }
 
-        // Collect the batches produced by CullVisibleInstances, each as a sorted
-        // vector of the instance nodes. The outer vector is sorted by the first
-        // node pointer so comparisons are deterministic.
-        std::vector<std::vector<const Node*>> CullVisibleInstancesBatches ( const Scene& aScene, const Frustum& aFrustum )
+        // Collect the sizes of the batches ForEachRenderBatch produces from the
+        // built queue, sorted ascending so comparisons are order-independent.
+        std::vector<size_t> RenderBatchSizes ( const Scene& aScene )
         {
-            std::vector<std::vector<const Node*>> batches;
-            aScene.CullVisibleInstances ( aFrustum, [&batches] ( const Node&, std::span<const Node* const> aInstances )
+            std::vector<size_t> sizes;
+            aScene.ForEachRenderBatch ( [&sizes] ( std::span<const RenderItem> aBatch )
             {
-                std::vector<const Node*> batch ( aInstances.begin(), aInstances.end() );
-                std::sort ( batch.begin(), batch.end() );
-                batches.push_back ( std::move ( batch ) );
+                sizes.push_back ( aBatch.size() );
             } );
-            std::sort ( batches.begin(), batches.end() );
-            return batches;
+            std::sort ( sizes.begin(), sizes.end() );
+            return sizes;
         }
     }
 
-    TEST ( SceneCullVisibleInstances, GroupsVisibleSiblingsSharingABatchId )
+    TEST ( SceneRenderQueue, CollectsVisibleNodesIntoQueue )
     {
         Scene scene;
-        Node* a = AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 7u );
-        Node* b = AddInstanced ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, 7u );
-        Node* c = AddInstanced ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, 7u );
-        std::vector<const Node*> expected { a, b, c };
-        std::sort ( expected.begin(), expected.end() );
-        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
-        ASSERT_EQ ( batches.size(), 1u );
-        EXPECT_EQ ( batches.front(), expected );
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, kMeshA, kPipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, kMeshA, kPipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, kMeshA, kPipeline, kMaterial );
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        EXPECT_EQ ( scene.GetRenderQueue().size(), 3u );
+        // All three share geometry, pipeline and material: one instanced batch.
+        EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 3u } ) );
     }
 
-    TEST ( SceneCullVisibleInstances, SeparatesDistinctBatchIds )
+    TEST ( SceneRenderQueue, SeparatesDistinctGeometryIntoBatches )
     {
         Scene scene;
-        AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 1u );
-        AddInstanced ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, 1u );
-        AddInstanced ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, 2u );
-        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
-        ASSERT_EQ ( batches.size(), 2u );
-        EXPECT_EQ ( batches[0].size() + batches[1].size(), 3u );
-        // One batch of two (id 1) and one batch of one (id 2).
-        EXPECT_TRUE ( ( batches[0].size() == 1u && batches[1].size() == 2u ) ||
-                      ( batches[0].size() == 2u && batches[1].size() == 1u ) );
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, kMeshA, kPipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, kMeshA, kPipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, kMeshB, kPipeline, kMaterial );
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        EXPECT_EQ ( scene.GetRenderQueue().size(), 3u );
+        // Two share kMeshA (batched), the kMeshB item draws alone.
+        EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u, 2u } ) );
     }
 
-    TEST ( SceneCullVisibleInstances, CullsInstancesOutsideTheFrustum )
+    TEST ( SceneRenderQueue, CullsItemsOutsideTheFrustum )
     {
         Scene scene;
-        Node* visible = AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 7u );
-        AddInstanced ( scene, Vector3 { 0.0f, -50.0f, 0.0f }, 7u );  // behind camera
-        AddInstanced ( scene, Vector3 { 1000.0f, 50.0f, 0.0f }, 7u ); // far to the side
-        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
-        ASSERT_EQ ( batches.size(), 1u );
-        ASSERT_EQ ( batches.front().size(), 1u );
-        EXPECT_EQ ( batches.front().front(), visible );
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, kMeshA, kPipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { 0.0f, -50.0f, 0.0f }, kMeshA, kPipeline, kMaterial );   // behind camera
+        AddDrawable ( scene, Vector3 { 1000.0f, 50.0f, 0.0f }, kMeshA, kPipeline, kMaterial ); // far to the side
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        EXPECT_EQ ( scene.GetRenderQueue().size(), 1u );
+        EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u } ) );
     }
 
-    TEST ( SceneCullVisibleInstances, NonInstanceableNodesAreSingletonBatches )
+    TEST ( SceneRenderQueue, SkinnedItemsAreNeverBatched )
     {
         Scene scene;
-        Node* a = AddInstanced ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, 0u );
-        Node* b = AddInstanced ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, 0u );
-        const auto batches = CullVisibleInstancesBatches ( scene, MakeCullFrustum() );
-        ASSERT_EQ ( batches.size(), 2u );
-        EXPECT_EQ ( batches[0].size(), 1u );
-        EXPECT_EQ ( batches[1].size(), 1u );
-        std::vector<std::vector<const Node*>> expected { { a }, { b } };
-        std::sort ( expected.begin(), expected.end() );
-        EXPECT_EQ ( batches, expected );
+        // Distinct skinned-vertex pointers stand in for per-node posed buffers.
+        const BufferAccessor* const skinnedA = reinterpret_cast<const BufferAccessor*> ( 0x5000 );
+        const BufferAccessor* const skinnedB = reinterpret_cast<const BufferAccessor*> ( 0x6000 );
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, kMeshA, kPipeline, kMaterial, skinnedA );
+        AddDrawable ( scene, Vector3 { 10.0f, 50.0f, 5.0f }, kMeshA, kPipeline, kMaterial, skinnedB );
+        // A non-skinned node sharing the same geometry must not absorb the
+        // skinned ones into a batch.
+        AddDrawable ( scene, Vector3 { -8.0f, 50.0f, -4.0f }, kMeshA, kPipeline, kMaterial );
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        EXPECT_EQ ( scene.GetRenderQueue().size(), 3u );
+        EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u, 1u, 1u } ) );
     }
 
-    TEST ( SceneCullVisibleInstances, EmptySceneVisitsNothing )
+    TEST ( SceneRenderQueue, EmptySceneProducesEmptyQueue )
     {
         Scene scene;
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        EXPECT_TRUE ( scene.GetRenderQueue().empty() );
         size_t count = 0;
-        scene.CullVisibleInstances ( MakeCullFrustum(), [&count] ( const Node&, std::span<const Node* const> )
+        scene.ForEachRenderBatch ( [&count] ( std::span<const RenderItem> )
         {
             ++count;
         } );

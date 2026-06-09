@@ -34,6 +34,7 @@ limitations under the License.
 #include "VulkanUtilities.hpp"
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/GuiOverlay.hpp"
+#include "aeongames/Scene.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
@@ -1020,6 +1021,61 @@ namespace AeonGames
         }
         it->second.EndRender();
     }
+    void VulkanRenderer::RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        VulkanWindow& window = it->second;
+        const Pipeline* lighting = aScene.GetLightingPipeline();
+        window.BeginRender ( lighting );
+        // Collect every visible draw once; the queue feeds both the depth
+        // pre-pass and the shading pass.
+        aScene.BuildRenderQueue ( window.GetFrustum() );
+        if ( lighting )
+        {
+            // Depth pre-pass: flag clusters containing visible geometry with the
+            // renderer's marking pipeline before light culling.
+            for ( const RenderItem& item : aScene.GetRenderQueue() )
+            {
+                window.Render (
+                    item.mTransform,
+                    *item.mMesh,
+                    *item.mPipeline,
+                    item.mMaterial,
+                    Topology::TRIANGLE_LIST,
+                    0,
+                    0xffffffff,
+                    1,
+                    0,
+                    item.mSkinnedVertices,
+                    RenderPass::DepthPrePass );
+            }
+            window.EndDepthPrePass ( lighting );
+        }
+        for ( const RenderItem& item : aScene.GetRenderQueue() )
+        {
+            window.Render (
+                item.mTransform,
+                *item.mMesh,
+                *item.mPipeline,
+                item.mMaterial,
+                Topology::TRIANGLE_LIST,
+                0,
+                0xffffffff,
+                1,
+                0,
+                item.mSkinnedVertices,
+                RenderPass::Shading );
+        }
+        if ( aGuiOverlay )
+        {
+            RenderOverlay ( aWindowId, *aGuiOverlay );
+        }
+        window.EndRender();
+    }
     void VulkanRenderer::Render ( void* aWindowId,
                                   const Matrix4x4& aModelMatrix,
                                   const Mesh& aMesh,
@@ -1030,14 +1086,15 @@ namespace AeonGames
                                   uint32_t aVertexCount,
                                   uint32_t aInstanceCount,
                                   uint32_t aFirstInstance,
-                                  const BufferAccessor* aSkinnedVertices ) const
+                                  const BufferAccessor* aSkinnedVertices,
+                                  RenderPass aRenderPass ) const
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices, aRenderPass );
     }
 
     void VulkanRenderer::Dispatch ( void* aWindowId,

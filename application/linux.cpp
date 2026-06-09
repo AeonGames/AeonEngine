@@ -493,7 +493,6 @@ namespace AeonGames
                     mGuiOverlay->BeginFrame ( reinterpret_cast<void*> ( mWindowId ), delta.count() );
                     mGuiOverlay->EndFrame ( reinterpret_cast<void*> ( mWindowId ) );
                 }
-                const Pipeline* lighting = aScene.GetLightingPipeline();
                 // Compute skinning pre-pass: dispatch skinning before the render
                 // pass begins so the skinned vertex buffers are ready for both
                 // the depth and shading traversals.
@@ -501,27 +500,12 @@ namespace AeonGames
                 {
                     aNode.Skin ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
                 } );
-                mRenderer->BeginRender ( reinterpret_cast<void*> ( mWindowId ), lighting );
-                if ( lighting )
-                {
-                    // Depth pre-pass: flag clusters containing visible geometry
-                    // with the renderer's marking pipeline before light culling.
-                    aScene.CullVisible ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ), [this] ( const Node & aNode )
-                    {
-                        aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
-                    } );
-                    mRenderer->EndDepthPrePass ( reinterpret_cast<void*> ( mWindowId ), lighting );
-                }
-                aScene.CullVisible ( mRenderer->GetFrustum ( reinterpret_cast<void * > ( mWindowId ) ), [this] ( const Node & aNode )
-                {
-                    // Call Node specific rendering function.
-                    aNode.Render ( *mRenderer, reinterpret_cast<void*> ( mWindowId ) );
-                } );
-                if ( mGuiOverlay )
-                {
-                    mRenderer->RenderOverlay ( reinterpret_cast<void*> ( mWindowId ), *mGuiOverlay );
-                }
-                mRenderer->EndRender ( reinterpret_cast<void*> ( mWindowId ) );
+                // Hand the whole frame to the renderer: it brackets
+                // BeginRender/EndRender, builds the render queue from the window
+                // frustum, runs the depth pre-pass and light culling when the
+                // scene has a lighting pipeline, submits the shading pass and
+                // composites the overlay.
+                mRenderer->RenderScene ( reinterpret_cast<void*> ( mWindowId ), aScene, mGuiOverlay.get() );
             }
             // End-of-frame input bookkeeping. Done after the scene has read
             // this frame's input so deltas/edges are valid during Update().

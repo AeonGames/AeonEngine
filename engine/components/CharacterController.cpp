@@ -267,10 +267,6 @@ namespace AeonGames
         }
     }
 
-    void CharacterController::Render ( const Node& /*aNode*/, Renderer& /*aRenderer*/, void* /*aWindowId*/ )
-    {
-    }
-
     void CharacterController::ProcessMessage ( Node& /*aNode*/, uint32_t /*aMessageType*/, const void* /*aMessageData*/ )
     {
     }

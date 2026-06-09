@@ -194,10 +194,6 @@ namespace AeonGames
         scene->SetFar ( mFarPlane );
     }
 
-    void OverTheShoulderCamera::Render ( const Node& /*aNode*/, Renderer& /*aRenderer*/, void* /*aWindowId*/ )
-    {
-    }
-
     void OverTheShoulderCamera::ProcessMessage ( Node& /*aNode*/, uint32_t /*aMessageType*/, const void* /*aMessageData*/ )
     {
     }

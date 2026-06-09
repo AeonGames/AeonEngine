@@ -182,23 +182,6 @@ namespace AeonGames
         return mModel;
     }
 
-    uint32_t ModelComponent::GetInstanceBatchId() const
-    {
-        // Only non-skinned models can be instanced: skinned models carry
-        // per-node pose state in their own skeleton buffer and must render
-        // individually. The model's resource path hash is a stable key shared
-        // by every node referencing the same model, so sibling instances of
-        // the same static model group together.
-        if ( auto model = mModel.Cast<Model>() )
-        {
-            if ( model->GetSkeleton() == nullptr )
-            {
-                return mModel.GetPath();
-            }
-        }
-        return 0;
-    }
-
     void ModelComponent::SetActiveAnimation ( std::string_view aActiveAnimation )
     {
         // No-op when the active animation is unchanged so callers can
@@ -381,36 +364,35 @@ namespace AeonGames
         }
     }
 
-    void ModelComponent::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
+    void ModelComponent::Collect ( const Node& aNode, std::vector<RenderItem>& aQueue ) const
     {
-        if ( auto model = mModel.Cast<Model>() )
+        auto model = mModel.Cast<Model>();
+        if ( model == nullptr )
         {
-            const auto& assemblies = model->GetAssemblies();
-            for ( size_t index = 0; index < assemblies.size(); ++index )
+            return;
+        }
+        const auto& assemblies = model->GetAssemblies();
+        for ( size_t index = 0; index < assemblies.size(); ++index )
+        {
+            const auto& i = assemblies[index];
+            // Skinned assemblies are posed by the compute pre-pass and drawn
+            // from the resulting compact vertex buffer; non-skinned ones draw
+            // straight from the mesh's own rest-pose vertices. The submit phase
+            // keeps skinned items unbatched because each carries a per-node pose.
+            const BufferAccessor* skinned_vertices_ptr{nullptr};
+            if ( index < mSkinnedVertices.size() &&
+                 mSkinnedVertices[index].GetMemoryPoolBuffer() != nullptr )
             {
-                const auto& i = assemblies[index];
-                // Skinned assemblies are posed by the compute pre-pass and drawn
-                // from the resulting compact vertex buffer; non-skinned ones draw
-                // straight from the mesh's own rest-pose vertices.
-                const BufferAccessor* skinned_vertices_ptr{nullptr};
-                if ( index < mSkinnedVertices.size() &&
-                     mSkinnedVertices[index].GetMemoryPoolBuffer() != nullptr )
-                {
-                    skinned_vertices_ptr = &mSkinnedVertices[index];
-                }
-                aRenderer.Render (
-                    aWindowId,
-                    aNode.GetGlobalTransform(),
-                    *std::get<0> ( i ).Cast<Mesh>(),
-                    *std::get<1> ( i ).Cast<Pipeline>(),
-                    std::get<2> ( i ).Cast<Material>(),
-                    Topology::TRIANGLE_LIST,
-                    0,
-                    0xffffffff,
-                    1,
-                    0,
-                    skinned_vertices_ptr );
+                skinned_vertices_ptr = &mSkinnedVertices[index];
             }
+            aQueue.push_back ( RenderItem
+            {
+                std::get<0> ( i ).Cast<Mesh>(),
+                std::get<1> ( i ).Cast<Pipeline>(),
+                std::get<2> ( i ).Cast<Material>(),
+                skinned_vertices_ptr,
+                aNode.GetGlobalTransform()
+            } );
         }
     }
 

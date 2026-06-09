@@ -255,7 +255,8 @@ namespace AeonGames
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance,
-                                const BufferAccessor* aSkinnedVertices ) const
+                                const BufferAccessor* aSkinnedVertices,
+                                RenderPass aRenderPass ) const
     {
         // Resolve the optional pre-skinned vertex buffer produced by the compute
         // skinning pre-pass. When present it is bound as the vertex array source
@@ -276,7 +277,7 @@ namespace AeonGames
         // During the depth pre-pass, substitute the renderer-owned marking
         // pipeline: it records only the cluster each fragment occupies into the
         // ClusterActive SSBO and ignores material and lighting state.
-        if ( mDepthPrePassActive )
+        if ( aRenderPass == RenderPass::DepthPrePass )
         {
             mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
             mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
@@ -338,6 +339,83 @@ namespace AeonGames
         }
     }
 
+    void OpenGLWindow::RenderInstanced ( std::span<const Matrix4x4> aModelMatrices,
+                                         const Mesh& aMesh,
+                                         const Pipeline& aPipeline,
+                                         const Material* aMaterial,
+                                         Topology aTopology,
+                                         uint32_t aVertexStart,
+                                         uint32_t aVertexCount,
+                                         RenderPass aRenderPass )
+    {
+        const uint32_t instance_count = static_cast<uint32_t> ( aModelMatrices.size() );
+        if ( instance_count == 0 )
+        {
+            return;
+        }
+        // Upload every instance's model matrix into a transient std430 storage
+        // buffer; the INSTANCED shader variant indexes it by gl_BaseInstance +
+        // gl_InstanceID. Each batch gets its own buffer starting at index 0, so
+        // the draws use a zero base instance.
+        const size_t matrices_size = static_cast<size_t> ( instance_count ) * sizeof ( float ) * 16;
+        BufferAccessor instance_matrices = AllocateSingleFrameStorageMemory ( matrices_size );
+        instance_matrices.WriteMemory ( 0, matrices_size, aModelMatrices.data() );
+
+        // During the depth pre-pass every draw uses the renderer-owned marking
+        // pipeline; its INSTANCED variant reads the same per-instance buffer.
+        if ( aRenderPass == RenderPass::DepthPrePass )
+        {
+            mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline, true );
+            mOpenGLRenderer.SetMatrices ( mMatrices );
+            mOpenGLRenderer.SetClusterParams ( mClusterParams );
+            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
+            {
+                mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
+            }
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, instance_matrices );
+            mOpenGLRenderer.BindMesh ( aMesh );
+            if ( aMesh.GetIndexCount() )
+            {
+                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, instance_count, 0 );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            else
+            {
+                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            return;
+        }
+
+        mOpenGLRenderer.BindPipeline ( aPipeline, true );
+        mOpenGLRenderer.SetMatrices ( mMatrices );
+        mOpenGLRenderer.SetLights ( mLights );
+        mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
+        {
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
+        }
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, instance_matrices );
+        if ( aMaterial )
+        {
+            mOpenGLRenderer.SetMaterial ( *aMaterial );
+        }
+        mOpenGLRenderer.BindMesh ( aMesh );
+        if ( aMesh.GetIndexCount() )
+        {
+            glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                  GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, instance_count, 0 );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+        else
+        {
+            glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+    }
+
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
         return mMemoryPoolBuffer.Allocate ( aSize );
@@ -371,7 +449,6 @@ namespace AeonGames
             // Begin the depth pre-pass; the application's first geometry
             // traversal records into it with the marking pipeline substituted.
             BeginRenderPass();
-            mDepthPrePassActive = true;
         }
         else
         {
@@ -393,7 +470,6 @@ namespace AeonGames
 
     void OpenGLWindow::EndDepthPrePass ( const Pipeline* aComputePipeline )
     {
-        mDepthPrePassActive = false;
         // The mark pass wrote the per-cluster active flags from the fragment
         // shader; make those writes visible to the light-cull compute stage.
         Barrier();

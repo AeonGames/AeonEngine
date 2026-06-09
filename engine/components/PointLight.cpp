@@ -175,13 +175,6 @@ namespace AeonGames
         scene->AddLight ( light );
     }
 
-    void PointLight::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
-    {
-        // Lights are uploaded to the GPU by the renderer using the
-        // per-frame list collected in Update(); nothing to do here yet.
-        // A future visualization (debug gizmo) could go here.
-    }
-
     void PointLight::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
     {
     }

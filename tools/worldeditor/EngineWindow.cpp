@@ -332,11 +332,14 @@ namespace AeonGames
                         }
                     } );
 
+                    // Submit the scene's geometry through the render queue so the
+                    // editor shares the engine's collect/submit path; the cull
+                    // loop below only adds editor-specific debug wireframes.
+                    mScene->BuildRenderQueue ( frustum );
+                    mScene->SubmitRenderQueue ( *qWorldEditorApp->GetRenderer(), mWinId, RenderPass::Shading );
                     mScene->CullVisible ( frustum, [this] ( const Node & aNode )
                     {
                         AABB transformed_aabb = aNode.GetGlobalTransform() * aNode.GetAABB();
-                        // Call Node specific rendering function.
-                        aNode.Render ( *qWorldEditorApp->GetRenderer(), mWinId );
                         // Render Node AABBss
                         qWorldEditorApp->GetRenderer()->Render (
                             mWinId,

@@ -27,6 +27,7 @@ limitations under the License.
 #include "aeongames/Texture.hpp"
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/GuiOverlay.hpp"
+#include "aeongames/Scene.hpp"
 
 namespace AeonGames
 {
@@ -577,7 +578,7 @@ void main()
         mPipelineStore.erase ( it );
     }
 
-    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline )
+    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline, bool aInstanced )
     {
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it == mPipelineStore.end() )
@@ -586,7 +587,7 @@ void main()
             it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         };
         mCurrentPipeline = &it->second;
-        glUseProgram ( mCurrentPipeline->GetProgramId() );
+        glUseProgram ( mCurrentPipeline->GetProgramId ( aInstanced ) );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
@@ -918,6 +919,74 @@ void main()
         }
         it->second.EndRender();
     }
+    void OpenGLRenderer::SubmitRenderQueue ( OpenGLWindow& aWindow, const Scene& aScene, RenderPass aRenderPass )
+    {
+        aScene.ForEachRenderBatch ( [this, &aWindow, aRenderPass] ( std::span<const RenderItem> aBatch )
+        {
+            const RenderItem& head = aBatch.front();
+            if ( aBatch.size() == 1 )
+            {
+                aWindow.Render (
+                    head.mTransform,
+                    *head.mMesh,
+                    *head.mPipeline,
+                    head.mMaterial,
+                    Topology::TRIANGLE_LIST,
+                    0,
+                    0xffffffff,
+                    1,
+                    0,
+                    head.mSkinnedVertices,
+                    aRenderPass );
+                return;
+            }
+            // Gather the batch's transforms contiguously for one instanced draw.
+            // mInstanceTransforms is reused so this only allocates when a batch
+            // grows beyond any previously seen size.
+            mInstanceTransforms.clear();
+            for ( const RenderItem& item : aBatch )
+            {
+                mInstanceTransforms.push_back ( item.mTransform );
+            }
+            aWindow.RenderInstanced (
+                mInstanceTransforms,
+                *head.mMesh,
+                *head.mPipeline,
+                head.mMaterial,
+                Topology::TRIANGLE_LIST,
+                0,
+                0xffffffff,
+                aRenderPass );
+        } );
+    }
+    void OpenGLRenderer::RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        OpenGLWindow& window = it->second;
+        const Pipeline* lighting = aScene.GetLightingPipeline();
+        window.BeginRender ( lighting );
+        // Collect every visible draw once; the queue feeds both the depth
+        // pre-pass and the shading pass, merging sorted runs into instanced
+        // draws on submit.
+        aScene.BuildRenderQueue ( window.GetFrustum() );
+        if ( lighting )
+        {
+            // Depth pre-pass: flag clusters containing visible geometry with the
+            // renderer's marking pipeline before light culling.
+            SubmitRenderQueue ( window, aScene, RenderPass::DepthPrePass );
+            window.EndDepthPrePass ( lighting );
+        }
+        SubmitRenderQueue ( window, aScene, RenderPass::Shading );
+        if ( aGuiOverlay )
+        {
+            RenderOverlay ( aWindowId, *aGuiOverlay );
+        }
+        window.EndRender();
+    }
     void OpenGLRenderer::Render ( void* aWindowId,
                                   const Matrix4x4& aModelMatrix,
                                   const Mesh& aMesh,
@@ -928,14 +997,33 @@ void main()
                                   uint32_t aVertexCount,
                                   uint32_t aInstanceCount,
                                   uint32_t aFirstInstance,
-                                  const BufferAccessor* aSkinnedVertices ) const
+                                  const BufferAccessor* aSkinnedVertices,
+                                  RenderPass aRenderPass ) const
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices );
+        it->second.Render ( aModelMatrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aInstanceCount, aFirstInstance, aSkinnedVertices, aRenderPass );
+    }
+
+    void OpenGLRenderer::RenderInstanced ( void* aWindowId,
+                                           std::span<const Matrix4x4> aModelMatrices,
+                                           const Mesh& aMesh,
+                                           const Pipeline& aPipeline,
+                                           const Material* aMaterial,
+                                           Topology aTopology,
+                                           uint32_t aVertexStart,
+                                           uint32_t aVertexCount,
+                                           RenderPass aRenderPass )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.RenderInstanced ( aModelMatrices, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, aRenderPass );
     }
 
     void OpenGLRenderer::Dispatch ( void* aWindowId,

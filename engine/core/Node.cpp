@@ -593,11 +593,11 @@ namespace AeonGames
         }
     }
 
-    void Node::Render ( Renderer& aRenderer, void* aWindowId ) const
+    void Node::Collect ( std::vector<RenderItem>& aQueue ) const
     {
         for ( auto& i : mComponentDependencyMap )
         {
-            GetComponent ( i )->Render ( *this, aRenderer, aWindowId );
+            GetComponent ( i )->Collect ( *this, aQueue );
         }
     }
 
@@ -649,17 +649,6 @@ namespace AeonGames
         return nullptr;
     }
 
-    uint32_t Node::GetInstanceBatchId() const
-    {
-        for ( const auto& component : mComponents )
-        {
-            if ( const uint32_t id = component->GetInstanceBatchId(); id != 0 )
-            {
-                return id;
-            }
-        }
-        return 0;
-    }
 
     std::unique_ptr<Component> Node::RemoveComponent ( uint32_t aId )
     {

@@ -24,6 +24,7 @@ limitations under the License.
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Pipeline.hpp"
+#include "aeongames/RenderItem.hpp"
 #include "aeongames/GpuLight.hpp"
 
 namespace AeonGames
@@ -37,6 +38,7 @@ namespace AeonGames
     class Pipeline;
     class Material;
     class Window;
+    class Scene;
     class BufferAccessor;
     /** A storage buffer (SSBO) binding for a compute dispatch.
      *  Maps a shader storage block — identified by the CRC32 of its GLSL block
@@ -190,6 +192,8 @@ namespace AeonGames
          * @param aSkinnedVertices Optional pre-skinned vertex buffer produced by
          *        the compute skinning pre-pass; when set it is bound as the
          *        vertex input in place of the mesh's rest-pose vertices.
+         * @param aRenderPass Pass this draw feeds; DepthPrePass substitutes the
+         *        renderer's cluster-mark pipeline, Shading uses aPipeline.
          */
         virtual void Render ( void* aWindowId,
                               const Matrix4x4& aModelMatrix,
@@ -201,7 +205,42 @@ namespace AeonGames
                               uint32_t aVertexCount = 0xffffffff,
                               uint32_t aInstanceCount = 1,
                               uint32_t aFirstInstance = 0,
-                              const BufferAccessor* aSkinnedVertices = nullptr ) const = 0;
+                              const BufferAccessor* aSkinnedVertices = nullptr,
+                              RenderPass aRenderPass = RenderPass::Shading ) const = 0;
+        /** Issues a single instanced draw for a batch of identical-geometry
+         * nodes, each positioned by its own model matrix.
+         *
+         * The default implementation simply loops Render once per matrix, which
+         * is always correct; backends that support a per-instance model-matrix
+         * buffer (selected by the shader's INSTANCED variant) override this to
+         * collapse the batch into one draw call. Only non-skinned geometry is
+         * ever batched, so no skinned vertex buffer is involved.
+         * @param aWindowId Platform dependent window handle.
+         * @param aModelMatrices Contiguous per-instance model matrices.
+         * @param aMesh Mesh shared by every instance.
+         * @param aPipeline Pipeline shared by every instance.
+         * @param aMaterial Optional material shared by every instance.
+         * @param aTopology Primitive topology (default: TRIANGLE_LIST).
+         * @param aVertexStart First vertex index.
+         * @param aVertexCount Number of vertices to draw (default: all).
+         * @param aRenderPass Pass this draw feeds; DepthPrePass substitutes the
+         *        renderer's cluster-mark pipeline, Shading uses aPipeline.
+         */
+        virtual void RenderInstanced ( void* aWindowId,
+                                       std::span<const Matrix4x4> aModelMatrices,
+                                       const Mesh& aMesh,
+                                       const Pipeline& aPipeline,
+                                       const Material* aMaterial = nullptr,
+                                       Topology aTopology = Topology::TRIANGLE_LIST,
+                                       uint32_t aVertexStart = 0,
+                                       uint32_t aVertexCount = 0xffffffff,
+                                       RenderPass aRenderPass = RenderPass::Shading )
+        {
+            for ( const Matrix4x4& model_matrix : aModelMatrices )
+            {
+                Render ( aWindowId, model_matrix, aMesh, aPipeline, aMaterial, aTopology, aVertexStart, aVertexCount, 1, 0, nullptr, aRenderPass );
+            }
+        }
         /** Dispatches the compute stage of a pipeline.
          * Group counts are measured in workgroups, not invocations. For
          * backends with an explicit render pass (Vulkan), this must be recorded
@@ -288,6 +327,23 @@ namespace AeonGames
          * @param aGuiOverlay The GUI overlay whose pixel buffer to composite.
          */
         virtual void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) = 0;
+        ///@}
+
+        ///@name Scene rendering
+        ///@{
+        /** Renders an entire scene for a window in a single call.
+         * Owns the per-frame render protocol: resolves the target window once,
+         * brackets the frame with BeginRender/EndRender, builds the scene's
+         * render queue from the window frustum, runs the depth pre-pass and
+         * light culling when the scene defines a lighting pipeline, submits the
+         * shading pass, and composites the optional GUI overlay. Callers remain
+         * responsible for the per-frame setup that precedes BeginRender
+         * (BeginFrame, view/projection matrices, lights and skinning).
+         * @param aWindowId Platform dependent window handle.
+         * @param aScene The scene to render.
+         * @param aGuiOverlay Optional GUI overlay to composite on top of the frame.
+         */
+        virtual void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr ) = 0;
         ///@}
     };
     /**@name Factory Functions */

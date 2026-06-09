@@ -24,6 +24,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/FrameLightContainer.hpp"
 #include "aeongames/ResourceId.hpp"
+#include "aeongames/RenderItem.hpp"
 #include "aeongames/Octree.hpp"
 #include <memory>
 #include <vector>
@@ -233,28 +234,48 @@ namespace AeonGames
          *  @param aFrustum Frustum to test node bounds against.
          *  @param aCallback Invoked once per visible node. */
         DLL void CullVisible ( const Frustum& aFrustum, const std::function<void ( const Node& ) >& aCallback ) const;
-        /** @brief Group visible nodes that can be drawn as instances of shared
-         *  geometry and invoke a callback once per batch.
+        /** @brief Build the per-frame render queue from the frustum-visible nodes.
          *
-         *  Builds on CullVisible, so every node is frustum-culled individually
-         *  and only visible instances appear in a batch. Nodes whose components
-         *  report a non-zero instance batch id (see Component::GetInstanceBatchId)
-         *  are grouped by that id and reported together with a representative
-         *  node; nodes that are not instanceable (id 0, e.g. skinned models) are
-         *  each reported as a single-node batch so callers can fall back to the
-         *  per-node render path.
+         *  Traverses the scene, frustum-culls each node individually (via
+         *  CullVisible), and asks every visible node's components to append the
+         *  draws they contribute (Node::Collect / Component::Collect). The
+         *  resulting items are sorted so that draws sharing pipeline, material
+         *  and mesh become adjacent, ready for ForEachRenderBatch to merge them
+         *  into instanced draws. Components never touch the Renderer; they only
+         *  declare what to draw here.
          *
-         *  Runs once per frame and performs no per-call heap allocation: the
-         *  visible set is gathered into a scratch buffer whose capacity persists
-         *  across calls, sorted in place by batch id, and delivered as spans
-         *  into that buffer. The spans are only valid for the duration of the
-         *  callback.
-         *  @param aFrustum Frustum to cull instances against.
-         *  @param aCallback Invoked once per batch with a representative node and
-         *         the visible instance nodes sharing its batch id. */
-        DLL void CullVisibleInstances ( const Frustum& aFrustum,
-                                        const std::function<void ( const Node& aRepresentative,
-                                                std::span<const Node* const> aInstances ) >& aCallback ) const;
+         *  Runs once per frame and performs no per-call heap allocation in
+         *  steady state: the queue buffer's capacity persists across calls
+         *  (clear() keeps the storage) and std::sort is in place. The queue
+         *  stays valid until the next BuildRenderQueue call, so a single build
+         *  can feed several submit passes (e.g. depth pre-pass and shading).
+         *  @param aFrustum Frustum to cull the scene against. */
+        DLL void BuildRenderQueue ( const Frustum& aFrustum ) const;
+        /** @brief Read-only view of the queue built by the last BuildRenderQueue. */
+        DLL const std::vector<RenderItem>& GetRenderQueue() const;
+        /** @brief Walk the built render queue grouping consecutive items that can
+         *  be drawn as a single instanced batch.
+         *
+         *  After BuildRenderQueue's sort, a maximal run of non-skinned items
+         *  sharing pipeline, material and mesh forms one batch; skinned items
+         *  (which carry a per-node posed vertex buffer) and otherwise unique
+         *  items each form a length-1 batch. The spans are slices into the
+         *  queue and are only valid for the duration of the callback.
+         *  @param aCallback Invoked once per batch with the batch's items. */
+        DLL void ForEachRenderBatch ( const std::function<void ( std::span<const RenderItem> ) >& aCallback ) const;
+        /** @brief Issue the built render queue to a renderer.
+         *
+         *  Draws every batch from ForEachRenderBatch: length-1 batches via
+         *  Renderer::Render (passing the skinned vertex buffer when present),
+         *  larger batches via a single Renderer::RenderInstanced. Safe to call
+         *  more than once per BuildRenderQueue (e.g. depth pre-pass then shading)
+         *  and performs no per-frame heap allocation in steady state.
+         *  @param aRenderer Renderer to submit the draws to.
+         *  @param aWindowId Platform-specific window identifier.
+         *  @param aRenderPass Pass these draws feed; forwarded to the renderer so
+         *         it selects the cluster-mark pipeline for DepthPrePass or each
+         *         item's own pipeline for Shading. */
+        DLL void SubmitRenderQueue ( Renderer& aRenderer, void* aWindowId, RenderPass aRenderPass ) const;
         /** @brief Invoke a callback for every node whose world-space AABB
          *  intersects the given query box.
          *
@@ -300,10 +321,14 @@ namespace AeonGames
         mutable Octree mSpatialIndex{};
         /// @brief True when mSpatialIndex must be rebuilt before the next query.
         mutable bool mSpatialIndexDirty{true};
-        /// @brief Reused scratch buffer of frustum-visible nodes for
-        /// CullVisibleInstances; its capacity persists so per-frame instance
-        /// batching performs no heap allocation in steady state.
-        mutable std::vector<const Node*> mVisibleInstanceScratch{};
+        /// @brief Per-frame render queue rebuilt by BuildRenderQueue. Its
+        /// capacity persists across frames so steady-state collection performs
+        /// no heap allocation; mutable so the build can run on a const scene.
+        mutable std::vector<RenderItem> mRenderQueue{};
+        /// @brief Reused scratch of per-instance transforms gathered while
+        /// submitting an instanced batch, so SubmitRenderQueue allocates only
+        /// when a batch grows beyond any previously seen size.
+        mutable std::vector<Matrix4x4> mInstanceTransforms{};
         FrameLightContainer mFrameLights{};
         ResourceId mLightingPipeline{};
     };

@@ -38,7 +38,9 @@ namespace AeonGames
         OpenGLPipeline& operator= ( OpenGLPipeline&& ) = delete;
         ~OpenGLPipeline();
         /// @brief Get the linked graphics shader program identifier (0 if none).
-        GLint GetProgramId() const;
+        ///        When @p aInstanced is true and an INSTANCED variant was
+        ///        compiled, returns that variant; otherwise the base program.
+        GLint GetProgramId ( bool aInstanced = false ) const;
         /// @brief Get the number of compute shader programs (ordered stages).
         uint32_t GetComputeStageCount() const;
         /// @brief Get the linked compute program identifier for an ordered stage.
@@ -58,6 +60,10 @@ namespace AeonGames
         const OpenGLRenderer& mOpenGLRenderer;
         const Pipeline* mPipeline{};
         GLint mProgramId{};
+        // Optional second graphics program compiled with `#define INSTANCED`,
+        // selecting the shader's per-instance model-matrix path. 0 when the
+        // pipeline's stages do not reference the INSTANCED macro.
+        GLint mInstancedProgramId{};
         std::vector<GLuint> mComputeProgramIds{};
         std::vector<OpenGLVariable> mAttributes{};
         std::vector<OpenGLSamplerLocation> mSamplerLocations{};

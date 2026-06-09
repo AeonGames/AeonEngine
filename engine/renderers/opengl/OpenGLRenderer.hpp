@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <cstdint>
 #include <unordered_map>
+#include <vector>
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -41,6 +42,7 @@ namespace AeonGames
     class UniformBuffer;
     class OpenGLMesh;
     class OpenGLModel;
+    class Scene;
     /** @brief OpenGL rendering backend implementing the Renderer interface. */
     class OpenGLRenderer : public Renderer
     {
@@ -61,8 +63,10 @@ namespace AeonGames
 
         /// @brief Bind a mesh for subsequent draw calls.
         void BindMesh ( const Mesh& aMesh, GLuint aSkinnedVertexBufferId = 0, size_t aSkinnedVertexOffset = 0, size_t aSkinnedVertexStride = 0 );
-        /// @brief Bind a pipeline (shader program) for rendering.
-        void BindPipeline ( const Pipeline& aPipeline );
+        /// @brief Bind a pipeline (shader program) for rendering. When
+        ///        @p aInstanced is true the pipeline's INSTANCED program variant
+        ///        is selected if available.
+        void BindPipeline ( const Pipeline& aPipeline, bool aInstanced = false );
         /// @brief Bind a pipeline's compute program for the given ordered
         ///        compute stage for subsequent dispatch.
         void BindComputePipeline ( const Pipeline& aPipeline, uint32_t aComputeStageIndex );
@@ -115,7 +119,17 @@ namespace AeonGames
                       uint32_t aVertexCount = 0xffffffff,
                       uint32_t aInstanceCount = 1,
                       uint32_t aFirstInstance = 0,
-                      const BufferAccessor* aSkinnedVertices = nullptr ) const final;
+                      const BufferAccessor* aSkinnedVertices = nullptr,
+                      RenderPass aRenderPass = RenderPass::Shading ) const final;
+        void RenderInstanced ( void* aWindowId,
+                               std::span<const Matrix4x4> aModelMatrices,
+                               const Mesh& aMesh,
+                               const Pipeline& aPipeline,
+                               const Material* aMaterial = nullptr,
+                               Topology aTopology = Topology::TRIANGLE_LIST,
+                               uint32_t aVertexStart = 0,
+                               uint32_t aVertexCount = 0xffffffff,
+                               RenderPass aRenderPass = RenderPass::Shading ) final;
         void Dispatch ( void* aWindowId,
                         const Pipeline& aPipeline,
                         uint32_t aGroupCountX,
@@ -135,6 +149,7 @@ namespace AeonGames
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
         BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;
         void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;
+        void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr ) final;
 #if defined(_WIN32)
         bool MakeCurrent ( HDC aDeviceContext = nullptr );
 #elif defined(__unix__)
@@ -146,6 +161,9 @@ namespace AeonGames
         void InitializeOverlay();
         /// @brief Release overlay shader program and quad buffer.
         void FinalizeOverlay();
+        /// @brief Submit the scene's render queue for a single pass, issuing
+        ///        instanced draws directly on the already-resolved window.
+        void SubmitRenderQueue ( OpenGLWindow& aWindow, const Scene& aScene, RenderPass aRenderPass );
 #if defined(_WIN32)
         HWND mWindowId {};
         HDC mDeviceContext{};
@@ -181,6 +199,8 @@ namespace AeonGames
         std::unordered_map<size_t, OpenGLMesh> mMeshStore{}; ///< Loaded mesh cache.
         std::unordered_map<size_t, OpenGLTexture> mTextureStore{}; ///< Loaded texture cache.
         std::unordered_map<void*, OpenGLWindow> mWindowStore{}; ///< Attached window map.
+        /// Reused scratch for gathering a batch's transforms for instanced draws.
+        std::vector<Matrix4x4> mInstanceTransforms{};
     private:
         static std::atomic<size_t> mRendererCount;
 #if defined(__unix__)

@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Pipeline.hpp"
+#include "aeongames/Mesh.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/AABB.hpp"
 #include "aeongames/ProtoBufHelpers.hpp"
@@ -328,48 +329,114 @@ namespace AeonGames
         } );
     }
 
-    void Scene::CullVisibleInstances ( const Frustum& aFrustum,
-                                       const std::function<void ( const Node&, std::span<const Node* const> ) >& aCallback ) const
+    void Scene::BuildRenderQueue ( const Frustum& aFrustum ) const
     {
-        // Gather the frustum-visible nodes into a scratch buffer whose capacity
-        // persists across frames, so this once-per-frame routine performs no
-        // heap allocation in steady state (clear() keeps the storage). Per-node
-        // frustum culling is inherited from CullVisible.
-        mVisibleInstanceScratch.clear();
+        // Per-node frustum culling is inherited from CullVisible; each visible
+        // node appends the draws its components contribute. clear() keeps the
+        // buffer capacity so steady-state frames perform no heap allocation.
+        mRenderQueue.clear();
         CullVisible ( aFrustum, [this] ( const Node & aNode )
         {
-            mVisibleInstanceScratch.push_back ( &aNode );
+            aNode.Collect ( mRenderQueue );
         } );
-        // Sorting by batch id gathers every instanceable group into a single
-        // contiguous run with no extra storage (std::sort is in place). Nodes
-        // that are not instanceable carry batch id 0 and sort to the front.
-        std::sort ( mVisibleInstanceScratch.begin(), mVisibleInstanceScratch.end(),
-                    [] ( const Node * aLhs, const Node * aRhs )
+        // Sort so items sharing pipeline, material and mesh become adjacent,
+        // letting ForEachRenderBatch merge them into one instanced draw. Skinned
+        // items carry a distinct skinned-vertex pointer and sort apart, so they
+        // never merge with each other or with non-skinned items. std::sort is in
+        // place, keeping this routine allocation-free.
+        std::sort ( mRenderQueue.begin(), mRenderQueue.end(),
+                    [] ( const RenderItem & aLhs, const RenderItem & aRhs )
         {
-            return aLhs->GetInstanceBatchId() < aRhs->GetInstanceBatchId();
+            if ( aLhs.mPipeline != aRhs.mPipeline )
+            {
+                return aLhs.mPipeline < aRhs.mPipeline;
+            }
+            if ( aLhs.mMaterial != aRhs.mMaterial )
+            {
+                return aLhs.mMaterial < aRhs.mMaterial;
+            }
+            if ( aLhs.mMesh != aRhs.mMesh )
+            {
+                return aLhs.mMesh < aRhs.mMesh;
+            }
+            return aLhs.mSkinnedVertices < aRhs.mSkinnedVertices;
         } );
-        const size_t count = mVisibleInstanceScratch.size();
-        const Node* const* data = mVisibleInstanceScratch.data();
+    }
+
+    const std::vector<RenderItem>& Scene::GetRenderQueue() const
+    {
+        return mRenderQueue;
+    }
+
+    void Scene::ForEachRenderBatch ( const std::function<void ( std::span<const RenderItem> ) >& aCallback ) const
+    {
+        const size_t count = mRenderQueue.size();
+        const RenderItem* const data = mRenderQueue.data();
         size_t i = 0;
-        // Non-instanceable nodes (id 0): each is its own single-node batch so the
-        // caller can fall back to the per-node render path.
-        while ( i < count && data[i]->GetInstanceBatchId() == 0 )
-        {
-            aCallback ( *data[i], std::span<const Node* const> ( data + i, 1 ) );
-            ++i;
-        }
-        // Instanceable nodes: each maximal run of equal batch id is one batch.
         while ( i < count )
         {
-            const uint32_t batch_id = data[i]->GetInstanceBatchId();
+            const RenderItem& head = data[i];
             size_t j = i + 1;
-            while ( j < count && data[j]->GetInstanceBatchId() == batch_id )
+            // Skinned items are posed per node and must draw individually, so
+            // only non-skinned items extend a batch; the run ends as soon as a
+            // skinned item or a different pipeline/material/mesh is reached.
+            if ( head.mSkinnedVertices == nullptr )
             {
-                ++j;
+                while ( j < count &&
+                        data[j].mSkinnedVertices == nullptr &&
+                        data[j].mPipeline == head.mPipeline &&
+                        data[j].mMaterial == head.mMaterial &&
+                        data[j].mMesh == head.mMesh )
+                {
+                    ++j;
+                }
             }
-            aCallback ( *data[i], std::span<const Node* const> ( data + i, j - i ) );
+            aCallback ( std::span<const RenderItem> ( data + i, j - i ) );
             i = j;
         }
+    }
+
+    void Scene::SubmitRenderQueue ( Renderer& aRenderer, void* aWindowId, RenderPass aRenderPass ) const
+    {
+        ForEachRenderBatch ( [this, &aRenderer, aWindowId, aRenderPass] ( std::span<const RenderItem> aBatch )
+        {
+            const RenderItem& head = aBatch.front();
+            if ( aBatch.size() == 1 )
+            {
+                aRenderer.Render (
+                    aWindowId,
+                    head.mTransform,
+                    *head.mMesh,
+                    *head.mPipeline,
+                    head.mMaterial,
+                    Topology::TRIANGLE_LIST,
+                    0,
+                    0xffffffff,
+                    1,
+                    0,
+                    head.mSkinnedVertices,
+                    aRenderPass );
+                return;
+            }
+            // Gather the batch's transforms contiguously for one instanced draw.
+            // mInstanceTransforms is reused so this only allocates when a batch
+            // grows beyond any previously seen size.
+            mInstanceTransforms.clear();
+            for ( const RenderItem& item : aBatch )
+            {
+                mInstanceTransforms.push_back ( item.mTransform );
+            }
+            aRenderer.RenderInstanced (
+                aWindowId,
+                mInstanceTransforms,
+                *head.mMesh,
+                *head.mPipeline,
+                head.mMaterial,
+                Topology::TRIANGLE_LIST,
+                0,
+                0xffffffff,
+                aRenderPass );
+        } );
     }
 
     void Scene::BroadcastMessage ( uint32_t aMessageType, const void* aMessageData )

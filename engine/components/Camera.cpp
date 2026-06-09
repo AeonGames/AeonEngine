@@ -139,10 +139,6 @@ namespace AeonGames
         }
     }
 
-    void Camera::Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId )
-    {
-    }
-
     void Camera::ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData )
     {
     }

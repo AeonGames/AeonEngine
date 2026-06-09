@@ -85,7 +85,8 @@ namespace AeonGames
                         uint32_t aVertexCount = 0xffffffff,
                         uint32_t aInstanceCount = 1,
                         uint32_t aFirstInstance = 0,
-                        const BufferAccessor* aSkinnedVertices = nullptr ) const;
+                        const BufferAccessor* aSkinnedVertices = nullptr,
+                        RenderPass aRenderPass = RenderPass::Shading ) const;
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.
@@ -191,9 +192,6 @@ namespace AeonGames
         // lazily the first frame clustering runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
-        // True while recording the depth pre-pass: Render substitutes the
-        // marking pipeline instead of the scene's draw pipelines.
-        bool mDepthPrePassActive{false};
         // True once BeginFrame() has acquired the swapchain image and begun the
         // command buffer this frame; makes BeginFrame() idempotent so the app
         // can run a pre-render-pass compute phase before BeginRender().

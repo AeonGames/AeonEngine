@@ -497,7 +497,6 @@ namespace AeonGames
                             mGuiOverlay->BeginFrame ( ( __bridge void* ) mNSView, delta.count() );
                             mGuiOverlay->EndFrame ( ( __bridge void* ) mNSView );
                         }
-                        const Pipeline* lighting = aScene.GetLightingPipeline();
                         // Compute skinning pre-pass: dispatch skinning before the
                         // render pass begins so the skinned vertex buffers are
                         // ready for both the depth and shading traversals.
@@ -505,27 +504,12 @@ namespace AeonGames
                         {
                             aNode.Skin ( *mRenderer, ( __bridge void* ) mNSView );
                         } );
-                        mRenderer->BeginRender ( ( __bridge void* ) mNSView, lighting );
-                        if ( lighting )
-                        {
-                            // Depth pre-pass: flag clusters containing visible
-                            // geometry with the renderer's marking pipeline
-                            // before light culling.
-                            aScene.CullVisible ( mRenderer->GetFrustum ( ( __bridge void * ) mNSView ), [this] ( const Node & aNode )
-                            {
-                                aNode.Render ( *mRenderer, ( __bridge void* ) mNSView );
-                            } );
-                            mRenderer->EndDepthPrePass ( ( __bridge void* ) mNSView, lighting );
-                        }
-                        aScene.CullVisible ( mRenderer->GetFrustum ( ( __bridge void * ) mNSView ), [this] ( const Node & aNode )
-                        {
-                            aNode.Render ( *mRenderer, ( __bridge void* ) mNSView );
-                        } );
-                        if ( mGuiOverlay )
-                        {
-                            mRenderer->RenderOverlay ( ( __bridge void* ) mNSView, *mGuiOverlay );
-                        }
-                        mRenderer->EndRender ( ( __bridge void* ) mNSView );
+                        // Hand the whole frame to the renderer: it brackets
+                        // BeginRender/EndRender, builds the render queue from the
+                        // window frustum, runs the depth pre-pass and light
+                        // culling when the scene has a lighting pipeline, submits
+                        // the shading pass and composites the overlay.
+                        mRenderer->RenderScene ( ( __bridge void* ) mNSView, aScene, mGuiOverlay.get() );
                     }
                 }
             }

@@ -47,7 +47,6 @@ namespace AeonGames
         Property GetProperty ( const StringId& aId ) const final;
         void SetProperty ( uint32_t, const Property& aProperty ) final;
         void Update ( Node& aNode, double aDelta ) final;
-        void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
 

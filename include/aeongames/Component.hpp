@@ -18,12 +18,14 @@ limitations under the License.
 #include <memory>
 #include <functional>
 #include <variant>
+#include <span>
 #include <string>
 #include <vector>
 #include <type_traits>
 #include "aeongames/Platform.hpp"
 #include "aeongames/StringId.hpp"
 #include "aeongames/Property.hpp"
+#include "aeongames/RenderItem.hpp"
 
 namespace AeonGames
 {
@@ -100,12 +102,22 @@ namespace AeonGames
          *  @param aDelta Elapsed time since the last update, in seconds.
          */
         virtual void Update ( Node& aNode, double aDelta ) = 0;
-        /** @brief Render the component.
-         *  @param aNode     Node this component is attached to.
-         *  @param aRenderer Renderer used for drawing.
-         *  @param aWindowId Platform-specific window identifier.
+        /** @brief Append the draws this component contributes to the render queue.
+         *
+         *  Read-only: every piece of state needed to render must already be
+         *  prepared by Update and the compute Skin pre-pass. The default
+         *  contributes nothing, so only drawable components (e.g. ModelComponent)
+         *  override it. The scene later sorts the queue and merges items that
+         *  share geometry, pipeline and material into instanced draws, so
+         *  components never talk to the Renderer directly.
+         *  @param aNode  Node this component is attached to.
+         *  @param aQueue Render queue to append draw items to.
          */
-        virtual void Render ( const Node& aNode, Renderer& aRenderer, void* aWindowId ) = 0;
+        virtual void Collect ( const Node& aNode, std::vector<RenderItem>& aQueue ) const
+        {
+            ( void ) aNode;
+            ( void ) aQueue;
+        }
         /** @brief Dispatch compute skinning for the component before the render pass.
          *  Recorded between BeginFrame and BeginRenderPass; the default does
          *  nothing so only skinned components need to override it.
@@ -118,21 +130,6 @@ namespace AeonGames
             ( void ) aNode;
             ( void ) aRenderer;
             ( void ) aWindowId;
-        }
-        /** @brief Return a stable, non-zero identifier shared by components
-         *  whose geometry can be drawn together in a single instanced draw,
-         *  or 0 when this component cannot be instanced (the default).
-         *
-         *  Sibling nodes whose components report the same non-zero id are
-         *  batched by Scene::CullVisibleInstances into one instanced draw, so
-         *  the id must be identical for components sharing identical geometry
-         *  and distinct otherwise. ModelComponent returns the resource hash of
-         *  a non-skinned model, and 0 for skinned models, which keep per-node
-         *  pose state and must render individually.
-         */
-        virtual uint32_t GetInstanceBatchId() const
-        {
-            return 0;
         }
         /** @brief Process an incoming message.
          *  @param aNode        Node this component is attached to.

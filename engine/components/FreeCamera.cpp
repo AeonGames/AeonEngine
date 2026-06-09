@@ -335,10 +335,6 @@ namespace AeonGames
         scene->SetFar ( mFarPlane );
     }
 
-    void FreeCamera::Render ( const Node& /*aNode*/, Renderer& /*aRenderer*/, void* /*aWindowId*/ )
-    {
-    }
-
     void FreeCamera::ProcessMessage ( Node& /*aNode*/, uint32_t /*aMessageType*/, const void* /*aMessageData*/ )
     {
     }

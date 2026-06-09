@@ -985,7 +985,6 @@ namespace AeonGames
             // Begin the depth pre-pass; the application's first geometry
             // traversal records into it with the marking pipeline substituted.
             BeginRenderPass();
-            mDepthPrePassActive = true;
         }
         else
         {
@@ -1007,7 +1006,6 @@ namespace AeonGames
 
     void VulkanWindow::EndDepthPrePass ( const Pipeline* aComputePipeline )
     {
-        mDepthPrePassActive = false;
         // End the depth pre-pass render pass so light culling can run outside
         // any render pass.
         vkCmdEndRenderPass ( mVkCommandBuffer );
@@ -1143,7 +1141,8 @@ namespace AeonGames
                                 uint32_t aVertexCount,
                                 uint32_t aInstanceCount,
                                 uint32_t aFirstInstance,
-                                const BufferAccessor* aSkinnedVertices ) const
+                                const BufferAccessor* aSkinnedVertices,
+                                RenderPass aRenderPass ) const
     {
         // Resolve the optional pre-skinned vertex buffer produced by the compute
         // skinning pre-pass. When present it is bound as the vertex input in
@@ -1162,7 +1161,7 @@ namespace AeonGames
         // During the depth pre-pass, substitute the renderer-owned marking
         // pipeline: it records only the cluster each fragment occupies into the
         // ClusterActive SSBO and ignores material and lighting state.
-        if ( mDepthPrePassActive )
+        if ( aRenderPass == RenderPass::DepthPrePass )
         {
             const VulkanPipeline* mark_pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
