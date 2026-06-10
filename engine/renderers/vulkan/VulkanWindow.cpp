@@ -1349,21 +1349,24 @@ namespace AeonGames
             return;
         }
         const size_t size = aMatrices.size() * sizeof ( float ) * 16;
-        // High-frequency per-draw allocation: reserve buffer space without a
-        // dedicated descriptor set and bind the shared whole-buffer set with
-        // the allocation offset as the dynamic offset. This keeps the number of
-        // batched draws independent of the descriptor-set pool capacity.
-        BufferAccessor object_matrices = mStorageMemoryPoolBuffer.AllocateWithoutDescriptor ( size );
+        // High-frequency per-draw allocation. Each allocation gets its own
+        // descriptor set whose buffer range is exactly this allocation, bound
+        // with a zero dynamic offset: a dynamic offset combined with a
+        // VK_WHOLE_SIZE range is illegal (VUID-vkCmdBindDescriptorSets-
+        // pDescriptorSets-06715). The descriptor pool grows on demand, so the
+        // number of batched draws is not bounded by a fixed pool capacity.
+        BufferAccessor object_matrices = mStorageMemoryPoolBuffer.Allocate ( size );
         object_matrices.WriteMemory ( 0, size, aMatrices.data() );
         const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
             reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( object_matrices.GetMemoryPoolBuffer() );
-        uint32_t dynamic_offset = static_cast<uint32_t> ( object_matrices.GetOffset() );
+        size_t offset = object_matrices.GetOffset();
+        uint32_t dynamic_offset = 0;
         vkCmdBindDescriptorSets ( GetCommandBuffer(),
                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   aPipeline->GetPipelineLayout(),
                                   set_index,
                                   1,
-                                  &memory_pool_buffer->GetWholeBufferDescriptorSet(), 1, &dynamic_offset );
+                                  &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
     }
 
     void VulkanWindow::RenderInstanced ( std::span<const Matrix4x4> aModelMatrices,

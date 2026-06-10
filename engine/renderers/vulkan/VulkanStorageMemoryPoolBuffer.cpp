@@ -38,9 +38,8 @@ namespace AeonGames
         mStorageBuffer { std::move ( aVulkanStorageMemoryPoolBuffer.mStorageBuffer ) }
     {
         std::swap ( mOffset, aVulkanStorageMemoryPoolBuffer.mOffset );
-        std::swap ( mVkDescriptorPool, aVulkanStorageMemoryPoolBuffer.mVkDescriptorPool );
+        std::swap ( mVkDescriptorPools, aVulkanStorageMemoryPoolBuffer.mVkDescriptorPools );
         std::swap ( mVkDescriptorSetLayout, aVulkanStorageMemoryPoolBuffer.mVkDescriptorSetLayout );
-        std::swap ( mWholeBufferDescriptorSet, aVulkanStorageMemoryPoolBuffer.mWholeBufferDescriptorSet );
         std::swap ( mVkDescriptorSets, aVulkanStorageMemoryPoolBuffer.mVkDescriptorSets );
         std::swap ( mDescriptorSetIndex, aVulkanStorageMemoryPoolBuffer.mDescriptorSetIndex );
         std::swap ( mOffsetToDescriptorSet, aVulkanStorageMemoryPoolBuffer.mOffsetToDescriptorSet );
@@ -68,21 +67,28 @@ namespace AeonGames
         mStorageBuffer.Finalize();
     }
 
-    void VulkanStorageMemoryPoolBuffer::InitializeDescriptorPool()
+    void VulkanStorageMemoryPoolBuffer::AddDescriptorPool()
     {
-        VkDescriptorPoolSize pool_size{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, kMaxDescriptorSets };
+        VkDescriptorPoolSize pool_size{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, kDescriptorSetsPerPool };
         VkDescriptorPoolCreateInfo descriptor_pool_create_info{};
         descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptor_pool_create_info.maxSets = kMaxDescriptorSets;
+        descriptor_pool_create_info.maxSets = kDescriptorSetsPerPool;
         descriptor_pool_create_info.poolSizeCount = 1;
         descriptor_pool_create_info.pPoolSizes = &pool_size;
-        if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &mVkDescriptorPool ) )
+        VkDescriptorPool descriptor_pool{ VK_NULL_HANDLE };
+        if ( VkResult result = vkCreateDescriptorPool ( mVulkanRenderer.GetDevice(), &descriptor_pool_create_info, nullptr, &descriptor_pool ) )
         {
             std::ostringstream stream;
             stream << "vkCreateDescriptorPool failed. error code: ( " << GetVulkanResultString ( result ) << " )";
             std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
+        mVkDescriptorPools.push_back ( descriptor_pool );
+    }
+
+    void VulkanStorageMemoryPoolBuffer::InitializeDescriptorPool()
+    {
+        AddDescriptorPool();
 
         VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info{};
         descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -95,31 +101,15 @@ namespace AeonGames
         descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
         mVkDescriptorSetLayout = mVulkanRenderer.GetDescriptorSetLayout ( descriptor_set_layout_create_info );
-
-        // A single descriptor set spanning the whole pool buffer. Per-draw
-        // object-matrix allocations bind this set with a dynamic offset, so
-        // they never consume a per-offset descriptor set from the pool.
-        mWholeBufferDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, mVkDescriptorSetLayout );
-        VkDescriptorBufferInfo whole_buffer_info = { mStorageBuffer.GetBuffer(), 0, VK_WHOLE_SIZE };
-        VkWriteDescriptorSet whole_buffer_write{};
-        whole_buffer_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        whole_buffer_write.dstSet = mWholeBufferDescriptorSet;
-        whole_buffer_write.dstBinding = 0;
-        whole_buffer_write.dstArrayElement = 0;
-        whole_buffer_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
-        whole_buffer_write.descriptorCount = 1;
-        whole_buffer_write.pBufferInfo = &whole_buffer_info;
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &whole_buffer_write, 0, nullptr );
     }
 
     void VulkanStorageMemoryPoolBuffer::FinalizeDescriptorPool()
     {
-        if ( mVkDescriptorPool != VK_NULL_HANDLE )
+        for ( VkDescriptorPool& descriptor_pool : mVkDescriptorPools )
         {
-            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, nullptr );
-            mVkDescriptorPool = VK_NULL_HANDLE;
+            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), descriptor_pool, nullptr );
         }
-        mWholeBufferDescriptorSet = VK_NULL_HANDLE;
+        mVkDescriptorPools.clear();
         mVkDescriptorSets.clear();
         mOffsetToDescriptorSet.clear();
         mDescriptorSetIndex = 0;
@@ -135,18 +125,19 @@ namespace AeonGames
             std::cout << LogLevel::Error << "Storage Memory Pool Buffer cannot fulfill allocation request." << std::endl;
             throw std::runtime_error ( "Storage Memory Pool Buffer cannot fulfill allocation request." );
         }
-        if ( mDescriptorSetIndex >= kMaxDescriptorSets )
-        {
-            mOffset = offset;
-            std::cout << LogLevel::Error << "Storage Memory Pool Buffer ran out of descriptor sets." << std::endl;
-            throw std::runtime_error ( "Storage Memory Pool Buffer ran out of descriptor sets." );
-        }
 
         // Grow the descriptor-set cache lazily; sets are reused across frames.
+        // Each backing pool holds kDescriptorSetsPerPool sets, so add a new
+        // pool whenever the cache crosses a pool boundary.
         if ( mDescriptorSetIndex >= mVkDescriptorSets.size() )
         {
+            const uint32_t pool_index = mDescriptorSetIndex / kDescriptorSetsPerPool;
+            if ( pool_index >= mVkDescriptorPools.size() )
+            {
+                AddDescriptorPool();
+            }
             mVkDescriptorSets.push_back (
-                CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, mVkDescriptorSetLayout ) );
+                CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mVkDescriptorPools[pool_index], mVkDescriptorSetLayout ) );
         }
         VkDescriptorSet descriptor_set = mVkDescriptorSets[mDescriptorSetIndex++];
 
@@ -171,19 +162,6 @@ namespace AeonGames
         return BufferAccessor{this, offset, aSize};
     }
 
-    BufferAccessor VulkanStorageMemoryPoolBuffer::AllocateWithoutDescriptor ( size_t aSize )
-    {
-        size_t offset = mOffset;
-        mOffset += ( ( aSize - 1 ) | ( mVulkanRenderer.GetPhysicalDeviceProperties().limits.minStorageBufferOffsetAlignment - 1 ) ) + 1;
-        if ( mOffset > mStorageBuffer.GetSize() )
-        {
-            mOffset = offset;
-            std::cout << LogLevel::Error << "Storage Memory Pool Buffer cannot fulfill allocation request." << std::endl;
-            throw std::runtime_error ( "Storage Memory Pool Buffer cannot fulfill allocation request." );
-        }
-        return BufferAccessor{this, offset, aSize};
-    }
-
     void VulkanStorageMemoryPoolBuffer::Reset()
     {
         mOffset = 0;
@@ -194,10 +172,6 @@ namespace AeonGames
     const VkDescriptorSet& VulkanStorageMemoryPoolBuffer::GetDescriptorSet ( size_t aOffset ) const
     {
         return mOffsetToDescriptorSet.at ( aOffset );
-    }
-    const VkDescriptorSet& VulkanStorageMemoryPoolBuffer::GetWholeBufferDescriptorSet() const
-    {
-        return mWholeBufferDescriptorSet;
     }
     const Buffer& VulkanStorageMemoryPoolBuffer::GetBuffer() const
     {
