@@ -7,9 +7,6 @@ layout(binding = 0, std140)
 #endif
 uniform Matrices
 {
-#ifndef VULKAN
-      mat4 ModelMatrix;
-#endif
       mat4 ProjectionMatrix;
       mat4 ViewMatrix;
 };

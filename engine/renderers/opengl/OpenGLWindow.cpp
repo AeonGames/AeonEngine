@@ -41,7 +41,7 @@ namespace AeonGames
 {
     void OpenGLWindow::Initialize()
     {
-        mMatrices.Initialize ( sizeof ( float ) * 16 * 3, GL_DYNAMIC_DRAW );
+        mMatrices.Initialize ( sizeof ( float ) * 16 * 2, GL_DYNAMIC_DRAW );
         // Per-frame Lights SSBO: 16-byte header (count) + MAX_LIGHTS_PER_FRAME
         // records. A storage buffer, not a UBO, because the light cap is large.
         // The header is zeroed so an empty scene draws unlit (count == 0) safely.
@@ -280,9 +280,9 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::DepthPrePass )
         {
             mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
-            mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
             mOpenGLRenderer.SetMatrices ( mMatrices );
             mOpenGLRenderer.SetClusterParams ( mClusterParams );
+            BindObjectMatrices ( { &aModelMatrix, 1 } );
             if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
             {
                 mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
@@ -304,10 +304,10 @@ namespace AeonGames
 
         mOpenGLRenderer.BindPipeline ( aPipeline );
 
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aModelMatrix.GetMatrix4x4() );
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        BindObjectMatrices ( { &aModelMatrix, 1 } );
         // Clustered Forward+ light lists, produced by the lighting compute
         // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer
         // silently skips pipelines that don't declare these blocks.
@@ -353,26 +353,18 @@ namespace AeonGames
         {
             return;
         }
-        // Upload every instance's model matrix into a transient std430 storage
-        // buffer; the INSTANCED shader variant indexes it by gl_BaseInstance +
-        // gl_InstanceID. Each batch gets its own buffer starting at index 0, so
-        // the draws use a zero base instance.
-        const size_t matrices_size = static_cast<size_t> ( instance_count ) * sizeof ( float ) * 16;
-        BufferAccessor instance_matrices = AllocateSingleFrameStorageMemory ( matrices_size );
-        instance_matrices.WriteMemory ( 0, matrices_size, aModelMatrices.data() );
-
         // During the depth pre-pass every draw uses the renderer-owned marking
-        // pipeline; its INSTANCED variant reads the same per-instance buffer.
+        // pipeline; the same object-matrix buffer drives it.
         if ( aRenderPass == RenderPass::DepthPrePass )
         {
-            mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline, true );
+            mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
             mOpenGLRenderer.SetMatrices ( mMatrices );
             mOpenGLRenderer.SetClusterParams ( mClusterParams );
             if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
             {
                 mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
             }
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, instance_matrices );
+            BindObjectMatrices ( aModelMatrices );
             mOpenGLRenderer.BindMesh ( aMesh );
             if ( aMesh.GetIndexCount() )
             {
@@ -388,7 +380,7 @@ namespace AeonGames
             return;
         }
 
-        mOpenGLRenderer.BindPipeline ( aPipeline, true );
+        mOpenGLRenderer.BindPipeline ( aPipeline );
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
@@ -397,7 +389,7 @@ namespace AeonGames
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
         }
-        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, instance_matrices );
+        BindObjectMatrices ( aModelMatrices );
         if ( aMaterial )
         {
             mOpenGLRenderer.SetMaterial ( *aMaterial );
@@ -414,6 +406,14 @@ namespace AeonGames
             glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
+    }
+
+    void OpenGLWindow::BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const
+    {
+        const size_t size = aMatrices.size() * sizeof ( float ) * 16;
+        BufferAccessor object_matrices = mStorageMemoryPoolBuffer.Allocate ( size );
+        object_matrices.WriteMemory ( 0, size, aMatrices.data() );
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, object_matrices );
     }
 
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
@@ -679,7 +679,7 @@ namespace AeonGames
             0.0f, 0.0f, 0.0f, 1.0f
         };
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, mProjectionMatrix.GetMatrix4x4() );
         UpdateClusterParams();
     }
 
@@ -708,7 +708,7 @@ namespace AeonGames
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16 * 2, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
+        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, mViewMatrix.GetMatrix4x4() );
     }
 
     void OpenGLWindow::SetLights ( std::span<const GpuLight> aLights )

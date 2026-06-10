@@ -28,7 +28,6 @@ namespace AeonGames
     {
         std::swap ( mPipeline, aOpenGLPipeline.mPipeline );
         std::swap ( mProgramId, aOpenGLPipeline.mProgramId );
-        std::swap ( mInstancedProgramId, aOpenGLPipeline.mInstancedProgramId );
         mComputeProgramIds.swap ( aOpenGLPipeline.mComputeProgramIds );
         mAttributes.swap ( aOpenGLPipeline.mAttributes );
         mUniformBlocks.swap ( aOpenGLPipeline.mUniformBlocks );
@@ -148,59 +147,6 @@ namespace AeonGames
                 glDeleteShader ( shader_id );
                 OPENGL_CHECK_ERROR_THROW;
             }
-
-            // Compile a second graphics program with `#define INSTANCED 1`
-            // injected after the `#version` directive, but only when a stage
-            // actually references the macro; otherwise the variant would be
-            // byte-for-byte identical to the base program.
-            bool wants_instanced{false};
-            for ( ShaderType stage : graphics_stages )
-            {
-                if ( aPipeline.GetShaderCode ( stage ).find ( "INSTANCED" ) != std::string_view::npos )
-                {
-                    wants_instanced = true;
-                    break;
-                }
-            }
-            if ( wants_instanced )
-            {
-                auto inject_instanced_define = [] ( std::string_view source ) -> std::string
-                {
-                    const size_t version_pos = source.find ( "#version" );
-                    const size_t line_end = ( version_pos != std::string_view::npos ) ? source.find ( '\n', version_pos ) : std::string_view::npos;
-                    if ( line_end == std::string_view::npos )
-                    {
-                        return std::string{ source };
-                    }
-                    std::string result;
-                    result.reserve ( source.size() + 20 );
-                    result.append ( source.substr ( 0, line_end + 1 ) );
-                    result.append ( "#define INSTANCED 1\n" );
-                    result.append ( source.substr ( line_end + 1 ) );
-                    return result;
-                };
-                mInstancedProgramId = glCreateProgram();
-                OPENGL_CHECK_ERROR_THROW;
-                std::vector<GLuint> instanced_shader_ids;
-                for ( ShaderType stage : graphics_stages )
-                {
-                    const std::string_view code{ aPipeline.GetShaderCode ( stage ) };
-                    if ( code.empty() )
-                    {
-                        continue;
-                    }
-                    const std::string instanced_code{ inject_instanced_define ( code ) };
-                    instanced_shader_ids.push_back ( compile_and_attach ( mInstancedProgramId, ShaderTypeToGLShaderType.at ( stage ), instanced_code, stage ) );
-                }
-                link_program ( mInstancedProgramId );
-                for ( GLuint shader_id : instanced_shader_ids )
-                {
-                    glDetachShader ( mInstancedProgramId, shader_id );
-                    OPENGL_CHECK_ERROR_THROW;
-                    glDeleteShader ( shader_id );
-                    OPENGL_CHECK_ERROR_THROW;
-                }
-            }
         }
 
         const uint32_t compute_stage_count = aPipeline.GetComputeStageCount();
@@ -230,13 +176,6 @@ namespace AeonGames
             ReflectAttributes();
             ReflectUniforms ( mProgramId, true );
             ReflectStorageBlocks ( mProgramId );
-        }
-        // The INSTANCED variant adds the per-instance matrix storage block;
-        // reflect it so the renderer can resolve it by name. Common blocks are
-        // deduplicated by ReflectStorageBlocks.
-        if ( mInstancedProgramId != 0 )
-        {
-            ReflectStorageBlocks ( mInstancedProgramId );
         }
         for ( GLuint program : mComputeProgramIds )
         {
@@ -406,13 +345,6 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
             mProgramId = 0;
         }
-        if ( glIsProgram ( mInstancedProgramId ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteProgram ( mInstancedProgramId );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mInstancedProgramId = 0;
-        }
         for ( GLuint& compute_program : mComputeProgramIds )
         {
             if ( glIsProgram ( compute_program ) )
@@ -426,9 +358,9 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
-    GLint OpenGLPipeline::GetProgramId ( bool aInstanced ) const
+    GLint OpenGLPipeline::GetProgramId() const
     {
-        return ( aInstanced && mInstancedProgramId != 0 ) ? mInstancedProgramId : mProgramId;
+        return mProgramId;
     }
 
     uint32_t OpenGLPipeline::GetComputeStageCount() const

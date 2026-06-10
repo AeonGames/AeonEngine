@@ -578,7 +578,7 @@ void main()
         mPipelineStore.erase ( it );
     }
 
-    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline, bool aInstanced )
+    void OpenGLRenderer::BindPipeline ( const Pipeline& aPipeline )
     {
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it == mPipelineStore.end() )
@@ -587,7 +587,7 @@ void main()
             it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         };
         mCurrentPipeline = &it->second;
-        glUseProgram ( mCurrentPipeline->GetProgramId ( aInstanced ) );
+        glUseProgram ( mCurrentPipeline->GetProgramId() );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 

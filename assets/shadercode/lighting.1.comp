@@ -29,8 +29,8 @@ uniform ClusterParams
     vec4  screen; // viewport width, height, heatmap-toggle, active-cull-enable
 };
 
-// Transform matrices. ModelMatrix is unused here (compute has no draw), but the
-// block layout must match what the renderer uploads, which differs per backend.
+// Transform matrices. ModelMatrix lives in a per-object storage buffer now, so the
+// Matrices block only carries the shared projection and view matrices.
 #ifdef VULKAN
 layout(set = 1, binding = 0, std140)
 #else
@@ -38,9 +38,6 @@ layout(binding = 1, std140)
 #endif
 uniform Matrices
 {
-#ifndef VULKAN
-    mat4 ModelMatrix;
-#endif
     mat4 ProjectionMatrix;
     mat4 ViewMatrix;
 };

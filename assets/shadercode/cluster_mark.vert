@@ -3,15 +3,6 @@
 // Depth pre-pass mark stage (Phase R2). Rasterizes geometry only to record
 // which clusters are occupied; mirrors the vertex inputs of
 // diffuse_map_phong_no_skeleton.vert so the same static meshes bind unchanged.
-#ifdef INSTANCED
-#ifndef VULKAN
-#extension GL_ARB_shader_draw_parameters : require
-#endif
-#endif
-
-#if defined(VULKAN) && !defined(INSTANCED)
-layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };
-#endif
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
 #else
@@ -19,17 +10,13 @@ layout(binding = 0, std140)
 #endif
 uniform Matrices
 {
-#ifndef VULKAN
-      mat4 ModelMatrix;
-#endif
       mat4 ProjectionMatrix;
       mat4 ViewMatrix;
 };
 
-// Per-instance model matrices for instanced draws (Track E). Under INSTANCED
-// the per-node ModelMatrix is replaced by a lookup into this buffer, indexed by
-// the instance id so a single draw can render many sibling nodes.
-#ifdef INSTANCED
+// Per-object model matrices (Track E uber-pipeline). Every draw — single or
+// instanced — sources its model matrix from this buffer, indexed by the
+// instance id, so there is no separate instanced shader variant.
 #ifdef VULKAN
 layout(set = 3, binding = 0, std430)
 #else
@@ -42,10 +29,7 @@ readonly buffer InstanceMatrices
 #ifdef VULKAN
 #define MODEL_MATRIX InstanceModelMatrices[gl_InstanceIndex]
 #else
-#define MODEL_MATRIX InstanceModelMatrices[gl_BaseInstanceARB + gl_InstanceID]
-#endif
-#else
-#define MODEL_MATRIX ModelMatrix
+#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
 #endif
 
 layout(location = 0) in vec3 VertexPosition;

@@ -55,7 +55,20 @@ namespace AeonGames
          * @c (effectiveOffset + range) within the pool buffer for every
          * allocation, unlike a single shared whole-buffer descriptor. */
         const VkDescriptorSet& GetDescriptorSet ( size_t aOffset ) const;
+        /** @brief Descriptor set covering the whole pool buffer.
+         *
+         * Used for high-frequency per-draw allocations (object matrices): the
+         * caller reserves space with @ref AllocateWithoutDescriptor and binds
+         * this single set with the allocation offset as the dynamic offset,
+         * so the number of live draws is not bounded by the descriptor-set
+         * pool. */
+        const VkDescriptorSet& GetWholeBufferDescriptorSet() const;
         BufferAccessor Allocate ( size_t aSize ) final;
+        /** @brief Reserve buffer space without allocating a per-offset descriptor set.
+         *
+         * Intended to be paired with @ref GetWholeBufferDescriptorSet and a
+         * dynamic offset equal to the returned accessor's offset. */
+        BufferAccessor AllocateWithoutDescriptor ( size_t aSize );
         void Reset() final;
         const Buffer& GetBuffer() const final;
     private:
@@ -67,6 +80,7 @@ namespace AeonGames
         size_t mOffset{0};
         VkDescriptorPool mVkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mVkDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorSet mWholeBufferDescriptorSet{ VK_NULL_HANDLE };
         std::vector<VkDescriptorSet> mVkDescriptorSets{};
         uint32_t mDescriptorSetIndex{0};
         std::unordered_map<size_t, VkDescriptorSet> mOffsetToDescriptorSet{};

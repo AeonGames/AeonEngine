@@ -1,7 +1,13 @@
 #version 450
 
+// Skinned shading. The model matrix is delivered per-API: Vulkan uses a push
+// constant (its 8 descriptor sets are fully taken, leaving no slot for an
+// object SSBO), while OpenGL — which has no push constants — sources it from
+// the same per-object matrix buffer the static shaders use. Skinned meshes are
+// never instanced, so that buffer holds a single matrix here.
 #ifdef VULKAN
 layout(push_constant) uniform PushConstant { mat4 ModelMatrix; };
+#define MODEL_MATRIX ModelMatrix
 #endif
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
@@ -10,9 +16,6 @@ layout(binding = 0, std140)
 #endif
 uniform Matrices
 {
-#ifndef VULKAN
-      mat4 ModelMatrix;
-#endif
       mat4 ProjectionMatrix;
       mat4 ViewMatrix;
 };
@@ -25,6 +28,15 @@ layout(binding = 2, std140)
 uniform Skeleton{
       mat4 skeleton[256];
 };
+
+#ifndef VULKAN
+layout(binding = 3, std430)
+readonly buffer InstanceMatrices
+{
+      mat4 InstanceModelMatrices[];
+};
+#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
+#endif
 
 layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec3 VertexNormal;
@@ -54,13 +66,13 @@ void main()
                         ( mat3(skeleton[VertexWeightIndices[1]]) * (VertexWeights[1] * VertexNormal) ) +
                         ( mat3(skeleton[VertexWeightIndices[2]]) * (VertexWeights[2] * VertexNormal) ) +
                         ( mat3(skeleton[VertexWeightIndices[3]]) * (VertexWeights[3] * VertexNormal) ));
-            tnorm = normalize ( mat3(ViewMatrix * ModelMatrix) * vertex_normal );
+            tnorm = normalize ( mat3(ViewMatrix * MODEL_MATRIX) * vertex_normal );
       }
       else
       {
             tnorm = vec3 ( 0.0 );
       }
-      eyeCoords = ( ViewMatrix * ModelMatrix * vec4 ( weighted_position.xyz, 1.0 ) ).xyz;
-      gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(weighted_position.xyz, 1.0);
+      eyeCoords = ( ViewMatrix * MODEL_MATRIX * vec4 ( weighted_position.xyz, 1.0 ) ).xyz;
+      gl_Position = ProjectionMatrix * ViewMatrix * MODEL_MATRIX * vec4(weighted_position.xyz, 1.0);
       CoordUV = VertexUV;
 }

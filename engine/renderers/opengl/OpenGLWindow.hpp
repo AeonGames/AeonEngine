@@ -81,7 +81,7 @@ namespace AeonGames
                         RenderPass aRenderPass = RenderPass::Shading ) const;
         /// @brief Issue one instanced draw for a batch of identical-geometry
         ///        nodes, uploading their model matrices to a transient
-        ///        per-instance storage buffer read by the INSTANCED shader variant.
+        ///        per-instance storage buffer indexed by gl_InstanceID.
         void RenderInstanced ( std::span<const Matrix4x4> aModelMatrices,
                                const Mesh& aMesh,
                                const Pipeline& aPipeline,
@@ -151,6 +151,11 @@ namespace AeonGames
         /// @brief Dispatch the remaining compute stages (light culling) after
         ///        the depth pre-pass has flagged the active clusters.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
+        /// @brief Upload per-object model matrices into a transient storage
+        ///        buffer and bind it at INSTANCE_MATRICES. The uber-pipeline
+        ///        vertex shaders index it by gl_InstanceID, so a single draw
+        ///        covers the whole batch.
+        void BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const;
         OpenGLRenderer& mOpenGLRenderer;
 #if defined(_WIN32)
         HWND mWindowId {};
@@ -165,7 +170,7 @@ namespace AeonGames
         //OpenGLTexture mOverlay{Texture::Format::RGBA, Texture::Type::UNSIGNED_INT_8_8_8_8_REV};
         OpenGLFrameBuffer mFrameBuffer{};
         OpenGLMemoryPoolBuffer mMemoryPoolBuffer;
-        OpenGLStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
+        mutable OpenGLStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
         OpenGLBuffer mMatrices{};
         OpenGLBuffer mLights{};
         OpenGLBuffer mClusterParams{};

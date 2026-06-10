@@ -1212,6 +1212,10 @@ namespace AeonGames
                                      push_constant_model_matrix.offset, push_constant_model_matrix.size,
                                      aModelMatrix.GetMatrix4x4() );
             }
+            else
+            {
+                BindObjectMatrices ( mark_pipeline, { &aModelMatrix, 1 } );
+            }
 
             mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
             if ( aMesh.GetIndexCount() )
@@ -1307,6 +1311,10 @@ namespace AeonGames
                                  push_constant_model_matrix.offset, push_constant_model_matrix.size,
                                  aModelMatrix.GetMatrix4x4() );
         }
+        else
+        {
+            BindObjectMatrices ( pipeline, { &aModelMatrix, 1 } );
+        }
         if ( aMaterial != nullptr )
         {
             mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
@@ -1330,6 +1338,203 @@ namespace AeonGames
                 aInstanceCount,
                 aVertexStart,
                 aFirstInstance );
+        }
+    }
+
+    void VulkanWindow::BindObjectMatrices ( const VulkanPipeline* aPipeline, std::span<const Matrix4x4> aMatrices ) const
+    {
+        uint32_t set_index = aPipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::INSTANCE_MATRICES );
+        if ( set_index == std::numeric_limits<uint32_t>::max() )
+        {
+            return;
+        }
+        const size_t size = aMatrices.size() * sizeof ( float ) * 16;
+        // High-frequency per-draw allocation: reserve buffer space without a
+        // dedicated descriptor set and bind the shared whole-buffer set with
+        // the allocation offset as the dynamic offset. This keeps the number of
+        // batched draws independent of the descriptor-set pool capacity.
+        BufferAccessor object_matrices = mStorageMemoryPoolBuffer.AllocateWithoutDescriptor ( size );
+        object_matrices.WriteMemory ( 0, size, aMatrices.data() );
+        const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+            reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( object_matrices.GetMemoryPoolBuffer() );
+        uint32_t dynamic_offset = static_cast<uint32_t> ( object_matrices.GetOffset() );
+        vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  aPipeline->GetPipelineLayout(),
+                                  set_index,
+                                  1,
+                                  &memory_pool_buffer->GetWholeBufferDescriptorSet(), 1, &dynamic_offset );
+    }
+
+    void VulkanWindow::RenderInstanced ( std::span<const Matrix4x4> aModelMatrices,
+                                         const Mesh& aMesh,
+                                         const Pipeline& aPipeline,
+                                         const Material* aMaterial,
+                                         Topology aTopology,
+                                         uint32_t aVertexStart,
+                                         uint32_t aVertexCount,
+                                         RenderPass aRenderPass ) const
+    {
+        const uint32_t instance_count = static_cast<uint32_t> ( aModelMatrices.size() );
+        if ( instance_count == 0 )
+        {
+            return;
+        }
+        // During the depth pre-pass every draw uses the renderer-owned marking
+        // pipeline; the same object-matrix buffer drives it. Only non-skinned
+        // geometry is ever batched, so no pre-skinned vertex buffer is involved.
+        if ( aRenderPass == RenderPass::DepthPrePass )
+        {
+            const VulkanPipeline* mark_pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
+            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+
+            if ( uint32_t matrix_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          mark_pipeline->GetPipelineLayout(),
+                                          matrix_set_index,
+                                          1,
+                                          &mMatricesDescriptorSet, 0, nullptr );
+            }
+
+            if ( uint32_t cluster_params_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          mark_pipeline->GetPipelineLayout(),
+                                          cluster_params_set_index,
+                                          1,
+                                          &mClusterParamsDescriptorSet, 0, nullptr );
+            }
+
+            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
+            {
+                if ( uint32_t active_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_ACTIVE ); active_set_index != std::numeric_limits<uint32_t>::max() )
+                {
+                    const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                        reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( mFrameClusterActive.GetMemoryPoolBuffer() );
+                    size_t offset = mFrameClusterActive.GetOffset();
+                    uint32_t dynamic_offset = 0;
+                    vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                              VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                              mark_pipeline->GetPipelineLayout(),
+                                              active_set_index,
+                                              1,
+                                              &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+                }
+            }
+
+            BindObjectMatrices ( mark_pipeline, aModelMatrices );
+
+            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
+            if ( aMesh.GetIndexCount() )
+            {
+                vkCmdDrawIndexed (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                    instance_count,
+                    aVertexStart,
+                    0,
+                    0 );
+            }
+            else
+            {
+                vkCmdDraw (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                    instance_count,
+                    aVertexStart,
+                    0 );
+            }
+            return;
+        }
+
+        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+
+        if ( uint32_t matrix_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      matrix_set_index,
+                                      1,
+                                      &mMatricesDescriptorSet, 0, nullptr );
+        }
+
+        if ( uint32_t lights_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::LIGHTS ); lights_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      lights_set_index,
+                                      1,
+                                      &mLightsDescriptorSet, 0, nullptr );
+        }
+
+        if ( uint32_t cluster_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      cluster_params_set_index,
+                                      1,
+                                      &mClusterParamsDescriptorSet, 0, nullptr );
+        }
+
+        auto bind_cluster_storage = [&] ( uint32_t aBinding, const BufferAccessor & aAccessor )
+        {
+            if ( aAccessor.GetMemoryPoolBuffer() == nullptr )
+            {
+                return;
+            }
+            uint32_t storage_set_index = pipeline->GetDescriptorSetIndex ( aBinding );
+            if ( storage_set_index == std::numeric_limits<uint32_t>::max() )
+            {
+                return;
+            }
+            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aAccessor.GetMemoryPoolBuffer() );
+            size_t offset = aAccessor.GetOffset();
+            uint32_t dynamic_offset = 0;
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      storage_set_index,
+                                      1,
+                                      &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+        };
+        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
+
+        BindObjectMatrices ( pipeline, aModelMatrices );
+
+        if ( aMaterial != nullptr )
+        {
+            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
+        }
+        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
+        if ( aMesh.GetIndexCount() )
+        {
+            vkCmdDrawIndexed (
+                mVkCommandBuffer,
+                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                instance_count,
+                aVertexStart,
+                0,
+                0 );
+        }
+        else
+        {
+            vkCmdDraw (
+                mVkCommandBuffer,
+                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                instance_count,
+                aVertexStart,
+                0 );
         }
     }
 

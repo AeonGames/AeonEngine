@@ -87,6 +87,25 @@ namespace AeonGames
                         uint32_t aFirstInstance = 0,
                         const BufferAccessor* aSkinnedVertices = nullptr,
                         RenderPass aRenderPass = RenderPass::Shading ) const;
+        /** @brief Render a batch of identical-geometry nodes in one instanced
+         *         draw, each positioned by its own model matrix.
+         *  @param aModelMatrices Contiguous per-instance model matrices.
+         *  @param aMesh Mesh shared by every instance.
+         *  @param aPipeline Pipeline shared by every instance.
+         *  @param aMaterial Optional material, may be nullptr.
+         *  @param aTopology Primitive topology.
+         *  @param aVertexStart First vertex index.
+         *  @param aVertexCount Number of vertices to draw.
+         *  @param aRenderPass Pass this draw feeds.
+         */
+        void RenderInstanced ( std::span<const Matrix4x4> aModelMatrices,
+                               const Mesh& aMesh,
+                               const Pipeline& aPipeline,
+                               const Material* aMaterial = nullptr,
+                               Topology aTopology = Topology::TRIANGLE_LIST,
+                               uint32_t aVertexStart = 0,
+                               uint32_t aVertexCount = 0xffffffff,
+                               RenderPass aRenderPass = RenderPass::Shading ) const;
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.
@@ -169,12 +188,17 @@ namespace AeonGames
         /// @brief Dispatch the remaining compute stages (light culling) after
         ///        the depth pre-pass has flagged the active clusters.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
+        /// @brief Upload per-object model matrices into a transient storage
+        ///        buffer and bind it at INSTANCE_MATRICES for the given
+        ///        pipeline. The uber-pipeline vertex shaders index it by
+        ///        gl_InstanceIndex, so a single draw covers the whole batch.
+        void BindObjectMatrices ( const VulkanPipeline* aPipeline, std::span<const Matrix4x4> aMatrices ) const;
 
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
         Frustum mFrustum{};
         VulkanMemoryPoolBuffer mMemoryPoolBuffer;
-        VulkanStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
+        mutable VulkanStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         VulkanBuffer mMatrices;

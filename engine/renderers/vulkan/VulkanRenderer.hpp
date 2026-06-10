@@ -109,6 +109,15 @@ namespace AeonGames
                       uint32_t aFirstInstance = 0,
                       const BufferAccessor* aSkinnedVertices = nullptr,
                       RenderPass aRenderPass = RenderPass::Shading ) const final;
+        void RenderInstanced ( void* aWindowId,
+                               std::span<const Matrix4x4> aModelMatrices,
+                               const Mesh& aMesh,
+                               const Pipeline& aPipeline,
+                               const Material* aMaterial = nullptr,
+                               Topology aTopology = Topology::TRIANGLE_LIST,
+                               uint32_t aVertexStart = 0,
+                               uint32_t aVertexCount = 0xffffffff,
+                               RenderPass aRenderPass = RenderPass::Shading ) final;
         void Dispatch ( void* aWindowId,
                         const Pipeline& aPipeline,
                         uint32_t aGroupCountX,
@@ -157,6 +166,9 @@ namespace AeonGames
         void FinalizeOverlay();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
+        /// @brief Submit the scene's render queue for one pass, merging sorted
+        ///        runs of identical-geometry items into instanced draws.
+        void SubmitRenderQueue ( VulkanWindow& aWindow, const Scene& aScene, RenderPass aRenderPass );
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* mDisplay {XOpenDisplay ( nullptr ) };
 #endif
@@ -185,6 +197,10 @@ namespace AeonGames
         std::unordered_map<size_t, VulkanMaterial> mMaterialStore{};
         std::unordered_map<size_t, VulkanTexture> mTextureStore{};
         std::unordered_map<void*, VulkanWindow> mWindowStore{};
+        // Scratch buffer holding one batch's contiguous model matrices, reused
+        // across batches so SubmitRenderQueue only allocates when a batch grows
+        // beyond any previously seen size.
+        std::vector<Matrix4x4> mInstanceTransforms{};
         // Fallback texture bound when a material is missing a sampler that its
         // pipeline statically uses (e.g. an untextured material drawn with a
         // diffuse-map shader). Loaded from "textures/default.png".

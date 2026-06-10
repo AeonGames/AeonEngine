@@ -66,7 +66,7 @@ namespace AeonGames
         /// @brief Bind a pipeline (shader program) for rendering. When
         ///        @p aInstanced is true the pipeline's INSTANCED program variant
         ///        is selected if available.
-        void BindPipeline ( const Pipeline& aPipeline, bool aInstanced = false );
+        void BindPipeline ( const Pipeline& aPipeline );
         /// @brief Bind a pipeline's compute program for the given ordered
         ///        compute stage for subsequent dispatch.
         void BindComputePipeline ( const Pipeline& aPipeline, uint32_t aComputeStageIndex );
