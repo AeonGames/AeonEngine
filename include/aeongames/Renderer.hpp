@@ -332,19 +332,62 @@ namespace AeonGames
         ///@name Scene rendering
         ///@{
         /** Renders an entire scene for a window in a single call.
-         * Owns the per-frame render protocol: resolves the target window once,
+         * Owns the per-frame render protocol as a fixed sequence of steps:
          * brackets the frame with BeginRender/EndRender, builds the scene's
          * render queue from the window frustum, runs the depth pre-pass and
          * light culling when the scene defines a lighting pipeline, submits the
-         * shading pass, and composites the optional GUI overlay. Callers remain
-         * responsible for the per-frame setup that precedes BeginRender
-         * (BeginFrame, view/projection matrices, lights and skinning).
+         * shading pass, runs the optional debug-geometry step, and composites
+         * the optional GUI overlay. The sequence lives here (not in the
+         * backends) so it is defined once; backends only implement the
+         * individual step primitives. Callers remain responsible for the
+         * per-frame setup that precedes BeginRender (BeginFrame,
+         * view/projection matrices, lights and skinning).
+         *
+         * The debug-geometry step is gated by a bool flag toggled by
+         * SetDebugRendering: when disabled the step is skipped entirely; when
+         * enabled SubmitDebugGeometry is invoked. The step is placed after the
+         * shading submit and before the overlay so debug wireframes share the
+         * scene depth buffer and stay underneath the GUI.
          * @param aWindowId Platform dependent window handle.
          * @param aScene The scene to render.
          * @param aGuiOverlay Optional GUI overlay to composite on top of the frame.
          */
-        virtual void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr ) = 0;
+        DLL void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr );
+        /** Enables or disables the debug-geometry render step for RenderScene.
+         * Debug geometry is only drawn by backends that override
+         * SubmitDebugGeometry.
+         * @param aEnabled True to draw debug geometry, false for the production path.
+         */
+        DLL void SetDebugRendering ( bool aEnabled );
+        /** @return True when the debug-geometry render step is currently enabled. */
+        DLL bool GetDebugRendering() const;
         ///@}
+    protected:
+        /** Submits the scene's render queue for one pass, issuing one draw per
+         * batch (instanced when a batch holds more than one item). Backends
+         * resolve the target window once and walk Scene::ForEachRenderBatch.
+         * @param aWindowId Platform dependent window handle.
+         * @param aScene Scene whose previously-built render queue to submit.
+         * @param aRenderPass Pass to submit (DepthPrePass or Shading).
+         */
+        virtual void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) = 0;
+        /** @return True when @p aWindowId names a surface known to this renderer. */
+        virtual bool IsValidWindow ( void* aWindowId ) const = 0;
+        /** Draws debug geometry (AABB wireframes, octree grid, etc.) on top of
+         * the shaded scene, sharing its depth buffer. The base implementation
+         * draws nothing; backends that own debug assets override it. Only
+         * invoked when debug rendering is enabled.
+         * @param aWindowId Platform dependent window handle.
+         * @param aScene Scene whose debug geometry to draw.
+         */
+        virtual void SubmitDebugGeometry ( void* /*aWindowId*/, const Scene& /*aScene*/ )
+        {
+            // Base renderer owns no debug assets; backends override to draw.
+        }
+    private:
+        /** When true, RenderScene runs the debug-geometry step after shading.
+         * Toggled by SetDebugRendering. */
+        bool mDebugRendering{false};
     };
     /**@name Factory Functions */
     /*@{*/

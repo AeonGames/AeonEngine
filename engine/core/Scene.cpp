@@ -329,6 +329,24 @@ namespace AeonGames
         } );
     }
 
+    void Scene::ForEachOctreeCell ( const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const
+    {
+        if ( mSpatialIndexDirty )
+        {
+            BuildSpatialIndex();
+        }
+        mSpatialIndex.ForEachCell ( aCallback );
+    }
+
+    void Scene::ForEachOctreeCell ( const Frustum& aFrustum, const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const
+    {
+        if ( mSpatialIndexDirty )
+        {
+            BuildSpatialIndex();
+        }
+        mSpatialIndex.ForEachCell ( aFrustum, aCallback );
+    }
+
     void Scene::BuildRenderQueue ( const Frustum& aFrustum ) const
     {
         // Per-node frustum culling is inherited from CullVisible; each visible

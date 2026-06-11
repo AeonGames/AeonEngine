@@ -287,6 +287,20 @@ namespace AeonGames
          *  @param aBox World-space box to test node bounds against.
          *  @param aCallback Invoked once per overlapping node. */
         DLL void QueryAABB ( const AABB& aBox, const std::function<void ( const Node& ) >& aCallback ) const;
+        /** @brief Invoke a callback for every allocated octree cell, passing its
+         *  world-space bounds and subdivision depth (root = 0).
+         *
+         *  Intended for debug visualization of the scene's spatial subdivision
+         *  (drawing the octree grid). Shares the lazily-built octree with
+         *  CullVisible/QueryAABB; visits nothing when the index is empty. When a
+         *  frustum is supplied, whole subtrees outside it are skipped so only
+         *  on-screen cells are visited.
+         *  @param aCallback Invoked once per cell with its bounds and depth. */
+        DLL void ForEachOctreeCell ( const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const;
+        /** @brief Frustum-filtered overload of ForEachOctreeCell.
+         *  @param aFrustum Only cells intersecting this frustum are visited.
+         *  @param aCallback Invoked once per intersecting cell with its bounds and depth. */
+        DLL void ForEachOctreeCell ( const Frustum& aFrustum, const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const;
         /** @brief Mark the spatial index stale so it is rebuilt on the next
          *  CullVisible or QueryAABB call. Called automatically when nodes are
          *  added, removed, or moved; expose publicly so external mutations can

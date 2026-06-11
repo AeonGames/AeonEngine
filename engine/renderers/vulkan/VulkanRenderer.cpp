@@ -1021,8 +1021,14 @@ namespace AeonGames
         }
         it->second.EndRender();
     }
-    void VulkanRenderer::SubmitRenderQueue ( VulkanWindow& aWindow, const Scene& aScene, RenderPass aRenderPass )
+    void VulkanRenderer::SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass )
     {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        VulkanWindow& aWindow = it->second;
         aScene.ForEachRenderBatch ( [this, &aWindow, aRenderPass] ( std::span<const RenderItem> aBatch )
         {
             const RenderItem& head = aBatch.front();
@@ -1061,33 +1067,9 @@ namespace AeonGames
                 aRenderPass );
         } );
     }
-    void VulkanRenderer::RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay )
+    bool VulkanRenderer::IsValidWindow ( void* aWindowId ) const
     {
-        auto it = mWindowStore.find ( aWindowId );
-        if ( it == mWindowStore.end() )
-        {
-            return;
-        }
-        VulkanWindow& window = it->second;
-        const Pipeline* lighting = aScene.GetLightingPipeline();
-        window.BeginRender ( lighting );
-        // Collect every visible draw once; the queue feeds both the depth
-        // pre-pass and the shading pass, merging sorted runs into instanced
-        // draws on submit.
-        aScene.BuildRenderQueue ( window.GetFrustum() );
-        if ( lighting )
-        {
-            // Depth pre-pass: flag clusters containing visible geometry with the
-            // renderer's marking pipeline before light culling.
-            SubmitRenderQueue ( window, aScene, RenderPass::DepthPrePass );
-            window.EndDepthPrePass ( lighting );
-        }
-        SubmitRenderQueue ( window, aScene, RenderPass::Shading );
-        if ( aGuiOverlay )
-        {
-            RenderOverlay ( aWindowId, *aGuiOverlay );
-        }
-        window.EndRender();
+        return mWindowStore.find ( aWindowId ) != mWindowStore.end();
     }
     void VulkanRenderer::Render ( void* aWindowId,
                                   const Matrix4x4& aModelMatrix,

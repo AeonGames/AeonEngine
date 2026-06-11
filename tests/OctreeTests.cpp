@@ -262,4 +262,80 @@ namespace AeonGames
         } );
         EXPECT_EQ ( count, 0u );
     }
+
+    TEST ( OctreeTest, ForEachCellVisitsEveryAllocatedCell )
+    {
+        // A tiny corner node subdivides to maxDepth, creating one cell per level
+        // (root + 3 descendants). ForEachCell must visit all of them, and the
+        // visited count must match GetCellCount.
+        Octree octree { AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        Node node = MakeNode ( Vector3 { 7.0f, 7.0f, 7.0f }, Vector3 { 0.1f, 0.1f, 0.1f } );
+        octree.AddNode ( &node );
+
+        size_t count = 0;
+        uint32_t max_depth = 0;
+        bool root_seen = false;
+        octree.ForEachCell ( [&] ( const AABB & bounds, uint32_t depth )
+        {
+            ++count;
+            max_depth = std::max ( max_depth, depth );
+            if ( depth == 0 )
+            {
+                root_seen = true;
+                // The root cell reports the octree's root bounds.
+                EXPECT_EQ ( bounds.GetCenter() [0], octree.GetRootBounds().GetCenter() [0] );
+                EXPECT_EQ ( bounds.GetRadii() [0], octree.GetRootBounds().GetRadii() [0] );
+            }
+        } );
+
+        EXPECT_EQ ( count, octree.GetCellCount() );
+        EXPECT_EQ ( count, 4u );
+        EXPECT_EQ ( max_depth, 3u );
+        EXPECT_TRUE ( root_seen );
+    }
+
+    TEST ( OctreeTest, ForEachCellEmptyOctreeVisitsNothing )
+    {
+        Octree octree { AABB { Vector3 {}, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        size_t count = 0;
+        octree.ForEachCell ( [&count] ( const AABB&, uint32_t )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, 0u );
+    }
+
+    TEST ( OctreeTest, ForEachCellFrustumSkipsCellsBehindCamera )
+    {
+        // Root sits behind the camera (-Y), entirely outside the frustum, so the
+        // frustum-filtered traversal visits no cell even though cells exist.
+        Octree octree { AABB { Vector3 { 0.0f, -50.0f, 0.0f }, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        Node a = MakeNode ( Vector3 { 7.0f, -47.0f, 7.0f }, Vector3 { 0.1f, 0.1f, 0.1f } );
+        octree.AddNode ( &a );
+        ASSERT_GT ( octree.GetCellCount(), 0u );
+
+        size_t count = 0;
+        octree.ForEachCell ( MakeFrustum(), [&count] ( const AABB&, uint32_t )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, 0u );
+    }
+
+    TEST ( OctreeTest, ForEachCellFrustumVisitsCellsInView )
+    {
+        // Root in front of the camera (+Y): every cell intersects the frustum so
+        // the filtered traversal matches the unfiltered cell count.
+        Octree octree { AABB { Vector3 { 0.0f, 50.0f, 0.0f }, Vector3 { 8.0f, 8.0f, 8.0f } }, 3 };
+        Node a = MakeNode ( Vector3 { 7.0f, 57.0f, 7.0f }, Vector3 { 0.1f, 0.1f, 0.1f } );
+        octree.AddNode ( &a );
+
+        size_t count = 0;
+        octree.ForEachCell ( MakeFrustum(), [&count] ( const AABB&, uint32_t )
+        {
+            ++count;
+        } );
+        EXPECT_EQ ( count, octree.GetCellCount() );
+        EXPECT_GT ( count, 0u );
+    }
 }

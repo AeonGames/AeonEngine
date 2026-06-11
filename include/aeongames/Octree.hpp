@@ -89,6 +89,21 @@ namespace AeonGames
          *  @param aBox The query box to test cell bounds against.
          *  @param aCallback Invoked once per node found inside an intersecting cell. */
         DLL void QueryAABB ( const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const;
+        /** @brief Visit every allocated cell, passing its world-space bounds and depth.
+         *
+         * Intended for debug visualization of the spatial subdivision (drawing the
+         * octree grid). Cells are visited in depth-first order from the root; the
+         * root cell has depth 0. Cell bounds are derived on the fly from the root
+         * bounds and location code.
+         *  @param aCallback Invoked once per allocated cell with its bounds and depth. */
+        DLL void ForEachCell ( const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const;
+        /** @brief Visit every allocated cell whose bounds intersect the frustum.
+         *
+         * Like ForEachCell but skips whole subtrees whose bounds fall entirely
+         * outside @p aFrustum, so only cells potentially on screen are visited.
+         *  @param aFrustum The frustum to test cell bounds against.
+         *  @param aCallback Invoked once per intersecting cell with its bounds and depth. */
+        DLL void ForEachCell ( const Frustum& aFrustum, const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const;
         ///@brief Number of nodes currently stored.
         DLL size_t GetNodeCount() const;
         ///@brief Number of allocated cells (occupied or on the path to an occupied cell).
@@ -103,10 +118,6 @@ namespace AeonGames
             std::vector<const Node*> mObjects{};
             uint8_t mChildExists{0};
         };
-        /// @brief Recursive frustum traversal helper.
-        void QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const;
-        /// @brief Recursive box traversal helper.
-        void QueryAABB ( uint64_t aLocationCode, const AABB& aBounds, const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const;
         AABB mRootBounds{};
         uint32_t mMaxDepth{0};
         size_t mSize{0};

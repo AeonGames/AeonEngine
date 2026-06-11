@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <algorithm>
+#include <array>
 #include "aeongames/Octree.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Frustum.hpp"
@@ -27,6 +28,19 @@ namespace AeonGames
     {
         /// @brief Maximum depth a 64-bit location code can represent (63 spare bits / 3 bits per level).
         constexpr uint32_t kMaxLocationCodeDepth = 21u;
+        /// @brief One frame of the iterative cell-traversal stack.
+        struct CellFrame
+        {
+            uint64_t mLocationCode;
+            AABB mBounds;
+            uint32_t mDepth;
+        };
+        /// @brief Upper bound on the traversal stack depth: a depth-first walk
+        /// that pushes all eight children on each pop holds at most seven pending
+        /// siblings per level plus the eight just pushed, so the frontier never
+        /// exceeds 7 * maxDepth + 8 entries. Sized for the deepest possible tree
+        /// so the stack can live on the call stack with no heap allocation.
+        constexpr size_t kCellStackCapacity = 7u * kMaxLocationCodeDepth + 8u;
     }
 
     Octree::Octree() = default;
@@ -122,52 +136,106 @@ namespace AeonGames
 
     void Octree::QueryFrustum ( const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const
     {
-        QueryFrustum ( 1, mRootBounds, aFrustum, aCallback );
-    }
-
-    void Octree::QueryFrustum ( uint64_t aLocationCode, const AABB& aBounds, const Frustum& aFrustum, const std::function<void ( const Node* ) >& aCallback ) const
-    {
-        auto cell = mCells.find ( aLocationCode );
-        if ( cell == mCells.end() || !aFrustum.Intersects ( aBounds ) )
+        std::array<CellFrame, kCellStackCapacity> stack;
+        size_t top = 0;
+        stack[top++] = CellFrame{ 1, mRootBounds, 0 };
+        while ( top != 0 )
         {
-            return;
-        }
-        for ( const Node * node : cell->second.mObjects )
-        {
-            aCallback ( node );
-        }
-        const uint8_t child_exists = cell->second.mChildExists;
-        for ( uint8_t octant = 0; octant < 8; ++octant )
-        {
-            if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+            const CellFrame frame = stack[--top];
+            auto cell = mCells.find ( frame.mLocationCode );
+            if ( cell == mCells.end() || !aFrustum.Intersects ( frame.mBounds ) )
             {
-                QueryFrustum ( ( aLocationCode << 3 ) | octant, aBounds.GetChildOctant ( octant ), aFrustum, aCallback );
+                continue;
+            }
+            for ( const Node * node : cell->second.mObjects )
+            {
+                aCallback ( node );
+            }
+            const uint8_t child_exists = cell->second.mChildExists;
+            for ( uint8_t octant = 0; octant < 8; ++octant )
+            {
+                if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+                {
+                    stack[top++] = CellFrame{ ( frame.mLocationCode << 3 ) | octant, frame.mBounds.GetChildOctant ( octant ), 0 };
+                }
             }
         }
     }
 
     void Octree::QueryAABB ( const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const
     {
-        QueryAABB ( 1, mRootBounds, aBox, aCallback );
+        std::array<CellFrame, kCellStackCapacity> stack;
+        size_t top = 0;
+        stack[top++] = CellFrame{ 1, mRootBounds, 0 };
+        while ( top != 0 )
+        {
+            const CellFrame frame = stack[--top];
+            auto cell = mCells.find ( frame.mLocationCode );
+            if ( cell == mCells.end() || !frame.mBounds.Overlaps ( aBox ) )
+            {
+                continue;
+            }
+            for ( const Node * node : cell->second.mObjects )
+            {
+                aCallback ( node );
+            }
+            const uint8_t child_exists = cell->second.mChildExists;
+            for ( uint8_t octant = 0; octant < 8; ++octant )
+            {
+                if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+                {
+                    stack[top++] = CellFrame{ ( frame.mLocationCode << 3 ) | octant, frame.mBounds.GetChildOctant ( octant ), 0 };
+                }
+            }
+        }
     }
 
-    void Octree::QueryAABB ( uint64_t aLocationCode, const AABB& aBounds, const AABB& aBox, const std::function<void ( const Node* ) >& aCallback ) const
+    void Octree::ForEachCell ( const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const
     {
-        auto cell = mCells.find ( aLocationCode );
-        if ( cell == mCells.end() || !aBounds.Overlaps ( aBox ) )
+        std::array<CellFrame, kCellStackCapacity> stack;
+        size_t top = 0;
+        stack[top++] = CellFrame{ 1, mRootBounds, 0 };
+        while ( top != 0 )
         {
-            return;
-        }
-        for ( const Node * node : cell->second.mObjects )
-        {
-            aCallback ( node );
-        }
-        const uint8_t child_exists = cell->second.mChildExists;
-        for ( uint8_t octant = 0; octant < 8; ++octant )
-        {
-            if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+            const CellFrame frame = stack[--top];
+            auto cell = mCells.find ( frame.mLocationCode );
+            if ( cell == mCells.end() )
             {
-                QueryAABB ( ( aLocationCode << 3 ) | octant, aBounds.GetChildOctant ( octant ), aBox, aCallback );
+                continue;
+            }
+            aCallback ( frame.mBounds, frame.mDepth );
+            const uint8_t child_exists = cell->second.mChildExists;
+            for ( uint8_t octant = 0; octant < 8; ++octant )
+            {
+                if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+                {
+                    stack[top++] = CellFrame{ ( frame.mLocationCode << 3 ) | octant, frame.mBounds.GetChildOctant ( octant ), frame.mDepth + 1 };
+                }
+            }
+        }
+    }
+
+    void Octree::ForEachCell ( const Frustum& aFrustum, const std::function<void ( const AABB&, uint32_t ) >& aCallback ) const
+    {
+        std::array<CellFrame, kCellStackCapacity> stack;
+        size_t top = 0;
+        stack[top++] = CellFrame{ 1, mRootBounds, 0 };
+        while ( top != 0 )
+        {
+            const CellFrame frame = stack[--top];
+            auto cell = mCells.find ( frame.mLocationCode );
+            if ( cell == mCells.end() || !aFrustum.Intersects ( frame.mBounds ) )
+            {
+                continue;
+            }
+            aCallback ( frame.mBounds, frame.mDepth );
+            const uint8_t child_exists = cell->second.mChildExists;
+            for ( uint8_t octant = 0; octant < 8; ++octant )
+            {
+                if ( child_exists & static_cast<uint8_t> ( 1u << octant ) )
+                {
+                    stack[top++] = CellFrame{ ( frame.mLocationCode << 3 ) | octant, frame.mBounds.GetChildOctant ( octant ), frame.mDepth + 1 };
+                }
             }
         }
     }

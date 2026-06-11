@@ -149,7 +149,6 @@ namespace AeonGames
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
         BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;
         void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;
-        void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr ) final;
 #if defined(_WIN32)
         bool MakeCurrent ( HDC aDeviceContext = nullptr );
 #elif defined(__unix__)
@@ -161,9 +160,11 @@ namespace AeonGames
         void InitializeOverlay();
         /// @brief Release overlay shader program and quad buffer.
         void FinalizeOverlay();
-        /// @brief Submit the scene's render queue for a single pass, issuing
-        ///        instanced draws directly on the already-resolved window.
-        void SubmitRenderQueue ( OpenGLWindow& aWindow, const Scene& aScene, RenderPass aRenderPass );
+        /// @brief Submit the scene's render queue for a single pass, resolving
+        ///        the target window once and issuing instanced draws on it.
+        void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) final;
+        /// @brief True when aWindowId names an attached window.
+        bool IsValidWindow ( void* aWindowId ) const final;
 #if defined(_WIN32)
         HWND mWindowId {};
         HDC mDeviceContext{};

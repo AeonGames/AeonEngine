@@ -919,8 +919,14 @@ void main()
         }
         it->second.EndRender();
     }
-    void OpenGLRenderer::SubmitRenderQueue ( OpenGLWindow& aWindow, const Scene& aScene, RenderPass aRenderPass )
+    void OpenGLRenderer::SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass )
     {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        OpenGLWindow& aWindow = it->second;
         aScene.ForEachRenderBatch ( [this, &aWindow, aRenderPass] ( std::span<const RenderItem> aBatch )
         {
             const RenderItem& head = aBatch.front();
@@ -959,33 +965,9 @@ void main()
                 aRenderPass );
         } );
     }
-    void OpenGLRenderer::RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay )
+    bool OpenGLRenderer::IsValidWindow ( void* aWindowId ) const
     {
-        auto it = mWindowStore.find ( aWindowId );
-        if ( it == mWindowStore.end() )
-        {
-            return;
-        }
-        OpenGLWindow& window = it->second;
-        const Pipeline* lighting = aScene.GetLightingPipeline();
-        window.BeginRender ( lighting );
-        // Collect every visible draw once; the queue feeds both the depth
-        // pre-pass and the shading pass, merging sorted runs into instanced
-        // draws on submit.
-        aScene.BuildRenderQueue ( window.GetFrustum() );
-        if ( lighting )
-        {
-            // Depth pre-pass: flag clusters containing visible geometry with the
-            // renderer's marking pipeline before light culling.
-            SubmitRenderQueue ( window, aScene, RenderPass::DepthPrePass );
-            window.EndDepthPrePass ( lighting );
-        }
-        SubmitRenderQueue ( window, aScene, RenderPass::Shading );
-        if ( aGuiOverlay )
-        {
-            RenderOverlay ( aWindowId, *aGuiOverlay );
-        }
-        window.EndRender();
+        return mWindowStore.find ( aWindowId ) != mWindowStore.end();
     }
     void OpenGLRenderer::Render ( void* aWindowId,
                                   const Matrix4x4& aModelMatrix,

@@ -137,7 +137,6 @@ namespace AeonGames
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;
         BufferAccessor AllocateSingleFrameStorageMemory ( void* aWindowId, size_t aSize ) final;
         void RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay ) final;
-        void RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay = nullptr ) final;
         /// @brief Get the common Vulkan render pass.
         VkRenderPass GetRenderPass() const;
         /// @brief Get the cached VulkanPipeline for a Pipeline resource.
@@ -166,9 +165,12 @@ namespace AeonGames
         void FinalizeOverlay();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
-        /// @brief Submit the scene's render queue for one pass, merging sorted
-        ///        runs of identical-geometry items into instanced draws.
-        void SubmitRenderQueue ( VulkanWindow& aWindow, const Scene& aScene, RenderPass aRenderPass );
+        /// @brief Submit the scene's render queue for one pass, resolving the
+        ///        target window once and merging sorted runs of identical-geometry
+        ///        items into instanced draws.
+        void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) final;
+        /// @brief True when aWindowId names an attached window.
+        bool IsValidWindow ( void* aWindowId ) const final;
 #if defined (VK_USE_PLATFORM_XLIB_KHR)
         Display* mDisplay {XOpenDisplay ( nullptr ) };
 #endif
