@@ -132,6 +132,7 @@ namespace AeonGames
                     const BufferAccessor& aSkinnedVertices ) const final;
         void Barrier ( void* aWindowId ) const final;
         const Frustum& GetFrustum ( void* aWindowId ) const final;
+        const Matrix4x4& GetProjectionMatrix ( void* aWindowId ) const final;
         const BufferAccessor* GetFrameLightGrid ( void* aWindowId ) const final;
         const BufferAccessor* GetFrameClusterActive ( void* aWindowId ) const final;
         BufferAccessor AllocateSingleFrameUniformMemory ( void* aWindowId, size_t aSize ) final;

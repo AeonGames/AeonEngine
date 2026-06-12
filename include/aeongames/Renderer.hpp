@@ -60,6 +60,7 @@ namespace AeonGames
         bool mDrawGrid{true};        /**< Draw the analytic infinite ground grid. */
         bool mDrawNodeAABBs{true};   /**< Draw per-node world-space AABB wireframes. */
         bool mDrawOctree{true};      /**< Draw the scene octree cell wireframes. */
+        bool mDrawCameraFrustums{true}; /**< Draw a wireframe frustum for each camera node. */
         float mGridCellSize{1.0f};       /**< World units between minor grid lines. */
         float mGridMajorInterval{10.0f}; /**< Minor lines between emphasized major lines. */
         float mGridFadeDistance{100.0f}; /**< Distance from the camera at which the grid fully fades. */
@@ -69,6 +70,7 @@ namespace AeonGames
         Vector4 mAxisYColor{0.2f, 0.75f, 0.2f, 1.0f};     /**< Color of the world Y axis line. */
         Vector4 mNodeAABBColor{0.2f, 0.85f, 0.3f, 1.0f};  /**< Per-node AABB wireframe color (green). */
         Vector4 mOctreeColor{0.3f, 0.5f, 0.95f, 1.0f};    /**< Octree cell wireframe color (blue). */
+        Vector4 mCameraFrustumColor{0.95f, 0.8f, 0.2f, 1.0f}; /**< Camera frustum wireframe color (yellow). */
     };
     /** Abstract base class for rendering backends.
      *
@@ -310,6 +312,13 @@ namespace AeonGames
          * @return A const reference to the current view frustum.
          */
         virtual const Frustum& GetFrustum ( void* aWindowId ) const = 0;
+        /** Returns the projection matrix currently uploaded for the given window
+         * surface. Intended for debug visualization (e.g. drawing camera
+         * frustums by inverting it).
+         * @param aWindowId Platform dependent window handle.
+         * @return A const reference to the current projection matrix.
+         */
+        virtual const Matrix4x4& GetProjectionMatrix ( void* aWindowId ) const = 0;
         /** Returns the current frame's per-cluster light grid SSBO for the given
          * window surface. Intended for test/debug introspection of clustering.
          * @param aWindowId Platform dependent window handle.
@@ -432,7 +441,8 @@ namespace AeonGames
         std::unique_ptr<Material> mDebugAABBMaterial{};
         /** Solid-color material for octree cell wireframes. */
         std::unique_ptr<Material> mDebugOctreeMaterial{};
-        /** Analytic infinite ground-grid pipeline. */
+        /** Solid-color material for camera frustum wireframes. */
+        std::unique_ptr<Material> mDebugFrustumMaterial{};        /** Analytic infinite ground-grid pipeline. */
         std::unique_ptr<Pipeline> mDebugGridPipeline{};
         /** Full-screen triangle the grid pipeline unprojects to the ground plane. */
         std::unique_ptr<Mesh> mDebugGridMesh{};

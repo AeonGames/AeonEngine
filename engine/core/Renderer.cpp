@@ -97,6 +97,7 @@ namespace AeonGames
         mDebugWireMesh = std::make_unique<Mesh>();
         mDebugAABBMaterial = std::make_unique<Material>();
         mDebugOctreeMaterial = std::make_unique<Material>();
+        mDebugFrustumMaterial = std::make_unique<Material>();
         mDebugGridPipeline = std::make_unique<Pipeline>();
         mDebugGridMesh = std::make_unique<Mesh>();
         mDebugGridMaterial = std::make_unique<Material>();
@@ -104,6 +105,7 @@ namespace AeonGames
         mDebugWireMesh->LoadFromId ( "meshes/aabb_wire.msh"_crc32 );
         mDebugAABBMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
         mDebugOctreeMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
+        mDebugFrustumMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
         mDebugGridPipeline->LoadFromId ( "shaders/debug_grid.txt"_crc32 );
         mDebugGridMesh->LoadFromId ( "meshes/fullscreen_triangle.msh"_crc32 );
         mDebugGridMaterial->LoadFromId ( "materials/debug_grid.txt"_crc32 );
@@ -127,6 +129,7 @@ namespace AeonGames
             // Each wireframe category gets its own solid color.
             mDebugAABBMaterial->Set ( { "SolidColor", mDebugSettings.mNodeAABBColor } );
             mDebugOctreeMaterial->Set ( { "SolidColor", mDebugSettings.mOctreeColor } );
+            mDebugFrustumMaterial->Set ( { "SolidColor", mDebugSettings.mCameraFrustumColor } );
             mDebugSettingsDirty = false;
         }
         // Infinite ground grid first: a single full-screen triangle the grid
@@ -158,6 +161,26 @@ namespace AeonGames
             {
                 Render ( aWindowId, aBounds.GetTransform(), *mDebugWireMesh, *mDebugPipeline,
                          mDebugOctreeMaterial.get(), Topology::LINE_LIST );
+            } );
+        }
+        // Camera frustums: the NDC cube ([-1, 1] wire cube) maps to a camera's
+        // world-space frustum via nodeGlobalTransform * inverse(projection).
+        // Uses the window's active projection (correct aspect already baked in);
+        // drawn for every node carrying a Camera component, regardless of
+        // visibility, so off-screen cameras still show.
+        if ( mDebugSettings.mDrawCameraFrustums )
+        {
+            Matrix4x4 inverse_projection = GetProjectionMatrix ( aWindowId );
+            inverse_projection.Invert();
+            aScene.LoopTraverseDFSPreOrder ( [this, aWindowId, &inverse_projection] ( const Node & aNode )
+            {
+                if ( aNode.GetComponent ( "Camera"_crc32 ) == nullptr )
+                {
+                    return;
+                }
+                const Matrix4x4 model = Matrix4x4{ aNode.GetGlobalTransform() } * inverse_projection;
+                Render ( aWindowId, model, *mDebugWireMesh, *mDebugPipeline,
+                         mDebugFrustumMaterial.get(), Topology::LINE_LIST );
             } );
         }
     }

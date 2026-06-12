@@ -1058,6 +1058,16 @@ void main()
         }
         return it->second.GetFrustum();
     }
+    const Matrix4x4& OpenGLRenderer::GetProjectionMatrix ( void* aWindowId ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            std::cout << LogLevel::Error << "Unknown Window Id." << std::endl;
+            throw std::runtime_error ( "Unknown Window Id." );
+        }
+        return it->second.GetProjectionMatrix();
+    }
     const BufferAccessor* OpenGLRenderer::GetFrameLightGrid ( void* aWindowId ) const
     {
         auto it = mWindowStore.find ( aWindowId );
