@@ -300,6 +300,12 @@ namespace AeonGames
                             running = false;
                             break;
                         }
+                        // F1 toggles the renderer's debug-geometry overlay.
+                        if ( key == XK_F1 )
+                        {
+                            ToggleDebugRendering();
+                            break;
+                        }
                         if ( mInputSystem )
                         {
                             mInputSystem->OnKeyEvent ( key, true );

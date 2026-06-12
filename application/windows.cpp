@@ -187,6 +187,12 @@ namespace AeonGames
                         PostQuitMessage ( 0 );
                         break;
                     }
+                    // F1 toggles the renderer's debug-geometry overlay.
+                    if ( key == VK_F1 )
+                    {
+                        window->ToggleDebugRendering();
+                        break;
+                    }
                     if ( window->GetInputSystem() )
                     {
                         window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );

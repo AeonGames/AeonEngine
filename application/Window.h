@@ -51,6 +51,14 @@ namespace AeonGames
         {
             return mGuiOverlay.get();
         }
+        /// @brief Toggle the renderer's debug-geometry overlay (grid, AABBs, octree).
+        void ToggleDebugRendering()
+        {
+            if ( mRenderer )
+            {
+                mRenderer->SetDebugRendering ( !mRenderer->GetDebugRendering() );
+            }
+        }
     private:
 #if defined(_WIN32)
         HWND mWindowId {};

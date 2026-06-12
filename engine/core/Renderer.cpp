@@ -17,6 +17,13 @@ limitations under the License.
 #include "aeongames/StringId.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Scene.hpp"
+#include "aeongames/Node.hpp"
+#include "aeongames/Mesh.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/Material.hpp"
+#include "aeongames/AABB.hpp"
+#include "aeongames/Transform.hpp"
+#include "aeongames/CRC.hpp"
 
 namespace AeonGames
 {
@@ -67,6 +74,92 @@ namespace AeonGames
     bool Renderer::GetDebugRendering() const
     {
         return mDebugRendering;
+    }
+
+    void Renderer::SetDebugRenderSettings ( const DebugRenderSettings& aSettings )
+    {
+        mDebugSettings = aSettings;
+        mDebugSettingsDirty = true;
+    }
+
+    const DebugRenderSettings& Renderer::GetDebugRenderSettings() const
+    {
+        return mDebugSettings;
+    }
+
+    void Renderer::EnsureDebugAssets()
+    {
+        if ( mDebugAssetsLoaded )
+        {
+            return;
+        }
+        mDebugPipeline = std::make_unique<Pipeline>();
+        mDebugWireMesh = std::make_unique<Mesh>();
+        mDebugAABBMaterial = std::make_unique<Material>();
+        mDebugOctreeMaterial = std::make_unique<Material>();
+        mDebugGridPipeline = std::make_unique<Pipeline>();
+        mDebugGridMesh = std::make_unique<Mesh>();
+        mDebugGridMaterial = std::make_unique<Material>();
+        mDebugPipeline->LoadFromId ( "shaders/solid_color.txt"_crc32 );
+        mDebugWireMesh->LoadFromId ( "meshes/aabb_wire.msh"_crc32 );
+        mDebugAABBMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
+        mDebugOctreeMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
+        mDebugGridPipeline->LoadFromId ( "shaders/debug_grid.txt"_crc32 );
+        mDebugGridMesh->LoadFromId ( "meshes/fullscreen_triangle.msh"_crc32 );
+        mDebugGridMaterial->LoadFromId ( "materials/debug_grid.txt"_crc32 );
+        mDebugAssetsLoaded = true;
+    }
+
+    void Renderer::SubmitDebugGeometry ( void* aWindowId, const Scene& aScene )
+    {
+        EnsureDebugAssets();
+        if ( mDebugSettingsDirty )
+        {
+            // Push the tunable grid parameters into the grid material once per
+            // change rather than every frame.
+            mDebugGridMaterial->Set ( { "GridColor", mDebugSettings.mGridColor } );
+            mDebugGridMaterial->Set ( { "GridMajorColor", mDebugSettings.mGridMajorColor } );
+            mDebugGridMaterial->Set ( { "AxisXColor", mDebugSettings.mAxisXColor } );
+            mDebugGridMaterial->Set ( { "AxisYColor", mDebugSettings.mAxisYColor } );
+            mDebugGridMaterial->Set ( { "CellSize", mDebugSettings.mGridCellSize } );
+            mDebugGridMaterial->Set ( { "MajorInterval", mDebugSettings.mGridMajorInterval } );
+            mDebugGridMaterial->Set ( { "FadeDistance", mDebugSettings.mGridFadeDistance } );
+            // Each wireframe category gets its own solid color.
+            mDebugAABBMaterial->Set ( { "SolidColor", mDebugSettings.mNodeAABBColor } );
+            mDebugOctreeMaterial->Set ( { "SolidColor", mDebugSettings.mOctreeColor } );
+            mDebugSettingsDirty = false;
+        }
+        // Infinite ground grid first: a single full-screen triangle the grid
+        // shader unprojects to the z = 0 plane. It writes true scene depth, so
+        // the wireframes drawn afterward depth-test against it correctly.
+        if ( mDebugSettings.mDrawGrid )
+        {
+            Render ( aWindowId, Matrix4x4{}, *mDebugGridMesh, *mDebugGridPipeline,
+                     mDebugGridMaterial.get(), Topology::TRIANGLE_LIST );
+        }
+        const Frustum& frustum = GetFrustum ( aWindowId );
+        // Per-node world-space AABB wireframes for everything visible this frame.
+        // The unit (radii 1) wire cube is scaled and translated to each box by
+        // its transform; LINE_LIST topology draws the 12 edges.
+        if ( mDebugSettings.mDrawNodeAABBs )
+        {
+            aScene.CullVisible ( frustum, [this, aWindowId] ( const Node & aNode )
+            {
+                const AABB world = aNode.GetGlobalTransform() * aNode.GetAABB();
+                Render ( aWindowId, world.GetTransform(), *mDebugWireMesh, *mDebugPipeline,
+                         mDebugAABBMaterial.get(), Topology::LINE_LIST );
+            } );
+        }
+        // Scene octree grid: one wire cube per allocated cell whose bounds are on
+        // screen, visualizing the spatial subdivision.
+        if ( mDebugSettings.mDrawOctree )
+        {
+            aScene.ForEachOctreeCell ( frustum, [this, aWindowId] ( const AABB & aBounds, uint32_t /*aDepth*/ )
+            {
+                Render ( aWindowId, aBounds.GetTransform(), *mDebugWireMesh, *mDebugPipeline,
+                         mDebugOctreeMaterial.get(), Topology::LINE_LIST );
+            } );
+        }
     }
 
     /// @brief Factory implementation for Renderer with a window argument.

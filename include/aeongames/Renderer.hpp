@@ -23,6 +23,7 @@ limitations under the License.
 #include <functional>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Vector4.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/RenderItem.hpp"
 #include "aeongames/GpuLight.hpp"
@@ -49,6 +50,25 @@ namespace AeonGames
     {
         uint32_t mBinding;             /**< CRC32 of the GLSL storage block name. */
         const BufferAccessor* mBuffer; /**< Storage allocation to bind. */
+    };
+    /** Tunable parameters for the renderer's debug-geometry step (see
+     *  Renderer::SetDebugRendering). Defaults reproduce a neutral editor-style
+     *  view: a 1-unit ground grid with every tenth line emphasized, colored
+     *  origin axes, and per-node AABB and octree-cell wireframes. */
+    struct DebugRenderSettings
+    {
+        bool mDrawGrid{true};        /**< Draw the analytic infinite ground grid. */
+        bool mDrawNodeAABBs{true};   /**< Draw per-node world-space AABB wireframes. */
+        bool mDrawOctree{true};      /**< Draw the scene octree cell wireframes. */
+        float mGridCellSize{1.0f};       /**< World units between minor grid lines. */
+        float mGridMajorInterval{10.0f}; /**< Minor lines between emphasized major lines. */
+        float mGridFadeDistance{100.0f}; /**< Distance from the camera at which the grid fully fades. */
+        Vector4 mGridColor{0.4f, 0.4f, 0.4f, 1.0f};       /**< Minor grid line color. */
+        Vector4 mGridMajorColor{0.65f, 0.65f, 0.65f, 1.0f}; /**< Major grid line color. */
+        Vector4 mAxisXColor{0.85f, 0.2f, 0.2f, 1.0f};     /**< Color of the world X axis line. */
+        Vector4 mAxisYColor{0.2f, 0.75f, 0.2f, 1.0f};     /**< Color of the world Y axis line. */
+        Vector4 mNodeAABBColor{0.2f, 0.85f, 0.3f, 1.0f};  /**< Per-node AABB wireframe color (green). */
+        Vector4 mOctreeColor{0.3f, 0.5f, 0.95f, 1.0f};    /**< Octree cell wireframe color (blue). */
     };
     /** Abstract base class for rendering backends.
      *
@@ -361,6 +381,13 @@ namespace AeonGames
         DLL void SetDebugRendering ( bool aEnabled );
         /** @return True when the debug-geometry render step is currently enabled. */
         DLL bool GetDebugRendering() const;
+        /** Replaces the debug-geometry parameters (grid spacing/colors, which
+         * features to draw). Takes effect on the next RenderScene.
+         * @param aSettings New debug render settings.
+         */
+        DLL void SetDebugRenderSettings ( const DebugRenderSettings& aSettings );
+        /** @return The current debug render settings. */
+        DLL const DebugRenderSettings& GetDebugRenderSettings() const;
         ///@}
     protected:
         /** Submits the scene's render queue for one pass, issuing one draw per
@@ -373,21 +400,44 @@ namespace AeonGames
         virtual void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) = 0;
         /** @return True when @p aWindowId names a surface known to this renderer. */
         virtual bool IsValidWindow ( void* aWindowId ) const = 0;
-        /** Draws debug geometry (AABB wireframes, octree grid, etc.) on top of
-         * the shaded scene, sharing its depth buffer. The base implementation
-         * draws nothing; backends that own debug assets override it. Only
-         * invoked when debug rendering is enabled.
+    private:
+        /** Draws debug geometry (an analytic infinite ground grid, per-node
+         * world-space AABB wireframes and the scene octree cell wireframes) on
+         * top of the shaded scene, sharing its depth buffer. Implemented in
+         * terms of the public Render API and the Scene spatial queries, so it
+         * is backend-agnostic and lives here rather than in each backend. The
+         * built-in pipelines, meshes and materials are lazily loaded on first
+         * use. Which features draw and how the grid looks are controlled by
+         * SetDebugRenderSettings. Only invoked when debug rendering is enabled.
          * @param aWindowId Platform dependent window handle.
          * @param aScene Scene whose debug geometry to draw.
          */
-        virtual void SubmitDebugGeometry ( void* /*aWindowId*/, const Scene& /*aScene*/ )
-        {
-            // Base renderer owns no debug assets; backends override to draw.
-        }
-    private:
+        void SubmitDebugGeometry ( void* aWindowId, const Scene& aScene );
+        /** Lazily loads the built-in debug assets (idempotent). */
+        void EnsureDebugAssets();
         /** When true, RenderScene runs the debug-geometry step after shading.
          * Toggled by SetDebugRendering. */
         bool mDebugRendering{false};
+        /** True once the built-in debug assets have been loaded. */
+        bool mDebugAssetsLoaded{false};
+        /** True when mDebugSettings changed and must be pushed to the grid material. */
+        bool mDebugSettingsDirty{true};
+        /** Tunable debug-geometry parameters. */
+        DebugRenderSettings mDebugSettings{};
+        /** Solid-color line pipeline for debug wireframes. */
+        std::unique_ptr<Pipeline> mDebugPipeline{};
+        /** Unit (radii 1) wireframe cube; scaled per draw to an AABB. */
+        std::unique_ptr<Mesh> mDebugWireMesh{};
+        /** Solid-color material for per-node AABB wireframes. */
+        std::unique_ptr<Material> mDebugAABBMaterial{};
+        /** Solid-color material for octree cell wireframes. */
+        std::unique_ptr<Material> mDebugOctreeMaterial{};
+        /** Analytic infinite ground-grid pipeline. */
+        std::unique_ptr<Pipeline> mDebugGridPipeline{};
+        /** Full-screen triangle the grid pipeline unprojects to the ground plane. */
+        std::unique_ptr<Mesh> mDebugGridMesh{};
+        /** Grid appearance material (colors, spacing, fade). */
+        std::unique_ptr<Material> mDebugGridMaterial{};
     };
     /**@name Factory Functions */
     /*@{*/

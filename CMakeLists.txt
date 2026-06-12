@@ -394,6 +394,18 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt -o
           ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.cln
   COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.txt"
+  COMMAND
+          $<TARGET_FILE:aeontool> convert -i
+          ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.txt -o
+          ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.msh
+  COMMAND
+          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.txt"
+  COMMAND
+          $<TARGET_FILE:aeontool> convert -i
+          ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.txt -o
+          ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.msh
+  COMMAND
           ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt"
   COMMAND
           $<TARGET_FILE:aeontool> convert -i
@@ -450,6 +462,8 @@ add_custom_target(
   SOURCES ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
           ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt
           ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt
+          ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.txt
+          ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
           ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt

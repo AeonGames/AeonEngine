@@ -1,0 +1,18 @@
+AEONMSH
+Version: 1
+Center {
+}
+Radii {
+}
+Attribute {
+    Semantic: POSITION
+    Size:     3
+    Type:     FLOAT
+}
+VertexCount: 3
+IndexSize: 0
+IndexCount: 0
+VertexBuffer:
+"( -1.0 -1.0 0.0 )"
+"(  3.0 -1.0 0.0 )"
+"( -1.0  3.0 0.0 )"
