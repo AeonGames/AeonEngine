@@ -38,6 +38,12 @@ namespace AeonGames
 
         /// @brief Initialize the buffer with the given size, usage, and optional data.
         void Initialize ( const GLsizei aSize, const GLenum aUsage, const void *aData = nullptr );
+        /// @brief Initialize as a persistent-coherent-mapped streaming buffer of
+        /// the given size. WriteMemory then memcpys straight into the mapping
+        /// instead of issuing glNamedBufferSubData, so per-draw matrix uploads do
+        /// not trigger the implicit buffer orphan/rename that corrupts earlier
+        /// draws' in-flight reads on the AMD OpenGL driver.
+        void InitializePersistent ( const GLsizei aSize );
         /// @brief Release the buffer resources.
         void Finalize();
         /// @name Virtual functions
@@ -58,6 +64,9 @@ namespace AeonGames
         GLsizei mSize{};
         GLenum mUsage{};
         GLuint mBuffer{};
+        // Non-null when the buffer was created with InitializePersistent: points
+        // at the persistently mapped storage WriteMemory copies into.
+        void* mPersistentData{nullptr};
     };
 }
 #endif

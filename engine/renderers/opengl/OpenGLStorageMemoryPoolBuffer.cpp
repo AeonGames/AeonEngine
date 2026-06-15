@@ -30,22 +30,22 @@ namespace AeonGames
     }
 
     OpenGLStorageMemoryPoolBuffer::OpenGLStorageMemoryPoolBuffer ( const OpenGLRenderer&  aOpenGLRenderer, GLsizei aStackSize ) :
-        mOpenGLRenderer { aOpenGLRenderer },
-        mStorageBuffer { ( ( aStackSize - 1 ) | ( GetStorageBufferOffsetAlignment() - 1 ) ) + 1, GL_DYNAMIC_DRAW }
+        mOpenGLRenderer { aOpenGLRenderer }
     {
+        Initialize ( aStackSize );
     }
 
     OpenGLStorageMemoryPoolBuffer::OpenGLStorageMemoryPoolBuffer ( const OpenGLRenderer& aOpenGLRenderer ) :
-        mOpenGLRenderer { aOpenGLRenderer },
-        mStorageBuffer {}
+        mOpenGLRenderer { aOpenGLRenderer }
     {
     }
 
     OpenGLStorageMemoryPoolBuffer::OpenGLStorageMemoryPoolBuffer ( OpenGLStorageMemoryPoolBuffer&& aOpenGLStorageMemoryPoolBuffer ) :
         mOpenGLRenderer { aOpenGLStorageMemoryPoolBuffer.mOpenGLRenderer },
-        mStorageBuffer { std::move ( aOpenGLStorageMemoryPoolBuffer.mStorageBuffer ) }
+        mStorageBuffers { std::move ( aOpenGLStorageMemoryPoolBuffer.mStorageBuffers ) }
     {
         std::swap ( mOffset, aOpenGLStorageMemoryPoolBuffer.mOffset );
+        std::swap ( mCurrent, aOpenGLStorageMemoryPoolBuffer.mCurrent );
     }
 
     OpenGLStorageMemoryPoolBuffer::~OpenGLStorageMemoryPoolBuffer()
@@ -57,7 +57,7 @@ namespace AeonGames
     {
         size_t offset = mOffset;
         mOffset += ( ( aSize - 1 ) | ( GetStorageBufferOffsetAlignment() - 1 ) ) + 1;
-        if ( mOffset > mStorageBuffer.GetSize() )
+        if ( mOffset > mStorageBuffers[mCurrent].GetSize() )
         {
             mOffset = offset;
             std::cout << LogLevel::Error << "Storage Memory Pool Buffer cannot fulfill allocation request." << std::endl;
@@ -68,19 +68,30 @@ namespace AeonGames
 
     void OpenGLStorageMemoryPoolBuffer::Reset()
     {
+        // Advance to the next physical buffer so the frame about to be recorded
+        // writes into storage no longer read by the previous frames' in-flight
+        // draws.
+        mCurrent = ( mCurrent + 1 ) % kFramesInFlight;
         mOffset = 0;
     }
     const Buffer& OpenGLStorageMemoryPoolBuffer::GetBuffer() const
     {
-        return mStorageBuffer;
+        return mStorageBuffers[mCurrent];
     }
 
     void OpenGLStorageMemoryPoolBuffer::Initialize ( GLsizei aStackSize )
     {
-        mStorageBuffer.Initialize ( ( ( aStackSize - 1 ) | ( GetStorageBufferOffsetAlignment() - 1 ) ) + 1, GL_DYNAMIC_DRAW );
+        const GLsizei aligned = ( ( aStackSize - 1 ) | ( GetStorageBufferOffsetAlignment() - 1 ) ) + 1;
+        for ( OpenGLBuffer& buffer : mStorageBuffers )
+        {
+            buffer.InitializePersistent ( aligned );
+        }
     }
     void OpenGLStorageMemoryPoolBuffer::Finalize()
     {
-        mStorageBuffer.Finalize();
+        for ( OpenGLBuffer& buffer : mStorageBuffers )
+        {
+            buffer.Finalize();
+        }
     }
 }

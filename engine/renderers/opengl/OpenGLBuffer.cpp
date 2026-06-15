@@ -47,6 +47,7 @@ namespace AeonGames
         std::swap ( mBuffer, aBuffer.mBuffer );
         std::swap ( mSize, aBuffer.mSize );
         std::swap ( mUsage, aBuffer.mUsage );
+        std::swap ( mPersistentData, aBuffer.mPersistentData );
     }
 
     GLuint OpenGLBuffer::GetBufferId() const
@@ -63,7 +64,20 @@ namespace AeonGames
 
     void OpenGLBuffer::WriteMemory ( const size_t aOffset, const size_t aSize, const void * aData ) const
     {
-        if ( ( glIsBuffer ( mBuffer ) ) && ( aData ) )
+        if ( !aData )
+        {
+            return;
+        }
+        // Persistent-coherent buffers are written by copying straight into the
+        // mapping: no glNamedBufferSubData means no implicit orphan/rename, so
+        // earlier draws still reading other regions of this buffer this frame are
+        // not disturbed (the AMD OpenGL write-after-read corruption).
+        if ( mPersistentData != nullptr )
+        {
+            std::memcpy ( static_cast<uint8_t*> ( mPersistentData ) + aOffset, aData, aSize );
+            return;
+        }
+        if ( glIsBuffer ( mBuffer ) )
         {
             glNamedBufferSubData ( mBuffer,
                                    aOffset,
@@ -82,6 +96,13 @@ namespace AeonGames
 
     void* OpenGLBuffer::Map ( size_t aOffset, size_t aSize ) const
     {
+        // Persistent buffers are already mapped for the buffer's lifetime; hand
+        // back a pointer into the existing mapping instead of mapping again
+        // (re-mapping a persistently mapped buffer is invalid).
+        if ( mPersistentData != nullptr )
+        {
+            return static_cast<uint8_t*> ( mPersistentData ) + aOffset;
+        }
         return MapRange ( aOffset, aSize, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT );
     }
     void * OpenGLBuffer::MapRange ( const GLintptr aOffset, const GLsizeiptr aSize, const GLbitfield aAccess ) const
@@ -93,6 +114,11 @@ namespace AeonGames
 
     void OpenGLBuffer::Unmap() const
     {
+        // No-op for persistent mappings: they stay mapped for the buffer's life.
+        if ( mPersistentData != nullptr )
+        {
+            return;
+        }
         glUnmapNamedBuffer ( mBuffer );
         OPENGL_CHECK_ERROR_THROW;
     }
@@ -119,10 +145,32 @@ namespace AeonGames
     {
         if ( mBuffer != 0 && glIsBuffer ( mBuffer ) )
         {
+            if ( mPersistentData != nullptr )
+            {
+                glUnmapNamedBuffer ( mBuffer );
+                mPersistentData = nullptr;
+            }
             glDeleteBuffers ( 1, &mBuffer );
             mBuffer = 0;
             mSize = 0;
             mUsage = 0;
         }
+    }
+
+    void OpenGLBuffer::InitializePersistent ( const GLsizei aSize )
+    {
+        mSize = aSize;
+        mUsage = GL_DYNAMIC_DRAW;
+        if ( !mSize )
+        {
+            return;
+        }
+        constexpr GLbitfield storage_flags =
+            GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+        glCreateBuffers ( 1, &mBuffer );
+        glNamedBufferStorage ( mBuffer, mSize, nullptr, storage_flags );
+        OPENGL_CHECK_ERROR_THROW;
+        mPersistentData = glMapNamedBufferRange ( mBuffer, 0, mSize, storage_flags );
+        OPENGL_CHECK_ERROR_THROW;
     }
 }
