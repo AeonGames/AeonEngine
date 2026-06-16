@@ -52,7 +52,7 @@ namespace AeonGames
             // here. Reusing the camera frustum would make casters outside the
             // view pop in and out of the shadow map as the camera moves.
             Matrix4x4 light_view_projection;
-            if ( aScene.GetDirectionalShadowMatrix ( light_view_projection ) )
+            if ( aScene.GetDirectionalShadowMatrix ( light_view_projection, GetProjectionMatrix ( aWindowId ) ) )
             {
                 aScene.BuildRenderQueue ( Frustum ( light_view_projection ) );
                 BeginShadowPass ( aWindowId, light_view_projection );

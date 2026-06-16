@@ -28,6 +28,14 @@ namespace AeonGames
      *  trivial to bump later. */
     constexpr uint32_t SHADOW_MAP_RESOLUTION = 2048;
 
+    /** @brief Depth of the directional shadow map's coverage, as a multiple of
+     *  the scene's bounding-sphere radius. The shadow pass fits the map to the
+     *  camera's view frustum truncated to this distance (clamped to the camera
+     *  far plane) instead of the whole scene, trading shadows on very distant
+     *  geometry for frame time and shadow sharpness on what the camera actually
+     *  sees. Lower values fit tighter: faster, sharper, shorter shadow range. */
+    constexpr float SHADOW_COVERAGE_FRACTION = 1.0f;
+
     /** @brief CPU-side mirror of the @c ShadowParams uniform block.
      *
      *  Consumed by the shadow-depth pipeline (to transform geometry into the

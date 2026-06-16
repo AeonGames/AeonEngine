@@ -222,15 +222,22 @@ namespace AeonGames
         /** @brief Compute the directional shadow caster's world-to-light-clip
          *  matrix for the current frame. Selects the first directional light
          *  submitted this frame and fits an orthographic light view-projection
-         *  around the scene's world bounds so the whole scene falls inside the
-         *  shadow map. Writes the matrix and returns true when a caster exists;
-         *  returns false (leaving @p aLightViewProjection untouched) when no
-         *  directional light was submitted or the scene has no geometry, so the
-         *  caller can skip the shadow pass. Must be called after
-         *  BuildRenderQueue so the spatial index is current.
+         *  around the camera's view frustum (truncated to the shadow coverage
+         *  distance) so the fixed-resolution shadow map is spent on what the
+         *  camera can see; the depth range still spans the whole scene so
+         *  casters between the sun and the visible region are included. Writes
+         *  the matrix and returns true when a caster exists; returns false
+         *  (leaving @p aLightViewProjection untouched) when no directional light
+         *  was submitted or the scene has no geometry, so the caller can skip
+         *  the shadow pass. Must be called after BuildRenderQueue so the spatial
+         *  index is current.
          *  @param[out] aLightViewProjection Receives Ortho * LightView in engine
-         *  convention (no per-backend depth flip applied). */
-        DLL bool GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection ) const;
+         *  convention (no per-backend depth flip applied).
+         *  @param aCameraProjection The camera projection matrix uploaded this
+         *  frame; only its aspect ratio is read (invariant to the backend depth
+         *  flip), so either backend's matrix works. */
+        DLL bool GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection,
+                                              const Matrix4x4& aCameraProjection ) const;
         /**@}*/
 
         /** @name Visibility culling */

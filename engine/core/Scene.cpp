@@ -26,6 +26,10 @@ limitations under the License.
 #include "aeongames/Transform.hpp"
 #include "aeongames/Quaternion.hpp"
 #include "aeongames/Vector3.hpp"
+#include "aeongames/GpuShadowParams.hpp"
+#include <array>
+#include <algorithm>
+#include <limits>
 #include <cmath>
 #include "aeongames/ProtoBufHelpers.hpp"
 #include "aeongames/ProtoBufUtils.hpp"
@@ -156,7 +160,8 @@ namespace AeonGames
         return mLightingPipeline.Get<Pipeline>();
     }
 
-    bool Scene::GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection ) const
+    bool Scene::GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection,
+            const Matrix4x4& aCameraProjection ) const
     {
         // Pick the first directional light submitted this frame as the caster.
         const GpuLight* caster = nullptr;
@@ -173,7 +178,9 @@ namespace AeonGames
             return false;
         }
         // The scene's world-space extent comes from the octree root cell, which
-        // BuildRenderQueue has already refreshed for this frame.
+        // BuildRenderQueue has already refreshed for this frame. It bounds the
+        // shadow depth range so casters behind the camera (between the sun and
+        // the visible region) still write into the map.
         if ( mSpatialIndexDirty )
         {
             BuildSpatialIndex();
@@ -183,12 +190,10 @@ namespace AeonGames
             return false;
         }
         const AABB& bounds = mSpatialIndex.GetRootBounds();
-        const Vector3& center = bounds.GetCenter();
-        const Vector3& radii = bounds.GetRadii();
-        // Fit the orthographic frustum to the bounding sphere of the root cell so
-        // the whole scene stays inside the shadow map for any light orientation.
-        const float radius = radii.GetLength();
-        if ( radius <= 0.0f )
+        const Vector3 scene_center = bounds.GetCenter();
+        const Vector3 scene_radii = bounds.GetRadii();
+        const float scene_radius = scene_radii.GetLength();
+        if ( scene_radius <= 0.0f )
         {
             return false;
         }
@@ -205,6 +210,73 @@ namespace AeonGames
             return false;
         }
         light_dir = Normalize ( light_dir );
+
+        // Fit the shadow map to the camera's view frustum, truncated to the
+        // shadow coverage distance, instead of the whole scene: only geometry
+        // the camera can see needs shadows, so a tighter fit both culls casters
+        // from the shadow pass (recovering frame time) and spends the fixed
+        // shadow resolution on the visible region (sharper shadows).
+        //
+        // Reconstruct the sub-frustum's eight world-space corners by inverting a
+        // camera view-projection rebuilt in engine convention. The aspect ratio
+        // is the only camera parameter the scene does not already hold; recover
+        // it from the uploaded projection (|m9/m0|, invariant to the backend
+        // depth flip) so this stays backend-agnostic.
+        if ( std::fabs ( aCameraProjection[0] ) < 1e-6f )
+        {
+            return false;
+        }
+        const float aspect = std::fabs ( aCameraProjection[9] / aCameraProjection[0] );
+        if ( aspect <= 0.0f )
+        {
+            return false;
+        }
+        const float shadow_far = mNear +
+                                 std::min ( mFar - mNear, scene_radius * SHADOW_COVERAGE_FRACTION );
+        Matrix4x4 camera_projection;
+        camera_projection.Perspective ( mFieldOfView, aspect, mNear, shadow_far );
+        Matrix4x4 camera_view_projection = camera_projection * mViewMatrix;
+        const Matrix4x4 inverse_view_projection = camera_view_projection.GetInvertedMatrix4x4();
+        // Engine NDC cube is z in [-1,1] (Matrix4x4::Perspective is GL-style);
+        // transform each cube corner as a homogeneous point and divide by w.
+        std::array<Vector3, 8> corners{};
+        size_t corner_index = 0;
+        for ( float z = -1.0f; z <= 1.0f; z += 2.0f )
+        {
+            for ( float y = -1.0f; y <= 1.0f; y += 2.0f )
+            {
+                for ( float x = -1.0f; x <= 1.0f; x += 2.0f )
+                {
+                    const float cx = x * inverse_view_projection[0] + y * inverse_view_projection[4] + z * inverse_view_projection[8]  + inverse_view_projection[12];
+                    const float cy = x * inverse_view_projection[1] + y * inverse_view_projection[5] + z * inverse_view_projection[9]  + inverse_view_projection[13];
+                    const float cz = x * inverse_view_projection[2] + y * inverse_view_projection[6] + z * inverse_view_projection[10] + inverse_view_projection[14];
+                    const float cw = x * inverse_view_projection[3] + y * inverse_view_projection[7] + z * inverse_view_projection[11] + inverse_view_projection[15];
+                    const float inv_w = ( std::fabs ( cw ) > 1e-6f ) ? ( 1.0f / cw ) : 1.0f;
+                    corners[corner_index++] = Vector3{ cx * inv_w, cy * inv_w, cz * inv_w };
+                }
+            }
+        }
+        // Bounding sphere of the sub-frustum (centroid + farthest corner): its
+        // size is rotation-invariant, so the shadow extent does not pulse as the
+        // camera turns. Clamp the radius to the scene so a camera looking out
+        // past the world never grows the fit beyond the whole scene.
+        Vector3 frustum_center{ 0.0f, 0.0f, 0.0f };
+        for ( const Vector3& c : corners )
+        {
+            frustum_center += c;
+        }
+        frustum_center *= ( 1.0f / 8.0f );
+        float radius = 0.0f;
+        for ( const Vector3& c : corners )
+        {
+            radius = std::max ( radius, ( c - frustum_center ).GetLength() );
+        }
+        radius = std::min ( radius, scene_radius );
+        if ( radius <= 0.0f )
+        {
+            return false;
+        }
+
         // Orient a virtual camera so its forward axis (engine +Y) looks along the
         // light direction. The shortest-arc rotation maps +Y onto light_dir,
         // with the antiparallel case handled explicitly.
@@ -222,20 +294,52 @@ namespace AeonGames
             const float angle = std::acos ( d ) * ( 180.0f / 3.14159265358979323846f );
             orientation = Quaternion::GetFromAxisAngle ( angle, axis.GetX(), axis.GetY(), axis.GetZ() );
         }
-        // Place the eye one diameter behind the scene center so the whole sphere
-        // sits between the near (radius) and far (3*radius) planes.
-        const Vector3 eye
-        {
-            center.GetX() - light_dir.GetX() * ( 2.0f * radius ),
-                  center.GetY() - light_dir.GetY() * ( 2.0f * radius ),
-                  center.GetZ() - light_dir.GetZ() * ( 2.0f * radius )
-        };
         Transform light_transform;
         light_transform.SetRotation ( orientation );
-        light_transform.SetTranslation ( eye );
-        const Matrix4x4 light_view = light_transform.GetInvertedMatrix();
+        light_transform.SetTranslation ( frustum_center );
+        Matrix4x4 light_view = light_transform.GetInvertedMatrix();
+        // Stabilize the fit against sub-texel crawl: snap the sphere centre to
+        // shadow-texel increments along the light's two lateral axes. Those axes
+        // are the columns of the light rotation that map a world vector onto
+        // light-space X and Z, read directly out of the world->light matrix.
+        const float texel = ( 2.0f * radius ) / static_cast<float> ( SHADOW_MAP_RESOLUTION );
+        const Vector3 light_right { light_view[0], light_view[4], light_view[8] };
+        const Vector3 light_up    { light_view[2], light_view[6], light_view[10] };
+        const float proj_right = Dot ( frustum_center, light_right );
+        const float proj_up    = Dot ( frustum_center, light_up );
+        const float snapped_right = std::round ( proj_right / texel ) * texel;
+        const float snapped_up    = std::round ( proj_up / texel ) * texel;
+        const Vector3 snapped_center = frustum_center +
+                                       light_right * ( snapped_right - proj_right ) +
+                                       light_up * ( snapped_up - proj_up );
+        light_transform.SetTranslation ( snapped_center );
+        light_view = light_transform.GetInvertedMatrix();
+
+        // Depth range (light-space forward axis = engine +Y) spanning the whole
+        // scene so every potential caster between the sun and the visible region
+        // is rendered. Transform the scene AABB's eight corners into light space
+        // and take the forward extent, padded slightly so casters exactly on the
+        // boundary are not clipped.
+        float depth_min = std::numeric_limits<float>::max();
+        float depth_max = std::numeric_limits<float>::lowest();
+        for ( int i = 0; i < 8; ++i )
+        {
+            const Vector3 corner
+            {
+                scene_center.GetX() + ( ( i & 1 ) ? scene_radii.GetX() : -scene_radii.GetX() ),
+                            scene_center.GetY() + ( ( i & 2 ) ? scene_radii.GetY() : -scene_radii.GetY() ),
+                            scene_center.GetZ() + ( ( i & 4 ) ? scene_radii.GetZ() : -scene_radii.GetZ() )
+            };
+            const Vector3 light_space = light_view * corner;
+            depth_min = std::min ( depth_min, light_space.GetY() );
+            depth_max = std::max ( depth_max, light_space.GetY() );
+        }
+        const float depth_pad = ( depth_max - depth_min ) * 0.01f + 1.0f;
+        depth_min -= depth_pad;
+        depth_max += depth_pad;
+
         Matrix4x4 light_projection;
-        light_projection.Ortho ( -radius, radius, -radius, radius, radius, 3.0f * radius );
+        light_projection.Ortho ( -radius, radius, -radius, radius, depth_min, depth_max );
         // Engine convention (column-major, clip = Proj * View * Model * v). The
         // per-backend depth flip is applied inside the shadow shaders.
         aLightViewProjection = light_projection * light_view;
