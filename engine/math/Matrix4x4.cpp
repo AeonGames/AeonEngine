@@ -96,8 +96,11 @@ namespace AeonGames
 
     void Matrix4x4::Ortho ( float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar )
     {
-        ///\note This function is yet to be tested for correctness.
-        // glOrtho, +Z up, +Y forward
+        // Orthographic projection in the engine convention: +X right, +Y
+        // forward (depth), +Z up, with clip.w = 1. Depth is the POSITIVE +Y
+        // axis (view.y in [near, far]), like the perspective Frustum above, so
+        // the depth scale is +2/(far-near) (the textbook glOrtho -2/(far-near)
+        // is for the -Z-forward convention and would map depth outside [-1,1]).
 
         // X
         mMatrix[0] = ( 2.0f / ( aRight - aLeft ) );
@@ -108,7 +111,7 @@ namespace AeonGames
         // Y
         mMatrix[4] = 0.0f;
         mMatrix[5] = 0.0f;
-        mMatrix[6] = - ( 2.0f / ( aFar - aNear ) );
+        mMatrix[6] = ( 2.0f / ( aFar - aNear ) );
         mMatrix[7] = 0.0f;
 
         // Z
