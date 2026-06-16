@@ -186,6 +186,22 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
+        // Seed the viewport and scissor from the surface extent so the very
+        // first frame has a valid (non-zero) render area even before the
+        // platform delivers its initial resize. On Win32 WM_SIZE arrives before
+        // the first paint, but on X11 the render loop can draw a frame before
+        // the asynchronous Expose event calls ResizeViewport; without this the
+        // first frame's mVkScissor is 0x0 (VUID-VkRenderPassBeginInfo-None-08996).
+        // ResizeViewport overwrites these with the real values when it runs.
+        mVkViewport.x = 0.0f;
+        mVkViewport.y = 0.0f;
+        mVkViewport.width = static_cast<float> ( mVkSurfaceCapabilitiesKHR.currentExtent.width );
+        mVkViewport.height = static_cast<float> ( mVkSurfaceCapabilitiesKHR.currentExtent.height );
+        mVkViewport.minDepth = 0.0f;
+        mVkViewport.maxDepth = 1.0f;
+        mVkScissor.offset = { 0, 0 };
+        mVkScissor.extent = mVkSurfaceCapabilitiesKHR.currentExtent;
+
         if ( mSwapchainImageCount < mVkSurfaceCapabilitiesKHR.minImageCount )
         {
             mSwapchainImageCount = mVkSurfaceCapabilitiesKHR.minImageCount;

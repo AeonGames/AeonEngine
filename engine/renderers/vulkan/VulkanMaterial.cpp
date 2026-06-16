@@ -79,6 +79,14 @@ namespace AeonGames
         std::vector<VkWriteDescriptorSet> write_descriptor_sets{};
         write_descriptor_sets.reserve ( sampler_binding_count + ( ( mMaterial->GetUniformBuffer().size() ? 1 : 0 ) ) );
 
+        // Must outlive the single vkUpdateDescriptorSets call at the end of this
+        // constructor: the VkWriteDescriptorSet below stores a pointer to this
+        // struct, so a block-scoped local would dangle once the uniform-buffer
+        // block closes. The sampler block's stack reuse then zeroes its range,
+        // tripping VUID-VkDescriptorBufferInfo-range-00341 on strict drivers
+        // (undefined behavior that happened to survive on the Windows build).
+        VkDescriptorBufferInfo descriptor_buffer_info{};
+
         if ( mMaterial->GetUniformBuffer().size() > 0 )
         {
             VkDescriptorSetLayoutBinding descriptor_set_layout_binding
@@ -115,11 +123,13 @@ namespace AeonGames
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                 mMaterial->GetUniformBuffer().data() );
-            VkDescriptorBufferInfo descriptor_buffer_info
+            // Populate the function-scope struct (declared above) so the pointer
+            // stored in pBufferInfo stays valid until vkUpdateDescriptorSets.
+            descriptor_buffer_info = VkDescriptorBufferInfo
             {
                 mUniformBuffer.GetBuffer(),
-                              0,
-                              mMaterial->GetUniformBuffer().size()
+                0,
+                mMaterial->GetUniformBuffer().size()
             };
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
