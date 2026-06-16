@@ -96,6 +96,8 @@ namespace AeonGames
         void BeginFrame ( void* aWindowId ) final;
         void BeginRenderPass ( void* aWindowId ) final;
         void EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline ) final;
+        void BeginShadowPass ( void* aWindowId, const Matrix4x4& aLightViewProjection ) final;
+        void EndShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,

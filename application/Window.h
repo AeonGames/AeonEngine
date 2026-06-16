@@ -59,6 +59,15 @@ namespace AeonGames
                 mRenderer->SetDebugRendering ( !mRenderer->GetDebugRendering() );
             }
         }
+        /// @brief Toggle a whole light type on/off (debugging aid, e.g. isolate
+        /// the directional light to inspect its shadow).
+        void ToggleLightType ( LightType aType )
+        {
+            if ( mRenderer )
+            {
+                mRenderer->ToggleLightType ( aType );
+            }
+        }
     private:
 #if defined(_WIN32)
         HWND mWindowId {};

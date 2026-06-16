@@ -44,6 +44,7 @@ limitations under the License.
 #include "aeongames/BufferAccessor.hpp"
 #include "aeongames/CRC.hpp"
 #include "aeongames/ResourceId.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 
 #if defined(__APPLE__)
 // Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
@@ -58,7 +59,8 @@ namespace AeonGames
         mStorageMemoryPoolBuffer{mVulkanRenderer, 8_mb},
         mMatrices { aVulkanRenderer },
         mLights { aVulkanRenderer },
-        mClusterParams { aVulkanRenderer }
+        mClusterParams { aVulkanRenderer },
+        mShadowParams { aVulkanRenderer }
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
         try
@@ -78,7 +80,8 @@ namespace AeonGames
         mStorageMemoryPoolBuffer{std::move ( aVulkanWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aVulkanWindow.mMatrices ) },
         mLights{std::move ( aVulkanWindow.mLights ) },
-        mClusterParams{std::move ( aVulkanWindow.mClusterParams ) }
+        mClusterParams{std::move ( aVulkanWindow.mClusterParams ) },
+        mShadowParams{std::move ( aVulkanWindow.mShadowParams ) }
     {
         std::cout << LogLevel::Debug << "Moving VulkanWindow." << std::endl;
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
@@ -105,6 +108,19 @@ namespace AeonGames
         std::swap ( mLightsDescriptorSet, aVulkanWindow.mLightsDescriptorSet );
         std::swap ( mClusterParamsDescriptorPool, aVulkanWindow.mClusterParamsDescriptorPool );
         std::swap ( mClusterParamsDescriptorSet, aVulkanWindow.mClusterParamsDescriptorSet );
+        std::swap ( mVkShadowDepthImage, aVulkanWindow.mVkShadowDepthImage );
+        std::swap ( mVkShadowDepthImageMemory, aVulkanWindow.mVkShadowDepthImageMemory );
+        std::swap ( mVkShadowDepthImageView, aVulkanWindow.mVkShadowDepthImageView );
+        std::swap ( mVkShadowColorImage, aVulkanWindow.mVkShadowColorImage );
+        std::swap ( mVkShadowColorImageMemory, aVulkanWindow.mVkShadowColorImageMemory );
+        std::swap ( mVkShadowColorImageView, aVulkanWindow.mVkShadowColorImageView );
+        std::swap ( mVkShadowSampler, aVulkanWindow.mVkShadowSampler );
+        std::swap ( mVkShadowRenderPass, aVulkanWindow.mVkShadowRenderPass );
+        std::swap ( mVkShadowFramebuffer, aVulkanWindow.mVkShadowFramebuffer );
+        std::swap ( mShadowParamsDescriptorPool, aVulkanWindow.mShadowParamsDescriptorPool );
+        std::swap ( mShadowParamsDescriptorSet, aVulkanWindow.mShadowParamsDescriptorSet );
+        std::swap ( mShadowMapDescriptorPool, aVulkanWindow.mShadowMapDescriptorPool );
+        std::swap ( mShadowMapDescriptorSet, aVulkanWindow.mShadowMapDescriptorSet );
         std::swap ( mFrameLightGrid, aVulkanWindow.mFrameLightGrid );
         std::swap ( mFrameLightIndexList, aVulkanWindow.mFrameLightIndexList );
         std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
@@ -716,6 +732,387 @@ namespace AeonGames
         mClusterParams.Finalize();
     }
 
+    void VulkanWindow::InitializeShadowMap()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        const bool has_stencil =
+            ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
+
+        // Local helper: create a device-local 2D image and bind fresh memory.
+        auto create_image = [&] ( VkFormat format, VkImageUsageFlags usage,
+                                  VkImage & image, VkDeviceMemory & memory )
+        {
+            VkImageCreateInfo image_create_info{};
+            image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_create_info.format = format;
+            image_create_info.imageType = VK_IMAGE_TYPE_2D;
+            image_create_info.extent.width = SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.height = SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.depth = 1;
+            image_create_info.mipLevels = 1;
+            image_create_info.arrayLayers = 1;
+            image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            image_create_info.usage = usage;
+            image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if ( VkResult result = vkCreateImage ( device, &image_create_info, nullptr, &image ) )
+            {
+                std::ostringstream stream;
+                stream << "Shadow vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            VkMemoryRequirements memory_requirements;
+            vkGetImageMemoryRequirements ( device, image, &memory_requirements );
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex =
+                mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+            vkAllocateMemory ( device, &memory_allocate_info, nullptr, &memory );
+            vkBindImageMemory ( device, image, memory, 0 );
+        };
+
+        // Sampleable depth target the shadow pass writes; uses the same depth
+        // format as the main pass so the shadow render pass stays
+        // attachment-compatible with pipelines created against the main pass.
+        create_image ( mVkDepthStencilFormat,
+                       VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                       mVkShadowDepthImage, mVkShadowDepthImageMemory );
+        // Throwaway color attachment, never sampled, carried only for
+        // render-pass compatibility with the main color+depth render pass.
+        create_image ( mVkSurfaceFormatKHR.format,
+                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                       mVkShadowColorImage, mVkShadowColorImageMemory );
+
+        // Depth view (depth aspect only so it can be sampled as sampler2DShadow).
+        VkImageViewCreateInfo depth_view_create_info{};
+        depth_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        depth_view_create_info.image = mVkShadowDepthImage;
+        depth_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        depth_view_create_info.format = mVkDepthStencilFormat;
+        depth_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        depth_view_create_info.subresourceRange.levelCount = 1;
+        depth_view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( device, &depth_view_create_info, nullptr, &mVkShadowDepthImageView );
+
+        VkImageViewCreateInfo color_view_create_info{};
+        color_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        color_view_create_info.image = mVkShadowColorImage;
+        color_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        color_view_create_info.format = mVkSurfaceFormatKHR.format;
+        color_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        color_view_create_info.subresourceRange.levelCount = 1;
+        color_view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( device, &color_view_create_info, nullptr, &mVkShadowColorImageView );
+
+        // Comparison sampler: hardware PCF, depth <= stored => lit; sampling
+        // outside the map returns the white border (1.0) so it reads as lit.
+        VkSamplerCreateInfo sampler_create_info{};
+        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_create_info.magFilter = VK_FILTER_LINEAR;
+        sampler_create_info.minFilter = VK_FILTER_LINEAR;
+        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        sampler_create_info.compareEnable = VK_TRUE;
+        sampler_create_info.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+        sampler_create_info.maxLod = 1.0f;
+        vkCreateSampler ( device, &sampler_create_info, nullptr, &mVkShadowSampler );
+
+        // Shadow render pass. Attachment 0 (color) is throwaway; attachment 1
+        // (depth) is cleared, stored, and left in SHADER_READ_ONLY for sampling.
+        std::array<VkAttachmentDescription, 2> attachment_descriptions{ {} };
+        attachment_descriptions[0].format = mVkSurfaceFormatKHR.format;
+        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachment_descriptions[1].format = mVkDepthStencilFormat;
+        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference color_attachment_reference{};
+        color_attachment_reference.attachment = 0;
+        color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkAttachmentReference depth_attachment_reference{};
+        depth_attachment_reference.attachment = 1;
+        depth_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass_description{};
+        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_description.colorAttachmentCount = 1;
+        subpass_description.pColorAttachments = &color_attachment_reference;
+        subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
+
+        // Render-pass compatibility (Vulkan spec, Render Pass Compatibility)
+        // requires identical subpass dependencies, because the shadow depth
+        // pipeline is created against the window's main render pass yet executed
+        // here. Mirror the main pass's single dependency exactly; the depth
+        // write -> shader read hazard is instead handled by an explicit barrier
+        // in EndShadowPass.
+        VkSubpassDependency subpass_dependency{};
+        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependency.dstSubpass = 0;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.srcAccessMask = 0;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkRenderPassCreateInfo render_pass_create_info{};
+        render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
+        render_pass_create_info.pAttachments = attachment_descriptions.data();
+        render_pass_create_info.subpassCount = 1;
+        render_pass_create_info.pSubpasses = &subpass_description;
+        render_pass_create_info.dependencyCount = 1;
+        render_pass_create_info.pDependencies = &subpass_dependency;
+        vkCreateRenderPass ( device, &render_pass_create_info, nullptr, &mVkShadowRenderPass );
+
+        std::array<VkImageView, 2> framebuffer_attachments{ { mVkShadowColorImageView, mVkShadowDepthImageView } };
+        VkFramebufferCreateInfo framebuffer_create_info{};
+        framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebuffer_create_info.renderPass = mVkShadowRenderPass;
+        framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
+        framebuffer_create_info.pAttachments = framebuffer_attachments.data();
+        framebuffer_create_info.width = SHADOW_MAP_RESOLUTION;
+        framebuffer_create_info.height = SHADOW_MAP_RESOLUTION;
+        framebuffer_create_info.layers = 1;
+        vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkShadowFramebuffer );
+
+        // ShadowParams UBO (light view-projection + bias/PCF/enable), shared by
+        // the shadow depth vertex shader (set 8) and the shading fragment shader.
+        const GpuShadowParams empty_shadow_params{};
+        mShadowParams.Initialize (
+            sizeof ( GpuShadowParams ),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            &empty_shadow_params );
+
+        VkDescriptorSetLayoutCreateInfo shadow_params_layout_create_info{};
+        shadow_params_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        shadow_params_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding shadow_params_layout_binding{};
+        shadow_params_layout_binding.binding = 0;
+        shadow_params_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        shadow_params_layout_binding.descriptorCount = 1;
+        shadow_params_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        shadow_params_layout_create_info.pBindings = &shadow_params_layout_binding;
+
+        mShadowParamsDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mShadowParamsDescriptorSet = CreateDescriptorSet ( device, mShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_params_layout_create_info ) );
+        VkDescriptorBufferInfo shadow_params_buffer_info{};
+        shadow_params_buffer_info.buffer = mShadowParams.GetBuffer();
+        shadow_params_buffer_info.offset = 0;
+        shadow_params_buffer_info.range = mShadowParams.GetSize();
+        VkWriteDescriptorSet shadow_params_write{};
+        shadow_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        shadow_params_write.dstSet = mShadowParamsDescriptorSet;
+        shadow_params_write.dstBinding = 0;
+        shadow_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        shadow_params_write.descriptorCount = 1;
+        shadow_params_write.pBufferInfo = &shadow_params_buffer_info;
+        vkUpdateDescriptorSets ( device, 1, &shadow_params_write, 0, nullptr );
+
+        // ShadowMap combined image sampler (set 9), sampled by the shading pass.
+        VkDescriptorSetLayoutCreateInfo shadow_map_layout_create_info{};
+        shadow_map_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        shadow_map_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding shadow_map_layout_binding{};
+        shadow_map_layout_binding.binding = 0;
+        shadow_map_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        shadow_map_layout_binding.descriptorCount = 1;
+        shadow_map_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        shadow_map_layout_create_info.pBindings = &shadow_map_layout_binding;
+
+        mShadowMapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
+        mShadowMapDescriptorSet = CreateDescriptorSet ( device, mShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_map_layout_create_info ) );
+        VkDescriptorImageInfo shadow_map_image_info{};
+        shadow_map_image_info.sampler = mVkShadowSampler;
+        shadow_map_image_info.imageView = mVkShadowDepthImageView;
+        shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkWriteDescriptorSet shadow_map_write{};
+        shadow_map_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        shadow_map_write.dstSet = mShadowMapDescriptorSet;
+        shadow_map_write.dstBinding = 0;
+        shadow_map_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        shadow_map_write.descriptorCount = 1;
+        shadow_map_write.pImageInfo = &shadow_map_image_info;
+        vkUpdateDescriptorSets ( device, 1, &shadow_map_write, 0, nullptr );
+
+        // Transition the shadow depth image to the sampled layout once, so a
+        // frame that draws no caster (ShadowParams.enabled == 0, shader skips
+        // the sample) still presents a descriptor in a valid layout.
+        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = mVkShadowDepthImage;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( command_buffer,
+                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
+    }
+
+    void VulkanWindow::FinalizeShadowMap()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        DestroyDescriptorPool ( device, mShadowMapDescriptorPool );
+        DestroyDescriptorPool ( device, mShadowParamsDescriptorPool );
+        mShadowParams.Finalize();
+        if ( mVkShadowFramebuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyFramebuffer ( device, mVkShadowFramebuffer, nullptr );
+        }
+        if ( mVkShadowRenderPass != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass ( device, mVkShadowRenderPass, nullptr );
+        }
+        if ( mVkShadowSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( device, mVkShadowSampler, nullptr );
+        }
+        if ( mVkShadowColorImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkShadowColorImageView, nullptr );
+        }
+        if ( mVkShadowColorImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkShadowColorImage, nullptr );
+        }
+        if ( mVkShadowColorImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkShadowColorImageMemory, nullptr );
+        }
+        if ( mVkShadowDepthImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkShadowDepthImageView, nullptr );
+        }
+        if ( mVkShadowDepthImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkShadowDepthImage, nullptr );
+        }
+        if ( mVkShadowDepthImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkShadowDepthImageMemory, nullptr );
+        }
+    }
+
+    void VulkanWindow::BeginShadowPass ( const Matrix4x4& aLightViewProjection )
+    {
+        // Lazily load the renderer-owned shadow depth pipeline, substituted for
+        // the scene's draw pipelines during the shadow pass.
+        if ( !mShadowDepthLoaded )
+        {
+            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
+            mShadowDepthLoaded = true;
+        }
+        // Upload this frame's light view-projection and shadow parameters.
+        GpuShadowParams shadow_params{};
+        shadow_params.light_view_projection = aLightViewProjection;
+        shadow_params.params[0] = 1.0f / static_cast<float> ( SHADOW_MAP_RESOLUTION );
+        shadow_params.params[1] = 0.0015f;
+        shadow_params.params[2] = 1.0f;
+        shadow_params.params[3] = 1.0f; // enabled
+        mShadowParams.WriteMemory ( 0, sizeof ( GpuShadowParams ), &shadow_params );
+
+        // The main render pass was opened by BeginRender for the depth
+        // pre-pass; close it so the fixed-size shadow pass can run.
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+
+        // Two clear values to satisfy the render pass's two attachments. The
+        // throwaway color attachment (index 0) is DONT_CARE so its value is
+        // ignored, but the array must still be large enough to index the depth
+        // attachment (index 1), which is cleared to the far plane.
+        std::array<VkClearValue, 2> clear_values{};
+        clear_values[1].depthStencil.depth = 1.0f;
+        clear_values[1].depthStencil.stencil = 0;
+        VkRenderPassBeginInfo render_pass_begin_info{};
+        render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_begin_info.renderPass = mVkShadowRenderPass;
+        render_pass_begin_info.framebuffer = mVkShadowFramebuffer;
+        render_pass_begin_info.renderArea.offset = { 0, 0 };
+        render_pass_begin_info.renderArea.extent = { SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION };
+        render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
+        render_pass_begin_info.pClearValues = clear_values.data();
+        vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+
+        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( SHADOW_MAP_RESOLUTION ), static_cast<float> ( SHADOW_MAP_RESOLUTION ), 0.0f, 1.0f };
+        VkRect2D shadow_scissor{ { 0, 0 }, { SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION } };
+        vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &shadow_viewport );
+        vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &shadow_scissor );
+        // Slope-scaled depth bias pushes caster depths away from the light so
+        // surfaces do not shadow themselves (the single whole-scene shadow map
+        // has coarse texels, producing large blocky acne otherwise). Mirrors the
+        // OpenGL glPolygonOffset(2.5, 4.0): slope factor 2.5, constant 4.0.
+        vkCmdSetDepthBias ( mVkCommandBuffer, 4.0f, 0.0f, 2.5f );
+    }
+
+    void VulkanWindow::EndShadowPass()
+    {
+        // Close the shadow pass; its final layout leaves the depth image
+        // sampleable by the shading fragment shader.
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+        // The shadow render pass mirrors the main pass's single colour-output
+        // dependency for render-pass compatibility, so it does not synchronise
+        // the depth write -> shader read hazard. Do it explicitly here, while no
+        // render pass is active. The render pass already transitioned the image
+        // to SHADER_READ_ONLY_OPTIMAL, so this is a pure execution/memory
+        // barrier (old == new layout).
+        const bool has_stencil =
+            ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
+        VkImageMemoryBarrier shadow_depth_barrier{};
+        shadow_depth_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        shadow_depth_barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        shadow_depth_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        shadow_depth_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        shadow_depth_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        shadow_depth_barrier.image = mVkShadowDepthImage;
+        shadow_depth_barrier.subresourceRange.aspectMask =
+            VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        shadow_depth_barrier.subresourceRange.levelCount = 1;
+        shadow_depth_barrier.subresourceRange.layerCount = 1;
+        shadow_depth_barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        shadow_depth_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &shadow_depth_barrier );
+        // Restore the window viewport/scissor for the rest of the frame.
+        vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &mVkViewport );
+        vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &mVkScissor );
+        // Clear the shadow-pass depth bias so the depth pre-pass and shading
+        // draws that follow are not biased.
+        vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
+        // Reopen the main render pass so the depth pre-pass can continue. No
+        // geometry has been recorded into it yet, so the re-clear is harmless.
+        BeginRenderPass();
+    }
+
     void VulkanWindow::UpdateClusterParams()
     {
         GpuClusterParams params{};
@@ -746,6 +1143,7 @@ namespace AeonGames
         InitializeImageViews();
         InitializeDepthStencil();
         InitializeFrameBuffers();
+        InitializeShadowMap();
         InitializeCommandBuffer();
     }
 
@@ -766,6 +1164,7 @@ namespace AeonGames
         FinalizeSwapchain();
         FinalizeRenderPass();
         FinalizeSurface();
+        FinalizeShadowMap();
         FinalizeClusterParams();
         FinalizeLights();
         FinalizeMatrices();
@@ -954,6 +1353,10 @@ namespace AeonGames
 
         vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &mVkViewport );
         vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &mVkScissor );
+        // Depth bias is dynamic and enabled on every pipeline; default it to
+        // zero for the frame so normal geometry is unbiased. Only the shadow
+        // depth pass overrides this with a non-zero slope/constant bias.
+        vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
     }
 
     void VulkanWindow::BeginRenderPass()
@@ -1174,6 +1577,60 @@ namespace AeonGames
                 reinterpret_cast<const VulkanBuffer&> ( storage_pool_buffer->GetBuffer() ).GetBuffer();
             skinned_vertex_offset = aSkinnedVertices->GetOffset();
         }
+        // During the directional shadow pass, substitute the renderer-owned
+        // shadow depth pipeline: it transforms geometry by the light
+        // view-projection (ShadowParams) and writes depth only.
+        if ( aRenderPass == RenderPass::ShadowPass )
+        {
+            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mShadowDepthPipeline );
+            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+
+            if ( uint32_t shadow_params_set_index = shadow_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          shadow_pipeline->GetPipelineLayout(),
+                                          shadow_params_set_index,
+                                          1,
+                                          &mShadowParamsDescriptorSet, 0, nullptr );
+            }
+
+            if ( const VkPushConstantRange& push_constant_model_matrix = shadow_pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
+            {
+                vkCmdPushConstants ( mVkCommandBuffer,
+                                     shadow_pipeline->GetPipelineLayout(),
+                                     push_constant_model_matrix.stageFlags,
+                                     push_constant_model_matrix.offset, push_constant_model_matrix.size,
+                                     aModelMatrix.GetMatrix4x4() );
+            }
+            else
+            {
+                BindObjectMatrices ( shadow_pipeline, { &aModelMatrix, 1 } );
+            }
+
+            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
+            if ( aMesh.GetIndexCount() )
+            {
+                vkCmdDrawIndexed (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                    aInstanceCount,
+                    aVertexStart,
+                    0,
+                    aFirstInstance );
+            }
+            else
+            {
+                vkCmdDraw (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                    aInstanceCount,
+                    aVertexStart,
+                    aFirstInstance );
+            }
+            return;
+        }
         // During the depth pre-pass, substitute the renderer-owned marking
         // pipeline: it records only the cluster each fragment occupies into the
         // ClusterActive SSBO and ignores material and lighting state.
@@ -1319,6 +1776,27 @@ namespace AeonGames
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
 
+        // Directional shadow: bind the ShadowParams UBO (light view-projection
+        // + bias/enable) and the shadow map sampler for pipelines that sample.
+        if ( uint32_t shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      shadow_params_set_index,
+                                      1,
+                                      &mShadowParamsDescriptorSet, 0, nullptr );
+        }
+        if ( uint32_t shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_MAP ); shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      shadow_map_set_index,
+                                      1,
+                                      &mShadowMapDescriptorSet, 0, nullptr );
+        }
+
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
         {
             vkCmdPushConstants ( mVkCommandBuffer,
@@ -1397,6 +1875,48 @@ namespace AeonGames
         const uint32_t instance_count = static_cast<uint32_t> ( aModelMatrices.size() );
         if ( instance_count == 0 )
         {
+            return;
+        }
+        // Directional shadow pass: substitute the shadow depth pipeline and
+        // drive every instance from the per-object matrix buffer.
+        if ( aRenderPass == RenderPass::ShadowPass )
+        {
+            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mShadowDepthPipeline );
+            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+
+            if ( uint32_t shadow_params_set_index = shadow_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          shadow_pipeline->GetPipelineLayout(),
+                                          shadow_params_set_index,
+                                          1,
+                                          &mShadowParamsDescriptorSet, 0, nullptr );
+            }
+
+            BindObjectMatrices ( shadow_pipeline, aModelMatrices );
+
+            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
+            if ( aMesh.GetIndexCount() )
+            {
+                vkCmdDrawIndexed (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                    instance_count,
+                    aVertexStart,
+                    0,
+                    0 );
+            }
+            else
+            {
+                vkCmdDraw (
+                    mVkCommandBuffer,
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                    instance_count,
+                    aVertexStart,
+                    0 );
+            }
             return;
         }
         // During the depth pre-pass every draw uses the renderer-owned marking
@@ -1528,6 +2048,27 @@ namespace AeonGames
         };
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
+
+        // Directional shadow: bind the ShadowParams UBO and shadow map sampler
+        // for pipelines that sample them.
+        if ( uint32_t shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      shadow_params_set_index,
+                                      1,
+                                      &mShadowParamsDescriptorSet, 0, nullptr );
+        }
+        if ( uint32_t shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_MAP ); shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      shadow_map_set_index,
+                                      1,
+                                      &mShadowMapDescriptorSet, 0, nullptr );
+        }
 
         BindObjectMatrices ( pipeline, aModelMatrices );
 

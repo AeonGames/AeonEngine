@@ -193,6 +193,24 @@ namespace AeonGames
                         window->ToggleDebugRendering();
                         break;
                     }
+                    // F2/F3/F4 toggle a whole light type on/off (debugging aid:
+                    // e.g. disable point and spot lights to isolate the
+                    // directional light's shadow).
+                    if ( key == VK_F2 )
+                    {
+                        window->ToggleLightType ( AeonGames::LightType::Directional );
+                        break;
+                    }
+                    if ( key == VK_F3 )
+                    {
+                        window->ToggleLightType ( AeonGames::LightType::Point );
+                        break;
+                    }
+                    if ( key == VK_F4 )
+                    {
+                        window->ToggleLightType ( AeonGames::LightType::Spot );
+                        break;
+                    }
                     if ( window->GetInputSystem() )
                     {
                         window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );

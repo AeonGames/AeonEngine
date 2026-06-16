@@ -219,6 +219,18 @@ namespace AeonGames
         /** @brief Get the per-frame compute pipeline, loading it from the cache
          *  if set, or nullptr when none is configured. */
         DLL const Pipeline* GetLightingPipeline() const;
+        /** @brief Compute the directional shadow caster's world-to-light-clip
+         *  matrix for the current frame. Selects the first directional light
+         *  submitted this frame and fits an orthographic light view-projection
+         *  around the scene's world bounds so the whole scene falls inside the
+         *  shadow map. Writes the matrix and returns true when a caster exists;
+         *  returns false (leaving @p aLightViewProjection untouched) when no
+         *  directional light was submitted or the scene has no geometry, so the
+         *  caller can skip the shadow pass. Must be called after
+         *  BuildRenderQueue so the spatial index is current.
+         *  @param[out] aLightViewProjection Receives Ortho * LightView in engine
+         *  convention (no per-backend depth flip applied). */
+        DLL bool GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection ) const;
         /**@}*/
 
         /** @name Visibility culling */

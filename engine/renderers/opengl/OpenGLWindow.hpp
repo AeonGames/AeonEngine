@@ -66,6 +66,12 @@ namespace AeonGames
         /// @brief End the depth pre-pass, dispatch light culling and begin the
         ///        main color pass.
         void EndDepthPrePass ( const Pipeline* aComputePipeline );
+        /// @brief Bind the off-screen shadow framebuffer and prepare the
+        ///        directional shadow depth pass for the given light matrix.
+        void BeginShadowPass ( const Matrix4x4& aLightViewProjection );
+        /// @brief End the shadow depth pass and restore the main framebuffer
+        ///        and viewport.
+        void EndShadowPass();
         /// @brief End the current frame and present.
         void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
@@ -151,6 +157,11 @@ namespace AeonGames
         /// @brief Dispatch the remaining compute stages (light culling) after
         ///        the depth pre-pass has flagged the active clusters.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
+        /// @brief Create the off-screen directional shadow map: a sampleable
+        ///        depth texture, its framebuffer, and the ShadowParams UBO.
+        void InitializeShadowMap();
+        /// @brief Release the shadow map texture, framebuffer and UBO.
+        void FinalizeShadowMap();
         /// @brief Upload per-object model matrices into a transient storage
         ///        buffer and bind it at INSTANCE_MATRICES. The uber-pipeline
         ///        vertex shaders index it by gl_InstanceID, so a single draw
@@ -186,6 +197,15 @@ namespace AeonGames
         // lazily the first frame clustering runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
+        // Off-screen directional shadow map: a sampleable depth texture and its
+        // framebuffer, plus the ShadowParams UBO (light view-projection +
+        // filtering params) and the renderer-owned depth-only pipeline that
+        // substitutes the scene's draw pipelines during the shadow pass.
+        GLuint mShadowDepthTexture{0};
+        GLuint mShadowFrameBuffer{0};
+        OpenGLBuffer mShadowParams{};
+        Pipeline mShadowDepthPipeline{};
+        bool mShadowDepthLoaded{false};
         // True once BeginFrame() has begun this frame; makes BeginFrame()
         // idempotent so the app can run a pre-render-pass compute phase
         // (e.g. skinning) before BeginRender().

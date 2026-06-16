@@ -22,6 +22,11 @@ limitations under the License.
 #include "aeongames/Mesh.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/AABB.hpp"
+#include "aeongames/GpuLight.hpp"
+#include "aeongames/Transform.hpp"
+#include "aeongames/Quaternion.hpp"
+#include "aeongames/Vector3.hpp"
+#include <cmath>
 #include "aeongames/ProtoBufHelpers.hpp"
 #include "aeongames/ProtoBufUtils.hpp"
 #include "aeongames/CRC.hpp"
@@ -149,6 +154,92 @@ namespace AeonGames
             return nullptr;
         }
         return mLightingPipeline.Get<Pipeline>();
+    }
+
+    bool Scene::GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection ) const
+    {
+        // Pick the first directional light submitted this frame as the caster.
+        const GpuLight* caster = nullptr;
+        for ( const GpuLight& light : mFrameLights.Get() )
+        {
+            if ( light.type == static_cast<uint32_t> ( LightType::Directional ) )
+            {
+                caster = &light;
+                break;
+            }
+        }
+        if ( caster == nullptr )
+        {
+            return false;
+        }
+        // The scene's world-space extent comes from the octree root cell, which
+        // BuildRenderQueue has already refreshed for this frame.
+        if ( mSpatialIndexDirty )
+        {
+            BuildSpatialIndex();
+        }
+        if ( mSpatialIndex.GetNodeCount() == 0 )
+        {
+            return false;
+        }
+        const AABB& bounds = mSpatialIndex.GetRootBounds();
+        const Vector3& center = bounds.GetCenter();
+        const Vector3& radii = bounds.GetRadii();
+        // Fit the orthographic frustum to the bounding sphere of the root cell so
+        // the whole scene stays inside the shadow map for any light orientation.
+        const float radius = radii.GetLength();
+        if ( radius <= 0.0f )
+        {
+            return false;
+        }
+        // direction_cosOuter.xyz points TOWARD the light (= -lightDir), so the
+        // light travels along its negation.
+        Vector3 light_dir
+        {
+            -caster->direction_cosOuter.GetX(),
+                                       -caster->direction_cosOuter.GetY(),
+                                       -caster->direction_cosOuter.GetZ()
+        };
+        if ( light_dir.GetLength() <= 0.0f )
+        {
+            return false;
+        }
+        light_dir = Normalize ( light_dir );
+        // Orient a virtual camera so its forward axis (engine +Y) looks along the
+        // light direction. The shortest-arc rotation maps +Y onto light_dir,
+        // with the antiparallel case handled explicitly.
+        const Vector3 forward { 0.0f, 1.0f, 0.0f };
+        const float d = Dot ( forward, light_dir );
+        Quaternion orientation{ 1.0f, 0.0f, 0.0f, 0.0f };
+        if ( d < -0.9999f )
+        {
+            // light_dir == -forward: rotate 180 degrees about any orthogonal axis.
+            orientation = Quaternion::GetFromAxisAngle ( 180.0f, 0.0f, 0.0f, 1.0f );
+        }
+        else if ( d < 0.9999f )
+        {
+            const Vector3 axis = Normalize ( Cross ( forward, light_dir ) );
+            const float angle = std::acos ( d ) * ( 180.0f / 3.14159265358979323846f );
+            orientation = Quaternion::GetFromAxisAngle ( angle, axis.GetX(), axis.GetY(), axis.GetZ() );
+        }
+        // Place the eye one diameter behind the scene center so the whole sphere
+        // sits between the near (radius) and far (3*radius) planes.
+        const Vector3 eye
+        {
+            center.GetX() - light_dir.GetX() * ( 2.0f * radius ),
+                  center.GetY() - light_dir.GetY() * ( 2.0f * radius ),
+                  center.GetZ() - light_dir.GetZ() * ( 2.0f * radius )
+        };
+        Transform light_transform;
+        light_transform.SetRotation ( orientation );
+        light_transform.SetTranslation ( eye );
+        const Matrix4x4 light_view = light_transform.GetInvertedMatrix();
+        Matrix4x4 light_projection;
+        light_projection.Ortho ( -radius, radius, -radius, radius, radius, 3.0f * radius );
+        // Engine convention (column-major, clip = Proj * View * Model * v). The
+        // per-backend depth flip is applied inside the shadow shaders.
+        aLightViewProjection = light_projection * light_view;
+        return true;
     }
 
     void Scene::SetFieldOfView ( float aFieldOfView )

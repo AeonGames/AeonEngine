@@ -31,6 +31,10 @@ namespace AeonGames
         inferring it from internal frame state. */
     enum class RenderPass : uint32_t
     {
+        /// Shadow depth pass: every geometry pipeline is substituted with the
+        /// renderer-owned shadow-depth pipeline, which renders geometry from the
+        /// shadow-casting light's point of view into a depth-only shadow map.
+        ShadowPass,
         /// Clustered light-cull marking pass: every geometry pipeline is
         /// substituted with the renderer-owned cluster-mark pipeline, which only
         /// records the cluster each fragment occupies.

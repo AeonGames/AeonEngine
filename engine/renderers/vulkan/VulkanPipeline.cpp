@@ -443,12 +443,16 @@ namespace AeonGames
         memset ( pipeline_color_blend_state_create_info.blendConstants, 0, sizeof ( VkPipelineColorBlendStateCreateInfo::blendConstants ) );
 
         //----------------Dynamic State------------------//
-        std::array<VkDynamicState, 3> dynamic_states
+        std::array<VkDynamicState, 4> dynamic_states
         {
             {
                 VK_DYNAMIC_STATE_VIEWPORT,
                 VK_DYNAMIC_STATE_SCISSOR,
-                VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
+                VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY,
+                // Depth bias is enabled on every pipeline but kept dynamic so it
+                // defaults to zero and only the shadow depth pass sets non-zero
+                // slope/constant bias (via vkCmdSetDepthBias) to fight acne.
+                VK_DYNAMIC_STATE_DEPTH_BIAS
             }
         };
         VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
@@ -458,7 +462,12 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
-        std::array<VkDescriptorSetLayout, 8> descriptor_set_layouts{};
+        // Cap on simultaneously-bound descriptor sets. Raised from 8 to 16 so
+        // the clustered shading pipeline (sets 0-7) can additionally bind the
+        // directional-shadow ShadowParams (set 8) and ShadowMap (set 9) sets.
+        // Desktop Vulkan implementations report maxBoundDescriptorSets >= 32, so
+        // 16 stays well within hardware limits.
+        std::array<VkDescriptorSetLayout, 16> descriptor_set_layouts{};
         if ( mDescriptorSets.size() > descriptor_set_layouts.size() )
         {
             std::cout << LogLevel::Error << "More descriptor sets than available slots" << std::endl;
@@ -744,6 +753,21 @@ namespace AeonGames
                 const char* type_name{ is_named_buffer_block
                                        ? descriptor_set->bindings[0]->type_description->type_name
                                        : "Samplers" };
+                // A lone combined image sampler that the engine binds by name
+                // (the directional ShadowMap, owned by the window rather than
+                // the material) must keep its own identity instead of collapsing
+                // into the material "Samplers" bucket; otherwise two distinct
+                // sampler sets hash-collide and overwrite each other at bind
+                // time, leaving the material sampler set unbound.
+                if ( !is_named_buffer_block &&
+                     descriptor_set->binding_count == 1 &&
+                     first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
+                     descriptor_set->bindings[0]->name != nullptr &&
+                     descriptor_set->bindings[0]->name[0] != '\0' &&
+                     crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SHADOW_MAP )
+                {
+                    type_name = descriptor_set->bindings[0]->name;
+                }
                 uint32_t hash = crc32i ( type_name,
                                          strlen ( type_name ) );
 

@@ -20,6 +20,7 @@ limitations under the License.
 #include <span>
 #include <string>
 #include <memory>
+#include <vector>
 #include <functional>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -185,6 +186,26 @@ namespace AeonGames
          * @param aWindowId Platform dependent window handle.
          */
         virtual void BeginRenderPass ( void* aWindowId ) = 0;
+        /** Begins the directional shadow-depth pass for the given window surface.
+         * Uploads the shadow-casting light's world-to-clip matrix into the
+         * window's ShadowParams uniform block (marking shadows enabled for this
+         * frame) and begins the depth-only shadow render pass that renders into
+         * the window's shadow map. Geometry submitted with
+         * RenderPass::ShadowPass between this call and EndShadowPass is drawn
+         * from the light's point of view. Recorded after BeginFrame and before
+         * the main color render pass; only called when the scene has both a
+         * lighting pipeline and a directional shadow caster.
+         * @param aWindowId Platform dependent window handle.
+         * @param aLightViewProjection World-space to light clip-space matrix used
+         *        to render and later sample the shadow map.
+         */
+        virtual void BeginShadowPass ( void* aWindowId, const Matrix4x4& aLightViewProjection ) = 0;
+        /** Ends the directional shadow-depth pass and transitions the shadow map
+         * so it can be sampled as a depth-comparison texture by the shading
+         * pass. Must be paired with a preceding BeginShadowPass.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void EndShadowPass ( void* aWindowId ) = 0;
         /** Ends the depth pre-pass mark render pass, dispatches the remaining
          * clustering compute stages (light culling, which now gates on the
          * clusters the mark pass flagged as active), then begins the main color
@@ -397,8 +418,28 @@ namespace AeonGames
         DLL void SetDebugRenderSettings ( const DebugRenderSettings& aSettings );
         /** @return The current debug render settings. */
         DLL const DebugRenderSettings& GetDebugRenderSettings() const;
+        /** Enables or disables a whole light type for shading. Disabled types
+         * are filtered out of the per-frame light set in SetLights, so the
+         * change takes effect on the next frame. Intended as a debugging aid
+         * (e.g. isolate the directional light to inspect its shadow).
+         * @param aType Light type to toggle.
+         * @param aEnabled True to include lights of this type, false to drop them.
+         */
+        DLL void SetLightTypeEnabled ( LightType aType, bool aEnabled );
+        /** @return True when lights of @p aType are currently included. */
+        DLL bool GetLightTypeEnabled ( LightType aType ) const;
+        /** Flips the enabled state of a whole light type. */
+        DLL void ToggleLightType ( LightType aType );
         ///@}
     protected:
+        /** Returns @p aLights filtered to only the currently enabled light
+         * types. When every type is enabled the input span is returned
+         * unchanged; otherwise the kept lights are copied into a reused member
+         * buffer and a span over it is returned (valid until the next call).
+         * Backends call this in their SetLights before uploading.
+         * @param aLights The frame's full light set.
+         */
+        DLL std::span<const GpuLight> FilterLightsByType ( std::span<const GpuLight> aLights ) const;
         /** Submits the scene's render queue for one pass, issuing one draw per
          * batch (instanced when a batch holds more than one item). Backends
          * resolve the target window once and walk Scene::ForEachRenderBatch.
@@ -433,6 +474,14 @@ namespace AeonGames
         bool mDebugSettingsDirty{true};
         /** Tunable debug-geometry parameters. */
         DebugRenderSettings mDebugSettings{};
+        /** Bitmask of enabled light types (bit = 1u << LightType). All types
+         * enabled by default; cleared bits drop that type in FilterLightsByType. */
+        uint32_t mLightTypeMask{ ( 1u << static_cast<uint32_t> ( LightType::Point ) ) |
+            ( 1u << static_cast<uint32_t> ( LightType::Spot ) ) |
+            ( 1u << static_cast<uint32_t> ( LightType::Directional ) ) };
+        /** Scratch buffer holding the type-filtered light subset, reused across
+         * frames so FilterLightsByType allocates only when the set grows. */
+        mutable std::vector<GpuLight> mFilteredLights{};
         /** Solid-color line pipeline for debug wireframes. */
         std::unique_ptr<Pipeline> mDebugPipeline{};
         /** Unit (radii 1) wireframe cube; scaled per draw to an AABB. */

@@ -89,6 +89,28 @@ layout(binding = 0)
 #endif
 uniform sampler2D DiffuseMap;
 
+// Directional shadow mapping. ShadowParams carries the sun's world-space
+// view-projection and filtering parameters; ShadowMap is the depth map sampled
+// with hardware comparison (sampler2DShadow). shadow_params.w > 0.5 marks a
+// directional caster active this frame; otherwise geometry is left fully lit.
+#ifdef VULKAN
+layout(set = 8, binding = 0, std140)
+#else
+layout(binding = 5, std140)
+#endif
+uniform ShadowParams
+{
+      mat4 light_view_projection; // world -> light clip space
+      vec4 shadow_params;         // (texel_size, depth_bias, pcf_radius, enabled)
+};
+
+#ifdef VULKAN
+layout(set = 9, binding = 0)
+#else
+layout(binding = 8)
+#endif
+uniform sampler2DShadow ShadowMap;
+
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
@@ -124,9 +146,58 @@ uint fragment_cluster_index()
       return ix + iy * gx + iz * gx * gy;
 }
 
+// Sample the directional shadow map for the current fragment and return a
+// visibility factor in [0,1] (1 = fully lit, 0 = fully shadowed). Reconstructs
+// the fragment's world position from its view-space position, projects it into
+// the light's clip space and does a 3x3 PCF comparison against the stored
+// depth. Fragments outside the light frustum, or frames without a caster, are
+// treated as fully lit.
+float directional_shadow()
+{
+      if ( shadow_params.w < 0.5 )
+      {
+            return 1.0;
+      }
+      // eyeCoords is the view-space fragment position; the view matrix has no
+      // projection Z-flip baked in on either backend, so its inverse recovers
+      // the world position the light matrix expects.
+      vec4 world = inverse ( ViewMatrix ) * vec4 ( eyeCoords, 1.0 );
+      vec4 light_clip = light_view_projection * world;
+#ifdef VULKAN
+      // Match the GL[-1,1] -> VK[0,1] depth remap the shadow_depth pass applied.
+      light_clip.z = ( light_clip.z + light_clip.w ) * 0.5;
+#endif
+      vec3 proj = light_clip.xyz / light_clip.w;
+      vec2 uv = proj.xy * 0.5 + 0.5;
+      if ( uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 )
+      {
+            return 1.0;
+      }
+#ifdef VULKAN
+      float current_depth = proj.z;            // already [0,1] after the remap
+#else
+      float current_depth = proj.z * 0.5 + 0.5; // NDC[-1,1] -> window depth[0,1]
+#endif
+      current_depth -= shadow_params.y;        // constant bias to fight acne
+      // 3x3 percentage-closer filtering. shadow_params.x is one texel in UV
+      // space; shadow_params.z scales the kernel footprint.
+      float visibility = 0.0;
+      float step = shadow_params.x * shadow_params.z;
+      for ( int y = -1; y <= 1; ++y )
+      {
+            for ( int x = -1; x <= 1; ++x )
+            {
+                  vec2 offset = vec2 ( float ( x ), float ( y ) ) * step;
+                  visibility += texture ( ShadowMap, vec3 ( uv + offset, current_depth ) );
+            }
+      }
+      return visibility / 9.0;
+}
+
 // Blinn-Phong contribution of a single light, accumulated into the running
-// diffuse/specular sums.
-void accumulate_light ( GpuLight L, vec3 N, vec3 V,
+// diffuse/specular sums. aShadow scales the radiance (1.0 = fully lit); only
+// the directional sun passes a value below 1.0, from directional_shadow().
+void accumulate_light ( GpuLight L, vec3 N, vec3 V, float aShadow,
                         inout vec3 diffuse_accum, inout vec3 specular_accum )
 {
       vec3 to_light;
@@ -153,7 +224,7 @@ void accumulate_light ( GpuLight L, vec3 N, vec3 V,
                   attenuation *= smoothstep ( L.direction_cosOuter.w, L.cos_inner, cos_a );
             }
       }
-      vec3  light_radiance = L.color_intensity.rgb * L.color_intensity.a * attenuation;
+      vec3  light_radiance = L.color_intensity.rgb * L.color_intensity.a * attenuation * aShadow;
       float NdotL = max ( dot ( to_light, N ), 0.0 );
       diffuse_accum += light_radiance * NdotL;
       if ( NdotL > 0.0 )
@@ -245,16 +316,18 @@ void main()
             {
                   continue;
             }
-            accumulate_light ( Lights_data[li], N, V, diffuse_accum, specular_accum );
+            accumulate_light ( Lights_data[li], N, V, 1.0, diffuse_accum, specular_accum );
       }
 
       // Directional lights bypass clustering (they touch every fragment), so
-      // the cull stage skips them; shade them here for every fragment.
+      // the cull stage skips them; shade them here for every fragment. The sun
+      // is shadowed by the directional shadow map (computed once per fragment).
+      float sun_visibility = directional_shadow();
       for ( uint i = 0u; i < LightCount; ++i )
       {
             if ( Lights_data[i].type == 2u )
             {
-                  accumulate_light ( Lights_data[i], N, V, diffuse_accum, specular_accum );
+                  accumulate_light ( Lights_data[i], N, V, sun_visibility, diffuse_accum, specular_accum );
             }
       }
 

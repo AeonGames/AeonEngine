@@ -65,6 +65,18 @@ namespace AeonGames
         ///        stage's ClusterActive writes visible, dispatch the remaining
         ///        (light-cull) compute stages, then begin the main color pass.
         void EndDepthPrePass ( const Pipeline* aComputePipeline );
+        /// @brief Begin the directional-light shadow depth pass. Closes the
+        ///        currently-open main render pass, uploads the light
+        ///        view-projection to the ShadowParams UBO, and opens the
+        ///        fixed-size shadow render pass with the shadow framebuffer
+        ///        bound. Caller submits the render queue with
+        ///        RenderPass::ShadowPass, then calls EndShadowPass.
+        void BeginShadowPass ( const Matrix4x4& aLightViewProjection );
+        /// @brief End the shadow depth pass: close the shadow render pass
+        ///        (transitioning the shadow map to a sampleable layout),
+        ///        restore the window viewport/scissor, and reopen the main
+        ///        render pass for the depth pre-pass to continue.
+        void EndShadowPass();
         /** @brief Render a mesh with the given pipeline, material, and transform.
          *  @param aModelMatrix Model-to-world transform matrix.
          *  @param aMesh Mesh geometry to render.
@@ -168,6 +180,7 @@ namespace AeonGames
         void InitializeMatrices();
         void InitializeLights();
         void InitializeClusterParams();
+        void InitializeShadowMap();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
@@ -178,6 +191,7 @@ namespace AeonGames
         void FinalizeMatrices();
         void FinalizeLights();
         void FinalizeClusterParams();
+        void FinalizeShadowMap();
         /// @brief Recompute and upload the ClusterParams UBO from the current
         ///        projection matrix and viewport. Cheap; called on projection
         ///        or viewport change.
@@ -204,6 +218,7 @@ namespace AeonGames
         VulkanBuffer mMatrices;
         VulkanBuffer mLights;
         VulkanBuffer mClusterParams;
+        VulkanBuffer mShadowParams;
         // Scratch buffer holding the frustum-culled subset of this frame's
         // lights; reused across frames so capacity is not reallocated.
         std::vector<GpuLight> mVisibleLights{};
@@ -216,6 +231,10 @@ namespace AeonGames
         // lazily the first frame clustering runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
+        // Renderer-owned directional-shadow depth pipeline, loaded lazily the
+        // first frame a shadow caster is present.
+        Pipeline mShadowDepthPipeline{};
+        bool mShadowDepthLoaded{false};
         // True once BeginFrame() has acquired the swapchain image and begun the
         // command buffer this frame; makes BeginFrame() idempotent so the app
         // can run a pre-render-pass compute phase before BeginRender().
@@ -246,6 +265,24 @@ namespace AeonGames
         VkDescriptorSet mLightsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mClusterParamsDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mClusterParamsDescriptorSet{VK_NULL_HANDLE};
+        // Directional shadow map: a fixed-size depth target the shadow pass
+        // writes and the shading pass samples. A throwaway color attachment is
+        // carried so the shadow render pass stays attachment-compatible with
+        // the window's main render pass (pipelines are created against the
+        // latter). See render-pass compatibility notes.
+        VkImage mVkShadowDepthImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkShadowDepthImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkShadowDepthImageView{VK_NULL_HANDLE};
+        VkImage mVkShadowColorImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkShadowColorImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkShadowColorImageView{VK_NULL_HANDLE};
+        VkSampler mVkShadowSampler{VK_NULL_HANDLE};
+        VkRenderPass mVkShadowRenderPass{VK_NULL_HANDLE};
+        VkFramebuffer mVkShadowFramebuffer{VK_NULL_HANDLE};
+        VkDescriptorPool mShadowParamsDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mShadowParamsDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mShadowMapDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mShadowMapDescriptorSet{VK_NULL_HANDLE};
         VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
         VkFence mVkFence{ VK_NULL_HANDLE };
 

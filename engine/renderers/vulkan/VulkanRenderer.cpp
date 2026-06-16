@@ -963,7 +963,7 @@ namespace AeonGames
         {
             return;
         }
-        it->second.SetLights ( aLights );
+        it->second.SetLights ( FilterLightsByType ( aLights ) );
     }
 
     void VulkanRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
@@ -1011,6 +1011,24 @@ namespace AeonGames
             return;
         }
         it->second.EndDepthPrePass ( aComputePipeline );
+    }
+    void VulkanRenderer::BeginShadowPass ( void* aWindowId, const Matrix4x4& aLightViewProjection )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginShadowPass ( aLightViewProjection );
+    }
+    void VulkanRenderer::EndShadowPass ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndShadowPass();
     }
     void VulkanRenderer::EndRender ( void* aWindowId )
     {

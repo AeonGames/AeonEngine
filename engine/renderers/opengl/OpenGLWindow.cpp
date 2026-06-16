@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Scene.hpp"
 #include "aeongames/Material.hpp"
 #include "aeongames/GpuLight.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/MemoryPool.hpp" ///<- This is here just for the literals
 #include "OpenGLWindow.hpp"
 #include "OpenGLRenderer.hpp"
@@ -39,6 +40,11 @@ limitations under the License.
 
 namespace AeonGames
 {
+    // Texture unit the directional shadow map is bound to during shading. Must
+    // match `layout(binding = N) uniform sampler2DShadow ShadowMap;` in the GL
+    // path of the shading fragment shaders.
+    static constexpr GLuint SHADOW_MAP_TEXTURE_UNIT = 8;
+
     void OpenGLWindow::Initialize()
     {
         mMatrices.Initialize ( sizeof ( float ) * 16 * 2, GL_DYNAMIC_DRAW );
@@ -56,6 +62,7 @@ namespace AeonGames
             GpuClusterParams empty{};
             mClusterParams.Initialize ( sizeof ( GpuClusterParams ), GL_DYNAMIC_DRAW, &empty );
         }
+        InitializeShadowMap();
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_BLEND );
@@ -142,13 +149,16 @@ namespace AeonGames
         mStorageMemoryPoolBuffer{std::move ( aOpenGLWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
         mLights{std::move ( aOpenGLWindow.mLights ) },
-        mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) }
+        mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) },
+        mShadowParams{std::move ( aOpenGLWindow.mShadowParams ) }
     {
         std::swap ( mDisplay, aOpenGLWindow.mDisplay );
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
         std::swap ( mFrustum, aOpenGLWindow.mFrustum );
         std::swap ( mProjectionMatrix, aOpenGLWindow.mProjectionMatrix );
         std::swap ( mViewMatrix, aOpenGLWindow.mViewMatrix );
+        std::swap ( mShadowDepthTexture, aOpenGLWindow.mShadowDepthTexture );
+        std::swap ( mShadowFrameBuffer, aOpenGLWindow.mShadowFrameBuffer );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -161,6 +171,7 @@ namespace AeonGames
             mMatrices.Finalize();
             mLights.Finalize();
             mClusterParams.Finalize();
+            FinalizeShadowMap();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -210,7 +221,8 @@ namespace AeonGames
         mStorageMemoryPoolBuffer{std::move ( aOpenGLWindow.mStorageMemoryPoolBuffer ) },
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
         mLights{std::move ( aOpenGLWindow.mLights ) },
-        mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) }
+        mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) },
+        mShadowParams{std::move ( aOpenGLWindow.mShadowParams ) }
     {
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
         std::swap ( mFrustum, aOpenGLWindow.mFrustum );
@@ -221,6 +233,8 @@ namespace AeonGames
         std::swap ( mFrameLightIndexList, aOpenGLWindow.mFrameLightIndexList );
         std::swap ( mViewportWidth, aOpenGLWindow.mViewportWidth );
         std::swap ( mViewportHeight, aOpenGLWindow.mViewportHeight );
+        std::swap ( mShadowDepthTexture, aOpenGLWindow.mShadowDepthTexture );
+        std::swap ( mShadowFrameBuffer, aOpenGLWindow.mShadowFrameBuffer );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -233,6 +247,7 @@ namespace AeonGames
             mMatrices.Finalize();
             mLights.Finalize();
             mClusterParams.Finalize();
+            FinalizeShadowMap();
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -273,6 +288,28 @@ namespace AeonGames
                 reinterpret_cast<const OpenGLBuffer&> ( aSkinnedVertices->GetMemoryPoolBuffer()->GetBuffer() ).GetBufferId();
             skinned_vertex_offset = aSkinnedVertices->GetOffset();
             skinned_vertex_stride = 56;
+        }
+        // During the shadow pass, substitute the renderer-owned depth-only
+        // pipeline: it rasterizes geometry into the shadow map's depth texture
+        // using the light's view-projection and ignores material/lighting state.
+        if ( aRenderPass == RenderPass::ShadowPass )
+        {
+            mOpenGLRenderer.BindPipeline ( mShadowDepthPipeline );
+            mOpenGLRenderer.SetShadowParams ( mShadowParams );
+            BindObjectMatrices ( { &aModelMatrix, 1 } );
+            mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
+            if ( aMesh.GetIndexCount() )
+            {
+                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            else
+            {
+                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            return;
         }
         // During the depth pre-pass, substitute the renderer-owned marking
         // pipeline: it records only the cluster each fragment occupies into the
@@ -316,6 +353,10 @@ namespace AeonGames
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
         }
+        // Directional shadow map: bind its params and depth texture. Pipelines
+        // that don't sample shadows ignore the unused UBO/texture unit.
+        mOpenGLRenderer.SetShadowParams ( mShadowParams );
+        glBindTextureUnit ( SHADOW_MAP_TEXTURE_UNIT, mShadowDepthTexture );
 
         if ( aMaterial )
         {
@@ -351,6 +392,27 @@ namespace AeonGames
         const uint32_t instance_count = static_cast<uint32_t> ( aModelMatrices.size() );
         if ( instance_count == 0 )
         {
+            return;
+        }
+        // Shadow pass: rasterize the batch into the shadow map depth texture
+        // with the renderer-owned depth-only pipeline.
+        if ( aRenderPass == RenderPass::ShadowPass )
+        {
+            mOpenGLRenderer.BindPipeline ( mShadowDepthPipeline );
+            mOpenGLRenderer.SetShadowParams ( mShadowParams );
+            BindObjectMatrices ( aModelMatrices );
+            mOpenGLRenderer.BindMesh ( aMesh );
+            if ( aMesh.GetIndexCount() )
+            {
+                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, instance_count, 0 );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            else
+            {
+                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
             return;
         }
         // During the depth pre-pass every draw uses the renderer-owned marking
@@ -389,6 +451,9 @@ namespace AeonGames
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
         }
+        // Directional shadow map: bind its params and depth texture.
+        mOpenGLRenderer.SetShadowParams ( mShadowParams );
+        glBindTextureUnit ( SHADOW_MAP_TEXTURE_UNIT, mShadowDepthTexture );
         BindObjectMatrices ( aModelMatrices );
         if ( aMaterial )
         {
@@ -482,6 +547,102 @@ namespace AeonGames
         BeginRenderPass();
     }
 
+    void OpenGLWindow::InitializeShadowMap()
+    {
+        // Sampleable depth texture used as the directional shadow map. Hardware
+        // depth comparison (sampler2DShadow) is enabled so the fragment shader
+        // can PCF-filter the depth test in a single texture() lookup.
+        glGenTextures ( 1, &mShadowDepthTexture );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindTexture ( GL_TEXTURE_2D, mShadowDepthTexture );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F,
+                       SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, 0,
+                       GL_DEPTH_COMPONENT, GL_FLOAT, nullptr );
+        OPENGL_CHECK_ERROR_THROW;
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+        // White border so fragments projecting outside the light frustum sample
+        // depth 1.0 and are therefore always lit (never spuriously shadowed).
+        const float border[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glTexParameterfv ( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
+        OPENGL_CHECK_ERROR_THROW;
+
+        // Depth-only framebuffer; no color attachment.
+        glGenFramebuffers ( 1, &mShadowFrameBuffer );
+        glBindFramebuffer ( GL_FRAMEBUFFER, mShadowFrameBuffer );
+        glFramebufferTexture2D ( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mShadowDepthTexture, 0 );
+        glDrawBuffer ( GL_NONE );
+        glReadBuffer ( GL_NONE );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+
+        // ShadowParams UBO: light view-projection + filtering params. Default-
+        // init (enabled == 0) so the shading pass skips shadowing until a caster
+        // matrix is uploaded in BeginShadowPass.
+        {
+            GpuShadowParams empty{};
+            mShadowParams.Initialize ( sizeof ( GpuShadowParams ), GL_DYNAMIC_DRAW, &empty );
+        }
+    }
+
+    void OpenGLWindow::FinalizeShadowMap()
+    {
+        mShadowParams.Finalize();
+        if ( mShadowFrameBuffer != 0 )
+        {
+            glDeleteFramebuffers ( 1, &mShadowFrameBuffer );
+            mShadowFrameBuffer = 0;
+        }
+        if ( mShadowDepthTexture != 0 )
+        {
+            glDeleteTextures ( 1, &mShadowDepthTexture );
+            mShadowDepthTexture = 0;
+        }
+    }
+
+    void OpenGLWindow::BeginShadowPass ( const Matrix4x4& aLightViewProjection )
+    {
+        // Lazily load the renderer-owned depth-only pipeline that substitutes
+        // the scene's draw pipelines during the shadow pass.
+        if ( !mShadowDepthLoaded )
+        {
+            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
+            mShadowDepthLoaded = true;
+        }
+        // Upload the light's world-space view-projection and mark shadowing
+        // enabled for the shading pass that samples this map.
+        GpuShadowParams params{};
+        params.light_view_projection = aLightViewProjection;
+        params.params[3] = 1.0f; // enabled
+        mShadowParams.WriteMemory ( 0, sizeof ( params ), &params );
+
+        glBindFramebuffer ( GL_FRAMEBUFFER, mShadowFrameBuffer );
+        glViewport ( 0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION );
+        glClear ( GL_DEPTH_BUFFER_BIT );
+        glEnable ( GL_DEPTH_TEST );
+        // Slope-scaled depth bias pushes caster depths away from the light so
+        // surfaces do not shadow themselves. Without it the single whole-scene
+        // shadow map (coarse texels) produces large blocky self-shadow acne.
+        glEnable ( GL_POLYGON_OFFSET_FILL );
+        glPolygonOffset ( 2.5f, 4.0f );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::EndShadowPass()
+    {
+        // Disable the shadow-pass depth bias before the main passes resume.
+        glDisable ( GL_POLYGON_OFFSET_FILL );
+        // Restore the main framebuffer and full-window viewport for the depth
+        // pre-pass and shading passes that follow.
+        mFrameBuffer.Bind();
+        glViewport ( 0, 0, static_cast<GLsizei> ( mViewportWidth ), static_cast<GLsizei> ( mViewportHeight ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLWindow::DispatchClusterBuild ( const Pipeline& aComputePipeline )
     {
         // One workgroup per 64 clusters (clustering compute stages use local_size_x=64).
@@ -561,6 +722,11 @@ namespace AeonGames
     {
         glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
+        // Opaque scene geometry must not blend: it is drawn in arbitrary order
+        // and many diffuse textures carry alpha < 1, which would otherwise make
+        // surfaces translucent and show overlapping geometry through each other.
+        // The GUI overlay re-enables blending for itself and restores this.
+        glDisable ( GL_BLEND );
     }
 
     void OpenGLWindow::Dispatch ( const Pipeline& aPipeline,

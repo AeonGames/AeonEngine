@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Material.hpp"
 #include "aeongames/AABB.hpp"
 #include "aeongames/Transform.hpp"
+#include "aeongames/Frustum.hpp"
 #include "aeongames/CRC.hpp"
 
 namespace AeonGames
@@ -41,9 +42,28 @@ namespace AeonGames
         // through identical logic.
         const Pipeline* lighting = aScene.GetLightingPipeline();
         BeginRender ( aWindowId, lighting );
-        // Collect every visible draw once; the queue feeds both the depth
+        if ( lighting )
+        {
+            // Shadow pass: when a directional caster is present, render scene
+            // depth from the light's point of view into the shadow map before
+            // shading so the fragment stage can sample it. The shadow map must
+            // contain every caster the light can see, NOT just what the camera
+            // sees, so the queue is culled to the light's orthographic frustum
+            // here. Reusing the camera frustum would make casters outside the
+            // view pop in and out of the shadow map as the camera moves.
+            Matrix4x4 light_view_projection;
+            if ( aScene.GetDirectionalShadowMatrix ( light_view_projection ) )
+            {
+                aScene.BuildRenderQueue ( Frustum ( light_view_projection ) );
+                BeginShadowPass ( aWindowId, light_view_projection );
+                SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
+                EndShadowPass ( aWindowId );
+            }
+        }
+        // Collect every camera-visible draw; the queue feeds both the depth
         // pre-pass and the shading pass, merging sorted runs into instanced
-        // draws on submit.
+        // draws on submit. Built after the shadow pass, which uses its own
+        // light-space queue.
         aScene.BuildRenderQueue ( GetFrustum ( aWindowId ) );
         if ( lighting )
         {
@@ -74,6 +94,51 @@ namespace AeonGames
     bool Renderer::GetDebugRendering() const
     {
         return mDebugRendering;
+    }
+
+    void Renderer::SetLightTypeEnabled ( LightType aType, bool aEnabled )
+    {
+        const uint32_t bit = 1u << static_cast<uint32_t> ( aType );
+        if ( aEnabled )
+        {
+            mLightTypeMask |= bit;
+        }
+        else
+        {
+            mLightTypeMask &= ~bit;
+        }
+    }
+
+    bool Renderer::GetLightTypeEnabled ( LightType aType ) const
+    {
+        return ( mLightTypeMask & ( 1u << static_cast<uint32_t> ( aType ) ) ) != 0u;
+    }
+
+    void Renderer::ToggleLightType ( LightType aType )
+    {
+        mLightTypeMask ^= ( 1u << static_cast<uint32_t> ( aType ) );
+    }
+
+    std::span<const GpuLight> Renderer::FilterLightsByType ( std::span<const GpuLight> aLights ) const
+    {
+        // Fast path: every type enabled, no filtering needed.
+        constexpr uint32_t all_types =
+            ( 1u << static_cast<uint32_t> ( LightType::Point ) ) |
+            ( 1u << static_cast<uint32_t> ( LightType::Spot ) ) |
+            ( 1u << static_cast<uint32_t> ( LightType::Directional ) );
+        if ( ( mLightTypeMask & all_types ) == all_types )
+        {
+            return aLights;
+        }
+        mFilteredLights.clear();
+        for ( const GpuLight& light : aLights )
+        {
+            if ( mLightTypeMask & ( 1u << light.type ) )
+            {
+                mFilteredLights.push_back ( light );
+            }
+        }
+        return mFilteredLights;
     }
 
     void Renderer::SetDebugRenderSettings ( const DebugRenderSettings& aSettings )
