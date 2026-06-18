@@ -37,19 +37,53 @@ void main()
       int base_layer = int ( face_params.x );
       for ( int face = 0; face < 6; ++face )
       {
+            // Project the triangle into this face once, up front, so it can be
+            // both frustum-culled and emitted without recomputing.
+            vec4 clip0 = face_view_projection[face] * vec4 ( vWorldPosition[0], 1.0 );
+            vec4 clip1 = face_view_projection[face] * vec4 ( vWorldPosition[1], 1.0 );
+            vec4 clip2 = face_view_projection[face] * vec4 ( vWorldPosition[2], 1.0 );
+            // Conservative per-face frustum cull: skip the face when all three
+            // vertices lie outside the same clip plane (behind the eye, or past
+            // one of the four side planes). Most triangles are visible on a
+            // single cube face, so this avoids rasterizing each triangle on the
+            // five faces it does not touch -- without it the geometry shader
+            // would do roughly six times the shadow rasterization. The test uses
+            // the raw GL clip (|x|,|y| <= w); the Vulkan z remap below does not
+            // affect it.
+            if ( clip0.w <= 0.0 && clip1.w <= 0.0 && clip2.w <= 0.0 )
+            {
+                  continue;
+            }
+            if ( clip0.x >  clip0.w && clip1.x >  clip1.w && clip2.x >  clip2.w )
+            {
+                  continue;
+            }
+            if ( clip0.x < -clip0.w && clip1.x < -clip1.w && clip2.x < -clip2.w )
+            {
+                  continue;
+            }
+            if ( clip0.y >  clip0.w && clip1.y >  clip1.w && clip2.y >  clip2.w )
+            {
+                  continue;
+            }
+            if ( clip0.y < -clip0.w && clip1.y < -clip1.w && clip2.y < -clip2.w )
+            {
+                  continue;
+            }
+            vec4 clip[3] = vec4[3] ( clip0, clip1, clip2 );
             gl_Layer = base_layer + face;
             for ( int i = 0; i < 3; ++i )
             {
                   gWorldPosition = vWorldPosition[i];
-                  vec4 clip = face_view_projection[face] * vec4 ( vWorldPosition[i], 1.0 );
+                  vec4 c = clip[i];
 #ifdef VULKAN
                   // Matrix4x4::Perspective produces GL-style NDC z in [-1,1];
                   // Vulkan clips to [0,1]. Remap so the near half of the face
                   // frustum is not clipped (only affects clipping; the stored
                   // depth is the linear distance written by the fragment shader).
-                  clip.z = ( clip.z + clip.w ) * 0.5;
+                  c.z = ( c.z + c.w ) * 0.5;
 #endif
-                  gl_Position = clip;
+                  gl_Position = c;
                   EmitVertex();
             }
             EndPrimitive();
