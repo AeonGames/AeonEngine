@@ -1016,14 +1016,14 @@ void main()
         }
         it->second.SetPointShadowParams ( aPointShadowParams );
     }
-    void OpenGLRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    void OpenGLRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster )
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.BeginPointShadowPass ( aCaster, aFace, aLightViewProjection );
+        it->second.BeginPointShadowPass ( aCaster );
     }
     void OpenGLRenderer::EndPointShadowPass ( void* aWindowId )
     {

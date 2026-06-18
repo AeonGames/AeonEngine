@@ -149,5 +149,41 @@ namespace AeonGames
     static_assert ( sizeof ( GpuPointShadowParams ) ==
                     64 * POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS + 16 * MAX_POINT_SHADOW_CASTERS + 16,
                     "GpuPointShadowParams layout must match the shader-side std140 PointShadowParams block." );
+
+    /** @brief CPU-side mirror of the point shadow depth pass's @c ShadowParams
+     *  uniform block, used by the single-pass (geometry-shader) point depth
+     *  pipeline.
+     *
+     *  One of these is bound per caster. The point depth pass renders all six
+     *  cube faces of a caster in a single draw: the geometry shader replicates
+     *  each primitive to the six cube-face layers (gl_Layer = base_layer + face)
+     *  using @c face_view_projection[face], and the fragment shader writes the
+     *  normalized radial distance from @c light_position_radius. @c base_layer
+     *  is the first cube-array layer of this caster's cube: it is @c caster*6 on
+     *  OpenGL (the whole array is attached, so gl_Layer is absolute) and 0 on
+     *  Vulkan (a per-caster six-layer framebuffer is bound, so gl_Layer is
+     *  relative). Matches the std140 block:
+     *  @code
+     *  layout(std140) uniform ShadowParams {
+     *      mat4 face_view_projection[POINT_SHADOW_FACES];
+     *      vec4 light_position_radius; // xyz world pos, w radius
+     *      vec4 face_params;           // x = base_layer
+     *  };
+     *  @endcode
+     *
+     *  @note A future optimization is to render the six faces with Vulkan
+     *  multiview (VK_KHR_multiview, gl_ViewIndex) instead of a geometry shader,
+     *  which avoids the geometry-shader amplification. That needs per-renderer
+     *  pipeline variants (the geometry stage must be absent on the Vulkan build
+     *  of this pipeline), so it is deferred; the geometry-shader path here is
+     *  used by both backends for now. */
+    struct GpuPointDepthParams
+    {
+        Matrix4x4 face_view_projection[POINT_SHADOW_FACES] {};
+        Vector4   light_position_radius {};
+        Vector4   face_params {};
+    };
+    static_assert ( sizeof ( GpuPointDepthParams ) == 64 * POINT_SHADOW_FACES + 16 + 16,
+                    "GpuPointDepthParams layout must match the shader-side std140 point depth ShadowParams block." );
 }
 #endif

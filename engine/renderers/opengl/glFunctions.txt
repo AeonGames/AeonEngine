@@ -134,6 +134,7 @@ glIsFramebuffer
 glFramebufferParameteri
 glDeleteFramebuffers
 glFramebufferTexture2D
+glFramebufferTexture
 glFramebufferTextureLayer
 glCheckFramebufferStatus
 glBlitFramebuffer

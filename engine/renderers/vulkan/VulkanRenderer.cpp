@@ -528,10 +528,14 @@ namespace AeonGames
         // The cluster_mark fragment shader writes the per-cluster active-flag
         // storage buffer during the depth pre-pass; that requires the
         // fragmentStoresAndAtomics device feature. imageCubeArray lets the point
-        // shadow depth array be sampled as a cube map array.
+        // shadow depth array be sampled as a cube map array. geometryShader is
+        // used by the single-pass point shadow depth pipeline to replicate
+        // geometry across the six cube faces in one draw (a future multiview
+        // path would remove this).
         VkPhysicalDeviceFeatures enabled_features {};
         enabled_features.fragmentStoresAndAtomics = VK_TRUE;
         enabled_features.imageCubeArray = VK_TRUE;
+        enabled_features.geometryShader = VK_TRUE;
         device_create_info.pEnabledFeatures = &enabled_features;
 
         /// @todo Grab best device rather than first one
@@ -1068,14 +1072,14 @@ namespace AeonGames
         }
         it->second.SetPointShadowParams ( aPointShadowParams );
     }
-    void VulkanRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    void VulkanRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster )
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.BeginPointShadowPass ( aCaster, aFace, aLightViewProjection );
+        it->second.BeginPointShadowPass ( aCaster );
     }
     void VulkanRenderer::EndPointShadowPass ( void* aWindowId )
     {

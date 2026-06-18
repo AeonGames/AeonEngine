@@ -265,24 +265,20 @@ namespace AeonGames
             ( void ) aWindowId;
             ( void ) aPointShadowParams;
         }
-        /** Begins a point shadow-depth pass that renders scene depth from one
-         * cube face of one point light into the corresponding layer
-         * (aCaster*6 + aFace) of the window's point shadow map array. Geometry
-         * submitted with RenderPass::ShadowPass between this call and
-         * EndPointShadowPass is drawn from that face's point of view. Virtual
-         * with an empty default so a backend without point shadow support
-         * ignores it.
+        /** Begins a point shadow-depth pass that renders scene depth for one
+         * point light's six cube faces into that caster's six layers
+         * (aCaster*6 .. aCaster*6+5) of the window's point shadow cube-map
+         * array, in a single draw. Geometry submitted with RenderPass::ShadowPass
+         * between this call and EndPointShadowPass is replicated to all six faces
+         * by the point depth pipeline's geometry shader. Virtual with an empty
+         * default so a backend without point shadow support ignores it.
          * @param aWindowId Platform dependent window handle.
          * @param aCaster Point shadow caster index (0 <= aCaster < MAX_POINT_SHADOW_CASTERS).
-         * @param aFace Cube face index (0 <= aFace < 6).
-         * @param aLightViewProjection World-space to that face's clip-space matrix.
          */
-        virtual void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+        virtual void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster )
         {
             ( void ) aWindowId;
             ( void ) aCaster;
-            ( void ) aFace;
-            ( void ) aLightViewProjection;
         }
         /** Ends the current point shadow-depth pass and transitions that layer
          * of the point shadow map array so it can be sampled by the shading

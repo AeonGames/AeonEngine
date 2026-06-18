@@ -63,22 +63,27 @@ namespace AeonGames
                 EndSpotShadowPass ( aWindowId );
             }
             // Point shadow passes: each point caster is omnidirectional, so its
-            // depth is captured as six 90-degree faces (one per cube axis) into
-            // six consecutive layers of the point shadow map array.
+            // depth is captured as six 90-degree cube faces. The point depth
+            // pipeline's geometry shader replicates geometry to all six faces in
+            // a single draw per caster, so the queue is culled once to a box that
+            // bounds the caster's shadow sphere (a point light has no single
+            // frustum; the axis-aligned box is a conservative superset).
             GpuPointShadowParams point_shadow_params{};
             const uint32_t point_caster_count = aScene.GetPointShadowCasters ( point_shadow_params );
             SetPointShadowParams ( aWindowId, point_shadow_params );
             for ( uint32_t caster = 0; caster < point_caster_count; ++caster )
             {
-                for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
-                {
-                    const Matrix4x4 point_light_view_projection =
-                        point_shadow_params.point_light_view_projection[caster * POINT_SHADOW_FACES + face];
-                    aScene.BuildRenderQueue ( Frustum ( point_light_view_projection ) );
-                    BeginPointShadowPass ( aWindowId, caster, face, point_light_view_projection );
-                    SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
-                    EndPointShadowPass ( aWindowId );
-                }
+                const Vector4& caster_position_radius = point_shadow_params.caster_position_radius[caster];
+                const float radius = caster_position_radius.GetW();
+                Matrix4x4 caster_bounds;
+                caster_bounds.Ortho (
+                    caster_position_radius.GetX() - radius, caster_position_radius.GetX() + radius,
+                    caster_position_radius.GetZ() - radius, caster_position_radius.GetZ() + radius,
+                    caster_position_radius.GetY() - radius, caster_position_radius.GetY() + radius );
+                aScene.BuildRenderQueue ( Frustum ( caster_bounds ) );
+                BeginPointShadowPass ( aWindowId, caster );
+                SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
+                EndPointShadowPass ( aWindowId );
             }
             // Directional shadow pass: render scene depth from the sun's point of
             // view into the shadow map before shading so the fragment stage can
