@@ -198,19 +198,6 @@ namespace AeonGames
             glslang::DefaultTBuiltInResource.maxComputeImageUniforms = 8;
             glslang::DefaultTBuiltInResource.maxComputeAtomicCounters = 8;
             glslang::DefaultTBuiltInResource.maxComputeAtomicCounterBuffers = 1;
-            // Geometry-stage limits are otherwise left zero-initialized, which
-            // would reject any geometry shader (e.g. max_vertices > 0); use
-            // glslang's standard desktop defaults so the point shadow depth
-            // pipeline's geometry shader compiles.
-            glslang::DefaultTBuiltInResource.maxGeometryInputComponents = 64;
-            glslang::DefaultTBuiltInResource.maxGeometryOutputComponents = 128;
-            glslang::DefaultTBuiltInResource.maxGeometryOutputVertices = 256;
-            glslang::DefaultTBuiltInResource.maxGeometryTotalOutputComponents = 1024;
-            glslang::DefaultTBuiltInResource.maxGeometryVaryingComponents = 64;
-            glslang::DefaultTBuiltInResource.maxGeometryTextureImageUnits = 16;
-            glslang::DefaultTBuiltInResource.maxGeometryUniformComponents = 1024;
-            glslang::DefaultTBuiltInResource.maxGeometryAtomicCounters = 0;
-            glslang::DefaultTBuiltInResource.maxGeometryAtomicCounterBuffers = 0;
             // Allow dynamic (non-constant) indexing of arrays, otherwise
             // expressions like buffer[gl_GlobalInvocationID.x] are rejected.
             glslang::DefaultTBuiltInResource.limits.nonInductiveForLoops = true;

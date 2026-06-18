@@ -20,7 +20,7 @@ set(PIPELINES
     "lighting|comp=lighting.0.comp|comp=lighting.1.comp"
     "skinning|comp=skinning.comp"
     "shadow_depth|vert=shadow_depth.vert|frag=shadow_depth.frag"
-    "point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag"
+    "point_shadow_depth|vert=point_shadow_depth.vert|frag=point_shadow_depth.frag"
 )
 
 set(SHADER_SOURCE_DIR   ${CMAKE_CURRENT_SOURCE_DIR})

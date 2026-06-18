@@ -87,7 +87,7 @@ namespace AeonGames
         void SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams );
         /// @brief Bind the point shadow framebuffer to one cube-face array layer
         ///        (caster*6 + face) and prepare its depth pass.
-        void BeginPointShadowPass ( uint32_t aCaster );
+        void BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection );
         /// @brief End the current point shadow depth pass and restore the main
         ///        framebuffer and viewport.
         void EndPointShadowPass();
