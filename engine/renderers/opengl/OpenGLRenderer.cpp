@@ -741,6 +741,24 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
+    void OpenGLRenderer::SetSpotShadowParams ( const OpenGLBuffer& aSpotShadowParamsBuffer ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::SPOT_SHADOW_PARAMS ) };
+        if ( uniform_block == nullptr )
+        {
+            // Pipeline doesn't sample spot shadows; silently skip, same
+            // convention as SetShadowParams/SetClusterParams.
+            return;
+        }
+        assert ( static_cast<const size_t> ( uniform_block->size ) <= aSpotShadowParamsBuffer.GetSize() );
+        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aSpotShadowParamsBuffer.GetBufferId(), 0, aSpotShadowParamsBuffer.GetSize() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
     void OpenGLRenderer::LoadMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
@@ -945,6 +963,33 @@ void main()
             return;
         }
         it->second.EndShadowPass();
+    }
+    void OpenGLRenderer::SetSpotShadowParams ( void* aWindowId, const GpuSpotShadowParams& aSpotShadowParams )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetSpotShadowParams ( aSpotShadowParams );
+    }
+    void OpenGLRenderer::BeginSpotShadowPass ( void* aWindowId, uint32_t aSlot, const Matrix4x4& aLightViewProjection )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginSpotShadowPass ( aSlot, aLightViewProjection );
+    }
+    void OpenGLRenderer::EndSpotShadowPass ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndSpotShadowPass();
     }
     void OpenGLRenderer::EndRender ( void* aWindowId )
     {

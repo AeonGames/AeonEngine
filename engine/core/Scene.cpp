@@ -346,6 +346,97 @@ namespace AeonGames
         return true;
     }
 
+    uint32_t Scene::GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams ) const
+    {
+        // Start from the "no casters" state: zero matrices, zero positions, and
+        // refill the filtering params below. Slots left zero never match a real
+        // light's position, so the shader treats them as non-casters.
+        aSpotShadowParams = GpuSpotShadowParams{};
+        uint32_t count = 0;
+        for ( const GpuLight& light : mFrameLights.Get() )
+        {
+            if ( count >= MAX_SPOT_SHADOW_CASTERS )
+            {
+                break;
+            }
+            if ( light.type != static_cast<uint32_t> ( LightType::Spot ) )
+            {
+                continue;
+            }
+            // The cone axis (direction the light travels) is the negation of
+            // direction_cosOuter.xyz, which stores -lightDir.
+            Vector3 cone_axis
+            {
+                -light.direction_cosOuter.GetX(),
+                                         -light.direction_cosOuter.GetY(),
+                                         -light.direction_cosOuter.GetZ()
+            };
+            if ( cone_axis.GetLength() <= 0.0f )
+            {
+                continue;
+            }
+            cone_axis = Normalize ( cone_axis );
+            // The light's radius is the perspective far plane; without it there
+            // is no finite frustum to render.
+            const float radius = light.position_radius.GetW();
+            if ( radius <= 0.0f )
+            {
+                continue;
+            }
+            // Outer cone half-angle -> full vertical field of view. Clamp below
+            // 180 degrees so a very wide cone cannot form a degenerate frustum.
+            const float cos_outer = std::clamp ( light.direction_cosOuter.GetW(), -1.0f, 1.0f );
+            const float half_angle = std::acos ( cos_outer );
+            const float fov_degrees =
+                std::min ( 2.0f * half_angle * ( 180.0f / 3.14159265358979323846f ), 170.0f );
+            if ( fov_degrees <= 0.0f )
+            {
+                continue;
+            }
+            const Vector3 eye
+            {
+                light.position_radius.GetX(),
+                                     light.position_radius.GetY(),
+                                     light.position_radius.GetZ()
+            };
+            // Orient a virtual camera so its forward axis (engine +Y) looks along
+            // the cone axis (same shortest-arc construction as the directional
+            // caster, with the antiparallel case handled explicitly).
+            const Vector3 forward { 0.0f, 1.0f, 0.0f };
+            const float d = Dot ( forward, cone_axis );
+            Quaternion orientation{ 1.0f, 0.0f, 0.0f, 0.0f };
+            if ( d < -0.9999f )
+            {
+                orientation = Quaternion::GetFromAxisAngle ( 180.0f, 0.0f, 0.0f, 1.0f );
+            }
+            else if ( d < 0.9999f )
+            {
+                const Vector3 axis = Normalize ( Cross ( forward, cone_axis ) );
+                const float angle = std::acos ( d ) * ( 180.0f / 3.14159265358979323846f );
+                orientation = Quaternion::GetFromAxisAngle ( angle, axis.GetX(), axis.GetY(), axis.GetZ() );
+            }
+            Transform light_transform;
+            light_transform.SetRotation ( orientation );
+            light_transform.SetTranslation ( eye );
+            const Matrix4x4 light_view = light_transform.GetInvertedMatrix();
+            // Near plane a small fraction of the range, floored so it is never 0.
+            const float near_plane = std::max ( radius * 0.02f, 0.05f );
+            Matrix4x4 light_projection;
+            light_projection.Perspective ( fov_degrees, 1.0f, near_plane, radius );
+            // Engine convention (clip = Proj * View * Model * v); the per-backend
+            // depth flip is applied inside the shadow shaders.
+            aSpotShadowParams.spot_light_view_projection[count] = light_projection * light_view;
+            aSpotShadowParams.caster_position[count] =
+                Vector4 { eye.GetX(), eye.GetY(), eye.GetZ(), 0.0f };
+            ++count;
+        }
+        aSpotShadowParams.params[0] = 1.0f / static_cast<float> ( SPOT_SHADOW_MAP_RESOLUTION );
+        aSpotShadowParams.params[1] = 0.0015f;
+        aSpotShadowParams.params[2] = 1.0f;
+        aSpotShadowParams.params[3] = static_cast<float> ( count );
+        return count;
+    }
+
     void Scene::SetFieldOfView ( float aFieldOfView )
     {
         mFieldOfView = aFieldOfView;

@@ -111,6 +111,30 @@ layout(binding = 8)
 #endif
 uniform sampler2DShadow ShadowMap;
 
+// Spot shadow mapping. SpotShadowParams carries one world-space view-projection
+// and one world-space position per active spot caster; SpotShadowMap is a depth
+// texture array (one layer per caster) sampled with hardware comparison. While
+// shading a spot light the fragment shader finds the slot whose caster_position
+// matches the light's own position and samples that array layer.
+#ifdef VULKAN
+layout(set = 10, binding = 0, std140)
+#else
+layout(binding = 6, std140)
+#endif
+uniform SpotShadowParams
+{
+      mat4 spot_light_view_projection[4]; // world -> caster clip space, per slot
+      vec4 spot_caster_position[4];        // caster world position, per slot (.xyz)
+      vec4 spot_shadow_params;             // (texel_size, depth_bias, pcf_radius, count)
+};
+
+#ifdef VULKAN
+layout(set = 11, binding = 0)
+#else
+layout(binding = 9)
+#endif
+uniform sampler2DArrayShadow SpotShadowMap;
+
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
@@ -192,6 +216,67 @@ float directional_shadow()
             }
       }
       return visibility / 9.0;
+}
+
+// Sample the spot shadow map layer for caster slot @p aSlot and return a
+// visibility factor in [0,1] (1 = fully lit, 0 = fully shadowed). Mirrors
+// directional_shadow() but uses the caster's perspective light view-projection
+// and samples the matching layer of the sampler2DArrayShadow.
+float spot_shadow ( int aSlot )
+{
+      vec4 world = inverse ( ViewMatrix ) * vec4 ( eyeCoords, 1.0 );
+      vec4 light_clip = spot_light_view_projection[aSlot] * world;
+#ifdef VULKAN
+      // Match the GL[-1,1] -> VK[0,1] depth remap the shadow_depth pass applied.
+      light_clip.z = ( light_clip.z + light_clip.w ) * 0.5;
+#endif
+      // Behind the light (w <= 0) projects nowhere valid: treat as lit.
+      if ( light_clip.w <= 0.0 )
+      {
+            return 1.0;
+      }
+      vec3 proj = light_clip.xyz / light_clip.w;
+      vec2 uv = proj.xy * 0.5 + 0.5;
+      if ( uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 )
+      {
+            return 1.0;
+      }
+#ifdef VULKAN
+      float current_depth = proj.z;            // already [0,1] after the remap
+#else
+      float current_depth = proj.z * 0.5 + 0.5; // NDC[-1,1] -> window depth[0,1]
+#endif
+      current_depth -= spot_shadow_params.y;   // constant bias to fight acne
+      // 3x3 PCF on this caster's array layer (slot index as the third coord).
+      float visibility = 0.0;
+      float step = spot_shadow_params.x * spot_shadow_params.z;
+      for ( int y = -1; y <= 1; ++y )
+      {
+            for ( int x = -1; x <= 1; ++x )
+            {
+                  vec2 offset = vec2 ( float ( x ), float ( y ) ) * step;
+                  visibility += texture ( SpotShadowMap, vec4 ( uv + offset, float ( aSlot ), current_depth ) );
+            }
+      }
+      return visibility / 9.0;
+}
+
+// Find the spot shadow caster slot whose recorded world position matches the
+// given spot light's position, or -1 when this light is not a shadow caster.
+// The shadow records are bit-identical copies of the same light, so an exact
+// (small-epsilon) position match reliably identifies the casting light even
+// after the renderer's frustum cull shifts light indices.
+int spot_shadow_slot ( vec3 aLightPos )
+{
+      int count = int ( spot_shadow_params.w );
+      for ( int i = 0; i < count; ++i )
+      {
+            if ( distance ( spot_caster_position[i].xyz, aLightPos ) < 0.01 )
+            {
+                  return i;
+            }
+      }
+      return -1;
 }
 
 // Blinn-Phong contribution of a single light, accumulated into the running
@@ -300,6 +385,7 @@ void main()
       // In eye space the camera sits at the origin, so the view direction is
       // just the negated, normalized eye-space position.
       vec3 V = normalize ( -eyeCoords );
+
       vec3 diffuse_accum  = vec3 ( 0.0 );
       vec3 specular_accum = vec3 ( 0.0 );
 
@@ -316,7 +402,19 @@ void main()
             {
                   continue;
             }
-            accumulate_light ( Lights_data[li], N, V, 1.0, diffuse_accum, specular_accum );
+            // Spot lights may cast a shadow: find this light's caster slot (by
+            // matching its world position) and sample that layer. Point lights
+            // and non-casting spots stay fully lit (visibility 1).
+            float light_visibility = 1.0;
+            if ( Lights_data[li].type == 1u )
+            {
+                  int slot = spot_shadow_slot ( Lights_data[li].position_radius.xyz );
+                  if ( slot >= 0 )
+                  {
+                        light_visibility = spot_shadow ( slot );
+                  }
+            }
+            accumulate_light ( Lights_data[li], N, V, light_visibility, diffuse_accum, specular_accum );
       }
 
       // Directional lights bypass clustering (they touch every fragment), so

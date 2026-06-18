@@ -84,6 +84,8 @@ namespace AeonGames
             INSTANCE_MATRICES = "InstanceMatrices"_crc32, ///< Instanced rendering: per-instance model matrices indexed by instance id (SSBO).
             SHADOW_PARAMS     = "ShadowParams"_crc32,    ///< Directional shadow mapping: light view-projection and filtering params (UBO).
             SHADOW_MAP        = "ShadowMap"_crc32,       ///< Directional shadow mapping: depth shadow map sampled with comparison (sampler2DShadow).
+            SPOT_SHADOW_PARAMS = "SpotShadowParams"_crc32, ///< Spot shadow mapping: per-caster light view-projections, caster light indices and filtering params (UBO).
+            SPOT_SHADOW_MAP   = "SpotShadowMap"_crc32,   ///< Spot shadow mapping: depth shadow map array sampled with comparison (sampler2DArrayShadow).
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */

@@ -112,6 +112,7 @@ glUniform3uiv
 glUniform4uiv
 glGetUniformIndices
 glCompressedTexImage2D
+glTexImage3D
 glBindTextureUnit
 glActiveTexture
 glDetachShader
@@ -133,6 +134,7 @@ glIsFramebuffer
 glFramebufferParameteri
 glDeleteFramebuffers
 glFramebufferTexture2D
+glFramebufferTextureLayer
 glCheckFramebufferStatus
 glBlitFramebuffer
 glBlitNamedFramebuffer

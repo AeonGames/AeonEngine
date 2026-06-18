@@ -72,6 +72,15 @@ namespace AeonGames
         /// @brief End the shadow depth pass and restore the main framebuffer
         ///        and viewport.
         void EndShadowPass();
+        /// @brief Upload this frame's spot shadow casters into the spot
+        ///        ShadowParams UBO sampled by the shading pass.
+        void SetSpotShadowParams ( const GpuSpotShadowParams& aSpotShadowParams );
+        /// @brief Bind the spot shadow framebuffer to one array layer and
+        ///        prepare its depth pass for the given caster light matrix.
+        void BeginSpotShadowPass ( uint32_t aSlot, const Matrix4x4& aLightViewProjection );
+        /// @brief End the current spot shadow depth pass and restore the main
+        ///        framebuffer and viewport.
+        void EndSpotShadowPass();
         /// @brief End the current frame and present.
         void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
@@ -162,6 +171,12 @@ namespace AeonGames
         void InitializeShadowMap();
         /// @brief Release the shadow map texture, framebuffer and UBO.
         void FinalizeShadowMap();
+        /// @brief Create the off-screen spot shadow map: a sampleable depth
+        ///        texture array (one layer per caster), its framebuffer, the
+        ///        spot ShadowParams UBO and the per-pass depth matrix scratch UBO.
+        void InitializeSpotShadowMap();
+        /// @brief Release the spot shadow map array, framebuffer and UBOs.
+        void FinalizeSpotShadowMap();
         /// @brief Upload per-object model matrices into a transient storage
         ///        buffer and bind it at INSTANCE_MATRICES. The uber-pipeline
         ///        vertex shaders index it by gl_InstanceID, so a single draw
@@ -206,6 +221,18 @@ namespace AeonGames
         OpenGLBuffer mShadowParams{};
         Pipeline mShadowDepthPipeline{};
         bool mShadowDepthLoaded{false};
+        // Off-screen spot shadow maps: a sampleable depth texture array with one
+        // layer per caster, its framebuffer (a single layer attached per pass),
+        // the spot ShadowParams UBO sampled by the shading pass, and a scratch
+        // UBO holding the current pass's light matrix for the shared depth-only
+        // pipeline (whose vertex shader reads the directional ShadowParams
+        // block; the spot passes bind this scratch there instead). mInSpotShadowPass
+        // selects which the shadow-pass draw branch binds as the depth matrix.
+        GLuint mSpotShadowDepthTexture{0};
+        GLuint mSpotShadowFrameBuffer{0};
+        OpenGLBuffer mSpotShadowParams{};
+        OpenGLBuffer mSpotShadowDepthScratch{};
+        bool mInSpotShadowPass{false};
         // True once BeginFrame() has begun this frame; makes BeginFrame()
         // idempotent so the app can run a pre-render-pass compute phase
         // (e.g. skinning) before BeginRender().

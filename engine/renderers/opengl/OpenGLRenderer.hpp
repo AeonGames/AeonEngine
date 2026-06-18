@@ -90,6 +90,8 @@ namespace AeonGames
         void SetClusterParams ( const OpenGLBuffer& aClusterParamsBuffer ) const;
         /// @brief Bind the directional shadow params uniform buffer for the current draw.
         void SetShadowParams ( const OpenGLBuffer& aShadowParamsBuffer ) const;
+        /// @brief Bind the spot shadow params uniform buffer for the current draw.
+        void SetSpotShadowParams ( const OpenGLBuffer& aSpotShadowParamsBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -112,6 +114,9 @@ namespace AeonGames
         void EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline ) final;
         void BeginShadowPass ( void* aWindowId, const Matrix4x4& aLightViewProjection ) final;
         void EndShadowPass ( void* aWindowId ) final;
+        void SetSpotShadowParams ( void* aWindowId, const GpuSpotShadowParams& aSpotShadowParams ) final;
+        void BeginSpotShadowPass ( void* aWindowId, uint32_t aSlot, const Matrix4x4& aLightViewProjection ) final;
+        void EndSpotShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,

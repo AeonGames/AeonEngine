@@ -98,6 +98,9 @@ namespace AeonGames
         void EndDepthPrePass ( void* aWindowId, const Pipeline* aComputePipeline ) final;
         void BeginShadowPass ( void* aWindowId, const Matrix4x4& aLightViewProjection ) final;
         void EndShadowPass ( void* aWindowId ) final;
+        void SetSpotShadowParams ( void* aWindowId, const GpuSpotShadowParams& aSpotShadowParams ) final;
+        void BeginSpotShadowPass ( void* aWindowId, uint32_t aSlot, const Matrix4x4& aLightViewProjection ) final;
+        void EndSpotShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,

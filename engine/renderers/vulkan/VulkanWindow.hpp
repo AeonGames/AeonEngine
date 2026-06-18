@@ -19,6 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <span>
 #include <vector>
+#include <array>
 #include <vulkan/vulkan.h>
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuClusterParams.hpp"
@@ -77,17 +78,17 @@ namespace AeonGames
         ///        restore the window viewport/scissor, and reopen the main
         ///        render pass for the depth pre-pass to continue.
         void EndShadowPass();
-        /** @brief Render a mesh with the given pipeline, material, and transform.
-         *  @param aModelMatrix Model-to-world transform matrix.
-         *  @param aMesh Mesh geometry to render.
-         *  @param aPipeline Shader pipeline to use.
-         *  @param aMaterial Optional material, may be nullptr.
-         *  @param aTopology Primitive topology.
-         *  @param aVertexStart First vertex index.
-         *  @param aVertexCount Number of vertices to draw.
-         *  @param aInstanceCount Number of instances.
-         *  @param aFirstInstance First instance index.
-         */
+        /// @brief Upload this frame's spot shadow casters into the spot
+        ///        ShadowParams UBO sampled by the shading pass.
+        void SetSpotShadowParams ( const GpuSpotShadowParams& aSpotShadowParams );
+        /// @brief Begin a spot-light shadow depth pass rendering into one array
+        ///        layer of the spot shadow map. Closes the open main render
+        ///        pass and opens the spot shadow render pass for the given slot.
+        void BeginSpotShadowPass ( uint32_t aSlot, const Matrix4x4& aLightViewProjection );
+        /// @brief End the current spot shadow depth pass: close its render pass
+        ///        (leaving that layer sampleable), restore the window
+        ///        viewport/scissor, and reopen the main render pass.
+        void EndSpotShadowPass();
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -181,6 +182,13 @@ namespace AeonGames
         void InitializeLights();
         void InitializeClusterParams();
         void InitializeShadowMap();
+        /// @brief Create the spot shadow map: a sampleable depth texture array
+        ///        (one layer per caster), per-layer framebuffers reusing the
+        ///        directional shadow render pass, the spot ShadowParams UBO and
+        ///        the per-slot depth matrix UBO + descriptor sets.
+        void InitializeSpotShadowMap();
+        /// @brief Release the spot shadow map array, framebuffers and buffers.
+        void FinalizeSpotShadowMap();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
@@ -219,6 +227,11 @@ namespace AeonGames
         VulkanBuffer mLights;
         VulkanBuffer mClusterParams;
         VulkanBuffer mShadowParams;
+        // Spot shadow params (all caster matrices + positions) sampled by the
+        // shading pass, and the per-slot depth matrices read by the spot depth
+        // passes (one aligned GpuShadowParams slot per caster).
+        VulkanBuffer mSpotShadowParams;
+        VulkanBuffer mSpotShadowDepthMatrices;
         // Scratch buffer holding the frustum-culled subset of this frame's
         // lights; reused across frames so capacity is not reallocated.
         std::vector<GpuLight> mVisibleLights{};
@@ -283,6 +296,32 @@ namespace AeonGames
         VkDescriptorSet mShadowParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mShadowMapDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mShadowMapDescriptorSet{VK_NULL_HANDLE};
+        // Spot shadow maps: a depth texture ARRAY with one layer per caster,
+        // sampled as a sampler2DArrayShadow by the shading pass. Each layer is
+        // rendered through its own single-layer image view and framebuffer
+        // (reusing the directional shadow render pass, which is size-agnostic).
+        // A throwaway color image is shared across the framebuffers for
+        // render-pass compatibility. The per-slot light matrices live in one UBO
+        // with aligned slots; one descriptor set per slot binds its slot region
+        // at the depth pipeline's ShadowParams slot, so each spot depth pass
+        // reads its own matrix with no single-buffer write hazard.
+        VkImage mVkSpotShadowDepthImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkSpotShadowDepthImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkSpotShadowDepthArrayView{VK_NULL_HANDLE};
+        std::array<VkImageView, MAX_SPOT_SHADOW_CASTERS> mVkSpotShadowDepthLayerViews{};
+        VkImage mVkSpotShadowColorImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkSpotShadowColorImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkSpotShadowColorImageView{VK_NULL_HANDLE};
+        std::array<VkFramebuffer, MAX_SPOT_SHADOW_CASTERS> mVkSpotShadowFramebuffers{};
+        VkDescriptorPool mSpotShadowParamsDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mSpotShadowParamsDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mSpotShadowMapDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mSpotShadowMapDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mSpotShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, MAX_SPOT_SHADOW_CASTERS> mSpotShadowDepthMatricesDescriptorSets{};
+        VkDeviceSize mSpotShadowDepthMatrixStride{0};
+        bool mInSpotShadowPass{false};
+        uint32_t mCurrentSpotShadowSlot{0};
         VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
         VkFence mVkFence{ VK_NULL_HANDLE };
 

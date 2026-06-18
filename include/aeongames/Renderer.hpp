@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/RenderItem.hpp"
 #include "aeongames/GpuLight.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 
 namespace AeonGames
 {
@@ -206,6 +207,50 @@ namespace AeonGames
          * @param aWindowId Platform dependent window handle.
          */
         virtual void EndShadowPass ( void* aWindowId ) = 0;
+        /** Uploads the per-frame spot shadow casters into the window's
+         * SpotShadowParams uniform block so the shading pass can sample each
+         * spot light's shadow map layer. Called once per frame before the spot
+         * shadow depth passes, regardless of caster count (a count of zero
+         * leaves every spot light unshadowed). Virtual with an empty default so
+         * a backend that has not yet implemented spot shadows simply ignores it.
+         * @param aWindowId Platform dependent window handle.
+         * @param aSpotShadowParams The per-caster light view-projections, caster
+         *        positions and filtering params to upload.
+         */
+        virtual void SetSpotShadowParams ( void* aWindowId, const GpuSpotShadowParams& aSpotShadowParams )
+        {
+            ( void ) aWindowId;
+            ( void ) aSpotShadowParams;
+        }
+        /** Begins a spot shadow-depth pass that renders scene depth from one
+         * spot light's point of view into the given layer of the window's spot
+         * shadow map array. Geometry submitted with RenderPass::ShadowPass
+         * between this call and EndSpotShadowPass is drawn from the light's point
+         * of view. Mirrors BeginShadowPass but targets an array layer and a
+         * perspective light frustum. Virtual with an empty default so a backend
+         * without spot shadow support ignores it.
+         * @param aWindowId Platform dependent window handle.
+         * @param aSlot Spot shadow map array layer to render into
+         *        (0 <= aSlot < MAX_SPOT_SHADOW_CASTERS).
+         * @param aLightViewProjection World-space to light clip-space matrix for
+         *        this caster, used to render and later sample its shadow layer.
+         */
+        virtual void BeginSpotShadowPass ( void* aWindowId, uint32_t aSlot, const Matrix4x4& aLightViewProjection )
+        {
+            ( void ) aWindowId;
+            ( void ) aSlot;
+            ( void ) aLightViewProjection;
+        }
+        /** Ends the current spot shadow-depth pass and transitions that layer of
+         * the spot shadow map array so it can be sampled by the shading pass.
+         * Must be paired with a preceding BeginSpotShadowPass. Virtual with an
+         * empty default so a backend without spot shadow support ignores it.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void EndSpotShadowPass ( void* aWindowId )
+        {
+            ( void ) aWindowId;
+        }
         /** Ends the depth pre-pass mark render pass, dispatches the remaining
          * clustering compute stages (light culling, which now gates on the
          * clusters the mark pass flagged as active), then begins the main color

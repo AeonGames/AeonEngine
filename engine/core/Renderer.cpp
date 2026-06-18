@@ -44,13 +44,30 @@ namespace AeonGames
         BeginRender ( aWindowId, lighting );
         if ( lighting )
         {
-            // Shadow pass: when a directional caster is present, render scene
-            // depth from the light's point of view into the shadow map before
-            // shading so the fragment stage can sample it. The shadow map must
-            // contain every caster the light can see, NOT just what the camera
-            // sees, so the queue is culled to the light's orthographic frustum
-            // here. Reusing the camera frustum would make casters outside the
-            // view pop in and out of the shadow map as the camera moves.
+            // Spot shadow passes: render each spot shadow caster's depth into its
+            // own layer of the spot shadow map array before the directional pass.
+            // Spots run BEFORE the directional pass on purpose: every shadow
+            // depth pass reuses the window's ShadowParams matrix as scratch for
+            // the depth vertex shader, so the directional pass must write it LAST
+            // to leave the directional matrix in place for the shading pass.
+            GpuSpotShadowParams spot_shadow_params{};
+            const uint32_t spot_caster_count = aScene.GetSpotShadowCasters ( spot_shadow_params );
+            SetSpotShadowParams ( aWindowId, spot_shadow_params );
+            for ( uint32_t slot = 0; slot < spot_caster_count; ++slot )
+            {
+                const Matrix4x4 spot_light_view_projection =
+                    spot_shadow_params.spot_light_view_projection[slot];
+                aScene.BuildRenderQueue ( Frustum ( spot_light_view_projection ) );
+                BeginSpotShadowPass ( aWindowId, slot, spot_light_view_projection );
+                SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
+                EndSpotShadowPass ( aWindowId );
+            }
+            // Directional shadow pass: render scene depth from the sun's point of
+            // view into the shadow map before shading so the fragment stage can
+            // sample it. The shadow map must contain every caster the light can
+            // see, NOT just what the camera sees, so the queue is culled to the
+            // light's orthographic frustum here. Reusing the camera frustum would
+            // make casters outside the view pop in and out as the camera moves.
             Matrix4x4 light_view_projection;
             if ( aScene.GetDirectionalShadowMatrix ( light_view_projection, GetProjectionMatrix ( aWindowId ) ) )
             {

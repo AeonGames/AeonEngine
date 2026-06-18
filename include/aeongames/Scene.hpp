@@ -23,6 +23,7 @@ limitations under the License.
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/FrameLightContainer.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/RenderItem.hpp"
 #include "aeongames/Octree.hpp"
@@ -238,6 +239,21 @@ namespace AeonGames
          *  flip), so either backend's matrix works. */
         DLL bool GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection,
                                               const Matrix4x4& aCameraProjection ) const;
+        /** @brief Select the spot lights that should cast a shadow this frame
+         *  and fill their per-caster shadow data. Picks up to
+         *  @ref MAX_SPOT_SHADOW_CASTERS spot lights from the frame light list
+         *  (in submission order) and, for each, computes a perspective light
+         *  view-projection from the light's position, cone direction, outer cone
+         *  angle (field of view) and radius (far plane), recording the casting
+         *  light's index so the fragment shader can match a shaded spot light to
+         *  its shadow map layer. Slots past the returned count are left with a
+         *  light index of -1. Must be called after BuildRenderQueue so the
+         *  spatial index is current.
+         *  @param[out] aSpotShadowParams Receives the per-caster light
+         *  view-projections (engine convention, no per-backend depth flip), the
+         *  caster light indices and the filtering params (count in params[3]).
+         *  @return The number of spot shadow casters selected (0 when none). */
+        DLL uint32_t GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams ) const;
         /**@}*/
 
         /** @name Visibility culling */
