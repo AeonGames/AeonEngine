@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/Texture.hpp"
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuClusterParams.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/BufferAccessor.hpp"
@@ -258,6 +259,15 @@ namespace AeonGames
         GLuint mPointShadowFrameBuffer{0};
         OpenGLBuffer mPointShadowParams{};
         OpenGLBuffer mPointShadowDepthScratch{};
+        // Point passes use a dedicated depth pipeline that writes linear radial
+        // distance from the light (point_shadow_depth) instead of projected
+        // depth; lazily loaded on the first point pass.
+        Pipeline mPointShadowDepthPipeline{};
+        bool mPointShadowDepthLoaded{false};
+        // CPU mirror of the point shadow params so a point pass can read its
+        // caster's world position + radius, which the linear-distance depth
+        // shader needs (passed through the depth scratch's params vec4).
+        GpuPointShadowParams mPointShadowParamsCpu{};
         bool mInPointShadowPass{false};
         // True once BeginFrame() has begun this frame; makes BeginFrame()
         // idempotent so the app can run a pre-render-pass compute phase

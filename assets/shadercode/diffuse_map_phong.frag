@@ -307,9 +307,11 @@ int spot_shadow_slot ( vec3 aLightPos )
 
 // Sample the point shadow map for caster @p aCaster and return a visibility
 // factor in [0,1]. Reconstructs the fragment's world position, picks the cube
-// face from the dominant axis of the light-to-fragment vector, then projects
-// and 3x3-PCF-compares against that face's array layer (caster*6 + face),
-// exactly like spot_shadow but with the extra face selection step.
+// face from the dominant axis of the light-to-fragment vector to locate the
+// array layer and its texel, then compares the fragment's normalized radial
+// distance from the light against the stored distance. The depth pass writes
+// length(frag - light) / radius, so the comparison metric is the same on both
+// faces and both backends (no projected-depth NDC remap needed here).
 float point_shadow ( int aCaster, vec3 aLightPos )
 {
       vec4 world = inverse ( ViewMatrix ) * vec4 ( eyeCoords, 1.0 );
@@ -329,26 +331,21 @@ float point_shadow ( int aCaster, vec3 aLightPos )
             face = ( L.z > 0.0 ) ? 4 : 5;
       }
       int layer = aCaster * 6 + face;
+      // Project only to find the texel (uv); the compared depth is radial, not
+      // this projection's z. uv uses xy/w, which is identical on GL and Vulkan.
       vec4 light_clip = point_light_view_projection[layer] * world;
-#ifdef VULKAN
-      light_clip.z = ( light_clip.z + light_clip.w ) * 0.5;
-#endif
       if ( light_clip.w <= 0.0 )
       {
             return 1.0;
       }
-      vec3 proj = light_clip.xyz / light_clip.w;
-      vec2 uv = proj.xy * 0.5 + 0.5;
+      vec2 uv = ( light_clip.xy / light_clip.w ) * 0.5 + 0.5;
       if ( uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 )
       {
             return 1.0;
       }
-#ifdef VULKAN
-      float current_depth = proj.z;
-#else
-      float current_depth = proj.z * 0.5 + 0.5;
-#endif
-      current_depth -= point_shadow_params.y;
+      // Normalized radial distance: the exact metric the depth pass stored.
+      float radius = point_caster_position_radius[aCaster].w;
+      float current_depth = length ( L ) / radius - point_shadow_params.y;
       float visibility = 0.0;
       float step = point_shadow_params.x * point_shadow_params.z;
       for ( int y = -1; y <= 1; ++y )

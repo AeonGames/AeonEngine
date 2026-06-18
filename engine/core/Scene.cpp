@@ -507,7 +507,10 @@ namespace AeonGames
             ++count;
         }
         aPointShadowParams.params[0] = 1.0f / static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION );
-        aPointShadowParams.params[1] = 0.0015f;
+        // Depth bias is in normalized radial-distance units (the depth pass
+        // stores length(frag-light)/radius), so it is larger than the NDC bias
+        // the directional/spot maps use.
+        aPointShadowParams.params[1] = 0.004f;
         aPointShadowParams.params[2] = 1.0f;
         aPointShadowParams.params[3] = static_cast<float> ( count );
         return count;

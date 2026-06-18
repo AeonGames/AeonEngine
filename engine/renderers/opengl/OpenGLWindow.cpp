@@ -324,7 +324,7 @@ namespace AeonGames
         // using the light's view-projection and ignores material/lighting state.
         if ( aRenderPass == RenderPass::ShadowPass )
         {
-            mOpenGLRenderer.BindPipeline ( mShadowDepthPipeline );
+            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             // Point and spot passes feed their per-caster (or per-face) matrix
             // through a scratch UBO bound at the same ShadowParams slot the depth
             // vertex shader reads; the directional pass uses the real buffer.
@@ -439,7 +439,7 @@ namespace AeonGames
         // with the renderer-owned depth-only pipeline.
         if ( aRenderPass == RenderPass::ShadowPass )
         {
-            mOpenGLRenderer.BindPipeline ( mShadowDepthPipeline );
+            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             // Point and spot passes feed their per-caster (or per-face) matrix
             // through a scratch UBO bound at the same ShadowParams slot the depth
             // vertex shader reads; the directional pass uses the real buffer.
@@ -866,19 +866,26 @@ namespace AeonGames
 
     void OpenGLWindow::SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams )
     {
+        mPointShadowParamsCpu = aPointShadowParams;
         mPointShadowParams.WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
     }
 
     void OpenGLWindow::BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
     {
-        if ( !mShadowDepthLoaded )
+        if ( !mPointShadowDepthLoaded )
         {
-            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
-            mShadowDepthLoaded = true;
+            mPointShadowDepthPipeline.LoadFromId ( "shaders/point_shadow_depth.txt"_crc32 );
+            mPointShadowDepthLoaded = true;
         }
         GpuShadowParams params{};
         params.light_view_projection = aLightViewProjection;
-        params.params[3] = 1.0f; // enabled (unused by the depth vertex shader)
+        // The point depth shader reads the caster's world position (.xyz) and
+        // radius (.w) from shadow_params to write normalized radial distance.
+        const Vector4& caster = mPointShadowParamsCpu.caster_position_radius[aCaster];
+        params.params[0] = caster.GetX();
+        params.params[1] = caster.GetY();
+        params.params[2] = caster.GetZ();
+        params.params[3] = caster.GetW();
         mPointShadowDepthScratch.WriteMemory ( 0, sizeof ( params ), &params );
         mInPointShadowPass = true;
 
@@ -890,15 +897,12 @@ namespace AeonGames
         glViewport ( 0, 0, POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION );
         glClear ( GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
-        glEnable ( GL_POLYGON_OFFSET_FILL );
-        glPolygonOffset ( 2.5f, 4.0f );
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
     void OpenGLWindow::EndPointShadowPass()
     {
         mInPointShadowPass = false;
-        glDisable ( GL_POLYGON_OFFSET_FILL );
         mFrameBuffer.Bind();
         glViewport ( 0, 0, static_cast<GLsizei> ( mViewportWidth ), static_cast<GLsizei> ( mViewportHeight ) );
         OPENGL_CHECK_ERROR_NO_THROW;

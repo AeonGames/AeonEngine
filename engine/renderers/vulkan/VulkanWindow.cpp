@@ -1788,6 +1788,7 @@ namespace AeonGames
 
     void VulkanWindow::SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams )
     {
+        mPointShadowParamsCpu = aPointShadowParams;
         mPointShadowParams.WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
     }
 
@@ -1798,14 +1799,20 @@ namespace AeonGames
         {
             return;
         }
-        if ( !mShadowDepthLoaded )
+        if ( !mPointShadowDepthLoaded )
         {
-            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
-            mShadowDepthLoaded = true;
+            mPointShadowDepthPipeline.LoadFromId ( "shaders/point_shadow_depth.txt"_crc32 );
+            mPointShadowDepthLoaded = true;
         }
         GpuShadowParams depth_matrix{};
         depth_matrix.light_view_projection = aLightViewProjection;
-        depth_matrix.params[3] = 1.0f;
+        // The point depth shader reads the caster's world position (.xyz) and
+        // radius (.w) from shadow_params to write normalized radial distance.
+        const Vector4& caster = mPointShadowParamsCpu.caster_position_radius[aCaster];
+        depth_matrix.params[0] = caster.GetX();
+        depth_matrix.params[1] = caster.GetY();
+        depth_matrix.params[2] = caster.GetZ();
+        depth_matrix.params[3] = caster.GetW();
         mPointShadowDepthMatrices.WriteMemory ( layer * mPointShadowDepthMatrixStride,
                                                 sizeof ( GpuShadowParams ), &depth_matrix );
         mInPointShadowPass = true;
@@ -2338,7 +2345,7 @@ namespace AeonGames
         // view-projection (ShadowParams) and writes depth only.
         if ( aRenderPass == RenderPass::ShadowPass )
         {
-            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mShadowDepthPipeline );
+            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
             vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
@@ -2685,7 +2692,7 @@ namespace AeonGames
         // drive every instance from the per-object matrix buffer.
         if ( aRenderPass == RenderPass::ShadowPass )
         {
-            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mShadowDepthPipeline );
+            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
             vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 

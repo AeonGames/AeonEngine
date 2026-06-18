@@ -23,6 +23,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuClusterParams.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Renderer.hpp"
@@ -365,6 +366,14 @@ namespace AeonGames
         VkDescriptorPool mPointShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
         std::array<VkDescriptorSet, POINT_SHADOW_LAYERS> mPointShadowDepthMatricesDescriptorSets{};
         VkDeviceSize mPointShadowDepthMatrixStride{0};
+        // Point passes use a dedicated depth pipeline that writes linear radial
+        // distance from the light (point_shadow_depth) instead of projected
+        // depth; lazily loaded on the first point pass.
+        Pipeline mPointShadowDepthPipeline{};
+        bool mPointShadowDepthLoaded{false};
+        // CPU mirror of the point shadow params so a point pass can read its
+        // caster's world position + radius for the linear-distance depth shader.
+        GpuPointShadowParams mPointShadowParamsCpu{};
         bool mInPointShadowPass{false};
         uint32_t mCurrentPointShadowLayer{0};
         VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
