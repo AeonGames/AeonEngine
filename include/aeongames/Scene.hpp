@@ -254,6 +254,20 @@ namespace AeonGames
          *  caster light indices and the filtering params (count in params[3]).
          *  @return The number of spot shadow casters selected (0 when none). */
         DLL uint32_t GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams ) const;
+        /** @brief Select the point lights that should cast a shadow this frame
+         *  and fill their per-caster shadow data. Picks up to
+         *  @ref MAX_POINT_SHADOW_CASTERS point lights from the frame light list
+         *  and, for each, builds six 90-degree perspective light view-projections
+         *  (one per cube face, axis order +X,-X,+Y,-Y,+Z,-Z) from the light's
+         *  position and radius, recording the light's world position and radius
+         *  so the fragment shader can match a shaded point light to its caster
+         *  and pick the cube face from the light-to-fragment direction. Must be
+         *  called after BuildRenderQueue so the spatial index is current.
+         *  @param[out] aPointShadowParams Receives the six-per-caster light
+         *  view-projections (engine convention, no per-backend depth flip), the
+         *  caster positions/radii and the filtering params (count in params[3]).
+         *  @return The number of point shadow casters selected (0 when none). */
+        DLL uint32_t GetPointShadowCasters ( GpuPointShadowParams& aPointShadowParams ) const;
         /**@}*/
 
         /** @name Visibility culling */

@@ -754,18 +754,20 @@ namespace AeonGames
                                        ? descriptor_set->bindings[0]->type_description->type_name
                                        : "Samplers" };
                 // A lone combined image sampler that the engine binds by name
-                // (the directional ShadowMap or the spot SpotShadowMap, owned by
-                // the window rather than the material) must keep its own identity
-                // instead of collapsing into the material "Samplers" bucket;
-                // otherwise distinct sampler sets hash-collide and overwrite each
-                // other at bind time, leaving the material sampler set unbound.
+                // (the directional ShadowMap, the spot SpotShadowMap or the
+                // point PointShadowMap, owned by the window rather than the
+                // material) must keep its own identity instead of collapsing
+                // into the material "Samplers" bucket; otherwise distinct sampler
+                // sets hash-collide and overwrite each other at bind time,
+                // leaving the material sampler set unbound.
                 if ( !is_named_buffer_block &&
                      descriptor_set->binding_count == 1 &&
                      first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
                      descriptor_set->bindings[0]->name != nullptr &&
                      descriptor_set->bindings[0]->name[0] != '\0' &&
                      ( crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SHADOW_MAP ||
-                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SPOT_SHADOW_MAP ) )
+                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SPOT_SHADOW_MAP ||
+                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::POINT_SHADOW_MAP ) )
                 {
                     type_name = descriptor_set->bindings[0]->name;
                 }

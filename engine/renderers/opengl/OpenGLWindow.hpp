@@ -81,6 +81,15 @@ namespace AeonGames
         /// @brief End the current spot shadow depth pass and restore the main
         ///        framebuffer and viewport.
         void EndSpotShadowPass();
+        /// @brief Upload this frame's point shadow casters into the point
+        ///        ShadowParams UBO sampled by the shading pass.
+        void SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams );
+        /// @brief Bind the point shadow framebuffer to one cube-face array layer
+        ///        (caster*6 + face) and prepare its depth pass.
+        void BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection );
+        /// @brief End the current point shadow depth pass and restore the main
+        ///        framebuffer and viewport.
+        void EndPointShadowPass();
         /// @brief End the current frame and present.
         void EndRender();
         void Render (   const Matrix4x4& aModelMatrix,
@@ -177,6 +186,13 @@ namespace AeonGames
         void InitializeSpotShadowMap();
         /// @brief Release the spot shadow map array, framebuffer and UBOs.
         void FinalizeSpotShadowMap();
+        /// @brief Create the off-screen point shadow map: a sampleable depth
+        ///        texture array (six cube-face layers per caster), its
+        ///        framebuffer, the point ShadowParams UBO and the per-pass depth
+        ///        matrix scratch UBO.
+        void InitializePointShadowMap();
+        /// @brief Release the point shadow map array, framebuffer and UBOs.
+        void FinalizePointShadowMap();
         /// @brief Upload per-object model matrices into a transient storage
         ///        buffer and bind it at INSTANCE_MATRICES. The uber-pipeline
         ///        vertex shaders index it by gl_InstanceID, so a single draw
@@ -233,6 +249,16 @@ namespace AeonGames
         OpenGLBuffer mSpotShadowParams{};
         OpenGLBuffer mSpotShadowDepthScratch{};
         bool mInSpotShadowPass{false};
+        // Off-screen point shadow maps: a sampleable depth texture array with
+        // six cube-face layers per caster (layer = caster*6 + face), rendered
+        // one face per pass, plus the point ShadowParams UBO sampled by the
+        // shading pass and a per-pass depth matrix scratch UBO. mInPointShadowPass
+        // routes the shadow-pass draw branch to the scratch matrix.
+        GLuint mPointShadowDepthTexture{0};
+        GLuint mPointShadowFrameBuffer{0};
+        OpenGLBuffer mPointShadowParams{};
+        OpenGLBuffer mPointShadowDepthScratch{};
+        bool mInPointShadowPass{false};
         // True once BeginFrame() has begun this frame; makes BeginFrame()
         // idempotent so the app can run a pre-render-pass compute phase
         // (e.g. skinning) before BeginRender().

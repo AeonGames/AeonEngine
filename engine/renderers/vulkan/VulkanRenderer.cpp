@@ -1057,6 +1057,33 @@ namespace AeonGames
         }
         it->second.EndSpotShadowPass();
     }
+    void VulkanRenderer::SetPointShadowParams ( void* aWindowId, const GpuPointShadowParams& aPointShadowParams )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetPointShadowParams ( aPointShadowParams );
+    }
+    void VulkanRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginPointShadowPass ( aCaster, aFace, aLightViewProjection );
+    }
+    void VulkanRenderer::EndPointShadowPass ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndPointShadowPass();
+    }
     void VulkanRenderer::EndRender ( void* aWindowId )
     {
         auto it = mWindowStore.find ( aWindowId );

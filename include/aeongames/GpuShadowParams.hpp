@@ -41,6 +41,21 @@ namespace AeonGames
      *  there can be several, so they trade per-caster resolution for count. */
     constexpr uint32_t SPOT_SHADOW_MAP_RESOLUTION = 1024;
 
+    /** @brief Maximum number of point lights that can cast a shadow in one
+     *  frame. Each point caster is omnidirectional and is captured as six 90
+     *  degree perspective faces (one per +/-X, +/-Y, +/-Z axis), stored as six
+     *  consecutive layers of a depth texture array, so the array has
+     *  6 * MAX_POINT_SHADOW_CASTERS layers and the shadow pass renders six times
+     *  per caster. Kept small because of that 6x render cost; bump it (and the
+     *  matrix array size below) to allow more. */
+    constexpr uint32_t MAX_POINT_SHADOW_CASTERS = 2;
+
+    /** @brief Number of cube faces captured per point shadow caster. */
+    constexpr uint32_t POINT_SHADOW_FACES = 6;
+
+    /** @brief Square resolution of each point shadow map face, in texels. */
+    constexpr uint32_t POINT_SHADOW_MAP_RESOLUTION = 1024;
+
     /** @brief Depth of the directional shadow map's coverage, as a multiple of
      *  the scene's bounding-sphere radius. The shadow pass fits the map to the
      *  camera's view frustum truncated to this distance (clamped to the camera
@@ -104,5 +119,35 @@ namespace AeonGames
     };
     static_assert ( sizeof ( GpuSpotShadowParams ) == 64 * MAX_SPOT_SHADOW_CASTERS + 16 * MAX_SPOT_SHADOW_CASTERS + 16,
                     "GpuSpotShadowParams layout must match the shader-side std140 SpotShadowParams block." );
+
+    /** @brief CPU-side mirror of the @c PointShadowParams uniform block.
+     *
+     *  Carries the per-frame point shadow casters. Each caster occupies six
+     *  consecutive slots in @c point_light_view_projection, one per cube face
+     *  (axis order +X, -X, +Y, -Y, +Z, -Z), each a 90 degree perspective from
+     *  the light position looking along that world axis; the matching depth
+     *  array layer is @c caster*6 + face. @c caster_position_radius holds the
+     *  light's world position (.xyz) and shadow radius / far plane (.w) per
+     *  caster. The fragment shader, while shading a point light, finds the slot
+     *  whose position matches the light's own (bit-identical copies, so an exact
+     *  match is reliable through the renderer's light cull), picks the cube face
+     *  from the dominant axis of the light-to-fragment vector, and samples that
+     *  layer. Matches the std140 block:
+     *  @code
+     *  layout(std140) uniform PointShadowParams {
+     *      mat4 point_light_view_projection[6 * MAX_POINT_SHADOW_CASTERS];
+     *      vec4 point_caster_position_radius[MAX_POINT_SHADOW_CASTERS]; // xyz pos, w radius
+     *      vec4 point_shadow_params;  // (texel_size, depth_bias, pcf_radius, count)
+     *  };
+     *  @endcode */
+    struct GpuPointShadowParams
+    {
+        Matrix4x4 point_light_view_projection[POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS] {};
+        Vector4   caster_position_radius[MAX_POINT_SHADOW_CASTERS] {};
+        float     params[4] { 1.0f / static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION ), 0.0015f, 1.0f, 0.0f };
+    };
+    static_assert ( sizeof ( GpuPointShadowParams ) ==
+                    64 * POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS + 16 * MAX_POINT_SHADOW_CASTERS + 16,
+                    "GpuPointShadowParams layout must match the shader-side std140 PointShadowParams block." );
 }
 #endif

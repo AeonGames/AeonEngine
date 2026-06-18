@@ -437,6 +437,82 @@ namespace AeonGames
         return count;
     }
 
+    uint32_t Scene::GetPointShadowCasters ( GpuPointShadowParams& aPointShadowParams ) const
+    {
+        aPointShadowParams = GpuPointShadowParams{};
+        uint32_t count = 0;
+        // Cube face forward axes, in the layer order +X,-X,+Y,-Y,+Z,-Z that the
+        // fragment shader's dominant-axis face selection mirrors.
+        static const Vector3 face_axes[POINT_SHADOW_FACES] =
+        {
+            { 1.0f, 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f },
+            { 0.0f, 1.0f, 0.0f }, { 0.0f, -1.0f, 0.0f },
+            { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }
+        };
+        for ( const GpuLight& light : mFrameLights.Get() )
+        {
+            if ( count >= MAX_POINT_SHADOW_CASTERS )
+            {
+                break;
+            }
+            if ( light.type != static_cast<uint32_t> ( LightType::Point ) )
+            {
+                continue;
+            }
+            const float radius = light.position_radius.GetW();
+            if ( radius <= 0.0f )
+            {
+                continue;
+            }
+            const Vector3 eye
+            {
+                light.position_radius.GetX(),
+                                     light.position_radius.GetY(),
+                                     light.position_radius.GetZ()
+            };
+            const float near_plane = std::max ( radius * 0.02f, 0.05f );
+            for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
+            {
+                const Vector3& axis = face_axes[face];
+                // Orient a virtual camera so its forward axis (engine +Y) looks
+                // along this face's world axis (same shortest-arc construction as
+                // the spot/directional casters). The roll is irrelevant: the same
+                // matrix renders and samples this face, so any orthonormal frame
+                // with the right forward tiles the cube correctly at 90deg FOV.
+                const Vector3 forward { 0.0f, 1.0f, 0.0f };
+                const float d = Dot ( forward, axis );
+                Quaternion orientation{ 1.0f, 0.0f, 0.0f, 0.0f };
+                if ( d < -0.9999f )
+                {
+                    orientation = Quaternion::GetFromAxisAngle ( 180.0f, 0.0f, 0.0f, 1.0f );
+                }
+                else if ( d < 0.9999f )
+                {
+                    const Vector3 rot_axis = Normalize ( Cross ( forward, axis ) );
+                    const float angle = std::acos ( d ) * ( 180.0f / 3.14159265358979323846f );
+                    orientation = Quaternion::GetFromAxisAngle ( angle, rot_axis.GetX(), rot_axis.GetY(), rot_axis.GetZ() );
+                }
+                Transform light_transform;
+                light_transform.SetRotation ( orientation );
+                light_transform.SetTranslation ( eye );
+                const Matrix4x4 light_view = light_transform.GetInvertedMatrix();
+                Matrix4x4 light_projection;
+                // 90-degree field of view so the six faces tile the full sphere.
+                light_projection.Perspective ( 90.0f, 1.0f, near_plane, radius );
+                aPointShadowParams.point_light_view_projection[count * POINT_SHADOW_FACES + face] =
+                    light_projection * light_view;
+            }
+            aPointShadowParams.caster_position_radius[count] =
+                Vector4 { eye.GetX(), eye.GetY(), eye.GetZ(), radius };
+            ++count;
+        }
+        aPointShadowParams.params[0] = 1.0f / static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION );
+        aPointShadowParams.params[1] = 0.0015f;
+        aPointShadowParams.params[2] = 1.0f;
+        aPointShadowParams.params[3] = static_cast<float> ( count );
+        return count;
+    }
+
     void Scene::SetFieldOfView ( float aFieldOfView )
     {
         mFieldOfView = aFieldOfView;

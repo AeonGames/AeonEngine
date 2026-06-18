@@ -759,6 +759,22 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
+    void OpenGLRenderer::SetPointShadowParams ( const OpenGLBuffer& aPointShadowParamsBuffer ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::POINT_SHADOW_PARAMS ) };
+        if ( uniform_block == nullptr )
+        {
+            return;
+        }
+        assert ( static_cast<const size_t> ( uniform_block->size ) <= aPointShadowParamsBuffer.GetSize() );
+        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aPointShadowParamsBuffer.GetBufferId(), 0, aPointShadowParamsBuffer.GetSize() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
     void OpenGLRenderer::LoadMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
@@ -990,6 +1006,33 @@ void main()
             return;
         }
         it->second.EndSpotShadowPass();
+    }
+    void OpenGLRenderer::SetPointShadowParams ( void* aWindowId, const GpuPointShadowParams& aPointShadowParams )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetPointShadowParams ( aPointShadowParams );
+    }
+    void OpenGLRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.BeginPointShadowPass ( aCaster, aFace, aLightViewProjection );
+    }
+    void OpenGLRenderer::EndPointShadowPass ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.EndPointShadowPass();
     }
     void OpenGLRenderer::EndRender ( void* aWindowId )
     {

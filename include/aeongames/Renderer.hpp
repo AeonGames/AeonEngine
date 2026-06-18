@@ -251,6 +251,50 @@ namespace AeonGames
         {
             ( void ) aWindowId;
         }
+        /** Uploads the per-frame point shadow casters into the window's
+         * PointShadowParams uniform block so the shading pass can sample each
+         * point light's cube-face shadow layers. Called once per frame before
+         * the point shadow depth passes. Virtual with an empty default so a
+         * backend without point shadow support ignores it.
+         * @param aWindowId Platform dependent window handle.
+         * @param aPointShadowParams The per-caster six-face light view-projections,
+         *        caster positions/radii and filtering params to upload.
+         */
+        virtual void SetPointShadowParams ( void* aWindowId, const GpuPointShadowParams& aPointShadowParams )
+        {
+            ( void ) aWindowId;
+            ( void ) aPointShadowParams;
+        }
+        /** Begins a point shadow-depth pass that renders scene depth from one
+         * cube face of one point light into the corresponding layer
+         * (aCaster*6 + aFace) of the window's point shadow map array. Geometry
+         * submitted with RenderPass::ShadowPass between this call and
+         * EndPointShadowPass is drawn from that face's point of view. Virtual
+         * with an empty default so a backend without point shadow support
+         * ignores it.
+         * @param aWindowId Platform dependent window handle.
+         * @param aCaster Point shadow caster index (0 <= aCaster < MAX_POINT_SHADOW_CASTERS).
+         * @param aFace Cube face index (0 <= aFace < 6).
+         * @param aLightViewProjection World-space to that face's clip-space matrix.
+         */
+        virtual void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+        {
+            ( void ) aWindowId;
+            ( void ) aCaster;
+            ( void ) aFace;
+            ( void ) aLightViewProjection;
+        }
+        /** Ends the current point shadow-depth pass and transitions that layer
+         * of the point shadow map array so it can be sampled by the shading
+         * pass. Must be paired with a preceding BeginPointShadowPass. Virtual
+         * with an empty default so a backend without point shadow support
+         * ignores it.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void EndPointShadowPass ( void* aWindowId )
+        {
+            ( void ) aWindowId;
+        }
         /** Ends the depth pre-pass mark render pass, dispatches the remaining
          * clustering compute stages (light culling, which now gates on the
          * clusters the mark pass flagged as active), then begins the main color

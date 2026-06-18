@@ -92,6 +92,8 @@ namespace AeonGames
         void SetShadowParams ( const OpenGLBuffer& aShadowParamsBuffer ) const;
         /// @brief Bind the spot shadow params uniform buffer for the current draw.
         void SetSpotShadowParams ( const OpenGLBuffer& aSpotShadowParamsBuffer ) const;
+        /// @brief Bind the point shadow params uniform buffer for the current draw.
+        void SetPointShadowParams ( const OpenGLBuffer& aPointShadowParamsBuffer ) const;
         void LoadPipeline ( const Pipeline& aPipeline ) final;
         void UnloadPipeline ( const Pipeline& aPipeline ) final;
         void LoadMaterial ( const Material& aMaterial ) final;
@@ -117,6 +119,9 @@ namespace AeonGames
         void SetSpotShadowParams ( void* aWindowId, const GpuSpotShadowParams& aSpotShadowParams ) final;
         void BeginSpotShadowPass ( void* aWindowId, uint32_t aSlot, const Matrix4x4& aLightViewProjection ) final;
         void EndSpotShadowPass ( void* aWindowId ) final;
+        void SetPointShadowParams ( void* aWindowId, const GpuPointShadowParams& aPointShadowParams ) final;
+        void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection ) final;
+        void EndPointShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,

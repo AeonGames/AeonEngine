@@ -135,6 +135,32 @@ layout(binding = 9)
 #endif
 uniform sampler2DArrayShadow SpotShadowMap;
 
+// Point shadow mapping. Each point caster is captured as six 90-degree faces
+// (one per +/-X,+/-Y,+/-Z axis) into six consecutive layers of a depth array
+// (layer = caster*6 + face). PointShadowParams holds those six view-projections
+// per caster plus the caster world position and radius; PointShadowMap is the
+// depth array sampled with comparison. The fragment shader picks the face from
+// the dominant axis of the light-to-fragment vector and samples that layer.
+// Array sizes are 6 * MAX_POINT_SHADOW_CASTERS and MAX_POINT_SHADOW_CASTERS.
+#ifdef VULKAN
+layout(set = 12, binding = 0, std140)
+#else
+layout(binding = 7, std140)
+#endif
+uniform PointShadowParams
+{
+      mat4 point_light_view_projection[12]; // 6 faces * MAX_POINT_SHADOW_CASTERS
+      vec4 point_caster_position_radius[2]; // MAX_POINT_SHADOW_CASTERS (.xyz pos, .w radius)
+      vec4 point_shadow_params;             // (texel_size, depth_bias, pcf_radius, count)
+};
+
+#ifdef VULKAN
+layout(set = 13, binding = 0)
+#else
+layout(binding = 10)
+#endif
+uniform sampler2DArrayShadow PointShadowMap;
+
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
@@ -279,6 +305,78 @@ int spot_shadow_slot ( vec3 aLightPos )
       return -1;
 }
 
+// Sample the point shadow map for caster @p aCaster and return a visibility
+// factor in [0,1]. Reconstructs the fragment's world position, picks the cube
+// face from the dominant axis of the light-to-fragment vector, then projects
+// and 3x3-PCF-compares against that face's array layer (caster*6 + face),
+// exactly like spot_shadow but with the extra face selection step.
+float point_shadow ( int aCaster, vec3 aLightPos )
+{
+      vec4 world = inverse ( ViewMatrix ) * vec4 ( eyeCoords, 1.0 );
+      vec3 L = world.xyz - aLightPos;
+      vec3 aL = abs ( L );
+      int face;
+      if ( aL.x >= aL.y && aL.x >= aL.z )
+      {
+            face = ( L.x > 0.0 ) ? 0 : 1;
+      }
+      else if ( aL.y >= aL.z )
+      {
+            face = ( L.y > 0.0 ) ? 2 : 3;
+      }
+      else
+      {
+            face = ( L.z > 0.0 ) ? 4 : 5;
+      }
+      int layer = aCaster * 6 + face;
+      vec4 light_clip = point_light_view_projection[layer] * world;
+#ifdef VULKAN
+      light_clip.z = ( light_clip.z + light_clip.w ) * 0.5;
+#endif
+      if ( light_clip.w <= 0.0 )
+      {
+            return 1.0;
+      }
+      vec3 proj = light_clip.xyz / light_clip.w;
+      vec2 uv = proj.xy * 0.5 + 0.5;
+      if ( uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 )
+      {
+            return 1.0;
+      }
+#ifdef VULKAN
+      float current_depth = proj.z;
+#else
+      float current_depth = proj.z * 0.5 + 0.5;
+#endif
+      current_depth -= point_shadow_params.y;
+      float visibility = 0.0;
+      float step = point_shadow_params.x * point_shadow_params.z;
+      for ( int y = -1; y <= 1; ++y )
+      {
+            for ( int x = -1; x <= 1; ++x )
+            {
+                  vec2 offset = vec2 ( float ( x ), float ( y ) ) * step;
+                  visibility += texture ( PointShadowMap, vec4 ( uv + offset, float ( layer ), current_depth ) );
+            }
+      }
+      return visibility / 9.0;
+}
+
+// Find the point shadow caster whose recorded world position matches the given
+// point light's position, or -1 when this light is not a shadow caster.
+int point_shadow_caster ( vec3 aLightPos )
+{
+      int count = int ( point_shadow_params.w );
+      for ( int i = 0; i < count; ++i )
+      {
+            if ( distance ( point_caster_position_radius[i].xyz, aLightPos ) < 0.01 )
+            {
+                  return i;
+            }
+      }
+      return -1;
+}
+
 // Blinn-Phong contribution of a single light, accumulated into the running
 // diffuse/specular sums. aShadow scales the radiance (1.0 = fully lit); only
 // the directional sun passes a value below 1.0, from directional_shadow().
@@ -404,7 +502,7 @@ void main()
             }
             // Spot lights may cast a shadow: find this light's caster slot (by
             // matching its world position) and sample that layer. Point lights
-            // and non-casting spots stay fully lit (visibility 1).
+            // sample their six-face cube map; non-casting lights stay fully lit.
             float light_visibility = 1.0;
             if ( Lights_data[li].type == 1u )
             {
@@ -412,6 +510,14 @@ void main()
                   if ( slot >= 0 )
                   {
                         light_visibility = spot_shadow ( slot );
+                  }
+            }
+            else if ( Lights_data[li].type == 0u )
+            {
+                  int caster = point_shadow_caster ( Lights_data[li].position_radius.xyz );
+                  if ( caster >= 0 )
+                  {
+                        light_visibility = point_shadow ( caster, Lights_data[li].position_radius.xyz );
                   }
             }
             accumulate_light ( Lights_data[li], N, V, light_visibility, diffuse_accum, specular_accum );

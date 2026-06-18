@@ -86,6 +86,8 @@ namespace AeonGames
             SHADOW_MAP        = "ShadowMap"_crc32,       ///< Directional shadow mapping: depth shadow map sampled with comparison (sampler2DShadow).
             SPOT_SHADOW_PARAMS = "SpotShadowParams"_crc32, ///< Spot shadow mapping: per-caster light view-projections, caster light indices and filtering params (UBO).
             SPOT_SHADOW_MAP   = "SpotShadowMap"_crc32,   ///< Spot shadow mapping: depth shadow map array sampled with comparison (sampler2DArrayShadow).
+            POINT_SHADOW_PARAMS = "PointShadowParams"_crc32, ///< Point shadow mapping: per-caster six-face light view-projections, caster positions/radii and filtering params (UBO).
+            POINT_SHADOW_MAP  = "PointShadowMap"_crc32,  ///< Point shadow mapping: six-faces-per-caster depth array sampled with comparison (sampler2DArrayShadow).
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */

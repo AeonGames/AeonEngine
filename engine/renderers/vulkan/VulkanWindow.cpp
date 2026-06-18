@@ -62,7 +62,9 @@ namespace AeonGames
         mClusterParams { aVulkanRenderer },
         mShadowParams { aVulkanRenderer },
         mSpotShadowParams { aVulkanRenderer },
-        mSpotShadowDepthMatrices { aVulkanRenderer }
+        mSpotShadowDepthMatrices { aVulkanRenderer },
+        mPointShadowParams { aVulkanRenderer },
+        mPointShadowDepthMatrices { aVulkanRenderer }
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
         try
@@ -85,7 +87,9 @@ namespace AeonGames
         mClusterParams{std::move ( aVulkanWindow.mClusterParams ) },
         mShadowParams{std::move ( aVulkanWindow.mShadowParams ) },
         mSpotShadowParams{std::move ( aVulkanWindow.mSpotShadowParams ) },
-        mSpotShadowDepthMatrices{std::move ( aVulkanWindow.mSpotShadowDepthMatrices ) }
+        mSpotShadowDepthMatrices{std::move ( aVulkanWindow.mSpotShadowDepthMatrices ) },
+        mPointShadowParams{std::move ( aVulkanWindow.mPointShadowParams ) },
+        mPointShadowDepthMatrices{std::move ( aVulkanWindow.mPointShadowDepthMatrices ) }
     {
         std::cout << LogLevel::Debug << "Moving VulkanWindow." << std::endl;
         std::swap ( mWindowId, aVulkanWindow.mWindowId );
@@ -140,6 +144,21 @@ namespace AeonGames
         std::swap ( mSpotShadowDepthMatricesDescriptorPool, aVulkanWindow.mSpotShadowDepthMatricesDescriptorPool );
         std::swap ( mSpotShadowDepthMatricesDescriptorSets, aVulkanWindow.mSpotShadowDepthMatricesDescriptorSets );
         std::swap ( mSpotShadowDepthMatrixStride, aVulkanWindow.mSpotShadowDepthMatrixStride );
+        std::swap ( mVkPointShadowDepthImage, aVulkanWindow.mVkPointShadowDepthImage );
+        std::swap ( mVkPointShadowDepthImageMemory, aVulkanWindow.mVkPointShadowDepthImageMemory );
+        std::swap ( mVkPointShadowDepthArrayView, aVulkanWindow.mVkPointShadowDepthArrayView );
+        std::swap ( mVkPointShadowDepthLayerViews, aVulkanWindow.mVkPointShadowDepthLayerViews );
+        std::swap ( mVkPointShadowColorImage, aVulkanWindow.mVkPointShadowColorImage );
+        std::swap ( mVkPointShadowColorImageMemory, aVulkanWindow.mVkPointShadowColorImageMemory );
+        std::swap ( mVkPointShadowColorImageView, aVulkanWindow.mVkPointShadowColorImageView );
+        std::swap ( mVkPointShadowFramebuffers, aVulkanWindow.mVkPointShadowFramebuffers );
+        std::swap ( mPointShadowParamsDescriptorPool, aVulkanWindow.mPointShadowParamsDescriptorPool );
+        std::swap ( mPointShadowParamsDescriptorSet, aVulkanWindow.mPointShadowParamsDescriptorSet );
+        std::swap ( mPointShadowMapDescriptorPool, aVulkanWindow.mPointShadowMapDescriptorPool );
+        std::swap ( mPointShadowMapDescriptorSet, aVulkanWindow.mPointShadowMapDescriptorSet );
+        std::swap ( mPointShadowDepthMatricesDescriptorPool, aVulkanWindow.mPointShadowDepthMatricesDescriptorPool );
+        std::swap ( mPointShadowDepthMatricesDescriptorSets, aVulkanWindow.mPointShadowDepthMatricesDescriptorSets );
+        std::swap ( mPointShadowDepthMatrixStride, aVulkanWindow.mPointShadowDepthMatrixStride );
         std::swap ( mFrameLightGrid, aVulkanWindow.mFrameLightGrid );
         std::swap ( mFrameLightIndexList, aVulkanWindow.mFrameLightIndexList );
         std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
@@ -1274,6 +1293,270 @@ namespace AeonGames
         }
     }
 
+    void VulkanWindow::InitializePointShadowMap()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        const bool has_stencil =
+            ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
+
+        auto create_image = [&] ( VkFormat format, VkImageUsageFlags usage,
+                                  uint32_t array_layers, VkImage & image, VkDeviceMemory & memory )
+        {
+            VkImageCreateInfo image_create_info{};
+            image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_create_info.format = format;
+            image_create_info.imageType = VK_IMAGE_TYPE_2D;
+            image_create_info.extent.width = POINT_SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.height = POINT_SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.depth = 1;
+            image_create_info.mipLevels = 1;
+            image_create_info.arrayLayers = array_layers;
+            image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            image_create_info.usage = usage;
+            image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if ( VkResult result = vkCreateImage ( device, &image_create_info, nullptr, &image ) )
+            {
+                std::ostringstream stream;
+                stream << "Point shadow vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            VkMemoryRequirements memory_requirements;
+            vkGetImageMemoryRequirements ( device, image, &memory_requirements );
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex =
+                mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+            vkAllocateMemory ( device, &memory_allocate_info, nullptr, &memory );
+            vkBindImageMemory ( device, image, memory, 0 );
+        };
+
+        create_image ( mVkDepthStencilFormat,
+                       VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                       POINT_SHADOW_LAYERS, mVkPointShadowDepthImage, mVkPointShadowDepthImageMemory );
+        create_image ( mVkSurfaceFormatKHR.format,
+                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                       1, mVkPointShadowColorImage, mVkPointShadowColorImageMemory );
+
+        VkImageViewCreateInfo array_view_create_info{};
+        array_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        array_view_create_info.image = mVkPointShadowDepthImage;
+        array_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        array_view_create_info.format = mVkDepthStencilFormat;
+        array_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        array_view_create_info.subresourceRange.levelCount = 1;
+        array_view_create_info.subresourceRange.layerCount = POINT_SHADOW_LAYERS;
+        vkCreateImageView ( device, &array_view_create_info, nullptr, &mVkPointShadowDepthArrayView );
+
+        VkImageViewCreateInfo color_view_create_info{};
+        color_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        color_view_create_info.image = mVkPointShadowColorImage;
+        color_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        color_view_create_info.format = mVkSurfaceFormatKHR.format;
+        color_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        color_view_create_info.subresourceRange.levelCount = 1;
+        color_view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( device, &color_view_create_info, nullptr, &mVkPointShadowColorImageView );
+
+        for ( uint32_t layer = 0; layer < POINT_SHADOW_LAYERS; ++layer )
+        {
+            VkImageViewCreateInfo layer_view_create_info{};
+            layer_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            layer_view_create_info.image = mVkPointShadowDepthImage;
+            layer_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            layer_view_create_info.format = mVkDepthStencilFormat;
+            layer_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            layer_view_create_info.subresourceRange.levelCount = 1;
+            layer_view_create_info.subresourceRange.baseArrayLayer = layer;
+            layer_view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( device, &layer_view_create_info, nullptr, &mVkPointShadowDepthLayerViews[layer] );
+
+            std::array<VkImageView, 2> framebuffer_attachments{ { mVkPointShadowColorImageView, mVkPointShadowDepthLayerViews[layer] } };
+            VkFramebufferCreateInfo framebuffer_create_info{};
+            framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebuffer_create_info.renderPass = mVkShadowRenderPass;
+            framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
+            framebuffer_create_info.pAttachments = framebuffer_attachments.data();
+            framebuffer_create_info.width = POINT_SHADOW_MAP_RESOLUTION;
+            framebuffer_create_info.height = POINT_SHADOW_MAP_RESOLUTION;
+            framebuffer_create_info.layers = 1;
+            vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkPointShadowFramebuffers[layer] );
+        }
+
+        // Point ShadowParams UBO (all caster matrices + positions), sampled by
+        // the shading fragment shader (set 12).
+        const GpuPointShadowParams empty_point_params{};
+        mPointShadowParams.Initialize (
+            sizeof ( GpuPointShadowParams ),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            &empty_point_params );
+
+        VkDescriptorSetLayoutCreateInfo point_params_layout_create_info{};
+        point_params_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        point_params_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding point_params_layout_binding{};
+        point_params_layout_binding.binding = 0;
+        point_params_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        point_params_layout_binding.descriptorCount = 1;
+        point_params_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        point_params_layout_create_info.pBindings = &point_params_layout_binding;
+
+        mPointShadowParamsDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mPointShadowParamsDescriptorSet = CreateDescriptorSet ( device, mPointShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( point_params_layout_create_info ) );
+        VkDescriptorBufferInfo point_params_buffer_info{};
+        point_params_buffer_info.buffer = mPointShadowParams.GetBuffer();
+        point_params_buffer_info.offset = 0;
+        point_params_buffer_info.range = mPointShadowParams.GetSize();
+        VkWriteDescriptorSet point_params_write{};
+        point_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        point_params_write.dstSet = mPointShadowParamsDescriptorSet;
+        point_params_write.dstBinding = 0;
+        point_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        point_params_write.descriptorCount = 1;
+        point_params_write.pBufferInfo = &point_params_buffer_info;
+        vkUpdateDescriptorSets ( device, 1, &point_params_write, 0, nullptr );
+
+        // PointShadowMap combined image sampler (set 13).
+        VkDescriptorSetLayoutCreateInfo point_map_layout_create_info{};
+        point_map_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        point_map_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding point_map_layout_binding{};
+        point_map_layout_binding.binding = 0;
+        point_map_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        point_map_layout_binding.descriptorCount = 1;
+        point_map_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        point_map_layout_create_info.pBindings = &point_map_layout_binding;
+
+        mPointShadowMapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
+        mPointShadowMapDescriptorSet = CreateDescriptorSet ( device, mPointShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( point_map_layout_create_info ) );
+        VkDescriptorImageInfo point_map_image_info{};
+        point_map_image_info.sampler = mVkShadowSampler;
+        point_map_image_info.imageView = mVkPointShadowDepthArrayView;
+        point_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkWriteDescriptorSet point_map_write{};
+        point_map_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        point_map_write.dstSet = mPointShadowMapDescriptorSet;
+        point_map_write.dstBinding = 0;
+        point_map_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        point_map_write.descriptorCount = 1;
+        point_map_write.pImageInfo = &point_map_image_info;
+        vkUpdateDescriptorSets ( device, 1, &point_map_write, 0, nullptr );
+
+        // Per-layer depth matrices: one descriptor set per cube-face layer bound
+        // to its aligned region of a shared UBO (no single-buffer write hazard).
+        const VkDeviceSize alignment =
+            mVulkanRenderer.GetPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
+        mPointShadowDepthMatrixStride =
+            ( ( sizeof ( GpuShadowParams ) - 1 ) | ( ( alignment > 0 ? alignment : 1 ) - 1 ) ) + 1;
+        mPointShadowDepthMatrices.Initialize (
+            mPointShadowDepthMatrixStride * POINT_SHADOW_LAYERS,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            nullptr );
+
+        VkDescriptorSetLayoutCreateInfo depth_matrix_layout_create_info{};
+        depth_matrix_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        depth_matrix_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding depth_matrix_layout_binding{};
+        depth_matrix_layout_binding.binding = 0;
+        depth_matrix_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        depth_matrix_layout_binding.descriptorCount = 1;
+        depth_matrix_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        depth_matrix_layout_create_info.pBindings = &depth_matrix_layout_binding;
+        const VkDescriptorSetLayout depth_matrix_layout = mVulkanRenderer.GetDescriptorSetLayout ( depth_matrix_layout_create_info );
+
+        std::vector<VkDescriptorPoolSize> depth_matrix_pool_sizes ( POINT_SHADOW_LAYERS, {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
+        mPointShadowDepthMatricesDescriptorPool = CreateDescriptorPool ( device, depth_matrix_pool_sizes );
+        for ( uint32_t layer = 0; layer < POINT_SHADOW_LAYERS; ++layer )
+        {
+            mPointShadowDepthMatricesDescriptorSets[layer] =
+                CreateDescriptorSet ( device, mPointShadowDepthMatricesDescriptorPool, depth_matrix_layout );
+            VkDescriptorBufferInfo depth_matrix_buffer_info{};
+            depth_matrix_buffer_info.buffer = mPointShadowDepthMatrices.GetBuffer();
+            depth_matrix_buffer_info.offset = layer * mPointShadowDepthMatrixStride;
+            depth_matrix_buffer_info.range = sizeof ( GpuShadowParams );
+            VkWriteDescriptorSet depth_matrix_write{};
+            depth_matrix_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            depth_matrix_write.dstSet = mPointShadowDepthMatricesDescriptorSets[layer];
+            depth_matrix_write.dstBinding = 0;
+            depth_matrix_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            depth_matrix_write.descriptorCount = 1;
+            depth_matrix_write.pBufferInfo = &depth_matrix_buffer_info;
+            vkUpdateDescriptorSets ( device, 1, &depth_matrix_write, 0, nullptr );
+        }
+
+        // Transition every depth layer to the sampled layout once.
+        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = mVkPointShadowDepthImage;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = POINT_SHADOW_LAYERS;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( command_buffer,
+                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
+    }
+
+    void VulkanWindow::FinalizePointShadowMap()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        DestroyDescriptorPool ( device, mPointShadowDepthMatricesDescriptorPool );
+        DestroyDescriptorPool ( device, mPointShadowMapDescriptorPool );
+        DestroyDescriptorPool ( device, mPointShadowParamsDescriptorPool );
+        mPointShadowDepthMatrices.Finalize();
+        mPointShadowParams.Finalize();
+        for ( uint32_t layer = 0; layer < POINT_SHADOW_LAYERS; ++layer )
+        {
+            if ( mVkPointShadowFramebuffers[layer] != VK_NULL_HANDLE )
+            {
+                vkDestroyFramebuffer ( device, mVkPointShadowFramebuffers[layer], nullptr );
+            }
+            if ( mVkPointShadowDepthLayerViews[layer] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( device, mVkPointShadowDepthLayerViews[layer], nullptr );
+            }
+        }
+        if ( mVkPointShadowColorImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkPointShadowColorImageView, nullptr );
+        }
+        if ( mVkPointShadowColorImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkPointShadowColorImage, nullptr );
+        }
+        if ( mVkPointShadowColorImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkPointShadowColorImageMemory, nullptr );
+        }
+        if ( mVkPointShadowDepthArrayView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkPointShadowDepthArrayView, nullptr );
+        }
+        if ( mVkPointShadowDepthImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkPointShadowDepthImage, nullptr );
+        }
+        if ( mVkPointShadowDepthImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkPointShadowDepthImageMemory, nullptr );
+        }
+    }
+
     void VulkanWindow::FinalizeShadowMap()
     {
         const VkDevice device = mVulkanRenderer.GetDevice();
@@ -1503,6 +1786,85 @@ namespace AeonGames
         BeginRenderPass();
     }
 
+    void VulkanWindow::SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams )
+    {
+        mPointShadowParams.WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
+    }
+
+    void VulkanWindow::BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    {
+        const uint32_t layer = aCaster * POINT_SHADOW_FACES + aFace;
+        if ( layer >= POINT_SHADOW_LAYERS )
+        {
+            return;
+        }
+        if ( !mShadowDepthLoaded )
+        {
+            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
+            mShadowDepthLoaded = true;
+        }
+        GpuShadowParams depth_matrix{};
+        depth_matrix.light_view_projection = aLightViewProjection;
+        depth_matrix.params[3] = 1.0f;
+        mPointShadowDepthMatrices.WriteMemory ( layer * mPointShadowDepthMatrixStride,
+                                                sizeof ( GpuShadowParams ), &depth_matrix );
+        mInPointShadowPass = true;
+        mCurrentPointShadowLayer = layer;
+
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+
+        std::array<VkClearValue, 2> clear_values{};
+        clear_values[1].depthStencil.depth = 1.0f;
+        clear_values[1].depthStencil.stencil = 0;
+        VkRenderPassBeginInfo render_pass_begin_info{};
+        render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_begin_info.renderPass = mVkShadowRenderPass;
+        render_pass_begin_info.framebuffer = mVkPointShadowFramebuffers[layer];
+        render_pass_begin_info.renderArea.offset = { 0, 0 };
+        render_pass_begin_info.renderArea.extent = { POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION };
+        render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
+        render_pass_begin_info.pClearValues = clear_values.data();
+        vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+
+        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION ), static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION ), 0.0f, 1.0f };
+        VkRect2D shadow_scissor{ { 0, 0 }, { POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION } };
+        vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &shadow_viewport );
+        vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &shadow_scissor );
+        vkCmdSetDepthBias ( mVkCommandBuffer, 4.0f, 0.0f, 2.5f );
+    }
+
+    void VulkanWindow::EndPointShadowPass()
+    {
+        mInPointShadowPass = false;
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+        const bool has_stencil =
+            ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
+        VkImageMemoryBarrier point_depth_barrier{};
+        point_depth_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        point_depth_barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        point_depth_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        point_depth_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        point_depth_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        point_depth_barrier.image = mVkPointShadowDepthImage;
+        point_depth_barrier.subresourceRange.aspectMask =
+            VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        point_depth_barrier.subresourceRange.levelCount = 1;
+        point_depth_barrier.subresourceRange.baseArrayLayer = mCurrentPointShadowLayer;
+        point_depth_barrier.subresourceRange.layerCount = 1;
+        point_depth_barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        point_depth_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &point_depth_barrier );
+        vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &mVkViewport );
+        vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &mVkScissor );
+        vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
+        BeginRenderPass();
+    }
+
     void VulkanWindow::UpdateClusterParams()
     {
         GpuClusterParams params{};
@@ -1535,6 +1897,7 @@ namespace AeonGames
         InitializeFrameBuffers();
         InitializeShadowMap();
         InitializeSpotShadowMap();
+        InitializePointShadowMap();
         InitializeCommandBuffer();
     }
 
@@ -1555,6 +1918,7 @@ namespace AeonGames
         FinalizeSwapchain();
         FinalizeRenderPass();
         FinalizeSurface();
+        FinalizePointShadowMap();
         FinalizeSpotShadowMap();
         FinalizeShadowMap();
         FinalizeClusterParams();
@@ -1980,9 +2344,11 @@ namespace AeonGames
 
             if ( uint32_t shadow_params_set_index = shadow_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
             {
-                // Spot passes bind their slot's depth-matrix descriptor set;
-                // the directional pass binds the directional ShadowParams set.
-                const VkDescriptorSet shadow_depth_set = mInSpotShadowPass
+                // Point passes bind their cube-face layer's matrix set, spot
+                // passes their slot's set, the directional pass the directional set.
+                const VkDescriptorSet shadow_depth_set = mInPointShadowPass
+                    ? mPointShadowDepthMatricesDescriptorSets[mCurrentPointShadowLayer]
+                    : mInSpotShadowPass
                     ? mSpotShadowDepthMatricesDescriptorSets[mCurrentSpotShadowSlot]
                     : mShadowParamsDescriptorSet;
                 vkCmdBindDescriptorSets ( GetCommandBuffer(),
@@ -2214,6 +2580,26 @@ namespace AeonGames
                                       1,
                                       &mSpotShadowMapDescriptorSet, 0, nullptr );
         }
+        // Point shadows: bind the PointShadowParams UBO (per-caster six-face
+        // matrices and positions) and the cube-face shadow map array sampler.
+        if ( uint32_t point_shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_PARAMS ); point_shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      point_shadow_params_set_index,
+                                      1,
+                                      &mPointShadowParamsDescriptorSet, 0, nullptr );
+        }
+        if ( uint32_t point_shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_MAP ); point_shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      point_shadow_map_set_index,
+                                      1,
+                                      &mPointShadowMapDescriptorSet, 0, nullptr );
+        }
 
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
         {
@@ -2307,7 +2693,11 @@ namespace AeonGames
             {
                 // Spot passes bind their slot's depth-matrix descriptor set;
                 // the directional pass binds the directional ShadowParams set.
-                const VkDescriptorSet shadow_depth_set = mInSpotShadowPass
+                // Point passes bind their cube-face layer's matrix set, spot
+                // passes their slot's set, the directional pass the directional set.
+                const VkDescriptorSet shadow_depth_set = mInPointShadowPass
+                    ? mPointShadowDepthMatricesDescriptorSets[mCurrentPointShadowLayer]
+                    : mInSpotShadowPass
                     ? mSpotShadowDepthMatricesDescriptorSets[mCurrentSpotShadowSlot]
                     : mShadowParamsDescriptorSet;
                 vkCmdBindDescriptorSets ( GetCommandBuffer(),
@@ -2512,6 +2902,26 @@ namespace AeonGames
                                       spot_shadow_map_set_index,
                                       1,
                                       &mSpotShadowMapDescriptorSet, 0, nullptr );
+        }
+        // Point shadows: bind the PointShadowParams UBO (per-caster six-face
+        // matrices and positions) and the cube-face shadow map array sampler.
+        if ( uint32_t point_shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_PARAMS ); point_shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      point_shadow_params_set_index,
+                                      1,
+                                      &mPointShadowParamsDescriptorSet, 0, nullptr );
+        }
+        if ( uint32_t point_shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_MAP ); point_shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      point_shadow_map_set_index,
+                                      1,
+                                      &mPointShadowMapDescriptorSet, 0, nullptr );
         }
 
         BindObjectMatrices ( pipeline, aModelMatrices );

@@ -89,6 +89,15 @@ namespace AeonGames
         ///        (leaving that layer sampleable), restore the window
         ///        viewport/scissor, and reopen the main render pass.
         void EndSpotShadowPass();
+        /// @brief Upload this frame's point shadow casters into the point
+        ///        ShadowParams UBO sampled by the shading pass.
+        void SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams );
+        /// @brief Begin a point-light shadow depth pass rendering into one
+        ///        cube-face layer (aCaster*6 + aFace) of the point shadow map.
+        void BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection );
+        /// @brief End the current point shadow depth pass: close its render pass,
+        ///        restore the window viewport/scissor, and reopen the main pass.
+        void EndPointShadowPass();
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -189,6 +198,13 @@ namespace AeonGames
         void InitializeSpotShadowMap();
         /// @brief Release the spot shadow map array, framebuffers and buffers.
         void FinalizeSpotShadowMap();
+        /// @brief Create the point shadow map: a depth texture array with six
+        ///        cube-face layers per caster, per-layer framebuffers reusing the
+        ///        directional shadow render pass, the point ShadowParams UBO and
+        ///        the per-layer depth matrix UBO + descriptor sets.
+        void InitializePointShadowMap();
+        /// @brief Release the point shadow map array, framebuffers and buffers.
+        void FinalizePointShadowMap();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
@@ -232,6 +248,12 @@ namespace AeonGames
         // passes (one aligned GpuShadowParams slot per caster).
         VulkanBuffer mSpotShadowParams;
         VulkanBuffer mSpotShadowDepthMatrices;
+        // Point shadow params (six-per-caster matrices + caster positions/radii)
+        // sampled by the shading pass, and the per-layer depth matrices read by
+        // the point depth passes (one aligned GpuShadowParams slot per cube face
+        // per caster).
+        VulkanBuffer mPointShadowParams;
+        VulkanBuffer mPointShadowDepthMatrices;
         // Scratch buffer holding the frustum-culled subset of this frame's
         // lights; reused across frames so capacity is not reallocated.
         std::vector<GpuLight> mVisibleLights{};
@@ -322,6 +344,29 @@ namespace AeonGames
         VkDeviceSize mSpotShadowDepthMatrixStride{0};
         bool mInSpotShadowPass{false};
         uint32_t mCurrentSpotShadowSlot{0};
+        // Point shadow maps: a depth texture ARRAY with six cube-face layers per
+        // caster (layer = caster*6 + face), built exactly like the spot map but
+        // with POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS layers. One depth
+        // matrix descriptor set per layer feeds the matching face's matrix to the
+        // depth pipeline with no single-buffer write hazard across the faces.
+        static constexpr uint32_t POINT_SHADOW_LAYERS = POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS;
+        VkImage mVkPointShadowDepthImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkPointShadowDepthImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkPointShadowDepthArrayView{VK_NULL_HANDLE};
+        std::array<VkImageView, POINT_SHADOW_LAYERS> mVkPointShadowDepthLayerViews{};
+        VkImage mVkPointShadowColorImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkPointShadowColorImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkPointShadowColorImageView{VK_NULL_HANDLE};
+        std::array<VkFramebuffer, POINT_SHADOW_LAYERS> mVkPointShadowFramebuffers{};
+        VkDescriptorPool mPointShadowParamsDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mPointShadowParamsDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mPointShadowMapDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mPointShadowMapDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mPointShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, POINT_SHADOW_LAYERS> mPointShadowDepthMatricesDescriptorSets{};
+        VkDeviceSize mPointShadowDepthMatrixStride{0};
+        bool mInPointShadowPass{false};
+        uint32_t mCurrentPointShadowLayer{0};
         VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
         VkFence mVkFence{ VK_NULL_HANDLE };
 

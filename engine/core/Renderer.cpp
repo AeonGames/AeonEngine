@@ -62,6 +62,24 @@ namespace AeonGames
                 SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
                 EndSpotShadowPass ( aWindowId );
             }
+            // Point shadow passes: each point caster is omnidirectional, so its
+            // depth is captured as six 90-degree faces (one per cube axis) into
+            // six consecutive layers of the point shadow map array.
+            GpuPointShadowParams point_shadow_params{};
+            const uint32_t point_caster_count = aScene.GetPointShadowCasters ( point_shadow_params );
+            SetPointShadowParams ( aWindowId, point_shadow_params );
+            for ( uint32_t caster = 0; caster < point_caster_count; ++caster )
+            {
+                for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
+                {
+                    const Matrix4x4 point_light_view_projection =
+                        point_shadow_params.point_light_view_projection[caster * POINT_SHADOW_FACES + face];
+                    aScene.BuildRenderQueue ( Frustum ( point_light_view_projection ) );
+                    BeginPointShadowPass ( aWindowId, caster, face, point_light_view_projection );
+                    SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
+                    EndPointShadowPass ( aWindowId );
+                }
+            }
             // Directional shadow pass: render scene depth from the sun's point of
             // view into the shadow map before shading so the fragment stage can
             // sample it. The shadow map must contain every caster the light can

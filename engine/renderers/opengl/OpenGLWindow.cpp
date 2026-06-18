@@ -48,6 +48,10 @@ namespace AeonGames
     // match `layout(binding = N) uniform sampler2DArrayShadow SpotShadowMap;` in
     // the GL path of the shading fragment shaders.
     static constexpr GLuint SPOT_SHADOW_MAP_TEXTURE_UNIT = 9;
+    // Texture unit the point shadow map array is bound to during shading. Must
+    // match `layout(binding = N) uniform sampler2DArrayShadow PointShadowMap;`
+    // in the GL path of the shading fragment shaders.
+    static constexpr GLuint POINT_SHADOW_MAP_TEXTURE_UNIT = 10;
 
     void OpenGLWindow::Initialize()
     {
@@ -68,6 +72,7 @@ namespace AeonGames
         }
         InitializeShadowMap();
         InitializeSpotShadowMap();
+        InitializePointShadowMap();
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_BLEND );
@@ -157,7 +162,9 @@ namespace AeonGames
         mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) },
         mShadowParams{std::move ( aOpenGLWindow.mShadowParams ) },
         mSpotShadowParams{std::move ( aOpenGLWindow.mSpotShadowParams ) },
-        mSpotShadowDepthScratch{std::move ( aOpenGLWindow.mSpotShadowDepthScratch ) }
+        mSpotShadowDepthScratch{std::move ( aOpenGLWindow.mSpotShadowDepthScratch ) },
+        mPointShadowParams{std::move ( aOpenGLWindow.mPointShadowParams ) },
+        mPointShadowDepthScratch{std::move ( aOpenGLWindow.mPointShadowDepthScratch ) }
     {
         std::swap ( mDisplay, aOpenGLWindow.mDisplay );
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
@@ -168,6 +175,8 @@ namespace AeonGames
         std::swap ( mShadowFrameBuffer, aOpenGLWindow.mShadowFrameBuffer );
         std::swap ( mSpotShadowDepthTexture, aOpenGLWindow.mSpotShadowDepthTexture );
         std::swap ( mSpotShadowFrameBuffer, aOpenGLWindow.mSpotShadowFrameBuffer );
+        std::swap ( mPointShadowDepthTexture, aOpenGLWindow.mPointShadowDepthTexture );
+        std::swap ( mPointShadowFrameBuffer, aOpenGLWindow.mPointShadowFrameBuffer );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -182,6 +191,7 @@ namespace AeonGames
             mClusterParams.Finalize();
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
+            FinalizePointShadowMap();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -234,7 +244,9 @@ namespace AeonGames
         mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) },
         mShadowParams{std::move ( aOpenGLWindow.mShadowParams ) },
         mSpotShadowParams{std::move ( aOpenGLWindow.mSpotShadowParams ) },
-        mSpotShadowDepthScratch{std::move ( aOpenGLWindow.mSpotShadowDepthScratch ) }
+        mSpotShadowDepthScratch{std::move ( aOpenGLWindow.mSpotShadowDepthScratch ) },
+        mPointShadowParams{std::move ( aOpenGLWindow.mPointShadowParams ) },
+        mPointShadowDepthScratch{std::move ( aOpenGLWindow.mPointShadowDepthScratch ) }
     {
         std::swap ( mWindowId, aOpenGLWindow.mWindowId );
         std::swap ( mFrustum, aOpenGLWindow.mFrustum );
@@ -249,6 +261,8 @@ namespace AeonGames
         std::swap ( mShadowFrameBuffer, aOpenGLWindow.mShadowFrameBuffer );
         std::swap ( mSpotShadowDepthTexture, aOpenGLWindow.mSpotShadowDepthTexture );
         std::swap ( mSpotShadowFrameBuffer, aOpenGLWindow.mSpotShadowFrameBuffer );
+        std::swap ( mPointShadowDepthTexture, aOpenGLWindow.mPointShadowDepthTexture );
+        std::swap ( mPointShadowFrameBuffer, aOpenGLWindow.mPointShadowFrameBuffer );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -263,6 +277,7 @@ namespace AeonGames
             mClusterParams.Finalize();
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
+            FinalizePointShadowMap();
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -310,10 +325,12 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::ShadowPass )
         {
             mOpenGLRenderer.BindPipeline ( mShadowDepthPipeline );
-            // Spot passes feed their per-caster matrix through a scratch UBO
-            // bound at the same ShadowParams slot the depth vertex shader reads;
-            // the directional pass uses the real ShadowParams buffer.
-            mOpenGLRenderer.SetShadowParams ( mInSpotShadowPass ? mSpotShadowDepthScratch : mShadowParams );
+            // Point and spot passes feed their per-caster (or per-face) matrix
+            // through a scratch UBO bound at the same ShadowParams slot the depth
+            // vertex shader reads; the directional pass uses the real buffer.
+            mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
+                                              : mInSpotShadowPass ? mSpotShadowDepthScratch
+                                              : mShadowParams );
             BindObjectMatrices ( { &aModelMatrix, 1 } );
             mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
             if ( aMesh.GetIndexCount() )
@@ -378,6 +395,9 @@ namespace AeonGames
         // Spot shadow maps: bind the per-caster params UBO and the depth array.
         mOpenGLRenderer.SetSpotShadowParams ( mSpotShadowParams );
         glBindTextureUnit ( SPOT_SHADOW_MAP_TEXTURE_UNIT, mSpotShadowDepthTexture );
+        // Point shadow maps: bind the per-caster params UBO and the cube-face array.
+        mOpenGLRenderer.SetPointShadowParams ( mPointShadowParams );
+        glBindTextureUnit ( POINT_SHADOW_MAP_TEXTURE_UNIT, mPointShadowDepthTexture );
 
         if ( aMaterial )
         {
@@ -420,10 +440,12 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::ShadowPass )
         {
             mOpenGLRenderer.BindPipeline ( mShadowDepthPipeline );
-            // Spot passes feed their per-caster matrix through a scratch UBO
-            // bound at the same ShadowParams slot the depth vertex shader reads;
-            // the directional pass uses the real ShadowParams buffer.
-            mOpenGLRenderer.SetShadowParams ( mInSpotShadowPass ? mSpotShadowDepthScratch : mShadowParams );
+            // Point and spot passes feed their per-caster (or per-face) matrix
+            // through a scratch UBO bound at the same ShadowParams slot the depth
+            // vertex shader reads; the directional pass uses the real buffer.
+            mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
+                                              : mInSpotShadowPass ? mSpotShadowDepthScratch
+                                              : mShadowParams );
             BindObjectMatrices ( aModelMatrices );
             mOpenGLRenderer.BindMesh ( aMesh );
             if ( aMesh.GetIndexCount() )
@@ -481,6 +503,9 @@ namespace AeonGames
         // Spot shadow maps: bind the per-caster params UBO and the depth array.
         mOpenGLRenderer.SetSpotShadowParams ( mSpotShadowParams );
         glBindTextureUnit ( SPOT_SHADOW_MAP_TEXTURE_UNIT, mSpotShadowDepthTexture );
+        // Point shadow maps: bind the per-caster params UBO and the cube-face array.
+        mOpenGLRenderer.SetPointShadowParams ( mPointShadowParams );
+        glBindTextureUnit ( POINT_SHADOW_MAP_TEXTURE_UNIT, mPointShadowDepthTexture );
         BindObjectMatrices ( aModelMatrices );
         if ( aMaterial )
         {
@@ -779,6 +804,101 @@ namespace AeonGames
         glDisable ( GL_POLYGON_OFFSET_FILL );
         // Restore the main framebuffer and full-window viewport for the passes
         // that follow.
+        mFrameBuffer.Bind();
+        glViewport ( 0, 0, static_cast<GLsizei> ( mViewportWidth ), static_cast<GLsizei> ( mViewportHeight ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::InitializePointShadowMap()
+    {
+        // Sampleable depth texture ARRAY: six cube-face layers per caster.
+        glGenTextures ( 1, &mPointShadowDepthTexture );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindTexture ( GL_TEXTURE_2D_ARRAY, mPointShadowDepthTexture );
+        glTexImage3D ( GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F,
+                       POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION,
+                       POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS, 0,
+                       GL_DEPTH_COMPONENT, GL_FLOAT, nullptr );
+        OPENGL_CHECK_ERROR_THROW;
+        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+        const float border[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glTexParameterfv ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border );
+        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
+        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
+        OPENGL_CHECK_ERROR_THROW;
+
+        // Depth-only framebuffer; a single layer is attached per face pass.
+        glGenFramebuffers ( 1, &mPointShadowFrameBuffer );
+        glBindFramebuffer ( GL_FRAMEBUFFER, mPointShadowFrameBuffer );
+        glDrawBuffer ( GL_NONE );
+        glReadBuffer ( GL_NONE );
+        OPENGL_CHECK_ERROR_THROW;
+        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+
+        {
+            GpuPointShadowParams empty{};
+            mPointShadowParams.Initialize ( sizeof ( GpuPointShadowParams ), GL_DYNAMIC_DRAW, &empty );
+        }
+        {
+            GpuShadowParams empty{};
+            mPointShadowDepthScratch.Initialize ( sizeof ( GpuShadowParams ), GL_DYNAMIC_DRAW, &empty );
+        }
+    }
+
+    void OpenGLWindow::FinalizePointShadowMap()
+    {
+        mPointShadowDepthScratch.Finalize();
+        mPointShadowParams.Finalize();
+        if ( mPointShadowFrameBuffer != 0 )
+        {
+            glDeleteFramebuffers ( 1, &mPointShadowFrameBuffer );
+            mPointShadowFrameBuffer = 0;
+        }
+        if ( mPointShadowDepthTexture != 0 )
+        {
+            glDeleteTextures ( 1, &mPointShadowDepthTexture );
+            mPointShadowDepthTexture = 0;
+        }
+    }
+
+    void OpenGLWindow::SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams )
+    {
+        mPointShadowParams.WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
+    }
+
+    void OpenGLWindow::BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    {
+        if ( !mShadowDepthLoaded )
+        {
+            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
+            mShadowDepthLoaded = true;
+        }
+        GpuShadowParams params{};
+        params.light_view_projection = aLightViewProjection;
+        params.params[3] = 1.0f; // enabled (unused by the depth vertex shader)
+        mPointShadowDepthScratch.WriteMemory ( 0, sizeof ( params ), &params );
+        mInPointShadowPass = true;
+
+        glBindFramebuffer ( GL_FRAMEBUFFER, mPointShadowFrameBuffer );
+        // Attach the cube-face layer (caster*6 + face) for this pass.
+        glFramebufferTextureLayer ( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                    mPointShadowDepthTexture, 0,
+                                    static_cast<GLint> ( aCaster * POINT_SHADOW_FACES + aFace ) );
+        glViewport ( 0, 0, POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION );
+        glClear ( GL_DEPTH_BUFFER_BIT );
+        glEnable ( GL_DEPTH_TEST );
+        glEnable ( GL_POLYGON_OFFSET_FILL );
+        glPolygonOffset ( 2.5f, 4.0f );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::EndPointShadowPass()
+    {
+        mInPointShadowPass = false;
+        glDisable ( GL_POLYGON_OFFSET_FILL );
         mFrameBuffer.Bind();
         glViewport ( 0, 0, static_cast<GLsizei> ( mViewportWidth ), static_cast<GLsizei> ( mViewportHeight ) );
         OPENGL_CHECK_ERROR_NO_THROW;
