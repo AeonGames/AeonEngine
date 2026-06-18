@@ -527,9 +527,11 @@ namespace AeonGames
         device_create_info.ppEnabledExtensionNames = mDeviceExtensionNames.data();
         // The cluster_mark fragment shader writes the per-cluster active-flag
         // storage buffer during the depth pre-pass; that requires the
-        // fragmentStoresAndAtomics device feature.
+        // fragmentStoresAndAtomics device feature. imageCubeArray lets the point
+        // shadow depth array be sampled as a cube map array.
         VkPhysicalDeviceFeatures enabled_features {};
         enabled_features.fragmentStoresAndAtomics = VK_TRUE;
+        enabled_features.imageCubeArray = VK_TRUE;
         device_create_info.pEnabledFeatures = &enabled_features;
 
         /// @todo Grab best device rather than first one

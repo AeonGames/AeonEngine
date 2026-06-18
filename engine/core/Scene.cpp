@@ -441,13 +441,28 @@ namespace AeonGames
     {
         aPointShadowParams = GpuPointShadowParams{};
         uint32_t count = 0;
-        // Cube face forward axes, in the layer order +X,-X,+Y,-Y,+Z,-Z that the
-        // fragment shader's dominant-axis face selection mirrors.
-        static const Vector3 face_axes[POINT_SHADOW_FACES] =
+        // Per-face world->view rotation rows (view X, view Y = forward,
+        // view Z), one entry per cube face in the hardware layer order
+        // +X,-X,+Y,-Y,+Z,-Z (layer = caster*6 + face). They are derived so the
+        // engine perspective's NDC (ndc.x = vx/vy, ndc.y = -vz/vy) reproduces
+        // the GPU cube-map face and (s,t) selection convention for a world-space
+        // sampling direction, letting the shading pass sample the cube by raw
+        // direction. The bases are reflective (determinant -1) to match the
+        // left-handed cube convention, so with back-face culling the pass
+        // records back-face depth; that is correct (and reduces acne) for the
+        // solid shadow casters here.
+        struct FaceBasis
         {
-            { 1.0f, 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f },
-            { 0.0f, 1.0f, 0.0f }, { 0.0f, -1.0f, 0.0f },
-            { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }
+            Vector3 r0, r1, r2;
+        };
+        static const FaceBasis face_basis[POINT_SHADOW_FACES] =
+        {
+            { { 0.0f, 0.0f, -1.0f }, {  1.0f, 0.0f,  0.0f }, { 0.0f, 1.0f,  0.0f } }, // +X
+            { { 0.0f, 0.0f,  1.0f }, { -1.0f, 0.0f,  0.0f }, { 0.0f, 1.0f,  0.0f } }, // -X
+            { { 1.0f, 0.0f,  0.0f }, {  0.0f, 1.0f,  0.0f }, { 0.0f, 0.0f, -1.0f } }, // +Y
+            { { 1.0f, 0.0f,  0.0f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 0.0f,  1.0f } }, // -Y
+            { { 1.0f, 0.0f,  0.0f }, {  0.0f, 0.0f,  1.0f }, { 0.0f, 1.0f,  0.0f } }, // +Z
+            { {-1.0f, 0.0f,  0.0f }, {  0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f,  0.0f } }, // -Z
         };
         for ( const GpuLight& light : mFrameLights.Get() )
         {
@@ -471,34 +486,24 @@ namespace AeonGames
                                      light.position_radius.GetZ()
             };
             const float near_plane = std::max ( radius * 0.02f, 0.05f );
+            // 90-degree field of view so the six faces tile the full sphere.
+            Matrix4x4 light_projection;
+            light_projection.Perspective ( 90.0f, 1.0f, near_plane, radius );
             for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
             {
-                const Vector3& axis = face_axes[face];
-                // Orient a virtual camera so its forward axis (engine +Y) looks
-                // along this face's world axis (same shortest-arc construction as
-                // the spot/directional casters). The roll is irrelevant: the same
-                // matrix renders and samples this face, so any orthonormal frame
-                // with the right forward tiles the cube correctly at 90deg FOV.
-                const Vector3 forward { 0.0f, 1.0f, 0.0f };
-                const float d = Dot ( forward, axis );
-                Quaternion orientation{ 1.0f, 0.0f, 0.0f, 0.0f };
-                if ( d < -0.9999f )
+                const FaceBasis& b = face_basis[face];
+                // view = R * (world - eye): rotation rows are the view axes in
+                // world space, translation is -R*eye.
+                const float tx = - ( b.r0.GetX() * eye.GetX() + b.r0.GetY() * eye.GetY() + b.r0.GetZ() * eye.GetZ() );
+                const float ty = - ( b.r1.GetX() * eye.GetX() + b.r1.GetY() * eye.GetY() + b.r1.GetZ() * eye.GetZ() );
+                const float tz = - ( b.r2.GetX() * eye.GetX() + b.r2.GetY() * eye.GetY() + b.r2.GetZ() * eye.GetZ() );
+                const Matrix4x4 light_view
                 {
-                    orientation = Quaternion::GetFromAxisAngle ( 180.0f, 0.0f, 0.0f, 1.0f );
-                }
-                else if ( d < 0.9999f )
-                {
-                    const Vector3 rot_axis = Normalize ( Cross ( forward, axis ) );
-                    const float angle = std::acos ( d ) * ( 180.0f / 3.14159265358979323846f );
-                    orientation = Quaternion::GetFromAxisAngle ( angle, rot_axis.GetX(), rot_axis.GetY(), rot_axis.GetZ() );
-                }
-                Transform light_transform;
-                light_transform.SetRotation ( orientation );
-                light_transform.SetTranslation ( eye );
-                const Matrix4x4 light_view = light_transform.GetInvertedMatrix();
-                Matrix4x4 light_projection;
-                // 90-degree field of view so the six faces tile the full sphere.
-                light_projection.Perspective ( 90.0f, 1.0f, near_plane, radius );
+                    b.r0.GetX(), b.r1.GetX(), b.r2.GetX(), 0.0f,
+                        b.r0.GetY(), b.r1.GetY(), b.r2.GetY(), 0.0f,
+                        b.r0.GetZ(), b.r1.GetZ(), b.r2.GetZ(), 0.0f,
+                        tx,          ty,          tz,          1.0f
+                };
                 aPointShadowParams.point_light_view_projection[count * POINT_SHADOW_FACES + face] =
                     light_projection * light_view;
             }

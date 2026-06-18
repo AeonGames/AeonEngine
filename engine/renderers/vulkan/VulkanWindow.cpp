@@ -1302,10 +1302,12 @@ namespace AeonGames
               mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
 
         auto create_image = [&] ( VkFormat format, VkImageUsageFlags usage,
-                                  uint32_t array_layers, VkImage & image, VkDeviceMemory & memory )
+                                  uint32_t array_layers, VkImageCreateFlags flags,
+                                  VkImage & image, VkDeviceMemory & memory )
         {
             VkImageCreateInfo image_create_info{};
             image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_create_info.flags = flags;
             image_create_info.format = format;
             image_create_info.imageType = VK_IMAGE_TYPE_2D;
             image_create_info.extent.width = POINT_SHADOW_MAP_RESOLUTION;
@@ -1336,17 +1338,21 @@ namespace AeonGames
             vkBindImageMemory ( device, image, memory, 0 );
         };
 
+        // The depth image is CUBE-COMPATIBLE so it can be sampled as a cube map
+        // array (six faces per caster); the throwaway colour image is a plain 2D.
         create_image ( mVkDepthStencilFormat,
                        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                       POINT_SHADOW_LAYERS, mVkPointShadowDepthImage, mVkPointShadowDepthImageMemory );
+                       POINT_SHADOW_LAYERS, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
+                       mVkPointShadowDepthImage, mVkPointShadowDepthImageMemory );
         create_image ( mVkSurfaceFormatKHR.format,
                        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                       1, mVkPointShadowColorImage, mVkPointShadowColorImageMemory );
+                       1, 0,
+                       mVkPointShadowColorImage, mVkPointShadowColorImageMemory );
 
         VkImageViewCreateInfo array_view_create_info{};
         array_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         array_view_create_info.image = mVkPointShadowDepthImage;
-        array_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        array_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
         array_view_create_info.format = mVkDepthStencilFormat;
         array_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
         array_view_create_info.subresourceRange.levelCount = 1;

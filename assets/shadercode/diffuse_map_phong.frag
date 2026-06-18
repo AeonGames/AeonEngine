@@ -159,7 +159,7 @@ layout(set = 13, binding = 0)
 #else
 layout(binding = 10)
 #endif
-uniform sampler2DArrayShadow PointShadowMap;
+uniform samplerCubeArrayShadow PointShadowMap;
 
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
@@ -305,55 +305,30 @@ int spot_shadow_slot ( vec3 aLightPos )
       return -1;
 }
 
-// Sample the point shadow map for caster @p aCaster and return a visibility
-// factor in [0,1]. Reconstructs the fragment's world position, picks the cube
-// face from the dominant axis of the light-to-fragment vector to locate the
-// array layer and its texel, then compares the fragment's normalized radial
-// distance from the light against the stored distance. The depth pass writes
-// length(frag - light) / radius, so the comparison metric is the same on both
-// faces and both backends (no projected-depth NDC remap needed here).
+// Sample the point shadow cube map for caster @p aCaster and return a
+// visibility factor in [0,1]. The depth pass rendered six cube faces storing
+// normalized radial distance from the light, so the hardware picks the face and
+// (s,t) from the world-space light-to-fragment direction and we compare against
+// the same metric (length(frag - light) / radius). 3x3 PCF perturbs the
+// sampling direction in a frame perpendicular to it.
 float point_shadow ( int aCaster, vec3 aLightPos )
 {
       vec4 world = inverse ( ViewMatrix ) * vec4 ( eyeCoords, 1.0 );
-      vec3 L = world.xyz - aLightPos;
-      vec3 aL = abs ( L );
-      int face;
-      if ( aL.x >= aL.y && aL.x >= aL.z )
-      {
-            face = ( L.x > 0.0 ) ? 0 : 1;
-      }
-      else if ( aL.y >= aL.z )
-      {
-            face = ( L.y > 0.0 ) ? 2 : 3;
-      }
-      else
-      {
-            face = ( L.z > 0.0 ) ? 4 : 5;
-      }
-      int layer = aCaster * 6 + face;
-      // Project only to find the texel (uv); the compared depth is radial, not
-      // this projection's z. uv uses xy/w, which is identical on GL and Vulkan.
-      vec4 light_clip = point_light_view_projection[layer] * world;
-      if ( light_clip.w <= 0.0 )
-      {
-            return 1.0;
-      }
-      vec2 uv = ( light_clip.xy / light_clip.w ) * 0.5 + 0.5;
-      if ( uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 )
-      {
-            return 1.0;
-      }
-      // Normalized radial distance: the exact metric the depth pass stored.
+      vec3 dir = world.xyz - aLightPos;
       float radius = point_caster_position_radius[aCaster].w;
-      float current_depth = length ( L ) / radius - point_shadow_params.y;
+      float current_depth = length ( dir ) / radius - point_shadow_params.y;
+      // Build an orthonormal frame around the sampling direction for PCF.
+      vec3 ref_up = ( abs ( dir.z ) < 0.999 * length ( dir ) ) ? vec3 ( 0.0, 0.0, 1.0 ) : vec3 ( 1.0, 0.0, 0.0 );
+      vec3 tangent = normalize ( cross ( ref_up, dir ) );
+      vec3 bitangent = cross ( dir, tangent );
+      float texel = point_shadow_params.x * point_shadow_params.z * length ( dir );
       float visibility = 0.0;
-      float step = point_shadow_params.x * point_shadow_params.z;
       for ( int y = -1; y <= 1; ++y )
       {
             for ( int x = -1; x <= 1; ++x )
             {
-                  vec2 offset = vec2 ( float ( x ), float ( y ) ) * step;
-                  visibility += texture ( PointShadowMap, vec4 ( uv + offset, float ( layer ), current_depth ) );
+                  vec3 offset = ( tangent * float ( x ) + bitangent * float ( y ) ) * texel;
+                  visibility += texture ( PointShadowMap, vec4 ( dir + offset, float ( aCaster ) ), current_depth );
             }
       }
       return visibility / 9.0;

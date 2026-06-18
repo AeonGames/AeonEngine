@@ -811,26 +811,28 @@ namespace AeonGames
 
     void OpenGLWindow::InitializePointShadowMap()
     {
-        // Sampleable depth texture ARRAY: six cube-face layers per caster.
+        // Sampleable depth CUBE MAP ARRAY: one cube (six faces) per caster, so
+        // the shading pass samples by world direction and the GPU selects the
+        // face and filters seamlessly across face edges.
+        glEnable ( GL_TEXTURE_CUBE_MAP_SEAMLESS );
         glGenTextures ( 1, &mPointShadowDepthTexture );
         OPENGL_CHECK_ERROR_THROW;
-        glBindTexture ( GL_TEXTURE_2D_ARRAY, mPointShadowDepthTexture );
-        glTexImage3D ( GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F,
+        glBindTexture ( GL_TEXTURE_CUBE_MAP_ARRAY, mPointShadowDepthTexture );
+        glTexImage3D ( GL_TEXTURE_CUBE_MAP_ARRAY, 0, GL_DEPTH_COMPONENT32F,
                        POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION,
                        POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS, 0,
                        GL_DEPTH_COMPONENT, GL_FLOAT, nullptr );
         OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-        const float border[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        glTexParameterfv ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border );
-        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
-        glTexParameteri ( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
+        glTexParameteri ( GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
         OPENGL_CHECK_ERROR_THROW;
 
-        // Depth-only framebuffer; a single layer is attached per face pass.
+        // Depth-only framebuffer; a single cube-face layer is attached per pass.
         glGenFramebuffers ( 1, &mPointShadowFrameBuffer );
         glBindFramebuffer ( GL_FRAMEBUFFER, mPointShadowFrameBuffer );
         glDrawBuffer ( GL_NONE );
