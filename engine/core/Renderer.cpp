@@ -65,11 +65,29 @@ namespace AeonGames
             // Point shadow passes: each point caster is omnidirectional, so its
             // depth is captured as six 90-degree faces (one per cube axis) into
             // six consecutive layers of the point shadow map array.
+            //
+            // Each caster's six-face cube map is cached: it is only re-rendered
+            // when the caster's light (position/radius) or some shadow-casting
+            // geometry actually changed since it was last drawn. The depth image
+            // persists between frames, so an unchanged caster reuses its previous
+            // map and skips all six passes -- on a static scene the point shadow
+            // maps are rendered once and then sampled for free every frame, even
+            // while the camera moves.
             GpuPointShadowParams point_shadow_params{};
             const uint32_t point_caster_count = aScene.GetPointShadowCasters ( point_shadow_params );
             SetPointShadowParams ( aWindowId, point_shadow_params );
+            const uint64_t shadow_geometry_signature = aScene.GetShadowGeometrySignature();
+            auto& point_cache = mPointShadowCache[aWindowId];
             for ( uint32_t caster = 0; caster < point_caster_count; ++caster )
             {
+                PointShadowCacheEntry& entry = point_cache[caster];
+                if ( entry.rendered &&
+                     entry.geometry_signature == shadow_geometry_signature &&
+                     entry.light_position_radius == point_shadow_params.caster_position_radius[caster] )
+                {
+                    // Nothing this caster sees changed; reuse its cached cube map.
+                    continue;
+                }
                 for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
                 {
                     const Matrix4x4 point_light_view_projection =
@@ -79,6 +97,9 @@ namespace AeonGames
                     SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
                     EndPointShadowPass ( aWindowId );
                 }
+                entry.light_position_radius = point_shadow_params.caster_position_radius[caster];
+                entry.geometry_signature = shadow_geometry_signature;
+                entry.rendered = true;
             }
             // Directional shadow pass: render scene depth from the sun's point of
             // view into the shadow map before shading so the fragment stage can

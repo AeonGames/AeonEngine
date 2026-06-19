@@ -596,10 +596,39 @@ namespace AeonGames
     void Scene::Update ( const double delta )
     {
         mFrameLights.Reset();
-        LoopTraverseDFSPreOrder ( [delta] ( Node & aNode )
+        // Recompute the shadow-geometry signature in the same traversal that
+        // updates the nodes (avoids a second full-scene walk): FNV-1a over each
+        // geometry node's world pose and size. Nodes without geometry (camera,
+        // bare lights) have a degenerate AABB and are skipped, so moving the
+        // camera leaves the signature unchanged; only a moved, resized, or
+        // added/removed shadow caster changes it. Each node's world transform is
+        // final when it is visited (parents update first in pre-order).
+        uint64_t hash = 1469598103934665603ull;
+        auto fold = [&hash] ( float aValue )
+        {
+            uint32_t bits;
+            std::memcpy ( &bits, &aValue, sizeof ( bits ) );
+            hash = ( hash ^ bits ) * 1099511628211ull;
+        };
+        LoopTraverseDFSPreOrder ( [delta, &fold] ( Node & aNode )
         {
             aNode.Update ( delta );
+            const Vector3& radii = aNode.GetAABB().GetRadii();
+            if ( radii.GetX() <= 0.0f && radii.GetY() <= 0.0f && radii.GetZ() <= 0.0f )
+            {
+                return;
+            }
+            const Matrix4x4 world { aNode.GetGlobalTransform() };
+            const float* m = world.GetMatrix4x4();
+            for ( int i = 0; i < 16; ++i )
+            {
+                fold ( m[i] );
+            }
+            fold ( radii.GetX() );
+            fold ( radii.GetY() );
+            fold ( radii.GetZ() );
         } );
+        mShadowGeometrySignature = hash;
     }
 
     void Scene::InvalidateSpatialIndex()
@@ -715,6 +744,11 @@ namespace AeonGames
             BuildSpatialIndex();
         }
         mSpatialIndex.ForEachCell ( aFrustum, aCallback );
+    }
+
+    uint64_t Scene::GetShadowGeometrySignature() const
+    {
+        return mShadowGeometrySignature;
     }
 
     void Scene::BuildRenderQueue ( const Frustum& aFrustum ) const

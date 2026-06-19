@@ -300,6 +300,17 @@ namespace AeonGames
          *  can feed several submit passes (e.g. depth pre-pass and shading).
          *  @param aFrustum Frustum to cull the scene against. */
         DLL void BuildRenderQueue ( const Frustum& aFrustum ) const;
+        /** @brief A hash of all shadow-casting geometry's world poses this frame.
+         *
+         *  Folds the world transform (and size) of every node that has geometry
+         *  (a non-degenerate AABB) into one value. Nodes without geometry, such
+         *  as the camera or bare light nodes, contribute nothing, so moving the
+         *  camera does NOT change the signature. The renderer uses it to skip
+         *  re-rendering a shadow map whose casters and light are unchanged: the
+         *  signature only differs when some shadow-casting geometry actually
+         *  moved, was resized, or was added/removed. Cheap (one traversal, no
+         *  allocation); call once per frame. */
+        DLL uint64_t GetShadowGeometrySignature() const;
         /** @brief Read-only view of the queue built by the last BuildRenderQueue. */
         DLL const std::vector<RenderItem>& GetRenderQueue() const;
         /** @brief Walk the built render queue grouping consecutive items that can
@@ -394,6 +405,11 @@ namespace AeonGames
         mutable std::vector<Matrix4x4> mInstanceTransforms{};
         FrameLightContainer mFrameLights{};
         ResourceId mLightingPipeline{};
+        /// @brief Hash of all shadow-casting geometry's world poses, recomputed
+        /// each frame during Update (folded into its existing traversal). Read
+        /// by GetShadowGeometrySignature so the renderer can skip re-rendering
+        /// unchanged shadow maps without a second scene traversal.
+        uint64_t mShadowGeometrySignature{0};
     };
 }
 #endif

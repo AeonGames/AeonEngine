@@ -21,6 +21,8 @@ limitations under the License.
 #include <string>
 #include <memory>
 #include <vector>
+#include <array>
+#include <unordered_map>
 #include <functional>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -28,6 +30,7 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/RenderItem.hpp"
 #include "aeongames/GpuLight.hpp"
+#include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/GpuShadowParams.hpp"
 
 namespace AeonGames
@@ -586,6 +589,20 @@ namespace AeonGames
         std::unique_ptr<Mesh> mDebugGridMesh{};
         /** Grid appearance material (colors, spacing, fade). */
         std::unique_ptr<Material> mDebugGridMaterial{};
+        /** Per-window, per-caster point shadow cache. A caster's six-face cube
+         *  map is only re-rendered when its light or some shadow-casting
+         *  geometry actually changed; otherwise the previous frame's map is
+         *  reused (the depth image persists). An entry records the inputs the
+         *  last render depended on: the caster's light world position+radius and
+         *  the scene's shadow-geometry signature. @c rendered guards the first
+         *  frame and any time the map was invalidated. */
+        struct PointShadowCacheEntry
+        {
+            Vector4 light_position_radius{};
+            uint64_t geometry_signature{0};
+            bool rendered{false};
+        };
+        std::unordered_map<void*, std::array<PointShadowCacheEntry, MAX_POINT_SHADOW_CASTERS>> mPointShadowCache{};
     };
     /**@name Factory Functions */
     /*@{*/
