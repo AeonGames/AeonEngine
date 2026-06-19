@@ -50,6 +50,9 @@ namespace AeonGames
         /// @brief Construct from a native window handle.
         OpenGLRenderer ( void* aWindow );
         ~OpenGLRenderer();
+        /// @brief Registered renderer name ("OpenGL"); selects per-renderer
+        ///        pipeline shader variants.
+        std::string_view GetName() const final;
         void LoadMesh ( const Mesh& aMesh ) final;
         void UnloadMesh ( const Mesh& aMesh ) final;
         /// @brief Get the platform-specific OpenGL rendering context.

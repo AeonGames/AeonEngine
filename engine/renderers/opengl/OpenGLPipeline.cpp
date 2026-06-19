@@ -15,6 +15,7 @@ limitations under the License.
 */
 #include "OpenGLPipeline.hpp"
 #include "OpenGLFunctions.hpp"
+#include "OpenGLRenderer.hpp"
 #include "aeongames/CRC.hpp"
 #include <vector>
 #include <algorithm>
@@ -115,11 +116,12 @@ namespace AeonGames
         // Compute stages cannot share a GL program with graphics stages, so
         // each compute stage is linked into its own dedicated program.
         static constexpr std::array<ShaderType, 5> graphics_stages{ { VERT, FRAG, TESC, TESE, GEOM } };
+        const std::string_view renderer { mOpenGLRenderer.GetName() };
         std::vector<GLuint> graphics_shader_ids;
         bool has_graphics_stage{false};
         for ( ShaderType stage : graphics_stages )
         {
-            if ( !aPipeline.GetShaderCode ( stage ).empty() )
+            if ( !aPipeline.GetShaderCode ( stage, renderer ).empty() )
             {
                 has_graphics_stage = true;
                 break;
@@ -132,7 +134,7 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_THROW;
             for ( ShaderType stage : graphics_stages )
             {
-                const std::string_view code{ aPipeline.GetShaderCode ( stage ) };
+                const std::string_view code{ aPipeline.GetShaderCode ( stage, renderer ) };
                 if ( code.empty() )
                 {
                     continue;
@@ -149,13 +151,13 @@ namespace AeonGames
             }
         }
 
-        const uint32_t compute_stage_count = aPipeline.GetComputeStageCount();
+        const uint32_t compute_stage_count = aPipeline.GetComputeStageCount ( renderer );
         mComputeProgramIds.reserve ( compute_stage_count );
         for ( uint32_t c = 0; c < compute_stage_count; ++c )
         {
             GLuint program = glCreateProgram();
             OPENGL_CHECK_ERROR_THROW;
-            GLuint shader_id = compile_and_attach ( program, GL_COMPUTE_SHADER, aPipeline.GetComputeShaderCode ( c ), COMP );
+            GLuint shader_id = compile_and_attach ( program, GL_COMPUTE_SHADER, aPipeline.GetComputeShaderCode ( c, renderer ), COMP );
             link_program ( program );
             glDetachShader ( program, shader_id );
             OPENGL_CHECK_ERROR_THROW;

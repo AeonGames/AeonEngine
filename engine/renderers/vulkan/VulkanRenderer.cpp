@@ -125,6 +125,11 @@ namespace AeonGames
         return mVkInstance;
     }
 
+    std::string_view VulkanRenderer::GetName() const
+    {
+        return "Vulkan";
+    }
+
     const VkPhysicalDevice & VulkanRenderer::GetPhysicalDevice() const
     {
         return mVkPhysicalDevice;

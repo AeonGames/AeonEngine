@@ -184,26 +184,28 @@ namespace AeonGames
         return true;
     }
 
-    /// @brief Map from shader file extension to its mutable PipelineMsg accessor.
-    /// Compute shaders are handled separately because the `comp` field is repeated.
+    /// @brief Map from shader file extension to a setter for its default
+    /// (renderer-agnostic) variant. Each stage is now a map keyed by a renderer
+    /// selector; the empty key "" is the default. Compute shaders are handled
+    /// separately because their value is an ordered stage list.
     const std::unordered_map<const char*, std::function<std::string * ( PipelineMsg* ) >> ShaderTypeToExtension
     {
-        { ".vert", &PipelineMsg::mutable_vert },
-        { ".frag", &PipelineMsg::mutable_frag },
-        { ".tesc", &PipelineMsg::mutable_tesc },
-        { ".tese", &PipelineMsg::mutable_tese },
-        { ".geom", &PipelineMsg::mutable_geom }
+        { ".vert", [] ( PipelineMsg * m ) -> std::string* { return & ( *m->mutable_vert() ) [""]; } },
+        { ".frag", [] ( PipelineMsg * m ) -> std::string* { return & ( *m->mutable_frag() ) [""]; } },
+        { ".tesc", [] ( PipelineMsg * m ) -> std::string* { return & ( *m->mutable_tesc() ) [""]; } },
+        { ".tese", [] ( PipelineMsg * m ) -> std::string* { return & ( *m->mutable_tese() ) [""]; } },
+        { ".geom", [] ( PipelineMsg * m ) -> std::string* { return & ( *m->mutable_geom() ) [""]; } }
     };
 
-    /// @brief Map from shader file extension to its const PipelineMsg getter.
-    /// Compute shaders are handled separately because the `comp` field is repeated.
+    /// @brief Map from shader file extension to a getter for its default
+    /// (empty-key) variant, or an empty string when absent.
     const std::unordered_map<const char*, std::function<const std::string& ( const PipelineMsg* ) >> ShaderTypeToGetter
     {
-        { ".vert", &PipelineMsg::vert },
-        { ".frag", &PipelineMsg::frag },
-        { ".tesc", &PipelineMsg::tesc },
-        { ".tese", &PipelineMsg::tese },
-        { ".geom", &PipelineMsg::geom }
+        { ".vert", [] ( const PipelineMsg * m ) -> const std::string& { static const std::string e; auto it = m->vert().find ( "" ); return it != m->vert().end() ? it->second : e; } },
+        { ".frag", [] ( const PipelineMsg * m ) -> const std::string& { static const std::string e; auto it = m->frag().find ( "" ); return it != m->frag().end() ? it->second : e; } },
+        { ".tesc", [] ( const PipelineMsg * m ) -> const std::string& { static const std::string e; auto it = m->tesc().find ( "" ); return it != m->tesc().end() ? it->second : e; } },
+        { ".tese", [] ( const PipelineMsg * m ) -> const std::string& { static const std::string e; auto it = m->tese().find ( "" ); return it != m->tese().end() ? it->second : e; } },
+        { ".geom", [] ( const PipelineMsg * m ) -> const std::string& { static const std::string e; auto it = m->geom().find ( "" ); return it != m->geom().end() ? it->second : e; } }
     };
 
     int PipelineTool::operator() ( int argc, char** argv )
@@ -277,7 +279,7 @@ namespace AeonGames
                     std::filesystem::path shader_path{std::filesystem::path{mInputFile} .replace_extension ( ".comp" ) };
                     if ( std::filesystem::exists ( shader_path ) )
                     {
-                        pipeline_msg.add_comp ( read_shader ( shader_path ) );
+                        ( *pipeline_msg.mutable_comp() ) [""].add_stage ( read_shader ( shader_path ) );
                         found_shader = true;
                     }
                 }
@@ -290,7 +292,7 @@ namespace AeonGames
                 if ( extension == ".comp" )
                 {
                     // Compute stages are ordered; append in command-line order.
-                    pipeline_msg.add_comp ( std::move ( shader_code ) );
+                    ( *pipeline_msg.mutable_comp() ) [""].add_stage ( std::move ( shader_code ) );
                     found_shader = true;
                     continue;
                 }
@@ -417,17 +419,19 @@ namespace AeonGames
                 }
             }
 
-            // Extract compute stages (repeated). Multiple stages get an index
-            // suffix so they land on distinct files.
-            for ( int i = 0; i < pipeline_msg.comp_size(); ++i )
+            // Extract the default compute stages (empty-key variant). Multiple
+            // stages get an index suffix so they land on distinct files.
+            const auto comp_it = pipeline_msg.comp().find ( "" );
+            const int comp_count = ( comp_it != pipeline_msg.comp().end() ) ? comp_it->second.stage_size() : 0;
+            for ( int i = 0; i < comp_count; ++i )
             {
-                const std::string& shader_code = pipeline_msg.comp ( i );
+                const std::string& shader_code = comp_it->second.stage ( i );
                 if ( shader_code.empty() )
                 {
                     continue;
                 }
                 std::filesystem::path shader_path = base_path;
-                if ( pipeline_msg.comp_size() > 1 )
+                if ( comp_count > 1 )
                 {
                     shader_path = base_path.string() + "." + std::to_string ( i ) + ".comp";
                 }

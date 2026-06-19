@@ -203,9 +203,10 @@ namespace AeonGames
                                        ) };
 
         bool has_graphics_stage{false};
+        const std::string_view renderer { mVulkanRenderer.GetName() };
         for ( ShaderType stage : graphics_stages )
         {
-            const std::string_view code{ aPipeline.GetShaderCode ( stage ) };
+            const std::string_view code{ aPipeline.GetShaderCode ( stage, renderer ) };
             if ( code.empty() )
             {
                 continue;
@@ -287,7 +288,7 @@ namespace AeonGames
         // single pipeline asset can carry any number of ordered compute
         // stages. The modules are kept alive until their individual compute
         // pipelines are created against the shared layout.
-        const uint32_t compute_stage_count = aPipeline.GetComputeStageCount();
+        const uint32_t compute_stage_count = aPipeline.GetComputeStageCount ( renderer );
         std::vector<VkShaderModule> compute_shader_modules ( compute_stage_count, VK_NULL_HANDLE );
         std::vector<VkPipelineShaderStageCreateInfo> compute_shader_stage_create_infos ( compute_stage_count );
         for ( uint32_t c = 0; c < compute_stage_count; ++c )
@@ -297,7 +298,7 @@ namespace AeonGames
                     CompilerLinker::TOptions::EOptionVulkanRules |
                     CompilerLinker::TOptions::EOptionLinkProgram
                                                    ) };
-            compute_compiler_linker.AddShaderSource ( EShLanguage::EShLangCompute, aPipeline.GetComputeShaderCode ( c ).data() );
+            compute_compiler_linker.AddShaderSource ( EShLanguage::EShLangCompute, aPipeline.GetComputeShaderCode ( c, renderer ).data() );
             if ( CompilerLinker::FailCode result = compute_compiler_linker.CompileAndLink() )
             {
                 std::ostringstream stream;

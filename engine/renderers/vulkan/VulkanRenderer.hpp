@@ -46,6 +46,9 @@ namespace AeonGames
         /// @brief Construct from a native window handle.
         VulkanRenderer ( void* aWindow );
         ~VulkanRenderer() final;
+        /// @brief Registered renderer name ("Vulkan"); selects per-renderer
+        ///        pipeline shader variants.
+        std::string_view GetName() const final;
         /// @brief Get the Vulkan instance handle.
         const VkInstance& GetInstance() const;
         /// @brief Get the physical device handle.

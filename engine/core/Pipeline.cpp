@@ -201,19 +201,69 @@ namespace AeonGames
     }
 #endif
 
-    const std::string_view Pipeline::GetShaderCode ( ShaderType aType ) const
+    namespace
     {
-        return mShaderCode[aType];
+        /** True when @p aRenderer is one of the comma-separated names in the
+         *  selector key @p aKey (e.g. "Vulkan,Metal"). */
+        bool RendererInSet ( const std::string& aKey, std::string_view aRenderer )
+        {
+            const std::string_view key{ aKey };
+            size_t start = 0;
+            while ( true )
+            {
+                const size_t comma = key.find ( ',', start );
+                const size_t end = ( comma == std::string_view::npos ) ? key.size() : comma;
+                if ( key.substr ( start, end - start ) == aRenderer )
+                {
+                    return true;
+                }
+                if ( comma == std::string_view::npos )
+                {
+                    return false;
+                }
+                start = comma + 1;
+            }
+        }
+
+        /** Resolve a stage's per-renderer variant: a non-empty selector whose set
+         *  contains @p aRenderer wins (even when its value is empty/disabling, so
+         *  it overrides the default rather than inheriting it); otherwise the
+         *  default "" selector is used. Returns nullptr when neither exists. The
+         *  tool guarantees non-empty selectors are disjoint, so at most one
+         *  matches. */
+        template<typename Map>
+        const typename Map::mapped_type* ResolveVariant ( const Map& aVariants, std::string_view aRenderer )
+        {
+            for ( const auto& entry : aVariants )
+            {
+                if ( !entry.first.empty() && RendererInSet ( entry.first, aRenderer ) )
+                {
+                    return &entry.second;
+                }
+            }
+            const auto it = aVariants.find ( std::string{} );
+            return ( it != aVariants.end() ) ? &it->second : nullptr;
+        }
     }
 
-    uint32_t Pipeline::GetComputeStageCount() const
+    const std::string_view Pipeline::GetShaderCode ( ShaderType aType, std::string_view aRenderer ) const
     {
-        return static_cast<uint32_t> ( mComputeStages.size() );
+        const std::string* code = ResolveVariant ( mShaderVariants[aType], aRenderer );
+        return code ? std::string_view{ *code } :
+               std::string_view{};
     }
 
-    const std::string_view Pipeline::GetComputeShaderCode ( uint32_t aIndex ) const
+    uint32_t Pipeline::GetComputeStageCount ( std::string_view aRenderer ) const
     {
-        return mComputeStages.at ( aIndex );
+        const std::vector<std::string>* stages = ResolveVariant ( mComputeVariants, aRenderer );
+        return stages ? static_cast<uint32_t> ( stages->size() ) : 0u;
+    }
+
+    const std::string_view Pipeline::GetComputeShaderCode ( uint32_t aIndex, std::string_view aRenderer ) const
+    {
+        const std::vector<std::string>* stages = ResolveVariant ( mComputeVariants, aRenderer );
+        return ( stages && aIndex < stages->size() ) ? std::string_view{ ( *stages ) [aIndex] } :
+               std::string_view{};
     }
 
     void Pipeline::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
@@ -223,16 +273,27 @@ namespace AeonGames
 
     void Pipeline::LoadFromPBMsg ( const PipelineMsg& aPipelineMsg )
     {
-        mShaderCode[VERT] = aPipelineMsg.vert();
-        mShaderCode[FRAG] = aPipelineMsg.frag();
-        mShaderCode[TESC] = aPipelineMsg.tesc();
-        mShaderCode[TESE] = aPipelineMsg.tese();
-        mShaderCode[GEOM] = aPipelineMsg.geom();
-        mComputeStages.clear();
-        mComputeStages.reserve ( aPipelineMsg.comp_size() );
-        for ( const std::string& comp : aPipelineMsg.comp() )
+        for ( auto& variants : mShaderVariants )
         {
-            mComputeStages.emplace_back ( comp );
+            variants.clear();
+        }
+        mComputeVariants.clear();
+        auto copy_stage = [] ( std::unordered_map<std::string, std::string>& aDst, const auto & aSrc )
+        {
+            for ( const auto& entry : aSrc )
+            {
+                aDst[entry.first] = entry.second;
+            }
+        };
+        copy_stage ( mShaderVariants[VERT], aPipelineMsg.vert() );
+        copy_stage ( mShaderVariants[FRAG], aPipelineMsg.frag() );
+        copy_stage ( mShaderVariants[TESC], aPipelineMsg.tesc() );
+        copy_stage ( mShaderVariants[TESE], aPipelineMsg.tese() );
+        copy_stage ( mShaderVariants[GEOM], aPipelineMsg.geom() );
+        for ( const auto& entry : aPipelineMsg.comp() )
+        {
+            std::vector<std::string>& stages = mComputeVariants[entry.first];
+            stages.assign ( entry.second.stage().begin(), entry.second.stage().end() );
         }
         if ( aPipelineMsg.has_topology_class() )
         {
@@ -247,10 +308,10 @@ namespace AeonGames
 
     void Pipeline::Unload()
     {
-        for ( auto& i : mShaderCode )
+        for ( auto& variants : mShaderVariants )
         {
-            i.clear();
+            variants.clear();
         }
-        mComputeStages.clear();
+        mComputeVariants.clear();
     }
 }

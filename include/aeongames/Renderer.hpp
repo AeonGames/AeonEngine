@@ -19,6 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <span>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <vector>
 #include <array>
@@ -522,6 +523,9 @@ namespace AeonGames
         DLL bool GetLightTypeEnabled ( LightType aType ) const;
         /** Flips the enabled state of a whole light type. */
         DLL void ToggleLightType ( LightType aType );
+        /** @return The renderer's registered name ("OpenGL"/"Vulkan"), used to
+         *  resolve per-renderer pipeline shader variants. */
+        virtual std::string_view GetName() const = 0;
         ///@}
     protected:
         /** Returns @p aLights filtered to only the currently enabled light

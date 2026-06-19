@@ -23,6 +23,7 @@ limitations under the License.
 #include <array>
 #include <regex>
 #include <tuple>
+#include <unordered_map>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Material.hpp"
 #include "aeongames/Resource.hpp"
@@ -150,23 +151,34 @@ namespace AeonGames
         DLL std::string GetAttributes () const;
         DLL uint32_t GetAttributeBitmap() const;
 #endif
-        /** Get the shader source code for the given shader stage.
+        /** Get the shader source code for the given shader stage, resolved for a
+         * renderer. Each stage may carry per-renderer variants keyed by a
+         * comma-separated renderer set (empty key = default); a renderer-specific
+         * entry overrides the default, and an empty entry disables the stage.
          * @param aType The shader stage to retrieve code for.
-         * @return String view of the shader source code.
+         * @param aRenderer Name of the active renderer (e.g. "Vulkan"). Empty
+         *        resolves to the default variant only.
+         * @return String view of the resolved shader source, empty when the
+         *         stage is absent or disabled for this renderer.
          */
-        DLL const std::string_view GetShaderCode ( ShaderType aType ) const;
+        DLL const std::string_view GetShaderCode ( ShaderType aType, std::string_view aRenderer = {} ) const;
 
-        /** Get the number of compute shader stages in this pipeline.
+        /** Get the number of compute shader stages for a renderer.
          * Compute stages are ordered; index 0 is dispatched first.
+         * @param aRenderer Name of the active renderer. Empty resolves to the
+         *        default variant only.
          * @return The number of compute shader stages.
          */
-        DLL uint32_t GetComputeStageCount() const;
+        DLL uint32_t GetComputeStageCount ( std::string_view aRenderer = {} ) const;
 
-        /** Get the shader source code for a compute stage by index.
+        /** Get the shader source code for a compute stage by index, resolved for
+         * a renderer.
          * @param aIndex Zero-based index of the compute stage.
+         * @param aRenderer Name of the active renderer. Empty resolves to the
+         *        default variant only.
          * @return String view of the compute shader source code.
          */
-        DLL const std::string_view GetComputeShaderCode ( uint32_t aIndex ) const;
+        DLL const std::string_view GetComputeShaderCode ( uint32_t aIndex, std::string_view aRenderer = {} ) const;
 
         /** Load pipeline configuration from a protobuf message.
          * @param aPipelineMsg The protobuf message to load from.
@@ -180,8 +192,13 @@ namespace AeonGames
         std::vector<std::tuple<UniformType, std::string >> mUniformDescriptors{};
         std::vector<std::string> mSamplerDescriptors{};
 #endif
-        std::array<std::string, ShaderType::COUNT> mShaderCode {};
-        std::vector<std::string> mComputeStages {};
+        /** Per-stage renderer variants: selector (comma-separated renderer set,
+         *  empty = default) -> shader source (empty = disabled). Compute stages
+         *  map a selector to an ordered list of sources. Populated from the
+         *  pipeline message; resolved against the active renderer by the
+         *  Get*ShaderCode accessors. */
+        std::array<std::unordered_map<std::string, std::string>, ShaderType::COUNT> mShaderVariants {};
+        std::unordered_map<std::string, std::vector<std::string>> mComputeVariants {};
         uint32_t mTopologyClass{ TOPOLOGY_CLASS_TRIANGLE };
     };
 }

@@ -1237,6 +1237,11 @@ void main()
         return mOpenGLContext;
     }
 
+    std::string_view OpenGLRenderer::GetName() const
+    {
+        return "OpenGL";
+    }
+
     void OpenGLRenderer::RenderOverlay ( void* aWindowId, const GuiOverlay& aGuiOverlay )
     {
         const uint8_t* pixels = aGuiOverlay.GetPixels();

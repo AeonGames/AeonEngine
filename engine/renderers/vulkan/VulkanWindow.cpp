@@ -2258,7 +2258,7 @@ namespace AeonGames
         // depth pre-pass left inactive. A barrier between stages keeps each
         // stage's writes visible to the next and, after the last stage, to the
         // fragment shader of the main color pass.
-        const uint32_t stage_count = aComputePipeline.GetComputeStageCount();
+        const uint32_t stage_count = aComputePipeline.GetComputeStageCount ( mVulkanRenderer.GetName() );
         for ( uint32_t stage = 1; stage < stage_count; ++stage )
         {
             Dispatch ( aComputePipeline, group_count, 1, 1, bindings, stage );

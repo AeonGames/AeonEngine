@@ -35,11 +35,24 @@ message PipelineMsg {
 		LINE_TRIANGLE_AND_PATCH = 14;
 		ALL                     = 15;
 	};
-	optional string vert                  = 1;
-	optional string frag                  = 2;
-	repeated string comp                  = 3;
-	optional string tesc                  = 4;
-	optional string tese                  = 5;
-	optional string geom                  = 6;
-	optional TopologyClass topology_class = 7;
+	// Ordered list of compute shader stage sources (stage 0 dispatched first).
+	message ComputeStages {
+		repeated string stage = 1;
+	}
+	// Each stage maps a renderer selector to its shader source. The selector key
+	// is a comma-separated set of renderer names matching the names the renderer
+	// plugins export (e.g. "Vulkan", "OpenGL,Metal"); the empty key "" is the
+	// default used by any renderer not named in another key. The value is the
+	// shader source, or an empty string to explicitly disable the stage for the
+	// selected renderers (so a renderer-specific empty entry opts out of the
+	// default instead of inheriting it). The pipeline tool guarantees the
+	// non-empty keys of a stage are pairwise disjoint, so at most one matches any
+	// given renderer.
+	map<string, string>        vert           = 1;
+	map<string, string>        frag           = 2;
+	map<string, ComputeStages> comp           = 3;
+	map<string, string>        tesc           = 4;
+	map<string, string>        tese           = 5;
+	map<string, string>        geom           = 6;
+	optional TopologyClass     topology_class = 7;
 }
