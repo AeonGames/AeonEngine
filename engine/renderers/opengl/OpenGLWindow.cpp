@@ -846,7 +846,7 @@ namespace AeonGames
         }
         {
             GpuShadowParams empty{};
-            mPointShadowDepthScratch.Initialize ( sizeof ( GpuShadowParams ), GL_DYNAMIC_DRAW, &empty );
+            mPointShadowDepthScratch.Initialize ( sizeof ( GpuPointDepthParams ), GL_DYNAMIC_DRAW, &empty );
         }
     }
 
@@ -872,32 +872,40 @@ namespace AeonGames
         mPointShadowParams.WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
     }
 
-    void OpenGLWindow::BeginPointShadowPass ( uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    void OpenGLWindow::BeginPointShadowPass ( uint32_t aCaster )
     {
         if ( !mPointShadowDepthLoaded )
         {
             mPointShadowDepthPipeline.LoadFromId ( "shaders/point_shadow_depth.txt"_crc32 );
             mPointShadowDepthLoaded = true;
         }
-        GpuShadowParams params{};
-        params.light_view_projection = aLightViewProjection;
-        // The point depth shader reads the caster's world position (.xyz) and
-        // radius (.w) from shadow_params to write normalized radial distance.
-        const Vector4& caster = mPointShadowParamsCpu.caster_position_radius[aCaster];
-        params.params[0] = caster.GetX();
-        params.params[1] = caster.GetY();
-        params.params[2] = caster.GetZ();
-        params.params[3] = caster.GetW();
-        mPointShadowDepthScratch.WriteMemory ( 0, sizeof ( params ), &params );
+        // One draw renders all six cube faces: the geometry shader reads the six
+        // face matrices + light position/radius and routes each face to its
+        // cube-array layer. base_layer is absolute (caster*6) because the whole
+        // cube-map array is attached as a layered target.
+        GpuPointDepthParams depth_params{};
+        for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
+        {
+            depth_params.face_view_projection[face] =
+                mPointShadowParamsCpu.point_light_view_projection[aCaster * POINT_SHADOW_FACES + face];
+        }
+        depth_params.light_position_radius = mPointShadowParamsCpu.caster_position_radius[aCaster];
+        depth_params.face_params = Vector4 { static_cast<float> ( aCaster * POINT_SHADOW_FACES ), 0.0f, 0.0f, 0.0f };
+        mPointShadowDepthScratch.WriteMemory ( 0, sizeof ( depth_params ), &depth_params );
         mInPointShadowPass = true;
 
         glBindFramebuffer ( GL_FRAMEBUFFER, mPointShadowFrameBuffer );
-        // Attach the cube-face layer (caster*6 + face) for this pass.
-        glFramebufferTextureLayer ( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                    mPointShadowDepthTexture, 0,
-                                    static_cast<GLint> ( aCaster * POINT_SHADOW_FACES + aFace ) );
+        // Attach the whole cube-map array as a layered target; the geometry
+        // shader's gl_Layer selects the caster's six faces.
+        glFramebufferTexture ( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, mPointShadowDepthTexture, 0 );
         glViewport ( 0, 0, POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION );
-        glClear ( GL_DEPTH_BUFFER_BIT );
+        // The layered attachment covers every caster's layers, so clear the whole
+        // array once, before the first caster, to avoid wiping a caster already
+        // rendered this frame.
+        if ( aCaster == 0 )
+        {
+            glClear ( GL_DEPTH_BUFFER_BIT );
+        }
         glEnable ( GL_DEPTH_TEST );
         OPENGL_CHECK_ERROR_NO_THROW;
     }

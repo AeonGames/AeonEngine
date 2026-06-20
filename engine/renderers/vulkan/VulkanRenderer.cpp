@@ -519,11 +519,16 @@ namespace AeonGames
 #endif
         VkDeviceCreateInfo device_create_info {};
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        // Multiview renders all six point-shadow cube faces in a single pass
+        // (one view per cube face); enable it so the point shadow depth pipeline
+        // can replicate geometry across the six views in hardware.
+        VkPhysicalDeviceVulkan11Features vulkan11_features {};
+        vulkan11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        vulkan11_features.multiview = VK_TRUE;
 #ifdef VK_USE_PLATFORM_METAL_EXT
-        device_create_info.pNext = use_primitive_topology_list_restart ? &physical_device_primitive_topology_list_restart_features : nullptr;
-#else
-        device_create_info.pNext = nullptr;
+        vulkan11_features.pNext = use_primitive_topology_list_restart ? &physical_device_primitive_topology_list_restart_features : nullptr;
 #endif
+        device_create_info.pNext = &vulkan11_features;
         device_create_info.queueCreateInfoCount = 1;
         device_create_info.pQueueCreateInfos = &device_queue_create_info;
         device_create_info.enabledLayerCount = static_cast<uint32_t> ( mDeviceLayerNames.size() );
@@ -668,13 +673,22 @@ namespace AeonGames
 
     /*-----------------Pipeline-----------------------*/
 
-    const VulkanPipeline* VulkanRenderer::GetVulkanPipeline ( const Pipeline& aPipeline )
+    const VulkanPipeline* VulkanRenderer::GetVulkanPipeline ( const Pipeline& aPipeline, VkRenderPass aRenderPass )
     {
         auto it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
         if ( it == mPipelineStore.end() )
         {
-            LoadPipeline ( aPipeline );
-            it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+            if ( aRenderPass != VK_NULL_HANDLE )
+            {
+                // The pipeline must be created against this (e.g. multiview)
+                // render pass; cached on first use against it.
+                it = mPipelineStore.emplace ( aPipeline.GetConsecutiveId(), VulkanPipeline{*this, aPipeline, aRenderPass} ).first;
+            }
+            else
+            {
+                LoadPipeline ( aPipeline );
+                it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+            }
         }
         if ( it != mPipelineStore.end() )
         {
@@ -1073,14 +1087,14 @@ namespace AeonGames
         }
         it->second.SetPointShadowParams ( aPointShadowParams );
     }
-    void VulkanRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection )
+    void VulkanRenderer::BeginPointShadowPass ( void* aWindowId, uint32_t aCaster )
     {
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
             return;
         }
-        it->second.BeginPointShadowPass ( aCaster, aFace, aLightViewProjection );
+        it->second.BeginPointShadowPass ( aCaster );
     }
     void VulkanRenderer::EndPointShadowPass ( void* aWindowId )
     {

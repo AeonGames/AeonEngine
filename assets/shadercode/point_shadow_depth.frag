@@ -17,8 +17,9 @@ layout(binding = 5, std140)
 #endif
 uniform ShadowParams
 {
-      mat4 light_view_projection;
-      vec4 shadow_params; // (light_x, light_y, light_z, radius)
+      mat4 face_view_projection[6]; // POINT_SHADOW_FACES
+      vec4 light_position_radius;   // xyz world pos, w radius
+      vec4 face_params;             // x = base cube-array layer
 };
 
 layout(location = 0) in vec3 world_position;
@@ -26,7 +27,7 @@ layout(location = 0) out vec4 FragColor;
 
 void main()
 {
-      float dist = length ( world_position - shadow_params.xyz );
-      gl_FragDepth = clamp ( dist / shadow_params.w, 0.0, 1.0 );
+      float dist = length ( world_position - light_position_radius.xyz );
+      gl_FragDepth = clamp ( dist / light_position_radius.w, 0.0, 1.0 );
       FragColor = vec4 ( 1.0 );
 }

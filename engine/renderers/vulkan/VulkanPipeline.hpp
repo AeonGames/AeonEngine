@@ -34,8 +34,11 @@ namespace AeonGames
     class VulkanPipeline
     {
     public:
-        /// @brief Construct from a renderer and pipeline resource.
-        VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline );
+        /// @brief Construct from a renderer and pipeline resource. @p aRenderPass
+        ///        overrides the render pass the graphics pipeline is created
+        ///        against (e.g. the multiview point shadow pass); VK_NULL_HANDLE
+        ///        uses the renderer's main render pass.
+        VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, VkRenderPass aRenderPass = VK_NULL_HANDLE );
         ~VulkanPipeline();
         /// @brief Move constructor.
         VulkanPipeline ( VulkanPipeline&& aVulkanPipeline );

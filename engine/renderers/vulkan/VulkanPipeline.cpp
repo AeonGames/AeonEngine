@@ -184,7 +184,7 @@ namespace AeonGames
         VK_SHADER_STAGE_GEOMETRY_BIT
     };
 
-    VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline ) :
+    VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, VkRenderPass aRenderPass ) :
         mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
     {
         // Graphics stages (vert/frag/tesc/tese/geom) are compiled and linked
@@ -542,7 +542,7 @@ namespace AeonGames
             graphics_pipeline_create_info.pColorBlendState = &pipeline_color_blend_state_create_info;
             graphics_pipeline_create_info.pDynamicState = &pipeline_dynamic_state_create_info;
             graphics_pipeline_create_info.layout = mVkPipelineLayout;
-            graphics_pipeline_create_info.renderPass = mVulkanRenderer.GetRenderPass();
+            graphics_pipeline_create_info.renderPass = ( aRenderPass != VK_NULL_HANDLE ) ? aRenderPass : mVulkanRenderer.GetRenderPass();
             graphics_pipeline_create_info.subpass = 0;
             graphics_pipeline_create_info.basePipelineHandle = VK_NULL_HANDLE;
             graphics_pipeline_create_info.basePipelineIndex = 0;

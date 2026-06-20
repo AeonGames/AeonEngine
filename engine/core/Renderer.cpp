@@ -62,17 +62,18 @@ namespace AeonGames
                 SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
                 EndSpotShadowPass ( aWindowId );
             }
-            // Point shadow passes: each point caster is omnidirectional, so its
-            // depth is captured as six 90-degree faces (one per cube axis) into
-            // six consecutive layers of the point shadow map array.
+            // Point shadow passes: each point caster is omnidirectional, so all
+            // six cube faces are rendered in a single draw -- Vulkan multiview
+            // (one view per face) or an OpenGL geometry shader -- into the
+            // caster's six cube-map-array layers.
             //
-            // Each caster's six-face cube map is cached: it is only re-rendered
-            // when the caster's light (position/radius) or some shadow-casting
-            // geometry actually changed since it was last drawn. The depth image
-            // persists between frames, so an unchanged caster reuses its previous
-            // map and skips all six passes -- on a static scene the point shadow
-            // maps are rendered once and then sampled for free every frame, even
-            // while the camera moves.
+            // Each caster's cube map is cached: it is only re-rendered when the
+            // caster's light (position/radius) or some shadow-casting geometry
+            // actually changed since it was last drawn. The depth image persists
+            // between frames, so an unchanged caster reuses its previous map and
+            // skips the pass -- on a static scene the point shadow maps are
+            // rendered once and then sampled for free every frame, even while the
+            // camera moves.
             GpuPointShadowParams point_shadow_params{};
             const uint32_t point_caster_count = aScene.GetPointShadowCasters ( point_shadow_params );
             SetPointShadowParams ( aWindowId, point_shadow_params );
@@ -88,15 +89,20 @@ namespace AeonGames
                     // Nothing this caster sees changed; reuse its cached cube map.
                     continue;
                 }
-                for ( uint32_t face = 0; face < POINT_SHADOW_FACES; ++face )
-                {
-                    const Matrix4x4 point_light_view_projection =
-                        point_shadow_params.point_light_view_projection[caster * POINT_SHADOW_FACES + face];
-                    aScene.BuildRenderQueue ( Frustum ( point_light_view_projection ) );
-                    BeginPointShadowPass ( aWindowId, caster, face, point_light_view_projection );
-                    SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
-                    EndPointShadowPass ( aWindowId );
-                }
+                // The whole sphere is rendered in one pass, so cull once to a box
+                // that bounds the caster's shadow sphere (a point light has no
+                // single frustum; the axis-aligned box is a conservative superset).
+                const Vector4& caster_position_radius = point_shadow_params.caster_position_radius[caster];
+                const float radius = caster_position_radius.GetW();
+                Matrix4x4 caster_bounds;
+                caster_bounds.Ortho (
+                    caster_position_radius.GetX() - radius, caster_position_radius.GetX() + radius,
+                    caster_position_radius.GetZ() - radius, caster_position_radius.GetZ() + radius,
+                    caster_position_radius.GetY() - radius, caster_position_radius.GetY() + radius );
+                aScene.BuildRenderQueue ( Frustum ( caster_bounds ) );
+                BeginPointShadowPass ( aWindowId, caster );
+                SubmitRenderQueue ( aWindowId, aScene, RenderPass::ShadowPass );
+                EndPointShadowPass ( aWindowId );
                 entry.light_position_radius = point_shadow_params.caster_position_radius[caster];
                 entry.geometry_signature = shadow_geometry_signature;
                 entry.rendered = true;

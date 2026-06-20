@@ -105,7 +105,7 @@ namespace AeonGames
         void BeginSpotShadowPass ( void* aWindowId, uint32_t aSlot, const Matrix4x4& aLightViewProjection ) final;
         void EndSpotShadowPass ( void* aWindowId ) final;
         void SetPointShadowParams ( void* aWindowId, const GpuPointShadowParams& aPointShadowParams ) final;
-        void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster, uint32_t aFace, const Matrix4x4& aLightViewProjection ) final;
+        void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster ) final;
         void EndPointShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Render ( void* aWindowId,
@@ -152,7 +152,7 @@ namespace AeonGames
         /// @brief Get the common Vulkan render pass.
         VkRenderPass GetRenderPass() const;
         /// @brief Get the cached VulkanPipeline for a Pipeline resource.
-        const VulkanPipeline* GetVulkanPipeline ( const Pipeline& aPipeline );
+        const VulkanPipeline* GetVulkanPipeline ( const Pipeline& aPipeline, VkRenderPass aRenderPass = VK_NULL_HANDLE );
         /// @brief Get the cached VulkanMaterial for a Material resource.
         const VulkanMaterial* GetVulkanMaterial ( const Material& aMaterial );
         /// @brief Get the cached VulkanMesh for a Mesh resource.

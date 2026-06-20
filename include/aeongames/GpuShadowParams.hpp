@@ -149,5 +149,34 @@ namespace AeonGames
     static_assert ( sizeof ( GpuPointShadowParams ) ==
                     64 * POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS + 16 * MAX_POINT_SHADOW_CASTERS + 16,
                     "GpuPointShadowParams layout must match the shader-side std140 PointShadowParams block." );
+
+    /** @brief CPU-side mirror of the point shadow depth pass's @c ShadowParams
+     *  block, bound per caster for the single-pass cube render.
+     *
+     *  All six cube faces of one caster are rendered in a single draw. On Vulkan
+     *  this uses multiview: the vertex shader projects by
+     *  @c face_view_projection[gl_ViewIndex] into the view selected by the
+     *  render pass's view mask. On OpenGL a geometry shader replicates each
+     *  primitive across the six cube-map-array layers (gl_Layer = base_layer +
+     *  face), projecting by @c face_view_projection[face]. The fragment shader
+     *  writes the normalized radial distance from @c light_position_radius.
+     *  @c base_layer (face_params.x) is the caster's first cube-array layer:
+     *  @c caster*6 on OpenGL (whole array attached, absolute gl_Layer) and 0 on
+     *  Vulkan (a per-caster six-layer framebuffer, relative views). Matches:
+     *  @code
+     *  layout(std140) uniform ShadowParams {
+     *      mat4 face_view_projection[POINT_SHADOW_FACES];
+     *      vec4 light_position_radius; // xyz world pos, w radius
+     *      vec4 face_params;           // x = base_layer
+     *  };
+     *  @endcode */
+    struct GpuPointDepthParams
+    {
+        Matrix4x4 face_view_projection[POINT_SHADOW_FACES] {};
+        Vector4   light_position_radius {};
+        Vector4   face_params {};
+    };
+    static_assert ( sizeof ( GpuPointDepthParams ) == 64 * POINT_SHADOW_FACES + 16 + 16,
+                    "GpuPointDepthParams layout must match the shader-side std140 point depth ShadowParams block." );
 }
 #endif
