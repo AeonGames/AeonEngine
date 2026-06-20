@@ -31,6 +31,7 @@ limitations under the License.
 #include <iostream>
 #include <cstring>
 #include <array>
+#include <unordered_set>
 #include <filesystem>
 #include "PipelineTool.h"
 #include "CodeFieldValuePrinter.hpp"
@@ -71,11 +72,22 @@ namespace AeonGames
         "      --tese <file>   Tessellation evaluation shader source.\n"
         "      --geom <file>   Geometry shader source.\n"
         "\n"
+        "Per-renderer variants. A stage may carry renderer-scoped sources keyed\n"
+        "by a comma-separated renderer set (the names renderer plugins export,\n"
+        "e.g. \"Vulkan\" or \"Vulkan,Metal\"). A renderer not named in any set uses\n"
+        "the default (unscoped) source. The selector sets of a stage must be\n"
+        "pairwise disjoint.\n"
+        "      --variant <stage> <set> <file>  Source for the renderer set.\n"
+        "      --disable <stage> <set>         Disable the stage for the set.\n"
+        "\n"
         "Examples:\n"
         "  aeontool pipeline -i shader -o shader.pln\n"
         "  aeontool pipeline -i shader.pln -o shader\n"
         "  aeontool pipeline --vert no_skeleton.vert --frag shared.frag \\\n"
         "                    -o no_skeleton.txt\n"
+        "  aeontool pipeline --vert ps.vert --geom ps.geom --frag ps.frag \\\n"
+        "                    --variant vert Vulkan ps_mv.vert --disable geom Vulkan \\\n"
+        "                    -o point_shadow_depth.txt\n"
                   << std::flush;
     }
 
@@ -127,9 +139,43 @@ namespace AeonGames
                         i++;
                         mOutputFile = argv[i];
                     }
+                    else if ( strcmp ( opt, "variant" ) == 0 )
+                    {
+                        // --variant <stage> <selector> <file>: a renderer-scoped
+                        // stage source. <stage> is the bare name (vert, geom, ...),
+                        // <selector> a comma-separated renderer set.
+                        if ( i + 3 >= argc )
+                        {
+                            throw std::runtime_error ( "--variant requires <stage> <selector> <file>" );
+                        }
+                        std::string ext = std::string ( "." ) + argv[i + 1];
+                        if ( !IsStageExtension ( ext.c_str() ) )
+                        {
+                            throw std::runtime_error ( "Unknown stage for --variant: " + std::string ( argv[i + 1] ) );
+                        }
+                        mStageFiles.push_back ( { ext, argv[i + 2], argv[i + 3], false } );
+                        i += 3;
+                    }
+                    else if ( strcmp ( opt, "disable" ) == 0 )
+                    {
+                        // --disable <stage> <selector>: turn a stage explicitly off
+                        // for a renderer set (overrides the default without inheriting).
+                        if ( i + 2 >= argc )
+                        {
+                            throw std::runtime_error ( "--disable requires <stage> <selector>" );
+                        }
+                        std::string ext = std::string ( "." ) + argv[i + 1];
+                        if ( !IsStageExtension ( ext.c_str() ) )
+                        {
+                            throw std::runtime_error ( "Unknown stage for --disable: " + std::string ( argv[i + 1] ) );
+                        }
+                        mStageFiles.push_back ( { ext, argv[i + 2], std::string{}, true } );
+                        i += 2;
+                    }
                     else
                     {
                         // Per-stage overrides: --vert/--frag/--comp/--tesc/--tese/--geom
+                        // (default variant, empty selector).
                         std::string ext = std::string ( "." ) + opt;
                         if ( IsStageExtension ( ext.c_str() ) )
                         {
@@ -138,7 +184,7 @@ namespace AeonGames
                                 throw std::runtime_error ( "Missing value for --" + std::string ( opt ) );
                             }
                             i++;
-                            mStageFiles.emplace_back ( ext, argv[i] );
+                            mStageFiles.push_back ( { ext, std::string{}, argv[i], false } );
                         }
                         else
                         {
@@ -242,17 +288,47 @@ namespace AeonGames
                 return std::string ( ( std::istreambuf_iterator<char> ( shader_file ) ), std::istreambuf_iterator<char>() );
             };
 
-            // Helper: was this stage extension provided as a per-stage override?
+            // Helper: was this stage's DEFAULT variant provided as an override?
+            // Only a default (unscoped, non-disabled) override suppresses
+            // base-name auto-discovery of that stage; renderer-scoped variants
+            // sit alongside the auto-discovered default.
             auto stage_overridden = [this] ( const std::string & ext ) -> bool
             {
-                for ( const auto& [stage_ext, stage_path] : mStageFiles )
+                for ( const auto& sf : mStageFiles )
                 {
-                    if ( stage_ext == ext )
+                    if ( sf.extension == ext && sf.selector.empty() && !sf.disabled )
                     {
                         return true;
                     }
                 }
                 return false;
+            };
+
+            // Helper: target string for a graphics stage's variant keyed by the
+            // renderer selector ("" = default). Creates the entry if absent.
+            auto stage_setter = [&pipeline_msg] ( const std::string & ext, const std::string & selector ) -> std::string *
+            {
+                if ( ext == ".vert" )
+                {
+                    return & ( *pipeline_msg.mutable_vert() ) [selector];
+                }
+                if ( ext == ".frag" )
+                {
+                    return & ( *pipeline_msg.mutable_frag() ) [selector];
+                }
+                if ( ext == ".tesc" )
+                {
+                    return & ( *pipeline_msg.mutable_tesc() ) [selector];
+                }
+                if ( ext == ".tese" )
+                {
+                    return & ( *pipeline_msg.mutable_tese() ) [selector];
+                }
+                if ( ext == ".geom" )
+                {
+                    return & ( *pipeline_msg.mutable_geom() ) [selector];
+                }
+                return nullptr;
             };
 
             // 1. Base-name auto-discovery (only when input path is an extensionless base).
@@ -286,32 +362,76 @@ namespace AeonGames
             }
 
             // 2. Per-stage overrides take precedence and preserve command-line order.
-            for ( const auto& [extension, path] : mStageFiles )
+            for ( const auto& sf : mStageFiles )
             {
-                std::string shader_code = read_shader ( path );
-                if ( extension == ".comp" )
+                if ( sf.extension == ".comp" )
                 {
-                    // Compute stages are ordered; append in command-line order.
-                    ( *pipeline_msg.mutable_comp() ) [""].add_stage ( std::move ( shader_code ) );
+                    // Compute stages are ordered; append in command-line order. A
+                    // disabled compute selector leaves an empty stage list.
+                    auto& stages = ( *pipeline_msg.mutable_comp() ) [sf.selector];
+                    if ( !sf.disabled )
+                    {
+                        stages.add_stage ( read_shader ( sf.path ) );
+                    }
                     found_shader = true;
                     continue;
                 }
-                std::function<std::string* ( PipelineMsg* ) > setter;
-                for ( const auto& [known_ext, known_setter] : ShaderTypeToExtension )
+                std::string* target = stage_setter ( sf.extension, sf.selector );
+                if ( !target )
                 {
-                    if ( extension == known_ext )
-                    {
-                        setter = known_setter;
-                        break;
-                    }
+                    throw std::runtime_error ( "Unknown stage extension: " + sf.extension );
                 }
-                if ( !setter )
+                // A disabled stage keeps an empty value: the selector overrides
+                // the default without inheriting it.
+                if ( sf.disabled )
                 {
-                    throw std::runtime_error ( "Unknown stage extension: " + extension );
+                    target->clear();
                 }
-                setter ( &pipeline_msg )->assign ( std::move ( shader_code ) );
+                else
+                {
+                    target->assign ( read_shader ( sf.path ) );
+                }
                 found_shader = true;
             }
+
+            // Renderer selectors of a stage must be pairwise disjoint so at most
+            // one matches any renderer; reject overlaps so an ambiguous pipeline
+            // can never be packed.
+            auto validate_disjoint = [] ( const auto & aStageMap, const char* aStageName )
+            {
+                std::unordered_set<std::string> seen;
+                for ( const auto& entry : aStageMap )
+                {
+                    const std::string& key = entry.first;
+                    if ( key.empty() )
+                    {
+                        continue;
+                    }
+                    size_t start = 0;
+                    while ( true )
+                    {
+                        const size_t comma = key.find ( ',', start );
+                        const size_t end = ( comma == std::string::npos ) ? key.size() : comma;
+                        std::string name = key.substr ( start, end - start );
+                        if ( !name.empty() && !seen.insert ( name ).second )
+                        {
+                            throw std::runtime_error ( std::string ( "Renderer '" ) + name +
+                                                       "' appears in multiple " + aStageName + " selectors" );
+                        }
+                        if ( comma == std::string::npos )
+                        {
+                            break;
+                        }
+                        start = comma + 1;
+                    }
+                }
+            };
+            validate_disjoint ( pipeline_msg.vert(), "vert" );
+            validate_disjoint ( pipeline_msg.frag(), "frag" );
+            validate_disjoint ( pipeline_msg.comp(), "comp" );
+            validate_disjoint ( pipeline_msg.tesc(), "tesc" );
+            validate_disjoint ( pipeline_msg.tese(), "tese" );
+            validate_disjoint ( pipeline_msg.geom(), "geom" );
 
             if ( found_shader )
             {

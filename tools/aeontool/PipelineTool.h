@@ -46,10 +46,21 @@ namespace AeonGames
         bool ProcessArgs ( int argc, char** argv );
         std::string mInputFile;
         std::string mOutputFile;
-        /// Per-stage shader source file overrides as (extension, path) pairs in
-        /// command-line order. Order matters for compute stages, which may appear
-        /// multiple times (".comp").
-        std::vector<std::pair<std::string, std::string>> mStageFiles;
+        /// A shader source override for one stage, optionally scoped to a set of
+        /// renderers. @c selector is a comma-separated renderer set ("" = the
+        /// default variant); @c disabled marks the stage explicitly off for that
+        /// selector (the renderer then has no such stage instead of inheriting
+        /// the default). @c path is the source file (empty when disabled).
+        struct StageFile
+        {
+            std::string extension;
+            std::string selector;
+            std::string path;
+            bool disabled = false;
+        };
+        /// Per-stage shader source overrides in command-line order. Order matters
+        /// for compute stages, which may appear multiple times (".comp").
+        std::vector<StageFile> mStageFiles;
     };
 }
 #endif
