@@ -46,6 +46,10 @@ namespace AeonGames
         bool ProcessArgs ( int argc, char** argv );
         std::string mInputFile;
         std::string mOutputFile;
+        /// Optional topology class name (a PipelineMsg::TopologyClass enum name
+        /// such as "TRIANGLE" or "LINE"); empty leaves the field unset so the
+        /// loader applies its default. Set via --topology when packing.
+        std::string mTopologyClass;
         /// A shader source override for one stage, optionally scoped to a set of
         /// renderers. @c selector is a comma-separated renderer set ("" = the
         /// default variant); @c disabled marks the stage explicitly off for that

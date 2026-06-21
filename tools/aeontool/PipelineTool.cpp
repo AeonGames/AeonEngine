@@ -80,6 +80,10 @@ namespace AeonGames
         "      --variant <stage> <set> <file>  Source for the renderer set.\n"
         "      --disable <stage> <set>         Disable the stage for the set.\n"
         "\n"
+        "Pipeline state (packing only):\n"
+        "      --topology <class>  Topology class enum name (e.g. TRIANGLE, LINE,\n"
+        "                          POINT, PATCH). Unset leaves the loader default.\n"
+        "\n"
         "Examples:\n"
         "  aeontool pipeline -i shader -o shader.pln\n"
         "  aeontool pipeline -i shader.pln -o shader\n"
@@ -171,6 +175,17 @@ namespace AeonGames
                         }
                         mStageFiles.push_back ( { ext, argv[i + 2], std::string{}, true } );
                         i += 2;
+                    }
+                    else if ( strcmp ( opt, "topology" ) == 0 )
+                    {
+                        // --topology <class>: set the pipeline's topology class
+                        // (a PipelineMsg::TopologyClass enum name, e.g. LINE).
+                        if ( i + 1 >= argc )
+                        {
+                            throw std::runtime_error ( "--topology requires <class>" );
+                        }
+                        i++;
+                        mTopologyClass = argv[i];
                     }
                     else
                     {
@@ -432,6 +447,18 @@ namespace AeonGames
             validate_disjoint ( pipeline_msg.tesc(), "tesc" );
             validate_disjoint ( pipeline_msg.tese(), "tese" );
             validate_disjoint ( pipeline_msg.geom(), "geom" );
+
+            // Optional topology class. Parsed from the enum name so an invalid
+            // value fails loudly instead of silently defaulting.
+            if ( !mTopologyClass.empty() )
+            {
+                PipelineMsg::TopologyClass topology_value;
+                if ( !PipelineMsg::TopologyClass_Parse ( mTopologyClass, &topology_value ) )
+                {
+                    throw std::runtime_error ( "Unknown topology class: " + mTopologyClass );
+                }
+                pipeline_msg.set_topology_class ( topology_value );
+            }
 
             if ( found_shader )
             {

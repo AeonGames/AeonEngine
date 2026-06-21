@@ -7,6 +7,8 @@
 #
 # Entry format: "<pipeline-name>|<stage>=<file>|<stage>=<file>|..."
 # Supported stages: vert, frag, comp, tesc, tese, geom.
+# A field may also be "topology=<CLASS>" to set the pipeline topology class
+# (a PipelineMsg::TopologyClass enum name, e.g. TRIANGLE or LINE).
 #
 # To regenerate the pipeline .txt files, build the `shader-pipelines`
 # target (e.g. `make shader-pipelines`).
@@ -21,6 +23,13 @@ set(PIPELINES
     "skinning|comp=skinning.comp"
     "shadow_depth|vert=shadow_depth.vert|frag=shadow_depth.frag"
     "point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag|Vulkan:vert=point_shadow_depth_mv.vert|Vulkan:geom"
+    # Engine debug + example pipelines (sources recovered from the previously
+    # hand-committed game/shaders/*.txt, now generated like every other pipeline).
+    "debug_grid|vert=debug_grid.vert|frag=debug_grid.frag|topology=TRIANGLE"
+    "solid_color|vert=solid_color.vert|frag=solid_color.frag|topology=LINE"
+    "simple_phong|vert=simple_phong.vert|frag=simple_phong.frag"
+    "plain_red|vert=plain_red.vert|frag=plain_red.frag"
+    "noop_compute|comp=noop_compute.comp"
 )
 
 set(SHADER_SOURCE_DIR   ${CMAKE_CURRENT_SOURCE_DIR})
@@ -41,8 +50,11 @@ foreach(entry IN LISTS PIPELINES)
         #   stage=file            default variant (all renderers)
         #   Set:stage=file        variant for the renderer set Set (comma list)
         #   Set:stage             disable the stage for the renderer set Set
+        #   topology=CLASS        pipeline topology class (e.g. TRIANGLE, LINE)
         # Set uses ',' to list renderers ('|' is the entry field separator).
-        if(pair MATCHES "^([^=]+)=(.+)$")
+        if(pair MATCHES "^topology=(.+)$")
+            list(APPEND stage_args --topology ${CMAKE_MATCH_1})
+        elseif(pair MATCHES "^([^=]+)=(.+)$")
             set(lhs "${CMAKE_MATCH_1}")
             set(file_path "${SHADER_SOURCE_DIR}/${CMAKE_MATCH_2}")
             if(lhs MATCHES "^([^:]+):([A-Za-z]+)$")
