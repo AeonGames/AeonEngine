@@ -371,12 +371,12 @@ add_custom_target(
   COMMENT "Generating Protocol Buffers Python Code")
 
 #
-# Binary asset generation target.
+# Game asset generation (incremental).
 #
-# The game/shaders/*.txt listed below in SOURCES are produced by the
-# shader-pipelines target (assets/shadercode/CMakeLists.txt), so on a fresh
-# checkout they do not exist yet. Mark them GENERATED so the configure step does
-# not fail with "Cannot find source file" before they are first generated.
+# The generated pipeline .txt referenced below are produced by the
+# shader-pipelines target (assets/shadercode/CMakeLists.txt) and may not exist on
+# a fresh checkout. Mark them GENERATED so the conversion rules' DEPENDS neither
+# fail configure nor look for a (nonexistent) source-tree rule to build them.
 set_source_files_properties(
   ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
   ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
@@ -388,125 +388,78 @@ set_source_files_properties(
   ${CMAKE_SOURCE_DIR}/game/shaders/skinning.txt
   PROPERTIES GENERATED TRUE)
 
-add_custom_target(
-  binary-assets
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt -o
-          ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.msh
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt -o
-          ${CMAKE_SOURCE_DIR}/game/meshes/cube.msh
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt -o
-          ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.cln
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.txt -o
-          ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.msh
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.txt -o
-          ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.msh
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/light_cull.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/light_cull.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/light_cull.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/cluster_mark.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_mark.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_mark.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/lighting.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/lighting.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/lighting.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Converting: ${CMAKE_SOURCE_DIR}/game/shaders/skinning.txt"
-  COMMAND
-          $<TARGET_FILE:aeontool> convert -i
-          ${CMAKE_SOURCE_DIR}/game/shaders/skinning.txt -o
-          ${CMAKE_SOURCE_DIR}/game/shaders/skinning.prg
-  COMMAND
-          ${CMAKE_COMMAND} -E echo "Generating development textures"
-  COMMAND ${CMAKE_COMMAND} -DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -P
-          ${CMAKE_SOURCE_DIR}/cmake/GenerateDevelopmentTextures.cmake
-  DEPENDS aeontool ProtoBufClasses
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  SOURCES ${CMAKE_SOURCE_DIR}/game/meshes/suzanne.txt
-          ${CMAKE_SOURCE_DIR}/game/meshes/cube.txt
-          ${CMAKE_SOURCE_DIR}/game/meshes/cube_collision.txt
-          ${CMAKE_SOURCE_DIR}/game/meshes/aabb_wire.txt
-          ${CMAKE_SOURCE_DIR}/game/meshes/fullscreen_triangle.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/light_cull.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/cluster_mark.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/lighting.txt
-          ${CMAKE_SOURCE_DIR}/game/shaders/skinning.txt
+# Each entry is "<input>=<output>"; aeontool converts one into the other. The
+# committed meshes (.txt -> .msh/.cln) and the generated pipelines (.txt -> .prg)
+# share the same conversion, so they are driven from one list. Each output gets
+# its own rule below so a build only reconverts the inputs that actually changed.
+set(GAME_ASSET_CONVERSIONS
+  "game/meshes/suzanne.txt=game/meshes/suzanne.msh"
+  "game/meshes/cube.txt=game/meshes/cube.msh"
+  "game/meshes/cube_collision.txt=game/meshes/cube_collision.cln"
+  "game/meshes/aabb_wire.txt=game/meshes/aabb_wire.msh"
+  "game/meshes/fullscreen_triangle.txt=game/meshes/fullscreen_triangle.msh"
+  "game/shaders/simple_phong.txt=game/shaders/simple_phong.prg"
+  "game/shaders/plain_red.txt=game/shaders/plain_red.prg"
+  "game/shaders/noop_compute.txt=game/shaders/noop_compute.prg"
+  "game/shaders/cluster_build.txt=game/shaders/cluster_build.prg"
+  "game/shaders/light_cull.txt=game/shaders/light_cull.prg"
+  "game/shaders/cluster_mark.txt=game/shaders/cluster_mark.prg"
+  "game/shaders/lighting.txt=game/shaders/lighting.prg"
+  "game/shaders/skinning.txt=game/shaders/skinning.prg")
+
+set(GAME_ASSET_OUTPUTS)
+foreach(conversion IN LISTS GAME_ASSET_CONVERSIONS)
+  string(REPLACE "=" ";" conversion_parts "${conversion}")
+  list(GET conversion_parts 0 conversion_input)
+  list(GET conversion_parts 1 conversion_output)
+  add_custom_command(
+    OUTPUT  ${CMAKE_SOURCE_DIR}/${conversion_output}
+    COMMAND $<TARGET_FILE:aeontool> convert
+            -i ${CMAKE_SOURCE_DIR}/${conversion_input}
+            -o ${CMAKE_SOURCE_DIR}/${conversion_output}
+    DEPENDS ${CMAKE_SOURCE_DIR}/${conversion_input} aeontool ProtoBufClasses
+    COMMENT "Converting ${conversion_input}"
+    VERBATIM)
+  list(APPEND GAME_ASSET_OUTPUTS ${CMAKE_SOURCE_DIR}/${conversion_output})
+endforeach()
+
+# Development textures: a -P script expands game/colors.txt into per-color
+# SVG/PNG files. Its outputs are dynamic (one set per palette entry), so gate it
+# on a stamp that depends on the palette and the template; it only re-runs when
+# one of those changes instead of on every build.
+add_custom_command(
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/development-textures.stamp
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+          -P ${CMAKE_SOURCE_DIR}/cmake/GenerateDevelopmentTextures.cmake
+  COMMAND ${CMAKE_COMMAND} -E touch
+          ${CMAKE_CURRENT_BINARY_DIR}/development-textures.stamp
+  DEPENDS ${CMAKE_SOURCE_DIR}/game/colors.txt
           ${CMAKE_SOURCE_DIR}/game/images/development.svg.in
-  COMMENT "Generating binary game assets")
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Generating development textures"
+  VERBATIM)
+list(APPEND GAME_ASSET_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/development-textures.stamp)
 
-# Regenerate the shader pipeline .txt files from their assets/shadercode sources
-# before packing them into .prg binaries, so hand-edits to the generated files
-# can never silently diverge from the source of truth.
-add_dependencies(binary-assets shader-pipelines)
+# Aggregator: building game-assets brings every converted asset up to date.
+add_custom_target(game-assets DEPENDS ${GAME_ASSET_OUTPUTS})
 
-# Tie the generated game assets (pipeline .txt + binary .prg/.msh + development
-# textures) to the runtime deliverables so a clean build always (re)generates
-# them. After efcfff9a the generated pipeline .txt are no longer committed, so
-# without this a fresh checkout would build the binaries but ship no pipelines
-# and break at runtime. binary-assets chains to shader-pipelines, so depending
-# on it alone covers both the text pipelines and their binary forms. Gated on
-# TARGET because the application and tests are optional subprojects.
+# The .prg inputs above are the .txt produced by shader-pipelines; order it
+# first so a fresh checkout generates them before they are converted, and so
+# hand-edits to the generated files can never silently diverge from the source.
+add_dependencies(game-assets shader-pipelines)
+
+# Tie the generated game assets to the runtime deliverables so a clean build
+# always (re)generates them. After efcfff9a the generated pipeline .txt are no
+# longer committed, so without this a fresh checkout would build the binaries
+# but ship no pipelines and break at runtime. game-assets chains to
+# shader-pipelines, so depending on it alone covers both the text pipelines and
+# their binary forms. Gated on TARGET because the application and tests are
+# optional subprojects.
 if(TARGET game)
-  add_dependencies(game binary-assets)
+  add_dependencies(game game-assets)
 endif()
 if(TARGET unit-tests)
-  add_dependencies(unit-tests binary-assets)
+  add_dependencies(unit-tests game-assets)
 endif()
 
 #
