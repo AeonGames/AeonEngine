@@ -373,6 +373,21 @@ add_custom_target(
 #
 # Binary asset generation target.
 #
+# The game/shaders/*.txt listed below in SOURCES are produced by the
+# shader-pipelines target (assets/shadercode/CMakeLists.txt), so on a fresh
+# checkout they do not exist yet. Mark them GENERATED so the configure step does
+# not fail with "Cannot find source file" before they are first generated.
+set_source_files_properties(
+  ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/light_cull.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/cluster_mark.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/lighting.txt
+  ${CMAKE_SOURCE_DIR}/game/shaders/skinning.txt
+  PROPERTIES GENERATED TRUE)
+
 add_custom_target(
   binary-assets
   COMMAND
@@ -479,6 +494,20 @@ add_custom_target(
 # before packing them into .prg binaries, so hand-edits to the generated files
 # can never silently diverge from the source of truth.
 add_dependencies(binary-assets shader-pipelines)
+
+# Tie the generated game assets (pipeline .txt + binary .prg/.msh + development
+# textures) to the runtime deliverables so a clean build always (re)generates
+# them. After efcfff9a the generated pipeline .txt are no longer committed, so
+# without this a fresh checkout would build the binaries but ship no pipelines
+# and break at runtime. binary-assets chains to shader-pipelines, so depending
+# on it alone covers both the text pipelines and their binary forms. Gated on
+# TARGET because the application and tests are optional subprojects.
+if(TARGET game)
+  add_dependencies(game binary-assets)
+endif()
+if(TARGET unit-tests)
+  add_dependencies(unit-tests binary-assets)
+endif()
 
 #
 # Blender Execution target
