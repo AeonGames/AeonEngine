@@ -389,7 +389,7 @@ set_source_files_properties(
   PROPERTIES GENERATED TRUE)
 
 # Each entry is "<input>=<output>"; aeontool converts one into the other. The
-# committed meshes (.txt -> .msh/.cln) and the generated pipelines (.txt -> .prg)
+# committed meshes (.txt -> .msh/.cln) and the generated pipelines (.txt -> .pln)
 # share the same conversion, so they are driven from one list. Each output gets
 # its own rule below so a build only reconverts the inputs that actually changed.
 set(GAME_ASSET_CONVERSIONS
@@ -398,14 +398,14 @@ set(GAME_ASSET_CONVERSIONS
   "game/meshes/cube_collision.txt=game/meshes/cube_collision.cln"
   "game/meshes/aabb_wire.txt=game/meshes/aabb_wire.msh"
   "game/meshes/fullscreen_triangle.txt=game/meshes/fullscreen_triangle.msh"
-  "game/shaders/simple_phong.txt=game/shaders/simple_phong.prg"
-  "game/shaders/plain_red.txt=game/shaders/plain_red.prg"
-  "game/shaders/noop_compute.txt=game/shaders/noop_compute.prg"
-  "game/shaders/cluster_build.txt=game/shaders/cluster_build.prg"
-  "game/shaders/light_cull.txt=game/shaders/light_cull.prg"
-  "game/shaders/cluster_mark.txt=game/shaders/cluster_mark.prg"
-  "game/shaders/lighting.txt=game/shaders/lighting.prg"
-  "game/shaders/skinning.txt=game/shaders/skinning.prg")
+  "game/shaders/simple_phong.txt=game/shaders/simple_phong.pln"
+  "game/shaders/plain_red.txt=game/shaders/plain_red.pln"
+  "game/shaders/noop_compute.txt=game/shaders/noop_compute.pln"
+  "game/shaders/cluster_build.txt=game/shaders/cluster_build.pln"
+  "game/shaders/light_cull.txt=game/shaders/light_cull.pln"
+  "game/shaders/cluster_mark.txt=game/shaders/cluster_mark.pln"
+  "game/shaders/lighting.txt=game/shaders/lighting.pln"
+  "game/shaders/skinning.txt=game/shaders/skinning.pln")
 
 set(GAME_ASSET_OUTPUTS)
 foreach(conversion IN LISTS GAME_ASSET_CONVERSIONS)
@@ -443,7 +443,7 @@ list(APPEND GAME_ASSET_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/development-textures.
 # Aggregator: building game-assets brings every converted asset up to date.
 add_custom_target(game-assets DEPENDS ${GAME_ASSET_OUTPUTS})
 
-# The .prg inputs above are the .txt produced by shader-pipelines; order it
+# The .pln inputs above are the .txt produced by shader-pipelines; order it
 # first so a fresh checkout generates them before they are converted, and so
 # hand-edits to the generated files can never silently diverge from the source.
 add_dependencies(game-assets shader-pipelines)

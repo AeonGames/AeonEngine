@@ -50,7 +50,7 @@ xcode
 tags
 
 # Binary assets
-*.prg
+*.pln
 *.msh
 *.skl
 *.mtl
@@ -61,6 +61,11 @@ tags
 # Generated files
 game/images/*.svg
 game/config
+# Generated shader pipelines: packed from assets/shadercode by the
+# shader-pipelines target and converted to .pln by game-assets. (diffuse.txt and
+# diffuse_vertex_color.txt are hand-authored pre-migration and stay committed;
+# the binary .pln are covered by *.pln above.)
+game/shaders/*.txt
 game/**/*.png
 # Engine-level fallback texture, committed (loaded unconditionally at startup).
 !game/textures/default.png
