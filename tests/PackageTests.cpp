@@ -77,6 +77,59 @@ namespace AeonGames
         EXPECT_EQ ( std::string ( contents.data() ), "This is a test file for the Package class and can be safely deleted." );
     }
 
+    /** Exercises basename -> extension resolution (ResolveResourceCrc): a
+        reference without an extension resolves to an on-disk file by trying the
+        candidate extensions, preferring the editable .txt when several exist;
+        an explicit extension is honored verbatim. */
+    class ResourceResolveTest : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            namespace fs = std::filesystem;
+            fs::create_directories ( "resolve_pkg/shaders" );
+            fs::create_directories ( "resolve_pkg/meshes" );
+            auto write_file = [] ( const std::string & path, const std::string & content )
+            {
+                std::ofstream out ( path, std::ios::binary );
+                out << content;
+            };
+            write_file ( "resolve_pkg/shaders/skinning.txt", "TEXT" );      // 4 bytes
+            write_file ( "resolve_pkg/shaders/skinning.pln", "BINARYPLN" ); // 9 bytes
+            write_file ( "resolve_pkg/shaders/textonly.txt", "ONLYTEXT" );  // 8 bytes
+            write_file ( "resolve_pkg/meshes/binonly.msh", "MESHBINARY" );  // 10 bytes
+            SetResourcePath ( {"resolve_pkg"} );
+        }
+        void TearDown() override
+        {
+            SetResourcePath ( {} );
+            std::filesystem::remove_all ( "resolve_pkg" );
+        }
+    };
+    TEST_F ( ResourceResolveTest, BasenamePrefersText )
+    {
+        // Both forms exist; the text-first preference picks the .txt (4 bytes).
+        EXPECT_EQ ( GetResourceSize ( "shaders/skinning" ), 4u );
+        std::vector<char> contents ( GetResourceSize ( "shaders/skinning" ) + 1, 0 );
+        LoadResource ( "shaders/skinning", contents.data(), contents.size() - 1 );
+        EXPECT_EQ ( std::string ( contents.data() ), "TEXT" );
+    }
+    TEST_F ( ResourceResolveTest, ExplicitExtensionHonored )
+    {
+        // An explicit extension is used verbatim, not overridden by preference.
+        EXPECT_EQ ( GetResourceSize ( "shaders/skinning.pln" ), 9u );
+        EXPECT_EQ ( GetResourceSize ( "shaders/skinning.txt" ), 4u );
+    }
+    TEST_F ( ResourceResolveTest, BasenameFallsBackToOnlyForm )
+    {
+        EXPECT_EQ ( GetResourceSize ( "shaders/textonly" ), 8u );  // only .txt on disk
+        EXPECT_EQ ( GetResourceSize ( "meshes/binonly" ), 10u );   // only .msh on disk
+    }
+    TEST_F ( ResourceResolveTest, MissingBasenameResolvesToZero )
+    {
+        EXPECT_EQ ( GetResourceSize ( "shaders/missing" ), 0u );
+    }
+
     TEST ( PackageFileTest, AeonPkgRoundTrip )
     {
         // Build a tiny AEONPKG by hand: two files, one zlib-compressed, one

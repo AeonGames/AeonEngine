@@ -380,8 +380,70 @@ namespace AeonGames
         }
     }
 
+    // Candidate file extensions tried when a resource is referenced by a bare
+    // basename (no extension). Ordered by preference: the text form is tried
+    // first so a development tree containing both forms loads the readable,
+    // editable .txt; the binary forms follow. The loaded file's magic number
+    // still has the final say on the actual resource type.
+    static constexpr const char* const kResourceExtensionPreference[]
+    {
+        ".txt", ".pln", ".msh", ".mtl", ".skl", ".cln"
+    };
+
+    static bool ResourceInPackages ( uint32_t crc )
+    {
+        for ( const auto& package : gResourcePath )
+        {
+            if ( package.GetIndexTable().find ( crc ) != package.GetIndexTable().end() )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // True when the last path component carries an extension (a '.' after the
+    // final separator); such explicit references are honored verbatim.
+    static bool HasPathExtension ( const std::string& path )
+    {
+        const size_t separator = path.find_last_of ( "/\\" );
+        const size_t dot = path.find_last_of ( '.' );
+        return dot != std::string::npos &&
+               ( separator == std::string::npos || dot > separator );
+    }
+
+    // Resolve a resource crc to one that actually exists. A direct hit (an
+    // explicit-extension reference, or a basename whose exact name is on disk)
+    // is used as-is. Otherwise, when the crc came from a bare basename, try the
+    // candidate extensions in preference order and use the first that exists.
+    // Falls back to the original crc (which then fails to load with a
+    // descriptive error) when nothing matches.
+    static uint32_t ResolveResourceCrc ( uint32_t crc )
+    {
+        if ( ResourceInPackages ( crc ) )
+        {
+            return crc;
+        }
+        const std::string referenced = GetResourceString ( crc );
+        if ( referenced.empty() || HasPathExtension ( referenced ) )
+        {
+            return crc;
+        }
+        for ( const char * extension : kResourceExtensionPreference )
+        {
+            const std::string candidate = referenced + extension;
+            const uint32_t candidate_crc = crc32i ( candidate.data(), candidate.size() );
+            if ( ResourceInPackages ( candidate_crc ) )
+            {
+                return candidate_crc;
+            }
+        }
+        return crc;
+    }
+
     size_t GetResourceSize ( uint32_t crc )
     {
+        crc = ResolveResourceCrc ( crc );
         for ( auto &i : gResourcePath )
         {
             auto resource = i.GetIndexTable().find ( crc );
@@ -411,10 +473,13 @@ namespace AeonGames
 
     size_t GetResourceSize ( const std::string& aFileName )
     {
-        return GetResourceSize ( crc32i ( aFileName.data(), aFileName.size() ) );
+        const uint32_t crc = crc32i ( aFileName.data(), aFileName.size() );
+        RegisterResourceString ( crc, aFileName );
+        return GetResourceSize ( crc );
     }
     void LoadResource ( uint32_t crc, void* buffer, size_t buffer_size )
     {
+        crc = ResolveResourceCrc ( crc );
         for ( auto &i : gResourcePath )
         {
             auto resource = i.GetIndexTable().find ( crc );
@@ -433,7 +498,9 @@ namespace AeonGames
     {
         try
         {
-            LoadResource ( crc32i ( aFileName.data(), aFileName.size() ), buffer, buffer_size );
+            const uint32_t crc = crc32i ( aFileName.data(), aFileName.size() );
+            RegisterResourceString ( crc, aFileName );
+            LoadResource ( crc, buffer, buffer_size );
         }
         catch ( const std::runtime_error& e )
         {

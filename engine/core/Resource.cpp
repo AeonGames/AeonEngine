@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,7 +36,12 @@ namespace AeonGames
 
     void Resource::LoadFromFile ( const std::string& aFilename )
     {
-        LoadFromId ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+        const uint32_t crc = crc32i ( aFilename.c_str(), aFilename.size() );
+        // Register the original string so that, when aFilename is a bare
+        // basename, ResolveResourceCrc (AeonEngine.cpp) can recover it and try
+        // the candidate extensions to find the file actually on disk.
+        RegisterResourceString ( crc, aFilename );
+        LoadFromId ( crc );
     }
 
     size_t Resource::GetConsecutiveId() const
