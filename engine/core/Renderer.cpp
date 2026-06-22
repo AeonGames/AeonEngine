@@ -228,14 +228,14 @@ namespace AeonGames
         mDebugGridPipeline = std::make_unique<Pipeline>();
         mDebugGridMesh = std::make_unique<Mesh>();
         mDebugGridMaterial = std::make_unique<Material>();
-        mDebugPipeline->LoadFromId ( "shaders/solid_color.txt"_crc32 );
-        mDebugWireMesh->LoadFromId ( "meshes/aabb_wire.msh"_crc32 );
-        mDebugAABBMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
-        mDebugOctreeMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
-        mDebugFrustumMaterial->LoadFromId ( "materials/solidcolor.txt"_crc32 );
-        mDebugGridPipeline->LoadFromId ( "shaders/debug_grid.txt"_crc32 );
-        mDebugGridMesh->LoadFromId ( "meshes/fullscreen_triangle.msh"_crc32 );
-        mDebugGridMaterial->LoadFromId ( "materials/debug_grid.txt"_crc32 );
+        mDebugPipeline->LoadFromFile ( "shaders/solid_color" );
+        mDebugWireMesh->LoadFromFile ( "meshes/aabb_wire" );
+        mDebugAABBMaterial->LoadFromFile ( "materials/solidcolor" );
+        mDebugOctreeMaterial->LoadFromFile ( "materials/solidcolor" );
+        mDebugFrustumMaterial->LoadFromFile ( "materials/solidcolor" );
+        mDebugGridPipeline->LoadFromFile ( "shaders/debug_grid" );
+        mDebugGridMesh->LoadFromFile ( "meshes/fullscreen_triangle" );
+        mDebugGridMaterial->LoadFromFile ( "materials/debug_grid" );
         mDebugAssetsLoaded = true;
     }
 

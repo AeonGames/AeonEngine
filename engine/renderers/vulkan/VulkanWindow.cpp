@@ -1668,7 +1668,7 @@ namespace AeonGames
         // the scene's draw pipelines during the shadow pass.
         if ( !mShadowDepthLoaded )
         {
-            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
+            mShadowDepthPipeline.LoadFromFile ( "shaders/shadow_depth" );
             mShadowDepthLoaded = true;
         }
         // Upload this frame's light view-projection and shadow parameters.
@@ -1770,7 +1770,7 @@ namespace AeonGames
         // directional pass).
         if ( !mShadowDepthLoaded )
         {
-            mShadowDepthPipeline.LoadFromId ( "shaders/shadow_depth.txt"_crc32 );
+            mShadowDepthPipeline.LoadFromFile ( "shaders/shadow_depth" );
             mShadowDepthLoaded = true;
         }
         // Write this caster's matrix into its own slot region of the depth
@@ -1861,7 +1861,7 @@ namespace AeonGames
         }
         if ( !mPointShadowDepthLoaded )
         {
-            mPointShadowDepthPipeline.LoadFromId ( "shaders/point_shadow_depth.txt"_crc32 );
+            mPointShadowDepthPipeline.LoadFromFile ( "shaders/point_shadow_depth" );
             mPointShadowDepthLoaded = true;
         }
         // Pack this caster's six face projections + light position/radius into
@@ -2224,7 +2224,7 @@ namespace AeonGames
             // the scene's draw pipelines during the depth pre-pass.
             if ( !mClusterMarkLoaded )
             {
-                mClusterMarkPipeline.LoadFromId ( "shaders/cluster_mark.txt"_crc32 );
+                mClusterMarkPipeline.LoadFromFile ( "shaders/cluster_mark" );
                 mClusterMarkLoaded = true;
             }
             // Stage 0: build the cluster AABBs, reset the index allocator and
