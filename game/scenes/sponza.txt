@@ -7,7 +7,7 @@ camera {
   far_plane: 10000.0
 }
 lighting_pipeline {
-  path: "shaders/lighting.txt"
+  path: "shaders/lighting"
 }
 node {
   name: "Lamps 1st Floor 21"

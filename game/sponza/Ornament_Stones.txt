@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Ornament_Stones.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/stone_trims_01.txt"

@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Columns_1st_Floor_A_column_1stfloor.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/column_1stfloor.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Columns_1st_Floor_A_column_head_1stfloor.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/column_head_1stfloor.txt"

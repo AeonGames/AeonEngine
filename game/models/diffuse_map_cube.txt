@@ -1,6 +1,6 @@
 AEONMDL
 default_pipeline {
-    path: "shaders/diffuse.txt"
+    path: "shaders/diffuse"
 }
 default_material {
     path: "materials/orange.txt"

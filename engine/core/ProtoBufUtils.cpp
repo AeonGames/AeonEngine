@@ -18,6 +18,7 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.hpp"
 #include "aeongames/ProtoBufUtils.hpp"
 #include "aeongames/CRC.hpp"
+#include "aeongames/AeonEngine.hpp"
 #include "aeongames/Mesh.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -62,7 +63,14 @@ namespace AeonGames
         switch ( reference_buffer.reference_case() )
         {
         case ReferenceMsg::kPath:
-            return crc32i ( reference_buffer.path().c_str(), reference_buffer.path().size() );
+        {
+            // Register the path so that a bare-basename reference can be
+            // recovered and resolved to an on-disk file by trying candidate
+            // extensions (see ResolveResourceCrc in AeonEngine.cpp).
+            const uint32_t crc = crc32i ( reference_buffer.path().c_str(), reference_buffer.path().size() );
+            RegisterResourceString ( crc, reference_buffer.path() );
+            return crc;
+        }
         case ReferenceMsg::kId:
             return reference_buffer.id();
         default:

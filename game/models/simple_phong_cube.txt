@@ -1,6 +1,6 @@
 AEONMDL
 default_pipeline {
-    path: "shaders/simple_phong.txt"
+    path: "shaders/simple_phong"
 }
 assembly {
     mesh {

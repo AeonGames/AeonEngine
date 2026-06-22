@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Walls_1st_Floor_F_arch_stone_wall_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/arch_stone_wall_01.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Walls_1st_Floor_F_stones_01_tile.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/stones_01_tile.txt"
@@ -26,7 +26,7 @@ assembly {
     path: "sponza/meshes/Walls_1st_Floor_F_brickwall_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/brickwall_01.txt"
@@ -37,7 +37,7 @@ assembly {
     path: "sponza/meshes/Walls_1st_Floor_F_stone_trims_02.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton.txt"
+    path: "shaders/diffuse_map_phong_no_skeleton"
   }
   material {
     path: "sponza/materials/stone_trims_02.txt"
