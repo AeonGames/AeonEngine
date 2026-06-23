@@ -48,7 +48,7 @@ readonly buffer SourceVertices
 
 // Destination skinned vertices. The skinning output drops the per-vertex
 // weight data (no longer needed once the mesh is posed) so the buffer uses a
-// compact 56-byte (14-word) stride matching diffuse_map_phong_no_skeleton:
+// compact 56-byte (14-word) stride matching static_mesh:
 //   word  0..2  : position  (vec3, float)
 //   word  3..5  : normal    (vec3, float)
 //   word  6..8  : tangent   (vec3, float)

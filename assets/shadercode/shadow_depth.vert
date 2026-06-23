@@ -2,7 +2,7 @@
 
 // Directional shadow depth pass. Rasterizes static geometry into the shadow
 // map using the light's world-space view-projection. Mirrors the vertex inputs
-// of cluster_mark.vert / diffuse_map_phong_no_skeleton.vert so the same static
+// of cluster_mark.vert / static_mesh.vert so the same static
 // meshes bind unchanged. Skinned meshes fall back to their rest pose here.
 #ifdef VULKAN
 layout(set = 8, binding = 0, std140)

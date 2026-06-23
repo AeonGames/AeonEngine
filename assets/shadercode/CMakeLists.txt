@@ -14,8 +14,8 @@
 # target (e.g. `make shader-pipelines`).
 
 set(PIPELINES
-#    "diffuse_map_phong|vert=diffuse_map_phong.vert|frag=diffuse_map_phong.frag"
-    "diffuse_map_phong_no_skeleton|vert=diffuse_map_phong_no_skeleton.vert|frag=diffuse_map_phong.frag"
+#    "clustered_phong_skinned|vert=skinned_mesh.vert|frag=clustered_phong.frag"
+    "clustered_phong|vert=static_mesh.vert|frag=clustered_phong.frag"
     "cluster_build|comp=cluster_build.comp"
     "light_cull|comp=light_cull.comp"
     "cluster_mark|vert=cluster_mark.vert|frag=cluster_mark.frag"

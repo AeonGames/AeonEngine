@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Lamp_1st_Floor_Entrance_metal_door.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/metal_door.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Lamp_1st_Floor_Entrance_lamp_glass_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/lamp_glass_01.txt"
@@ -26,7 +26,7 @@ assembly {
     path: "sponza/meshes/Lamp_1st_Floor_Entrance_light_bulb.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/light_bulb.txt"

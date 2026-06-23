@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Roof_Floor_03_E_stones_01_tile.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/stones_01_tile.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Roof_Floor_03_E_roof_tiles_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/roof_tiles_01.txt"

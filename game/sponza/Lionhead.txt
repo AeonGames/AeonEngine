@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Lionhead.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/ornament_lion.txt"

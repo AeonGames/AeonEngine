@@ -2,7 +2,7 @@
 
 // Depth pre-pass mark stage (Phase R2). Rasterizes geometry only to record
 // which clusters are occupied; mirrors the vertex inputs of
-// diffuse_map_phong_no_skeleton.vert so the same static meshes bind unchanged.
+// static_mesh.vert so the same static meshes bind unchanged.
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
 #else

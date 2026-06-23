@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Ceiling_1st_Floor_A_stones_2ndfloor.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/stones_2ndfloor.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Ceiling_1st_Floor_A_stone_trims_02.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/stone_trims_02.txt"
@@ -26,7 +26,7 @@ assembly {
     path: "sponza/meshes/Ceiling_1st_Floor_A_ceiling_plaster_02.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/ceiling_plaster_02.txt"

@@ -36,7 +36,7 @@ _GAME_ROOT_PROP = "aeon_game_root"
 # makes the engine camera point the same way as in Blender.
 _BLENDER_TO_ENGINE_CAMERA = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'X')
 
-# The engine's forward Phong shaders (diffuse_map_phong*.txt) write radiance
+# The engine's forward Phong shaders (clustered_phong.txt) write radiance
 # straight to the framebuffer -- there is no exposure, tone mapping or gamma,
 # so any accumulated radiance above ~1.0 clips to white. Blender's light.energy
 # values are physically based (watts for point/spot, W*m^-2 for sun) and tuned

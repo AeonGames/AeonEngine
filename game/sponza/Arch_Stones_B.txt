@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_arch_stone_wall_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/arch_stone_wall_01.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_stone_trims_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/stone_trims_01.txt"
@@ -26,7 +26,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_window_frame_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/window_frame_01.txt"
@@ -37,7 +37,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_stones_01_tile.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/stones_01_tile.txt"
@@ -48,7 +48,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_floor_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/floor_01.txt"
@@ -59,7 +59,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_stones_2ndfloor.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/stones_2ndfloor.txt"
@@ -70,7 +70,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_metal_door.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/metal_door.txt"
@@ -81,7 +81,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_glass.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/glass.txt"
@@ -92,7 +92,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_brickwall_02.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/brickwall_02.txt"
@@ -103,7 +103,7 @@ assembly {
     path: "sponza/meshes/Arch_Stones_B_ceiling_plaster_02.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/ceiling_plaster_02.txt"

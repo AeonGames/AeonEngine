@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Wood_Door_wood_door_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/wood_door_01.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Wood_Door_wood_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/wood_01.txt"

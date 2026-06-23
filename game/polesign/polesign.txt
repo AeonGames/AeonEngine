@@ -1,6 +1,6 @@
 AEONMDL
 default_pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
 }
 default_material {
     path: "polesign/materials/default.txt"

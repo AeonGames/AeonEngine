@@ -43,7 +43,7 @@ layout(location = 0) in vec3 eyeCoords;
 layout(location = 0) out vec4 FragColor;
 
 // Map a view-space fragment to its cluster index, matching the tiling used by
-// the cluster-build compute stage and diffuse_map_phong.frag exactly.
+// the cluster-build compute stage and clustered_phong.frag exactly.
 uint fragment_cluster_index()
 {
       vec4 clip = ProjectionMatrix * vec4 ( eyeCoords, 1.0 );

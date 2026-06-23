@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Decals_3rd_Floor.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/dirt_decal.txt"

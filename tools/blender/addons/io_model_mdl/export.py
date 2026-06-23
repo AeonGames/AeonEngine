@@ -173,8 +173,8 @@ class MDL_OT_exporter(bpy.types.Operator):
                 mesh_ext = ".txt" if self.as_text else ".msh"
                 mat_ext = ".txt" if self.as_text else ".mtl"
                 # Skinning is applied in a compute pre-pass, so meshes are drawn
-                # with the non-skinning Phong pipeline regardless of rig state.
-                pipeline_path = "shaders/diffuse_map_phong_no_skeleton.txt"
+                # with the static-mesh clustered Phong pipeline regardless of rig state.
+                pipeline_path = "shaders/clustered_phong.txt"
 
                 materials = object.data.materials
                 # Determine which material slots actually have geometry.

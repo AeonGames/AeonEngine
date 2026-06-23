@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Sponza_Ornament.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/ornament_01.txt"

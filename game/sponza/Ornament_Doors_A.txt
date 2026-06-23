@@ -4,7 +4,7 @@ assembly {
     path: "sponza/meshes/Ornament_Doors_A_door_stoneframe_01.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/door_stoneframe_01.txt"
@@ -15,7 +15,7 @@ assembly {
     path: "sponza/meshes/Ornament_Doors_A_metal_door.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/metal_door.txt"
@@ -26,7 +26,7 @@ assembly {
     path: "sponza/meshes/Ornament_Doors_A_glass.txt"
   }
   pipeline {
-    path: "shaders/diffuse_map_phong_no_skeleton"
+    path: "shaders/clustered_phong"
   }
   material {
     path: "sponza/materials/glass.txt"

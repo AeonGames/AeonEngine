@@ -585,7 +585,7 @@ namespace AeonGames
         // Required graphics-pipeline argument to Render(); ignored while the
         // depth pre-pass substitutes the cluster_mark pipeline.
         Pipeline shading;
-        shading.LoadFromId ( "shaders/diffuse_map_phong_no_skeleton.txt"_crc32 );
+        shading.LoadFromId ( "shaders/clustered_phong.txt"_crc32 );
         renderer->LoadPipeline ( shading );
 
         // Place the mesh in front of the camera (camera at origin looking +Y).
