@@ -53,7 +53,7 @@ if(MSVC)
   set_target_properties(
     ProtoBufClasses
     PROPERTIES COMPILE_FLAGS
-               "-FIaeongames/ProtoBufClasses.hpp -WX -D_CRT_SECURE_NO_WARNINGS -wd4251")
+               "-FIaeongames/ProtoBufClasses.hpp -WX -D_CRT_SECURE_NO_WARNINGS -wd4251 -wd4267")
 elseif(MINGW OR MSYS OR UNIX)
   set_target_properties(
     ProtoBufClasses

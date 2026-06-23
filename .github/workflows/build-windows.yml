@@ -71,7 +71,10 @@ jobs:
 
     - name: 🔨 Build
       shell: pwsh
-      run: cmake --build ${{github.workspace}}/build --parallel $env:NUMBER_OF_PROCESSORS
+      run: |
+        $jobs = [math]::Max(1, [int][math]::Floor([int]$env:NUMBER_OF_PROCESSORS / 2))
+        Write-Host "Building with $jobs parallel job(s) out of $env:NUMBER_OF_PROCESSORS processor(s)"
+        cmake --build ${{github.workspace}}/build --parallel $jobs
 
     - name: 🧪 Run Tests
       shell: pwsh
