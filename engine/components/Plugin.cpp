@@ -20,6 +20,7 @@ limitations under the License.
 #include "ModelComponent.h"
 #include "Camera.h"
 #include "OverTheShoulderCamera.hpp"
+#include "OrbitalCamera.hpp"
 #include "CharacterController.hpp"
 #include "FreeCamera.hpp"
 #include "PointLight.h"
@@ -43,6 +44,10 @@ extern "C"
         AeonGames::RegisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId(), []()
         {
             return std::make_unique<AeonGames::OverTheShoulderCamera>();
+        } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::OrbitalCamera::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::OrbitalCamera>();
         } );
         AeonGames::RegisterComponentConstructor ( AeonGames::CharacterController::GetClassId(), []()
         {
@@ -76,6 +81,7 @@ extern "C"
         AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::OrbitalCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::CharacterController::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::FreeCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );

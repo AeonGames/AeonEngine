@@ -1,6 +1,30 @@
-set(NODES_HEADERS ModelComponent.h PointLight.h SpotLight.h DirectionalLight.h Camera.h OverTheShoulderCamera.hpp CharacterController.hpp FreeCamera.hpp CollisionComponent.hpp)
-set(NODES_SOURCES Plugin.cpp ModelComponent.cpp PointLight.cpp SpotLight.cpp DirectionalLight.cpp Camera.cpp OverTheShoulderCamera.cpp CharacterController.cpp FreeCamera.cpp CollisionComponent.cpp)
+set(NODES_HEADERS
+  ModelComponent.h
+  PointLight.h
+  SpotLight.h
+  DirectionalLight.h
+  Camera.h
+  OverTheShoulderCamera.hpp
+  OrbitalCamera.hpp
+  CharacterController.hpp
+  FreeCamera.hpp
+  CollisionComponent.hpp)
+set(NODES_SOURCES
+  Plugin.cpp
+  ModelComponent.cpp
+  PointLight.cpp
+  SpotLight.cpp
+  DirectionalLight.cpp
+  Camera.cpp
+  OverTheShoulderCamera.cpp
+  OrbitalCamera.cpp
+  CharacterController.cpp
+  FreeCamera.cpp
+  CollisionComponent.cpp
+)
+
 add_library(AeonEngineComponents SHARED ${NODES_HEADERS} ${NODES_SOURCES})
+
 if(MSVC)
   set_target_properties(
     AeonEngineComponents

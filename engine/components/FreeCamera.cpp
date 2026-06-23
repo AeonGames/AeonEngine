@@ -323,7 +323,7 @@ namespace AeonGames
             }
             if ( updown != 0.0f )
             {
-                t.Move ( 0.0f, 0.0f, updown * speed * dt );
+                t.MoveInInertialSpace ( Vector3 { 0.0f, 0.0f, updown * speed * dt } );
             }
         }
 

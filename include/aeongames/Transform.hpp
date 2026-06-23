@@ -40,6 +40,11 @@ namespace AeonGames
             @param aTranslation The translation vector.
         */
         DLL Transform ( const Vector3& aScale, const Quaternion& aRotation, const Vector3& aTranslation );
+        /** @brief Construct from rotation quaternion and translation.
+            @param aRotation The rotation quaternion.
+            @param aTranslation The translation vector.
+        */
+        DLL Transform ( const Quaternion& aRotation, const Vector3& aTranslation );
         /** @brief Construct from scale, rotation Euler angles, and translation.
             @param aScale The scale vector.
             @param aRotation The rotation as Euler angles in degrees.
@@ -84,7 +89,8 @@ namespace AeonGames
         \param y [in] Y move vector value.
         \param z [in] Z move vector value.
         */
-        DLL void Move ( float x, float y, float z );
+        DLL void MoveInInertialSpace ( float x, float y, float z );
+        DLL void MoveInInertialSpace ( const Vector3& aTranslation );
 
         /*! @brief Moves the transfrom relative to its own axes.
         \param x [in] X move vector value.
@@ -92,6 +98,7 @@ namespace AeonGames
         \param z [in] Z move vector value.
         */
         DLL void MoveInObjectSpace ( float x, float y, float z );
+        DLL void MoveInObjectSpace ( const Vector3& aTranslation );
 
         /*!
         \brief Rotate in Object Space.

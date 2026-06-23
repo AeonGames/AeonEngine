@@ -174,18 +174,22 @@ node {
     }
   }
   component {
-    name: "OverTheShoulderCamera"
+    name: "OrbitalCamera"
     property {
-      name: "Shoulder Offset"
-      float: 0.5
+      name: "Distance"
+      float: 2
+    }
+    property {
+      name: "Azimuth"
+      float: 0
+    }
+    property {
+      name: "Elevation"
+      float: 0
     }
     property {
       name: "Height Offset"
       float: 1.7
-    }
-    property {
-      name: "Distance Behind"
-      float: 3
     }
     property {
       name: "Field of View"

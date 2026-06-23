@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2014-2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,6 +26,11 @@ namespace AeonGames
 
     Transform::Transform ( const Vector3 & aScale, const Quaternion & aRotation, const Vector3 & aTranslation ) :
         mScale{ aScale }, mRotation{ aRotation }, mTranslation{aTranslation}
+    {
+    }
+
+    Transform::Transform ( const Quaternion & aRotation, const Vector3 & aTranslation ) :
+        mScale{1, 1, 1}, mRotation{ aRotation }, mTranslation{aTranslation}
     {
     }
 
@@ -84,11 +89,22 @@ namespace AeonGames
         mRotation = Quaternion::GetFromAxisAngle ( angle, x, y, z ) * mRotation;
     }
 
-    void Transform::Move ( float x, float y, float z )
+    void Transform::MoveInInertialSpace ( float x, float y, float z )
     {
-        mTranslation[0] += x;
-        mTranslation[1] += y;
-        mTranslation[2] += z;
+        mTranslation += Vector3 { x, y, z };
+    }
+    void Transform::MoveInInertialSpace ( const Vector3& aTranslation )
+    {
+        mTranslation += aTranslation;
+    }
+
+    void Transform::MoveInObjectSpace ( float x, float y, float z )
+    {
+        mTranslation += mRotation * Vector3 { x, y, z };
+    }
+    void Transform::MoveInObjectSpace ( const Vector3& aTranslation )
+    {
+        mTranslation += mRotation * aTranslation;
     }
 
     void Transform::ResetRotation()
@@ -150,11 +166,6 @@ namespace AeonGames
     const Matrix4x4 Transform::GetInvertedMatrix () const
     {
         return GetInverted().GetMatrix();
-    }
-
-    void Transform::MoveInObjectSpace ( float x, float y, float z )
-    {
-        mTranslation += mRotation * Vector3 ( x, y, z );
     }
 
     Transform& Transform::Invert()
