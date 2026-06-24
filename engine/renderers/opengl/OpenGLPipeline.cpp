@@ -312,8 +312,20 @@ namespace AeonGames
             if ( type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_3D ||
                  type == GL_SAMPLER_2D_ARRAY || type == GL_SAMPLER_2D_SHADOW || type == GL_SAMPLER_CUBE_SHADOW )
             {
-                binding_offset_or_location =  glGetUniformLocation ( aProgramId, name );
+                // Store the sampler's texture unit (its layout(binding = N)
+                // value), NOT its uniform location. The material binds its
+                // texture with glBindTextureUnit, which takes a unit; the
+                // uniform location is only an API handle and generally differs
+                // from the binding, so using it would bind the texture to the
+                // wrong unit and the sampler would read an empty one (black).
+                const GLint location = glGetUniformLocation ( aProgramId, name );
                 OPENGL_CHECK_ERROR_THROW;
+                binding_offset_or_location = 0;
+                if ( location >= 0 )
+                {
+                    glGetUniformiv ( aProgramId, location, &binding_offset_or_location );
+                    OPENGL_CHECK_ERROR_THROW;
+                }
                 uint32_t name_crc{crc32i ( name, length ) };
                 auto il = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_crc,
                                              [] ( const OpenGLSamplerLocation & a, const uint32_t b )
@@ -326,7 +338,7 @@ namespace AeonGames
 
         for ( const auto& sampler : mSamplerLocations )
         {
-            std::cout << LogLevel::Debug << "Sampler: " << sampler.name << " (crc: " << std::hex << sampler.name << std::dec << ", location: " << sampler.location << ")" << std::endl;
+            std::cout << LogLevel::Debug << "Sampler: " << sampler.name << " (crc: " << std::hex << sampler.name << std::dec << ", unit: " << sampler.location << ")" << std::endl;
         }
         for ( const auto& block : mUniformBlocks )
         {

@@ -70,6 +70,7 @@ glGetProgramInfoLog
 glGetShaderiv
 glGetShaderInfoLog
 glGetUniformLocation
+glGetUniformiv
 glGetActiveUniform
 glGetActiveUniformName
 glGetActiveUniformBlockName
