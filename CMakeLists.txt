@@ -373,39 +373,22 @@ add_custom_target(
 #
 # Game asset generation (incremental).
 #
-# The generated pipeline .txt referenced below are produced by the
-# shader-pipelines target (assets/shadercode/CMakeLists.txt) and may not exist on
-# a fresh checkout. Mark them GENERATED so the conversion rules' DEPENDS neither
-# fail configure nor look for a (nonexistent) source-tree rule to build them.
-set_source_files_properties(
-  ${CMAKE_SOURCE_DIR}/game/shaders/simple_phong.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/plain_red.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/noop_compute.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/cluster_build.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/light_cull.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/cluster_mark.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/lighting.txt
-  ${CMAKE_SOURCE_DIR}/game/shaders/skinning.txt
-  PROPERTIES GENERATED TRUE)
-
-# Each entry is "<input>=<output>"; aeontool converts one into the other. The
-# committed meshes (.txt -> .msh/.cln) and the generated pipelines (.txt -> .pln)
-# share the same conversion, so they are driven from one list. Each output gets
-# its own rule below so a build only reconverts the inputs that actually changed.
+# Each entry is "<input>=<output>"; aeontool converts one into the other. Only
+# the committed meshes (.txt -> .msh/.cln) live here: their inputs exist in the
+# source tree, so a custom command in this directory can depend on them. The
+# generated pipelines' binary (.pln) conversions live beside the rules that
+# produce their .txt (assets/shadercode/CMakeLists.txt, shader-pipeline-binaries)
+# because a consuming custom command in this directory cannot resolve a .txt
+# produced by a custom command in another one on a clean build -- before CMake
+# 3.20 / CMP0118 the GENERATED source-file property is directory-scoped, so make
+# fails with "No rule to make target .../<name>.txt". Each output gets its own
+# rule below so a build only reconverts the inputs that actually changed.
 set(GAME_ASSET_CONVERSIONS
   "game/meshes/suzanne.txt=game/meshes/suzanne.msh"
   "game/meshes/cube.txt=game/meshes/cube.msh"
   "game/meshes/cube_collision.txt=game/meshes/cube_collision.cln"
   "game/meshes/aabb_wire.txt=game/meshes/aabb_wire.msh"
-  "game/meshes/fullscreen_triangle.txt=game/meshes/fullscreen_triangle.msh"
-  "game/shaders/simple_phong.txt=game/shaders/simple_phong.pln"
-  "game/shaders/plain_red.txt=game/shaders/plain_red.pln"
-  "game/shaders/noop_compute.txt=game/shaders/noop_compute.pln"
-  "game/shaders/cluster_build.txt=game/shaders/cluster_build.pln"
-  "game/shaders/light_cull.txt=game/shaders/light_cull.pln"
-  "game/shaders/cluster_mark.txt=game/shaders/cluster_mark.pln"
-  "game/shaders/lighting.txt=game/shaders/lighting.pln"
-  "game/shaders/skinning.txt=game/shaders/skinning.pln")
+  "game/meshes/fullscreen_triangle.txt=game/meshes/fullscreen_triangle.msh")
 
 set(GAME_ASSET_OUTPUTS)
 foreach(conversion IN LISTS GAME_ASSET_CONVERSIONS)
@@ -443,10 +426,12 @@ list(APPEND GAME_ASSET_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/development-textures.
 # Aggregator: building game-assets brings every converted asset up to date.
 add_custom_target(game-assets DEPENDS ${GAME_ASSET_OUTPUTS})
 
-# The .pln inputs above are the .txt produced by shader-pipelines; order it
-# first so a fresh checkout generates them before they are converted, and so
-# hand-edits to the generated files can never silently diverge from the source.
-add_dependencies(game-assets shader-pipelines)
+# Build the generated pipeline .txt and their .pln binaries as part of the game
+# assets. shader-pipeline-binaries packs the .pln and itself depends on
+# shader-pipelines, so it brings up to date every .txt (including the pipelines
+# with no .pln that the engine loads at runtime) as well as the .pln; depending
+# on it alone covers a fresh checkout.
+add_dependencies(game-assets shader-pipeline-binaries)
 
 # Tie the generated game assets to the runtime deliverables so a clean build
 # always (re)generates them. After efcfff9a the generated pipeline .txt are no

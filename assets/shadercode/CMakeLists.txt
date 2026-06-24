@@ -88,3 +88,37 @@ add_custom_target(shader-pipelines
     SOURCES ${GENERATED_PIPELINES}
     COMMENT "Generating shader pipeline .txt files"
 )
+
+# Packed binary (.pln) forms of a subset of the generated pipelines. These rules
+# live here, beside the add_custom_command(OUTPUT ...) that produce the .txt, so
+# the Make generator can resolve the .txt dependency on a clean checkout. A
+# consuming custom command in another directory cannot: before CMake 3.20
+# (policy CMP0118) the GENERATED source-file property is directory-scoped, so the
+# root directory has no rule to build a .txt declared here and a fresh build
+# fails with "No rule to make target .../<name>.txt". The engine loads the .txt
+# at runtime; the .pln are produced for tooling/parity only.
+set(PIPELINE_BINARY_NAMES
+    simple_phong plain_red noop_compute cluster_build
+    light_cull cluster_mark lighting skinning)
+set(PIPELINE_BINARIES)
+foreach(name IN LISTS PIPELINE_BINARY_NAMES)
+    add_custom_command(
+        OUTPUT  ${PIPELINE_OUTPUT_DIR}/${name}.pln
+        COMMAND $<TARGET_FILE:aeontool> convert
+                -i ${PIPELINE_OUTPUT_DIR}/${name}.txt
+                -o ${PIPELINE_OUTPUT_DIR}/${name}.pln
+        DEPENDS ${PIPELINE_OUTPUT_DIR}/${name}.txt aeontool ProtoBufClasses
+        COMMENT "Converting game/shaders/${name}.txt"
+        VERBATIM
+    )
+    list(APPEND PIPELINE_BINARIES ${PIPELINE_OUTPUT_DIR}/${name}.pln)
+endforeach()
+
+# Depends on shader-pipelines so this one target brings up to date every .txt
+# (including the pipelines with no .pln that the engine loads at runtime) plus
+# the .pln binaries.
+add_custom_target(shader-pipeline-binaries
+    DEPENDS ${PIPELINE_BINARIES}
+    COMMENT "Packing shader pipeline .pln binaries"
+)
+add_dependencies(shader-pipeline-binaries shader-pipelines)
