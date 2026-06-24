@@ -83,20 +83,18 @@ foreach(entry IN LISTS PIPELINES)
     list(APPEND GENERATED_PIPELINES ${out_file})
 endforeach()
 
-add_custom_target(shader-pipelines
-    DEPENDS ${GENERATED_PIPELINES}
-    SOURCES ${GENERATED_PIPELINES}
-    COMMENT "Generating shader pipeline .txt files"
-)
-
-# Packed binary (.pln) forms of a subset of the generated pipelines. These rules
-# live here, beside the add_custom_command(OUTPUT ...) that produce the .txt, so
-# the Make generator can resolve the .txt dependency on a clean checkout. A
-# consuming custom command in another directory cannot: before CMake 3.20
-# (policy CMP0118) the GENERATED source-file property is directory-scoped, so the
-# root directory has no rule to build a .txt declared here and a fresh build
-# fails with "No rule to make target .../<name>.txt". The engine loads the .txt
-# at runtime; the .pln are produced for tooling/parity only.
+# Packed binary (.pln) forms of a subset of the generated pipelines. The engine
+# loads the .txt at runtime; the .pln are produced for tooling/parity only.
+#
+# Each .pln conversion is attached to the same shader-pipelines target as the
+# .txt it reads (the target is declared below, after this loop). Keeping the
+# packing and the conversion in one target is what makes a parallel clean build
+# correct: the Make generator then emits both rules in a single build.make, where
+# each .pln depends on its .txt as a plain file prerequisite, so the packing
+# always runs before the matching conversion at any -j. When the .pln lived in a
+# separate target the .txt became a cross-target dependency, ordered only at the
+# target level; a high-parallelism clean build could outrun that ordering and try
+# to convert a not-yet-packed pipeline ("File .../<name>.txt Not Found").
 set(PIPELINE_BINARY_NAMES
     simple_phong plain_red noop_compute cluster_build
     light_cull cluster_mark lighting skinning)
@@ -114,11 +112,11 @@ foreach(name IN LISTS PIPELINE_BINARY_NAMES)
     list(APPEND PIPELINE_BINARIES ${PIPELINE_OUTPUT_DIR}/${name}.pln)
 endforeach()
 
-# Depends on shader-pipelines so this one target brings up to date every .txt
-# (including the pipelines with no .pln that the engine loads at runtime) plus
-# the .pln binaries.
-add_custom_target(shader-pipeline-binaries
-    DEPENDS ${PIPELINE_BINARIES}
-    COMMENT "Packing shader pipeline .pln binaries"
+# One target owns every generated pipeline artifact: all the .txt (including the
+# runtime-only ones with no .pln) and the .pln binaries. Building it on a fresh
+# checkout brings the whole game/shaders/ tree up to date.
+add_custom_target(shader-pipelines
+    DEPENDS ${GENERATED_PIPELINES} ${PIPELINE_BINARIES}
+    SOURCES ${GENERATED_PIPELINES}
+    COMMENT "Generating shader pipeline .txt and .pln files"
 )
-add_dependencies(shader-pipeline-binaries shader-pipelines)

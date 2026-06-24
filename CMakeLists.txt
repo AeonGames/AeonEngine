@@ -377,7 +377,7 @@ add_custom_target(
 # the committed meshes (.txt -> .msh/.cln) live here: their inputs exist in the
 # source tree, so a custom command in this directory can depend on them. The
 # generated pipelines' binary (.pln) conversions live beside the rules that
-# produce their .txt (assets/shadercode/CMakeLists.txt, shader-pipeline-binaries)
+# produce their .txt (assets/shadercode/CMakeLists.txt, shader-pipelines target)
 # because a consuming custom command in this directory cannot resolve a .txt
 # produced by a custom command in another one on a clean build -- before CMake
 # 3.20 / CMP0118 the GENERATED source-file property is directory-scoped, so make
@@ -427,11 +427,10 @@ list(APPEND GAME_ASSET_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/development-textures.
 add_custom_target(game-assets DEPENDS ${GAME_ASSET_OUTPUTS})
 
 # Build the generated pipeline .txt and their .pln binaries as part of the game
-# assets. shader-pipeline-binaries packs the .pln and itself depends on
-# shader-pipelines, so it brings up to date every .txt (including the pipelines
-# with no .pln that the engine loads at runtime) as well as the .pln; depending
-# on it alone covers a fresh checkout.
-add_dependencies(game-assets shader-pipeline-binaries)
+# assets. shader-pipelines owns both the .txt (including the runtime-only ones
+# the engine loads at runtime) and the .pln binaries, so depending on it alone
+# covers a fresh checkout.
+add_dependencies(game-assets shader-pipelines)
 
 # Tie the generated game assets to the runtime deliverables so a clean build
 # always (re)generates them. After efcfff9a the generated pipeline .txt are no
