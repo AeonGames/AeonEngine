@@ -18,6 +18,7 @@ limitations under the License.
 #include <QSurfaceFormat>
 #include <QScrollArea>
 #include <QColorSpace>
+#include <QColor>
 #include <iostream>
 #include "aeongames/Renderer.hpp"
 #include "aeongames/LogLevel.hpp"
@@ -150,6 +151,16 @@ namespace AeonGames
             connect ( mCameraSettings, SIGNAL ( fieldOfViewChanged ( double ) ), this, SLOT ( fieldOfViewChanged ( double ) ) );
             connect ( mCameraSettings, SIGNAL ( nearChanged ( double ) ), this, SLOT ( nearChanged ( double ) ) );
             connect ( mCameraSettings, SIGNAL ( farChanged ( double ) ), this, SLOT ( farChanged ( double ) ) );
+            connect ( mCameraSettings, SIGNAL ( ambientChanged() ), this, SLOT ( ambientChanged() ) );
+        }
+        // Seed the ambient controls from the active scene so the dialog reflects
+        // and edits that scene's stored ambient.
+        if ( QMdiSubWindow * mdiSubWindow = mUi.mdiArea->currentSubWindow() )
+        {
+            QColor color{};
+            float intensity{};
+            reinterpret_cast<SceneWindow*> ( mdiSubWindow->widget() )->GetAmbient ( color, intensity );
+            mCameraSettings->SetAmbient ( color, intensity );
         }
         mCameraSettings->exec();
     }
@@ -200,5 +211,17 @@ namespace AeonGames
             return;
         }
         reinterpret_cast<SceneWindow * > ( mdiSubWindow->widget() )->SetFar ( static_cast<float> ( aFar ) );
+    }
+
+    void MainWindow::ambientChanged()
+    {
+        QMdiSubWindow*
+        mdiSubWindow = mUi.mdiArea->currentSubWindow ();
+        if ( !mdiSubWindow )
+        {
+            return;
+        }
+        reinterpret_cast<SceneWindow * > ( mdiSubWindow->widget() )->SetAmbient (
+            mCameraSettings->GetAmbientColor(), mCameraSettings->GetAmbientIntensity() );
     }
 }

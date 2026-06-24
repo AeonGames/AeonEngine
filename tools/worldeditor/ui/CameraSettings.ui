@@ -108,6 +108,43 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="lblAmbientColor">
+         <property name="text">
+          <string>Ambient Color</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="btnAmbientColor">
+         <property name="text">
+          <string>Pick...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="lblAmbientIntensity">
+         <property name="text">
+          <string>Ambient Intensity</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="dblAmbientIntensity">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>16.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.050000000000000</double>
+         </property>
+         <property name="value">
+          <double>0.250000000000000</double>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>

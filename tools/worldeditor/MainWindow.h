@@ -48,6 +48,7 @@ namespace AeonGames
         void fieldOfViewChanged ( double aFieldOfView );
         void nearChanged ( double aNear );
         void farChanged ( double aFar );
+        void ambientChanged();
     private:
         Ui::MainWindow mUi{};
         CameraSettings* mCameraSettings{};

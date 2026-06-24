@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_SCENEWINDOW_H
 
 #include <QList>
+#include <QColor>
 #include <memory>
 #include <string>
 #include "ui_SceneWindow.h"
@@ -75,6 +76,18 @@ namespace AeonGames
          * @param aFar Far plane distance.
          */
         void SetFar ( float aFar );
+        /**
+         * @brief Set the active scene's ambient light.
+         * @param aColor Ambient color.
+         * @param aIntensity Ambient intensity multiplier.
+         */
+        void SetAmbient ( const QColor& aColor, float aIntensity );
+        /**
+         * @brief Get the active scene's ambient light.
+         * @param[out] aColor Ambient color.
+         * @param[out] aIntensity Ambient intensity multiplier.
+         */
+        void GetAmbient ( QColor& aColor, float& aIntensity ) const;
     private slots:
         void on_actionAddNode_triggered();
         void on_actionRemoveNode_triggered();

@@ -73,6 +73,22 @@ namespace AeonGames
          * @param aFar Far plane distance.
          */
         void SetFar ( float aFar );
+        /**
+         * @brief Set the active scene's ambient light.
+         * @param aRed Ambient color red component (0..1).
+         * @param aGreen Ambient color green component (0..1).
+         * @param aBlue Ambient color blue component (0..1).
+         * @param aIntensity Ambient intensity multiplier.
+         */
+        void SetAmbient ( float aRed, float aGreen, float aBlue, float aIntensity );
+        /**
+         * @brief Get the active scene's ambient light.
+         * @param[out] aRed Ambient color red component (0..1).
+         * @param[out] aGreen Ambient color green component (0..1).
+         * @param[out] aBlue Ambient color blue component (0..1).
+         * @param[out] aIntensity Ambient intensity multiplier.
+         */
+        void GetAmbient ( float& aRed, float& aGreen, float& aBlue, float& aIntensity ) const;
     private:
         const QVector3D right
         {

@@ -383,6 +383,19 @@ namespace AeonGames
     {
         mEngineWindow->SetFar ( aFar );
     }
+    void SceneWindow::SetAmbient ( const QColor& aColor, float aIntensity )
+    {
+        mEngineWindow->SetAmbient ( static_cast<float> ( aColor.redF() ),
+                                    static_cast<float> ( aColor.greenF() ),
+                                    static_cast<float> ( aColor.blueF() ),
+                                    aIntensity );
+    }
+    void SceneWindow::GetAmbient ( QColor& aColor, float& aIntensity ) const
+    {
+        float r{}, g{}, b{};
+        mEngineWindow->GetAmbient ( r, g, b, aIntensity );
+        aColor = QColor::fromRgbF ( r, g, b );
+    }
     void SceneWindow::closeEvent ( QCloseEvent *event )
     {
         std::cout << LogLevel::Info << "Closing SceneWindow" << std::endl;

@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_CAMERA_SETTINGS_H
 
 #include "ui_CameraSettings.h"
+#include <QColor>
 
 namespace AeonGames
 {
@@ -42,6 +43,17 @@ namespace AeonGames
         /** @brief Get the far clipping plane distance.
          *  @return Far plane distance. */
         float GetFar() const;
+        /** @brief Get the ambient color.
+         *  @return The currently selected ambient color. */
+        QColor GetAmbientColor() const;
+        /** @brief Get the ambient intensity.
+         *  @return Ambient intensity multiplier. */
+        float GetAmbientIntensity() const;
+        /** @brief Seed the dialog's ambient color and intensity without
+         *  emitting a change (used to reflect the active scene).
+         *  @param aColor Ambient color.
+         *  @param aIntensity Ambient intensity multiplier. */
+        void SetAmbient ( const QColor& aColor, float aIntensity );
     private slots:
         /** @brief Slot called when the field of view value changes.
          *  @param aFieldOfView New field of view value. */
@@ -52,6 +64,11 @@ namespace AeonGames
         /** @brief Slot called when the far plane value changes.
          *  @param aFar New far plane value. */
         void setFar ( double aFar );
+        /** @brief Open a color dialog to choose the ambient color. */
+        void pickAmbientColor();
+        /** @brief Slot called when the ambient intensity value changes.
+         *  @param aIntensity New ambient intensity value. */
+        void setAmbientIntensity ( double aIntensity );
         /** @brief Slot called when a dialog button is clicked.
          *  @param aButton The button that was clicked. */
         void clicked ( QAbstractButton* aButton );
@@ -65,8 +82,13 @@ namespace AeonGames
         /** @brief Emitted when the far plane changes.
          *  @param aFar New far plane value. */
         void farChanged ( double aFar );
+        /** @brief Emitted when the ambient color or intensity changes. */
+        void ambientChanged();
     private:
+        /** @brief Refresh the color button's swatch from mAmbientColor. */
+        void UpdateAmbientSwatch();
         Ui::CameraSettings mUi;
+        QColor mAmbientColor{ 255, 255, 255 };
     };
 }
 #endif

@@ -32,6 +32,7 @@ limitations under the License.
 #include "aeongames/Frustum.hpp"
 #include "aeongames/CRC.hpp"
 #include "aeongames/Node.hpp"
+#include "aeongames/Scene.hpp"
 
 namespace AeonGames
 {
@@ -159,6 +160,21 @@ namespace AeonGames
         Matrix4x4 projection{};
         projection.Perspective ( mFieldOfView, mAspectRatio, mNear, mFar );
         qWorldEditorApp->GetRenderer()->SetProjectionMatrix ( mWinId, projection );
+    }
+    void EngineWindow::SetAmbient ( float aRed, float aGreen, float aBlue, float aIntensity )
+    {
+        if ( mScene )
+        {
+            const_cast<Scene*> ( mScene )->SetAmbient ( Vector4{ aRed, aGreen, aBlue, aIntensity } );
+        }
+    }
+    void EngineWindow::GetAmbient ( float& aRed, float& aGreen, float& aBlue, float& aIntensity ) const
+    {
+        const Vector4 ambient = mScene ? mScene->GetAmbient() : Vector4{ 1.0f, 1.0f, 1.0f, 0.25f };
+        aRed = ambient.GetX();
+        aGreen = ambient.GetY();
+        aBlue = ambient.GetZ();
+        aIntensity = ambient.GetW();
     }
 #if 0
     // Commented pending Refactor

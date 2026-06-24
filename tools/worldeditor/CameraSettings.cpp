@@ -19,6 +19,8 @@ limitations under the License.
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QDialogButtonBox>
+#include <QColorDialog>
+#include <QPushButton>
 
 namespace AeonGames
 {
@@ -32,6 +34,9 @@ namespace AeonGames
         setNear ( settings.value ( "Near", 0.01f ).toDouble() );
         setFar ( settings.value ( "Far", 16.0f ).toDouble() );
         settings.endGroup();
+        connect ( mUi.btnAmbientColor, &QPushButton::clicked, this, &CameraSettings::pickAmbientColor );
+        connect ( mUi.dblAmbientIntensity, SIGNAL ( valueChanged ( double ) ), this, SLOT ( setAmbientIntensity ( double ) ) );
+        UpdateAmbientSwatch();
     }
 
     CameraSettings::~CameraSettings()
@@ -50,6 +55,45 @@ namespace AeonGames
     float CameraSettings::GetFar() const
     {
         return mUi.dblFar->value();
+    }
+    QColor CameraSettings::GetAmbientColor() const
+    {
+        return mAmbientColor;
+    }
+    float CameraSettings::GetAmbientIntensity() const
+    {
+        return static_cast<float> ( mUi.dblAmbientIntensity->value() );
+    }
+    void CameraSettings::SetAmbient ( const QColor& aColor, float aIntensity )
+    {
+        mAmbientColor = aColor;
+        bool blkSignals = mUi.dblAmbientIntensity->blockSignals ( true );
+        mUi.dblAmbientIntensity->setValue ( aIntensity );
+        mUi.dblAmbientIntensity->blockSignals ( blkSignals );
+        UpdateAmbientSwatch();
+    }
+    void CameraSettings::pickAmbientColor()
+    {
+        QColor chosen = QColorDialog::getColor ( mAmbientColor, this, tr ( "Ambient Color" ) );
+        if ( chosen.isValid() )
+        {
+            mAmbientColor = chosen;
+            UpdateAmbientSwatch();
+            emit ambientChanged();
+        }
+    }
+    void CameraSettings::setAmbientIntensity ( double aIntensity )
+    {
+        ( void ) aIntensity;
+        emit ambientChanged();
+    }
+    void CameraSettings::UpdateAmbientSwatch()
+    {
+        mUi.btnAmbientColor->setText ( mAmbientColor.name() );
+        mUi.btnAmbientColor->setStyleSheet (
+            QStringLiteral ( "background-color: %1; color: %2;" )
+            .arg ( mAmbientColor.name(),
+                   ( mAmbientColor.lightnessF() < 0.5 ) ? QStringLiteral ( "#ffffff" ) : QStringLiteral ( "#000000" ) ) );
     }
     void CameraSettings::setFieldOfView ( double aFieldOfView )
     {
@@ -91,6 +135,8 @@ namespace AeonGames
             setFieldOfView ( 60.0 );
             setNear ( 0.01 );
             setFar ( 16.0 );
+            SetAmbient ( QColor ( 255, 255, 255 ), 0.25f );
+            emit ambientChanged();
         }
     }
 }
