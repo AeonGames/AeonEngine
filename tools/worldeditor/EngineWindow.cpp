@@ -288,6 +288,7 @@ namespace AeonGames
                 {
                     const_cast<Scene*> ( mScene )->Update ( delta );
                     qWorldEditorApp->GetRenderer()->SetLights ( mWinId, mScene->GetFrameLights() );
+                    qWorldEditorApp->GetRenderer()->SetGlobals ( mWinId, mScene->GetGlobals() );
                 }
                 qWorldEditorApp->GetRenderer()->BeginRender ( mWinId );
                 qWorldEditorApp->GetRenderer()->Render (

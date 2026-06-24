@@ -17,6 +17,7 @@ package AeonGames;
 
 import "transform.proto";
 import "reference.proto";
+import "vector4.proto";
 
 message ComponentPropertyMsg{
     string name = 1;
@@ -61,4 +62,5 @@ message SceneMsg{
     CameraMsg           camera            = 2;
     optional ReferenceMsg lighting_pipeline = 3;
     repeated NodeMsg    node              = 4;
+    optional Vector4Msg ambient           = 5;
 }

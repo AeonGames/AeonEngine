@@ -605,6 +605,7 @@ namespace AeonGames
                     mRenderer->SetProjectionMatrix ( mWindowId, projection );
                 }
                 mRenderer->SetLights ( mWindowId, aScene.GetFrameLights() );
+                mRenderer->SetGlobals ( mWindowId, aScene.GetGlobals() );
                 // Compute skinning pre-pass: dispatch skinning before the render
                 // pass begins so the skinned vertex buffers are ready for both
                 // the depth and shading traversals.

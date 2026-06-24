@@ -987,6 +987,16 @@ namespace AeonGames
         it->second.SetLights ( FilterLightsByType ( aLights ) );
     }
 
+    void VulkanRenderer::SetGlobals ( void* aWindowId, const GpuGlobals& aGlobals )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetGlobals ( aGlobals );
+    }
+
     void VulkanRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         auto it = mWindowStore.find ( aWindowId );

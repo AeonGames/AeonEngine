@@ -26,6 +26,7 @@ limitations under the License.
 #include "aeongames/Texture.hpp"
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuClusterParams.hpp"
+#include "aeongames/GpuGlobals.hpp"
 #include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Pipeline.hpp"
@@ -148,6 +149,8 @@ namespace AeonGames
         void SetViewMatrix ( const Matrix4x4& aMatrix );
         /// @brief Upload the per-frame light list to this window's Lights UBO.
         void SetLights ( std::span<const GpuLight> aLights );
+        /// @brief Upload the per-frame scene-wide globals (ambient) to this window's Globals UBO.
+        void SetGlobals ( const GpuGlobals& aGlobals );
         /// @brief Set the clear color for this window.
         void SetClearColor ( float R, float G, float B, float A );
         /// @brief Get the current projection matrix.
@@ -217,6 +220,7 @@ namespace AeonGames
         OpenGLBuffer mMatrices{};
         OpenGLBuffer mLights{};
         OpenGLBuffer mClusterParams{};
+        OpenGLBuffer mGlobals{};
         // Scratch buffer holding the frustum-culled subset of this frame's
         // lights; reused across frames so capacity is not reallocated.
         std::vector<GpuLight> mVisibleLights{};

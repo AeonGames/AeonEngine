@@ -23,6 +23,7 @@ limitations under the License.
 #include <vulkan/vulkan.h>
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuClusterParams.hpp"
+#include "aeongames/GpuGlobals.hpp"
 #include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Frustum.hpp"
@@ -156,6 +157,8 @@ namespace AeonGames
         void SetViewMatrix ( const Matrix4x4& aMatrix );
         /// @brief Upload per-frame light list to the Lights UBO.
         void SetLights ( std::span<const GpuLight> aLights );
+        /// @brief Upload per-frame scene-wide globals (ambient) to the Globals UBO.
+        void SetGlobals ( const GpuGlobals& aGlobals );
         /// @brief Get the current projection matrix.
         const Matrix4x4& GetProjectionMatrix() const;
         /// @brief Get the current view matrix.
@@ -191,6 +194,7 @@ namespace AeonGames
         void InitializeMatrices();
         void InitializeLights();
         void InitializeClusterParams();
+        void InitializeGlobals();
         void InitializeShadowMap();
         /// @brief Create the spot shadow map: a sampleable depth texture array
         ///        (one layer per caster), per-layer framebuffers reusing the
@@ -216,6 +220,7 @@ namespace AeonGames
         void FinalizeMatrices();
         void FinalizeLights();
         void FinalizeClusterParams();
+        void FinalizeGlobals();
         void FinalizeShadowMap();
         /// @brief Recompute and upload the ClusterParams UBO from the current
         ///        projection matrix and viewport. Cheap; called on projection
@@ -243,6 +248,7 @@ namespace AeonGames
         VulkanBuffer mMatrices;
         VulkanBuffer mLights;
         VulkanBuffer mClusterParams;
+        VulkanBuffer mGlobals;
         VulkanBuffer mShadowParams;
         // Spot shadow params (all caster matrices + positions) sampled by the
         // shading pass, and the per-slot depth matrices read by the spot depth
@@ -301,6 +307,8 @@ namespace AeonGames
         VkDescriptorSet mLightsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mClusterParamsDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mClusterParamsDescriptorSet{VK_NULL_HANDLE};
+        VkDescriptorPool mGlobalsDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mGlobalsDescriptorSet{VK_NULL_HANDLE};
         // Directional shadow map: a fixed-size depth target the shadow pass
         // writes and the shading pass samples. A throwaway color attachment is
         // carried so the shadow render pass stays attachment-compatible with

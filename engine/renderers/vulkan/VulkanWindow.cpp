@@ -60,6 +60,7 @@ namespace AeonGames
         mMatrices { aVulkanRenderer },
         mLights { aVulkanRenderer },
         mClusterParams { aVulkanRenderer },
+        mGlobals { aVulkanRenderer },
         mShadowParams { aVulkanRenderer },
         mSpotShadowParams { aVulkanRenderer },
         mSpotShadowDepthMatrices { aVulkanRenderer },
@@ -85,6 +86,7 @@ namespace AeonGames
         mMatrices{std::move ( aVulkanWindow.mMatrices ) },
         mLights{std::move ( aVulkanWindow.mLights ) },
         mClusterParams{std::move ( aVulkanWindow.mClusterParams ) },
+        mGlobals{std::move ( aVulkanWindow.mGlobals ) },
         mShadowParams{std::move ( aVulkanWindow.mShadowParams ) },
         mSpotShadowParams{std::move ( aVulkanWindow.mSpotShadowParams ) },
         mSpotShadowDepthMatrices{std::move ( aVulkanWindow.mSpotShadowDepthMatrices ) },
@@ -116,6 +118,8 @@ namespace AeonGames
         std::swap ( mLightsDescriptorSet, aVulkanWindow.mLightsDescriptorSet );
         std::swap ( mClusterParamsDescriptorPool, aVulkanWindow.mClusterParamsDescriptorPool );
         std::swap ( mClusterParamsDescriptorSet, aVulkanWindow.mClusterParamsDescriptorSet );
+        std::swap ( mGlobalsDescriptorPool, aVulkanWindow.mGlobalsDescriptorPool );
+        std::swap ( mGlobalsDescriptorSet, aVulkanWindow.mGlobalsDescriptorSet );
         std::swap ( mVkShadowDepthImage, aVulkanWindow.mVkShadowDepthImage );
         std::swap ( mVkShadowDepthImageMemory, aVulkanWindow.mVkShadowDepthImageMemory );
         std::swap ( mVkShadowDepthImageView, aVulkanWindow.mVkShadowDepthImageView );
@@ -769,6 +773,57 @@ namespace AeonGames
     {
         DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mClusterParamsDescriptorPool );
         mClusterParams.Finalize();
+    }
+
+    void VulkanWindow::InitializeGlobals()
+    {
+        GpuGlobals empty{};
+        mGlobals.Initialize (
+            sizeof ( GpuGlobals ),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            &empty );
+
+        VkDescriptorSetLayoutCreateInfo globals_descriptor_set_layout_create_info{};
+        globals_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        globals_descriptor_set_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding globals_descriptor_set_layout_binding{};
+        globals_descriptor_set_layout_binding.binding = 0;
+        globals_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        globals_descriptor_set_layout_binding.descriptorCount = 1;
+        globals_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        globals_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
+        globals_descriptor_set_layout_create_info.pBindings = &globals_descriptor_set_layout_binding;
+
+        mGlobalsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
+        mGlobalsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mGlobalsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( globals_descriptor_set_layout_create_info ) );
+        VkDescriptorBufferInfo descriptor_buffer_info{};
+        descriptor_buffer_info.buffer = mGlobals.GetBuffer();
+        descriptor_buffer_info.offset = 0;
+        descriptor_buffer_info.range = mGlobals.GetSize();
+        VkWriteDescriptorSet write_descriptor_set{};
+        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.pNext = nullptr;
+        write_descriptor_set.dstSet = mGlobalsDescriptorSet;
+        write_descriptor_set.dstBinding = 0;
+        write_descriptor_set.dstArrayElement = 0;
+        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.descriptorCount = 1;
+        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+        write_descriptor_set.pImageInfo = nullptr;
+        write_descriptor_set.pTexelBufferView = nullptr;
+        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+    }
+
+    void VulkanWindow::FinalizeGlobals()
+    {
+        DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mGlobalsDescriptorPool );
+        mGlobals.Finalize();
+    }
+
+    void VulkanWindow::SetGlobals ( const GpuGlobals& aGlobals )
+    {
+        mGlobals.WriteMemory ( 0, sizeof ( GpuGlobals ), &aGlobals );
     }
 
     void VulkanWindow::InitializeShadowMap()
@@ -1963,6 +2018,7 @@ namespace AeonGames
         InitializeMatrices();
         InitializeLights();
         InitializeClusterParams();
+        InitializeGlobals();
         InitializeSurface();
         InitializeRenderPass();
         InitializeSwapchain();
@@ -1995,6 +2051,7 @@ namespace AeonGames
         FinalizePointShadowMap();
         FinalizeSpotShadowMap();
         FinalizeShadowMap();
+        FinalizeGlobals();
         FinalizeClusterParams();
         FinalizeLights();
         FinalizeMatrices();
@@ -2584,6 +2641,16 @@ namespace AeonGames
                                       cluster_params_set_index,
                                       1,
                                       &mClusterParamsDescriptorSet, 0, nullptr );
+        }
+
+        if ( uint32_t globals_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::GLOBALS ); globals_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      globals_set_index,
+                                      1,
+                                      &mGlobalsDescriptorSet, 0, nullptr );
         }
 
         // Clustered Forward+ light lists, produced by the lighting compute

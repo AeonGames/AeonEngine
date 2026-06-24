@@ -24,6 +24,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/FrameLightContainer.hpp"
 #include "aeongames/GpuShadowParams.hpp"
+#include "aeongames/GpuGlobals.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/RenderItem.hpp"
 #include "aeongames/Octree.hpp"
@@ -189,6 +190,20 @@ namespace AeonGames
         /** Get the far clipping plane distance.
             @return Far plane distance. */
         DLL float GetFar() const;
+        /** @name Ambient lighting */
+        /**@{*/
+        /** Set the scene's ambient light: a flat fill added to every lit
+            surface (the engine has no global illumination).
+            @param aAmbient xyz = ambient color, w = intensity multiplier. */
+        DLL void SetAmbient ( const Vector4& aAmbient );
+        /** Get the scene's ambient light.
+            @return xyz = ambient color, w = intensity multiplier. */
+        DLL const Vector4& GetAmbient() const;
+        /** Build the per-frame scene-wide shading globals (ambient) to upload
+            to the renderer via Renderer::SetGlobals.
+            @return The GpuGlobals mirroring this scene's ambient. */
+        DLL GpuGlobals GetGlobals() const;
+        /**@}*/
         /** @name Input */
         /**@{*/
         /** Set the InputSystem associated with this scene.
@@ -373,6 +388,9 @@ namespace AeonGames
         float mFieldOfView{60.0f};
         float mNear{1.0f};
         float mFar{1600.0f};
+        /// Scene ambient light: xyz = color, w = intensity. Default reproduces
+        /// the former constant vec3(0.25) flat ambient fill.
+        Vector4 mAmbient{1.0f, 1.0f, 1.0f, 0.25f};
         std::string mName{};
         /// Children Nodes
         std::vector<std::unique_ptr<Node >> mNodes{};

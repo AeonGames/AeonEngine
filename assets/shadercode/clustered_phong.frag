@@ -161,6 +161,20 @@ layout(binding = 10)
 #endif
 uniform samplerCubeArrayShadow PointShadowMap;
 
+// Per-frame scene-wide shading globals, independent of any object, light or
+// cluster. ambient.rgb is the ambient color and ambient.a its intensity; the
+// fragment shader uses their product as the flat ambient fill. Kept in its own
+// small block so future frame-wide values (fog, exposure, ...) can join it.
+#ifdef VULKAN
+layout(set = 14, binding = 0, std140)
+#else
+layout(binding = 3, std140)
+#endif
+uniform Globals
+{
+      vec4 ambient;
+};
+
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
@@ -398,13 +412,6 @@ const uint HEATMAP_OVERFLOW = 128u;
 // useful gradients rather than a flat blue.
 const float HEATMAP_REFERENCE = 16.0;
 
-// Flat ambient fill. The engine has no global illumination, so surfaces that
-// face away from every light would otherwise render pure black, crushing the
-// scene and hiding all texture color. This constant lifts the shadows just
-// enough to reveal the diffuse maps, approximating the indirect bounce that
-// the Blender reference render gets from its world lighting.
-const vec3 AMBIENT = vec3 ( 0.25 );
-
 // Map t in [0,1] to a blue -> cyan -> green -> yellow -> red heat ramp.
 vec3 heat_color ( float t )
 {
@@ -507,6 +514,11 @@ void main()
             }
       }
 
-      vec3 LightIntensity = Kd * ( AMBIENT + diffuse_accum ) + Ks * specular_accum;
+      // ambient.rgb is the scene ambient color, ambient.a its intensity; their
+      // product is the flat ambient fill that lifts surfaces facing away from
+      // every light out of pure black (the engine has no global illumination).
+      // Supplied per frame via the Globals UBO; the default reproduces the
+      // former constant vec3(0.25).
+      vec3 LightIntensity = Kd * ( ambient.rgb * ambient.a + diffuse_accum ) + Ks * specular_accum;
       FragColor = tex * vec4 ( LightIntensity, 1.0 );
 }

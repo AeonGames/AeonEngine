@@ -1047,6 +1047,21 @@ namespace AeonGames
         return removed_node;
     }
 
+    void Scene::SetAmbient ( const Vector4& aAmbient )
+    {
+        mAmbient = aAmbient;
+    }
+
+    const Vector4& Scene::GetAmbient() const
+    {
+        return mAmbient;
+    }
+
+    GpuGlobals Scene::GetGlobals() const
+    {
+        return GpuGlobals{ mAmbient };
+    }
+
     std::string Scene::Serialize ( bool aAsBinary ) const
     {
         static SceneMsg scene_buffer;
@@ -1070,6 +1085,10 @@ namespace AeonGames
                 scene_buffer.mutable_lighting_pipeline()->set_id ( mLightingPipeline.GetPath() );
             }
         }
+        scene_buffer.mutable_ambient()->set_x ( mAmbient.GetX() );
+        scene_buffer.mutable_ambient()->set_y ( mAmbient.GetY() );
+        scene_buffer.mutable_ambient()->set_z ( mAmbient.GetZ() );
+        scene_buffer.mutable_ambient()->set_w ( mAmbient.GetW() );
         std::unordered_map<const Node*, NodeMsg*> node_map;
         LoopTraverseDFSPreOrder (
             [&node_map] ( const Node & node )
@@ -1157,6 +1176,15 @@ namespace AeonGames
         else
         {
             mLightingPipeline = ResourceId{};
+        }
+        if ( scene_buffer.has_ambient() )
+        {
+            mAmbient = Vector4{ scene_buffer.ambient().x(), scene_buffer.ambient().y(),
+                                scene_buffer.ambient().z(), scene_buffer.ambient().w() };
+        }
+        else
+        {
+            mAmbient = Vector4{ 1.0f, 1.0f, 1.0f, 0.25f };
         }
         if ( mCamera )
         {

@@ -512,6 +512,7 @@ namespace AeonGames
                     mRenderer->SetProjectionMatrix ( reinterpret_cast<void*> ( mWindowId ), projection );
                 }
                 mRenderer->SetLights ( reinterpret_cast<void*> ( mWindowId ), aScene.GetFrameLights() );
+                mRenderer->SetGlobals ( reinterpret_cast<void*> ( mWindowId ), aScene.GetGlobals() );
                 if ( mGuiOverlay )
                 {
                     mGuiOverlay->BeginFrame ( reinterpret_cast<void*> ( mWindowId ), delta.count() );

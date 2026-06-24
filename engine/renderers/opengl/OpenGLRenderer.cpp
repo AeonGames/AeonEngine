@@ -723,6 +723,24 @@ void main()
         OPENGL_CHECK_ERROR_THROW;
     }
 
+    void OpenGLRenderer::SetGlobals ( const OpenGLBuffer& aGlobalsBuffer ) const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::GLOBALS ) };
+        if ( uniform_block == nullptr )
+        {
+            // Pipeline doesn't use scene globals; silently skip, same
+            // convention as SetClusterParams/SetLights.
+            return;
+        }
+        assert ( static_cast<const size_t> ( uniform_block->size ) <= aGlobalsBuffer.GetSize() );
+        glBindBufferRange ( GL_UNIFORM_BUFFER, uniform_block->binding, aGlobalsBuffer.GetBufferId(), 0, aGlobalsBuffer.GetSize() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
     void OpenGLRenderer::SetShadowParams ( const OpenGLBuffer& aShadowParamsBuffer ) const
     {
         if ( mCurrentPipeline == nullptr )
@@ -905,6 +923,16 @@ void main()
             return;
         }
         it->second.SetLights ( FilterLightsByType ( aLights ) );
+    }
+
+    void OpenGLRenderer::SetGlobals ( void* aWindowId, const GpuGlobals& aGlobals )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetGlobals ( aGlobals );
     }
 
     void OpenGLRenderer::SetClearColor ( void* aWindowId, float R, float G, float B, float A )

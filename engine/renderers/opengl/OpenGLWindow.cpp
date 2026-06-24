@@ -70,6 +70,12 @@ namespace AeonGames
             GpuClusterParams empty{};
             mClusterParams.Initialize ( sizeof ( GpuClusterParams ), GL_DYNAMIC_DRAW, &empty );
         }
+        // Globals UBO: per-frame scene-wide shading values (ambient). The
+        // default reproduces the former constant ambient until a scene sets it.
+        {
+            GpuGlobals empty{};
+            mGlobals.Initialize ( sizeof ( GpuGlobals ), GL_DYNAMIC_DRAW, &empty );
+        }
         InitializeShadowMap();
         InitializeSpotShadowMap();
         InitializePointShadowMap();
@@ -160,6 +166,7 @@ namespace AeonGames
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
         mLights{std::move ( aOpenGLWindow.mLights ) },
         mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) },
+        mGlobals{std::move ( aOpenGLWindow.mGlobals ) },
         mShadowParams{std::move ( aOpenGLWindow.mShadowParams ) },
         mSpotShadowParams{std::move ( aOpenGLWindow.mSpotShadowParams ) },
         mSpotShadowDepthScratch{std::move ( aOpenGLWindow.mSpotShadowDepthScratch ) },
@@ -189,6 +196,7 @@ namespace AeonGames
             mMatrices.Finalize();
             mLights.Finalize();
             mClusterParams.Finalize();
+            mGlobals.Finalize();
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
             FinalizePointShadowMap();
@@ -242,6 +250,7 @@ namespace AeonGames
         mMatrices{std::move ( aOpenGLWindow.mMatrices ) },
         mLights{std::move ( aOpenGLWindow.mLights ) },
         mClusterParams{std::move ( aOpenGLWindow.mClusterParams ) },
+        mGlobals{std::move ( aOpenGLWindow.mGlobals ) },
         mShadowParams{std::move ( aOpenGLWindow.mShadowParams ) },
         mSpotShadowParams{std::move ( aOpenGLWindow.mSpotShadowParams ) },
         mSpotShadowDepthScratch{std::move ( aOpenGLWindow.mSpotShadowDepthScratch ) },
@@ -275,6 +284,7 @@ namespace AeonGames
             mMatrices.Finalize();
             mLights.Finalize();
             mClusterParams.Finalize();
+            mGlobals.Finalize();
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
             FinalizePointShadowMap();
@@ -379,6 +389,7 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        mOpenGLRenderer.SetGlobals ( mGlobals );
         BindObjectMatrices ( { &aModelMatrix, 1 } );
         // Clustered Forward+ light lists, produced by the lighting compute
         // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer
@@ -492,6 +503,7 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        mOpenGLRenderer.SetGlobals ( mGlobals );
         if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
         {
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
@@ -760,6 +772,11 @@ namespace AeonGames
             glDeleteTextures ( 1, &mSpotShadowDepthTexture );
             mSpotShadowDepthTexture = 0;
         }
+    }
+
+    void OpenGLWindow::SetGlobals ( const GpuGlobals& aGlobals )
+    {
+        mGlobals.WriteMemory ( 0, sizeof ( GpuGlobals ), &aGlobals );
     }
 
     void OpenGLWindow::SetSpotShadowParams ( const GpuSpotShadowParams& aSpotShadowParams )

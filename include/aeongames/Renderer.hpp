@@ -32,7 +32,7 @@ limitations under the License.
 #include "aeongames/RenderItem.hpp"
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuShadowParams.hpp"
-#include "aeongames/GpuShadowParams.hpp"
+#include "aeongames/GpuGlobals.hpp"
 
 namespace AeonGames
 {
@@ -156,6 +156,20 @@ namespace AeonGames
          *                 @c Scene::Update (see @ref Scene::GetFrameLights).
         */
         virtual void SetLights ( void* aWindowId, std::span<const GpuLight> aLights ) = 0;
+        /** Uploads the per-frame scene-wide shading globals (currently the
+         *  ambient fill) into the window's @c Globals uniform buffer. Called
+         *  once per frame like @ref SetLights. Virtual with an empty default so
+         *  a backend that has not implemented it keeps the buffer's initial
+         *  value, which reproduces the former constant ambient.
+         *  @param aWindowId Platform depended window handle.
+         *  @param aGlobals The scene-wide globals (ambient color/intensity) to
+         *                  upload.
+         */
+        virtual void SetGlobals ( void* aWindowId, const GpuGlobals& aGlobals )
+        {
+            ( void ) aWindowId;
+            ( void ) aGlobals;
+        }
         /** Sets the color to be used to clear the window background.
          * @param aWindowId Platform depended window handle.
          * @param R Red component of the clear color.
