@@ -33,6 +33,7 @@ limitations under the License.
 #include <array>
 #include <unordered_set>
 #include <filesystem>
+#include <system_error>
 #include "PipelineTool.h"
 #include "CodeFieldValuePrinter.hpp"
 #include "aeongames/Pipeline.hpp"
@@ -462,9 +463,23 @@ namespace AeonGames
 
             if ( found_shader )
             {
+                // The output directory (e.g. game/shaders/) holds only
+                // generated files, so it is gitignored and absent on a fresh
+                // checkout. Create it before opening the file: an ofstream that
+                // targets a missing directory fails to open and, unchecked,
+                // would silently write nothing while the tool still exits 0.
+                if ( output_path.has_parent_path() )
+                {
+                    std::error_code mkdir_ec;
+                    std::filesystem::create_directories ( output_path.parent_path(), mkdir_ec );
+                }
                 if ( output_path.extension() == ".pln" )
                 {
                     std::ofstream binary_file ( mOutputFile, std::ios::out | std::ios::binary );
+                    if ( !binary_file )
+                    {
+                        throw std::runtime_error ( "Failed to open output file: " + mOutputFile );
+                    }
                     binary_file << magick_number << '\0';
                     if ( !pipeline_msg.SerializeToOstream ( &binary_file ) )
                     {
@@ -489,6 +504,10 @@ namespace AeonGames
                     // Open in binary mode so newlines are written as LF rather
                     // than being translated to CRLF by the Windows CRT.
                     std::ofstream text_file ( mOutputFile, std::ios::out | std::ios::binary );
+                    if ( !text_file )
+                    {
+                        throw std::runtime_error ( "Failed to open output file: " + mOutputFile );
+                    }
                     if ( !printer.PrintToString ( pipeline_msg, &text_string ) )
                     {
                         std::cerr << "Failed to serialize pipeline message to text format.";
