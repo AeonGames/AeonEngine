@@ -93,5 +93,10 @@
         "msvc64/vcpkg_installed/**": true,
         "build/vcpkg/**": true,
         "build/vcpkg_installed/**": true
-    }
+    },
+    // GLSL Lint: lint the Vulkan branch of the dual-path (#ifdef VULKAN) shaders.
+    // glslangValidator auto-defines VULKAN for a Vulkan target, so no -D is
+    // needed. The machine-scoped glsllint.glslangValidatorPath lives in User
+    // settings (VS Code ignores that key here in workspace settings).
+    "glsllint.glslangValidatorArgs": ["--target-env", "vulkan1.2"]
 }
