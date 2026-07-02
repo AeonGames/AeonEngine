@@ -40,16 +40,31 @@ layout(location = 4) in vec2 VertexUV;
 layout(location = 0) out vec3 tnorm;
 layout(location = 1) out vec3 eyeCoords;
 layout(location = 2) out vec2 CoordUV;
+// Eye-space tangent basis for normal mapping; zero-length when the mesh has no
+// tangents (the fragment shader then falls back to the interpolated normal).
+layout(location = 3) out vec3 ttangent;
+layout(location = 4) out vec3 tbitangent;
 
 void main()
 {
+      mat3 normal_matrix = mat3 ( ViewMatrix * MODEL_MATRIX );
       if ( length ( VertexNormal ) != 0 )
       {
-            tnorm = normalize ( mat3(ViewMatrix * MODEL_MATRIX) * VertexNormal );
+            tnorm = normalize ( normal_matrix * VertexNormal );
       }
       else
       {
             tnorm = vec3 ( 0.0 );
+      }
+      if ( length ( VertexTangent ) != 0.0 )
+      {
+            ttangent = normalize ( normal_matrix * VertexTangent );
+            tbitangent = normalize ( normal_matrix * VertexBitangent );
+      }
+      else
+      {
+            ttangent = vec3 ( 0.0 );
+            tbitangent = vec3 ( 0.0 );
       }
       eyeCoords = ( ViewMatrix * MODEL_MATRIX * vec4 ( VertexPosition, 1.0 ) ).xyz;
       gl_Position = ProjectionMatrix * ViewMatrix * MODEL_MATRIX * vec4(VertexPosition, 1.0);

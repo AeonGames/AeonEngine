@@ -1,0 +1,56 @@
+/*
+Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+#ifndef AEONGAMES_MATERIALSAMPLERS_HPP
+#define AEONGAMES_MATERIALSAMPLERS_HPP
+#include <array>
+#include <cstddef>
+
+namespace AeonGames
+{
+    /** @brief One canonical material texture-sampler slot. */
+    struct MaterialSamplerSlot
+    {
+        const char* name;          ///< GLSL sampler name; @c crc32i(name) keys Material::GetSamplers().
+        const char* fallback_path; ///< Engine fallback texture bound when a material omits this sampler.
+    };
+
+    /** @brief Canonical, engine-wide material sampler layout.
+     *
+     *  The array index is the descriptor binding slot that every material-
+     *  sampling shader (e.g. clustered_phong) declares in the material sampler
+     *  set, in this exact order. A material only needs to supply the samplers it
+     *  actually uses; the renderers pad every omitted slot with the listed
+     *  fallback texture so the material's descriptor set layout always matches
+     *  the pipeline (Vulkan binds the whole set by position) and every sampled
+     *  texture unit is populated (OpenGL binds by name).
+     *
+     *  The @c NormalMap fallback is a flat (0,0,1) tangent-space normal, so
+     *  sampling it is a no-op after the TBN transform: materials without a
+     *  normal map keep their interpolated vertex normal. This lets normal
+     *  mapping be added to the shared shader without touching the ~93 existing
+     *  materials or the material protobuf format.
+     *
+     *  When extending this list (e.g. metallic/roughness for PBR), append new
+     *  slots and update every material-sampling shader to declare the full set
+     *  in the same order. */
+    inline constexpr std::array<MaterialSamplerSlot, 2> kMaterialSamplerSlots
+    {
+        {
+            { "DiffuseMap", "textures/default.png" },
+            { "NormalMap",  "textures/flat_normal.png" },
+        }};
+}
+#endif

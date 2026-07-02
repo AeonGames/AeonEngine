@@ -17,6 +17,7 @@ limitations under the License.
 #include <ostream>
 #include <regex>
 #include <array>
+#include <cstring>
 #include <utility>
 #include <cassert>
 #include "aeongames/ProtoBufClasses.hpp"
@@ -63,12 +64,12 @@ namespace AeonGames
         {
             descriptor_pool_sizes.push_back ( {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
         }
-        // A material may declare no samplers yet still be drawn with a pipeline
-        // that statically samples a texture (e.g. an untextured material using a
-        // diffuse-map shader). In that case we bind a single fallback texture so
-        // the required sampler set is never left unbound.
-        const uint32_t sampler_binding_count = mMaterial->GetSamplers().empty() ?
-                                               1u : static_cast<uint32_t> ( mMaterial->GetSamplers().size() );
+        // Every material presents the full canonical material-sampler set
+        // (kMaterialSamplerSlots) so its descriptor set layout always matches a
+        // material-sampling pipeline, regardless of which samplers the material
+        // actually declares. Slots the material omits are padded below with the
+        // slot's fallback texture (white diffuse / flat normal).
+        const uint32_t sampler_binding_count = static_cast<uint32_t> ( kMaterialSamplerSlots.size() );
         descriptor_pool_sizes.push_back ( {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sampler_binding_count } );
 
         if ( !descriptor_pool_sizes.empty() )
@@ -128,8 +129,8 @@ namespace AeonGames
             descriptor_buffer_info = VkDescriptorBufferInfo
             {
                 mUniformBuffer.GetBuffer(),
-                0,
-                mMaterial->GetUniformBuffer().size()
+                              0,
+                              mMaterial->GetUniformBuffer().size()
             };
             write_descriptor_sets.emplace_back();
             auto& write_descriptor_set = write_descriptor_sets.back();
@@ -184,6 +185,20 @@ namespace AeonGames
 
             for ( uint32_t i = 0; i < sampler_binding_count; ++i )
             {
+                // Bind canonical slot i to the material's matching sampler (by
+                // name crc), or the slot's fallback texture when the material
+                // does not declare it.
+                const char* slot_name = kMaterialSamplerSlots[i].name;
+                const uint32_t slot_crc = crc32i ( slot_name, std::strlen ( slot_name ) );
+                const VkDescriptorImageInfo* image_info = mVulkanRenderer.GetMaterialSamplerFallbackDescriptorImageInfo ( i );
+                for ( const auto& sampler : mMaterial->GetSamplers() )
+                {
+                    if ( std::get<0> ( sampler ) == slot_crc )
+                    {
+                        image_info = mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( sampler ).Get<Texture>() );
+                        break;
+                    }
+                }
                 write_descriptor_sets.emplace_back();
                 auto& write_descriptor_set = write_descriptor_sets.back();
                 write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -195,9 +210,7 @@ namespace AeonGames
                 write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write_descriptor_set.descriptorCount = 1;
                 write_descriptor_set.pBufferInfo = nullptr;
-                write_descriptor_set.pImageInfo = mMaterial->GetSamplers().empty() ?
-                                                  mVulkanRenderer.GetDefaultTextureDescriptorImageInfo() :
-                                                  mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( mMaterial->GetSamplers() [i] ).Get<Texture>() );
+                write_descriptor_set.pImageInfo = image_info;
                 write_descriptor_set.pTexelBufferView = nullptr;
             }
         }

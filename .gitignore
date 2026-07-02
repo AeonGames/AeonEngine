@@ -67,8 +67,9 @@ game/config
 # the binary .pln are covered by *.pln above.)
 game/shaders/*.txt
 game/**/*.png
-# Engine-level fallback texture, committed (loaded unconditionally at startup).
+# Engine-level fallback textures, committed (loaded unconditionally at startup).
 !game/textures/default.png
+!game/textures/flat_normal.png
 *~
 
 # MacOS preview store

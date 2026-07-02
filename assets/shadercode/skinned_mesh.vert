@@ -51,6 +51,10 @@ layout(location = 6) in vec4 VertexWeights;
 layout(location = 0) out vec3 tnorm;
 layout(location = 1) out vec3 eyeCoords;
 layout(location = 2) out vec2 CoordUV;
+// Eye-space tangent basis for normal mapping; zero-length when the mesh has no
+// tangents (the fragment shader then falls back to the interpolated normal).
+layout(location = 3) out vec3 ttangent;
+layout(location = 4) out vec3 tbitangent;
 
 void main()
 {
@@ -71,6 +75,28 @@ void main()
       else
       {
             tnorm = vec3 ( 0.0 );
+      }
+      // Skin the tangent basis with the same bone weights as the normal, then
+      // rotate into eye space. Zero-length when the mesh has no tangents.
+      if ( length ( VertexTangent ) != 0.0 )
+      {
+            vec3 vertex_tangent =
+                  ( mat3(skeleton[VertexWeightIndices[0]]) * (VertexWeights[0] * VertexTangent) ) +
+                  ( mat3(skeleton[VertexWeightIndices[1]]) * (VertexWeights[1] * VertexTangent) ) +
+                  ( mat3(skeleton[VertexWeightIndices[2]]) * (VertexWeights[2] * VertexTangent) ) +
+                  ( mat3(skeleton[VertexWeightIndices[3]]) * (VertexWeights[3] * VertexTangent) );
+            vec3 vertex_bitangent =
+                  ( mat3(skeleton[VertexWeightIndices[0]]) * (VertexWeights[0] * VertexBitangent) ) +
+                  ( mat3(skeleton[VertexWeightIndices[1]]) * (VertexWeights[1] * VertexBitangent) ) +
+                  ( mat3(skeleton[VertexWeightIndices[2]]) * (VertexWeights[2] * VertexBitangent) ) +
+                  ( mat3(skeleton[VertexWeightIndices[3]]) * (VertexWeights[3] * VertexBitangent) );
+            ttangent = normalize ( mat3(ViewMatrix * MODEL_MATRIX) * vertex_tangent );
+            tbitangent = normalize ( mat3(ViewMatrix * MODEL_MATRIX) * vertex_bitangent );
+      }
+      else
+      {
+            ttangent = vec3 ( 0.0 );
+            tbitangent = vec3 ( 0.0 );
       }
       eyeCoords = ( ViewMatrix * MODEL_MATRIX * vec4 ( weighted_position.xyz, 1.0 ) ).xyz;
       gl_Position = ProjectionMatrix * ViewMatrix * MODEL_MATRIX * vec4(weighted_position.xyz, 1.0);

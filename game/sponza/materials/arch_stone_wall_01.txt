@@ -25,3 +25,9 @@ sampler {
     path: "sponza/textures/arch_stone_wall_01_BaseColor.png"
   }
 }
+sampler {
+  name: "NormalMap"
+  image {
+    path: "sponza/textures/arch_stone_wall_01_Normal.png"
+  }
+}

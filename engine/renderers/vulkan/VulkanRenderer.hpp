@@ -21,10 +21,12 @@ limitations under the License.
 #include <unordered_map>
 #include <memory>
 #include <tuple>
+#include <array>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Transform.hpp"
+#include "aeongames/MaterialSamplers.hpp"
 #include "VulkanWindow.hpp"
 #include "VulkanBuffer.hpp"
 #include "VulkanMesh.hpp"
@@ -87,6 +89,10 @@ namespace AeonGames
         /// @brief Get the descriptor image info for the fallback texture used by
         /// materials that lack a sampler required by their pipeline.
         const VkDescriptorImageInfo* GetDefaultTextureDescriptorImageInfo() const;
+        /// @brief Get the descriptor image info for the canonical fallback
+        /// texture of material sampler slot @p aSlot (see kMaterialSamplerSlots),
+        /// bound when a material omits that sampler.
+        const VkDescriptorImageInfo* GetMaterialSamplerFallbackDescriptorImageInfo ( size_t aSlot ) const;
 
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
@@ -216,9 +222,13 @@ namespace AeonGames
         // across batches so SubmitRenderQueue only allocates when a batch grows
         // beyond any previously seen size.
         std::vector<Matrix4x4> mInstanceTransforms{};
-        // Fallback texture bound when a material is missing a sampler that its
-        // pipeline statically uses (e.g. an untextured material drawn with a
-        // diffuse-map shader). Loaded from "textures/default.png".
+        // Fallback textures for each canonical material sampler slot
+        // (kMaterialSamplerSlots), bound when a material omits that sampler
+        // (e.g. an untextured material drawn with a diffuse-map shader, or a
+        // material with no normal map). Loaded once at construction from each
+        // slot's fallback_path. Slot 0 ("textures/default.png") also serves as
+        // the general fallback exposed by GetDefaultTextureDescriptorImageInfo.
+        std::array<const Texture*, kMaterialSamplerSlots.size() > mMaterialSamplerFallbacks{};
         const Texture* mDefaultTexture{ nullptr };
         bool mHasPrimitiveTopologyListRestart{false};
 

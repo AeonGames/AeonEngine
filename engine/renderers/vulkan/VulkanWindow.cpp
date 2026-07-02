@@ -2980,6 +2980,16 @@ namespace AeonGames
                                       &mClusterParamsDescriptorSet, 0, nullptr );
         }
 
+        if ( uint32_t globals_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::GLOBALS ); globals_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      pipeline->GetPipelineLayout(),
+                                      globals_set_index,
+                                      1,
+                                      &mGlobalsDescriptorSet, 0, nullptr );
+        }
+
         auto bind_cluster_storage = [&] ( uint32_t aBinding, const BufferAccessor & aAccessor )
         {
             if ( aAccessor.GetMemoryPoolBuffer() == nullptr )

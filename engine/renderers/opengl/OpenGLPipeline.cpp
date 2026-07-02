@@ -406,6 +406,16 @@ namespace AeonGames
         return it->location;
     }
 
+    bool OpenGLPipeline::HasSampler ( uint32_t name_hash ) const
+    {
+        auto it = std::lower_bound ( mSamplerLocations.begin(), mSamplerLocations.end(), name_hash,
+                                     [] ( const OpenGLSamplerLocation & a, const uint32_t b )
+        {
+            return a.name < b;
+        } );
+        return it != mSamplerLocations.end() && it->name == name_hash && it->location >= 0;
+    }
+
     const OpenGLUniformBlock* OpenGLPipeline::GetUniformBlock ( uint32_t name ) const
     {
         auto it = std::lower_bound ( mUniformBlocks.begin(), mUniformBlocks.end(), name,

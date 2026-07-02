@@ -67,13 +67,17 @@ namespace AeonGames
             InitializeCommandPools();
             AttachWindow ( aWindow );
             InitializeOverlay();
-            // Load the fallback texture used for materials that lack a sampler
-            // their pipeline statically uses. Requires the device, command
-            // pools and queue to already be initialized for the upload.
+            // Load the fallback textures used for material sampler slots a
+            // material omits (see kMaterialSamplerSlots). Requires the device,
+            // command pools and queue to already be initialized for the upload.
             {
-                ResourceId default_texture{ "Texture"_crc32, "textures/default.png" };
-                mDefaultTexture = default_texture.Get<Texture>();
-                LoadTexture ( *mDefaultTexture );
+                for ( size_t i = 0; i < kMaterialSamplerSlots.size(); ++i )
+                {
+                    ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[i].fallback_path };
+                    mMaterialSamplerFallbacks[i] = fallback.Get<Texture>();
+                    LoadTexture ( *mMaterialSamplerFallbacks[i] );
+                }
+                mDefaultTexture = mMaterialSamplerFallbacks[0];
             }
         }
         catch ( ... )
@@ -816,6 +820,11 @@ namespace AeonGames
     const VkDescriptorImageInfo* VulkanRenderer::GetDefaultTextureDescriptorImageInfo() const
     {
         return GetTextureDescriptorImageInfo ( *mDefaultTexture );
+    }
+
+    const VkDescriptorImageInfo* VulkanRenderer::GetMaterialSamplerFallbackDescriptorImageInfo ( size_t aSlot ) const
+    {
+        return GetTextureDescriptorImageInfo ( *mMaterialSamplerFallbacks[aSlot] );
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const

@@ -51,6 +51,8 @@ namespace AeonGames
         const OpenGLUniformBlock* GetStorageBlock ( uint32_t name ) const;
         /// @brief Get the uniform location of a sampler by its name hash.
         const GLuint GetSamplerLocation ( uint32_t name_hash ) const;
+        /// @brief Return true if the pipeline declares a sampler with this name hash.
+        bool HasSampler ( uint32_t name_hash ) const;
     private:
         void ReflectAttributes();
         void ReflectUniforms ( GLuint aProgramId, bool aReflectSamplers );

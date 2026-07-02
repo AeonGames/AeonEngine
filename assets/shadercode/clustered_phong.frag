@@ -89,6 +89,18 @@ layout(binding = 0)
 #endif
 uniform sampler2D DiffuseMap;
 
+// Tangent-space normal map (canonical material sampler slot 1). It shares the
+// material "Samplers" descriptor set with DiffuseMap (set 2, binding 1), which
+// is the two-binding set VulkanMaterial builds. Materials without a normal map
+// bind the engine's flat (0,0,1) fallback texture, so sampling here is a no-op
+// after the TBN transform in main().
+#ifdef VULKAN
+layout(set = 2, binding = 1)
+#else
+layout(binding = 1)
+#endif
+uniform sampler2D NormalMap;
+
 // Directional shadow mapping. ShadowParams carries the sun's world-space
 // view-projection and filtering parameters; ShadowMap is the depth map sampled
 // with hardware comparison (sampler2DShadow). shadow_params.w > 0.5 marks a
@@ -178,6 +190,8 @@ uniform Globals
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
+layout(location = 3) in vec3 ttangent;
+layout(location = 4) in vec3 tbitangent;
 layout(location = 0) out vec4 FragColor;
 
 // Map a view-space fragment to its cluster index, matching the tiling used by
@@ -459,6 +473,12 @@ void main()
             return;
       }
       vec3 N = normalize ( tnorm );
+      // Tangent-space normal mapping. NormalMap defaults to a flat (0,0,1)
+      // texture for materials with no normal map, and the vertex shader emits a
+      // zero tangent basis for meshes with no tangents; either case collapses
+      // the result back to the interpolated normal N.
+      vec3 tangent_normal = texture ( NormalMap, CoordUV ).xyz * 2.0 - 1.0;
+      N = normalize ( mat3 ( ttangent, tbitangent, N ) * tangent_normal );
       // In eye space the camera sits at the origin, so the view direction is
       // just the negated, normalized eye-space position.
       vec3 V = normalize ( -eyeCoords );

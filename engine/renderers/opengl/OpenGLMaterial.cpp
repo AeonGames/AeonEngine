@@ -13,9 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <cstring>
 #include "aeongames/Material.hpp"
 #include "aeongames/Texture.hpp"
 #include "aeongames/Mesh.hpp"
+#include "aeongames/CRC.hpp"
+#include "aeongames/MaterialSamplers.hpp"
 
 #include "OpenGLFunctions.hpp"
 #include "OpenGLMaterial.hpp"
@@ -66,12 +69,36 @@ namespace AeonGames
     void OpenGLMaterial::Bind ( const OpenGLPipeline& aPipeline ) const
     {
         const auto& samplers = mMaterial->GetSamplers();
-        for ( GLenum i = 0; i < samplers.size(); ++i )
+        // Bind every canonical material sampler slot the pipeline declares to
+        // the material's matching texture (by name crc), or the slot's fallback
+        // texture when the material omits it (white diffuse / flat normal). This
+        // mirrors the Vulkan material's padded sampler set so both backends
+        // sample a valid texture for NormalMap even on materials that have none.
+        for ( size_t slot = 0; slot < kMaterialSamplerSlots.size(); ++slot )
         {
-            aPipeline.GetSamplerLocation ( std::get<0> ( samplers[i] ) );
-
-            glBindTextureUnit ( aPipeline.GetSamplerLocation ( std::get<0> ( samplers[i] ) ),
-                                mOpenGLRenderer.GetTextureId ( *std::get<1> ( samplers[i] ).Cast<Texture>() ) );
+            const char* slot_name = kMaterialSamplerSlots[slot].name;
+            const uint32_t slot_crc = crc32i ( slot_name, std::strlen ( slot_name ) );
+            if ( !aPipeline.HasSampler ( slot_crc ) )
+            {
+                continue;
+            }
+            GLuint texture_id = 0;
+            bool found = false;
+            for ( const auto& sampler : samplers )
+            {
+                if ( std::get<0> ( sampler ) == slot_crc )
+                {
+                    texture_id = mOpenGLRenderer.GetTextureId ( *std::get<1> ( sampler ).Cast<Texture>() );
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found )
+            {
+                ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[slot].fallback_path };
+                texture_id = mOpenGLRenderer.GetTextureId ( *fallback.Get<Texture>() );
+            }
+            glBindTextureUnit ( aPipeline.GetSamplerLocation ( slot_crc ), texture_id );
             OPENGL_CHECK_ERROR_THROW;
         }
 
