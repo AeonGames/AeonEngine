@@ -862,6 +862,11 @@ namespace AeonGames
         return std::numeric_limits<uint32_t>::max();
     }
 
+    const std::vector<VulkanDescriptorSetInfo>& VulkanPipeline::GetDescriptorSetInfos() const
+    {
+        return mDescriptorSets;
+    }
+
     const VkPushConstantRange& VulkanPipeline::GetPushConstantModelMatrix() const
     {
         return mPushConstantModelMatrix;

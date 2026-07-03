@@ -335,12 +335,7 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::ShadowPass )
         {
             mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
-            // Point and spot passes feed their per-caster (or per-face) matrix
-            // through a scratch UBO bound at the same ShadowParams slot the depth
-            // vertex shader reads; the directional pass uses the real buffer.
-            mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
-                                              : mInSpotShadowPass ? mSpotShadowDepthScratch
-                                              : mShadowParams );
+            BindShadowPassState();
             BindObjectMatrices ( { &aModelMatrix, 1 } );
             mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
             if ( aMesh.GetIndexCount() )
@@ -362,13 +357,8 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::DepthPrePass )
         {
             mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
-            mOpenGLRenderer.SetMatrices ( mMatrices );
-            mOpenGLRenderer.SetClusterParams ( mClusterParams );
+            BindDepthPrePassState();
             BindObjectMatrices ( { &aModelMatrix, 1 } );
-            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
-            {
-                mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
-            }
             mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
             if ( aMesh.GetIndexCount() )
             {
@@ -385,30 +375,8 @@ namespace AeonGames
         }
 
         mOpenGLRenderer.BindPipeline ( aPipeline );
-
-        mOpenGLRenderer.SetMatrices ( mMatrices );
-        mOpenGLRenderer.SetLights ( mLights );
-        mOpenGLRenderer.SetClusterParams ( mClusterParams );
-        mOpenGLRenderer.SetGlobals ( mGlobals );
+        BindShadingPassState();
         BindObjectMatrices ( { &aModelMatrix, 1 } );
-        // Clustered Forward+ light lists, produced by the lighting compute
-        // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer
-        // silently skips pipelines that don't declare these blocks.
-        if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
-        {
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
-        }
-        // Directional shadow map: bind its params and depth texture. Pipelines
-        // that don't sample shadows ignore the unused UBO/texture unit.
-        mOpenGLRenderer.SetShadowParams ( mShadowParams );
-        glBindTextureUnit ( SHADOW_MAP_TEXTURE_UNIT, mShadowDepthTexture );
-        // Spot shadow maps: bind the per-caster params UBO and the depth array.
-        mOpenGLRenderer.SetSpotShadowParams ( mSpotShadowParams );
-        glBindTextureUnit ( SPOT_SHADOW_MAP_TEXTURE_UNIT, mSpotShadowDepthTexture );
-        // Point shadow maps: bind the per-caster params UBO and the cube-face array.
-        mOpenGLRenderer.SetPointShadowParams ( mPointShadowParams );
-        glBindTextureUnit ( POINT_SHADOW_MAP_TEXTURE_UNIT, mPointShadowDepthTexture );
 
         if ( aMaterial )
         {
@@ -451,12 +419,7 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::ShadowPass )
         {
             mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
-            // Point and spot passes feed their per-caster (or per-face) matrix
-            // through a scratch UBO bound at the same ShadowParams slot the depth
-            // vertex shader reads; the directional pass uses the real buffer.
-            mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
-                                              : mInSpotShadowPass ? mSpotShadowDepthScratch
-                                              : mShadowParams );
+            BindShadowPassState();
             BindObjectMatrices ( aModelMatrices );
             mOpenGLRenderer.BindMesh ( aMesh );
             if ( aMesh.GetIndexCount() )
@@ -477,12 +440,7 @@ namespace AeonGames
         if ( aRenderPass == RenderPass::DepthPrePass )
         {
             mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
-            mOpenGLRenderer.SetMatrices ( mMatrices );
-            mOpenGLRenderer.SetClusterParams ( mClusterParams );
-            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
-            {
-                mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
-            }
+            BindDepthPrePassState();
             BindObjectMatrices ( aModelMatrices );
             mOpenGLRenderer.BindMesh ( aMesh );
             if ( aMesh.GetIndexCount() )
@@ -500,24 +458,7 @@ namespace AeonGames
         }
 
         mOpenGLRenderer.BindPipeline ( aPipeline );
-        mOpenGLRenderer.SetMatrices ( mMatrices );
-        mOpenGLRenderer.SetLights ( mLights );
-        mOpenGLRenderer.SetClusterParams ( mClusterParams );
-        mOpenGLRenderer.SetGlobals ( mGlobals );
-        if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
-        {
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
-        }
-        // Directional shadow map: bind its params and depth texture.
-        mOpenGLRenderer.SetShadowParams ( mShadowParams );
-        glBindTextureUnit ( SHADOW_MAP_TEXTURE_UNIT, mShadowDepthTexture );
-        // Spot shadow maps: bind the per-caster params UBO and the depth array.
-        mOpenGLRenderer.SetSpotShadowParams ( mSpotShadowParams );
-        glBindTextureUnit ( SPOT_SHADOW_MAP_TEXTURE_UNIT, mSpotShadowDepthTexture );
-        // Point shadow maps: bind the per-caster params UBO and the cube-face array.
-        mOpenGLRenderer.SetPointShadowParams ( mPointShadowParams );
-        glBindTextureUnit ( POINT_SHADOW_MAP_TEXTURE_UNIT, mPointShadowDepthTexture );
+        BindShadingPassState();
         BindObjectMatrices ( aModelMatrices );
         if ( aMaterial )
         {
@@ -535,6 +476,50 @@ namespace AeonGames
             glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
+    }
+
+    void OpenGLWindow::BindShadingPassState() const
+    {
+        mOpenGLRenderer.SetMatrices ( mMatrices );
+        mOpenGLRenderer.SetLights ( mLights );
+        mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        mOpenGLRenderer.SetGlobals ( mGlobals );
+        // Clustered Forward+ light lists, produced by the lighting compute
+        // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer silently
+        // skips pipelines that don't declare these blocks.
+        if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
+        {
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
+        }
+        // Directional / spot / point shadow params + depth textures. Pipelines
+        // that don't sample shadows ignore the unused UBOs/texture units.
+        mOpenGLRenderer.SetShadowParams ( mShadowParams );
+        glBindTextureUnit ( SHADOW_MAP_TEXTURE_UNIT, mShadowDepthTexture );
+        mOpenGLRenderer.SetSpotShadowParams ( mSpotShadowParams );
+        glBindTextureUnit ( SPOT_SHADOW_MAP_TEXTURE_UNIT, mSpotShadowDepthTexture );
+        mOpenGLRenderer.SetPointShadowParams ( mPointShadowParams );
+        glBindTextureUnit ( POINT_SHADOW_MAP_TEXTURE_UNIT, mPointShadowDepthTexture );
+    }
+
+    void OpenGLWindow::BindDepthPrePassState() const
+    {
+        mOpenGLRenderer.SetMatrices ( mMatrices );
+        mOpenGLRenderer.SetClusterParams ( mClusterParams );
+        if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
+        {
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
+        }
+    }
+
+    void OpenGLWindow::BindShadowPassState() const
+    {
+        // Point and spot passes feed their per-caster (or per-face) matrix
+        // through a scratch UBO bound at the same ShadowParams slot the depth
+        // vertex shader reads; the directional pass uses the real buffer.
+        mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
+                                          : mInSpotShadowPass ? mSpotShadowDepthScratch
+                                          : mShadowParams );
     }
 
     void OpenGLWindow::BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const

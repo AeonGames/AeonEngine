@@ -202,6 +202,16 @@ namespace AeonGames
         ///        vertex shaders index it by gl_InstanceID, so a single draw
         ///        covers the whole batch.
         void BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const;
+        /// @brief Bind the engine-owned state for a Shading-pass draw (matrices,
+        ///        lights, clustering, globals, shadow params + textures). Shared
+        ///        by Render and RenderInstanced so the set has one definition.
+        void BindShadingPassState() const;
+        /// @brief Bind the engine-owned state for a depth pre-pass draw:
+        ///        matrices, cluster params and the ClusterActive SSBO.
+        void BindDepthPrePassState() const;
+        /// @brief Bind the ShadowParams state for a shadow-depth draw (the active
+        ///        point/spot caster's scratch UBO, or the directional buffer).
+        void BindShadowPassState() const;
         OpenGLRenderer& mOpenGLRenderer;
 #if defined(_WIN32)
         HWND mWindowId {};

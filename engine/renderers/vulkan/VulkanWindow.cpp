@@ -25,6 +25,7 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <initializer_list>
 #include <utility>
 #include <cstring>
 #include <cstdlib>
@@ -2474,22 +2475,7 @@ namespace AeonGames
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
             vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
-            if ( uint32_t shadow_params_set_index = shadow_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                // Point passes bind their caster's six-face matrix set, spot
-                // passes their slot's set, the directional pass the directional set.
-                const VkDescriptorSet shadow_depth_set = mInPointShadowPass
-                    ? mPointShadowDepthMatricesDescriptorSets[mCurrentPointShadowCaster]
-                    : mInSpotShadowPass
-                    ? mSpotShadowDepthMatricesDescriptorSets[mCurrentSpotShadowSlot]
-                    : mShadowParamsDescriptorSet;
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          shadow_pipeline->GetPipelineLayout(),
-                                          shadow_params_set_index,
-                                          1,
-                                          &shadow_depth_set, 0, nullptr );
-            }
+            BindShadowPassSets ( shadow_pipeline );
 
             if ( const VkPushConstantRange& push_constant_model_matrix = shadow_pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
             {
@@ -2535,42 +2521,7 @@ namespace AeonGames
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
             vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
-            if ( uint32_t matrix_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          mark_pipeline->GetPipelineLayout(),
-                                          matrix_set_index,
-                                          1,
-                                          &mMatricesDescriptorSet, 0, nullptr );
-            }
-
-            if ( uint32_t cluster_params_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          mark_pipeline->GetPipelineLayout(),
-                                          cluster_params_set_index,
-                                          1,
-                                          &mClusterParamsDescriptorSet, 0, nullptr );
-            }
-
-            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
-            {
-                if ( uint32_t active_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_ACTIVE ); active_set_index != std::numeric_limits<uint32_t>::max() )
-                {
-                    const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
-                        reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( mFrameClusterActive.GetMemoryPoolBuffer() );
-                    size_t offset = mFrameClusterActive.GetOffset();
-                    uint32_t dynamic_offset = 0;
-                    vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                              VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                              mark_pipeline->GetPipelineLayout(),
-                                              active_set_index,
-                                              1,
-                                              &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
-                }
-            }
+            BindDepthPrePassSets ( mark_pipeline );
 
             if ( const VkPushConstantRange& push_constant_model_matrix = mark_pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
             {
@@ -2613,135 +2564,7 @@ namespace AeonGames
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
 
-        if ( uint32_t matrix_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      matrix_set_index,
-                                      1,
-                                      &mMatricesDescriptorSet, 0, nullptr );
-        }
-
-        if ( uint32_t lights_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::LIGHTS ); lights_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      lights_set_index,
-                                      1,
-                                      &mLightsDescriptorSet, 0, nullptr );
-        }
-
-        if ( uint32_t cluster_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      cluster_params_set_index,
-                                      1,
-                                      &mClusterParamsDescriptorSet, 0, nullptr );
-        }
-
-        if ( uint32_t globals_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::GLOBALS ); globals_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      globals_set_index,
-                                      1,
-                                      &mGlobalsDescriptorSet, 0, nullptr );
-        }
-
-        // Clustered Forward+ light lists, produced by the lighting compute
-        // pipeline in BeginRender. Bound per draw for pipelines that declare
-        // them; mirrors the storage-buffer binding done in Dispatch().
-        auto bind_cluster_storage = [&] ( uint32_t aBinding, const BufferAccessor & aAccessor )
-        {
-            if ( aAccessor.GetMemoryPoolBuffer() == nullptr )
-            {
-                return;
-            }
-            uint32_t storage_set_index = pipeline->GetDescriptorSetIndex ( aBinding );
-            if ( storage_set_index == std::numeric_limits<uint32_t>::max() )
-            {
-                return;
-            }
-            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
-                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aAccessor.GetMemoryPoolBuffer() );
-            size_t offset = aAccessor.GetOffset();
-            uint32_t dynamic_offset = 0;
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      storage_set_index,
-                                      1,
-                                      &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
-        };
-        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
-        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
-
-        // Directional shadow: bind the ShadowParams UBO (light view-projection
-        // + bias/enable) and the shadow map sampler for pipelines that sample.
-        if ( uint32_t shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      shadow_params_set_index,
-                                      1,
-                                      &mShadowParamsDescriptorSet, 0, nullptr );
-        }
-        if ( uint32_t shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_MAP ); shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      shadow_map_set_index,
-                                      1,
-                                      &mShadowMapDescriptorSet, 0, nullptr );
-        }
-        // Spot shadows: bind the SpotShadowParams UBO (per-caster matrices and
-        // positions) and the spot shadow map array sampler for pipelines that
-        // sample them.
-        if ( uint32_t spot_shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SPOT_SHADOW_PARAMS ); spot_shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      spot_shadow_params_set_index,
-                                      1,
-                                      &mSpotShadowParamsDescriptorSet, 0, nullptr );
-        }
-        if ( uint32_t spot_shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SPOT_SHADOW_MAP ); spot_shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      spot_shadow_map_set_index,
-                                      1,
-                                      &mSpotShadowMapDescriptorSet, 0, nullptr );
-        }
-        // Point shadows: bind the PointShadowParams UBO (per-caster six-face
-        // matrices and positions) and the cube-face shadow map array sampler.
-        if ( uint32_t point_shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_PARAMS ); point_shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      point_shadow_params_set_index,
-                                      1,
-                                      &mPointShadowParamsDescriptorSet, 0, nullptr );
-        }
-        if ( uint32_t point_shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_MAP ); point_shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      point_shadow_map_set_index,
-                                      1,
-                                      &mPointShadowMapDescriptorSet, 0, nullptr );
-        }
+        BindShadingPassSets ( pipeline );
 
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
         {
@@ -2778,6 +2601,145 @@ namespace AeonGames
                 aInstanceCount,
                 aVertexStart,
                 aFirstInstance );
+        }
+    }
+
+#ifndef NDEBUG
+    namespace
+    {
+        // Debug-only regression guard for the per-pass binding helpers below.
+        // Every descriptor set a pipeline reflects must be one that some binder in
+        // the active render pass handles. If a shader gains a new descriptor set
+        // but the matching Bind*PassSets/caller sequence is not updated, that set
+        // would silently go unbound and the GPU would fault at draw time (device
+        // lost) -- exactly the class of bug that unifying the draw paths is meant
+        // to prevent. Assert at the bind site so the omission is caught loudly.
+        void AssertDescriptorSetsHandled ( const VulkanPipeline* aPipeline,
+                                           std::initializer_list<uint32_t> aHandledHashes )
+        {
+            for ( const VulkanDescriptorSetInfo& descriptor_set : aPipeline->GetDescriptorSetInfos() )
+            {
+                assert ( std::find ( aHandledHashes.begin(), aHandledHashes.end(), descriptor_set.hash ) != aHandledHashes.end() &&
+                         "Pipeline reflects a descriptor set that no binder handles for this render pass; "
+                         "wire it into the matching Bind*PassSets helper (and this handled-set list)." );
+            }
+        }
+    }
+#endif
+
+    void VulkanWindow::BindShadingPassSets ( const VulkanPipeline* aPipeline ) const
+    {
+#ifndef NDEBUG
+        // Engine sets bound here, plus MATERIAL/SAMPLERS (VulkanMaterial::Bind) and
+        // INSTANCE_MATRICES (BindObjectMatrices) bound by the caller after us.
+        AssertDescriptorSetsHandled ( aPipeline,
+        {
+            Mesh::BindingLocations::MATRICES, Mesh::BindingLocations::LIGHTS,
+            Mesh::BindingLocations::CLUSTER_PARAMS, Mesh::BindingLocations::GLOBALS,
+            Mesh::BindingLocations::LIGHT_GRID, Mesh::BindingLocations::LIGHT_INDEX_LIST,
+            Mesh::BindingLocations::SHADOW_PARAMS, Mesh::BindingLocations::SHADOW_MAP,
+            Mesh::BindingLocations::SPOT_SHADOW_PARAMS, Mesh::BindingLocations::SPOT_SHADOW_MAP,
+            Mesh::BindingLocations::POINT_SHADOW_PARAMS, Mesh::BindingLocations::POINT_SHADOW_MAP,
+            Mesh::BindingLocations::MATERIAL, Mesh::BindingLocations::SAMPLERS,
+            Mesh::BindingLocations::INSTANCE_MATRICES,
+        } );
+#endif
+        // Bind an engine-owned descriptor set at its reflected set index, if the
+        // pipeline declares it.
+        auto bind = [&] ( uint32_t aBinding, VkDescriptorSet aSet )
+        {
+            if ( uint32_t set_index = aPipeline->GetDescriptorSetIndex ( aBinding ); set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          aPipeline->GetPipelineLayout(), set_index, 1, &aSet, 0, nullptr );
+            }
+        };
+        // Clustered Forward+ light lists live in single-frame pool buffers bound
+        // with a dynamic offset; skip when the light-cull stage produced none.
+        auto bind_cluster_storage = [&] ( uint32_t aBinding, const BufferAccessor & aAccessor )
+        {
+            if ( aAccessor.GetMemoryPoolBuffer() == nullptr )
+            {
+                return;
+            }
+            if ( uint32_t set_index = aPipeline->GetDescriptorSetIndex ( aBinding ); set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                    reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aAccessor.GetMemoryPoolBuffer() );
+                uint32_t dynamic_offset = 0;
+                vkCmdBindDescriptorSets ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          aPipeline->GetPipelineLayout(), set_index, 1,
+                                          &memory_pool_buffer->GetDescriptorSet ( aAccessor.GetOffset() ), 1, &dynamic_offset );
+            }
+        };
+        bind ( Mesh::BindingLocations::MATRICES, mMatricesDescriptorSet );
+        bind ( Mesh::BindingLocations::LIGHTS, mLightsDescriptorSet );
+        bind ( Mesh::BindingLocations::CLUSTER_PARAMS, mClusterParamsDescriptorSet );
+        bind ( Mesh::BindingLocations::GLOBALS, mGlobalsDescriptorSet );
+        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
+        bind ( Mesh::BindingLocations::SHADOW_PARAMS, mShadowParamsDescriptorSet );
+        bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapDescriptorSet );
+        bind ( Mesh::BindingLocations::SPOT_SHADOW_PARAMS, mSpotShadowParamsDescriptorSet );
+        bind ( Mesh::BindingLocations::SPOT_SHADOW_MAP, mSpotShadowMapDescriptorSet );
+        bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );
+        bind ( Mesh::BindingLocations::POINT_SHADOW_MAP, mPointShadowMapDescriptorSet );
+    }
+
+    void VulkanWindow::BindDepthPrePassSets ( const VulkanPipeline* aPipeline ) const
+    {
+#ifndef NDEBUG
+        // Plus INSTANCE_MATRICES bound by the caller (BindObjectMatrices).
+        AssertDescriptorSetsHandled ( aPipeline,
+        {
+            Mesh::BindingLocations::MATRICES, Mesh::BindingLocations::CLUSTER_PARAMS,
+            Mesh::BindingLocations::CLUSTER_ACTIVE, Mesh::BindingLocations::INSTANCE_MATRICES,
+        } );
+#endif
+        auto bind = [&] ( uint32_t aBinding, VkDescriptorSet aSet )
+        {
+            if ( uint32_t set_index = aPipeline->GetDescriptorSetIndex ( aBinding ); set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          aPipeline->GetPipelineLayout(), set_index, 1, &aSet, 0, nullptr );
+            }
+        };
+        bind ( Mesh::BindingLocations::MATRICES, mMatricesDescriptorSet );
+        bind ( Mesh::BindingLocations::CLUSTER_PARAMS, mClusterParamsDescriptorSet );
+        if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
+        {
+            if ( uint32_t active_set_index = aPipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_ACTIVE ); active_set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+                    reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( mFrameClusterActive.GetMemoryPoolBuffer() );
+                uint32_t dynamic_offset = 0;
+                vkCmdBindDescriptorSets ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          aPipeline->GetPipelineLayout(), active_set_index, 1,
+                                          &memory_pool_buffer->GetDescriptorSet ( mFrameClusterActive.GetOffset() ), 1, &dynamic_offset );
+            }
+        }
+    }
+
+    void VulkanWindow::BindShadowPassSets ( const VulkanPipeline* aPipeline ) const
+    {
+#ifndef NDEBUG
+        // Plus INSTANCE_MATRICES bound by the caller (BindObjectMatrices).
+        AssertDescriptorSetsHandled ( aPipeline,
+        {
+            Mesh::BindingLocations::SHADOW_PARAMS, Mesh::BindingLocations::INSTANCE_MATRICES,
+        } );
+#endif
+        if ( uint32_t shadow_params_set_index = aPipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            // Point passes bind their caster's six-face matrix set, spot passes
+            // their slot's set, the directional pass the directional set.
+            const VkDescriptorSet shadow_depth_set = mInPointShadowPass
+                ? mPointShadowDepthMatricesDescriptorSets[mCurrentPointShadowCaster]
+                : mInSpotShadowPass
+                ? mSpotShadowDepthMatricesDescriptorSets[mCurrentSpotShadowSlot]
+                : mShadowParamsDescriptorSet;
+            vkCmdBindDescriptorSets ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      aPipeline->GetPipelineLayout(), shadow_params_set_index, 1, &shadow_depth_set, 0, nullptr );
         }
     }
 
@@ -2832,24 +2794,7 @@ namespace AeonGames
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
             vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
-            if ( uint32_t shadow_params_set_index = shadow_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                // Spot passes bind their slot's depth-matrix descriptor set;
-                // the directional pass binds the directional ShadowParams set.
-                // Point passes bind their caster's six-face matrix set, spot
-                // passes their slot's set, the directional pass the directional set.
-                const VkDescriptorSet shadow_depth_set = mInPointShadowPass
-                    ? mPointShadowDepthMatricesDescriptorSets[mCurrentPointShadowCaster]
-                    : mInSpotShadowPass
-                    ? mSpotShadowDepthMatricesDescriptorSets[mCurrentSpotShadowSlot]
-                    : mShadowParamsDescriptorSet;
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          shadow_pipeline->GetPipelineLayout(),
-                                          shadow_params_set_index,
-                                          1,
-                                          &shadow_depth_set, 0, nullptr );
-            }
+            BindShadowPassSets ( shadow_pipeline );
 
             BindObjectMatrices ( shadow_pipeline, aModelMatrices );
 
@@ -2884,42 +2829,7 @@ namespace AeonGames
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
             vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
-            if ( uint32_t matrix_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          mark_pipeline->GetPipelineLayout(),
-                                          matrix_set_index,
-                                          1,
-                                          &mMatricesDescriptorSet, 0, nullptr );
-            }
-
-            if ( uint32_t cluster_params_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
-            {
-                vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                          VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                          mark_pipeline->GetPipelineLayout(),
-                                          cluster_params_set_index,
-                                          1,
-                                          &mClusterParamsDescriptorSet, 0, nullptr );
-            }
-
-            if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
-            {
-                if ( uint32_t active_set_index = mark_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_ACTIVE ); active_set_index != std::numeric_limits<uint32_t>::max() )
-                {
-                    const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
-                        reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( mFrameClusterActive.GetMemoryPoolBuffer() );
-                    size_t offset = mFrameClusterActive.GetOffset();
-                    uint32_t dynamic_offset = 0;
-                    vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                              VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                              mark_pipeline->GetPipelineLayout(),
-                                              active_set_index,
-                                              1,
-                                              &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
-                }
-            }
+            BindDepthPrePassSets ( mark_pipeline );
 
             BindObjectMatrices ( mark_pipeline, aModelMatrices );
 
@@ -2950,132 +2860,7 @@ namespace AeonGames
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
 
-        if ( uint32_t matrix_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES ); matrix_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      matrix_set_index,
-                                      1,
-                                      &mMatricesDescriptorSet, 0, nullptr );
-        }
-
-        if ( uint32_t lights_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::LIGHTS ); lights_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      lights_set_index,
-                                      1,
-                                      &mLightsDescriptorSet, 0, nullptr );
-        }
-
-        if ( uint32_t cluster_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::CLUSTER_PARAMS ); cluster_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      cluster_params_set_index,
-                                      1,
-                                      &mClusterParamsDescriptorSet, 0, nullptr );
-        }
-
-        if ( uint32_t globals_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::GLOBALS ); globals_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      globals_set_index,
-                                      1,
-                                      &mGlobalsDescriptorSet, 0, nullptr );
-        }
-
-        auto bind_cluster_storage = [&] ( uint32_t aBinding, const BufferAccessor & aAccessor )
-        {
-            if ( aAccessor.GetMemoryPoolBuffer() == nullptr )
-            {
-                return;
-            }
-            uint32_t storage_set_index = pipeline->GetDescriptorSetIndex ( aBinding );
-            if ( storage_set_index == std::numeric_limits<uint32_t>::max() )
-            {
-                return;
-            }
-            const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
-                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aAccessor.GetMemoryPoolBuffer() );
-            size_t offset = aAccessor.GetOffset();
-            uint32_t dynamic_offset = 0;
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      storage_set_index,
-                                      1,
-                                      &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
-        };
-        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
-        bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
-
-        // Directional shadow: bind the ShadowParams UBO and shadow map sampler
-        // for pipelines that sample them.
-        if ( uint32_t shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_PARAMS ); shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      shadow_params_set_index,
-                                      1,
-                                      &mShadowParamsDescriptorSet, 0, nullptr );
-        }
-        if ( uint32_t shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SHADOW_MAP ); shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      shadow_map_set_index,
-                                      1,
-                                      &mShadowMapDescriptorSet, 0, nullptr );
-        }
-        // Spot shadows: bind the SpotShadowParams UBO (per-caster matrices and
-        // positions) and the spot shadow map array sampler for pipelines that
-        // sample them.
-        if ( uint32_t spot_shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SPOT_SHADOW_PARAMS ); spot_shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      spot_shadow_params_set_index,
-                                      1,
-                                      &mSpotShadowParamsDescriptorSet, 0, nullptr );
-        }
-        if ( uint32_t spot_shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SPOT_SHADOW_MAP ); spot_shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      spot_shadow_map_set_index,
-                                      1,
-                                      &mSpotShadowMapDescriptorSet, 0, nullptr );
-        }
-        // Point shadows: bind the PointShadowParams UBO (per-caster six-face
-        // matrices and positions) and the cube-face shadow map array sampler.
-        if ( uint32_t point_shadow_params_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_PARAMS ); point_shadow_params_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      point_shadow_params_set_index,
-                                      1,
-                                      &mPointShadowParamsDescriptorSet, 0, nullptr );
-        }
-        if ( uint32_t point_shadow_map_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::POINT_SHADOW_MAP ); point_shadow_map_set_index != std::numeric_limits<uint32_t>::max() )
-        {
-            vkCmdBindDescriptorSets ( GetCommandBuffer(),
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      pipeline->GetPipelineLayout(),
-                                      point_shadow_map_set_index,
-                                      1,
-                                      &mPointShadowMapDescriptorSet, 0, nullptr );
-        }
+        BindShadingPassSets ( pipeline );
 
         BindObjectMatrices ( pipeline, aModelMatrices );
 

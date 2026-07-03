@@ -237,6 +237,17 @@ namespace AeonGames
         ///        pipeline. The uber-pipeline vertex shaders index it by
         ///        gl_InstanceIndex, so a single draw covers the whole batch.
         void BindObjectMatrices ( const VulkanPipeline* aPipeline, std::span<const Matrix4x4> aMatrices ) const;
+        /// @brief Bind the engine-owned descriptor sets for a Shading-pass draw
+        ///        (matrices, lights, clustering, globals, shadows). Excludes the
+        ///        per-draw material and object-matrix sets. Shared by Render and
+        ///        RenderInstanced so the set list has a single definition.
+        void BindShadingPassSets ( const VulkanPipeline* aPipeline ) const;
+        /// @brief Bind the engine-owned descriptor sets for a depth pre-pass
+        ///        (cluster-mark) draw: matrices, cluster params, ClusterActive.
+        void BindDepthPrePassSets ( const VulkanPipeline* aPipeline ) const;
+        /// @brief Bind the ShadowParams descriptor set for a shadow-depth draw
+        ///        (directional, or the active spot/point caster's matrix set).
+        void BindShadowPassSets ( const VulkanPipeline* aPipeline ) const;
 
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};

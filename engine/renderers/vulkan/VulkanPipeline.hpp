@@ -59,6 +59,8 @@ namespace AeonGames
         const VkDescriptorSetLayout GetDescriptorSetLayout ( uint32_t name ) const;
         /// @brief Get the descriptor set index for a given hash.
         uint32_t GetDescriptorSetIndex ( uint32_t hash ) const;
+        /// @brief Get the reflected descriptor set metadata (hash, set index, bindings).
+        const std::vector<VulkanDescriptorSetInfo>& GetDescriptorSetInfos() const;
         /// @brief Get the push constant range used for the model matrix.
         const VkPushConstantRange& GetPushConstantModelMatrix() const;
     private:
