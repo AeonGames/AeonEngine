@@ -98,21 +98,40 @@ namespace AeonGames
             png_byte color_type = png_get_color_type ( png_ptr, info_ptr );
             png_byte bit_depth = png_get_bit_depth ( png_ptr, info_ptr );
 
-            Texture::Format format;
-            Texture::Type type;
-            if ( ( color_type == PNG_COLOR_TYPE_RGB ) || ( color_type == PNG_COLOR_TYPE_RGBA ) )
+            // Normalize every input to 8-/16-bit RGB or RGBA. Palette images are
+            // expanded to RGB, sub-8-bit grayscale is promoted to 8-bit, and
+            // grayscale (with or without alpha) is expanded to RGB(A) with the
+            // value replicated across the colour channels. This lets single-
+            // channel metallic / roughness / occlusion maps load like any colour
+            // texture (the shader reads the value from .r), since the engine's
+            // Texture only exposes RGB and RGBA formats.
+            if ( color_type == PNG_COLOR_TYPE_PALETTE )
             {
-                format = ( color_type == PNG_COLOR_TYPE_RGB ) ? Texture::Format::RGB : Texture::Format::RGBA;
-                type   = ( bit_depth == 8 ) ? Texture::Type::UNSIGNED_BYTE : Texture::Type::UNSIGNED_SHORT;
+                png_set_palette_to_rgb ( png_ptr );
             }
-            else
+            if ( ( color_type == PNG_COLOR_TYPE_GRAY ) && ( bit_depth < 8 ) )
             {
-                std::cout << LogLevel::Error << "PNG image color type not supported...yet" << std::endl;
-                throw std::runtime_error ( "PNG image color type not supported...yet" );
+                png_set_expand_gray_1_2_4_to_8 ( png_ptr );
+            }
+            if ( ( color_type == PNG_COLOR_TYPE_GRAY ) || ( color_type == PNG_COLOR_TYPE_GRAY_ALPHA ) )
+            {
+                png_set_gray_to_rgb ( png_ptr );
+            }
+            if ( png_get_valid ( png_ptr, info_ptr, PNG_INFO_tRNS ) )
+            {
+                png_set_tRNS_to_alpha ( png_ptr );
             }
 
             /*int number_of_passes =*/ png_set_interlace_handling ( png_ptr );
             png_read_update_info ( png_ptr, info_ptr );
+
+            // Re-query after the transforms above rewrote the pixel layout, then
+            // pick RGB vs RGBA from the presence of an alpha channel.
+            color_type = png_get_color_type ( png_ptr, info_ptr );
+            bit_depth = png_get_bit_depth ( png_ptr, info_ptr );
+            const bool has_alpha = ( color_type == PNG_COLOR_TYPE_RGBA ) || ( color_type == PNG_COLOR_TYPE_GRAY_ALPHA );
+            Texture::Format format = has_alpha ? Texture::Format::RGBA : Texture::Format::RGB;
+            Texture::Type type = ( bit_depth == 16 ) ? Texture::Type::UNSIGNED_SHORT : Texture::Type::UNSIGNED_BYTE;
 
             /* read file */
             if ( setjmp ( png_jmpbuf ( png_ptr ) ) )
