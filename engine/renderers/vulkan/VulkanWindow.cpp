@@ -2451,157 +2451,11 @@ namespace AeonGames
                                 const BufferAccessor* aSkinnedVertices,
                                 RenderPass aRenderPass ) const
     {
-        // Resolve the optional pre-skinned vertex buffer produced by the compute
-        // skinning pre-pass. When present it is bound as the vertex input in
-        // place of the mesh's rest-pose vertices (the index buffer still comes
-        // from the mesh).
-        VkBuffer skinned_vertex_buffer = VK_NULL_HANDLE;
-        VkDeviceSize skinned_vertex_offset = 0;
-        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
-        {
-            const VulkanStorageMemoryPoolBuffer* storage_pool_buffer =
-                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinnedVertices->GetMemoryPoolBuffer() );
-            skinned_vertex_buffer =
-                reinterpret_cast<const VulkanBuffer&> ( storage_pool_buffer->GetBuffer() ).GetBuffer();
-            skinned_vertex_offset = aSkinnedVertices->GetOffset();
-        }
-        // During the directional shadow pass, substitute the renderer-owned
-        // shadow depth pipeline: it transforms geometry by the light
-        // view-projection (ShadowParams) and writes depth only. Point passes use
-        // the multiview render pass, against which the pipeline must be created.
-        if ( aRenderPass == RenderPass::ShadowPass )
-        {
-            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : VK_NULL_HANDLE );
-            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
-            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-
-            BindShadowPassSets ( shadow_pipeline );
-
-            if ( const VkPushConstantRange& push_constant_model_matrix = shadow_pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
-            {
-                vkCmdPushConstants ( mVkCommandBuffer,
-                                     shadow_pipeline->GetPipelineLayout(),
-                                     push_constant_model_matrix.stageFlags,
-                                     push_constant_model_matrix.offset, push_constant_model_matrix.size,
-                                     aModelMatrix.GetMatrix4x4() );
-            }
-            else
-            {
-                BindObjectMatrices ( shadow_pipeline, { &aModelMatrix, 1 } );
-            }
-
-            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
-            if ( aMesh.GetIndexCount() )
-            {
-                vkCmdDrawIndexed (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                    aInstanceCount,
-                    aVertexStart,
-                    0,
-                    aFirstInstance );
-            }
-            else
-            {
-                vkCmdDraw (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                    aInstanceCount,
-                    aVertexStart,
-                    aFirstInstance );
-            }
-            return;
-        }
-        // During the depth pre-pass, substitute the renderer-owned marking
-        // pipeline: it records only the cluster each fragment occupies into the
-        // ClusterActive SSBO and ignores material and lighting state.
-        if ( aRenderPass == RenderPass::DepthPrePass )
-        {
-            const VulkanPipeline* mark_pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
-            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
-            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-
-            BindDepthPrePassSets ( mark_pipeline );
-
-            if ( const VkPushConstantRange& push_constant_model_matrix = mark_pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
-            {
-                vkCmdPushConstants ( mVkCommandBuffer,
-                                     mark_pipeline->GetPipelineLayout(),
-                                     push_constant_model_matrix.stageFlags,
-                                     push_constant_model_matrix.offset, push_constant_model_matrix.size,
-                                     aModelMatrix.GetMatrix4x4() );
-            }
-            else
-            {
-                BindObjectMatrices ( mark_pipeline, { &aModelMatrix, 1 } );
-            }
-
-            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
-            if ( aMesh.GetIndexCount() )
-            {
-                vkCmdDrawIndexed (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                    aInstanceCount,
-                    aVertexStart,
-                    0,
-                    aFirstInstance );
-            }
-            else
-            {
-                vkCmdDraw (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                    aInstanceCount,
-                    aVertexStart,
-                    aFirstInstance );
-            }
-            return;
-        }
-
-        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
-        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
-        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-
-
-        BindShadingPassSets ( pipeline );
-
-        if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 )
-        {
-            vkCmdPushConstants ( mVkCommandBuffer,
-                                 pipeline->GetPipelineLayout(),
-                                 push_constant_model_matrix.stageFlags,
-                                 push_constant_model_matrix.offset, push_constant_model_matrix.size,
-                                 aModelMatrix.GetMatrix4x4() );
-        }
-        else
-        {
-            BindObjectMatrices ( pipeline, { &aModelMatrix, 1 } );
-        }
-        if ( aMaterial != nullptr )
-        {
-            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
-        }
-        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
-        if ( aMesh.GetIndexCount() )
-        {
-            vkCmdDrawIndexed (
-                mVkCommandBuffer,
-                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                aInstanceCount,
-                aVertexStart,
-                0,
-                aFirstInstance );
-        }
-        else
-        {
-            vkCmdDraw (
-                mVkCommandBuffer,
-                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                aInstanceCount,
-                aVertexStart,
-                aFirstInstance );
-        }
+        // A single object: hardware-instanced aInstanceCount times (e.g. the
+        // editor grid draws one line matrix repeated across gl_InstanceIndex).
+        RenderCommon ( { &aModelMatrix, 1 }, aMesh, aPipeline, aMaterial, aTopology,
+                       aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
+                       aSkinnedVertices, aRenderPass );
     }
 
 #ifndef NDEBUG
@@ -2771,6 +2625,116 @@ namespace AeonGames
                                   &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
     }
 
+    void VulkanWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
+                                      const Mesh& aMesh,
+                                      const Pipeline& aPipeline,
+                                      const Material* aMaterial,
+                                      Topology aTopology,
+                                      uint32_t aVertexStart,
+                                      uint32_t aVertexCount,
+                                      uint32_t aInstanceCount,
+                                      uint32_t aFirstInstance,
+                                      const BufferAccessor* aSkinnedVertices,
+                                      RenderPass aRenderPass ) const
+    {
+        if ( aModelMatrices.empty() )
+        {
+            return;
+        }
+        // Resolve the optional pre-skinned vertex buffer produced by the compute
+        // skinning pre-pass. When present it is bound as the vertex input in
+        // place of the mesh's rest-pose vertices (the index buffer still comes
+        // from the mesh). Batched instancing is never skinned, so those callers
+        // pass a null accessor.
+        VkBuffer skinned_vertex_buffer = VK_NULL_HANDLE;
+        VkDeviceSize skinned_vertex_offset = 0;
+        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
+        {
+            const VulkanStorageMemoryPoolBuffer* storage_pool_buffer =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinnedVertices->GetMemoryPoolBuffer() );
+            skinned_vertex_buffer =
+                reinterpret_cast<const VulkanBuffer&> ( storage_pool_buffer->GetBuffer() ).GetBuffer();
+            skinned_vertex_offset = aSkinnedVertices->GetOffset();
+        }
+        // Select the pipeline for this pass. The shadow and depth-pre passes
+        // substitute renderer-owned pipelines (shadow-depth / cluster-mark) that
+        // transform geometry by the light view-projection or record cluster
+        // occupancy and ignore the item's own pipeline/material; the shading
+        // pass uses the item's pipeline. Point shadow passes are drawn against
+        // the multiview render pass the pipeline must be created against.
+        const VulkanPipeline* pipeline = nullptr;
+        switch ( aRenderPass )
+        {
+        case RenderPass::ShadowPass:
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : VK_NULL_HANDLE );
+            break;
+        case RenderPass::DepthPrePass:
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
+            break;
+        default:
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+            break;
+        }
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+        // Bind the engine-owned descriptor sets this pass needs. Shared with the
+        // sibling draw path so the set list has a single definition.
+        switch ( aRenderPass )
+        {
+        case RenderPass::ShadowPass:
+            BindShadowPassSets ( pipeline );
+            break;
+        case RenderPass::DepthPrePass:
+            BindDepthPrePassSets ( pipeline );
+            break;
+        default:
+            BindShadingPassSets ( pipeline );
+            break;
+        }
+        // Object transform: a single matrix can take the pipeline's push-constant
+        // fast path; otherwise (multiple instances, or a pipeline without a model
+        // push constant) every instance is driven from the per-object matrix
+        // buffer (InstanceMatrices), indexed by gl_InstanceIndex.
+        if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 && aModelMatrices.size() == 1 )
+        {
+            vkCmdPushConstants ( mVkCommandBuffer,
+                                 pipeline->GetPipelineLayout(),
+                                 push_constant_model_matrix.stageFlags,
+                                 push_constant_model_matrix.offset, push_constant_model_matrix.size,
+                                 aModelMatrices[0].GetMatrix4x4() );
+        }
+        else
+        {
+            BindObjectMatrices ( pipeline, aModelMatrices );
+        }
+        // Material state applies only to the shading pass; the substituted
+        // shadow/depth pipelines ignore it.
+        if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
+        {
+            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
+        }
+        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
+        if ( aMesh.GetIndexCount() )
+        {
+            vkCmdDrawIndexed (
+                mVkCommandBuffer,
+                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                aInstanceCount,
+                aVertexStart,
+                0,
+                aFirstInstance );
+        }
+        else
+        {
+            vkCmdDraw (
+                mVkCommandBuffer,
+                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
+                aInstanceCount,
+                aVertexStart,
+                aFirstInstance );
+        }
+    }
+
     void VulkanWindow::RenderInstanced ( std::span<const Matrix4x4> aModelMatrices,
                                          const Mesh& aMesh,
                                          const Pipeline& aPipeline,
@@ -2780,114 +2744,12 @@ namespace AeonGames
                                          uint32_t aVertexCount,
                                          RenderPass aRenderPass ) const
     {
-        const uint32_t instance_count = static_cast<uint32_t> ( aModelMatrices.size() );
-        if ( instance_count == 0 )
-        {
-            return;
-        }
-        // Directional shadow pass: substitute the shadow depth pipeline and
-        // drive every instance from the per-object matrix buffer. Point passes
-        // use the multiview render pass the pipeline must be created against.
-        if ( aRenderPass == RenderPass::ShadowPass )
-        {
-            const VulkanPipeline* shadow_pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : VK_NULL_HANDLE );
-            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_pipeline->GetVkPipeline() );
-            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-
-            BindShadowPassSets ( shadow_pipeline );
-
-            BindObjectMatrices ( shadow_pipeline, aModelMatrices );
-
-            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
-            if ( aMesh.GetIndexCount() )
-            {
-                vkCmdDrawIndexed (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                    instance_count,
-                    aVertexStart,
-                    0,
-                    0 );
-            }
-            else
-            {
-                vkCmdDraw (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                    instance_count,
-                    aVertexStart,
-                    0 );
-            }
-            return;
-        }
-        // During the depth pre-pass every draw uses the renderer-owned marking
-        // pipeline; the same object-matrix buffer drives it. Only non-skinned
-        // geometry is ever batched, so no pre-skinned vertex buffer is involved.
-        if ( aRenderPass == RenderPass::DepthPrePass )
-        {
-            const VulkanPipeline* mark_pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
-            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mark_pipeline->GetVkPipeline() );
-            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-
-            BindDepthPrePassSets ( mark_pipeline );
-
-            BindObjectMatrices ( mark_pipeline, aModelMatrices );
-
-            mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
-            if ( aMesh.GetIndexCount() )
-            {
-                vkCmdDrawIndexed (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                    instance_count,
-                    aVertexStart,
-                    0,
-                    0 );
-            }
-            else
-            {
-                vkCmdDraw (
-                    mVkCommandBuffer,
-                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                    instance_count,
-                    aVertexStart,
-                    0 );
-            }
-            return;
-        }
-
-        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
-        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
-        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
-
-        BindShadingPassSets ( pipeline );
-
-        BindObjectMatrices ( pipeline, aModelMatrices );
-
-        if ( aMaterial != nullptr )
-        {
-            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
-        }
-        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
-        if ( aMesh.GetIndexCount() )
-        {
-            vkCmdDrawIndexed (
-                mVkCommandBuffer,
-                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                instance_count,
-                aVertexStart,
-                0,
-                0 );
-        }
-        else
-        {
-            vkCmdDraw (
-                mVkCommandBuffer,
-                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                instance_count,
-                aVertexStart,
-                0 );
-        }
+        // One draw per matrix in the span: instance count is the span size and
+        // each instance reads its own transform from InstanceMatrices. Batches
+        // are never skinned, so no pre-skinned vertex buffer is forwarded.
+        RenderCommon ( aModelMatrices, aMesh, aPipeline, aMaterial, aTopology,
+                       aVertexStart, aVertexCount,
+                       static_cast<uint32_t> ( aModelMatrices.size() ), 0, nullptr, aRenderPass );
     }
 
     void VulkanWindow::Dispatch ( const Pipeline& aPipeline,

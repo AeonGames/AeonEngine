@@ -212,6 +212,22 @@ namespace AeonGames
         /// @brief Bind the ShadowParams state for a shadow-depth draw (the active
         ///        point/spot caster's scratch UBO, or the directional buffer).
         void BindShadowPassState() const;
+        /// @brief Shared implementation of Render and RenderInstanced: selects
+        ///        the pass pipeline/state, uploads the object matrices, binds
+        ///        material/mesh and issues one instanced draw. A single matrix
+        ///        with aInstanceCount>1 hardware-instances that matrix (editor
+        ///        grid); a multi-matrix span drives per-instance transforms.
+        void RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
+                            const Mesh& aMesh,
+                            const Pipeline& aPipeline,
+                            const Material* aMaterial,
+                            Topology aTopology,
+                            uint32_t aVertexStart,
+                            uint32_t aVertexCount,
+                            uint32_t aInstanceCount,
+                            uint32_t aFirstInstance,
+                            const BufferAccessor* aSkinnedVertices,
+                            RenderPass aRenderPass ) const;
         OpenGLRenderer& mOpenGLRenderer;
 #if defined(_WIN32)
         HWND mWindowId {};

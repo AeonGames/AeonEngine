@@ -248,6 +248,24 @@ namespace AeonGames
         /// @brief Bind the ShadowParams descriptor set for a shadow-depth draw
         ///        (directional, or the active spot/point caster's matrix set).
         void BindShadowPassSets ( const VulkanPipeline* aPipeline ) const;
+        /// @brief Shared implementation of Render and RenderInstanced: selects
+        ///        the pass pipeline, binds its engine descriptor sets, drives the
+        ///        object transform (push-constant fast path for a single matrix,
+        ///        else the per-object matrix buffer), binds material/mesh and
+        ///        issues one (possibly instanced) draw. A single matrix span with
+        ///        aInstanceCount>1 hardware-instances that matrix (editor grid);
+        ///        a multi-matrix span drives per-instance transforms.
+        void RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
+                            const Mesh& aMesh,
+                            const Pipeline& aPipeline,
+                            const Material* aMaterial,
+                            Topology aTopology,
+                            uint32_t aVertexStart,
+                            uint32_t aVertexCount,
+                            uint32_t aInstanceCount,
+                            uint32_t aFirstInstance,
+                            const BufferAccessor* aSkinnedVertices,
+                            RenderPass aRenderPass ) const;
 
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};

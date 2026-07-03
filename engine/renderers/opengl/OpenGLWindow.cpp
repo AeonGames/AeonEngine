@@ -313,14 +313,36 @@ namespace AeonGames
                                 const BufferAccessor* aSkinnedVertices,
                                 RenderPass aRenderPass ) const
     {
+        // A single object: hardware-instanced aInstanceCount times (e.g. the
+        // editor grid draws one line matrix repeated across gl_InstanceID).
+        RenderCommon ( { &aModelMatrix, 1 }, aMesh, aPipeline, aMaterial, aTopology,
+                       aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
+                       aSkinnedVertices, aRenderPass );
+    }
+
+    void OpenGLWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
+                                      const Mesh& aMesh,
+                                      const Pipeline& aPipeline,
+                                      const Material* aMaterial,
+                                      Topology aTopology,
+                                      uint32_t aVertexStart,
+                                      uint32_t aVertexCount,
+                                      uint32_t aInstanceCount,
+                                      uint32_t aFirstInstance,
+                                      const BufferAccessor* aSkinnedVertices,
+                                      RenderPass aRenderPass ) const
+    {
+        if ( aModelMatrices.empty() )
+        {
+            return;
+        }
         // Resolve the optional pre-skinned vertex buffer produced by the compute
         // skinning pre-pass. When present it is bound as the vertex array source
-        // in place of the mesh's rest-pose vertices.
+        // in place of the mesh's rest-pose vertices, using its compact 56-byte
+        // stride (weight data dropped) instead of the mesh's own 64-byte stride.
+        // Batched instancing is never skinned, so those callers pass null here.
         GLuint skinned_vertex_buffer_id = 0;
         size_t skinned_vertex_offset = 0;
-        // The pre-skinned buffer uses a compact 56-byte stride (weight data
-        // dropped); the attribute pointers must use it instead of the mesh's
-        // own 64-byte stride.
         size_t skinned_vertex_stride = 0;
         if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
         {
@@ -329,60 +351,36 @@ namespace AeonGames
             skinned_vertex_offset = aSkinnedVertices->GetOffset();
             skinned_vertex_stride = 56;
         }
-        // During the shadow pass, substitute the renderer-owned depth-only
-        // pipeline: it rasterizes geometry into the shadow map's depth texture
-        // using the light's view-projection and ignores material/lighting state.
-        if ( aRenderPass == RenderPass::ShadowPass )
+        // Select the pipeline and engine state for this pass. Shadow and depth-pre
+        // passes substitute renderer-owned pipelines (depth-only / cluster-mark)
+        // that ignore the item's own pipeline and material; the shading pass uses
+        // the item's pipeline.
+        switch ( aRenderPass )
         {
+        case RenderPass::ShadowPass:
             mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             BindShadowPassState();
-            BindObjectMatrices ( { &aModelMatrix, 1 } );
-            mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
-            if ( aMesh.GetIndexCount() )
-            {
-                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            else
-            {
-                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            return;
-        }
-        // During the depth pre-pass, substitute the renderer-owned marking
-        // pipeline: it records only the cluster each fragment occupies into the
-        // ClusterActive SSBO and ignores material and lighting state.
-        if ( aRenderPass == RenderPass::DepthPrePass )
-        {
+            break;
+        case RenderPass::DepthPrePass:
             mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
             BindDepthPrePassState();
-            BindObjectMatrices ( { &aModelMatrix, 1 } );
-            mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
-            if ( aMesh.GetIndexCount() )
-            {
-                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            else
-            {
-                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            return;
+            break;
+        default:
+            mOpenGLRenderer.BindPipeline ( aPipeline );
+            BindShadingPassState();
+            break;
         }
-
-        mOpenGLRenderer.BindPipeline ( aPipeline );
-        BindShadingPassState();
-        BindObjectMatrices ( { &aModelMatrix, 1 } );
-
-        if ( aMaterial )
+        // The uber-pipeline vertex shaders index InstanceMatrices by
+        // gl_InstanceID, so one draw covers the whole span. A single-matrix span
+        // with aInstanceCount>1 (editor grid) still works: those shaders place
+        // geometry procedurally from gl_InstanceID.
+        BindObjectMatrices ( aModelMatrices );
+        // Material state applies only to the shading pass; the substituted
+        // shadow/depth pipelines ignore it.
+        if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
         {
             mOpenGLRenderer.SetMaterial ( *aMaterial );
         }
-
         // aFirstInstance is forwarded as the base instance so a single per-frame
         // instance buffer can hold every batch and each draw selects its slice;
         // this mirrors the Vulkan path's firstInstance argument.
@@ -409,73 +407,12 @@ namespace AeonGames
                                          uint32_t aVertexCount,
                                          RenderPass aRenderPass )
     {
-        const uint32_t instance_count = static_cast<uint32_t> ( aModelMatrices.size() );
-        if ( instance_count == 0 )
-        {
-            return;
-        }
-        // Shadow pass: rasterize the batch into the shadow map depth texture
-        // with the renderer-owned depth-only pipeline.
-        if ( aRenderPass == RenderPass::ShadowPass )
-        {
-            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
-            BindShadowPassState();
-            BindObjectMatrices ( aModelMatrices );
-            mOpenGLRenderer.BindMesh ( aMesh );
-            if ( aMesh.GetIndexCount() )
-            {
-                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, instance_count, 0 );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            else
-            {
-                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            return;
-        }
-        // During the depth pre-pass every draw uses the renderer-owned marking
-        // pipeline; the same object-matrix buffer drives it.
-        if ( aRenderPass == RenderPass::DepthPrePass )
-        {
-            mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
-            BindDepthPrePassState();
-            BindObjectMatrices ( aModelMatrices );
-            mOpenGLRenderer.BindMesh ( aMesh );
-            if ( aMesh.GetIndexCount() )
-            {
-                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, instance_count, 0 );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            else
-            {
-                glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
-                OPENGL_CHECK_ERROR_NO_THROW;
-            }
-            return;
-        }
-
-        mOpenGLRenderer.BindPipeline ( aPipeline );
-        BindShadingPassState();
-        BindObjectMatrices ( aModelMatrices );
-        if ( aMaterial )
-        {
-            mOpenGLRenderer.SetMaterial ( *aMaterial );
-        }
-        mOpenGLRenderer.BindMesh ( aMesh );
-        if ( aMesh.GetIndexCount() )
-        {
-            glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                                  GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, instance_count, 0 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-        }
-        else
-        {
-            glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), instance_count, 0 );
-            OPENGL_CHECK_ERROR_NO_THROW;
-        }
+        // One draw per matrix in the span: instance count is the span size and
+        // each instance reads its own transform from InstanceMatrices. Batches
+        // are never skinned, so no pre-skinned vertex buffer is forwarded.
+        RenderCommon ( aModelMatrices, aMesh, aPipeline, aMaterial, aTopology,
+                       aVertexStart, aVertexCount,
+                       static_cast<uint32_t> ( aModelMatrices.size() ), 0, nullptr, aRenderPass );
     }
 
     void OpenGLWindow::BindShadingPassState() const
