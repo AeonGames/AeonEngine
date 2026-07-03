@@ -39,18 +39,22 @@ namespace AeonGames
      *
      *  The @c NormalMap fallback is a flat (0,0,1) tangent-space normal, so
      *  sampling it is a no-op after the TBN transform: materials without a
-     *  normal map keep their interpolated vertex normal. This lets normal
-     *  mapping be added to the shared shader without touching the ~93 existing
-     *  materials or the material protobuf format.
+     *  normal map keep their interpolated vertex normal. The @c MetallicMap and
+     *  @c RoughnessMap fallbacks are white (value 1.0); a metallic-roughness
+     *  shader multiplies the sampled value by the material's MetallicFactor /
+     *  RoughnessFactor, so a material with no such map falls back to its scalar
+     *  factor alone. This lets normal/metallic/roughness mapping be added to the
+     *  shared shader without requiring every material to supply every texture.
      *
-     *  When extending this list (e.g. metallic/roughness for PBR), append new
-     *  slots and update every material-sampling shader to declare the full set
-     *  in the same order. */
-    inline constexpr std::array<MaterialSamplerSlot, 2> kMaterialSamplerSlots
+     *  When extending this list, append new slots and update every material-
+     *  sampling shader to declare the full set in the same order. */
+    inline constexpr std::array<MaterialSamplerSlot, 4> kMaterialSamplerSlots
     {
         {
-            { "DiffuseMap", "textures/default.png" },
-            { "NormalMap",  "textures/flat_normal.png" },
+            { "DiffuseMap",   "textures/default.png" },
+            { "NormalMap",    "textures/flat_normal.png" },
+            { "MetallicMap",  "textures/default.png" },
+            { "RoughnessMap", "textures/default.png" },
         }};
 }
 #endif

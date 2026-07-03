@@ -35,8 +35,9 @@ EXTENSION_MAP = {
 
 
 class MTL_OT_exporterCommon():
-    '''Maps a Blender Principled BSDF material onto the engine's Phong material
-    (Kd/Ks/Shininess properties plus an optional DiffuseMap sampler).'''
+    '''Maps a Blender Principled BSDF material onto the engine's metallic-
+    roughness material (BaseColorFactor/MetallicFactor/RoughnessFactor properties
+    plus optional DiffuseMap/NormalMap/MetallicMap/RoughnessMap samplers).'''
 
     def __init__(self, filepath, as_text=False, texture_dir="textures"):
         self.filepath = filepath
@@ -69,57 +70,88 @@ class MTL_OT_exporterCommon():
                 basename += EXTENSION_MAP.get(image.file_format, '.png')
         return self.texture_dir + '/' + basename
 
-    def add_vector3(self, material_buffer, name, value):
+    def add_vector4(self, material_buffer, name, value):
         prop = material_buffer.property.add()
         prop.name = name
-        prop.vector3.x = value[0]
-        prop.vector3.y = value[1]
-        prop.vector3.z = value[2]
+        prop.vector4.x = value[0]
+        prop.vector4.y = value[1]
+        prop.vector4.z = value[2]
+        prop.vector4.w = value[3]
 
     def add_float(self, material_buffer, name, value):
         prop = material_buffer.property.add()
         prop.name = name
         prop.scalar_float = value
 
+    def add_sampler(self, material_buffer, name, image):
+        sampler = material_buffer.sampler.add()
+        sampler.name = name
+        sampler.image.path = self.texture_path(image)
+
+    def find_input_image(self, principled, input_name):
+        '''Return the Image datablock feeding a Principled input, following a
+        Normal Map node's Color input for the Normal slot.'''
+        if principled is None:
+            return None
+        inp = principled.inputs.get(input_name)
+        if inp is None or not inp.is_linked:
+            return None
+        from_node = inp.links[0].from_node
+        if from_node.type == 'TEX_IMAGE':
+            return from_node.image
+        # Normal is typically Principled.Normal <- Normal Map.Color <- Image.
+        color_in = from_node.inputs.get("Color")
+        if color_in is not None and color_in.is_linked:
+            img_node = color_in.links[0].from_node
+            if img_node.type == 'TEX_IMAGE':
+                return img_node.image
+        return None
+
+    def scalar_input(self, principled, name, default):
+        '''Flat value of a Principled scalar input, or the default when it is
+        absent or texture-driven.'''
+        if principled is None:
+            return default
+        inp = principled.inputs.get(name)
+        if inp is None or inp.is_linked:
+            return default
+        return float(inp.default_value)
+
     def fill_material_buffer(self, material_buffer, material):
         principled = self.find_principled(material)
-        image = self.find_base_color_image(principled) if principled is not None else None
+        base_image = self.find_base_color_image(principled) if principled is not None else None
+        normal_image = self.find_input_image(principled, "Normal")
+        metallic_image = self.find_input_image(principled, "Metallic")
+        roughness_image = self.find_input_image(principled, "Roughness")
 
-        # Diffuse colour: when a base-colour texture is present, leave Kd white
-        # so the sampled texture is not tinted; otherwise bake the flat colour.
-        if image is not None:
-            diffuse = (1.0, 1.0, 1.0)
+        # Base-colour factor: white (untinted) when a base-colour texture drives
+        # the colour, otherwise the flat Base Color; alpha defaults to 1.
+        if base_image is not None:
+            base_color = (1.0, 1.0, 1.0, 1.0)
         elif principled is not None and principled.inputs.get("Base Color") is not None:
-            base_color = principled.inputs["Base Color"].default_value
-            diffuse = (base_color[0], base_color[1], base_color[2])
+            c = principled.inputs["Base Color"].default_value
+            base_color = (c[0], c[1], c[2], c[3] if len(c) > 3 else 1.0)
         else:
-            diffuse = (0.8, 0.8, 0.8)
+            base_color = (0.8, 0.8, 0.8, 1.0)
 
-        # Specular colour: approximate from the (grayscale) Specular IOR Level.
-        specular = (0.4, 0.4, 0.4)
-        if principled is not None:
-            spec_input = principled.inputs.get("Specular IOR Level")
-            if spec_input is not None and not spec_input.is_linked:
-                spec = float(spec_input.default_value)
-                specular = (spec, spec, spec)
+        # Metallic / roughness factors: a texture drives the value at full
+        # strength (factor 1.0, since the engine multiplies factor * texel);
+        # otherwise the flat scalar from the Principled BSDF.
+        metallic = 1.0 if metallic_image is not None else self.scalar_input(principled, "Metallic", 0.0)
+        roughness = 1.0 if roughness_image is not None else self.scalar_input(principled, "Roughness", 0.5)
 
-        # Shininess: map PBR roughness onto a Phong exponent. Smoother surfaces
-        # (low roughness) produce a tighter, higher-exponent highlight.
-        roughness = 0.5
-        if principled is not None:
-            rough_input = principled.inputs.get("Roughness")
-            if rough_input is not None and not rough_input.is_linked:
-                roughness = float(rough_input.default_value)
-        shininess = max(1.0, (1.0 - roughness) * 128.0)
+        self.add_vector4(material_buffer, "BaseColorFactor", base_color)
+        self.add_float(material_buffer, "MetallicFactor", metallic)
+        self.add_float(material_buffer, "RoughnessFactor", roughness)
 
-        self.add_vector3(material_buffer, "Kd", diffuse)
-        self.add_vector3(material_buffer, "Ks", specular)
-        self.add_float(material_buffer, "Shininess", shininess)
-
-        if image is not None:
-            sampler = material_buffer.sampler.add()
-            sampler.name = "DiffuseMap"
-            sampler.image.path = self.texture_path(image)
+        if base_image is not None:
+            self.add_sampler(material_buffer, "DiffuseMap", base_image)
+        if normal_image is not None:
+            self.add_sampler(material_buffer, "NormalMap", normal_image)
+        if metallic_image is not None:
+            self.add_sampler(material_buffer, "MetallicMap", metallic_image)
+        if roughness_image is not None:
+            self.add_sampler(material_buffer, "RoughnessMap", roughness_image)
 
     def run(self, material):
         material_buffer = material_pb2.MaterialMsg()

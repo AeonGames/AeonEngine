@@ -1,27 +1,42 @@
 AEONMTL
 property {
-  name: "Kd"
-  vector3 {
+  name: "BaseColorFactor"
+  vector4 {
     x: 1.0
     y: 1.0
     z: 1.0
+    w: 1.0
   }
 }
 property {
-  name: "Ks"
-  vector3 {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-  }
+  name: "MetallicFactor"
+  scalar_float: 1.0
 }
 property {
-  name: "Shininess"
-  scalar_float: 64.0
+  name: "RoughnessFactor"
+  scalar_float: 1.0
 }
 sampler {
   name: "DiffuseMap"
   image {
     path: "sponza/textures/lionhead_01_BaseColor.png"
+  }
+}
+sampler {
+  name: "NormalMap"
+  image {
+    path: "sponza/textures/lionhead_01_Normal.png"
+  }
+}
+sampler {
+  name: "MetallicMap"
+  image {
+    path: "sponza/textures/lionhead_01_Metalness.png"
+  }
+}
+sampler {
+  name: "RoughnessMap"
+  image {
+    path: "sponza/textures/lionhead_01_Roughness.png"
   }
 }

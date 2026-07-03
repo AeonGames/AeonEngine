@@ -1,23 +1,20 @@
 AEONMTL
 property {
-  name: "Kd"
-  vector3 {
-    x: 1
-    y: 1
-    z: 1
+  name: "BaseColorFactor"
+  vector4 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+    w: 1.0
   }
 }
 property {
-  name: "Ks"
-  vector3 {
-    x: 0.4
-    y: 0.4
-    z: 0.4
-  }
+  name: "MetallicFactor"
+  scalar_float: 0.0
 }
 property {
-  name: "Shininess"
-  scalar_float: 32
+  name: "RoughnessFactor"
+  scalar_float: 0.75
 }
 sampler {
   name: "DiffuseMap"

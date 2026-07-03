@@ -11,15 +11,18 @@ uniform Matrices
       mat4 ViewMatrix;
 };
 
+// Metallic-roughness material factors (glTF-style). BaseColorFactor tints the
+// base-colour (diffuse) texture; MetallicFactor and RoughnessFactor scale the
+// sampled metallic/roughness maps (or stand alone when a material has none).
 #ifdef VULKAN
 layout(set = 1, binding = 0, std140)
 #else
 layout(binding = 1, std140)
 #endif
 uniform Material{
-      vec3  Kd;
-      vec3  Ks;
-      float Shininess;
+      vec4  BaseColorFactor;
+      float MetallicFactor;
+      float RoughnessFactor;
 };
 
 // Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
@@ -100,6 +103,25 @@ layout(set = 2, binding = 1)
 layout(binding = 1)
 #endif
 uniform sampler2D NormalMap;
+
+// Metallic and roughness maps (canonical material sampler slots 2 and 3). Both
+// share the material "Samplers" descriptor set with DiffuseMap/NormalMap (set 2,
+// bindings 2 and 3). They are single-channel (value read from .r) and scale the
+// material's MetallicFactor / RoughnessFactor. Materials with no such map bind
+// the engine's white fallback, so the scalar factor is used unchanged.
+#ifdef VULKAN
+layout(set = 2, binding = 2)
+#else
+layout(binding = 2)
+#endif
+uniform sampler2D MetallicMap;
+
+#ifdef VULKAN
+layout(set = 2, binding = 3)
+#else
+layout(binding = 3)
+#endif
+uniform sampler2D RoughnessMap;
 
 // Directional shadow mapping. ShadowParams carries the sun's world-space
 // view-projection and filtering parameters; ShadowMap is the depth map sampled
@@ -377,11 +399,48 @@ int point_shadow_caster ( vec3 aLightPos )
       return -1;
 }
 
-// Blinn-Phong contribution of a single light, accumulated into the running
-// diffuse/specular sums. aShadow scales the radiance (1.0 = fully lit); only
-// the directional sun passes a value below 1.0, from directional_shadow().
-void accumulate_light ( GpuLight L, vec3 N, vec3 V, float aShadow,
-                        inout vec3 diffuse_accum, inout vec3 specular_accum )
+const float PI = 3.14159265359;
+
+// GGX / Trowbridge-Reitz normal distribution: the relative concentration of
+// microfacets whose normal is the half-vector H, for the given roughness.
+float distribution_ggx ( vec3 N, vec3 H, float roughness )
+{
+      float a     = roughness * roughness;
+      float a2    = a * a;
+      float NdotH = max ( dot ( N, H ), 0.0 );
+      float d     = ( NdotH * NdotH ) * ( a2 - 1.0 ) + 1.0;
+      return a2 / ( PI * d * d );
+}
+
+// Smith geometry term via the Schlick-GGX approximation, using the direct-
+// lighting roughness remap (r+1)^2 / 8. Models microfacet self-shadowing and
+// masking from both the view and light directions.
+float geometry_schlick_ggx ( float NdotX, float roughness )
+{
+      float r = roughness + 1.0;
+      float k = ( r * r ) / 8.0;
+      return NdotX / ( NdotX * ( 1.0 - k ) + k );
+}
+float geometry_smith ( vec3 N, vec3 V, vec3 L, float roughness )
+{
+      return geometry_schlick_ggx ( max ( dot ( N, V ), 0.0 ), roughness ) *
+             geometry_schlick_ggx ( max ( dot ( N, L ), 0.0 ), roughness );
+}
+
+// Fresnel-Schlick: the fraction of light reflected rather than refracted,
+// interpolating from the surface's normal-incidence reflectance F0 up to 1 at
+// grazing angles.
+vec3 fresnel_schlick ( float cosTheta, vec3 F0 )
+{
+      return F0 + ( 1.0 - F0 ) * pow ( clamp ( 1.0 - cosTheta, 0.0, 1.0 ), 5.0 );
+}
+
+// Cook-Torrance contribution of a single light, accumulated into the running
+// outgoing-radiance sum Lo. aShadow scales the radiance (1.0 = fully lit). The
+// light direction and attenuation are computed exactly as before; only the BRDF
+// changed from Blinn-Phong to metallic-roughness Cook-Torrance.
+void accumulate_light ( GpuLight L, vec3 N, vec3 V, vec3 albedo, float metallic,
+                        float roughness, vec3 F0, float aShadow, inout vec3 Lo )
 {
       vec3 to_light;
       float attenuation = 1.0;
@@ -407,16 +466,23 @@ void accumulate_light ( GpuLight L, vec3 N, vec3 V, float aShadow,
                   attenuation *= smoothstep ( L.direction_cosOuter.w, L.cos_inner, cos_a );
             }
       }
-      vec3  light_radiance = L.color_intensity.rgb * L.color_intensity.a * attenuation * aShadow;
-      float NdotL = max ( dot ( to_light, N ), 0.0 );
-      diffuse_accum += light_radiance * NdotL;
-      if ( NdotL > 0.0 )
+      float NdotL = max ( dot ( N, to_light ), 0.0 );
+      if ( NdotL <= 0.0 )
       {
-            // Blinn-Phong: half-vector between view and light.
-            vec3  H     = normalize ( to_light + V );
-            float NdotH = max ( dot ( N, H ), 0.0 );
-            specular_accum += light_radiance * pow ( NdotH, Shininess );
+            return;
       }
+      vec3 radiance = L.color_intensity.rgb * L.color_intensity.a * attenuation * aShadow;
+      // Cook-Torrance specular: D * G * F / (4 * NdotV * NdotL).
+      vec3  H     = normalize ( to_light + V );
+      float NdotV = max ( dot ( N, V ), 0.0 );
+      float D     = distribution_ggx ( N, H, roughness );
+      float G     = geometry_smith ( N, V, to_light, roughness );
+      vec3  F     = fresnel_schlick ( max ( dot ( H, V ), 0.0 ), F0 );
+      vec3  specular = ( D * G * F ) / max ( 4.0 * NdotV * NdotL, 1e-4 );
+      // Energy conservation: light not reflected specularly (kd) is diffused;
+      // metals have no diffuse term.
+      vec3 kd = ( vec3 ( 1.0 ) - F ) * ( 1.0 - metallic );
+      Lo += ( kd * albedo / PI + specular ) * radiance * NdotL;
 }
 
 // Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
@@ -483,8 +549,17 @@ void main()
       // just the negated, normalized eye-space position.
       vec3 V = normalize ( -eyeCoords );
 
-      vec3 diffuse_accum  = vec3 ( 0.0 );
-      vec3 specular_accum = vec3 ( 0.0 );
+      // Metallic-roughness surface inputs. BaseColorFactor tints the base-colour
+      // texture; the metallic/roughness maps (white fallback = 1.0) scale their
+      // factors. F0 is the normal-incidence reflectance: 0.04 for dielectrics,
+      // the base colour for metals. Roughness is clamped away from 0 so the
+      // specular highlight stays finite.
+      vec3  albedo    = BaseColorFactor.rgb * tex.rgb;
+      float metallic  = MetallicFactor * texture ( MetallicMap, CoordUV ).r;
+      float roughness = clamp ( RoughnessFactor * texture ( RoughnessMap, CoordUV ).r, 0.045, 1.0 );
+      vec3  F0        = mix ( vec3 ( 0.04 ), albedo, metallic );
+
+      vec3 Lo = vec3 ( 0.0 );
 
       // Clustered point/spot lights: shade only the lights the light-cull stage
       // assigned to this fragment's cluster.
@@ -519,7 +594,7 @@ void main()
                         light_visibility = point_shadow ( caster, Lights_data[li].position_radius.xyz );
                   }
             }
-            accumulate_light ( Lights_data[li], N, V, light_visibility, diffuse_accum, specular_accum );
+            accumulate_light ( Lights_data[li], N, V, albedo, metallic, roughness, F0, light_visibility, Lo );
       }
 
       // Directional lights bypass clustering (they touch every fragment), so
@@ -530,15 +605,14 @@ void main()
       {
             if ( Lights_data[i].type == 2u )
             {
-                  accumulate_light ( Lights_data[i], N, V, sun_visibility, diffuse_accum, specular_accum );
+                  accumulate_light ( Lights_data[i], N, V, albedo, metallic, roughness, F0, sun_visibility, Lo );
             }
       }
 
-      // ambient.rgb is the scene ambient color, ambient.a its intensity; their
-      // product is the flat ambient fill that lifts surfaces facing away from
-      // every light out of pure black (the engine has no global illumination).
-      // Supplied per frame via the Globals UBO; the default reproduces the
-      // former constant vec3(0.25).
-      vec3 LightIntensity = Kd * ( ambient.rgb * ambient.a + diffuse_accum ) + Ks * specular_accum;
-      FragColor = tex * vec4 ( LightIntensity, 1.0 );
+      // Crude ambient fill (the engine has no global illumination): the scene
+      // ambient colour lights the base colour uniformly. ambient.rgb * ambient.a
+      // is the same flat term the Phong path used; the default reproduces the
+      // former constant vec3(0.25). Supplied per frame via the Globals UBO.
+      vec3 color = ambient.rgb * ambient.a * albedo + Lo;
+      FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
 }

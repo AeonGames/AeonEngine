@@ -1,18 +1,18 @@
 AEONMTL
 property {
-  name: "Kd"
-  vector3 {
+  name: "BaseColorFactor"
+  vector4 {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
   }
 }
 property {
-  name: "Ks"
-  vector3 {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-  }
+  name: "MetallicFactor"
+  scalar_float: 0.0
 }
 property {
-  name: "Shininess"
-  scalar_float: 128.0
+  name: "RoughnessFactor"
+  scalar_float: 0.045
 }
