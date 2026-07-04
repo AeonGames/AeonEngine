@@ -485,6 +485,42 @@ void accumulate_light ( GpuLight L, vec3 N, vec3 V, vec3 albedo, float metallic,
       Lo += ( kd * albedo / PI + specular ) * radiance * NdotL;
 }
 
+// --- Colour management -------------------------------------------------------
+// The scene is lit in linear space and written to a UNORM swapchain, so this
+// shader owns the sRGB conversions and tone mapping the hardware does not:
+// base-colour textures are decoded from sRGB before shading, and the final
+// radiance is exposed, tone mapped and re-encoded to sRGB on output.
+
+// Overall exposure applied before tone mapping. 1.0 is neutral; raise to
+// brighten, lower to darken. A future scene/camera value can drive this.
+const float EXPOSURE = 1.0;
+
+// Approximate sRGB decode (gamma 2.2): brings sRGB base-colour textures into
+// linear light for shading.
+vec3 srgb_to_linear ( vec3 c )
+{
+      return pow ( c, vec3 ( 2.2 ) );
+}
+
+// Inverse of the above, applied to the tone-mapped colour so a UNORM target
+// displays with correct brightness.
+vec3 linear_to_srgb ( vec3 c )
+{
+      return pow ( c, vec3 ( 1.0 / 2.2 ) );
+}
+
+// Narkowicz's cheap ACES filmic curve: maps unbounded linear HDR radiance into
+// a pleasing [0,1] range, rolling off bright speculars instead of clipping.
+vec3 aces_tonemap ( vec3 x )
+{
+      const float a = 2.51;
+      const float b = 0.03;
+      const float c = 2.43;
+      const float d = 0.59;
+      const float e = 0.14;
+      return clamp ( ( x * ( a * x + b ) ) / ( x * ( c * x + d ) + e ), 0.0, 1.0 );
+}
+
 // Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
 // A cluster reaching this count has overflowed and dropped lights.
 const uint HEATMAP_OVERFLOW = 128u;
@@ -554,7 +590,7 @@ void main()
       // factors. F0 is the normal-incidence reflectance: 0.04 for dielectrics,
       // the base colour for metals. Roughness is clamped away from 0 so the
       // specular highlight stays finite.
-      vec3  albedo    = BaseColorFactor.rgb * tex.rgb;
+      vec3  albedo    = BaseColorFactor.rgb * srgb_to_linear ( tex.rgb );
       float metallic  = MetallicFactor * texture ( MetallicMap, CoordUV ).r;
       float roughness = clamp ( RoughnessFactor * texture ( RoughnessMap, CoordUV ).r, 0.045, 1.0 );
       vec3  F0        = mix ( vec3 ( 0.04 ), albedo, metallic );
@@ -614,5 +650,9 @@ void main()
       // is the same flat term the Phong path used; the default reproduces the
       // former constant vec3(0.25). Supplied per frame via the Globals UBO.
       vec3 color = ambient.rgb * ambient.a * albedo + Lo;
+      // Expose, tone map the linear HDR radiance to [0,1], then sRGB-encode for
+      // the UNORM swapchain (the engine does no hardware sRGB conversion).
+      color = aces_tonemap ( color * EXPOSURE );
+      color = linear_to_srgb ( color );
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
 }

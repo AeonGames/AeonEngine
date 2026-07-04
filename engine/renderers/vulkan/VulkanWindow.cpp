@@ -535,7 +535,20 @@ namespace AeonGames
         }
         else
         {
+            // Prefer a UNORM (non-sRGB) surface so the fragment shader's own sRGB
+            // encode is the only gamma applied, keeping brightness consistent with
+            // the OpenGL path (which does not enable GL_FRAMEBUFFER_SRGB). Fall
+            // back to the driver's first advertised format.
             mVkSurfaceFormatKHR = surface_format_list[0];
+            for ( const VkSurfaceFormatKHR& candidate : surface_format_list )
+            {
+                if ( ( candidate.format == VK_FORMAT_B8G8R8A8_UNORM ) ||
+                     ( candidate.format == VK_FORMAT_R8G8B8A8_UNORM ) )
+                {
+                    mVkSurfaceFormatKHR = candidate;
+                    break;
+                }
+            }
         }
         std::array<VkFormat, 5> try_formats
         {
