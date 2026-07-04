@@ -16,6 +16,14 @@ property {
   name: "RoughnessFactor"
   scalar_float: 1.0
 }
+property {
+  name: "EmissiveFactor"
+  vector3 {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+}
 sampler {
   name: "DiffuseMap"
   image {

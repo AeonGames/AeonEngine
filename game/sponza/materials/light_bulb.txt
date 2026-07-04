@@ -16,3 +16,11 @@ property {
   name: "RoughnessFactor"
   scalar_float: 0.045
 }
+property {
+  name: "EmissiveFactor"
+  vector3 {
+    x: 4.0
+    y: 2.6
+    z: 1.2
+  }
+}

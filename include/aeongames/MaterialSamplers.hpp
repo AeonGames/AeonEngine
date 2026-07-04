@@ -39,22 +39,26 @@ namespace AeonGames
      *
      *  The @c NormalMap fallback is a flat (0,0,1) tangent-space normal, so
      *  sampling it is a no-op after the TBN transform: materials without a
-     *  normal map keep their interpolated vertex normal. The @c MetallicMap and
-     *  @c RoughnessMap fallbacks are white (value 1.0); a metallic-roughness
-     *  shader multiplies the sampled value by the material's MetallicFactor /
-     *  RoughnessFactor, so a material with no such map falls back to its scalar
-     *  factor alone. This lets normal/metallic/roughness mapping be added to the
-     *  shared shader without requiring every material to supply every texture.
+     *  normal map keep their interpolated vertex normal. The @c MetallicMap,
+     *  @c RoughnessMap and @c OcclusionMap fallbacks are white (value 1.0), and
+     *  the @c EmissiveMap fallback is white too but is scaled by an EmissiveFactor
+     *  that defaults to zero; a metallic-roughness shader multiplies each sampled
+     *  value by the matching material factor, so a material with no such map falls
+     *  back to its scalar factor (or, for occlusion, to no occlusion). This lets
+     *  the full PBR texture set be added to the shared shader without requiring
+     *  every material to supply every texture.
      *
      *  When extending this list, append new slots and update every material-
      *  sampling shader to declare the full set in the same order. */
-    inline constexpr std::array<MaterialSamplerSlot, 4> kMaterialSamplerSlots
+    inline constexpr std::array<MaterialSamplerSlot, 6> kMaterialSamplerSlots
     {
         {
             { "DiffuseMap",   "textures/default.png" },
             { "NormalMap",    "textures/flat_normal.png" },
             { "MetallicMap",  "textures/default.png" },
             { "RoughnessMap", "textures/default.png" },
+            { "OcclusionMap", "textures/default.png" },
+            { "EmissiveMap",  "textures/default.png" },
         }};
 }
 #endif

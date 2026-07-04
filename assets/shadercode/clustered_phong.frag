@@ -23,6 +23,7 @@ uniform Material{
       vec4  BaseColorFactor;
       float MetallicFactor;
       float RoughnessFactor;
+      vec3  EmissiveFactor;
 };
 
 // Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
@@ -122,6 +123,25 @@ layout(set = 2, binding = 3)
 layout(binding = 3)
 #endif
 uniform sampler2D RoughnessMap;
+
+// Ambient-occlusion (slot 4) and emissive (slot 5) maps, sharing the material
+// "Samplers" set (set 2, bindings 4 and 5). OcclusionMap.r scales the ambient
+// term; EmissiveMap.rgb (sRGB) times EmissiveFactor is added as self-illumination.
+// Both fall back to white, so occlusion defaults to 1 and emissive to the factor
+// (which defaults to zero -> no glow).
+#ifdef VULKAN
+layout(set = 2, binding = 4)
+#else
+layout(binding = 4)
+#endif
+uniform sampler2D OcclusionMap;
+
+#ifdef VULKAN
+layout(set = 2, binding = 5)
+#else
+layout(binding = 5)
+#endif
+uniform sampler2D EmissiveMap;
 
 // Directional shadow mapping. ShadowParams carries the sun's world-space
 // view-projection and filtering parameters; ShadowMap is the depth map sampled
@@ -594,6 +614,11 @@ void main()
       float metallic  = MetallicFactor * texture ( MetallicMap, CoordUV ).r;
       float roughness = clamp ( RoughnessFactor * texture ( RoughnessMap, CoordUV ).r, 0.045, 1.0 );
       vec3  F0        = mix ( vec3 ( 0.04 ), albedo, metallic );
+      // Ambient occlusion scales the ambient term; emissive is added after
+      // lighting. The emissive texture is sRGB; its white fallback times a zero
+      // EmissiveFactor means non-emissive materials add nothing.
+      float ao        = texture ( OcclusionMap, CoordUV ).r;
+      vec3  emissive  = EmissiveFactor * srgb_to_linear ( texture ( EmissiveMap, CoordUV ).rgb );
 
       vec3 Lo = vec3 ( 0.0 );
 
@@ -649,7 +674,7 @@ void main()
       // ambient colour lights the base colour uniformly. ambient.rgb * ambient.a
       // is the same flat term the Phong path used; the default reproduces the
       // former constant vec3(0.25). Supplied per frame via the Globals UBO.
-      vec3 color = ambient.rgb * ambient.a * albedo + Lo;
+      vec3 color = ambient.rgb * ambient.a * albedo * ao + Lo + emissive;
       // Expose, tone map the linear HDR radiance to [0,1], then sRGB-encode for
       // the UNORM swapchain (the engine does no hardware sRGB conversion).
       color = aces_tonemap ( color * EXPOSURE );

@@ -36,8 +36,10 @@ EXTENSION_MAP = {
 
 class MTL_OT_exporterCommon():
     '''Maps a Blender Principled BSDF material onto the engine's metallic-
-    roughness material (BaseColorFactor/MetallicFactor/RoughnessFactor properties
-    plus optional DiffuseMap/NormalMap/MetallicMap/RoughnessMap samplers).'''
+    roughness material (BaseColorFactor/MetallicFactor/RoughnessFactor/
+    EmissiveFactor properties plus optional DiffuseMap/NormalMap/MetallicMap/
+    RoughnessMap/EmissiveMap samplers). Ambient occlusion has no Principled
+    input and is not exported.'''
 
     def __init__(self, filepath, as_text=False, texture_dir="textures"):
         self.filepath = filepath
@@ -83,6 +85,13 @@ class MTL_OT_exporterCommon():
         prop.name = name
         prop.scalar_float = value
 
+    def add_vector3(self, material_buffer, name, value):
+        prop = material_buffer.property.add()
+        prop.name = name
+        prop.vector3.x = value[0]
+        prop.vector3.y = value[1]
+        prop.vector3.z = value[2]
+
     def add_sampler(self, material_buffer, name, image):
         sampler = material_buffer.sampler.add()
         sampler.name = name
@@ -123,6 +132,7 @@ class MTL_OT_exporterCommon():
         normal_image = self.find_input_image(principled, "Normal")
         metallic_image = self.find_input_image(principled, "Metallic")
         roughness_image = self.find_input_image(principled, "Roughness")
+        emissive_image = self.find_input_image(principled, "Emission Color")
 
         # Base-colour factor: white (untinted) when a base-colour texture drives
         # the colour, otherwise the flat Base Color; alpha defaults to 1.
@@ -140,9 +150,22 @@ class MTL_OT_exporterCommon():
         metallic = 1.0 if metallic_image is not None else self.scalar_input(principled, "Metallic", 0.0)
         roughness = 1.0 if roughness_image is not None else self.scalar_input(principled, "Roughness", 0.5)
 
+        # Emissive factor = Emission Color x Emission Strength. A texture drives
+        # the colour at full strength (factor carries only the strength);
+        # otherwise the flat emission colour is baked in. Defaults to no emission.
+        strength = self.scalar_input(principled, "Emission Strength", 1.0)
+        if emissive_image is not None:
+            emissive = (strength, strength, strength)
+        elif principled is not None and principled.inputs.get("Emission Color") is not None:
+            e = principled.inputs["Emission Color"].default_value
+            emissive = (e[0] * strength, e[1] * strength, e[2] * strength)
+        else:
+            emissive = (0.0, 0.0, 0.0)
+
         self.add_vector4(material_buffer, "BaseColorFactor", base_color)
         self.add_float(material_buffer, "MetallicFactor", metallic)
         self.add_float(material_buffer, "RoughnessFactor", roughness)
+        self.add_vector3(material_buffer, "EmissiveFactor", emissive)
 
         if base_image is not None:
             self.add_sampler(material_buffer, "DiffuseMap", base_image)
@@ -152,6 +175,8 @@ class MTL_OT_exporterCommon():
             self.add_sampler(material_buffer, "MetallicMap", metallic_image)
         if roughness_image is not None:
             self.add_sampler(material_buffer, "RoughnessMap", roughness_image)
+        if emissive_image is not None:
+            self.add_sampler(material_buffer, "EmissiveMap", emissive_image)
 
     def run(self, material):
         material_buffer = material_pb2.MaterialMsg()
