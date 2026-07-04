@@ -675,9 +675,12 @@ void main()
       // is the same flat term the Phong path used; the default reproduces the
       // former constant vec3(0.25). Supplied per frame via the Globals UBO.
       vec3 color = ambient.rgb * ambient.a * albedo * ao + Lo + emissive;
-      // Expose, tone map the linear HDR radiance to [0,1], then sRGB-encode for
-      // the UNORM swapchain (the engine does no hardware sRGB conversion).
+#ifdef VULKAN
+      // Vulkan still tone maps in-shader; its HDR post-pass is not wired yet.
+      // OpenGL writes linear HDR to an off-screen target that the fullscreen
+      // tonemap pass resolves (exposure + ACES + sRGB encode).
       color = aces_tonemap ( color * EXPOSURE );
       color = linear_to_srgb ( color );
+#endif
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
 }

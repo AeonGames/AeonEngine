@@ -37,7 +37,9 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
         OPENGL_CHECK_ERROR_THROW;
-        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
+        // RGBA16F so the geometry pass can store linear HDR radiance that the
+        // fullscreen tonemap pass later exposes, tone maps and sRGB-encodes.
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
         OPENGL_CHECK_ERROR_THROW;
@@ -100,7 +102,7 @@ namespace AeonGames
     void OpenGLFrameBuffer::Resize ( uint32_t aWidth, uint32_t aHeight )
     {
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
-        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, aWidth, aHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, aWidth, aHeight, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
         glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
         glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, aWidth, aHeight );
         glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
@@ -118,6 +120,11 @@ namespace AeonGames
     GLuint OpenGLFrameBuffer::GetFBO() const
     {
         return mFBO;
+    }
+
+    GLuint OpenGLFrameBuffer::GetColorBuffer() const
+    {
+        return mColorBuffer;
     }
 
     OpenGLFrameBuffer::OpenGLFrameBuffer ( OpenGLFrameBuffer&& aOpenGLFrameBuffer )

@@ -44,6 +44,8 @@ namespace AeonGames
         void Finalize();
         /// @brief Get the OpenGL framebuffer object identifier.
         GLuint GetFBO() const; /// This is temporary
+        /// @brief Get the colour attachment texture (RGBA16F HDR).
+        GLuint GetColorBuffer() const;
     private:
         GLuint mFBO {};
         GLuint mColorBuffer {};

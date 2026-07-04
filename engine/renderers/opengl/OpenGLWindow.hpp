@@ -259,6 +259,12 @@ namespace AeonGames
         // lazily the first frame clustering runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
+        // Renderer-owned fullscreen tone-map pipeline (loaded lazily) and its
+        // empty VAO, used to resolve the off-screen linear HDR colour target to
+        // the swapchain (exposure + ACES tone map + sRGB encode).
+        Pipeline mTonemapPipeline{};
+        bool mTonemapLoaded{false};
+        GLuint mFullscreenVAO{0};
         // Off-screen directional shadow map: a sampleable depth texture and its
         // framebuffer, plus the ShadowParams UBO (light view-projection +
         // filtering params) and the renderer-owned depth-only pipeline that

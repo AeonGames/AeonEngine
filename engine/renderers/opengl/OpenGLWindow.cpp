@@ -997,27 +997,30 @@ namespace AeonGames
 
     void OpenGLWindow::EndRender()
     {
+        // Resolve the off-screen linear HDR target to the default framebuffer: a
+        // buffer-less fullscreen triangle runs the tonemap pipeline (exposure +
+        // ACES tone map + sRGB encode), sampling the HDR colour texture.
         mFrameBuffer.Unbind();
-        glClear ( GL_COLOR_BUFFER_BIT );
-        OPENGL_CHECK_ERROR_NO_THROW;
         glDisable ( GL_DEPTH_TEST );
         OPENGL_CHECK_ERROR_NO_THROW;
-        GLint dims[4] = {0};
-        glGetIntegerv ( GL_VIEWPORT, dims );
+        glDisable ( GL_BLEND );
         OPENGL_CHECK_ERROR_NO_THROW;
-        glBlitNamedFramebuffer (
-            mFrameBuffer.GetFBO(),
-            0,
-            dims[0],
-            dims[1],
-            dims[2],
-            dims[3],
-            dims[0],
-            dims[1],
-            dims[2],
-            dims[3],
-            GL_COLOR_BUFFER_BIT,
-            GL_LINEAR );
+        if ( !mTonemapLoaded )
+        {
+            mTonemapPipeline.LoadFromFile ( "shaders/tonemap" );
+            mTonemapLoaded = true;
+        }
+        if ( mFullscreenVAO == 0 )
+        {
+            glGenVertexArrays ( 1, &mFullscreenVAO );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+        mOpenGLRenderer.BindPipeline ( mTonemapPipeline );
+        glBindTextureUnit ( 0, mFrameBuffer.GetColorBuffer() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindVertexArray ( mFullscreenVAO );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glDrawArrays ( GL_TRIANGLES, 0, 3 );
         OPENGL_CHECK_ERROR_NO_THROW;
 #if 0
         /* Bind and render overlay texture */

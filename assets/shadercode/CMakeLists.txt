@@ -23,6 +23,9 @@ set(PIPELINES
     "skinning|comp=skinning.comp"
     "shadow_depth|vert=shadow_depth.vert|frag=shadow_depth.frag"
     "point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag|Vulkan:vert=point_shadow_depth_mv.vert|Vulkan:geom"
+    # Fullscreen HDR resolve: exposure + ACES tone map + sRGB encode from the
+    # off-screen linear HDR target to the swapchain.
+    "tonemap|vert=tonemap.vert|frag=tonemap.frag|topology=TRIANGLE"
     # Engine debug + example pipelines (sources recovered from the previously
     # hand-committed game/shaders/*.txt, now generated like every other pipeline).
     "debug_grid|vert=debug_grid.vert|frag=debug_grid.frag|topology=TRIANGLE"
