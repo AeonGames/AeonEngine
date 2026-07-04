@@ -113,6 +113,14 @@ namespace AeonGames
         std::swap ( mVkDepthStencilFormat, aVulkanWindow.mVkDepthStencilFormat );
         std::swap ( mVkSurfaceFormatKHR, aVulkanWindow.mVkSurfaceFormatKHR );
         std::swap ( mVkRenderPass, aVulkanWindow.mVkRenderPass );
+        std::swap ( mVkHdrColorImage, aVulkanWindow.mVkHdrColorImage );
+        std::swap ( mVkHdrColorImageMemory, aVulkanWindow.mVkHdrColorImageMemory );
+        std::swap ( mVkHdrColorImageView, aVulkanWindow.mVkHdrColorImageView );
+        std::swap ( mVkHdrFramebuffer, aVulkanWindow.mVkHdrFramebuffer );
+        std::swap ( mVkHdrSampler, aVulkanWindow.mVkHdrSampler );
+        std::swap ( mVkTonemapRenderPass, aVulkanWindow.mVkTonemapRenderPass );
+        std::swap ( mTonemapDescriptorPool, aVulkanWindow.mTonemapDescriptorPool );
+        std::swap ( mTonemapDescriptorSet, aVulkanWindow.mTonemapDescriptorSet );
         std::swap ( mMatricesDescriptorPool, aVulkanWindow.mMatricesDescriptorPool );
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
         std::swap ( mLightsDescriptorPool, aVulkanWindow.mLightsDescriptorPool );
@@ -487,26 +495,101 @@ namespace AeonGames
             std::cout << LogLevel::Debug << "Cannot create framebuffers with zero area. (" << mVkSurfaceCapabilitiesKHR.currentExtent.width << "x" << mVkSurfaceCapabilitiesKHR.currentExtent.height << ")" << std::endl;
             return;
         }
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        const uint32_t width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
+        const uint32_t height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
+
+        // HDR offscreen colour image the scene renders linear radiance into,
+        // sampled by the fullscreen tonemap pass. Extent-dependent, so it is
+        // (re)created here alongside the framebuffers.
+        VkImageCreateInfo hdr_image_create_info{};
+        hdr_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        hdr_image_create_info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        hdr_image_create_info.imageType = VK_IMAGE_TYPE_2D;
+        hdr_image_create_info.extent = { width, height, 1 };
+        hdr_image_create_info.mipLevels = 1;
+        hdr_image_create_info.arrayLayers = 1;
+        hdr_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        hdr_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        hdr_image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        hdr_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        hdr_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vkCreateImage ( device, &hdr_image_create_info, nullptr, &mVkHdrColorImage );
+        VkMemoryRequirements hdr_memory_requirements;
+        vkGetImageMemoryRequirements ( device, mVkHdrColorImage, &hdr_memory_requirements );
+        VkMemoryAllocateInfo hdr_memory_allocate_info{};
+        hdr_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        hdr_memory_allocate_info.allocationSize = hdr_memory_requirements.size;
+        hdr_memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( hdr_memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+        vkAllocateMemory ( device, &hdr_memory_allocate_info, nullptr, &mVkHdrColorImageMemory );
+        vkBindImageMemory ( device, mVkHdrColorImage, mVkHdrColorImageMemory, 0 );
+
+        VkImageViewCreateInfo hdr_view_create_info{};
+        hdr_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        hdr_view_create_info.image = mVkHdrColorImage;
+        hdr_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        hdr_view_create_info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        hdr_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        hdr_view_create_info.subresourceRange.levelCount = 1;
+        hdr_view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( device, &hdr_view_create_info, nullptr, &mVkHdrColorImageView );
+
+        // Scene framebuffer: HDR colour + the shared depth-stencil, drawn with
+        // the main render pass.
+        std::array<VkImageView, 2> hdr_attachments { { mVkHdrColorImageView, mVkDepthStencilImageView } };
+        VkFramebufferCreateInfo hdr_framebuffer_create_info{};
+        hdr_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        hdr_framebuffer_create_info.renderPass = mVkRenderPass;
+        hdr_framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( hdr_attachments.size() );
+        hdr_framebuffer_create_info.pAttachments = hdr_attachments.data();
+        hdr_framebuffer_create_info.width = width;
+        hdr_framebuffer_create_info.height = height;
+        hdr_framebuffer_create_info.layers = 1;
+        vkCreateFramebuffer ( device, &hdr_framebuffer_create_info, nullptr, &mVkHdrFramebuffer );
+
+        // Tonemap framebuffers: one per swapchain image (colour only), drawn
+        // with the tonemap render pass.
         mVkFramebuffers.resize ( mSwapchainImageCount );
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
         {
-            std::array<VkImageView, 2> attachments
-            {
-                {
-                    mVkSwapchainImageViews[i],
-                    mVkDepthStencilImageView
-                }
-            };
             VkFramebufferCreateInfo framebuffer_create_info{};
             framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebuffer_create_info.renderPass = mVkRenderPass;
-            framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( attachments.size() );
-            framebuffer_create_info.pAttachments = attachments.data();
-            framebuffer_create_info.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
-            framebuffer_create_info.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
+            framebuffer_create_info.renderPass = mVkTonemapRenderPass;
+            framebuffer_create_info.attachmentCount = 1;
+            framebuffer_create_info.pAttachments = &mVkSwapchainImageViews[i];
+            framebuffer_create_info.width = width;
+            framebuffer_create_info.height = height;
             framebuffer_create_info.layers = 1;
-            vkCreateFramebuffer ( mVulkanRenderer.GetDevice(), &framebuffer_create_info, nullptr, &mVkFramebuffers[i] );
+            vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkFramebuffers[i] );
         }
+
+        // Tonemap descriptor set: the HDR colour image sampled by tonemap.frag
+        // (set 0, binding 0). Mirrors the shadow-map combined image sampler; the
+        // VK_SHADER_STAGE_ALL layout stays compatible with the reflected pipeline
+        // layout. Recreated on resize because it points at the HDR image view.
+        VkDescriptorSetLayoutCreateInfo tonemap_layout_create_info{};
+        tonemap_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        tonemap_layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding tonemap_layout_binding{};
+        tonemap_layout_binding.binding = 0;
+        tonemap_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        tonemap_layout_binding.descriptorCount = 1;
+        tonemap_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        tonemap_layout_create_info.pBindings = &tonemap_layout_binding;
+        mTonemapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
+        mTonemapDescriptorSet = CreateDescriptorSet ( device, mTonemapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( tonemap_layout_create_info ) );
+        VkDescriptorImageInfo tonemap_image_info{};
+        tonemap_image_info.sampler = mVkHdrSampler;
+        tonemap_image_info.imageView = mVkHdrColorImageView;
+        tonemap_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkWriteDescriptorSet tonemap_write{};
+        tonemap_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        tonemap_write.dstSet = mTonemapDescriptorSet;
+        tonemap_write.dstBinding = 0;
+        tonemap_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        tonemap_write.descriptorCount = 1;
+        tonemap_write.pImageInfo = &tonemap_image_info;
+        vkUpdateDescriptorSets ( device, 1, &tonemap_write, 0, nullptr );
     }
 
     void VulkanWindow::InitializeRenderPass()
@@ -581,14 +664,17 @@ namespace AeonGames
 
         std::array<VkAttachmentDescription, 2> attachment_descriptions{ {} };
         attachment_descriptions[0].flags = 0;
-        attachment_descriptions[0].format = mVkSurfaceFormatKHR.format;
+        // The scene renders linear HDR radiance here; a fullscreen tonemap pass
+        // resolves it to the swapchain, so the colour target is an RGBA16F image
+        // left in SHADER_READ_ONLY for that pass (not the swapchain any more).
+        attachment_descriptions[0].format = VK_FORMAT_R16G16B16A16_SFLOAT;
         attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
         attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         attachment_descriptions[1].flags = 0;
         attachment_descriptions[1].format = mVkDepthStencilFormat;
@@ -620,23 +706,81 @@ namespace AeonGames
         subpass_descriptions[0].preserveAttachmentCount = 0;
         subpass_descriptions[0].pPreserveAttachments = nullptr;
 
-        VkSubpassDependency subpass_dependency = {};
-        subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        subpass_dependency.dstSubpass = 0;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.srcAccessMask = 0;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        std::array<VkSubpassDependency, 2> subpass_dependencies{};
+        subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[0].dstSubpass = 0;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].srcAccessMask = 0;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // Make the HDR colour writes available/visible to the tonemap pass's
+        // fragment-shader sample of this image.
+        subpass_dependencies[1].srcSubpass = 0;
+        subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpass_dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpass_dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        subpass_dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
         VkRenderPassCreateInfo render_pass_create_info{};
         render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         render_pass_create_info.attachmentCount = static_cast<uint32_t> ( attachment_descriptions.size() );
         render_pass_create_info.pAttachments = attachment_descriptions.data();
-        render_pass_create_info.dependencyCount = 1;
-        render_pass_create_info.pDependencies = &subpass_dependency;
+        render_pass_create_info.dependencyCount = static_cast<uint32_t> ( subpass_dependencies.size() );
+        render_pass_create_info.pDependencies = subpass_dependencies.data();
         render_pass_create_info.subpassCount = static_cast<uint32_t> ( subpass_descriptions.size() );
         render_pass_create_info.pSubpasses = subpass_descriptions.data();
         vkCreateRenderPass ( mVulkanRenderer.GetDevice(), &render_pass_create_info, nullptr, &mVkRenderPass );
+
+        // --- Tonemap resolve resources (extent-independent) ---------------------
+        // Linear sampler for the HDR colour image (clamp; no depth comparison).
+        VkSamplerCreateInfo hdr_sampler_create_info{};
+        hdr_sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        hdr_sampler_create_info.magFilter = VK_FILTER_LINEAR;
+        hdr_sampler_create_info.minFilter = VK_FILTER_LINEAR;
+        hdr_sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        hdr_sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        hdr_sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        hdr_sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        hdr_sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        hdr_sampler_create_info.maxLod = 1.0f;
+        vkCreateSampler ( mVulkanRenderer.GetDevice(), &hdr_sampler_create_info, nullptr, &mVkHdrSampler );
+
+        // Tonemap render pass: one swapchain colour attachment, no depth. The
+        // fullscreen pass overwrites every pixel (loadOp DONT_CARE) and leaves
+        // the result ready to present.
+        VkAttachmentDescription tonemap_attachment{};
+        tonemap_attachment.format = mVkSurfaceFormatKHR.format;
+        tonemap_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        tonemap_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        tonemap_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        tonemap_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        tonemap_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        tonemap_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        tonemap_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        VkAttachmentReference tonemap_color_reference{};
+        tonemap_color_reference.attachment = 0;
+        tonemap_color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkSubpassDescription tonemap_subpass{};
+        tonemap_subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        tonemap_subpass.colorAttachmentCount = 1;
+        tonemap_subpass.pColorAttachments = &tonemap_color_reference;
+        VkSubpassDependency tonemap_dependency{};
+        tonemap_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        tonemap_dependency.dstSubpass = 0;
+        tonemap_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        tonemap_dependency.srcAccessMask = 0;
+        tonemap_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        tonemap_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        VkRenderPassCreateInfo tonemap_render_pass_create_info{};
+        tonemap_render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        tonemap_render_pass_create_info.attachmentCount = 1;
+        tonemap_render_pass_create_info.pAttachments = &tonemap_attachment;
+        tonemap_render_pass_create_info.subpassCount = 1;
+        tonemap_render_pass_create_info.pSubpasses = &tonemap_subpass;
+        tonemap_render_pass_create_info.dependencyCount = 1;
+        tonemap_render_pass_create_info.pDependencies = &tonemap_dependency;
+        vkCreateRenderPass ( mVulkanRenderer.GetDevice(), &tonemap_render_pass_create_info, nullptr, &mVkTonemapRenderPass );
     }
 
     void VulkanWindow::FinalizeRenderPass()
@@ -644,6 +788,17 @@ namespace AeonGames
         if ( mVkRenderPass != VK_NULL_HANDLE )
         {
             vkDestroyRenderPass ( mVulkanRenderer.GetDevice(), mVkRenderPass, nullptr );
+            mVkRenderPass = VK_NULL_HANDLE;
+        }
+        if ( mVkTonemapRenderPass != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass ( mVulkanRenderer.GetDevice(), mVkTonemapRenderPass, nullptr );
+            mVkTonemapRenderPass = VK_NULL_HANDLE;
+        }
+        if ( mVkHdrSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkHdrSampler, nullptr );
+            mVkHdrSampler = VK_NULL_HANDLE;
         }
     }
 
@@ -2275,7 +2430,7 @@ namespace AeonGames
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_begin_info.renderPass = mVkRenderPass;
-        render_pass_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
+        render_pass_begin_info.framebuffer = mVkHdrFramebuffer;
         render_pass_begin_info.renderArea = mVkScissor;
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
@@ -2401,6 +2556,35 @@ namespace AeonGames
     void VulkanWindow::EndRender()
     {
         vkCmdEndRenderPass ( mVkCommandBuffer );
+
+        // Resolve the linear HDR scene target to the swapchain: a second render
+        // pass runs the fullscreen tonemap pipeline (exposure + ACES tone map +
+        // sRGB encode), sampling the HDR colour image the scene pass left in
+        // SHADER_READ_ONLY. The fullscreen triangle needs no vertex buffer.
+        if ( !mTonemapLoaded )
+        {
+            mTonemapPipeline.LoadFromFile ( "shaders/tonemap" );
+            mTonemapLoaded = true;
+        }
+        const VulkanPipeline* tonemap_pipeline = mVulkanRenderer.GetVulkanPipeline ( mTonemapPipeline, mVkTonemapRenderPass );
+        VkRenderPassBeginInfo tonemap_begin_info{};
+        tonemap_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        tonemap_begin_info.renderPass = mVkTonemapRenderPass;
+        tonemap_begin_info.framebuffer = mVkFramebuffers[mActiveImageIndex];
+        tonemap_begin_info.renderArea = mVkScissor;
+        tonemap_begin_info.clearValueCount = 0;
+        tonemap_begin_info.pClearValues = nullptr;
+        vkCmdBeginRenderPass ( mVkCommandBuffer, &tonemap_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, tonemap_pipeline->GetVkPipeline() );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST );
+        // The tonemap pipeline inherits the engine-wide dynamic depth-bias
+        // state; it draws no depth, so keep it at zero for this pass.
+        vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
+        vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  tonemap_pipeline->GetPipelineLayout(), 0, 1, &mTonemapDescriptorSet, 0, nullptr );
+        vkCmdDraw ( mVkCommandBuffer, 3, 1, 0, 0 );
+        vkCmdEndRenderPass ( mVkCommandBuffer );
+
         if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
@@ -2679,7 +2863,7 @@ namespace AeonGames
         switch ( aRenderPass )
         {
         case RenderPass::ShadowPass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : VK_NULL_HANDLE );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
             break;
         case RenderPass::DepthPrePass:
             pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
@@ -3007,13 +3191,40 @@ namespace AeonGames
 
     void VulkanWindow::FinalizeFrameBuffers()
     {
+        const VkDevice device = mVulkanRenderer.GetDevice();
         for ( auto& i : mVkFramebuffers )
         {
             if ( i != VK_NULL_HANDLE )
             {
-                vkDestroyFramebuffer ( mVulkanRenderer.GetDevice(), i, nullptr );
+                vkDestroyFramebuffer ( device, i, nullptr );
                 i = VK_NULL_HANDLE;
             }
+        }
+        if ( mVkHdrFramebuffer != VK_NULL_HANDLE )
+        {
+            vkDestroyFramebuffer ( device, mVkHdrFramebuffer, nullptr );
+            mVkHdrFramebuffer = VK_NULL_HANDLE;
+        }
+        if ( mTonemapDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( device, mTonemapDescriptorPool, nullptr );
+            mTonemapDescriptorPool = VK_NULL_HANDLE;
+            mTonemapDescriptorSet = VK_NULL_HANDLE;
+        }
+        if ( mVkHdrColorImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkHdrColorImageView, nullptr );
+            mVkHdrColorImageView = VK_NULL_HANDLE;
+        }
+        if ( mVkHdrColorImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkHdrColorImage, nullptr );
+            mVkHdrColorImage = VK_NULL_HANDLE;
+        }
+        if ( mVkHdrColorImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkHdrColorImageMemory, nullptr );
+            mVkHdrColorImageMemory = VK_NULL_HANDLE;
         }
     }
 

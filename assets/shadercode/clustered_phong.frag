@@ -506,39 +506,16 @@ void accumulate_light ( GpuLight L, vec3 N, vec3 V, vec3 albedo, float metallic,
 }
 
 // --- Colour management -------------------------------------------------------
-// The scene is lit in linear space and written to a UNORM swapchain, so this
-// shader owns the sRGB conversions and tone mapping the hardware does not:
-// base-colour textures are decoded from sRGB before shading, and the final
-// radiance is exposed, tone mapped and re-encoded to sRGB on output.
-
-// Overall exposure applied before tone mapping. 1.0 is neutral; raise to
-// brighten, lower to darken. A future scene/camera value can drive this.
-const float EXPOSURE = 1.0;
+// The scene is lit in linear space; the base-colour texture is decoded from
+// sRGB before shading. Exposure, tone mapping and the final sRGB encode are
+// done by the separate fullscreen tonemap pass (tonemap.frag) that resolves the
+// off-screen HDR target to the swapchain.
 
 // Approximate sRGB decode (gamma 2.2): brings sRGB base-colour textures into
 // linear light for shading.
 vec3 srgb_to_linear ( vec3 c )
 {
       return pow ( c, vec3 ( 2.2 ) );
-}
-
-// Inverse of the above, applied to the tone-mapped colour so a UNORM target
-// displays with correct brightness.
-vec3 linear_to_srgb ( vec3 c )
-{
-      return pow ( c, vec3 ( 1.0 / 2.2 ) );
-}
-
-// Narkowicz's cheap ACES filmic curve: maps unbounded linear HDR radiance into
-// a pleasing [0,1] range, rolling off bright speculars instead of clipping.
-vec3 aces_tonemap ( vec3 x )
-{
-      const float a = 2.51;
-      const float b = 0.03;
-      const float c = 2.43;
-      const float d = 0.59;
-      const float e = 0.14;
-      return clamp ( ( x * ( a * x + b ) ) / ( x * ( c * x + d ) + e ), 0.0, 1.0 );
 }
 
 // Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
@@ -674,13 +651,8 @@ void main()
       // ambient colour lights the base colour uniformly. ambient.rgb * ambient.a
       // is the same flat term the Phong path used; the default reproduces the
       // former constant vec3(0.25). Supplied per frame via the Globals UBO.
+      // Both backends render this linear HDR radiance into an off-screen target
+      // that the fullscreen tonemap pass resolves (exposure + ACES + sRGB).
       vec3 color = ambient.rgb * ambient.a * albedo * ao + Lo + emissive;
-#ifdef VULKAN
-      // Vulkan still tone maps in-shader; its HDR post-pass is not wired yet.
-      // OpenGL writes linear HDR to an off-screen target that the fullscreen
-      // tonemap pass resolves (exposure + ACES + sRGB encode).
-      color = aces_tonemap ( color * EXPOSURE );
-      color = linear_to_srgb ( color );
-#endif
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
 }

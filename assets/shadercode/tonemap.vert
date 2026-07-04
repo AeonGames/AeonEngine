@@ -14,7 +14,18 @@ layout(location = 0) out vec2 CoordUV;
 // A tone-map pass draws this with a 3-vertex, buffer-less draw call.
 void main()
 {
-      vec2 uv = vec2 ( ( VERTEX_ID << 1 ) & 2, VERTEX_ID & 2 );
+#ifdef VULKAN
+      // Vulkan's framebuffer is y-down while the scene's y-flip lives in the
+      // projection matrix, which this buffer-less triangle bypasses. Emit the
+      // three vertices in reverse so the triangle is front-facing (CCW) under
+      // the engine's baked back-face cull instead of being culled away.
+      // Reversing the order preserves each position/UV pair, so the sampled
+      // image stays upright.
+      int vid = 2 - int ( VERTEX_ID );
+#else
+      int vid = int ( VERTEX_ID );
+#endif
+      vec2 uv = vec2 ( ( vid << 1 ) & 2, vid & 2 );
       CoordUV = uv;
       gl_Position = vec4 ( uv * 2.0 - 1.0, 0.0, 1.0 );
 }

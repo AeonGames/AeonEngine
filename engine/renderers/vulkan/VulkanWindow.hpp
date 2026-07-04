@@ -422,7 +422,25 @@ namespace AeonGames
 
         ::std::vector<VkImage> mVkSwapchainImages{};
         ::std::vector<VkImageView> mVkSwapchainImageViews{};
+        // Repurposed as the per-swapchain-image tonemap framebuffers (colour
+        // only): the scene renders into the HDR image below and the fullscreen
+        // tonemap pass resolves it into these swapchain images.
         ::std::vector<VkFramebuffer> mVkFramebuffers{};
+        // HDR offscreen target the scene renders linear radiance into (RGBA16F),
+        // sampled by the fullscreen tonemap pass. mVkTonemapRenderPass + sampler
+        // are extent-independent (created in InitializeRenderPass); the image,
+        // framebuffer and descriptor set are extent-dependent (recreated on
+        // resize in Initialize/FinalizeFrameBuffers).
+        VkImage mVkHdrColorImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkHdrColorImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkHdrColorImageView{VK_NULL_HANDLE};
+        VkFramebuffer mVkHdrFramebuffer{VK_NULL_HANDLE};
+        VkSampler mVkHdrSampler{VK_NULL_HANDLE};
+        VkRenderPass mVkTonemapRenderPass{VK_NULL_HANDLE};
+        VkDescriptorPool mTonemapDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mTonemapDescriptorSet{VK_NULL_HANDLE};
+        Pipeline mTonemapPipeline{};
+        bool mTonemapLoaded{false};
         ::std::vector<VkSemaphore> mVkSubmitSemaphores{};
     };
 }
